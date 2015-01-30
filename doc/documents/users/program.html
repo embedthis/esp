@@ -58,7 +58,6 @@
                     <a class="item" href="../users/controllers.html">ESP Controllers</a>
                     <a class="item" href="../users/database.html">ESP Databases</a>
                     <a class="item" href="../users/sessions.html">ESP Sessions</a>
-                    <a class="item" href="../users/angular.html">ESP for Angular</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
@@ -178,12 +177,10 @@ $ <b>pak install esp-html-skeleton</b>
             <p>The format of the "<em>pak install</em>" command is:</p>
             <pre class="ui code segment">$ <b>pak install packName</b></pre>
 
-            <p>ESP provides two skeleton paks in the Pak <a href="https://embedthis.com/catalog/">catalog</a>:
-            <ul>
-                <li>esp-html-skeleton &mdash; ESP HTML5 MVC skeleton</li>
-                <li>esp-angular-skeleton &mdash; ESP Angular MVC skeleton</li>
-            </ul>
-            <p>These skeletons leverage several other paks including:</p>
+            <p>ESP provides skeleton paks in the Pak <a href="https://embedthis.com/catalog/">catalog</a>. For example:
+                esp-html-skeleton &mdash; the ESP HTML5 MVC skeleton.</p>
+
+            <p>Skeletons leverage several other paks including:</p>
             <ul>
                 <li>esp-server &mdash; Default ESP service-side configuration</li>
                 <li>esp-mvc &mdash; ESP server-side MVC application skeleton</li>
@@ -197,12 +194,12 @@ $ <b>pak install esp-html-skeleton</b>
             <a href="https://embedthis.com/pak/">Pak Manager</a>.
             <p> For example:</p>
             <pre class="ui code segment">
-$ <b>pak install esp-angular-mvc</b></pre>
+$ <b>pak install jquery</b></pre>
 
             <h3>Pak Dependencies</h3>
             <p>ESP Paks may depend on other packs. The <em>pak</em> program will resolve these 
             dependencies and install all the required paks. For example: the 
-            <em>esp-angular-mvc</em> pak depends on: angular, esp-angular and other paks.
+            <em>esp-html-mvc</em> pak depends on: exp-less, exp-js and other paks.
             After installing, the dependencies are described in the <em>package.json</em> file.</p>
 
             <h3>Overwriting</h3>
@@ -371,8 +368,8 @@ $ <b>esp generate migration description MODEL [field:type ...]</b>
             Generating a scaffold will create a database table, controller and a set of views that provide
             add, edit and list functionality for a database table. Scaffolds are useful to quickly generate prototype
             web pages and actions for managing a database table. </p>
-            <p>Generating scaffolds is available if you are using the <em>esp-angular-mvc</em> 
-            pack &mdash; as the view scaffold depends on the Angular libraries.</p>
+
+            <p>Generating scaffolds is available if you are using the <em>esp-html-skeleton</em> skeleton.</p>
             <p>To generate a scaffold:</p>
             <pre class="ui code segment">
 $ <b>esp generate scaffold NAME [field:type ...]</b>

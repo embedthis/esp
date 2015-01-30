@@ -164,8 +164,9 @@ static void listPost() {
 }
 </pre>
             <p>The <em>list</em> action reads the post table and then renders the table data and schema as a JSON
-            response. The client interprets this JSON data an applies it to the client-side model. Angular uses this
-            model and "data-binding" to paste the data, somewhat auto-magically into the HTML page. </p>
+            response. The client interprets this JSON data an applies it to the client-side model. The Aurelia
+            client Javascript framework uses this model and "data-binding" to paste the data, 
+            somewhat auto-magically into the HTML page. </p>
             
             <h2>Code Errors</h2>
             <p>What happens if you make a mistake entering the embedded "C" code in your controller or in an ESP web page. 
@@ -216,11 +217,15 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
             <p>Other validation types include: checkNumber, checkBoolean, checkDate and checkFormat.
             You can also define new validation types by calling 
             <a href="../ref/api/edi.html#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46">ediDefineValidation</a>.
+
             <a id="homePage"></a>
             <h2>Edit the Home Page</h2>
-            <p>ESP applications based on Angular use a single home page that applies different view templates 
+            <p>ESP applications based on single-page client Javascript frameworks like 
+                <a href="http://angularjs.org">Angular</a> or <a href="http://aurelia.io">Aurelia</a>
+            use a single home page that applies different view templates 
             to modify the content. Consequently, the index.esp home page is typically also the master 
             application layout page. Modifying index.esp will modify all the views presented to the client.</p>
+
             <a id="learn"></a>
             <h2 >Learn More ...</h2>
             <p>That concludes the a quick tour through some of the capabilities of the ESP web framework.</p>

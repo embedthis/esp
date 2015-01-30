@@ -38,7 +38,6 @@
                     <a class="item" href="@~users/controllers.html">ESP Controllers</a>
                     <a class="item" href="@~users/database.html">ESP Databases</a>
                     <a class="item" href="@~users/sessions.html">ESP Sessions</a>
-                    <a class="item" href="@~users/angular.html">ESP for Angular</a>
                     <a class="item" href="@~users/security.html">Security Considerations</a>
                     <a class="item" href="@~users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="@~users/hosting.html">Hosting in Appweb</a>

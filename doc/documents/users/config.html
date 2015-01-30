@@ -58,7 +58,6 @@
                     <a class="item" href="../users/controllers.html">ESP Controllers</a>
                     <a class="item" href="../users/database.html">ESP Databases</a>
                     <a class="item" href="../users/sessions.html">ESP Sessions</a>
-                    <a class="item" href="../users/angular.html">ESP for Angular</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
@@ -207,7 +206,7 @@
             it only contain valid C identifer characters. The title provides a multi-word title suitable 
             for display to the user.</p>
             <p>These identifying properties may alternatively be defined in an optional package.json file
-            that is used by the <a href="https://embedthis.com/pak">Pak</a> package manager when installing 
+            that is used by the <a href="https://embedthis.com/pak">Pak</a> Manager when installing 
             ESP extensions packages and skeletons.</p>
 
             <h2>Creating an esp.json file</h2>
@@ -291,7 +290,7 @@ pak mode debug</pre>
             will be added to the dependency collection. For example:</p>
 
             <pre class="ui code segment">"dependencies": {
-    "angular": "1.2.0",
+    "jquery": "1.11.0",
     "bootstrap": "3.0.0",
 }</pre>
 
@@ -313,7 +312,6 @@ pak mode debug</pre>
             <p>For example:</p>
 
             <pre class="ui code segment">"dependencies": {
-    "angular": "&gt;=1.2.0",  /* Versions 1.2.0 or later including prereleases */
     "bootstrap": "~3",     /* Versions 3.0.0 or later including prereleases */
     "jquery": "^1.9.1",    /* Version 1.9.1 and not prereleases */
     "less": "1.3.x",       /* Version 1.3.x and prereleases /
@@ -445,8 +443,7 @@ mappings: {
         'lib/angular/angular-animate.js',
         'lib/angular/angular-route.js',
         'main.js',
-        '*/**.js*',
-        'lib/esp-gui/*.js',
+        '*/**.js*'
     ]
 }</pre></td>
                     </tr>
@@ -570,6 +567,7 @@ compress: [ 'html', 'js', 'css' ]
     '404': '/notFound.html,
 },</pre></td>
                     </tr>
+<!--
                     <tr>
                         <td>formats</td>
                         <td>Collection default data formats for various data types. The <em>response</em> property specifies
@@ -584,6 +582,7 @@ compress: [ 'html', 'js', 'css' ]
     float: 2,
 },</pre></td>
                     </tr>
+-->
                     <tr>
                         <td>headers</td>
                         <td>Collection response header directives. This includes sub-collections for headers to 
@@ -954,14 +953,12 @@ server: {
                         If <em>users</em> is defined, then a user must login before using the application. The
                         <em>users</em> property may be set to a list of users, a string with a single 
                         user name or <em>true</em> to imply any authenticated user. Note: it is 
-                        application dependent how the required login feature is implemented.
-                        The <em>esp-user</em> Angular pak implements this feature.</td>
+                        application dependent how the required login feature is implemented.</p>
                         </tr>
                         <tr>
                         <td>single</td>
                         <td>Set to true to permit only one simultaneous login. Ideal for some management user
-                        interfaces. Note: it is application dependent how the required login feature is implemented.
-                        The <em>esp-user</em> Angular pak implements this feature.</td>
+                        interfaces. Note: it is application dependent how the required login feature is implemented.</p>
                     </tr>
                     <tr>
                         <td>roles</td>
