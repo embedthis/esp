@@ -944,9 +944,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             return MPR_ERR_CANT_LOAD;
         }
         if ((eroute->appName = espGetConfig(route, "name", 0)) == 0) {
-            mprLog("error esp", 0, "Missing ESP application name");
-            unlock(esp);
-            return MPR_ERR_CANT_LOAD;
+            eroute->appName = sclone("app");
         } 
         unlock(esp);
     }

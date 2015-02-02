@@ -675,7 +675,6 @@ static void initialize(int argc, char **argv)
         }
 #if DEPRECATE || 1
     } else if (mprPathExists("package.json", R_OK)) {
-        trace("Warn", "ESP configuration should be in %s instead of package.json", "esp.json");
         if (espLoadApp(route, 0, "package.json")) {
             fail("Cannot define and load ESP app");
             return;
