@@ -1,0 +1,51 @@
+/*
+    esp.me -- MakeMe file to build the ESP library
+ */
+
+Me.load({
+    blend: [ 'http', '?sqlite' ],
+
+    targets: {
+        esp: {
+            configurable: true,
+            depends:      [ 'libesp', 'mdb' ],
+            uses:         [ 'sqlite' ],
+        },
+
+        mdb: {
+            configurable: true,
+            description: 'Embedthis MDB Database',
+        },
+
+        'esp.h': {
+            type: 'header',
+            headers: [ '*.h' ],
+        },
+
+        libesp: {
+            type: 'lib',
+            depends: [ 'libhttp', 'mdb' ],
+            uses:    [ 'sqlite' ],
+            sources: [ '*.c' ],
+            exclude: /esp\.c/,
+            headers: [ '*.h' ],
+            ifdef:   [ 'esp' ],
+        },
+
+        espcmd: {
+            pname: 'esp',
+            path: '${BIN}/esp${EXE}',
+            type: 'exe',
+            depends: [ 'libesp' ],
+            sources: [ 'esp.c' ]
+            platforms: [ 'local' ],
+            ifdef:   [ 'esp' ],
+        },
+
+        'esp-compile.json': {
+            type: 'file',
+            files: [ 'esp-compile.json' ],
+            ifdef: [ 'esp' ],
+        }
+    }
+})

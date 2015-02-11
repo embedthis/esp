@@ -1,0 +1,52 @@
+/*
+    http.me -- MakeMe file for Http
+ */
+
+Me.load({
+    blend: [ 'mpr', 'pcre' ],
+
+    targets: {
+        http: {
+            configurable: true,
+            depends:      [ 'libhttp' ],
+            requires:     [ 'pcre' ],
+            uses:         [ 'ssl' ],
+        },
+
+        libhttp: {
+            type: 'lib',
+            sources: [ 'httpLib.c' ],
+            headers: [ '*.h' ],
+            depends: [ 'libmpr', 'libpcre' ],
+            ifdef:   [ 'http' ],
+            scripts: {
+                postblend: `
+                    let s = me.settings
+                    if (s && s.compiler && s.compiler.hasPam && s.http && s.http.pam) {
+                        me.target.libraries.push('pam')
+                    }
+                `,
+            },
+        },
+
+        httpcmd: {
+            pname: 'http',
+            path: '${BIN}/http${EXE}',
+            type: 'exe',
+            sources:   [ 'http.c' ],
+            depends:   [ 'libhttp' ],
+            ifdef:     [ 'http' ],
+            postblend: function (target) {
+                if (target.static) {
+                    target.depends += ['libmprssl']
+                }
+            },
+        },
+
+        'http-ca-crt': {
+            type: 'file',
+            files: [ 'ca.crt' ],
+            path: '${BIN}/ca.crt',
+        },
+	},
+})

@@ -1,0 +1,34 @@
+/*
+    pcre.me -- MakeMe file PCRE 
+ */
+
+Me.load({
+    targets: {
+        pcre: {
+            configurable: true,
+            depends:      [ 'libpcre' ],
+        },
+
+        libpcre: {
+			scripts: {
+				prebuild: `
+					if (me.settings.charlen == 2) {
+						me.target.defines = [ '-DPCRE_CHAR=short' ]
+					} else if (me.settings.charlen == 4) {
+						me.target.defines = [ '-DPCRE_CHAR=int32' ]
+					} else {
+						me.target.defines = [ '-DPCRE_CHAR=char' ]
+					}
+                    if (me.platform.os == 'macosx' && me.target.type == 'lib') {
+                        me.target.linker.push('-compatibility_version ' + me.settings.compatible)
+                        me.target.linker.push('-current_version ' + me.settings.compatible)                                
+                    }  
+				`,
+			}
+            type: 'lib',
+            headers: [ '*.h' ],
+            sources: [ 'pcre.c' ],
+            ifdef:   [ 'pcre' ],
+        },
+	},
+})

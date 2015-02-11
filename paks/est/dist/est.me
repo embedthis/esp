@@ -1,0 +1,29 @@
+/*
+    est.me -- MakeMe file for Embedded Secure Transport
+ */
+
+Me.load({
+    blend: [ 'osdep' ],
+
+    targets: {
+        est: {
+            configurable: true,
+            depends:      [ 'libest' ],
+            ifdef:        [ 'ssl' ],
+            conflicts:    [ 'openssl' ],
+        },
+
+        libest: {
+            type: 'lib',
+            headers: [ '*.h' ],
+            depends: [ 'osdep' ],
+            sources: [ 'estLib.c' ],
+            '-compiler': [
+                '-Wall',
+                '-Wshorten-64-to-32',
+                '-W3',
+            ],
+            ifdef: [ 'est' ],
+        },
+	},
+})

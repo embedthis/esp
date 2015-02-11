@@ -1,6 +1,6 @@
 {
-    "name":        "espdoc",
-    "title":       "Embedthis ESP Documentation",
+    "name": "espdoc",
+    "title": "Embedthis ESP Documentation",
     "description": "The amazing C web framework",
     "dependencies": {
         "exp-css": "~0.2",

@@ -20,12 +20,14 @@
     "bugs": {
         "url": "http://github.com/embedthis/esp/issues"
     },
-    "pak": "~0.10",
     "dependencies": {
+        "est": "~0.6",
         "http": "~6.0",
         "mpr": "~6.0",
         "osdep": "~0.8",
-        "pcre": "~1.0"
+        "pcre": "~1.0",
+        "sqlite": "~1.0",
+        "ssl": "~0.8"
     },
     "optionalDependencies": {
         "est": "~0.6",
@@ -34,16 +36,6 @@
     "devDependencies": {
         "me": ">0.8.0"
     },
-    "directories": {
-        "paks": "src/paks",
-        "client": "client"
-    },
-    "export": [
-        {
-            "from": "doc/**",
-            "to": "${TOP}"
-        }
-    ],
     "licenses": [
         {
             "type": "GPL",
@@ -54,17 +46,12 @@
             "url": "https://embedthis.com/licensing/"
         }
     ],
-    "app": {
-        "appweb": {
-            "noblend": true,
-            "noexport": true,
-            "nodeps": true
-        },
-        "*": {
-            "noblend": true,
-            "ignore": [
-                "doc**"
-            ]
-        }
+    "files": [
+        "dist/",
+        "doc/api/"
+    ],
+    "pak": {
+        "import": true,
+        "version": ">=0.10.0"
     }
 }

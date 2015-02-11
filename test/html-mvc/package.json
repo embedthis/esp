@@ -23,5 +23,7 @@
     "dependencies": {
         "esp-html-skeleton": "~5.3"
     },
-    "mode": "debug"
+    "pak": {
+        "mode": "debug"
+    }
 }

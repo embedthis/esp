@@ -1,0 +1,26 @@
+{
+    "name": "pcre",
+    "description": "PCRE Library",
+    "title": "PCRE Library",
+    "version": "1.0.4",
+    "keywords": [
+        "pcre",
+        "me"
+    ],
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "https://embedthis.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/pcre.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/pcre/issues"
+    },
+    "licenses": "BSD",
+    "pak": {
+        "version": ">=0.10.0"
+    }
+}

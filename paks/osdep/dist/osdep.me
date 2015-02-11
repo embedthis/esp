@@ -1,0 +1,16 @@
+/*
+    osdep.me -- MakeMe for osdep 
+ */
+
+Me.load({
+    targets: {
+        osdep: {
+            configurable: true,
+            depends: [ 'osdep.h' ],
+        },
+        'osdep.h': {
+            type: 'header',
+            headers: [ '*.h' ],
+        }
+	}
+})

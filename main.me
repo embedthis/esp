@@ -3,9 +3,10 @@
  */
 
 Me.load({
-    plugins: [ 'configuration', 'package' ],
+    plugins: [ 'configuration', 'installs' ],
 
     blend: [
+        'http',
         'sqlite',
         'samples/samples.me',
         'src/esp.me',
@@ -35,8 +36,8 @@ Me.load({
         /*
             Installation prefix set
          */
-        prefixes: 'package-prefixes',
-        manifest: 'package/manifest.me',
+        prefixes: 'install-prefixes',
+        manifest: 'installs/manifest.me',
 
         platforms: [ 'local' ],
         static: false,

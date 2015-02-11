@@ -1,0 +1,19 @@
+{
+    "name": "jquery",
+    "description": "Client-side Javascript library for DOM manipulation",
+    "version": "1.11.1",
+    "keywords": [
+        "esp"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/jquery.git"
+    },
+    "pak": {
+        "export": "*.js",
+        "render": {
+            "js": "*.js"
+        },
+        "version": ">=0.10.0"
+    }
+}

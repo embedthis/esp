@@ -1,0 +1,24 @@
+{
+    "name": "semantic",
+    "description": "Semantic UI library",
+    "version": "0.50.0",
+    "keywords": [
+        "semantic"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/semantic.git"
+    },
+    "pak": {
+        "export": [
+            "js/*.js",
+            "css/*.css",
+            "fonts/**"
+        ],
+        "render": {
+            "js": "js/*.js",
+            "css": "css/*.css"
+        },
+        "version": ">=0.10.0"
+    }
+}

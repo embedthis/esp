@@ -9,11 +9,12 @@ Me.load({
             depends: ['render-doc'],
             action: `
                 rm(['api/edi.tags', 'api/esp.tags'])
-                apidoc('api/edi.dox', ['${SRC}/src/edi.h', '${SRC}/src/mdb.h' ], 'EDI', ls('api/*.tags'))
-                apidoc('api/esp.dox', ['${SRC}/src/esp.h'], 'ESP', ls('api/*.tags'))
-                for each (let src: Path in ['api/http.html', 'api/mpr.html', 'api/osdep.html', 'api/esp.html', 
-                        'api/edi.html']) {
-                    apiLayout(src, Path('documents/ref').join(src))
+                let tags = me.dir.paks.join('*/doc/api/*.tags')
+                apidoc('api/edi.dox', ['${SRC}/edi.h', '${SRC}/mdb.h' ], 'EDI', tags)
+                apidoc('api/esp.dox', ['${SRC}/esp.h'], 'ESP', [tags, 'api/edi.tags'])
+                let files = Path().files(['api/esp.html', 'api/edi.html', me.dir.paks.join('*/doc/api/*.html')])
+                for each (let src in files) {
+                    apiLayout(src, Path('dist/ref').join(src))
                 }
             `,
         },
