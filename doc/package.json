@@ -7,6 +7,11 @@
         "exp-js": "~0.2",
         "exp-less": "~0.2",
         "jquery": "~1.11",
+        "me-docstyle": "~0.8",
         "semantic": "~0.50"
+    },
+    "pak": {
+        "mode": "debug",
+        "import": true
     }
 }

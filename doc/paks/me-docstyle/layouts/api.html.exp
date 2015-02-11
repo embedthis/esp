@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><@= meta.title @></title>
+    <@ partial('head') @>
+    <link href="@~css/api.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <@ partial('sidebar') @>
+    <div class="ui inverted masthead">
+        <@ partial('nav') @>
+    </div>
+    <div class="content">
+        <@ content @>
+    </div>
+    <@ partial('terms') @>
+    <@ partial('scripts') @>
+</body>
+</html>

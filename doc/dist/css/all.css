@@ -204,6 +204,7 @@ h3 + ul {
   color: #333333;
   border: 1px solid #c2c2c2;
   box-shadow: 2px 2px 2px #e8e8e8;
+  line-height: 1.25em;
 }
 img.screen {
   margin: 8px 0 4px 0;
