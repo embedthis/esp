@@ -95,7 +95,7 @@
       </Link>
 
       <CustomBuildStep>
-        <Command>cd ..\..\src\paks\http
+        <Command>cd ..\..\paks\http\dist
 if exist $(BinDir)\ca.crt del /Q $(BinDir)\ca.crt
 copy /Y ca.crt $(BinDir)\ca.crt
 cd ..\..\..\projects\esp-windows-default</Command>

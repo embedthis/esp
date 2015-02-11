@@ -432,8 +432,8 @@
 		7E9C57C07E9C6B6C00000022 /* esp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = esp.c; path = src/esp.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C00000096 /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = src/esp.h; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C00000097 /* espcmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = esp; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C00000024 /* http.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = http.c; path = src/paks/http/http.c; sourceTree = "<group>"; };
-		7E9C57C07E9C6B6C00000098 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = src/paks/http/http.h; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000024 /* http.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = http.c; path = paks/http/dist/http.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000098 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = paks/http/dist/http.h; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C00000099 /* httpcmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = http; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E9C57C07E9C6B6C00000026 /* edi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = edi.c; path = src/edi.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C0000009A /* edi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = edi.h; path = src/edi.h; sourceTree = "<group>"; };
@@ -449,25 +449,25 @@
 		7E9C57C07E9C6B6C0000009D /* mdb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mdb.h; path = src/mdb.h; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C00000036 /* sdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sdb.c; path = src/sdb.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C0000004A /* libesp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libesp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C00000038 /* httpLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = httpLib.c; path = src/paks/http/httpLib.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000038 /* httpLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = httpLib.c; path = paks/http/dist/httpLib.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C0000004C /* libhttp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhttp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C0000003A /* mprLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprLib.c; path = src/paks/mpr/mprLib.c; sourceTree = "<group>"; };
-		7E9C57C07E9C6B6C0000009E /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = src/paks/mpr/mpr.h; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C0000003A /* mprLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprLib.c; path = paks/mpr/dist/mprLib.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C0000009E /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = paks/mpr/dist/mpr.h; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C0000004E /* libmpr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C0000003C /* mprSsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprSsl.c; path = src/paks/mpr/mprSsl.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C0000003C /* mprSsl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprSsl.c; path = paks/mpr/dist/mprSsl.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C0000009F /* libmprssl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmprssl.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C0000003E /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = src/paks/pcre/pcre.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C0000003E /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = paks/pcre/dist/pcre.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C000000A0 /* me.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = me.h; path = build/macosx-x64-default/inc/me.h; sourceTree = "<group>"; };
-		7E9C57C07E9C6B6C000000A1 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = src/paks/pcre/pcre.h; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C000000A1 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = paks/pcre/dist/pcre.h; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C00000050 /* libpcre */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpcre.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C00000040 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = src/paks/sqlite/sqlite3.c; sourceTree = "<group>"; };
-		7E9C57C07E9C6B6C000000A2 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = src/paks/sqlite/sqlite3.h; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000040 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = paks/sqlite/dist/sqlite3.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C000000A2 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = paks/sqlite/dist/sqlite3.h; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C00000048 /* libsql */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsql.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C00000042 /* makerom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = makerom.c; path = src/paks/mpr/makerom.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000042 /* makerom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = makerom.c; path = paks/mpr/dist/makerom.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C000000A3 /* makerom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = makerom; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C00000044 /* manager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = manager.c; path = src/paks/mpr/manager.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000044 /* manager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = manager.c; path = paks/mpr/dist/manager.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C000000A4 /* manager */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = espman; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9C57C07E9C6B6C00000046 /* sqlite.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite.c; path = src/paks/sqlite/sqlite.c; sourceTree = "<group>"; };
+		7E9C57C07E9C6B6C00000046 /* sqlite.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite.c; path = paks/sqlite/dist/sqlite.c; sourceTree = "<group>"; };
 		7E9C57C07E9C6B6C000000A5 /* sqliteshell */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sqlite; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -971,7 +971,7 @@ cd ..
     			files = (
     			);
     			inputPaths = (
-    ../src/paks/http/ca.crt
+    ../paks/http/dist/ca.crt
     			);
     			outputPaths = (
     ../build/macosx-x64-default/bin/ca.crt
@@ -981,7 +981,7 @@ cd ..
     			shellScript = "PATH=$PATH:/usr/local/bin
 cd ..
 	mkdir -p \"build/macosx-x64-default/bin\"
-	cp src/paks/http/ca.crt build/macosx-x64-default/bin/ca.crt
+	cp paks/http/dist/ca.crt build/macosx-x64-default/bin/ca.crt
 ";
     		};
 		7E9C57C07E9C6B6C00000020 /* ShellScript for Prep */ = {
@@ -1011,23 +1011,23 @@ fi
 if [ ../src/esp.h -nt ${OUT_DIR}/inc/esp.h ] ; then
 cp ../src/esp.h ${OUT_DIR}/inc/esp.h
 fi
-if [ ../src/paks/http/http.h -nt ${OUT_DIR}/inc/http.h ] ; then
-cp ../src/paks/http/http.h ${OUT_DIR}/inc/http.h
+if [ ../paks/http/dist/http.h -nt ${OUT_DIR}/inc/http.h ] ; then
+cp ../paks/http/dist/http.h ${OUT_DIR}/inc/http.h
 fi
 if [ ../src/mdb.h -nt ${OUT_DIR}/inc/mdb.h ] ; then
 cp ../src/mdb.h ${OUT_DIR}/inc/mdb.h
 fi
-if [ ../src/paks/mpr/mpr.h -nt ${OUT_DIR}/inc/mpr.h ] ; then
-cp ../src/paks/mpr/mpr.h ${OUT_DIR}/inc/mpr.h
+if [ ../paks/mpr/dist/mpr.h -nt ${OUT_DIR}/inc/mpr.h ] ; then
+cp ../paks/mpr/dist/mpr.h ${OUT_DIR}/inc/mpr.h
 fi
-if [ ../src/paks/osdep/osdep.h -nt ${OUT_DIR}/inc/osdep.h ] ; then
-cp ../src/paks/osdep/osdep.h ${OUT_DIR}/inc/osdep.h
+if [ ../paks/osdep/dist/osdep.h -nt ${OUT_DIR}/inc/osdep.h ] ; then
+cp ../paks/osdep/dist/osdep.h ${OUT_DIR}/inc/osdep.h
 fi
-if [ ../src/paks/pcre/pcre.h -nt ${OUT_DIR}/inc/pcre.h ] ; then
-cp ../src/paks/pcre/pcre.h ${OUT_DIR}/inc/pcre.h
+if [ ../paks/pcre/dist/pcre.h -nt ${OUT_DIR}/inc/pcre.h ] ; then
+cp ../paks/pcre/dist/pcre.h ${OUT_DIR}/inc/pcre.h
 fi
-if [ ../src/paks/sqlite/sqlite3.h -nt ${OUT_DIR}/inc/sqlite3.h ] ; then
-cp ../src/paks/sqlite/sqlite3.h ${OUT_DIR}/inc/sqlite3.h
+if [ ../paks/sqlite/dist/sqlite3.h -nt ${OUT_DIR}/inc/sqlite3.h ] ; then
+cp ../paks/sqlite/dist/sqlite3.h ${OUT_DIR}/inc/sqlite3.h
 fi
 if [ ../src/edi.h -nt ${OUT_DIR}/inc/edi.h ] ; then
 cp ../src/edi.h ${OUT_DIR}/inc/edi.h
@@ -1038,17 +1038,17 @@ fi
 if [ ../src/mdb.h -nt ${OUT_DIR}/inc/mdb.h ] ; then
 cp ../src/mdb.h ${OUT_DIR}/inc/mdb.h
 fi
-if [ ../src/paks/http/http.h -nt ${OUT_DIR}/inc/http.h ] ; then
-cp ../src/paks/http/http.h ${OUT_DIR}/inc/http.h
+if [ ../paks/http/dist/http.h -nt ${OUT_DIR}/inc/http.h ] ; then
+cp ../paks/http/dist/http.h ${OUT_DIR}/inc/http.h
 fi
-if [ ../src/paks/mpr/mpr.h -nt ${OUT_DIR}/inc/mpr.h ] ; then
-cp ../src/paks/mpr/mpr.h ${OUT_DIR}/inc/mpr.h
+if [ ../paks/mpr/dist/mpr.h -nt ${OUT_DIR}/inc/mpr.h ] ; then
+cp ../paks/mpr/dist/mpr.h ${OUT_DIR}/inc/mpr.h
 fi
-if [ ../src/paks/pcre/pcre.h -nt ${OUT_DIR}/inc/pcre.h ] ; then
-cp ../src/paks/pcre/pcre.h ${OUT_DIR}/inc/pcre.h
+if [ ../paks/pcre/dist/pcre.h -nt ${OUT_DIR}/inc/pcre.h ] ; then
+cp ../paks/pcre/dist/pcre.h ${OUT_DIR}/inc/pcre.h
 fi
-if [ ../src/paks/sqlite/sqlite3.h -nt ${OUT_DIR}/inc/sqlite3.h ] ; then
-cp ../src/paks/sqlite/sqlite3.h ${OUT_DIR}/inc/sqlite3.h
+if [ ../paks/sqlite/dist/sqlite3.h -nt ${OUT_DIR}/inc/sqlite3.h ] ; then
+cp ../paks/sqlite/dist/sqlite3.h ${OUT_DIR}/inc/sqlite3.h
 fi";
     		};
 /* End PBXShellScriptBuildPhase section */
@@ -1438,10 +1438,10 @@ fi";
 
                     OUT_DIR = "../build/macosx-x64-default";
                     BIN_DIR = "../build/macosx-x64-default/bin";
-                    LIB_DIR = "../build/macosx-x64-default/bin";
+                    LIB_DIR = "../lib";
                     INC_DIR = "../build/macosx-x64-default/inc";
                     OBJ_DIR = "../build/macosx-x64-default/obj";
-                    SRC_DIR = "..";
+                    SRC_DIR = "../src";
 
                     CONFIGURATION_TEMP_DIR = "$(OBJ_DIR)/esp-xcode/$(CONFIGURATION)";
                     CONFIGURATION_BUILD_DIR = "$(BIN_DIR)";
@@ -1507,10 +1507,10 @@ fi";
 
                     OUT_DIR = "../build/macosx-x64-default";
                     BIN_DIR = "../build/macosx-x64-default/bin";
-                    LIB_DIR = "../build/macosx-x64-default/bin";
+                    LIB_DIR = "../lib";
                     INC_DIR = "../build/macosx-x64-default/inc";
                     OBJ_DIR = "../build/macosx-x64-default/obj";
-                    SRC_DIR = "..";
+                    SRC_DIR = "../src";
 
                     CONFIGURATION_TEMP_DIR = "$(OBJ_DIR)/esp-xcode/$(CONFIGURATION)";
                     CONFIGURATION_BUILD_DIR = "$(BIN_DIR)";

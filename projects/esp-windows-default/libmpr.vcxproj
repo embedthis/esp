@@ -100,7 +100,7 @@
   </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\src\paks\mpr\mprLib.c" />
+    <ClCompile Include="..\..\paks\mpr\dist\mprLib.c" />
   </ItemGroup>
 
       <ItemGroup>
@@ -114,7 +114,7 @@
       </Link>
 
       <CustomBuildStep>
-        <Command>cd ..\..\src\paks\mpr
+        <Command>cd ..\..\paks\mpr\dist
 copy /Y /B mpr.h $(IncDir)
 cd ..\..\..\projects\esp-windows-default</Command>
         <Outputs>$(BinDir)\libmpr.dll</Outputs>

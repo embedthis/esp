@@ -100,7 +100,7 @@
   </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\src\paks\est\estLib.c" />
+    <ClCompile Include="..\..\paks\est\dist\estLib.c" />
   </ItemGroup>
 
       <ItemGroup>
@@ -114,7 +114,7 @@
       </Link>
 
       <CustomBuildStep>
-        <Command>cd ..\..\src\paks\est
+        <Command>cd ..\..\paks\est\dist
 copy /Y /B est.h $(IncDir)
 cd ..\..\..\projects\esp-windows-default</Command>
         <Outputs>$(BinDir)\libest.dll</Outputs>

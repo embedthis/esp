@@ -102,13 +102,13 @@ if not exist "$(IncDir)" md "$(IncDir)"
 if not exist "$(IncDir)\me.h" copy "..\esp-windows-default-me.h" "$(IncDir)\me.h"
 copy /Y /B ..\..\src\edi.h $(IncDir)
 copy /Y /B ..\..\src\esp.h $(IncDir)
-copy /Y /B ..\..\src\paks\est\est.h $(IncDir)
-copy /Y /B ..\..\src\paks\http\http.h $(IncDir)
+copy /Y /B ..\..\paks\est\dist\est.h $(IncDir)
+copy /Y /B ..\..\paks\http\dist\http.h $(IncDir)
 copy /Y /B ..\..\src\mdb.h $(IncDir)
-copy /Y /B ..\..\src\paks\mpr\mpr.h $(IncDir)
-copy /Y /B ..\..\src\paks\osdep\osdep.h $(IncDir)
-copy /Y /B ..\..\src\paks\pcre\pcre.h $(IncDir)
-copy /Y /B ..\..\src\paks\sqlite\sqlite3.h $(IncDir)
+copy /Y /B ..\..\paks\mpr\dist\mpr.h $(IncDir)
+copy /Y /B ..\..\paks\osdep\dist\osdep.h $(IncDir)
+copy /Y /B ..\..\paks\pcre\dist\pcre.h $(IncDir)
+copy /Y /B ..\..\paks\sqlite\dist\sqlite3.h $(IncDir)
 cd .</Command>
         <Outputs>always</Outputs>
       </CustomBuildStep>

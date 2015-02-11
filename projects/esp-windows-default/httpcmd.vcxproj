@@ -103,7 +103,7 @@
     </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\src\paks\http\http.c" />
+    <ClCompile Include="..\..\paks\http\dist\http.c" />
   </ItemGroup>
 
       <ItemDefinitionGroup>
