@@ -892,7 +892,7 @@ static void init(int argc, char **argv)
             identity = sfmt("name: '%s', title: '%s', description: '%s', version: '%s'",
                 app->name, app->title, app->description, app->version);
         } else {
-            identity = "";
+            identity = "name: 'app'";
         }
         config = mprParseJson(sfmt("{" \
             "%s," \

@@ -4838,6 +4838,8 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     source = mprTrimPathDrive(source);
 #endif
     canonical = mprGetPortablePath(mprGetRelPath(source, route->documents));
+
+    //  MOB - eroute->appName should always be set
     appName = eroute->appName ? eroute->appName : route->host->name;
     if (eroute->combine) {
         cacheName = eroute->appName;
@@ -5025,10 +5027,11 @@ PUBLIC EspRoute *espCreateRoute(HttpRoute *route)
     eroute->compileMode = ESP_COMPILE_OPTIMIZED;
 #endif
     if (route->parent && route->parent->eroute) {
-        eroute->top = ((EspRoute*)route->parent->eroute)->top;
+        eroute->top = ((EspRoute*) route->parent->eroute)->top;
     } else {
         eroute->top = eroute;
     }
+    eroute->appName = sclone("app");
     return eroute;
 }
 
@@ -5203,9 +5206,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             unlock(esp);
             return MPR_ERR_CANT_LOAD;
         }
-        if ((eroute->appName = espGetConfig(route, "name", 0)) == 0) {
-            eroute->appName = sclone("app");
-        } 
+        eroute->appName = espGetConfig(route, "name", 0);
         unlock(esp);
     }
     if (!route->cookie && eroute->appName) {
@@ -5262,6 +5263,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
 
 
 /*
+    Load an ESP application
     Prefix is the URI prefix for the application
     Path is the path to the esp.json
  */
@@ -5327,14 +5329,17 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
 {
     cchar   *documents;
 
-    documents = mprJoinPath(route->home, "documents");
+    documents = mprJoinPath(route->home, "dist");
 #if DEPRECATE || 1
     if (!mprPathExists(documents, X_OK)) {
-        documents = mprJoinPath(route->home, "client");
+        documents = mprJoinPath(route->home, "documents");
         if (!mprPathExists(documents, X_OK)) {
-            documents = mprJoinPath(route->home, "public");
+            documents = mprJoinPath(route->home, "client");
             if (!mprPathExists(documents, X_OK)) {
-                documents = route->home;
+                documents = mprJoinPath(route->home, "public");
+                if (!mprPathExists(documents, X_OK)) {
+                    documents = route->home;
+                }
             }
         }
     }
@@ -5345,14 +5350,14 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
 #endif
     httpSetDir(route, "CACHE", 0);
     httpSetDir(route, "CONTROLLERS", 0);
+    httpSetDir(route, "CONTENTS", 0);
     httpSetDir(route, "DB", 0);
     httpSetDir(route, "DOCUMENTS", documents);
     httpSetDir(route, "HOME", route->home);
     httpSetDir(route, "LAYOUTS", 0);
-    httpSetDir(route, "LIB", "lib");
+    httpSetDir(route, "LIB", 0);
     httpSetDir(route, "PAKS", 0);
     httpSetDir(route, "PARTIALS", 0);
-    httpSetDir(route, "SOURCE", 0);
     httpSetDir(route, "SRC", 0);
     httpSetDir(route, "UPLOAD", "/tmp");
 }
