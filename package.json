@@ -20,6 +20,16 @@
     "bugs": {
         "url": "http://github.com/embedthis/esp/issues"
     },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
     "dependencies": {
         "est": "~0.6",
         "http": "~6.0",
@@ -36,16 +46,6 @@
     "devDependencies": {
         "me": ">0.8.0"
     },
-    "licenses": [
-        {
-            "type": "GPL",
-            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
-        },
-        {
-            "type": "Commercial",
-            "url": "https://embedthis.com/licensing/"
-        }
-    ],
     "files": [
         "dist/",
         "doc/api/"
