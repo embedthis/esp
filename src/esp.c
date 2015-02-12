@@ -2398,7 +2398,7 @@ static MprHash *makeTokens(cchar *path, MprHash *other)
         "{ NAME: '%s', TITLE: '%s', HOME: '%s', DOCUMENTS: '%s', SOURCE: '%s', BINDIR: '%s', DATABASE: '%s', FILENAME: '%s',"
         "LIST: '%s', LISTEN: '%s', CONTROLLER: '%s', UCONTROLLER: '%s', MODEL: '%s', UMODEL: '%s',"
         "TABLE: '%s', ACTIONS: '', DEFINE_ACTIONS: '' }",
-        app->name, app->title, route->home, route->documents, httpGetDir(route, "SOURCE"), app->binDir, app->database,
+        app->name, app->title, route->home, route->documents, httpGetDir(route, "CONTENTS"), app->binDir, app->database,
         filename, list, app->listen, app->controller, stitle(app->controller), app->controller, stitle(app->controller), 
         app->table));
     if (other) {

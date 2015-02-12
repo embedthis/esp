@@ -3098,7 +3098,7 @@ static HttpConn *openConnection(HttpConn *conn, struct MprSsl *ssl)
         New socket
      */
     if ((sp = mprCreateSocket()) == 0) {
-        httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Cannot create socket for %s", uri->uri);
+        httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Cannot create socket for %s", httpUriToString(uri, 0));
         return 0;
     }
     if ((rc = mprConnectSocket(sp, ip, port, MPR_SOCKET_NODELAY)) < 0) {
@@ -21115,7 +21115,7 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
     if ((up = mprAllocObj(HttpUri, manageUri)) == 0) {
         return 0;
     }
-    tok = up->uri = sclone(uri);
+    tok = sclone(uri);
 
     /*
         [scheme://][hostname[:port]][/path[.ext]][#ref][?query]
@@ -21235,7 +21235,6 @@ static void manageUri(HttpUri *uri, int flags)
         mprMark(uri->ext);
         mprMark(uri->reference);
         mprMark(uri->query);
-        mprMark(uri->uri);
     }
 }
 

@@ -1384,7 +1384,6 @@ typedef struct HttpUri {
     char        *ext;                   /**< Document extension */
     char        *reference;             /**< Reference fragment within the specified resource */
     char        *query;                 /**< Query string */
-    char        *uri;                   /**< Original URI (not decoded) */
     int         port;                   /**< Port number */
     int         secure;                 /**< Using https */
     int         webSockets;             /**< Using WebSockets */
