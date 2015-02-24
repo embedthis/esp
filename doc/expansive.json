@@ -4,12 +4,10 @@
     },
     control: {
         copy: [ 'images' ],
-    },
-    debug: {
-        services: {
-            'compress':  false,
-            'minify-js':  false,
-            'minify-css': false
+        collections: {
+            styles: [
+                'css/all.css',
+            ]
         }
     }
 }

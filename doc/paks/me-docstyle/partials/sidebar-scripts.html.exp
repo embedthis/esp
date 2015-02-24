@@ -1,8 +1,4 @@
 <@
-    addItems('scripts', [
-        'lib/jquery/jquery.js',
-        'lib/semantic/js/semantic.js',
-    ])
     addItems('inline-scripts', `
         var sl = $('.sidebar-launch');
         $('.sidebar-launch').click(function() {

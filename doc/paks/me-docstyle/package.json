@@ -1,7 +1,7 @@
 {
     "name": "me-docstyle",
     "description": "Documentation Style",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "keywords": [
         "me"
     ],
@@ -29,7 +29,7 @@
     ],
     "dependencies": {
         "jquery": "~1.11",
-        "semantic": "~0.50"
+        "semantic-ui": "~1"
     },
     "files": [
         "contents",
