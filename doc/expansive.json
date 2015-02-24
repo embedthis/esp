@@ -1,13 +1,5 @@
 {
     meta: {
-        url: 'https://embedthis.com/esp/doc/',
-    },
-    control: {
-        copy: [ 'images' ],
-        collections: {
-            styles: [
-                'css/all.css',
-            ]
-        }
+        url: 'https://embedthis.com/esp/doc/'
     }
 }
