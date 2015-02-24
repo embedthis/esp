@@ -4404,7 +4404,7 @@ static int openEsp(HttpQueue *q)
         cookies are unique per esp application.
      */
     if (!route->cookie && eroute->appName && *eroute->appName) {
-        httpSetRouteCookie(route, eroute->appName);
+        httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
     return 0;
 }
