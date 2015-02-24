@@ -1,0 +1,42 @@
+{
+    "name": "semantic-ui",
+    "version": "1.9.3",
+    "title": "Semantic UI",
+    "description": "CSS Only distribution of Semantic UI",
+    "homepage": "http://www.semantic-ui.com",
+    "author": "Jack Lukic <jack@semantic-ui.com>",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/Semantic-Org/Semantic-UI-CSS.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Semantic-Org/Semantic-UI/issues"
+    },
+    "dependencies": {
+        "jquery": "x.*"
+    },
+    "pak": {
+        "export": [
+            {
+                "from": "themes/default/assets/**"
+            },
+            {
+                "from": "semantic.*"
+            }
+        ],
+        "render": {
+            "js": [
+                "*.js"
+            ],
+            "css": [
+                "*.css"
+            ]
+        },
+        "origin": "Semantic-Org/Semantic-UI-CSS"
+    },
+    "files": [
+        "semantic.*",
+        "themes/**"
+    ]
+}
