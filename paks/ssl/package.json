@@ -2,7 +2,7 @@
     "name": "ssl",
     "description": "Embedthis SSL Interface",
     "title": "Embedthis Development",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "keywords": [
         "me",
         "ssl"
@@ -28,5 +28,8 @@
             "type": "Commercial",
             "url": "https://embedthis.com/licensing/"
         }
-    ]
+    ],
+    "pak": {
+        "origin": "embedthis/ssl"
+    }
 }

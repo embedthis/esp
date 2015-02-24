@@ -2,7 +2,7 @@
     "name": "sqlite",
     "description": "SQLite Library",
     "title": "SQLite Library",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "keywords": [
         "sqlite",
         "me"
@@ -24,5 +24,8 @@
             "type": "PUBLIC",
             "url": "https://github.com/embedthis/sqlite/blob/master/LICENSE.md"
         }
-    ]
+    ],
+    "pak": {
+        "origin": "embedthis/sqlite"
+    }
 }
