@@ -30,7 +30,7 @@ typedef struct App {
     cchar       *listen;                /* Listen endpoint for "esp run" */
     cchar       *platform;              /* Target platform os-arch-profile (lower) */
 
-    int         combine;                /* Combine all inputs into one, combine output */
+    int         combine;                /* Combine all inputs into one, combine output */ 
     cchar       *combinePath;           /* Output filename for combine compilations */
     MprFile     *combineFile;           /* Output file for combine compilations */
     MprList     *combineItems;          /* Items to invoke from Init */
@@ -67,7 +67,7 @@ typedef struct App {
 
     int         compileMode;            /* Debug or release compilation */
     int         error;                  /* Any processing error */
-    int         keep;                   /* Keep source */
+    int         keep;                   /* Keep source */ 
     int         force;                  /* Force the requested action, ignoring unfullfilled dependencies */
     int         quiet;                  /* Don't trace progress */
     int         noupdate;               /* Do not update the esp.json */
@@ -187,7 +187,7 @@ PUBLIC int main(int argc, char **argv)
         exit(1);
     }
     if ((app = createApp(mpr)) == 0) {
-        exit(2);
+        exit(2); 
     }
     options = parseArgs(argc, argv);
     process(argc - options, &argv[options]);
@@ -472,7 +472,7 @@ static void parseCommand(int argc, char **argv)
         return;
     }
     cmd = argv[0];
-
+    
     if (argc == 0) {
         /* Run */
         app->require = REQ_SERVE;
@@ -542,7 +542,7 @@ static void initRuntime()
     }
     http = MPR->httpService;
     app->route = httpGetDefaultRoute(0);
-
+    
     mprStartLogging(app->logSpec, MPR_LOG_CMDLINE);
     if (app->traceSpec) {
         httpStartTracing(app->traceSpec);
@@ -575,7 +575,7 @@ static void initRuntime()
         return;
     }
     HTTP->staticLink = app->staticLink;
-
+    
     if (app->error) {
         return;
     }
@@ -628,7 +628,7 @@ static void initialize(int argc, char **argv)
     app->name = getConfigValue(app->package, "name", app->name);
     app->title = getConfigValue(app->package, "title", app->name);
     app->version = getConfigValue(app->package, "version", app->version);
-
+    
     path = mprJoinPath(route->home, "esp.json");
     if (mprPathExists(path, R_OK)) {
         if ((app->config = readConfig(path)) == 0) {
@@ -761,7 +761,7 @@ static void process(int argc, char **argv)
 }
 
 
-static void config()
+static void config() 
 {
     printf("ESP configuration:\n");
     printf("Pak cache dir \"%s\"\n", app->paksCacheDir);
@@ -871,7 +871,7 @@ static void editValue(int argc, char **argv)
             saveConfig(app->config, "esp.json", MPR_JSON_QUOTES);
         } else {
             value = getConfigValue(app->config, key, 0);
-            if (value) {
+            if (value) { 
                 printf("%s\n", value);
             } else {
                 printf("undefined\n");
@@ -1435,7 +1435,7 @@ static MprList *getRoutes()
             }
         }
         if (route && mprLookupItem(routes, route) < 0) {
-            mprLog("", 6, "Using route name: %s documents:%s prefix: %s", route->pattern, route->documents,
+            mprLog("", 6, "Using route name: %s documents:%s prefix: %s", route->pattern, route->documents, 
                 route->startWith);
             mprAddItem(routes, route);
         }
@@ -1620,7 +1620,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
             if (kind & ESP_SRC) {
                 mprAddItem(app->combineItems, sfmt("esp_app_%s", eroute->appName));
             } else if (eroute->appName && *eroute->appName) {
-                mprAddItem(app->combineItems,
+                mprAddItem(app->combineItems, 
                     sfmt("esp_controller_%s_%s", eroute->appName, mprTrimPathExt(mprGetPathBase(source))));
             } else {
                 mprAddItem(app->combineItems, sfmt("esp_controller_%s", mprTrimPathExt(mprGetPathBase(source))));
@@ -1740,7 +1740,7 @@ static void compile(int argc, char **argv)
         mprWriteFileFmt(file, "\nPUBLIC void appwebStaticInitialize()\n{\n");
         for (ITERATE_ITEMS(app->slink, route, next)) {
             name = app->name ? app->name : mprGetPathBase(route->documents);
-            mprWriteFileFmt(file, "    appwebStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name,
+            mprWriteFileFmt(file, "    appwebStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name, 
                 route->pattern);
         }
         mprWriteFileFmt(file, "}\n");
@@ -1935,7 +1935,7 @@ static void compileCombined(HttpRoute *route)
         if (app->slink) {
             mprAddItem(app->slink, route);
         }
-        mprWriteFileFmt(app->combineFile,
+        mprWriteFileFmt(app->combineFile, 
             "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {
             mprWriteFileFmt(app->combineFile, "    %s(route, module);\n", line);
@@ -1996,7 +1996,7 @@ static void generateController(int argc, char **argv)
     actions = sclone("");
     for (i = 1; i < argc; i++) {
         action = argv[i];
-        defines = sjoin(defines, sfmt("    espDefineAction(route, \"%s/%s\", %s);\n", app->controller,
+        defines = sjoin(defines, sfmt("    espDefineAction(route, \"%s/%s\", %s);\n", app->controller, 
             action, action), NULL);
         actions = sjoin(actions, sfmt("static void %s() {\n}\n\n", action), NULL);
     }
@@ -2019,8 +2019,8 @@ static void generateMigration(int argc, char **argv)
     }
     table = app->table ? app->table : sclone(argv[1]);
     stem = sfmt("Migration %s", argv[0]);
-    /*
-        Migration name used in the filename and in the exported load symbol
+    /* 
+        Migration name used in the filename and in the exported load symbol 
      */
     name = sreplace(slower(stem), " ", "_");
     createMigration(name, table, stem, argc - 2, &argv[2]);
@@ -2056,7 +2056,7 @@ static void createMigration(cchar *name, cchar *table, cchar *comment, int field
         def = sfmt("    ediAddColumn(db, \"%s\", \"%s\", %s, 0);\n", table, field, typeDefine);
         forward = sjoin(forward, def, NULL);
     }
-    tokens = mprDeserialize(sfmt("{ MIGRATION: '%s', TABLE: '%s', COMMENT: '%s', FORWARD: '%s', BACKWARD: '%s' }",
+    tokens = mprDeserialize(sfmt("{ MIGRATION: '%s', TABLE: '%s', COMMENT: '%s', FORWARD: '%s', BACKWARD: '%s' }", 
         name, table, comment, forward, backward));
     if ((data = getTemplate("migration", tokens)) == 0) {
         return;
@@ -2090,14 +2090,14 @@ static void generateScaffoldController(int argc, char **argv)
 
 static void generateClientController(int argc, char **argv)
 {
-    genKey("clientController", sfmt("%s/%s/%sControl.js", httpGetDir(app->route, "CONTENTS"),
+    genKey("clientController", sfmt("%s/%s/%sControl.js", httpGetDir(app->route, "SOURCE"), 
         app->controller, stitle(app->controller)), 0);
 }
 
 
 static void generateClientModel(int argc, char **argv)
 {
-    genKey("clientModel", sfmt("%s/%s/%s.js", httpGetDir(app->route, "CONTENTS"), app->controller,
+    genKey("clientModel", sfmt("%s/%s/%s.js", httpGetDir(app->route, "SOURCE"), app->controller, 
         stitle(app->controller)), 0);
 }
 
@@ -2168,8 +2168,8 @@ static void generateTable(int argc, char **argv)
  */
 static void generateScaffoldViews(int argc, char **argv)
 {
-    genKey("clientList", "${CONTENTS}/${CONTROLLER}/${FILENAME}", 0);
-    genKey("clientEdit", "${CONTENTS}/${CONTROLLER}/${FILENAME}", 0);
+    genKey("clientList", "${SOURCE}/${CONTROLLER}/${FILENAME}", 0);
+    genKey("clientEdit", "${SOURCE}/${CONTROLLER}/${FILENAME}", 0);
 }
 
 
@@ -2195,7 +2195,7 @@ static void generateScaffold(int argc, char **argv)
     }
     /*
         This feature is undocumented.
-        Having plural database table names greatly complicates things and ejsJoin is not able to follow
+        Having plural database table names greatly complicates things and ejsJoin is not able to follow 
         foreign fields: NameId.
      */
     ssplit(sclone(app->controller), "-", &plural);
@@ -2392,14 +2392,14 @@ static MprHash *makeTokens(cchar *path, MprHash *other)
 
     route = app->route;
     filename = mprGetPathBase(path);
-    list = smatch(app->controller, app->table) ? sfmt("%ss", app->controller) : app->table;
+    list = smatch(app->controller, app->table) ? sfmt("%ss", app->controller) : app->table; 
 
     tokens = mprDeserialize(sfmt(
-        "{ NAME: '%s', TITLE: '%s', HOME: '%s', DOCUMENTS: '%s', CONTENTS: '%s', BINDIR: '%s', DATABASE: '%s', FILENAME: '%s',"
+        "{ NAME: '%s', TITLE: '%s', HOME: '%s', DOCUMENTS: '%s', SOURCE: '%s', BINDIR: '%s', DATABASE: '%s', FILENAME: '%s',"
         "LIST: '%s', LISTEN: '%s', CONTROLLER: '%s', UCONTROLLER: '%s', MODEL: '%s', UMODEL: '%s',"
         "TABLE: '%s', ACTIONS: '', DEFINE_ACTIONS: '' }",
         app->name, app->title, route->home, route->documents, httpGetDir(route, "CONTENTS"), app->binDir, app->database,
-        filename, list, app->listen, app->controller, stitle(app->controller), app->controller, stitle(app->controller),
+        filename, list, app->listen, app->controller, stitle(app->controller), app->controller, stitle(app->controller), 
         app->table));
     if (other) {
         mprBlendHash(tokens, other);
@@ -2620,7 +2620,7 @@ static MprJson *readConfig(cchar *path)
 {
     MprJson     *config;
     cchar       *data, *errorMsg;
-
+    
     if ((data = mprReadPathContents(path, NULL)) == 0) {
         fail("Cannot read configuration from \"%s\"", path);
         return 0;
@@ -2749,7 +2749,7 @@ static char *getpass(char *prompt)
 }
 
 #endif /* ME_WIN_LIKE */
-
+ 
 #endif /* ME_COM_ESP */
 
 /*
@@ -2758,7 +2758,7 @@ static char *getpass(char *prompt)
     Copyright (c) Embedthis Software. All Rights Reserved.
 
     This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
+    You may use the Embedthis Open Source license or you may acquire a 
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
