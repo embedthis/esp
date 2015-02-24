@@ -1394,7 +1394,8 @@ PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, bool isSecure);
+PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, 
+    bool isSecure);
 
 /**
     Set the transmission (response) content mime type
