@@ -98,7 +98,7 @@ body.show-sidebar {
   color: #ffffff;
 }
 .sidebar .ui.vertical.menu .menu .item {
-  font-size: 1.0rem;
+  font-size: 1.0rem !important;
 }
 .sidebar .ui.vertical.menu .menu .header.item {
   position: relative;

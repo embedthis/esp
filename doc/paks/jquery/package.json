@@ -54,11 +54,6 @@
         "export": {
             "trim": 1
         },
-        "render": {
-            "js": [
-                "*.js"
-            ]
-        },
         "origin": "@npm/jquery"
     },
     "files": "dist/jquery.*"
