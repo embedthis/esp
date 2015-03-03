@@ -247,10 +247,13 @@ static void restfulRouteSet(HttpRoute *route, cchar *set)
     httpAddResourceGroup(route, "{controller}");
 }
 
+
+#if DEPRECATED || 1
 static void legacyRouteSet(HttpRoute *route, cchar *set)
 {
     restfulRouteSet(route, "restful");
 }
+#endif
 
 
 PUBLIC int espInitParser() 

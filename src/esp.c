@@ -611,7 +611,7 @@ static void initialize(int argc, char **argv)
         app->version = sclone("0.0.1");
     }
     route = app->route;
-    if (argc <= 0 || !smatch(argv[1], "run")) {
+    if (argc > 0 && !smatch(argv[1], "run")) {
         route->flags |= HTTP_ROUTE_NO_LISTEN;
     }
     /*
