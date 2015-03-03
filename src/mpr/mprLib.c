@@ -6097,13 +6097,24 @@ PUBLIC ssize mprWriteCmdBlock(MprCmd *cmd, int channel, cchar *buf, ssize bufsiz
 {
 #if ME_UNIX_LIKE
     MprCmdFile  *file;
-    ssize       wrote;
+    ssize       total, wrote;
 
     file = &cmd->files[channel];
+    /*
+        Workaround for Mac OSX that seems to sometimes not full block on writes
+     */
     fcntl(file->fd, F_SETFL, fcntl(file->fd, F_GETFL) & ~O_NONBLOCK);
-    wrote = mprWriteCmd(cmd, channel, buf, bufsize);
+    total = 0;
+    while (bufsize > 0) {
+        if ((wrote = mprWriteCmd(cmd, channel, buf, bufsize)) < 0) {
+            return wrote;
+        }
+        buf += wrote;
+        bufsize -= wrote;
+        total += wrote;
+    }
     fcntl(file->fd, F_SETFL, fcntl(file->fd, F_GETFL) | O_NONBLOCK);
-    return wrote;
+    return total;
 #else
     return mprWriteCmd(cmd, channel, buf, bufsize);
 #endif

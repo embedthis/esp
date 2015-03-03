@@ -30,9 +30,9 @@
         }
     ],
     "dependencies": {
-        "est": "~0.6",
-        "osdep": "~0.8",
-        "ssl": "~0.8"
+        "est": "^0.6",
+        "osdep": "^0.8",
+        "ssl": "^0.8"
     },
     "files": [
         "dist/",
@@ -40,7 +40,6 @@
     ],
     "pak": {
         "import": true,
-        "version": ">=0.10.0",
-        "origin": "embedthis/mpr"
+        "version": ">=0.10.0"
     }
 }

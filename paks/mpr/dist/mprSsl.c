@@ -940,6 +940,10 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
 #endif
 
     SSL_CTX_set_options(context, SSL_OP_ALL);
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+    /* SSL_OP_ALL enables this. Only needed for ancient browsers like IE-6 */
+    SSL_CTX_clear_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+#endif
 #ifdef SSL_OP_NO_TICKET
     SSL_CTX_set_options(context, SSL_OP_NO_TICKET);
 #endif
