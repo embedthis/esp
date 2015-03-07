@@ -46,7 +46,6 @@
                 ],
                 "to": "${TOP}/"
             }
-        ],
-        "origin": "embedthis/me-docstyle"
+        ]
     }
 }

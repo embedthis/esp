@@ -1,5 +1,8 @@
  
-        <div class="ui inverted menu">
+        <div class="ui fixed inverted menu">
+            <div class="ui sidebar-launch button">
+                <i class="icon list layout"></i>
+            </div>
             <div class="right menu">
                 <@ partial('menu') @>
             </div>

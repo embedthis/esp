@@ -80,6 +80,7 @@ body {
 .sidebar {
     position: fixed;
     left: 0;
+    padding-top: 35px;
     width: 240px;
     height: 100%;
     overflow-y: auto;
@@ -115,12 +116,16 @@ body {
 }
 
 .ui.sidebar-launch.button {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 40px;
-    padding: 0.8em 0.6em 0.8em 1.1em;
-    background-color: #566166;
+    padding: 0.8em 0.6em 0.5em 1.1em;
+    background-color: #333;
+    border-radius: 0;
     color: white;
     float: left;
+    z-index: 100;
 }
 
 
