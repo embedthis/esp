@@ -17434,10 +17434,10 @@ PUBLIC char *mprSearchForModule(cchar *filename)
 
 /*********************************** Forwards *********************************/
 
-static MprList *globPathFiles(MprList *results, cchar *path, char *pattern, cchar *relativeTo, cchar *exclude, int flags);
+static MprList *globPathFiles(MprList *results, cchar *path, cchar *pattern, cchar *relativeTo, cchar *exclude, int flags);
 static bool matchFile(cchar *filename, cchar *pattern);
 static char *ptok(char *str, cchar *delim, char **last);
-static char *rewritePattern(cchar *pattern, int flags);
+static cchar *rewritePattern(cchar *pattern, int flags);
 
 /************************************* Code ***********************************/
 
@@ -18219,24 +18219,24 @@ PUBLIC MprList *mprGetPathFiles(cchar *dir, int flags)
     Return in reference arg the following pattern and set *dwild if a double wild was skipped.
     This routine clones the original pattern to preserve it.
  */
-static char *getNextPattern(char *pattern, char **nextPat, bool *dwild)
+static cchar *getNextPattern(cchar *pattern, cchar **nextPat, bool *dwild)
 {
     MprFileSystem   *fs;
-    char            *thisPat;
+    char            *pp, *thisPat;
 
-    fs = mprLookupFileSystem(pattern);
-    pattern = sclone(pattern);
+    pp = sclone(pattern);
+    fs = mprLookupFileSystem(pp);
     *dwild = 0; 
 
     while (1) {
-        thisPat = ptok(pattern, fs->separators, &pattern); 
+        thisPat = ptok(pp, fs->separators, &pp); 
         if (smatch(thisPat, "**") == 0) {
             break;
         }
         *dwild = 1;
     }
     if (nextPat) {
-        *nextPat = pattern;
+        *nextPat = pp;
     }
     return thisPat;
 }
@@ -18252,12 +18252,11 @@ static char *getNextPattern(char *pattern, char **nextPat, bool *dwild)
 
     As this routine recurses, 'relativeTo' does not change, but path and pattern will.
  */
-static MprList *globPathFiles(MprList *results, cchar *path, char *pattern, cchar *relativeTo, cchar *exclude, int flags)
+static MprList *globPathFiles(MprList *results, cchar *path, cchar *pattern, cchar *relativeTo, cchar *exclude, int flags)
 {
     MprDirEntry     *dp;
     MprList         *list;
-    cchar           *filename;
-    char            *thisPat, *nextPat;
+    cchar           *filename, *nextPat, *thisPat;
     bool            dwild;
     int             add, matched, next;
 
@@ -18358,6 +18357,8 @@ PUBLIC MprList *mprGlobPathFiles(cchar *path, cchar *pattern, int flags)
     Special version of stok that does not skip leading delimiters.
     Need this to handle leading "/path". This is handled as an empty "" filename segment
     This then works (automagically) for windows drives "C:/"
+
+    Warning: this modifies the "str"
  */
 static char *ptok(char *str, cchar *delim, char **last)
 {
@@ -18400,19 +18401,18 @@ static char *ptok(char *str, cchar *delim, char **last)
     abc** => abc* / **
     **abc => ** / *abc
  */
-static char *rewritePattern(cchar *pat, int flags)
+static cchar *rewritePattern(cchar *pattern, int flags)
 {
     MprFileSystem   *fs;
     MprBuf          *buf;
-    char            *cp, *pattern;
+    cchar           *cp;
 
-    fs = mprLookupFileSystem(pat);
-    pattern = sclone(pat);
+    fs = mprLookupFileSystem(pattern);
+    if (!scontains(pattern, "**") && !(flags & MPR_PATH_DESCEND)) {
+        return pattern;
+    }
     if (flags & MPR_PATH_DESCEND) {
         pattern = mprJoinPath(pattern, "**");
-    }
-    if (!scontains(pattern, "**")) {
-        return pattern;
     }
     buf = mprCreateBuf(0, 0);
     for (cp = pattern; *cp; cp++) {
@@ -18497,21 +18497,31 @@ static bool matchFile(cchar *filename, cchar *pattern)
 /*
     Pattern is in canonical form where "**" is always a segment by itself
  */
-static bool matchPath(MprFileSystem *fs, char *path, char *pattern)
+static bool matchPath(MprFileSystem *fs, cchar *path, cchar *pattern)
 {
-    char    *nextPat, *thisFile, *thisPat;
+    cchar   *nextPat, *thisFile, *thisPat;
+    char    *pp;
     bool    dwild;
 
-    assert(path);
-    assert(pattern);
-
-    while (pattern && path) {
-        thisFile = ptok(path, fs->separators, &path);
+    pp = sclone(path);
+    while (pattern && pp) {
+        thisFile = ptok(pp, fs->separators, &pp);
         thisPat = getNextPattern(pattern, &nextPat, &dwild);
-        if (!matchFile(thisFile, thisPat)) {
+        if (matchFile(thisFile, thisPat)) {
             if (dwild) {
-                if (path) {
-                    return matchPath(fs, path, pattern);
+                /* 
+                    Matching '**' but more pattern to come. Must support back-tracking 
+                    So recurse and match the next pattern and if that fails, continue with '**'
+                 */
+                if (matchPath(fs, pp, nextPat)) {
+                    return 1;
+                }
+                nextPat = pattern;
+            }
+        } else {
+            if (dwild) {
+                if (pp) {
+                    return matchPath(fs, pp, pattern);
                 } else {
                     return thisPat ? 0 : 1;
                 }
@@ -18520,7 +18530,7 @@ static bool matchPath(MprFileSystem *fs, char *path, char *pattern)
         }
         pattern = nextPat;
     }
-    return ((pattern && *pattern) || (path && *path)) ? 0 : 1;
+    return ((pattern && *pattern) || (pp && *pp)) ? 0 : 1;
 }
 
 
@@ -18532,7 +18542,7 @@ PUBLIC bool mprMatchPath(cchar *path, cchar *pattern)
         return 0;
     }
     fs = mprLookupFileSystem(path);
-    return matchPath(fs, sclone(path), rewritePattern(pattern, 0));
+    return matchPath(fs, path, rewritePattern(pattern, 0));
 }
 
 
@@ -24091,7 +24101,6 @@ PUBLIC char *sfmt(cchar *format, ...)
 
 PUBLIC char *sfmtv(cchar *format, va_list arg)
 {
-    assert(format);
     return mprPrintfCore(NULL, -1, format, arg);
 }
 
