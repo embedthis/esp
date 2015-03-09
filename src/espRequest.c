@@ -950,7 +950,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         unlock(esp);
     }
     if (!route->cookie && eroute->appName) {
-        httpSetRouteCookie(route, eroute->appName);
+        httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
     if (route->database && !eroute->edi) {
         if (espOpenDatabase(route, route->database) < 0) {
