@@ -929,7 +929,6 @@ typedef struct Http {
 
     int             nextAuth;               /**< Auth object version vector */
     int             activeProcesses;        /**< Count of active external processes */
-    int             activeSessions;         /**< Count of active sessions */
     uint64          totalConnections;       /**< Total connections accepted */
     uint64          totalRequests;          /**< Total requests served */
 
