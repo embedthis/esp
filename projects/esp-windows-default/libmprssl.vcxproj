@@ -100,7 +100,7 @@
   </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\paks\mpr\dist\mprSsl.c" />
+    <ClCompile Include="..\..\src\mpr\mprSsl.c" />
   </ItemGroup>
 
       <ItemDefinitionGroup>

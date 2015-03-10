@@ -33,7 +33,6 @@
         "doc/api/"
     ],
     "pak": {
-        "version": ">=0.10.0",
-        "origin": "embedthis/osdep"
+        "version": ">=0.10.0"
     }
 }

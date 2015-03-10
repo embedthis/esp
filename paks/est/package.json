@@ -32,14 +32,13 @@
         }
     ],
     "dependencies": {
-        "osdep": "~0.8"
+        "osdep": "^0.8"
     },
     "files": [
         "dist/"
     ],
     "pak": {
         "import": true,
-        "version": ">=0.10.0",
-        "origin": "embedthis/est"
+        "version": ">=0.10.0"
     }
 }

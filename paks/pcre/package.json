@@ -21,7 +21,6 @@
     },
     "licenses": "BSD",
     "pak": {
-        "version": ">=0.10.0",
-        "origin": "embedthis/pcre"
+        "version": ">=0.10.0"
     }
 }

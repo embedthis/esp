@@ -100,7 +100,7 @@
   </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\paks\mpr\dist\manager.c" />
+    <ClCompile Include="..\..\src\mpr\manager.c" />
   </ItemGroup>
 
       <ItemDefinitionGroup>

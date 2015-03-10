@@ -100,7 +100,7 @@
   </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\paks\sqlite\dist\sqlite3.c" />
+    <ClCompile Include="..\..\src\sqlite\sqlite3.c" />
   </ItemGroup>
 
       <ItemGroup>
@@ -114,9 +114,9 @@
       </Link>
 
       <CustomBuildStep>
-        <Command>cd ..\..\paks\sqlite\dist
+        <Command>cd ..\..\src\sqlite
 copy /Y /B sqlite3.h $(IncDir)
-cd ..\..\..\projects\esp-windows-default</Command>
+cd ..\..\projects\esp-windows-default</Command>
         <Outputs>$(BinDir)\libsql.dll</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>

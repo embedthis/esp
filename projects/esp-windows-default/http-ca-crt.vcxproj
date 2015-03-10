@@ -95,10 +95,10 @@
       </Link>
 
       <CustomBuildStep>
-        <Command>cd ..\..\paks\http\dist
+        <Command>cd ..\..\src\http
 if exist $(BinDir)\ca.crt del /Q $(BinDir)\ca.crt
 copy /Y ca.crt $(BinDir)\ca.crt
-cd ..\..\..\projects\esp-windows-default</Command>
+cd ..\..\projects\esp-windows-default</Command>
         <Outputs>$(BinDir)\ca.crt</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>
