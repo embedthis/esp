@@ -247,5 +247,23 @@ img.shadow {
 	box-shadow: 5px 5px 9px @gray-light;
 }
 
-/////////// Tweaks
 
+//  Desktop
+@media (min-width: @mobile-break) {
+    .mobile-only {
+        display:none !important;
+    }
+    .desktop-only {
+        // display:block !important;
+    }
+}
+
+//  Mobile
+@media (max-width: @mobile-break) {
+    .mobile-only {
+        // display:block !important;
+    }
+    .desktop-only {
+        display:none !important;
+    }
+}

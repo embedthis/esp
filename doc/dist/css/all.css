@@ -227,6 +227,16 @@ img.shadow {
   border-radius: 7px;
   box-shadow: 5px 5px 9px #999999;
 }
+@media (min-width: 900px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+@media (max-width: 900px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
 /*
     theme.less - Default Embedthis Documentation Theme
  */
