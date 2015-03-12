@@ -3,7 +3,7 @@
  */
 
 html, body {
-    font-size: 14px;
+    font-size: @font-size;
     height: 100%;
 }
 
@@ -22,7 +22,14 @@ body {
 }
 
 .masthead {
+    position: fixed;
     height: @masthead-height;
+    width: 100%;
+    z-index: 100;
+    background-image: linear-gradient(@body-gradient);
+    background-attachment: fixed;
+    border-bottom: 5px solid white;
+
     .ui.inverted.menu {
         background-color: @gray-dark;
         border-bottom: none;
@@ -49,19 +56,15 @@ body {
             }
         }
     }
-    .version {
-        font-size: 0.75rem;
-        margin: 0 0.4rem 0 0;
-        color: @white;
-        opacity: 0.75;
-    }
-    .ui.breadcrumb {
+    .breadcrumb {
+        position: absolute;
+        top: 40px;
         margin: 6px 0 0 35px;
         .section {
             padding-bottom: .5rem;
         }
         .active.section {
-            color: fade(@white, 90%);
+            color: fade(@white, 100%);
             font-weight: normal;
         }
         .divider {
@@ -74,6 +77,14 @@ body {
         a:hover.active.section {
             color: @white;
         }
+    }
+    .version {
+        position: fixed;
+        top: 48px;
+        right: 1rem;
+        font-size: 0.75rem;
+        color: @white;
+        opacity: 0.75;
     }
 }
 
@@ -142,14 +153,17 @@ body {
 }
 
 .content {
-	min-height: 80%;
+	min-height: 95%;
     text-decoration: none;
     background: @white;
-    padding: 1rem 2rem 2rem 2rem;
+    padding: 70px 2rem 2rem 2rem;
+    .floated {
+      overflow: auto;
+    }
 }
 
-.terms {
-    margin: 10px 0 26px 0;
+.ui.segment.terms {
+    margin: 6px 0 16px 0;
     height: @terms-height;
     color: @gray-lightest;
     font-size: 0.75rem;
@@ -203,6 +217,29 @@ h4 {
 
 h3 + ul {
   margin-top: -0.85rem;
+}
+
+em {
+    padding: 2px 6px;
+    font-family: monospace;
+    font-style: normal;
+    background-color: #F2F2FF;
+    color: #404080;
+    border-radius: 4px;
+}
+
+code {
+    display: block;
+    white-space: pre;
+    margin: 1rem 0;
+    padding: 1rem 1rem;
+    font-family: monospace;
+    font-style: normal;
+    border: 1px solid #C2C2C2;
+    border-radius: 0.3rem;
+    line-height: 1.25em;
+    background-color: #EEE;
+    color: #333;
 }
 
 .centered {

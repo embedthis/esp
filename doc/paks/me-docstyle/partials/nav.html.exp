@@ -23,6 +23,6 @@
             <@ } @>
         </div>
         <@ } @>
-        <div class="ui right floated basic segment version">
+        <div class="version desktop-only">
             v<@= Path('../package.json').readJSON().version @>
         </div>
