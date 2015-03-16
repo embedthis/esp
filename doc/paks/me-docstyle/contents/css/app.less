@@ -27,7 +27,6 @@ body {
     width: 100%;
     z-index: 100;
     background-image: linear-gradient(@body-gradient);
-    background-attachment: fixed;
     border-bottom: 5px solid white;
 
     .ui.inverted.menu {
@@ -240,6 +239,14 @@ code {
     line-height: 1.25em;
     background-color: #EEE;
     color: #333;
+    &.inverted {
+        background: @inverted-code-background;
+        color: @inverted-code-color;
+        b {
+            color: @inverted-code-bold;
+            font-weight: bold;
+        }
+    }
 }
 
 .centered {

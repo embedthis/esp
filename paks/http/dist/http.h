@@ -6247,6 +6247,7 @@ PUBLIC cchar *httpGetCookies(HttpConn *conn);
     @param var Name of the request param to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
     @return String containing a reference to the the request param's value. Caller should not mutate this value.
+        Returns defaultValue if not defined.
     @ingroup HttpRx
     @stability Stable
  */

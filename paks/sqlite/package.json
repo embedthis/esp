@@ -24,5 +24,8 @@
             "type": "PUBLIC",
             "url": "https://github.com/embedthis/sqlite/blob/master/LICENSE.md"
         }
-    ]
+    ],
+    "pak": {
+        "origin": "embedthis/sqlite"
+    }
 }

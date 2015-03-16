@@ -2278,6 +2278,7 @@ PUBLIC bool modeIs(cchar *check);
         This routine calls #espGetParam
     @param name Name of the request parameter to retrieve
     @return String containing the request parameter's value. Caller should not free.
+        Returns NULL if the parameter is not defined.
     @ingroup EspAbbrev
     @stability Evolving
  */
