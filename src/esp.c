@@ -231,6 +231,7 @@ static void manageApp(App *app, int flags)
         mprMark(app->base);
         mprMark(app->binDir);
         mprMark(app->build);
+        mprMark(app->built);
         mprMark(app->cacheName);
         mprMark(app->cipher);
         mprMark(app->combineFile);
