@@ -28,8 +28,12 @@
         }
     ],
     "dependencies": {
-        "jquery": "~1.11",
-        "semantic-ui": "~1"
+        "exp-css": "^0.2",
+        "exp-js": "^0.2",
+        "exp-less": "^0.2",
+        "exp-reload": "^0.2",
+        "jquery": "^1.11",
+        "semantic-ui": "^1"
     },
     "files": [
         "contents",
@@ -46,6 +50,7 @@
                 ],
                 "to": "${TOP}/"
             }
-        ]
+        ],
+        "origin": "embedthis/me-docstyle"
     }
 }
