@@ -8791,7 +8791,7 @@ PUBLIC char *mprGetPassword(cchar *prompt)
     if (!prompt || !*prompt) {
         prompt = "Password: ";
     }
-    fputs(prompt, stderr);
+    fputs(prompt, stdout);
     for (i = 0; i < (int) sizeof(passbuf) - 1; i++) {
 #if VXWORKS
         c = getchar();
@@ -8803,26 +8803,26 @@ PUBLIC char *mprGetPassword(cchar *prompt)
         }
         if ((c == '\b' || c == 127) && i > 0) {
             passbuf[--i] = '\0';
-            fputs("\b \b", stderr);
+            fputs("\b \b", stdout);
             i--;
         } else if (c == 26) {           /* Control Z */
             c = EOF;
             break;
         } else if (c == 3) {            /* Control C */
-            fputs("^C\n", stderr);
+            fputs("^C\n", stdout);
             exit(255);
         } else if (!iscntrl((uchar) c) && (i < (int) sizeof(passbuf) - 1)) {
             passbuf[i] = c;
-            fputc('*', stderr);
+            fputc('*', stdout);
         } else {
-            fputc('', stderr);
+            fputc('', stdout);
             i--;
         }
     }
     if (c == EOF) {
         return "";
     }
-    fputc('\n', stderr);
+    fputc('\n', stdout);
     passbuf[i] = '\0';
     password = passbuf;
 #else
@@ -15969,7 +15969,7 @@ PUBLIC void mprAssert(cchar *loc, cchar *msg)
     }
     mprLogProc("debug assert", 0, "%s", buf);
 #if ME_DEBUG_WATSON
-    fprintf(stderr, "Pause for debugger to attach\n");
+    fprintf(stdout, "Pause for debugger to attach\n");
     mprSleep(24 * 3600 * 1000);
 #endif
 #endif

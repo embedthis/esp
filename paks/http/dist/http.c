@@ -534,10 +534,10 @@ static int parseArgs(int argc, char **argv)
 
         } else if (isdigit((uchar) argp[1])) {
             if (!logSpec) {
-                logSpec = sfmt("stderr:%d", (int) stoi(&argp[1]));
+                logSpec = sfmt("stdout:%d", (int) stoi(&argp[1]));
             }
             if (!traceSpec) {
-                traceSpec = sfmt("stderr:%d", (int) stoi(&argp[1]));
+                traceSpec = sfmt("stdout:%d", (int) stoi(&argp[1]));
             }
 
         } else {
@@ -1276,7 +1276,7 @@ static char *getpass(char *prompt)
     static char password[80];
     int     c, i;
 
-    fputs(prompt, stderr);
+    fputs(prompt, stdout);
     for (i = 0; i < (int) sizeof(password) - 1; i++) {
 #if VXWORKS
         c = getchar();
@@ -1288,26 +1288,26 @@ static char *getpass(char *prompt)
         }
         if ((c == '\b' || c == 127) && i > 0) {
             password[--i] = '\0';
-            fputs("\b \b", stderr);
+            fputs("\b \b", stdout);
             i--;
         } else if (c == 26) {           /* Control Z */
             c = EOF;
             break;
         } else if (c == 3) {            /* Control C */
-            fputs("^C\n", stderr);
+            fputs("^C\n", stdout);
             exit(255);
         } else if (!iscntrl((uchar) c) && (i < (int) sizeof(password) - 1)) {
             password[i] = c;
-            fputc('*', stderr);
+            fputc('*', stdout);
         } else {
-            fputc('', stderr);
+            fputc('', stdout);
             i--;
         }
     }
     if (c == EOF) {
         return "";
     }
-    fputc('\n', stderr);
+    fputc('\n', stdout);
     password[i] = '\0';
     return password;
 }

@@ -431,10 +431,10 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "verbose") || smatch(argp, "v")) {
             app->verbose++;
             if (!app->logSpec) {
-                app->logSpec = sfmt("stderr:2");
+                app->logSpec = sfmt("stdout:2");
             }
             if (!app->traceSpec) {
-                app->traceSpec = sfmt("stderr:2");
+                app->traceSpec = sfmt("stdout:2");
             }
 
         } else if (smatch(argp, "version") || smatch(argp, "V")) {
@@ -444,10 +444,10 @@ static int parseArgs(int argc, char **argv)
         } else if (isdigit((uchar) *argp)) {
             app->verbose++;
             if (!app->logSpec) {
-                app->logSpec = sfmt("stderr:%d", (int) stoi(argp));
+                app->logSpec = sfmt("stdout:%d", (int) stoi(argp));
             }
             if (!app->traceSpec) {
-                app->traceSpec = sfmt("stderr:%d", (int) stoi(argp));
+                app->traceSpec = sfmt("stdout:%d", (int) stoi(argp));
             }
 
         } else if (smatch(argp, "why") || smatch(argp, "w")) {
@@ -2724,7 +2724,7 @@ static char *getpass(char *prompt)
     static char password[MAX_PASS];
     int     c, i;
 
-    fputs(prompt, stderr);
+    fputs(prompt, stdout);
     for (i = 0; i < (int) sizeof(password) - 1; i++) {
 #if VXWORKS
         c = getchar();
@@ -2736,26 +2736,26 @@ static char *getpass(char *prompt)
         }
         if ((c == '\b' || c == 127) && i > 0) {
             password[--i] = '\0';
-            fputs("\b \b", stderr);
+            fputs("\b \b", stdout);
             i--;
         } else if (c == 26) {           /* Control Z */
             c = EOF;
             break;
         } else if (c == 3) {            /* Control C */
-            fputs("^C\n", stderr);
+            fputs("^C\n", stdout);
             exit(255);
         } else if (!iscntrl((uchar) c) && (i < (int) sizeof(password) - 1)) {
             password[i] = c;
-            fputc('*', stderr);
+            fputc('*', stdout);
         } else {
-            fputc('', stderr);
+            fputc('', stdout);
             i--;
         }
     }
     if (c == EOF) {
         return "";
     }
-    fputc('\n', stderr);
+    fputc('\n', stdout);
     password[i] = '\0';
     return sclone(password);
 }

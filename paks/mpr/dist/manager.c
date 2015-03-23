@@ -208,7 +208,7 @@ PUBLIC int main(int argc, char *argv[])
             }
 
         } else if (strcmp(argp, "--verbose") == 0 || strcmp(argp, "-v") == 0) {
-            app->logSpec = sclone("stderr:2");
+            app->logSpec = sclone("stdout:2");
 
         } else {
             err++;
@@ -300,7 +300,7 @@ static void setAppDefaults()
     app->serviceHome = mprGetNativePath(SERVICE_HOME);
     app->retries = RESTART_MAX;
     app->signal = SIGTERM;
-    app->logSpec = sclone("stderr:1");
+    app->logSpec = sclone("stdout:1");
 
     if (mprPathExists("/var/run", X_OK) && getuid() == 0) {
         app->pidDir = sclone("/var/run");
@@ -1588,7 +1588,7 @@ static void gracefulShutdown(MprTicks timeout)
 
 #else
 PUBLIC void stubManager() {
-    fprintf(stderr, "Manager not supported on this architecture");
+    fprintf(stdout, "Manager not supported on this architecture");
 }
 #endif /* ME_WIN_LIKE */
 
