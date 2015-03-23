@@ -11263,8 +11263,8 @@ PUBLIC void mprDequeueEvent(MprEvent *event)
 /**
     file.c - File services.
 
-    This modules provides a simple cross platform file I/O abstraction. It uses the MprFileSystem to provide I/O services.
-    This module is not thread safe.
+    This modules provides a simple cross platform file I/O abstraction. It uses the MprFileSystem to 
+    provide I/O services. This module is not thread safe.
 
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
