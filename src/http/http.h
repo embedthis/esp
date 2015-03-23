@@ -506,6 +506,7 @@ PUBLIC void httpAddCounters();
 PUBLIC int httpAddRemedies();
 PUBLIC MprTicks httpGetTicks(cchar *value);
 PUBLIC uint64 httpGetNumber(cchar *value);
+PUBLIC int httpGetInt(cchar *value);
 PUBLIC void httpPruneMonitors();
 
 /********************************** HttpTrace *********************************/

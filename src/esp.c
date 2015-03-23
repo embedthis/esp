@@ -42,7 +42,8 @@ typedef struct App {
     HttpRoute   *route;                 /* Selected route to build */
     HttpHost    *host;                  /* Default host */
     MprList     *files;                 /* List of files to process */
-    MprList     *build;                 /* Items to build */
+    MprHash     *build;                 /* Items to build */
+    MprHash     *built;                 /* Items that have been built */
     MprList     *slink;                 /* List of items for static link */
     MprHash     *targets;               /* Command line targets */
     MprHash     *topDeps;               /* Top level dependencies */
@@ -56,7 +57,7 @@ typedef struct App {
     cchar       *filterRoutePrefix;     /* Prefix of route to use for filtering */
     cchar       *logSpec;               /* Arg for --log */
     cchar       *traceSpec;             /* Arg for --trace */
-    cchar       *mode;                  /* New "mode" to use */
+    cchar       *mode;                  /* New "pak.mode" to use */
     cchar       *module;                /* Compiled module name */
     cchar       *base;                  /* Base filename */
     cchar       *entry;                 /* Module entry point */
@@ -741,7 +742,7 @@ static void process(int argc, char **argv)
 
     } else if (smatch(cmd, "mode")) {
         if (argc < 2) {
-            printf("%s\n", getConfigValue(app->package, "mode", "undefined"));
+            printf("%s\n", getConfigValue(app->package, "pak.mode", "undefined"));
         } else {
             setMode(argv[1]);
         }
@@ -1172,7 +1173,7 @@ static void setMode(cchar *mode)
 {
     int     quiet;
 
-    setConfigValue(app->package, "mode", mode);
+    setConfigValue(app->package, "pak.mode", mode);
     saveConfig(app->package, "package.json", MPR_JSON_QUOTES);
     quiet = app->quiet;
     app->quiet = 1;
@@ -1544,6 +1545,11 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
     if (app->error) {
         return;
     }
+    if (mprLookupKey(app->built, source)) {
+        return;
+    }
+    mprAddKey(app->built, source, source);
+
     cacheDir = httpGetDir(route, "CACHE");
     eroute = route->eroute;
     defaultLayout = 0;
@@ -1693,6 +1699,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
 static void compile(int argc, char **argv)
 {
     HttpRoute   *route;
+    EspRoute    *eroute;
     MprFile     *file;
     MprKey      *kp;
     cchar       *name;
@@ -1707,13 +1714,20 @@ static void compile(int argc, char **argv)
     if (app->genlink) {
         app->slink = mprCreateList(0, MPR_LIST_STABLE);
     }
+    app->built = mprCreateHash(0, MPR_HASH_STABLE | MPR_HASH_STATIC_VALUES);
     for (ITERATE_ITEMS(app->routes, route, next)) {
-        if (app->combine) {
-            compileCombined(route);
-        } else {
-            compileItems(route);
+        eroute = route->eroute;
+        if (!eroute->compiled) {
+            eroute->compiled = 1;
+            if (app->combine) {
+                compileCombined(route);
+            } else {
+                compileItems(route);
+            }
         }
     }
+    app->built = 0;
+
     /*
         Check we have compiled all targets
      */
@@ -1875,14 +1889,15 @@ static void compileItems(HttpRoute *route)
 static void compileCombined(HttpRoute *route)
 {
     MprDirEntry     *dp;
-    MprKeyValue     *kp;
+    MprKey          *kp;
     EspRoute        *eroute;
-    cchar           *name;
+    cchar           *item, *name;
     char            *path, *line;
     int             next, kind;
 
     eroute = route->eroute;
     name = app->name ? app->name : mprGetPathBase(route->documents);
+    app->build = mprCreateHash(0, MPR_HASH_STABLE | MPR_HASH_STATIC_VALUES);
 
     /*
         Combined ... Catenate all source
@@ -1890,28 +1905,25 @@ static void compileCombined(HttpRoute *route)
     app->combineItems = mprCreateList(-1, MPR_LIST_STABLE);
     app->combinePath = mprJoinPath(httpGetDir(route, "CACHE"), sjoin(name, ".c", NULL));
 
-    app->build = mprCreateList(0, MPR_LIST_STABLE);
     path = mprJoinPath(httpGetDir(app->route, "SRC"), "app.c");
     if (mprPathExists(path, R_OK)) {
-        mprAddItem(app->build, mprCreateKeyPair(path, "src", 0));
+        mprAddKey(app->build, path, "src");
     }
     app->files = mprGetPathFiles(httpGetDir(route, "CONTROLLERS"), MPR_PATH_DESCEND);
     for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
         path = dp->name;
         if (smatch(mprGetPathExt(path), "c")) {
-            mprAddItem(app->build, mprCreateKeyPair(path, "controller", 0));
+            mprAddKey(app->build, path, "controller");
         }
     }
-    if (!httpGetDir(route, "CONTROLLERS")) {
-        app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
-        for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
-            path = dp->name;
-            if (smatch(mprGetPathExt(path), "esp")) {
-                mprAddItem(app->build, mprCreateKeyPair(path, "page", 0));
-            }
+    app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
+    for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
+        path = dp->name;
+        if (smatch(mprGetPathExt(path), "esp")) {
+            mprAddKey(app->build, path, "page");
         }
     }
-    if (mprGetListLength(app->build) > 0) {
+    if (mprGetHashLength(app->build) > 0) {
         mprMakeDir(httpGetDir(route, "CACHE"), 0755, -1, -1, 1);
         if ((app->combineFile = mprOpenFile(app->combinePath, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0664)) == 0) {
             fail("Cannot open %s", app->combinePath);
@@ -1920,12 +1932,12 @@ static void compileCombined(HttpRoute *route)
         mprWriteFileFmt(app->combineFile, "/*\n    Combined compilation of %s\n */\n\n", name);
         mprWriteFileFmt(app->combineFile, "#include \"esp.h\"\n\n");
 
-        for (ITERATE_ITEMS(app->build, kp, next)) {
-            if (smatch(kp->value, "src")) {
+        for (ITERATE_KEY_DATA(app->build, kp, item)) {
+            if (smatch(item, "src")) {
                 kind = ESP_SRC;
-            } else if (smatch(kp->value, "controller")) {
+            } else if (smatch(item, "controller")) {
                 kind = ESP_CONTROlLER;
-            } else if (smatch(kp->value, "page")) {
+            } else if (smatch(item, "page")) {
                 kind = ESP_VIEW;
             } else {
                 kind = ESP_PAGE;
