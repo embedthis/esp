@@ -1377,7 +1377,7 @@ This is a smart input control that will call the appropriate input control based
     <table class="parameters" title="Parameters">
     <tr><td class="param">name</td><td>Name of the request parameter to retrieve.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>String containing the request parameter&apos;s value. Caller should not free.</dd></dl>
+    <dl><dt>Returns:</dt><dd>String containing the request parameter&apos;s value. Caller should not free. Returns NULL if the parameter is not defined.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
@@ -5116,6 +5116,21 @@ Reloading ESP and modules.
             $('.sidebar').scrollTop(sessionStorage.getItem('scroll-top'));
         });
     </script> 
+
+        
+    <script>
+        (function() {
+            var r = new XMLHttpRequest();
+            r.onreadystatechange = function() {
+                if (r.readyState >= 3 && r.status == 200) {
+                    window.location.reload();
+                }
+            }
+            r.open("GET", "/reload-service", true);
+            r.send();
+        })();
+    </script>
+    
 
 </body>
 </html>

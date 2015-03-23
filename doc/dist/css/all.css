@@ -152,7 +152,7 @@ body.show-sidebar {
   min-height: 95%;
   text-decoration: none;
   background: #ffffff;
-  padding: 70px 2rem 2rem 2rem;
+  padding: 100px 2rem 2rem 2rem;
 }
 .content .floated {
   overflow: auto;
@@ -205,12 +205,13 @@ h3 + ul {
   margin-top: -0.85rem;
 }
 em {
-  padding: 2px 6px;
+  padding: 3px;
   font-family: monospace;
   font-style: normal;
   background-color: #F2F2FF;
   color: #404080;
   border-radius: 4px;
+  white-space: nowrap;
 }
 code {
   display: block;
@@ -230,8 +231,8 @@ code.inverted {
   color: #c0c0c0;
 }
 code.inverted b {
-  color: #2aa198;
-  font-weight: bold;
+  color: #4ab1b0;
+  font-weight: normal;
 }
 .centered {
   margin-left: auto;
@@ -243,7 +244,7 @@ code.inverted b {
   color: #c0c0c0;
 }
 .ui.code.inverted.code.segment b {
-  color: #2aa198;
+  color: #4ab1b0;
   font-weight: normal;
 }
 .ui.code.segment {
