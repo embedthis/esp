@@ -71,7 +71,7 @@ static void basicHttpGet()
 }
 
 
-#if ME_COM_SSL && (ME_COM_MATRIXSSL || ME_COM_OPENSSL)
+#if UNUSED && ME_COM_SSL && (ME_COM_MATRIXSSL || ME_COM_OPENSSL)
 static void secureHttpGet()
 {
     Http        *http;
@@ -115,7 +115,7 @@ static void stealSocket()
      */
     conn = httpCreateConn(NULL, 0);
     ttrue(conn != 0);
-    rc = httpConnect(conn, "GET", "https://www.example.com/", NULL);
+    rc = httpConnect(conn, "GET", "http://www.example.com/", NULL);
     ttrue(rc >= 0);
     if (rc >= 0) {
         ttrue(conn->sock != 0);
@@ -139,7 +139,7 @@ static void stealSocket()
      */
     conn = httpCreateConn(NULL, 0);
     ttrue(conn != 0);
-    rc = httpConnect(conn, "GET", "https://www.example.com/", NULL);
+    rc = httpConnect(conn, "GET", "http://www.example.com/", NULL);
     ttrue(rc >= 0);
     if (rc >= 0) {
         ttrue(conn->sock != 0);
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     initHttp();
     createHttp();
     basicHttpGet();
-#if ME_COM_SSL && (ME_COM_MATRIXSSL || ME_COM_OPENSSL)
+#if UNUSED && ME_COM_SSL && (ME_COM_MATRIXSSL || ME_COM_OPENSSL)
     secureHttpGet();
 #endif
     stealSocket();
