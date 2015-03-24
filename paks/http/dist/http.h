@@ -2776,7 +2776,7 @@ PUBLIC int httpOpenUploadFilter();
 PUBLIC int httpOpenWebSockFilter();
 PUBLIC int httpSendOpen(HttpQueue *q);
 PUBLIC void httpSendOutgoingService(HttpQueue *q);
-PUBLIC int httpHandleDirectory(struct HttpConn *conn);
+PUBLIC int httpHandleDirectory(struct HttpConn *conn, cchar *defaultIndex);
 
 /********************************** HttpConn *********************************/
 /**

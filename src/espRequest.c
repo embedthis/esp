@@ -403,7 +403,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *document)
         }
     }
     if (tx->fileInfo.isDir) {
-        httpHandleDirectory(conn);
+        httpHandleDirectory(conn, "index.esp");
         if (tx->finalized) {
             return;
         }

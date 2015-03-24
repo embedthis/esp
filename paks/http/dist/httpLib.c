@@ -8246,7 +8246,7 @@ static int rewriteFileHandler(HttpConn *conn)
         return HTTP_ROUTE_OK;
     }
     if (info->isDir) {
-        return httpHandleDirectory(conn);
+        return httpHandleDirectory(conn, NULL);
     }
     if (rx->flags & (HTTP_GET | HTTP_HEAD | HTTP_POST) && info->valid) {
         /*
@@ -8623,7 +8623,7 @@ static void handleDeleteRequest(HttpQueue *q)
 }
 
 
-PUBLIC int httpHandleDirectory(HttpConn *conn)
+PUBLIC int httpHandleDirectory(HttpConn *conn, cchar *defaultIndex)
 {
     HttpRx      *rx;
     HttpTx      *tx;
@@ -8660,20 +8660,28 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
         /*
             Ends with a "/" so do internal redirection to an index file
          */
+        path = 0;
         for (ITERATE_ITEMS(route->indexes, index, next)) {
             /*
                 Internal directory redirections. Transparently append index. Test indexes in order.
              */
             path = mprJoinPath(tx->filename, index);
             if (mprPathExists(path, R_OK)) {
-                pathInfo = sjoin(rx->scriptName, rx->pathInfo, index, NULL);
-                uri = httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0);
-                httpSetUri(conn, uri);
-                tx->filename = path;
-                tx->ext = httpGetExt(conn);
-                mprGetPathInfo(tx->filename, info);
-                return HTTP_ROUTE_REROUTE;
+                break;
             }
+        }
+        if (defaultIndex) {
+            index = defaultIndex;
+            path = mprJoinPath(tx->filename, index);
+        }
+        if (path) {
+            pathInfo = sjoin(rx->scriptName, rx->pathInfo, index, NULL);
+            uri = httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0);
+            httpSetUri(conn, uri);
+            tx->filename = path;
+            tx->ext = httpGetExt(conn);
+            mprGetPathInfo(tx->filename, info);
+            return HTTP_ROUTE_REROUTE;
         }
     }
 #if ME_COM_DIR
