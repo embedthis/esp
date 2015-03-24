@@ -18629,7 +18629,7 @@ PUBLIC char *mprGetPortablePath(cchar *path)
 
 
 /*
-    Get a relative path path from an origin path to a destination. If a relative path cannot be obtained,
+    Get a relative path from an origin path to a destination. If a relative path cannot be obtained,
     an absolute path to the destination will be returned. This happens if the paths cross drives.
     Returns the supplied destArg modified to be relative to originArg.
  */
