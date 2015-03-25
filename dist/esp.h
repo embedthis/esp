@@ -2393,6 +2393,17 @@ PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size);
 PUBLIC ssize espRenderCached(HttpConn *conn);
 
 /**
+    Render an ESP document
+    @description If the document is an ESP page, it will be rendered as a view via #espRenderView. Otherwise, it will 
+        be rendered using the fileHandler as a static document.
+    @param conn Http connection object
+    @param path Relative pathname from route->documents to the document to render.
+    @ingroup EspReq
+    @stability Evolving
+ */
+PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
+
+/**
     Render an error message back to the client and finalize the request. The output is Html escaped for security.
     @param conn HttpConn connection object
     @param status Http status code
@@ -2487,26 +2498,19 @@ PUBLIC ssize espRenderString(HttpConn *conn, cchar *s);
  */
 PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
 
+#if UNUSED
 /**
     Render an ESP view page to the client
     @param conn Http connection object
     @param view View name. The view name is interpreted relative to the matching route documents directory and may omit
         an ESP extension.
+    @param flags Reserved. Set to zero.
+    @return true if a vew can be rendered.
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC void espRenderView(HttpConn *conn, cchar *view);
-
-/**
-    Render an ESP document
-    @description If the document is an ESP page, it will be rendered as a view via #espRenderView. Otherwise, it will 
-        be rendered using the fileHandler as a static document.
-    @param conn Http connection object
-    @param path Pathname to the document to render
-    @ingroup EspReq
-    @stability Evolving
- */
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
+PUBLIC bool espRenderView(HttpConn *conn, cchar *view, int flags);
+#endif
 
 /**
     Send a database grid as a JSON string

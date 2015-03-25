@@ -2184,7 +2184,7 @@ PUBLIC ssize renderString(cchar *s)
 
 PUBLIC void renderView(cchar *view)
 {
-    espRenderView(getConn(), view);
+    espRenderDocument(getConn(), view);
 }
 
 
@@ -3035,7 +3035,7 @@ PUBLIC void espDefineBase(HttpRoute *route, EspProc baseProc)
 
 
 /*
-    Path should be an app-relative path to the view file (relative-path.esp)
+    Path should be a relative path from route->documents to the view file (relative-path.esp)
  */
 PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
 {
@@ -3046,7 +3046,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (route) {
-        path = mprGetPortablePath(mprJoinPath(route->documents, path));
+        path = mprGetPortablePath(path);
     }
     if (!eroute->views) {
         eroute->views = mprCreateHash(-1, MPR_HASH_STATIC_VALUES);
@@ -3452,7 +3452,7 @@ static cchar *getClientConfig(HttpConn *conn)
         }
     }
     route = conn->rx->route;
-    if ((obj = mprGetJsonObj(route->config, "esp.mappings")) == 0) {
+    if ((obj = mprGetJsonObj(route->config, "esp.mappings")) != 0) {
         mappings = mprCreateJson(MPR_JSON_OBJ);
         copyMappings(route, mappings, obj);
         mprWriteJson(mappings, "prefix", route->prefix, 0);
@@ -4277,6 +4277,8 @@ static cchar *map(HttpConn *conn, MprHash *options)
  */
 static Esp *esp;
 
+#define ESP_DONT_RENDER 0x1
+
 /************************************ Forward *********************************/
 
 static int cloneDatabase(HttpConn *conn);
@@ -4646,40 +4648,7 @@ static int runAction(HttpConn *conn)
 }
 
 
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *document)
-{
-    HttpTx      *tx;
-    cchar       *path;
-
-    tx = conn->tx;
-    path = httpMapContent(conn, mprJoinPath(conn->rx->route->documents, document));
-    if (!httpSetFilename(conn, path, 0)) {
-        if (conn->rx->flags & (HTTP_GET | HTTP_HEAD)) {
-            if (!httpSetFilename(conn, mprJoinPathExt(path, ".esp"), 0)) {
-#if DEPRECATE || 1
-                path = httpMapContent(conn, mprJoinPaths(conn->rx->route->documents, "app", document, NULL));
-                if (!httpSetFilename(conn, path, 0)) {
-                    httpSetFilename(conn, mprJoinPathExt(path, ".esp"), 0);
-                }
-#endif
-            }
-        }
-    }
-    if (tx->fileInfo.isDir) {
-        httpHandleDirectory(conn, "index.esp");
-        if (tx->finalized) {
-            return;
-        }
-    }
-    if (smatch(tx->ext, "esp")) {
-        espRenderView(conn, tx->filename);
-    } else {
-        httpSetFileHandler(conn, NULL);
-    }
-}
-
-
-PUBLIC void espRenderView(HttpConn *conn, cchar *view)
+static bool espRenderView(HttpConn *conn, cchar *target, int flags)
 {
     HttpRx      *rx;
     HttpRoute   *route;
@@ -4691,41 +4660,93 @@ PUBLIC void espRenderView(HttpConn *conn, cchar *view)
     route = rx->route;
     eroute = route->eroute;
 
-    path = mprJoinPathExt(mprJoinPath(route->documents, view), ".esp");
-
-#if DEPRECATE || 1
-    /*
-        Join the "app" directory for views
-     */
-    if (!mprPathExists(path, R_OK)) {
-        path = mprJoinPathExt(mprJoinPaths(route->documents, "app", view, NULL), ".esp");
-    }
+#if ME_WIN_LIKE
+    target = mprGetPortablePath(target);
 #endif
-    path = mprGetPortablePath(path);
+    path = mprJoinPath(route->documents, target);
 
 #if !ME_STATIC
-    assert(eroute->top);
-    if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, path))) {
+    if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, target))) {
         cchar *errMsg;
         /* WARNING: GC yield */
         if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg) < 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-            return;
+            return 0;
         }
     }
 #endif
-    if ((viewProc = mprLookupKey(eroute->views, path)) == 0) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find view");
-        return;
+    if ((viewProc = mprLookupKey(eroute->views, target)) == 0) {
+        return 0;
     }
-    if (rx->route->flags & HTTP_ROUTE_XSRF) {
-        /* Add a new unique security token */
-        httpAddSecurityToken(conn, 1);
+    if (!(flags & ESP_DONT_RENDER)) {
+        if (route->flags & HTTP_ROUTE_XSRF) {
+            /* Add a new unique security token */
+            httpAddSecurityToken(conn, 1);
+        }
+        httpSetContentType(conn, "text/html");
+        httpSetFilename(conn, path, 0);
+        /* WARNING: may GC yield */
+        (viewProc)(conn);
     }
-    httpSetContentType(conn, "text/html");
+    return 1;
+}
 
-    /* WARNING: GC yield */
-    (viewProc)(conn);
+
+/*
+    Target is a pathname relative to route->documents
+    If pathname is a directory without trailing "/" do external redirect to index.esp
+    If pathname is a directory with trailing "/", do internal redirect to index.esp
+    if pathname is not a directory and does not exist, then retry with .esp appended.
+
+    WARNING: may yield
+ */
+PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
+{
+    EspRoute    *eroute;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    HttpUri     *up;
+
+    rx = conn->rx;
+    tx = conn->tx;
+    eroute = rx->route->eroute;
+
+    /*
+        Internal directory redirection
+     */
+    if (*target == '\0' || sends(target, "/")) {
+        target = sjoin(target, "index.esp", NULL);
+    }
+    if (sends(target, ".esp")) {
+        if (espRenderView(conn, target, 0)) {
+            return;
+        } 
+    } else if (rx->flags & (HTTP_GET | HTTP_HEAD)) {
+        /*
+            Support pretty URLs without ".esp"
+         */
+        if (espRenderView(conn, sjoin(target, ".esp", NULL), 0)) {
+            return;
+        }
+    }
+    if (!sends(target, "index.esp")) {
+        /*
+            Target may be a directory, so pre-flight a test to see if it has an index.
+            If so, then do an external redirect. This is needed to keep browser relative URLs working.
+         */
+        if (espRenderView(conn, mprJoinPath(target, "index.esp"), ESP_DONT_RENDER)) {
+            up = rx->parsedUri;
+            httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
+                httpFormatUri(up->scheme, up->host, up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
+            return;
+        }
+    }
+    /*
+        Last chance, forward to the file handler ... not an ESP request. 
+        This enables static file requests within ESP routes.
+     */
+    // httpSetFileHandler(conn, mprJoinPath(rx->route->documents, target));
+    httpMapFile(conn);
+    httpSetFileHandler(conn, 0);
 }
 
 
@@ -4840,7 +4861,7 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
      */
     source = mprTrimPathDrive(source);
 #endif
-    canonical = mprGetPortablePath(mprGetRelPath(source, route->documents));
+    canonical = mprGetPortablePath(mprGetRelPath(source, route->home));
 
     //  MOB - eroute->appName should always be set
     appName = eroute->appName ? eroute->appName : route->host->name;
@@ -4849,6 +4870,8 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     } else {
         cacheName = mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
     }
+
+    //  MOB - refactor
     if ((cache = httpGetDir(route, "CACHE")) == 0) {
         cache = "cache";
     }
@@ -5232,9 +5255,9 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             WARNING: may yield when compiling modules
          */
         if (eroute->combine) {
-            source = mprJoinPath(httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName));
+            source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
         } else {
-            source = mprJoinPath(httpGetDir(route, "SRC"), "app.c");
+            source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
         }
         lock(esp);
         if (mprPathExists(source, R_OK)) {
@@ -5250,7 +5273,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
                 if (*kind == '\0') {
                     kind = "controller";
                 }
-                source = mprJoinPath(httpGetDir(route, "CONTROLLERS"), source);
+                source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
                 if (espLoadModule(route, NULL, kind, source, &errMsg) < 0) {
                     unlock(esp);
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);

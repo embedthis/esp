@@ -6904,7 +6904,7 @@ static void sortList(HttpConn *conn, MprList *list);
     Test if this request is for a directory listing. This routine is called directly by the fileHandler.
     Directory listings are enabled in a route via "Options Indexes".
  */
-PUBLIC bool httpRenderDirListing(HttpConn *conn)
+PUBLIC bool httpShouldRenderDirListing(HttpConn *conn)
 {
     HttpRx      *rx;
     HttpTx      *tx;
@@ -8246,7 +8246,7 @@ static int rewriteFileHandler(HttpConn *conn)
         return HTTP_ROUTE_OK;
     }
     if (info->isDir) {
-        return httpHandleDirectory(conn, NULL);
+        return httpHandleDirectory(conn);
     }
     if (rx->flags & (HTTP_GET | HTTP_HEAD | HTTP_POST) && info->valid) {
         /*
@@ -8623,14 +8623,13 @@ static void handleDeleteRequest(HttpQueue *q)
 }
 
 
-PUBLIC int httpHandleDirectory(HttpConn *conn, cchar *defaultIndex)
+PUBLIC int httpHandleDirectory(HttpConn *conn)
 {
     HttpRx      *rx;
     HttpTx      *tx;
     HttpRoute   *route;
     HttpUri     *req;
-    MprPath     *info;
-    cchar       *index, *pathInfo, *uri;
+    cchar       *index, *pathInfo;
     char        *path;
     int         next;
 
@@ -8638,22 +8637,19 @@ PUBLIC int httpHandleDirectory(HttpConn *conn, cchar *defaultIndex)
     tx = conn->tx;
     req = rx->parsedUri;
     route = rx->route;
-    info = &tx->fileInfo;
 
     /*
         Manage requests for directories
      */
     if (!sends(req->path, "/")) {
         /*
-           Append "/" and do an external redirect. Use the original request URI.
+           Append "/" and do an external redirect. Use the original request URI. Use httpFormatUri to preserve query.
          */
-        pathInfo = sjoin(req->path, "/", NULL);
-        uri = httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0);
-        httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, uri);
-        if (tx->finalized) {
-            /* This allows handlers to call httpHandleDirectory after routing (esp does this) */
-            tx->handler = conn->http->passHandler;
-        }
+        httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
+            httpFormatUri(req->scheme, req->host, req->port, sjoin(req->path, "/", NULL), req->reference, req->query, 0));
+#if UNUSED
+        tx->handler = conn->http->passHandler;
+#endif
         return HTTP_ROUTE_OK;
     }
     if (route->indexes) {
@@ -8671,26 +8667,27 @@ PUBLIC int httpHandleDirectory(HttpConn *conn, cchar *defaultIndex)
             }
             path = 0;
         }
+#if UNUSED
         if (defaultIndex) {
             index = defaultIndex;
             path = mprJoinPath(tx->filename, index);
         }
+#endif
         if (path) {
             pathInfo = sjoin(rx->scriptName, rx->pathInfo, index, NULL);
-            uri = httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0);
-            httpSetUri(conn, uri);
+            httpSetUri(conn, httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0));
             tx->filename = path;
             tx->ext = httpGetExt(conn);
-            mprGetPathInfo(tx->filename, info);
+            mprGetPathInfo(tx->filename, &tx->fileInfo);
             return HTTP_ROUTE_REROUTE;
         }
     }
 #if ME_COM_DIR
     /*
-        Directory Listing. If a directory, test if a directory listing should be rendered. If so, delegate to the
-        dirHandler. Cannot use the sendFile handler and must use the netConnector.
+        Directory Listing. Test if a directory listing should be rendered. If so, delegate to the dirHandler. 
+        Must use the netConnector.
      */
-    if (info->isDir && httpRenderDirListing(conn)) {
+    if (httpShouldRenderDirListing(conn)) {
         tx->handler = conn->http->dirHandler;
         tx->connector = conn->http->netConnector;
         return HTTP_ROUTE_OK;
@@ -16146,7 +16143,7 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
 {
     HttpRx      *rx;
     HttpLimits  *limits;
-    char        *method, *uri, *protocol, *start;
+    char        *headers, *method, *uri, *protocol, *start;
     MprBuf      *content;
     ssize       len;
 
@@ -16161,6 +16158,8 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
 
     content = packet->content;
     start = content->start;
+    headers = httpTracing(conn) ? snclone(start, rx->headerPacketLength) : 0;
+
     method = getToken(conn, 0);
     rx->originalMethod = rx->method = supper(method);
     parseMethod(conn);
@@ -16199,11 +16198,7 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
     if (httpTracing(conn)) {
         httpTrace(conn, "rx.first.server", "request", "method:'%s',uri:'%s',protocol:'%s'", 
             rx->method, rx->uri, conn->protocol);
-        uri[-1] = ' ';
-        protocol[-1] = ' ';
-        content->start[-2] = '\r';
-        content->start[-1] = '\n';
-        httpTraceContent(conn, "rx.headers.server", "context", start, rx->headerPacketLength, NULL);
+        httpTraceContent(conn, "rx.headers.server", "context", headers, rx->headerPacketLength, NULL);
     }
     return 1;
 }
@@ -19892,6 +19887,7 @@ PUBLIC void httpRedirect(HttpConn *conn, int status, cchar *targetUri)
             msg, msg);
     }
     httpFinalize(conn);
+    tx->handler = conn->http->passHandler;
 }
 
 
@@ -21576,10 +21572,6 @@ PUBLIC HttpUri *httpGetRelativeUri(HttpUri *base, HttpUri *target, int clone)
 }
 
 
-//  FUTURE - rethink API, makes chaining hard if result must be supplied
-/*
-    result = base.join(other)
- */
 PUBLIC HttpUri *httpJoinUriPath(HttpUri *result, HttpUri *base, HttpUri *other)
 {
     char    *sep;
@@ -21875,9 +21867,9 @@ PUBLIC HttpUri *httpLinkUri(HttpConn *conn, cchar *target, MprHash *options)
             target = "/";
         }
     }
-    //  OPT
     target = httpTemplate(conn, tplate, options);
     uri = httpCreateUri(target, 0);
+
     /*
         This was changed from: httpCreateUri(rx->uri) to rx->parsedUri.
         The use case was appweb: /auth/form/login which redirects using: https:///auth/form/login on localhost:4443

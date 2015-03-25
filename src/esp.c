@@ -1563,7 +1563,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
     } else {
         prefix = "view_";
     }
-    canonical = mprGetPortablePath(mprGetRelPath(source, route->documents));
+    canonical = mprGetPortablePath(mprGetRelPath(source, route->home));
     appName = eroute->appName ? eroute->appName : route->host->name;
     app->cacheName = mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, prefix);
     app->module = mprNormalizePath(sfmt("%s/%s%s", cacheDir, app->cacheName, ME_SHOBJ));

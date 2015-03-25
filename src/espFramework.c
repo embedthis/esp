@@ -165,7 +165,7 @@ PUBLIC void espDefineBase(HttpRoute *route, EspProc baseProc)
 
 
 /*
-    Path should be an app-relative path to the view file (relative-path.esp)
+    Path should be a relative path from route->documents to the view file (relative-path.esp)
  */
 PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
 {
@@ -176,7 +176,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (route) {
-        path = mprGetPortablePath(mprJoinPath(route->documents, path));
+        path = mprGetPortablePath(path);
     }
     if (!eroute->views) {
         eroute->views = mprCreateHash(-1, MPR_HASH_STATIC_VALUES);
@@ -582,7 +582,7 @@ static cchar *getClientConfig(HttpConn *conn)
         }
     }
     route = conn->rx->route;
-    if ((obj = mprGetJsonObj(route->config, "esp.mappings")) == 0) {
+    if ((obj = mprGetJsonObj(route->config, "esp.mappings")) != 0) {
         mappings = mprCreateJson(MPR_JSON_OBJ);
         copyMappings(route, mappings, obj);
         mprWriteJson(mappings, "prefix", route->prefix, 0);

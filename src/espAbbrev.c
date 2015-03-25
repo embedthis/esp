@@ -559,7 +559,7 @@ PUBLIC ssize renderString(cchar *s)
 
 PUBLIC void renderView(cchar *view)
 {
-    espRenderView(getConn(), view);
+    espRenderDocument(getConn(), view);
 }
 
 

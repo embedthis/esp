@@ -2776,7 +2776,7 @@ PUBLIC int httpOpenUploadFilter();
 PUBLIC int httpOpenWebSockFilter();
 PUBLIC int httpSendOpen(HttpQueue *q);
 PUBLIC void httpSendOutgoingService(HttpQueue *q);
-PUBLIC int httpHandleDirectory(struct HttpConn *conn, cchar *defaultIndex);
+PUBLIC int httpHandleDirectory(struct HttpConn *conn);
 
 /********************************** HttpConn *********************************/
 /**
@@ -3347,7 +3347,7 @@ PUBLIC void httpReadyHandler(HttpConn *conn);
     @stability Internal
     @internal
  */
-PUBLIC bool httpRenderDirListing(HttpConn *conn);
+PUBLIC bool httpShouldRenderDirListing(HttpConn *conn);
 
 /**
     Test if a request has exceeded its timeout limits
