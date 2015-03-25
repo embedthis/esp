@@ -811,7 +811,7 @@ static int getEspToken(EspParse *parse)
                             <%^ control
                          */
                         if (*next == '@') {
-                            mprLog("esp warn", 0, "AA Using deprecated \"@%c\" control directive in esp page", *next);
+                            mprLog("esp warn", 0, "Using deprecated \"@%c\" control directive in esp page", *next);
                         }
                         tid = ESP_TOK_CONTROL;
                         next = eatSpace(parse, ++next);
@@ -855,7 +855,7 @@ static int getEspToken(EspParse *parse)
 #if DEPRECATE || 1
         case '@':
             if (c == '@') {
-                mprLog("esp warn", 0, "BB Using deprecated \"@\" control directive in esp page");
+                mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page");
             }
 #endif
             if ((next == start) || next[-1] != '\\') {

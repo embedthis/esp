@@ -465,6 +465,14 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
             return;
         }
     }
+#if DEPRECATED || 1
+    /*
+        legacy-mvc applications have views under client/app
+     */
+    if (espRenderView(conn, sjoin("app/", target, ".esp", NULL), 0)) {
+        return;
+    }
+#endif
     if (!sends(target, "index.esp")) {
         /*
             Target may be a directory, so pre-flight a test to see if it has an index.
