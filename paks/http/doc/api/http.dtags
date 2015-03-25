@@ -1410,13 +1410,6 @@
     </member>
     <member kind="function">
       <type>bool</type>
-      <name>httpRenderDirListing</name>
-      <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>ga76efb00eef9f66c28c2ada344ac0fb93</anchor>
-      <arglist>(HttpConn *conn)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
       <name>httpRequestExpired</name>
       <anchorfile>group___http_conn.html</anchorfile>
       <anchor>ga4881adef12511e373fbf5c74756bfe1a</anchor>
@@ -1596,6 +1589,13 @@
       <anchorfile>group___http_conn.html</anchorfile>
       <anchor>ga3b9e9dbb4d2b8da2de6fb6d20c307fc6</anchor>
       <arglist>(HttpConn *conn, int eventMask)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>httpShouldRenderDirListing</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>ga1c75e95e5d8e9c55b88ac809854a95d0</anchor>
+      <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

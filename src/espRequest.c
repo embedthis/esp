@@ -610,14 +610,9 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     } else {
         cacheName = mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
     }
-
-    //  MOB - refactor
     if ((cache = httpGetDir(route, "CACHE")) == 0) {
         cache = "cache";
     }
-#if UNUSED
-    module = mprNormalizePath(sfmt("%s/%s%s", mprJoinPath(route->home, cache), cacheName, ME_SHOBJ));
-#endif
     module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
 
     lock(esp);
@@ -934,7 +929,7 @@ static int defineApp(HttpRoute *route, cchar *path)
     httpAddRouteIndex(route, "index.esp");
     httpAddRouteIndex(route, "index.html");
     httpSetRouteXsrf(route, 1);
-    mprLog("info esp", 2, "Define ESP app from: %s", path);
+    mprLog("info esp", 2, "ESP app: %s", path);
     return 0;
 }
 

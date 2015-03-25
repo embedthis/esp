@@ -25603,7 +25603,7 @@ PUBLIC void mprSetMinWorkers(int n)
     lock(ws);
     ws->minThreads = n; 
     if (n > 0) {
-        mprLog("info mpr thread", 1, "Pre-start %d workers", ws->minThreads);
+        mprLog("info mpr thread", 5, "Pre-start %d workers", ws->minThreads);
     }
     while (ws->numThreads < ws->minThreads) {
         worker = createWorker(ws, ws->stackSize);
@@ -25862,7 +25862,8 @@ static MprWorker *createWorker(MprWorkerService *ws, ssize stackSize)
     worker->idleCond = mprCreateCond();
 
     fmt(name, sizeof(name), "worker.%u", getNextThreadNum(ws));
-    mprLog("info mpr thread", 4, "Create %s, pool has %d workers. Limits %d-%d.", name, ws->numThreads + 1, ws->minThreads, ws->maxThreads);
+    mprLog("info mpr thread", 5, "Create %s, pool has %d workers. Limits %d-%d.", name, ws->numThreads + 1, 
+        ws->minThreads, ws->maxThreads);
     worker->thread = mprCreateThread(name, (MprThreadProc) workerMain, worker, stackSize);
     return worker;
 }
