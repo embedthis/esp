@@ -4701,14 +4701,10 @@ static bool espRenderView(HttpConn *conn, cchar *target, int flags)
  */
 PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 {
-    EspRoute    *eroute;
     HttpRx      *rx;
-    HttpTx      *tx;
     HttpUri     *up;
 
     rx = conn->rx;
-    tx = conn->tx;
-    eroute = rx->route->eroute;
 
     /*
         Internal directory redirection
@@ -4728,6 +4724,14 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
             return;
         }
     }
+#if DEPRECATED || 1
+    /*
+        legacy-mvc applications have views under client/app
+     */
+    if (espRenderView(conn, sjoin("app/", target, ".esp", NULL), 0)) {
+        return;
+    }
+#endif
     if (!sends(target, "index.esp")) {
         /*
             Target may be a directory, so pre-flight a test to see if it has an index.
@@ -4863,10 +4867,9 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 #endif
     canonical = mprGetPortablePath(mprGetRelPath(source, route->home));
 
-    //  MOB - eroute->appName should always be set
     appName = eroute->appName ? eroute->appName : route->host->name;
     if (eroute->combine) {
-        cacheName = eroute->appName;
+        cacheName = appName;
     } else {
         cacheName = mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
     }
@@ -4875,8 +4878,10 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     if ((cache = httpGetDir(route, "CACHE")) == 0) {
         cache = "cache";
     }
+#if UNUSED
     module = mprNormalizePath(sfmt("%s/%s%s", mprJoinPath(route->home, cache), cacheName, ME_SHOBJ));
-    isView = smatch(kind, "view");
+#endif
+    module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
 
     lock(esp);
     if (route->update) {
@@ -4885,6 +4890,7 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             unlock(esp);
             return MPR_ERR_CANT_FIND;
         }
+        isView = smatch(kind, "view");
         if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
             if (recompile) {
                 mprHoldBlocks(source, module, cacheName, NULL);
@@ -6267,7 +6273,7 @@ static int getEspToken(EspParse *parse)
                             <%^ control
                          */
                         if (*next == '@') {
-                            mprLog("esp warn", 0, "AA Using deprecated \"@%c\" control directive in esp page", *next);
+                            mprLog("esp warn", 0, "Using deprecated \"@%c\" control directive in esp page", *next);
                         }
                         tid = ESP_TOK_CONTROL;
                         next = eatSpace(parse, ++next);
@@ -6311,7 +6317,7 @@ static int getEspToken(EspParse *parse)
 #if DEPRECATE || 1
         case '@':
             if (c == '@') {
-                mprLog("esp warn", 0, "BB Using deprecated \"@\" control directive in esp page");
+                mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page");
             }
 #endif
             if ((next == start) || next[-1] != '\\') {
