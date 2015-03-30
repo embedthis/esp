@@ -2785,7 +2785,7 @@ static void parseBuild(HttpRoute *route, cchar *key, MprJson *prop)
             }
         }
     } else {
-        httpParseError(route, "Cannot find esp-compile rules for O/S \"%s\"", os);
+        httpParseError(route, "Cannot find compile rules for O/S \"%s\"", os);
     }
 }
 
@@ -2820,31 +2820,17 @@ static void legacyRouteSet(HttpRoute *route, cchar *set)
 
 PUBLIC int espInitParser() 
 {
-    HttpRoute   *route;
-    cchar       *path;
-
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
 #if DEPRECATED || 1
     httpDefineRouteSet("esp-angular-mvc", legacyRouteSet);
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
-    
     httpAddConfig("esp", httpParseAll);
     httpAddConfig("esp.apps", parseApps);
     httpAddConfig("esp.build", parseBuild);
     httpAddConfig("esp.combine", parseCombine);
     httpAddConfig("esp.optimize", parseOptimize);
-
-    path = mprJoinPath(mprGetAppDir(), "esp-compile.json");
-    if (mprPathExists(path, R_OK)) {
-        route = httpGetDefaultRoute(0);
-        espRoute(route);
-        if (httpLoadConfig(route, path) < 0) {
-            mprLog("error esp", 0, "Cannot parse %s", path);
-            return MPR_ERR_CANT_OPEN;
-        }
-    }
     return 0;
 } 
 
@@ -4011,18 +3997,22 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
 
     cmd = mprCreateCmd(conn->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, 0, 0) < 0) {
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
         httpTrace(conn, "esp.email.error", "error", 
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
         httpTrace(conn, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
+    mprDestroyCmd(cmd);
     return 0;
 }
 
@@ -4363,7 +4353,7 @@ static int openEsp(HttpQueue *q)
 {
     HttpConn    *conn;
     HttpRx      *rx;
-    HttpRoute   *route;
+    HttpRoute   *rp;
     EspRoute    *eroute;
     EspReq      *req;
 
@@ -4384,32 +4374,27 @@ static int openEsp(HttpQueue *q)
     /*
         Find the ESP route configuration. Search up the route parent chain.
      */
-    for (eroute = 0, route = rx->route; route; route = route->parent) {
-        if (route->eroute) {
-            eroute = route->eroute;
+    for (eroute = 0, rp = rx->route; rp; rp = rp->parent) {
+        if (rp->eroute) {
+            eroute = rp->eroute;
             break;
         }
     }
-    if (!route) {
-        route = rx->route;
-        eroute = createEspRoute(route);
-    }
     if (!eroute) {
-        httpError(conn, 0, "Cannot find a suitable ESP route");
-        closeEsp(q);
-        return MPR_ERR_CANT_OPEN;
+        eroute = createEspRoute(rx->route);
     }
+    rx->route->eroute = eroute;
     conn->reqData = req;
     req->esp = esp;
-    req->route = route;
+    req->route = rx->route;
     req->autoFinalize = 1;
 
     /*
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
-    if (!route->cookie && eroute->appName && *eroute->appName) {
-        httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
+    if (!rx->route->cookie) {
+        httpSetRouteCookie(rx->route, sfmt("esp-%s", eroute->appName));
     }
     return 0;
 }
@@ -4538,15 +4523,7 @@ static void startEsp(HttpQueue *q)
         mprSetThreadData(req->esp->local, conn);
         httpAuthenticate(conn);
         setupFlash(conn);
-#if UNUSED
-        /*
-            See if the esp configuration or app needs to be reloaded. (WARNING: GC yield)
-         */
-        if (route->update && eroute->appName && espLoadConfig(route) < 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot load esp config for %s", eroute->appName);
-            return;
-        }
-#endif
+
         /* WARNING: GC yield */
         if (!runAction(conn)) {
             pruneFlash(conn);
@@ -4867,7 +4844,7 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 #endif
     canonical = mprGetPortablePath(mprGetRelPath(source, route->home));
 
-    appName = eroute->appName ? eroute->appName : route->host->name;
+    appName = eroute->appName;
     if (eroute->combine) {
         cacheName = appName;
     } else {
@@ -5181,10 +5158,11 @@ static int defineApp(HttpRoute *route, cchar *path)
     eroute->top = eroute;
     if (path) {
         if (!mprPathExists(path, R_OK)) {
+            mprLog("error esp", 0, "Cannot open %s", path);
             return MPR_ERR_CANT_FIND;
         }
-        eroute->configFile = sclone(path);
         httpSetRouteHome(route, mprGetPathDir(path));
+        eroute->configFile = sclone(path);
     }
     espSetDefaultDirs(route);
 
@@ -5203,7 +5181,7 @@ static int defineApp(HttpRoute *route, cchar *path)
 PUBLIC int espLoadConfig(HttpRoute *route)
 {
     EspRoute    *eroute;
-    cchar       *package;
+    cchar       *name, *package;
     bool        modified;
 
     eroute = route->eroute;
@@ -5233,10 +5211,15 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             unlock(esp);
             return MPR_ERR_CANT_LOAD;
         }
-        eroute->appName = espGetConfig(route, "name", 0);
+        if ((name = espGetConfig(route, "name", 0)) != 0) {
+            eroute->appName = name;
+        }
+        if (espLoadCompilerRules(route) < 0) {
+            return MPR_ERR_CANT_OPEN;
+        }
         unlock(esp);
     }
-    if (!route->cookie && eroute->appName) {
+    if (!route->cookie) {
         httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
     if (route->database && !eroute->edi) {
@@ -5305,7 +5288,7 @@ PUBLIC int espLoadApp(HttpRoute *route, cchar *prefix, cchar *path)
         }
         prefix = stemplate(prefix, route->vars);
         httpSetRoutePrefix(route, prefix);
-        httpSetRoutePattern(route, sfmt("^%s.*$", prefix), 0);
+        httpSetRoutePattern(route, sfmt("^%s", prefix), 0);
     }
     if (defineApp(route, path) < 0) {
         return MPR_ERR_CANT_LOAD;
@@ -5413,7 +5396,6 @@ PUBLIC int espBindProc(HttpRoute *parent, cchar *pattern, void *proc)
         return MPR_ERR_CANT_CREATE;
     }
     httpSetRouteHandler(route, "espHandler");
-
     route->update = 0;
     espDefineAction(route, pattern, proc);
     return 0;
@@ -5426,7 +5408,6 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
     MprPath     info;
 
     eroute = route->eroute;
-    path = mprJoinPath(route->home, path);
     mprGetPathInfo(path, &info);
     if (info.mtime > eroute->loaded) {
         *modified = 1;
@@ -5684,7 +5665,8 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
 }
 
 
-static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module, char **errMsg)
+static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module, 
+    char **errMsg)
 {
     MprCmd      *cmd;
     MprKey      *var;
@@ -5696,7 +5678,6 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
 
     *errMsg = 0;
     eroute = route->eroute;
-    cmd = mprCreateCmd(dispatcher);
     if ((commandLine = espExpandCommand(route, command, csource, module)) == 0) {
         *errMsg = sfmt("Missing EspCompile directive for %s", csource);
         return MPR_ERR_CANT_READ;
@@ -5712,6 +5693,7 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     } else {
         env = 0;
     }
+    cmd = mprCreateCmd(dispatcher);
     if (eroute->searchPath) {
         mprSetCmdSearchPath(cmd, eroute->searchPath);
     }
@@ -5733,7 +5715,25 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
         } else {
             *errMsg = "Cannot compile view";
         }
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
+    }
+    mprDestroyCmd(cmd);
+    return 0;
+}
+
+
+PUBLIC int espLoadCompilerRules(HttpRoute *route)
+{
+    cchar   *compile, *rules;
+
+    if ((compile = mprGetJson(route->config, "esp.compile")) == 0) {
+        compile = ESP_COMPILE_JSON;
+    }
+    rules = mprJoinPath(mprGetAppDir(), compile);
+    if (httpLoadConfig(route, rules) < 0) {
+        mprLog("error esp", 0, "Cannot parse %s", rules);
+        return MPR_ERR_CANT_OPEN;
     }
     return 0;
 }
@@ -5814,7 +5814,14 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         }
     }
 #endif
-    /* WARNING: GC yield here */
+
+    if (!eroute->compile && espLoadCompilerRules(route) < 0) {
+        return 0;
+    }
+
+    /* 
+        Run compiler: WARNING: GC yield here 
+     */
     if (runCommand(route, dispatcher, eroute->compile, csource, module, errMsg) != 0) {
         return 0;
     }

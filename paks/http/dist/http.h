@@ -4418,6 +4418,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_STRICT_TLS           0x8000      /**< Emit Strict-Transport-Security header */
 #define HTTP_ROUTE_HOSTED               0x10000     /**< Route being hosted (appweb) */
 #define HTTP_ROUTE_NO_LISTEN            0x20000     /**< Not listening on endpoints */
+#define HTTP_ROUTE_PERSIST_COOKIE       0x40000     /**< Persist session cookie to disk */
 
 #if DEPRECATE || 1
 #define HTTP_ROUTE_SET_DEFINED          0x10000     /**< Route set defined */
@@ -5491,6 +5492,17 @@ PUBLIC void httpSetRouteMethods(HttpRoute *route, cchar *methods);
     @stability Evolving
  */
 PUBLIC void httpSetRouteCookie(HttpRoute *route, cchar *cookie);
+
+/**
+    Persist the cookie to disk
+    @description By default, browser session cookies are created so they are discarded when the browser exits.
+    If persistent cookies are created, they live despite browser restarts
+    @param route Route to modify
+    @param enable Set to true to enable
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable);
 
 /**
     Set the route pattern

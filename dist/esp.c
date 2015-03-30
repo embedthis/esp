@@ -555,7 +555,7 @@ static void initRuntime()
     if ((home = getenv("HOME")) != 0) {
         app->paksCacheDir = mprJoinPath(home, ".paks");
     } else {
-        app->paksCacheDir = mprJoinPath(mprGetAppDir(), "../" ME_ESP_PAKS);
+        app->paksCacheDir = mprJoinPath(mprGetPathParent(mprGetAppDir()), ".paks");
     }
     if (mprStart() < 0) {
         mprLog("", 0, "Cannot start MPR for %s", mprGetAppName());
@@ -567,7 +567,7 @@ static void initRuntime()
         httpSetPlatformDir(app->platform);
     } else {
         app->platform = http->platform;
-        httpSetPlatformDir(0);
+        httpSetPlatformDir(NULL);
     }
     vtrace("Info", "Platform \"%s\"", http->platformDir);
     if (!http->platformDir) {
@@ -1486,7 +1486,6 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     char        *err, *out;
 
     eroute = route->eroute;
-    cmd = mprCreateCmd(0);
     if ((app->command = espExpandCommand(route, command, csource, module)) == 0) {
         fail("Missing EspCompile directive for %s", csource);
         return MPR_ERR_CANT_READ;
@@ -1502,6 +1501,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     } else {
         env = 0;
     }
+    cmd = mprCreateCmd(0);
     if (eroute->searchPath) {
         mprSetCmdSearchPath(cmd, eroute->searchPath);
     }
@@ -1515,6 +1515,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
             err = out;
         }
         fail("Cannot run command: \n%s\nError: %s", app->command, err);
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if (out && *out) {
@@ -1531,6 +1532,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     if (err && *err) {
         mprLog("", 0, "%s", err);
     }
+    mprDestroyCmd(cmd);
     return 0;
 }
 
@@ -1743,7 +1745,7 @@ static void compile(int argc, char **argv)
             fail("Cannot open %s", app->combinePath);
             return;
         }
-        mprWriteFileFmt(file, "/*\n    %s -- Generated Appweb Static Initialization\n */\n", app->genlink);
+        mprWriteFileFmt(file, "/*\n    %s -- Static Initialization\n */\n", app->genlink);
         mprWriteFileFmt(file, "#include \"mpr.h\"\n\n");
         mprWriteFileFmt(file, "#include \"esp.h\"\n\n");
         for (ITERATE_ITEMS(app->slink, route, next)) {
@@ -1752,10 +1754,10 @@ static void compile(int argc, char **argv)
             mprWriteFileFmt(file, "    /* SOURCE %s */\n",
                 mprGetRelPath(mprJoinPath(httpGetDir(route, "CACHE"), sjoin(name, ".c", NULL)), NULL));
         }
-        mprWriteFileFmt(file, "\nPUBLIC void appwebStaticInitialize()\n{\n");
+        mprWriteFileFmt(file, "\nPUBLIC void espStaticInitialize()\n{\n");
         for (ITERATE_ITEMS(app->slink, route, next)) {
             name = app->name ? app->name : mprGetPathBase(route->documents);
-            mprWriteFileFmt(file, "    appwebStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name, 
+            mprWriteFileFmt(file, "    espStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name, 
                 route->pattern);
         }
         mprWriteFileFmt(file, "}\n");
@@ -2455,7 +2457,12 @@ static void usageError()
     "    --cipher cipher            # Password cipher 'md5' or 'blowfish'\n"
     "    --database name            # Database provider 'mdb|sdb'\n"
     "    --force                    # Force requested action\n"
+#if KEEP
+    /*
+        Static linking is not recommended due to the complexity of resolving initializers
+     */
     "    --genlink filename         # Generate a static link module for combine compilations\n"
+#endif
     "    --home directory           # Change to directory first\n"
     "    --keep                     # Keep intermediate source\n"
     "    --listen [ip:]port         # Generate app to listen at address\n"
@@ -2470,7 +2477,12 @@ static void usageError()
     "    --routePrefix prefix       # Prefix of route to select\n"
     "    --single                   # Generate a singleton controller\n"
     "    --show                     # Show routes and compile commands\n"
+#if KEEP
+    /*
+        Static linking is not recommended due to the complexity of resolving initializers
+     */
     "    --static                   # Use static linking\n"
+#endif
     "    --symbols                  # Compile for debug with symbols\n"
     "    --table name               # Override table name if plural required\n"
     "    --trace traceFile:level    # Trace to file at verbosity level (0-5)\n"

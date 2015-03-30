@@ -1212,22 +1212,17 @@ extern "C" {
 
 /********************************** Tunables **********************************/
 
-#ifndef ME_ESP_SERVER_PREFIX
-    #define ME_ESP_SERVER_PREFIX "/do"                 /**< URI prefix for server controllers */
-#endif
 #ifndef ME_ESP_EMAIL_TIMEOUT
     #define ME_ESP_EMAIL_TIMEOUT (60 * 1000)           /**< Timeout for sending email */
 #endif
 #ifndef ME_ESP_RELOAD_TIMEOUT
     #define ME_ESP_RELOAD_TIMEOUT (5 * 1000)           /**< Timeout for reloading esp modules */
 #endif
-#ifndef ME_ESP_PAKS
-    #define ME_ESP_PAKS     "esp"                       /**< Default Paks directory name */
-#endif
 #define ESP_TOK_INCR        1024                        /**< Growth increment for ESP tokens */
 #define ESP_LISTEN          "4000"                      /**< Default listening endpoint for the esp program */
 #define ESP_UNLOAD_TIMEOUT  (10)                        /**< Very short timeout for reloading */
 #define ESP_LIFESPAN        (3600 * MPR_TICKS_PER_SEC)  /**< Default generated content cache lifespan */
+#define ESP_COMPILE_JSON    "esp-compile.json"          /**< Compile rules filename */
 
 #if ME_64
     #define ESP_VSKEY "HKLM\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7"
@@ -1678,6 +1673,15 @@ PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue);
  */
 PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
 #endif
+
+/**
+    Load the compiler rules from esp-compile.json
+    @param route HttpRoute object
+    @ingroup EspRoute
+    @stability Prototype
+    @internal
+ */
+PUBLIC int espLoadCompilerRules(HttpRoute *route);
 
 /**
     Load an ESP module
