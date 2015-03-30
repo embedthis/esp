@@ -22,28 +22,28 @@
             },
             cache: [ {
                 client: '1hr',
-                uris: [ '/caching/client' ],
+                urls: '/caching/client',
             }, {
                 server: '1day',
-                uris: [ '/caching/small', '/caching/big', '/caching/huge' ],
+                urls: [ '/small', '/big', '/huge' ],
             }, {
                 server: '1day',
                 manual: true,
-                uris: [ '/caching/manual' ],
+                urls: '/caching/manual',
             } ],
         }, {
             pattern: '^/combined',
             prefix: '/combined',
             cache: [ {
                 server: '1day',
-                uris: [ '/caching.esp' ],
+                urls: [ '/caching.esp' ],
             } ],
         }, {
             pattern: '^/only',
             prefix: '/only',
             cache: [ {
                 server: '1day',
-                uris: [ '/caching.esp?esp=1&prefix=/only' ],
+                urls: [ '/caching.esp?esp=1&prefix=/only' ],
             } ],
         }, {
             pattern: '^/unique',
@@ -51,7 +51,7 @@
             cache: [ {
                 server: '1day',
                 unique: true,
-                uris: [ '/caching.esp' ],
+                urls: [ '/caching.esp' ],
             } ],
         }, {
             pattern: '^/ext',

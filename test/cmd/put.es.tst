@@ -4,14 +4,14 @@
 
 require support
 
-cleanDir('documents/tmp')
+cleanDir('dist/tmp')
 
 //  PUT file
 http('test.dat /tmp/day.tmp')
-ttrue(Path('documents/tmp/day.tmp').exists)
+ttrue(Path('dist/tmp/day.tmp').exists)
 
 //  PUT files
 http(Path('.').files('*.tst').join(' ') + ' /tmp/')
-ttrue(Path('documents/tmp/basic.es.tst').exists)
+ttrue(Path('dist/tmp/basic.es.tst').exists)
 
-cleanDir('documents/tmp')
+cleanDir('dist/tmp')

@@ -7,7 +7,7 @@ let http: Http = new Http
 
 if (thas('ME_DEBUG')) {
     //  First get
-    let path = new Path("documents/reload.esp")
+    let path = new Path("dist/reload.esp")
     path.write('<html><body><% espRender(conn, "First", -1); %></body></html>')
     http.get(HTTP + "/reload.esp")
     ttrue(http.status == 200)

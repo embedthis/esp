@@ -27,7 +27,6 @@ ttrue(resp.number == first)
 ttrue(resp.uri == "/caching/manual")
 ttrue(resp.query == "null")
 
-
 //  Update the cache
 http.get(HTTP + "/caching/update?updated=true")
 ttrue(http.status == 200)

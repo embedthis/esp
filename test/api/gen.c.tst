@@ -23,7 +23,7 @@ static void initHttp()
     /*
         Test if we have network connectivity. If not, then skip further tests.
      */
-    if (mprConnectSocket(sp, "www.example.com", 80, 0) < 0) {
+    if (mprConnectSocket(sp, "embedthis.com", 80, 0) < 0) {
         tskip("no internet connection");
         exit(0);
     }
@@ -54,7 +54,7 @@ static void basicHttpGet()
         httpStartTracing("stdout:4");
     }
     conn = httpCreateConn(NULL, 0);
-    rc = httpConnect(conn, "GET", "http://www.example.com/index.html", NULL);
+    rc = httpConnect(conn, "GET", "http://embedthis.com/index.html", NULL);
     ttrue(rc >= 0);
     if (rc >= 0) {
         httpWait(conn, HTTP_STATE_COMPLETE, timeout);
@@ -83,7 +83,7 @@ static void secureHttpGet()
     conn = httpCreateConn(NULL, 0);
     ttrue(conn != 0);
 
-    rc = httpConnect(conn, "GET", "https://www.example.com/", NULL);
+    rc = httpConnect(conn, "GET", "https://embedthis.com/", NULL);
     ttrue(rc >= 0);
     if (rc >= 0) {
         httpFinalize(conn);
@@ -115,7 +115,7 @@ static void stealSocket()
      */
     conn = httpCreateConn(NULL, 0);
     ttrue(conn != 0);
-    rc = httpConnect(conn, "GET", "http://www.example.com/", NULL);
+    rc = httpConnect(conn, "GET", "http://embedthis.com/", NULL);
     ttrue(rc >= 0);
     if (rc >= 0) {
         ttrue(conn->sock != 0);
@@ -139,7 +139,7 @@ static void stealSocket()
      */
     conn = httpCreateConn(NULL, 0);
     ttrue(conn != 0);
-    rc = httpConnect(conn, "GET", "http://www.example.com/", NULL);
+    rc = httpConnect(conn, "GET", "http://embedthis.com/", NULL);
     ttrue(rc >= 0);
     if (rc >= 0) {
         ttrue(conn->sock != 0);
