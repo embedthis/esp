@@ -227,7 +227,8 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
 }
 
 
-static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module, char **errMsg)
+static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module, 
+    char **errMsg)
 {
     MprCmd      *cmd;
     MprKey      *var;
@@ -239,7 +240,6 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
 
     *errMsg = 0;
     eroute = route->eroute;
-    cmd = mprCreateCmd(dispatcher);
     if ((commandLine = espExpandCommand(route, command, csource, module)) == 0) {
         *errMsg = sfmt("Missing EspCompile directive for %s", csource);
         return MPR_ERR_CANT_READ;
@@ -255,6 +255,7 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     } else {
         env = 0;
     }
+    cmd = mprCreateCmd(dispatcher);
     if (eroute->searchPath) {
         mprSetCmdSearchPath(cmd, eroute->searchPath);
     }
@@ -276,7 +277,25 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
         } else {
             *errMsg = "Cannot compile view";
         }
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
+    }
+    mprDestroyCmd(cmd);
+    return 0;
+}
+
+
+PUBLIC int espLoadCompilerRules(HttpRoute *route)
+{
+    cchar   *compile, *rules;
+
+    if ((compile = mprGetJson(route->config, "esp.compile")) == 0) {
+        compile = ESP_COMPILE_JSON;
+    }
+    rules = mprJoinPath(mprGetAppDir(), compile);
+    if (httpLoadConfig(route, rules) < 0) {
+        mprLog("error esp", 0, "Cannot parse %s", rules);
+        return MPR_ERR_CANT_OPEN;
     }
     return 0;
 }
@@ -357,7 +376,14 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         }
     }
 #endif
-    /* WARNING: GC yield here */
+
+    if (!eroute->compile && espLoadCompilerRules(route) < 0) {
+        return 0;
+    }
+
+    /* 
+        Run compiler: WARNING: GC yield here 
+     */
     if (runCommand(route, dispatcher, eroute->compile, csource, module, errMsg) != 0) {
         return 0;
     }

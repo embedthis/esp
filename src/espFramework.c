@@ -1141,18 +1141,22 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
 
     cmd = mprCreateCmd(conn->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, 0, 0) < 0) {
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
         httpTrace(conn, "esp.email.error", "error", 
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
         httpTrace(conn, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
+    mprDestroyCmd(cmd);
     return 0;
 }
 

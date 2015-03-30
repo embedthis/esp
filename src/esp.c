@@ -161,7 +161,7 @@ static cchar *readTemplate(cchar *path, MprHash *tokens, ssize *len);
 static bool requiredRoute(HttpRoute *route);
 static int reverseSortFiles(MprDirEntry **d1, MprDirEntry **d2);
 static void role(int argc, char **argv);
-static void run(int argc, char **argv);
+static void serve(int argc, char **argv);
 static void saveConfig(MprJson *config, cchar *path, int flags);
 static bool selectResource(cchar *path, cchar *kind);
 static void setConfigValue(MprJson *config, cchar *key, cchar *value);
@@ -513,7 +513,7 @@ static void parseCommand(int argc, char **argv)
     } else if (smatch(cmd, "role")) {
         app->require = REQ_CONFIG;
 
-    } else if (smatch(cmd, "run")) {
+    } else if (smatch(cmd, "serve")) {
         app->require = REQ_SERVE;
         if (argc > 1) {
             app->require = REQ_NO_CONFIG;
@@ -555,7 +555,7 @@ static void initRuntime()
     if ((home = getenv("HOME")) != 0) {
         app->paksCacheDir = mprJoinPath(home, ".paks");
     } else {
-        app->paksCacheDir = mprJoinPath(mprGetAppDir(), "../" ME_ESP_PAKS);
+        app->paksCacheDir = mprJoinPath(mprGetPathParent(mprGetAppDir()), ".paks");
     }
     if (mprStart() < 0) {
         mprLog("", 0, "Cannot start MPR for %s", mprGetAppName());
@@ -567,7 +567,7 @@ static void initRuntime()
         httpSetPlatformDir(app->platform);
     } else {
         app->platform = http->platform;
-        httpSetPlatformDir(0);
+        httpSetPlatformDir(NULL);
     }
     vtrace("Info", "Platform \"%s\"", http->platformDir);
     if (!http->platformDir) {
@@ -610,10 +610,10 @@ static void initialize(int argc, char **argv)
         app->description = sfmt("%s Application", app->title);
     }
     if (!app->version) {
-        app->version = sclone("0.0.1");
+        app->version = sclone("0.1.0");
     }
     route = app->route;
-    if (argc > 0 && !smatch(argv[1], "run")) {
+    if (argc > 0 && !smatch(argv[1], "serve")) {
         route->flags |= HTTP_ROUTE_NO_LISTEN;
     }
     /*
@@ -628,7 +628,7 @@ static void initialize(int argc, char **argv)
     }
     app->description = getConfigValue(app->package, "description", app->description);
     app->name = getConfigValue(app->package, "name", app->name);
-    app->title = getConfigValue(app->package, "title", app->name);
+    app->title = getConfigValue(app->package, "title", app->title);
     app->version = getConfigValue(app->package, "version", app->version);
     
     path = mprJoinPath(route->home, "esp.json");
@@ -637,9 +637,12 @@ static void initialize(int argc, char **argv)
             return;
         }
     }
+    /*
+        Read name, title, description and version from esp.json - permits execution without package.json
+     */
     app->description = getConfigValue(app->config, "description", app->description);
     app->name = getConfigValue(app->config, "name", app->name);
-    app->title = getConfigValue(app->config, "title", app->name);
+    app->title = getConfigValue(app->config, "title", app->title);
     app->version = getConfigValue(app->config, "version", app->version);
 
     if (!app->config) {
@@ -693,6 +696,7 @@ static void initialize(int argc, char **argv)
         httpAddRouteIndex(route, "index.html");
         httpSetRouteShowErrors(route, 1);
         route->update = 1;
+        espLoadCompilerRules(route);
     }
     httpFinalizeRoute(route);
     app->routes = getRoutes();
@@ -715,7 +719,7 @@ static void process(int argc, char **argv)
         return;
     }
     if (argc == 0) {
-        run(argc, argv);
+        serve(argc, argv);
         return;
     }
     cmd = argv[0];
@@ -751,14 +755,14 @@ static void process(int argc, char **argv)
     } else if (smatch(cmd, "role")) {
         role(argc - 1, &argv[1]);
 
-    } else if (smatch(cmd, "run")) {
-        run(argc - 1, &argv[1]);
+    } else if (smatch(cmd, "serve")) {
+        serve(argc - 1, &argv[1]);
 
     } else if (smatch(cmd, "user")) {
         user(argc - 1, &argv[1]);
 
     } else if (isdigit((uchar) *cmd)) {
-        run(1, (char**) &cmd);
+        serve(1, (char**) &cmd);
     }
 }
 
@@ -886,18 +890,11 @@ static void editValue(int argc, char **argv)
 static void init(int argc, char **argv)
 {
     MprJson     *config;
-    cchar       *data, *identity, *path;
+    cchar       *data, *path;
 
     if (!mprPathExists("esp.json", R_OK)) {
         trace("Create", "esp.json");
-        if (!mprPathExists("package.json", R_OK)) {
-            identity = sfmt("name: '%s', title: '%s', description: '%s', version: '%s'",
-                app->name, app->title, app->description, app->version);
-        } else {
-            identity = "name: 'app'";
-        }
         config = mprParseJson(sfmt("{" \
-            "%s," \
             "http: {" \
                 "server: {" \
                     "listen: [" \
@@ -908,11 +905,8 @@ static void init(int argc, char **argv)
                     "certificate: ''," \
                     "key: ''" \
                 "}" \
-            "}," \
-            "esp: {" \
-                "compile: 'symbols'" \
             "}" \
-        "}", identity));
+        "}"));
         if (config == 0) {
             fail("Cannot parse config");
             return;
@@ -929,6 +923,34 @@ static void init(int argc, char **argv)
             fail("Cannot save %s", path);
         }
     }
+    /*
+        package.json
+     */
+    if (!mprPathExists("package.json", R_OK)) {
+        trace("Create", "package.json");
+        config = mprParseJson(sfmt("{" \
+            "name: '%s'," \
+            "title: '%s'," \
+            "description: '%s'," \
+            "version: '%s'," \
+            "dependencies: {}," \
+        "}", app->name, app->title, app->description, app->version));
+        if (config == 0) {
+            fail("Cannot parse config");
+            return;
+        }
+        path = mprJoinPath(app->route ? app->route->home : ".", "package.json");
+        if ((data = mprJsonToString(config, MPR_JSON_PRETTY | MPR_JSON_QUOTES)) == 0) {
+            fail("Cannot save %s", path);
+        }
+        if (mprWritePathContents(path, data, -1, 0644) < 0) {
+            fail("Cannot save %s", path);
+        }
+    }
+    /*
+        Initially make the directory and do not consult httpGetDir because httpSetDir tests if "dist" exists.
+     */
+    mprMakeDir("dist", 0755, -1, -1, 1);
 }
 
 
@@ -1197,9 +1219,9 @@ static void setConfigValue(MprJson *config, cchar *key, cchar *value)
 
 
 /*
-    esp run [ip]:[port] ...
+    esp serve [ip]:[port] ...
  */
-static void run(int argc, char **argv)
+static void serve(int argc, char **argv)
 {
     HttpEndpoint    *endpoint;
     cchar           *address;
@@ -1412,15 +1434,6 @@ static MprList *getRoutes()
         } else {
             mprLog("", 6, "Check route name %s, prefix %s", route->pattern, route->startWith);
         }
-        parent = route->parent;
-        if (parent && parent->eroute &&
-            ((EspRoute*) parent->eroute)->compile && smatch(route->documents, parent->documents) && parent->startWith) {
-            /*
-                Use the parent instead if it has the same directory and is not the default route
-                This is for MVC apps with a prefix of "/" and a directory the same as the default route.
-             */
-            continue;
-        }
         if (!requiredRoute(route)) {
             mprLog("", 6, "Skip route %s not required for selected targets", route->pattern);
             continue;
@@ -1435,6 +1448,18 @@ static MprList *getRoutes()
                 route = 0;
                 break;
             }
+        }
+        if (!route) {
+            continue;
+        }
+        parent = route->parent;
+        if (parent && parent->eroute &&
+            ((EspRoute*) parent->eroute)->compile && smatch(route->documents, parent->documents) && parent->startWith) {
+            /*
+                Use the parent instead if it has the same directory and is not the default route
+                This is for MVC apps with a prefix of "/" and a directory the same as the default route.
+             */
+            continue;
         }
         if (route && mprLookupItem(routes, route) < 0) {
             mprLog("", 6, "Using route name: %s documents:%s prefix: %s", route->pattern, route->documents, 
@@ -1486,7 +1511,6 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     char        *err, *out;
 
     eroute = route->eroute;
-    cmd = mprCreateCmd(0);
     if ((app->command = espExpandCommand(route, command, csource, module)) == 0) {
         fail("Missing EspCompile directive for %s", csource);
         return MPR_ERR_CANT_READ;
@@ -1502,6 +1526,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     } else {
         env = 0;
     }
+    cmd = mprCreateCmd(0);
     if (eroute->searchPath) {
         mprSetCmdSearchPath(cmd, eroute->searchPath);
     }
@@ -1515,6 +1540,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
             err = out;
         }
         fail("Cannot run command: \n%s\nError: %s", app->command, err);
+        mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if (out && *out) {
@@ -1531,6 +1557,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     if (err && *err) {
         mprLog("", 0, "%s", err);
     }
+    mprDestroyCmd(cmd);
     return 0;
 }
 
@@ -1743,7 +1770,7 @@ static void compile(int argc, char **argv)
             fail("Cannot open %s", app->combinePath);
             return;
         }
-        mprWriteFileFmt(file, "/*\n    %s -- Generated Appweb Static Initialization\n */\n", app->genlink);
+        mprWriteFileFmt(file, "/*\n    %s -- Static Initialization\n */\n", app->genlink);
         mprWriteFileFmt(file, "#include \"mpr.h\"\n\n");
         mprWriteFileFmt(file, "#include \"esp.h\"\n\n");
         for (ITERATE_ITEMS(app->slink, route, next)) {
@@ -1752,10 +1779,10 @@ static void compile(int argc, char **argv)
             mprWriteFileFmt(file, "    /* SOURCE %s */\n",
                 mprGetRelPath(mprJoinPath(httpGetDir(route, "CACHE"), sjoin(name, ".c", NULL)), NULL));
         }
-        mprWriteFileFmt(file, "\nPUBLIC void appwebStaticInitialize()\n{\n");
+        mprWriteFileFmt(file, "\nPUBLIC void espStaticInitialize()\n{\n");
         for (ITERATE_ITEMS(app->slink, route, next)) {
             name = app->name ? app->name : mprGetPathBase(route->documents);
-            mprWriteFileFmt(file, "    appwebStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name, 
+            mprWriteFileFmt(file, "    espStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name, 
                 route->pattern);
         }
         mprWriteFileFmt(file, "}\n");
@@ -2455,7 +2482,12 @@ static void usageError()
     "    --cipher cipher            # Password cipher 'md5' or 'blowfish'\n"
     "    --database name            # Database provider 'mdb|sdb'\n"
     "    --force                    # Force requested action\n"
+#if KEEP
+    /*
+        Static linking is not recommended due to the complexity of resolving initializers
+     */
     "    --genlink filename         # Generate a static link module for combine compilations\n"
+#endif
     "    --home directory           # Change to directory first\n"
     "    --keep                     # Keep intermediate source\n"
     "    --listen [ip:]port         # Generate app to listen at address\n"
@@ -2470,7 +2502,12 @@ static void usageError()
     "    --routePrefix prefix       # Prefix of route to select\n"
     "    --single                   # Generate a singleton controller\n"
     "    --show                     # Show routes and compile commands\n"
+#if KEEP
+    /*
+        Static linking is not recommended due to the complexity of resolving initializers
+     */
     "    --static                   # Use static linking\n"
+#endif
     "    --symbols                  # Compile for debug with symbols\n"
     "    --table name               # Override table name if plural required\n"
     "    --trace traceFile:level    # Trace to file at verbosity level (0-5)\n"

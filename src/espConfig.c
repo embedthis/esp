@@ -223,7 +223,7 @@ static void parseBuild(HttpRoute *route, cchar *key, MprJson *prop)
             }
         }
     } else {
-        httpParseError(route, "Cannot find esp-compile rules for O/S \"%s\"", os);
+        httpParseError(route, "Cannot find compile rules for O/S \"%s\"", os);
     }
 }
 
@@ -258,31 +258,17 @@ static void legacyRouteSet(HttpRoute *route, cchar *set)
 
 PUBLIC int espInitParser() 
 {
-    HttpRoute   *route;
-    cchar       *path;
-
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
 #if DEPRECATED || 1
     httpDefineRouteSet("esp-angular-mvc", legacyRouteSet);
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
-    
     httpAddConfig("esp", httpParseAll);
     httpAddConfig("esp.apps", parseApps);
     httpAddConfig("esp.build", parseBuild);
     httpAddConfig("esp.combine", parseCombine);
     httpAddConfig("esp.optimize", parseOptimize);
-
-    path = mprJoinPath(mprGetAppDir(), "esp-compile.json");
-    if (mprPathExists(path, R_OK)) {
-        route = httpGetDefaultRoute(0);
-        espRoute(route);
-        if (httpLoadConfig(route, path) < 0) {
-            mprLog("error esp", 0, "Cannot parse %s", path);
-            return MPR_ERR_CANT_OPEN;
-        }
-    }
     return 0;
 } 
 
