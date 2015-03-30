@@ -51,15 +51,22 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
                     <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../users/database.html">ESP Databases</a>
-                    <a class="item" href="../users/sessions.html">ESP Sessions</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -67,6 +74,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -163,27 +171,34 @@
             can type along as you go. This tour uses the <em><a href="../users/program.html">esp</a></em> application
             generator.</p>
             <a id="blog"></a>
-            <h2 >Creating a New Application</h2>
-            <p>To create a new ESP application, you will use <em>esp</em>, the ESP application generator
-            program. Make a directory named <em>blog</em> and then install the esp-html-skeleton Pak.</p>
-            <pre class="ui code segment"><b>$ mkdir blog
+            <h2>Creating a New Application</h2>
+            <p>To create a new ESP application, you will use <a href="http://embedthis.com/pak/">Pak</a>
+            package manager to install the <em>esp-html-skeleton</em>.
+            Make a directory named <em>blog</em> and then install the esp-html-skeleton Pak.</p>
+            <pre class="code"><b>$ mkdir blog
 $ cd blog
 $ pak install esp-html-skeleton</b>
-   [Install] esp-server 5.3.0
-   [Install] esp-mvc 5.3.0
-   [Install] esp-html-skeleton 5.3.0
+/Users/mob/dev/demo> pak install esp-html-skeleton
+   [Install] esp-server 5.4.0
+   [Install] esp-mvc 5.4.0
+   [Install] exp-js 0.2.0
+   [Install] exp-less 0.2.0
+   [Install] exp-css 0.2.0
+   [Install] exp-esp 0.1.0
+   [Install] esp-html-skeleton 5.4.0
 </pre>
             <p>This simple command accomplished quite a bit, including:
             <ul>
                 <li>Create a core structure with directories for various parts of the application. Initially, some of
                     these directories are empty, but they will be used as your application grows.</li>
-                <li><p>Installed the esp-html-skeleton, esp-mvc and esp-server Paks. You can see these via
-                    the <em>pak list</em> command.</p>
+                <li><p>Installed the <em>esp-html-skeleton</em>, <em>esp-mvc</em>, <em>esp-server</em>, 
+                    <em>exp-js</em>, <em>exp-less</em>, <em>exp-css</em>,
+                    and exp-esp packages. You can see these via the <em>pak list</em> command.</p>
                 <li>Created <em>esp.json</em> and <em>package.json</em> files that configures and control how your application will run.</li>
             </ul>
 
             <h2>Conventions</h2>
-            <p>The ESP web framework follows the <i>"convention over
+            <p>The ESP web framework follows the <i>convention over
             configuration"</i> philosophy popularized by <a href="http://www.rubyonrails.org">Ruby on Rails</a>. This
             means that ESP adopts certain conventions about where files and directories should be placed and about
             how names are used. If you work with these conventions, then you need to do little or no configuration.
@@ -202,8 +217,13 @@ $ pak install esp-html-skeleton</b>
                         <td>Cached compiled controller and view modules</td>
                     </tr>
                     <tr>
-                        <td>documents</td>
-                        <td>Client-side documents including scripts, pages and style-sheets</td>
+                        <td>contents</td>
+                        <td>Input content for the Expansive tool to render into <em>dist</em></td>
+                    </tr>
+                    <tr>
+                        <td>dist</td>
+                        <td>Distribution directory for browser visible web content including scripts, 
+                            pages and style-sheets</td>
                     </tr>
                     <tr>
                         <td>controllers</td>
@@ -225,17 +245,11 @@ $ pak install esp-html-skeleton</b>
                         <td>partials</td>
                         <td>ESP partial pages. Used by Expansive.</td>
                     </tr>
-                    <tr>
-                        <td>source</td>
-                        <td>Input source documents for the Expansive tool to render into "documents"</td>
-                    </tr>
                 </tbody>
             </table>
-            <p>See the "<a href="../users/program.html">esp</a>" command documentation for an explanation 
-            of the other generated directories.</p>
             
             <a id="run"></a>
-            <h2 >Access your Application</h2>
+            <h2>Access your Application</h2>
             <p>To access your application enter <em>http://localhost:4000</em> in your browser. 
             You should see your first application home page.</p>
             <img src="../images/esp/mvc-tour/home.png" alt="home" class="bare-screen" /> 
@@ -247,7 +261,7 @@ $ pak install esp-html-skeleton</b>
             database tables, views and controllers for you. The command below will create a <em>post</em> database table
             with a blog post title and post comment body. The <em>title</em> is a string data type and the <em>body</em> is a
             multi-line text field.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 $ <b>esp generate scaffold post title:string body:text</b>
     [Create] Directory: client/app
     [Create] client/app/post.c
@@ -272,7 +286,7 @@ $ <b>esp generate scaffold post title:string body:text</b>
             <img src="../images/esp/mvc-tour/post-list.png" alt="postList" class="bare-screen" /> 
             
             <a id="newPosts"></a></p>
-            <h2 >Create New Posts</h2>
+            <h2>Create New Posts</h2>
             <p>The New Post button directs your browser to the <em>/server/post/</em> URI. This form is being
             rendered on the client from the client/app/post/post-edit.html template. Behind the scenes, the 
             browser asks for the <em>/server/post/init</em> URI to determine what are the required input fields 
@@ -285,15 +299,15 @@ $ <b>esp generate scaffold post title:string body:text</b>
             to edit its contents. This will run the same post-edit.html template that was used to create the post.</p>
             <h2 class=section>On the Server</h2>
             <p>When <em>OK</em> button is clicked to create a post, the browser invokes the
-            <em>/server/post</em> URI with the HTTP "POST" method to create the blog post. The Appweb server
+            <em>/server/post</em> URI with the HTTP "POST" method to create the blog post. Esp
             parses this URI and and selects the appropriate request route and handler for the request. It 
             then identifies <em>post</em> as the name of the server-side controller invokes the <em>createPost</em>
             action routine to service the request. The controller is automatically compiled and loaded if required.
             <p>A controller file typically defines many such C functions called actions, that are bound to specific URIs
-            via Appweb routes. Actions are defined using the <em>espDefineAction</em> API in the initialization 
+            via ESP routes. Actions are defined using the <em>espDefineAction</em> API in the initialization 
             function of the controller.</p>
             <p>A minimal post controller file looks like this:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 #include "esp.h"
 static void createPost() { 
     EdiRec *rec = createRec("post", params());
@@ -308,7 +322,7 @@ ESP_EXPORT int esp_controller_blog_post(EspRoute *eroute)
             <h3>Actions</h3>
             <p>The job of the action is to respond to the request and generate the response via views for the
             client. Here is the <em>list</em> action in the generated <em>post</em> controller.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 static void listPost() { 
     renderGrid(readTable("post"));
 }
@@ -322,18 +336,17 @@ static void listPost() {
             <p>What happens if you make a mistake entering the embedded "C" code in your controller or in an ESP web page. 
             Say you forgot the semicolon in the last example. You will see an error like this in your browser:</p>
             <img src="../images/esp/mvc-tour/error.png" alt="homeLink" class="bare-screen" /> 
-            <p>If you look in the appweb console log, you will see details about the request that failed.</p>
-            <pre class="ui code segment">
-appweb: 2: Error: Cannot run command clang -c -DBIT_DEBUG -g -Wall -DPIC \
+            <p>If you look at the esp console output, you will see details about the request that failed.</p>
+            <pre class="code">
+esp: 2: Error: Cannot run command clang -c -DBIT_DEBUG -g -Wall -DPIC \
   -fPIC -arch x86_64 /home/apps/blog/controllers/post.c -o \
   /home/apps/blog/cache/controller_74bffd199d8b4c675e1f693d86eef471.o
 /home/apps/blog/controllers/post.c:21:38: error: expected ';' after expression:
     renderGrid(readTable("post"))
-                                 ^</pre>
+</pre>
             
-            <a id="validations">
-            </a>
-            <h2 >Validations</h2>
+            <a id="validations"></a>
+            <h2>Validations</h2>
             <p>Complete validation of all user entered data is essential for a robust and secure application. The 
             validation may be performed at the client, but must also always be fully implemented on the server incase
             the client or network connection is compromised. ESP provides flexible validation methods to help 
@@ -341,7 +354,7 @@ appweb: 2: Error: Cannot run command clang -c -DBIT_DEBUG -g -Wall -DPIC \
             <p>You can add calls to validate record data before it is saved to the database. To do this, edit the
             <em>controllers/post.c</em> file and add calls to <a 
             href="../ref/api/edi.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944">ediAddValidation</a>.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module) 
 {
     <b>Edi *edi;</b>
@@ -377,7 +390,7 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
             application layout page. Modifying index.esp will modify all the views presented to the client.</p>
 
             <a id="learn"></a>
-            <h2 >Learn More ...</h2>
+            <h2>Learn More ...</h2>
             <p>That concludes the a quick tour through some of the capabilities of the ESP web framework.</p>
             <p>To learn more, please read:
             <ul>
@@ -417,19 +430,6 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
     </script> 
 
         
-    <script>
-        (function() {
-            var r = new XMLHttpRequest();
-            r.onreadystatechange = function() {
-                if (r.readyState >= 3 && r.status == 200) {
-                    window.location.reload();
-                }
-            }
-            r.open("GET", "/reload-service", true);
-            r.send();
-        })();
-    </script>
-    
 
 </body>
 </html>

@@ -358,6 +358,17 @@
                 cookie: "-esp-cookie-",
 
                 /*
+                    Enable / disable sessions
+                 */
+                enable: true,
+
+                /*
+                    Persist session cookie to disk. Means browser restarts do not exit session.
+                    If true, an Expires field is included in the cookie.
+                 */
+                persist: true,
+
+                /*
                     Determine if the cookie is visible to browser scripts
                  */
                 visible: true,
@@ -396,10 +407,10 @@
             extensions: [ "css", "gif", "ico", "jpeg", "jpg", "js", "html", "less", "png", "pdf", "txt" ],
 
             /*
-                URIs to cache. If the URI has a query, then only that exact request will be cached.
+                URLs to cache. If the URL has a query, then only that exact request will be cached.
                 The query should be in sorted urlencoded form. If omitted, defaults to "/"
              */
-            uris: [ "/" ],
+            urls: [ "/" ],
 
             /*
                 Request methods eligible for caching. If omitted, defaults to all methods.

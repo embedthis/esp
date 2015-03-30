@@ -43,7 +43,7 @@ esp \- ESP Application Generator for Server-Side Web Applications.
     esp migrate [forward|backward|NNN]
     esp mode [debug|release|otherMode]
     esp role [add|remove] rolename
-    esp [run] [ip]:[port]
+    esp serve [ip]:[port]
     esp user [add|compute] username password roles...
     esp user [remove|show] username 
 .SH DESCRIPTION
@@ -60,7 +60,7 @@ To run ESP to serve documents from the current directory, type:
 .RS 5
  \fBesp\fR
  # or
- \fBesp run\fR
+ \fBesp serve\fR
 .RE 5
 
 .SH GENERATING APPLICATIONS
@@ -226,10 +226,10 @@ The \fBesp release\fR command will set the esp.mode to "release".
 
 .SH RUNNING
 .PP
-To run your application:
+To run your application, start the esp command to serve pages:
 .RS 5
 
- \fBesp run\fR
+ \fBesp serve\fR
 .SH CLEANING
 To clean all generated module files:
 .RS 5
@@ -257,8 +257,8 @@ esp has the following command usage patterns:
  esp generate controllers name [action [, action] ...]
  esp generate scaffold model [field:type [, field:type] ...]
  esp generate table name model [field:type [, field:type] ...]
- esp run
- esp run 4000
+ esp serve
+ esp serve 4000
  esp mode debug
  esp init appName version
 .RE

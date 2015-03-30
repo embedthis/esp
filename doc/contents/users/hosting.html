@@ -6,233 +6,63 @@
 }
             <h1>Hosting ESP in Appweb</h1>
             <p>ESP applications can run stand-alone via the <em>esp</em> utility command. Alternatively, they
-            can be hosted in Appweb web server as part of a broader set of web services and content.</p>
+            can be hosted in the Appweb web server as part of a broader set of web services and content.</p>
 
-            <h2>Configuration</h2>
-            <p>ESP applications are configured via their <em>package.json</em> file, but when hosted in Appweb, 
-            some of this configuration is managed by the Appweb <em>appweb.conf</em> configuration file. 
-            For background, please first read <a href="config.html">Configuring ESP</a> and the relevant sections of the
+            <p>ESP is included by default in Appweb. However ESP can be omitted in custom Appweb builds. If 
+            you have trouble activating ESP, ensure it was included in your build of Appweb.</p>
+
+            <a id="app"></a>
+            <h2>ESP Applications</h2>
+            <p>ESP applications are configured via their <em>esp.json</em> file. This file provides 
+            the configuration for the ESP application. However, when hosted in Appweb, Appweb manages 
+            the listening endpoints, user accounts, logging and other properties defined in
+            the <a href="config.html#server"><em>http.server</em></a> collection in <em>esp.json</em>.</p>
+
+            <p>For more information, please read <a href="config.html">Configuring ESP</a> and the relevant sections of the
             <a href="https://embedthis.com/appweb/doc/users/configuration.html">Appweb Configuration Guide</a>
             before reading this document.</p>
 
-            <a id="module"></a>
-            <h2 >ESP Module</h2>
-            <p>Before ESP can be used in Appweb, the ESP web framework including the ESP handler must be loaded. 
-            For Appweb, ESP is packaged as a loadable Appweb module called "<em>libmod_esp</em>". This is loaded 
-            into Appweb via the <em>LoadModule</em> directive in the appweb.conf file.</p>
+            <h3>Defining ESP Applications</h3>
+            <p>To define an ESP application in Appweb, use the <em>EspApp</em> directive in your <em>appweb.conf</em> file. 
+            This directive takes the following arguments:</p>
 
-<pre class="ui code segment">LoadModule espHandler libmod_esp</pre>
-            <p>This loads the <em>libmod_esp</em> module and invokes the ESP module initialization routine that registers
-            ESP with Appweb.</p>
-            <a id="handler"></a>
-            <h2>ESP Handler</h2>
-            <p>For ESP to receive incoming client requests, the Appweb router must be told what requests to send to ESP.
-            The <em>AddHandler</em> directive below achieves this. It tells Appweb that the <em>espHandler</em> will service
-            all URIs that end with "<em>.esp</em>".</p>
-<pre class="ui code segment">AddHandler espHandler esp</pre>
-            <p>This is all that is needed to service any ESP web page that ends with "<em>.esp</em>". If you want to
-            ESP pages with another extension, you can specify extra extensions:</p>
-<pre class="ui code segment">AddHandler espHandler esp myesp</pre>
-            <a id="errors"></a>
-            <h3>Error Handling</h3>
-            <p>If an ESP page has a syntax error or a run-time error, messages will be sent to the Appweb log file.
-            This defaults to the file <em>error.log</em>. If appweb is run manually, you can see these message on 
-            the console.</p> 
-            <p>Often during development, it is useful to send errors back to the browser. To do this, add the following
-            directive to appweb.conf.</p>
-<pre class="ui code segment">ShowErrors on</pre>
-            <p>This will display errors to the browser in addition to sending the errors to the Appweb log.</p>
-            <a id="reload"></a>
-            <h3>Reloading</h3>
-            <p>ESP supports an "edit-and-continue" development style where you can make modifications to ESP controllers
-            and pages and when you click reload in your browser, the controller or page will be transparently 
-            recompiled and reloaded. This can be a great boost for development productivity.</p>
-            <p>If your ESP application is running in debug mode, then ESP
-            will automatically rebuild modified ESP pages and controllers. If your ESP application is running release mode,
-            the default is to not reload. This default behavior can be modified via the package.json esp.mode setting.
-            or the <em>EspUpdate</em> appweb.conf directive. </p>
-            <pre class="ui code segment">EspUpdate on</pre>
-            <a id="keep"></a>
-            <h3>Keep Source</h3>
-            <p>Sometimes, it is helpful to preserve intermediate "C" source files so that you can debug
-            your application at the source code level. When an ESP page is parsed, it is blended with a layout page and
-            then an intermediate C source file is generated. This is normally removed after compilation. Setting the
-            <em>EspKeepSource</em> directive to "<em>on</em>" will cause ESP to preserve this intermediate source file
-            in the <em>cache</em> directory.</p>
-            <pre class="ui code segment">EspKeepSource on</pre>
+            <code class="inverted">EspApp prefix="URI" config="path/to/esp.json"</code>
+
+<!--
+            <p>This defines an ESP application at the given directory that will receive 
+            requests that begin with specified URI prefix. </p>
+
             <a id="controllers"></a>
             <h2>ESP Controllers</h2>
             <p>ESP Controllers may be used as part of an ESP application or they may be used stand-alone outside
             an ESP app. A stand-alone controller must define a route that specifies the desired URI, the source file
             containing the controller and the format of the URI to action mapping. For example:</p>
-            <pre class="ui code segment">
+            <code class="inverted">
 &lt;Route ^/greetings/{action}$&gt;
     SetHandler espHandler
     Source     greetings.c
     Target     run greetings-$1
 &lt;/Route&gt;
-</pre>
+</code>
             <p>This defines a controller in <em>greeting.c</em> to respond to URIs that begin with <em>/greetings</em>.
             <p>Controllers are dynamically loaded and reloaded as required. Controllers contain one or more actions and have
             a module initialization routine that defines the actions for ESP to support. For example:</p>
-<pre class="ui code segment">
+<code class="inverted">
 #include "esp.h"
 static void hello() {
     render("Hello World\n");
 }
-ESP_EXPORT int esp_module_greetings(HttpRoute *route) {
+ESP_EXPORT int esp_controller_app_greetings(HttpRoute *route) {
     espDefineAction(route, "greetings-hello", hello);
     return 0;
 }
-</pre>
+</code>
             <p>This defines a single action which renders the string "Hello World\n" in response to the client request 
             for the URI <em>/greeting/hello</em>. When the URI is requested, the controller is compiled, linked into
             a dynamic library, saved in the cache directory and loaded into Appweb. If the source is modified, the 
             old controller is unloaded (after ensuring there are no active requests) and the new source is compiled and
             loaded.</p>
-            <p>If you wish to pre-compile the controller, use the <em>esp</em> manager program. For example:</p>
-            <pre class="ui code segment">esp compile greetings.c</pre>
-            <a id="app"></a>
-            <h2 >ESP Applications</h2>
-            <p>ESP applications typically require a little more configuration, but the ESP configuration
-            defaults make this fairly painless.</p>
-            <p>If your ESP application uses RESTful routes and follows the ESP defaults, the one-liner 
-            EspApp directive is typically all you need. This directive takes the following arguments:</p>
-            <pre class="ui code segment">&lt;EspApp name="NAME" prefix="URI" dir="Directory" routes="RouteSet"&gt;
-   ...
-&lt;EspApp&gt;</pre>
-            <p>This defines an ESP application at the given directory that will receive 
-            requests that begin with specified URI prefix. This will define a new Route block, inheriting the existing
-            ESP and route configuration. For example, this directive defines a "blog" application stored in the "./blog" directory.</p>
-            <pre class="ui code segment">&lt;EspApp prefix="/myblog" dir="./blog" routes="esp-html-mvc"&gt;
-    ...
-&lt;EspApp&gt;</pre>
-            <p>With this configuration, Appweb will send client requests begin with the URI <em>/myblog</em> 
-            to this ESP application at "./blog".</p>
-            <p>Inside the EspApp directory, you can define other routes, configure caching, define resource limits
-             or use most Appweb directives.</p>
-            <h3>Separate Config</h3>
-            <p>To modularize each ESP application, it is best practice to create a separate config file for each 
-            application. This per-application config file should be saved to the <em>/etc/appweb/apps</em> or 
-            on Windows, the <em>Embedthis Appweb/apps</em> directory. When Appweb is started or restarted, it will
-            parse all the config files under the <em>apps</em>. Installing or removing a config file for each 
-            application under the <em>apps</em> directory is a simple way to add/remove an application.</p>
-            <a id="routing"></a>
-            <h2 >ESP Routing</h2>
-            <p>So far, we've covered the basics, but ESP provides very powerful routing and directives 
-                that can be utilized to custom configure ESP applications. 
-            An application will typically deal with various resources that need to be managed. For example, a WIFI
-            router UI will need to manage the WIFI network name and password.  A network switch application may 
-            need to manage a group of ethernet ports. Using <a href="http://en.wikipedia.org/wiki/Clean_URL">RESTful Routes</a>,
-            these resources are mapped onto HTTP methods and URIs in a simple and clear manner.</p>
-            <p>ESP provides two directives to create URI routes for resources: </p>
-                <ul>
-                    <li>EspPermResource &mdash; Create routes for a permanent resource (no create or delete)</li>
-                    <li>EspResource &mdash; Create routes for a singleton resource</li>
-                    <li>EspResourceGroup &mdash; Create routes for a group of resources</li>
-                </ul>
-            <h3>EspPermResource</h3>
-            <p>The EspPermResource directive is used to create a RESTful set of routes to manage a permanent resource.
-            A permanent resource is a resource that cannot be created or destroyed. It may be modifified and has 
-            one or more related properties that are managed as a unit. 
-            These routes define URI routes for get, update and custom actions.
-            See the <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espPermResource">EspPermResource</a> 
-            reference for details of the actual routes created.</p>
 
-            <h3>EspResource</h3>
-            <p>The EspResource directive is used to create a RESTful set of routes to manage a singleton resource.
-            A singleton resource is one or more related properties that are managed as a unit, like the WIFI network
-            name and password. These routes define URI routes for create, edit, get, init, remove, show and  
-            update functions. See the <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espResource">
-            EspResource</a> reference for details of the actual routes created.</p>
-
-            <h3>EspResourceGroup</h3>
-            <p>The EspResourceGroup directive is used to create a RESTful set of routes to manage a singleton resource.
-            A group of resources is one or more instances of a resource that can be managed individually, like the 
-            "port" on a network switch.
-            See the <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espResourceGroup">EspResourceGroup</a>
-            reference for details of the actual routes created.</p>
-
-            <h3>EspRoute</h3>
-            <p>For more control over individual routes, you can use the 
-            <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espRoute">EspRoute</a> directive that will 
-            create a route for a URI and map the URI to an ESP controller and action. For example: </p>
-
-            <pre class="ui code segment">EspRoute name="/admin" methods="POST" prefix="^/wifi/admin/login"
- &nbsp; &rarr; target="admin-login" source="admin.c"</pre>
-
-            <p>This will map <em>/wifi/admin/login</em> URI to the <em>admin</em> controller for the 
-            <em>login</em> action.</p>
-
-            <h3>Custom Routes</h3>
-            <p>Sometimes you need a specific, custom mapping of a URI to an ESP controller and action. You can do this
-            with the lowest-level Appweb directives:</p>
-                <ul>
-                    <li><a href="https://embedthis.com/appweb/doc/users/dir/route.html#route">Route</a></li>
-                    <li><a href="https://embedthis.com/appweb/doc/users/dir/route.html#name">Name</a></li>
-                    <li><a href="https://embedthis.com/appweb/doc/users/dir/route.html#source">Source</a></li>
-                    <li><a href="https://embedthis.com/appweb/doc/users/dir/route.html#target">Target</a></li>
-                </ul>
-            <a id="compilation"></a>
-            <h2 >Compilation</h2>
-            <p>At development time, ESP need to compile ESP controllers and pages into native binary.
-            ESP supplies a pre-configured set of compilation commands for the major operating systems. These
-            are stored in the <em>esp.conf</em> file which is located at <em>/usr/local/lib/appweb/bin</em> on Unix or on
-            Windows at <em>C:/Program Files/Embedthis Appweb/bin</em>. The esp.conf file contains compile and link command
-            templates using the <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espCompile">EspCompile</a> and optionally 
-            <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espLink">EspLink</a>. For example:
-<pre class="ui code segment">
-EspCompile cc -shared ${DEBUG} -Wall -Wno-unused-result \
-    -DPIC -fPIC -I. -I${INC} -L${LIB} -Wl,--enable-new-dtags \
-    -Wl,-rpath,$ORIGIN ${LIBS} -o ${OUT}${SHOBJ} ${SRC}
-</pre>
-                <p>The various tokens in braces "${token}", are expanded at runtime depending on the configuration of
-                Appweb. The esp.conf configuration file has conditional sections for Cygwin, Windows, Mac OS X, VxWorks and
-                a default section for Linux/Unix. You can customize this file to suit your system. </p>
-                <p>Some systems require a separate link phase. The <a
-                    href="https://embedthis.com/appweb/doc/users/dir/esp.html#espLink">EspLink</a> command can be used to do a separate
-                link. Other systems require that various environment variables be defined for the compiler and linker to
-                successfully run. Use the <a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espEnv">EspEnv</a> command for this.
-            <h3>Cross Compilation</h3>
-            <p>When cross-compiling, invoke the <em>esp</em> command with the "<em>--config</em>" switch to specify a
-            separate config file for compiling on the target. Copy the standard <em>esp.conf</em> and modify the compile
-            and link targets as required.</p>
-            
-            <a id="directives"></a>
-            <h2 >Directives List</h2>
-            <p>The following is a list of the various ESP directives and their purpose.</p>
-            <table title="directives" class="ui table segment">
-                <thead>
-                    <tr><th>Directive</th><th>Purpose</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espApp">EspApp</a></td>
-                            <td>Define an ESP web application</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espCompile">EspCompile</a></td>
-                            <td>Compile command for ESP controllers and pages</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espDb">EspDb</a></td>
-                            <td>Pre-open a database</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espDir">EspDir</a></td>
-                            <td>Set an ESP directory location</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espEnv">EspEnv</a></td>
-                            <td>Set an environment variable</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espKeepSource">EspKeepSource</a></td>
-                            <td>Preserve intermediate page source code</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espLink">EspLink</a></td>
-                            <td>Link command for ESP controllers and pages</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espPermResource">EspPermResource</a></td>
-                            <td>Create a set of routes for a permanent resource</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espResource">EspResource</a></td>
-                            <td>Create a set of routes for a singleton resource</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espResourceGroup">EspResourceGroup</a></td>
-                            <td>Create a set of routes for a group of resources</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espRoute">EspRoute</a></td>
-                            <td>Define and configure an ESP route</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espRouteSet">EspRouteSet</a></td>
-                            <td>Create a pre-defined set of routes</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/esp.html#espUpdate">EspUpdate</a></td>
-                            <td>Reload updated ESP controllers and pages</td></tr>
-                        <tr><td><a href="https://embedthis.com/appweb/doc/users/dir/route.html#showErrors">ShowErrors</a></td>
-                            <td>Show ESP errors to the client</td></tr>
-                </tbody>
-            </table>
+            <p>If you wish to pre-compile the controller, use the <em>esp</em> utility program. For example:</p>
+            <code class="inverted">esp compile greetings.c</code>
+-->

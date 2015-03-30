@@ -48,9 +48,9 @@ ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
         <a id="routing"></a>
         <h2 >Routing Requests</h2>
         <p>At the heart of understanding how controllers are loaded and actions are run, is understanding request
-        routing. When ESP HTTP server receives a client request, it examines each of the configured request routes. These
-        may be configred via the <em>esp.json</em> or if hosted in Appweb, in the <em>appweb.conf</em> configuration file.
-        The ESP HTTP server searches the route table, until it finds a matching route for the request URI. The 
+        routing. When the HTTP server inside <em>esp</em>receives a client request, it examines each of the 
+        configured request routes. These may are configured via the <em>esp.json</em> file. 
+        Esp then searches the route table, until it finds a matching route for the request URI. The 
         selected route will then break the URI into tokens and save the token values as request parameters.</p>
         <p>For example: consider the URI format:</p>
         <pre class="ui code segment">
@@ -98,7 +98,7 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         <h3>Stand-Alone Controllers</h3>
         <p>A stand-alone controller is not part of a broader ESP MVC application. It is complete unto itself. 
         Such controllers are very useful for web services and for discrete interfaces to server-side functions.</p>
-        <p>To define a controller, you create an Appweb route using appweb.conf directives that specifies
+        <p>To define a controller, you create a route in the <em>esp.json</em> file that specifies
             the route URI, the controller source file and the target mapping from URI to controller action. For example</p>
         <pre class="ui code segment">
 &lt;Route ^/greeting/{action}$ &gt;
@@ -110,7 +110,8 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         <p>This set of directives will create a route that will invoke the controller <em>controllers/greeting.c</em>.
         If the <em>/greeting/hello</em> URI is invoked, the <em>hello</em> action function will be invoked.
         The Target directive defines how the action function name to invoke. You can optionally use the
-        <a href="../../appweb/users/dir/route.html#methods">Methods</a> directive to specify the support HTTP method verbs.</p>
+        <em>Methods</em> directive to specify the support HTTP method verbs.</p>
+
         <h3>ESP MVC Applications</h3>
         <p>The Model-view-controller (MVC) architecture is a well-proven organization for web applications. 
         A key reason is that MVC apps separate the logic (<em>controllers</em>), from the presentation (<em>views</em>) 
@@ -123,10 +124,11 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         MVC application with a directory for controllers, views, databases and other necessary configuration files. 
         For example:</p> 
         <pre class="ui code segment">esp generate app demo</pre>
-        <p>The generated appweb.conf file will have an <a href="../../appweb/users/dir/esp.html#espApp">EspApp</a> 
-        directive that defines the application and creates an initial set of MVC routes for the application.
+        <p>The generated <em>appweb.conf</em> file will have an EspApp directive that defines the application and 
+        creates an initial set of MVC routes for the application.
+
         For example:</p>
-        <pre class="ui code segment">EspApp name="store" prefix="/store" dir="./applications/store"</pre>
+        <pre class="ui code segment">EspApp prefix="/store" config="applications/store/esp.json"</pre>
 -->
             <a id="actions"></a>
             <h2 >Actions</h2>
@@ -199,11 +201,13 @@ static void first() {
             is held open, but ESP is not blocked in any thread. The call to <em>setTimeout</em> will arrange to have
             the ESP event loop invoke <em>second</em> after five seconds have elapsed. This pattern is a 
             highly efficient in its use of system resources and scales very well.</p>
+
             <h3>Request Timeout Limits</h3>
             <p>ESP has a request timeout and a request inactivity timeout. If a request duration exceeds the limit
-            defined via the RequestTimeout directive in appweb.conf, the request will be aborted. If the request does
-            no I/O for more than the limit specified by the InactivityTimeout directive, it will be similarly aborted.
-            These limits can be set per route in appweb.conf.</p>
+            defined via the <em>timeouts.request</em> directive in <em>esp.json</em>, the request will be aborted. 
+            If the request does no I/O for more than the limit specified by the <em>timeouts.inactivity</em>
+            it will be similarly aborted. These limits can be set per route in <em>esp.json</em>.</p>
+
             <h2>Loading and Caching Controllers</h2>
             <p>Before a controller can run, it must first be compiled and linked into a loadable library.
             On Windows, this will be a DLL, on Unix, it will be a shared library with a ".so" extension. On VxWorks it

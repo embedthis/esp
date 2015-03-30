@@ -1,0 +1,134 @@
+{
+    title:  'ESP Layouts',
+    crumbs: [
+        { "User's Guide": 'index.html' },
+    ],
+}
+            <h1>ESP Layouts</h1>
+            <p>Highly usable applications have consistent structure, menus and appearance so the user can easily 
+            navigate that application. Such applications may consist of many web pages that share a common look
+            and feel.  However, designing and maintaining that consistency is sometimes a challenge.</p>
+            
+            <p>ESP uses the <a href="http://embedthis.com/expansive/">Expansive</a> tool to provide a powerful and flexible solution for implementing a consistent UI via layout pages.
+            Layouts pages define the look and feel of an application while content pages provide page specific
+            content. HTML pages are then rendered to clients by merging content pages with one or more layout pages. 
+            This creates a composite page for what the user will actually see. In this way, a web application 
+            can easily maintain a consistent look and feel without repeating boilerplate code from page to page. 
+            ESP believes strongly in the DRY principle: <em>"Don't Repeat Yourself"</em>. </p>
+            
+            <img src="../images/esp/template/layout.jpeg" alt="layout" />
+            <p>For example: consider the layout page below named "<em>layouts/default.esp</em>". This will will
+            define the top level HTML layout page for content pages. It has a banner image and division tags that 
+            structure the page:</p>
+            <pre class="ui code segment">
+&lt;html&gt;
+&lt;body&gt;
+    &lt;div class="top"&gt;
+        &lt;img src="banner.jpg" /&gt;
+    &lt;/div&gt;
+    &lt;div class="content"&gt;
+        <b>&lt;&#64; content &#64;&gt;</b>
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+            <p>Modifications to this page, will be reflected automatically in all content pages.</p>
+            
+            <a id="content"></a>
+            <h3>Content Pages</h3>
+            <p>A content page defines only the HTML and code that is unique for a specific page. It is merged with a
+            layout page by inserting the content and replacing the <em>&lt;&#64; content &#64;&gt;</em> tag in the layout
+            page before rendering to the client.</p>
+            <p>For example, consider the content page named "<em>demo-index.esp</em>":</p>
+            <pre class="ui code segment">
+<b>&lt;h1&gt;Content Page&lt;/h1&gt;
+&lt;p&gt;Hello World&lt;/p&gt;</b>
+</pre>
+            <p>This would render a composite web page back to the user:</p>
+            <pre class="ui code segment">
+&lt;html&gt;
+&lt;body&gt;
+    &lt;div class="top"&gt;
+        &lt;img src="banner.jpg" /&gt;
+    &lt;/div&gt;
+    &lt;div class="content"&gt;
+        <b>&lt;h1&gt;Content Page&lt;/h1&gt;
+        &lt;p&gt;Hello World&lt;/p&gt;</b>
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+            <p>Note that the blending of layout and content page happens only once and the result is save under
+            the "documents" directory. For more information, read the
+            <a href="https://embedthis.com/expansive/doc/">Expansive Documentation</a>.</p>
+
+            <a id="include"></a>
+            <h3>Include Pages</h3>
+            <p>Sometimes you need to just include some arbitrary HTML file at any point in a page. Use the <em>
+            include</em> directive at any point in the page you wish to include another file. For example:</p>
+            <pre class="ui code segment">&lt;&#37;@ include "common/header.html" &#37;&gt;</pre> 
+  
+  ======
+
+  <a id="pipeline"></a>
+            <h3>ESP Pipeline</h3>
+            <p>The ESP pipeline processes ESP pages to generate client responses. The process begins with
+            with an HTML page which typically, though not always, contains embedded <em>C</em> code. This is
+            parsed by the ESP Template Engine and combined with layout pages to create a single composite web page. 
+            This is then converted to pure <em>C</em> code that is compiled, linked and saved as a native-code shared library. 
+            The library is loaded and the code run whenever a client request is received for that page. If the web page
+            or template is modified, the pipeline recompiles the page and regenerates the code library.</p>
+            <p>This entire pipeline process happens transparently in the background with only a momentary pause in 
+            processing. For production, you can pre-compile web pages so that a compiler is not required on the target.</p>
+            
+            <img src="images/esp/template/layout.jpeg" alt="View Pipeline" class="centered" />
+            
+            <a id= "layouts"></a>
+            <h3>Layout Pages</h3>
+            <p>Layout pages allow you to define the "look and feel" of the user interface and specify
+            the standard elements of all web pages in one place. 
+            ESP pages reuse the "look and feel" by simply referencing a layout page.</p>
+            <p>The layout page is structurally just an ESP Page that typically contains the top level HTML
+            structure, style sheets and graphic content to be included on every page. It may contain embedded <em>C</em> 
+            code, and most importantly, it specifies the location to insert content from content pages.</p>
+            <p>The ESP content pages supply the content and data that is unique to that page. Content pages 
+            do not replicate the layout and look and feel that is specified in the layout page.  In this way, changing
+            the layout page in once place will automatically change every web page in the application.</p>
+            <p>Here is a simple layout page:</p>
+            <pre class="ui code segment">
+&lt;html&gt;
+&lt;body&gt;
+    &lt;img src="banner.jpg"&gt;
+    <b>&lt;%@ content %&gt;</b>
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+            <p>The <b>&lt;%@ content %&gt;</b> directive instructs the Template Engine to insert the content page at
+            this location. </p>
+            <p>Here is a simple content page. Note that this is missing the &lt;html&gt; and &lt;body&gt; tags:</p>
+            <pre class="ui code segment">
+&lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;p&gt;Today is &lt;%= mprGetDate(0) %&gt;
+</pre>
+            <p>ESP pages are not required to use layout pages. To specify that no layout page is required, use an
+                empty layout directive in the content page. For example: </p>
+                <pre class="ui code segment">
+&lt;%@ layout "" %&gt;
+</pre>
+            <p>By default, stand-alone ESP pages do not use a layout page, whereas ESP view pages in an MVC application
+            do.</p>
+
+
+            <p>The <em>&lt;%@ layout "file" %&gt;</em> directive specifies the name of the layout page. By using 
+            this directive in layout pages, you can build up the web page layout by nesting layout pages. If omitted 
+            in content pages, which is usually the case, the default layout of <em>layouts/default.esp</em> will be used. 
+            If omitted in layout pages, it is assumed the layout page is the top level layout page.</p>
+            <p>The template engine additionally supports the following web page directive in layout pages:</p>
+
+            <pre class="ui code segment">&lt;%@ content %&gt;</pre>
+
+            <p>This specifies the location for the content page data.</p>
+            <p>Note: you do not have to use layout pages. Simple stand-alone web pages without layouts code are
+            supported. To disable use of a layout page, use a <em>&lt;%@ layout="" %&gt;</em> directive.</p>
+
+

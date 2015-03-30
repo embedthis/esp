@@ -11,14 +11,14 @@
             the development libraries and headers needed to embed ESP in a device or application.</p>
 
             <a id="licensing"></a>
-            <h2 >License</h2>
+            <h2>License</h2>
             <p>This software is copyrighted and distributed under license. It is available under a GPLv2 
             open source license and an optional <a href="https://embedthis.com/licensing/index.html">commercial license</a>.
             Please read LICENSE.md for details.</p>
             <p>ESP includes support for several external packages such as OpenSSL and Bootstrap. These
             packages have their own licenses. Make sure you check the relevant package license details 
             to ensure you are complying with their licenses.</p><a id="requirements"></a>
-            <h2 >System Requirements</h2>
+            <h2>System Requirements</h2>
             <p>Binary releases are supplied for the following operating systems.</p>
             <ul>
                 <li>Windows (x86)</li>
@@ -33,13 +33,15 @@
                 <li>VxWorks 6.X</li>
             </ul>
             <p>The following CPU architectures are supported: arm, mips, ppc, xscale, x86, x64, sparc.</p>
-            <h2 >Run-time System Requirements</h2>
+
+            <h2>Run-time System Requirements</h2>
             <p>To deploy ESP, you will need at least the following:</p>
             <ul>
                 <li>2-4 MB Disk/ROM space &mdash; depending on the application size</li>
                 <li>2-4 MB RAM</li>
             </ul>
-            <h2 >Development Environment Hardware Platform Support</h2>
+
+            <h2>Development Environment Hardware Platform Support</h2>
             <p>If you wish to build ESP from source code, you will need to use a "C" compiler and associated
             development tools. Several development environments are supported. You may choose any of the following to
             compile and build samples and source code.</p>
@@ -51,17 +53,16 @@
             </ul>
             
             <a id="hints"></a>
-            <h2 >Helpful Hints</h2>
-            <h3>Debug Trace and Logging</h3>
+            <h2>Debug Trace and Logging</h2>
             <p>ESP has a debug logging and trace facility that can help when debugging configuration issues or
             developing your application code that uses ESP. You can vary the level of logging via the <b>--log
             logfile</b> command line switch for the <b>esp</b> commands. The log command line switch has the
             format:</p>
-                <pre class="ui code segment">
+                <pre class="code">
 esp --log logFile:logLevel
 </pre>
-            <p>Use the <em>-v</em> switch to trace to the standard output at level 2.</p>
-            <pre class="ui code segment">
-esp -v
+            <p>To see the HTTP request trace Use the <em>--trace</em> switch.</p>
+            <pre class="code">
+esp --trace stdout:4
 </pre>
             <p>The log level can be from 0 to 5, with 5 being the most verbose level.</p>

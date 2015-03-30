@@ -101,7 +101,8 @@ monitors: {
                     <tr><td>ActiveRequests </td><td> Count of active requests.</td></tr>
                     <tr><td>BadRequestErrors </td><td> Count of requests that were badly formatted.</td></tr>
                     <tr><td>Errors </td><td> Count of requests that resulted in an error of some kind.</td></tr>
-                    <tr><td>LimitErrors </td><td> Count of requests that violated the defined limits in appweb.conf.</td></tr>
+                    <tr><td>LimitErrors </td><td> Count of requests that violated the defined limits in 
+                        <em>esp.json</em>.</td></tr>
                     <tr><td>NetworkIO </td><td> Total network I/O in bytes performed.</td></tr>
                     <tr><td>NotFoundErrors </td><td> Count of requests that accessed a resource not found on the server.</td></tr>
                     <tr><td>Requests </td><td> Count of requests.</td></tr>
@@ -340,7 +341,7 @@ monitors: {
 </pre>
             <a id="apis"></a>
             <h2>APIs</h2>
-            <p>You can define Monitors and Defenses via the appweb.conf file, or via the ESP APIs:
+            <p>You can define Monitors and Defenses via the <em>esp.json</em> file, or via the ESP APIs:
                 <a href="../ref/api/http.html#group___http_monitor_1gab63bf01d19bbbeda83109cbb8a240b8d">httpAddDefense</a> and 
                 <a href="../ref/api/http.html#group___http_monitor_1ga931db10ade516aff29d2fd827b4450bb">httpAddMonitor</a>. Via the API, you can also define remedies
                 using <a href="../ref/api/http.html#group___http_monitor_1ga511486e477c76397a37a3f0eeda236d2">httpAddRemedy</a>.</p>

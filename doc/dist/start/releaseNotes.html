@@ -51,15 +51,22 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
                     <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../users/database.html">ESP Databases</a>
-                    <a class="item" href="../users/sessions.html">ESP Sessions</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -67,6 +74,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -161,14 +169,14 @@
             the development libraries and headers needed to embed ESP in a device or application.</p>
 
             <a id="licensing"></a>
-            <h2 >License</h2>
+            <h2>License</h2>
             <p>This software is copyrighted and distributed under license. It is available under a GPLv2 
             open source license and an optional <a href="https://embedthis.com/licensing/index.html">commercial license</a>.
             Please read LICENSE.md for details.</p>
             <p>ESP includes support for several external packages such as OpenSSL and Bootstrap. These
             packages have their own licenses. Make sure you check the relevant package license details 
             to ensure you are complying with their licenses.</p><a id="requirements"></a>
-            <h2 >System Requirements</h2>
+            <h2>System Requirements</h2>
             <p>Binary releases are supplied for the following operating systems.</p>
             <ul>
                 <li>Windows (x86)</li>
@@ -183,13 +191,15 @@
                 <li>VxWorks 6.X</li>
             </ul>
             <p>The following CPU architectures are supported: arm, mips, ppc, xscale, x86, x64, sparc.</p>
-            <h2 >Run-time System Requirements</h2>
+
+            <h2>Run-time System Requirements</h2>
             <p>To deploy ESP, you will need at least the following:</p>
             <ul>
                 <li>2-4 MB Disk/ROM space &mdash; depending on the application size</li>
                 <li>2-4 MB RAM</li>
             </ul>
-            <h2 >Development Environment Hardware Platform Support</h2>
+
+            <h2>Development Environment Hardware Platform Support</h2>
             <p>If you wish to build ESP from source code, you will need to use a "C" compiler and associated
             development tools. Several development environments are supported. You may choose any of the following to
             compile and build samples and source code.</p>
@@ -201,18 +211,17 @@
             </ul>
             
             <a id="hints"></a>
-            <h2 >Helpful Hints</h2>
-            <h3>Debug Trace and Logging</h3>
+            <h2>Debug Trace and Logging</h2>
             <p>ESP has a debug logging and trace facility that can help when debugging configuration issues or
             developing your application code that uses ESP. You can vary the level of logging via the <b>--log
             logfile</b> command line switch for the <b>esp</b> commands. The log command line switch has the
             format:</p>
-                <pre class="ui code segment">
+                <pre class="code">
 esp --log logFile:logLevel
 </pre>
-            <p>Use the <em>-v</em> switch to trace to the standard output at level 2.</p>
-            <pre class="ui code segment">
-esp -v
+            <p>To see the HTTP request trace Use the <em>--trace</em> switch.</p>
+            <pre class="code">
+esp --trace stdout:4
 </pre>
             <p>The log level can be from 0 to 5, with 5 being the most verbose level.</p>
 
@@ -248,19 +257,6 @@ esp -v
     </script> 
 
         
-    <script>
-        (function() {
-            var r = new XMLHttpRequest();
-            r.onreadystatechange = function() {
-                if (r.readyState >= 3 && r.status == 200) {
-                    window.location.reload();
-                }
-            }
-            r.open("GET", "/reload-service", true);
-            r.send();
-        })();
-    </script>
-    
 
 </body>
 </html>

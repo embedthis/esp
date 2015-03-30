@@ -51,15 +51,22 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
                     <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../users/database.html">ESP Databases</a>
-                    <a class="item" href="../users/sessions.html">ESP Sessions</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -67,6 +74,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -156,15 +164,22 @@
 
             <h1>Configuring ESP</h1>
             <p>When serving stand-alone <em>esp</em> pages, you do not need any external ESP configuration.
-            ESP provides sensible defaults and you can just run <em>esp</em> to serve pages. </p>
+            ESP provides sensible defaults and you can just run <em>esp serve</em> to serve pages. </p>
 
-            <pre class="ui code segment">$ <b>esp run</b></pre>
+            <code class="inverted">$ <b>esp serve</b></code>
 
-            <p>However, larger ESP applications are configured via an <em>esp.json</em> file that permits
-            fine-grained control over how the application will run. The esp.json file manages:</p>
+            <p>However, larger ESP applications are configured via the <em>esp.json</em> and <em>package.json</em>
+            files that permits fine-grained control over how the application will run. 
+            <p>The <em>package.json</em> file manages:</p>
             <ul>
-                <li>Application name, version and description</li>
+                <li>Application name, title and description</li>
+                <li>Application version</li>
                 <li>Directory locations</li>
+                <li>Application execution mode</li>
+                <li>Extension package dependencies</li>
+            </ul>
+            <p>The <em>esp.json</em> file manages:</p>
+            <ul>
                 <li>Client-side scripts</li>
                 <li>Per-mode (debug or release) configuration</li>
                 <li>Response Caching</li>
@@ -172,53 +187,67 @@
                 <li>Error handling</li>
                 <li>Database name and location</li>
                 <li>Default data formats</li>
-                <li>Extension package definitions</li>
             </ul>
-            <p>This document will cover the various esp.json properties and the steps to configure ESP 
-            applications. If you are hosting your application in Appweb you may need to specify additional 
+            <p>This document will cover the various <em>esp.json</em> properties and the steps to configure ESP 
+            applications. If you are hosting your application in Appweb you will need to specify additional 
             configuration in the <em>appweb.conf</em> configuration file. For details, see
-                the <a href="https://embedthis.com/appweb/doc/">Appweb Documentation</a>.</p>
+                the <a href="hosting.html">Hosting in Appweb</a>.</p>
 
-            <h2>esp.json</h2>
-            <p>Here is a quick look at a sample.json file. The format is an enhanced JSON literal that 
-            supports property names without quotes, multi-line literals and commas on trailing properties.</p>
-<pre class="ui code segment">{
-    name: "blog",
-    title: "My Blog",
-    description: "My blog with thoughts and tales from my travels in Africa",
-    version: "1.0.0",
-    <b>
-    http: {
-        database: "mdb://blog.mdb",
-        auth: {
-            store: "app",
-        },
-        routes: "esp-restful",
-        server: {
-            listen: [
-                "http://127.0.0.1:4000",
-            ]
-        }
-    }</b>
-}</pre>
-
-            <h2>Application Name and Description</h2>
+            <h2>package.json</h2>
+            <p>The <em>package.json</em> file contains your application name, description, version and 
+            specifies any required packages that your application depends upon. The format is a JSON literal. 
+            For example:</p>
+<code class="inverted">{
+    "name": "blog",
+    "title": "My Blog",
+    "description": "My blog with thoughts and tales from my travels in Africa",
+    "version": "1.0.0",
+    "dependencies": {
+        "jquery": "^2.1"
+    }
+}</code>
+            <h3>Name and Description</h3>
             <p>All ESP applications have name, title, description and version properties that uniquely identify 
             the application. The application name is used in C function entry points, so it is important that 
             it only contain valid C identifer characters. The title provides a multi-word title suitable 
-            for display to the user.</p>
-            <p>These identifying properties may alternatively be defined in an optional package.json file
-            that is used by the <a href="https://embedthis.com/pak">Pak</a> Manager when installing 
-            ESP extensions packages and skeletons.</p>
+            for display to the user. The description is used should you publish your application in a package 
+            catalog.</p>
 
-            <h2>Creating an esp.json file</h2>
-            <p>To create an esp.json, run:</p>
-            <pre class="ui code segment"><b>esp init</b></pre>
+            <h3>Dependencies</h3>
+            <p>The <em>dependencies</em> hash lists all the installed packages and the required versions.
+            Entries will be added as packages are installed via <em>pak install</em>. For example:</p>
+            <code class="inverted">$ pak install jquery</code>
+            <p>ESP relies heavily on the <a href="http://embedthis.com/pak/">Pak</a> package manager to install
+            and manage extension packages. There are many thousands to choose from the 
+            <a href="http://embedthis.com/pak/">Pak</a> and NPM package catalogs.</p>
 
-            <p>Alternatively, or you can install one or more ESP paks and esp.json and package.json files 
+            <h2>esp.json</h2>
+            <p>The <em>esp.json</em> file provides configuration for ESP and how HTTP requests will be served.
+            The format is an enhanced JSON literal that supports property names without quotes, multi-line 
+            literals and commas on trailing properties. Here is the initial generated contents of the 
+            <em>esp.json</em></p>
+            <code>{
+    http: {
+        server: {
+            listen: [
+                "http://127.0.0.1:4000"
+            ]
+        },
+        ssl: {
+            certificate: "",
+            key: ""
+        }
+    }
+}</code>
+
+            <h2>Creating Configuration Files</h2>
+            <p>To create an <em>esp.json</em> and <em>package.json</em>, run the following in an empty directory.</p>
+            <code class="inverted"><b>esp init</b></code>
+
+            <p>Alternatively, or you can install an ESP skeleton <em>esp.json</em> and <em>package.json</em> files 
             will be created for you. For example:</p>
 
-            <pre class="ui code segment"><b>pak install esp-html-skeleton</b></pre>
+            <code class="inverted"><b>pak install esp-html-skeleton</b></code>
 
             <a id="mode"></a>
             <h2>Configuration Mode</h2>
@@ -226,17 +255,18 @@
             mode such as: <em>debug</em>, <em>test</em> or <em>release</em> modes. In each mode, different 
             configuration may be defined.</p>
 
-            <p>The selected mode is specified by the <em>mode</em> property in the package.json file.
+            <p>The selected mode is specified by the <em>mode</em> property in the <em>package.json</em> file.
             This then selects a collection of properties of that same name that will be copied to the 
             top-level before the application runs. By modifying the <em>mode</em> setting, an entirely 
             different execution configuration may be selected. ESP makes this easy via the command:</p>
 
-            <pre class="ui code segment">esp mode debug
-  # or
-pak mode debug</pre> 
-            <p>This will select the <em>debug</em> collection of properties in the esp.json file.</p>
-            <p>The <em>mode</em> property is centralized in the package.json file because the Pak and 
-            Expansive utilities follow a similar scheme and having one single <em>mode</em> property is
+            <code class="inverted">$ esp mode debug</code>
+
+            <p>This will set the <em>pak.mode</em> property to <em>debug</em> in the <em>package.json</em> file
+            and select the <em>debug</em> collection of properties in the <em>esp.json</em> file.
+            The <em>mode</em> property is centralized in the <em>package.json</em> file because the 
+            <a href="http://embedthis.com/pak/">Pak</a> and <a href="http://embedthis.com/expansive/">Expansive</a> 
+            utilities follow a similar scheme and having one single <em>mode</em> property is
             desirable over each utility replicating the mode definition.</p>
 
             <h2>Package.json Properties</h2>
@@ -251,7 +281,7 @@ pak mode debug</pre>
                     </tr>
                     <tr>
                         <td>dependencies</td>
-                        <td>Extension Paks used by the ESP application. The key is the pak name and the value is a 
+                        <td>Extension packages used by the ESP application. The key is the pak name and the value is a 
                         <a href="http://semver.org">SemVer</a> version expression. 
                         See <a href="https://embedthis.com/pak/doc/index.html">Pak</a> Documentation for details.</td>
                     </tr>
@@ -264,15 +294,15 @@ pak mode debug</pre>
                         <td>List of external files to include.</td>
                     </tr>
                     <tr>
-                        <td>mode</td>
-                        <td>Configuration mode for the application that selects a property collection of the 
-                        same name from the <em>modes</em> collection in the package.json or esp.json files. 
-                        Those properties are copied up to the top level.</td>
-                    </tr>
-                    <tr>
                         <td>name</td>
                         <td>One word application name. This value is used to name the application and will be used
                             in controller and application function entry point names.</td>
+                    </tr>
+                    <tr>
+                        <td>pak.mode</td>
+                        <td>Configuration mode for the application that selects a property collection of the 
+                        same name from the <em>modes</em> collection in the <em>package.json</em> and 
+                        <em>esp.json</em> files. Those properties are copied up to the top level.</td>
                     </tr>
                     <tr>
                         <td>title</td>
@@ -287,19 +317,19 @@ pak mode debug</pre>
 
             <a name="dependencies"></a>
             <h3>Dependency Expressions</h3>
-            <p>Dependent extension Paks may be specified in the <em>dependencies</em> property. This is an object 
+            <p>Dependent extension packages may be specified in the <em>dependencies</em> property. This is an object 
             collection of paks with version expressions. When Pak installs a package, an entry for the new pak
             will be added to the dependency collection. For example:</p>
 
-            <pre class="ui code segment">"dependencies": {
+            <code class="inverted">"dependencies": {
     "jquery": "1.11.0",
     "bootstrap": "3.0.0",
-}</pre>
+}</code>
 
             <h4>Dependency Versions</h4>
             <p>ESP versions comply with the <a href="http://semver.org">SemVer</a> version specification.
             Briefly, this means versions are expressed :</p>
-            <pre class="ui code segment">MAJOR.MINOR.PATCH-PRERELEASE</pre> 
+            <code class="inverted">MAJOR.MINOR.PATCH-PRERELEASE</code> 
             <p>Dependency versions may also include expressions that describe a range of acceptable pak versions.</p>
             <ul>
                 <li>version &mdash; (allows prereleases)</li>
@@ -313,11 +343,11 @@ pak mode debug</pre>
             </ul>
             <p>For example:</p>
 
-            <pre class="ui code segment">"dependencies": {
+            <code class="inverted">"dependencies": {
     "bootstrap": "~3",     /* Versions 3.0.0 or later including prereleases */
     "jquery": "^1.9.1",    /* Version 1.9.1 and not prereleases */
     "less": "1.3.x",       /* Version 1.3.x and prereleases /
-}</pre>
+}</code>
 
             <a name="directories"></a>
             <h3>Directory Configuration &mdash; directories.*</h3>
@@ -360,7 +390,7 @@ pak mode debug</pre>
                     </tr>
                     <tr>
                         <td>paks</td>
-                        <td>Directory to contain installed Paks. Defaults to "<em>./paks</em>".</td>
+                        <td>Directory to contain installed packages. Defaults to "<em>./paks</em>".</td>
                     </tr>
                     <tr>
                         <td>partials</td>
@@ -369,7 +399,7 @@ pak mode debug</pre>
                     </tr>
                     <tr>
                         <td>pakcache</td>
-                        <td>Location of the per-user Pak cache of packages. Defaults to "<em>~/.paks</em>".</td>
+                        <td>Location of the per-user cache of packages. Defaults to "<em>~/.paks</em>".</td>
                     </tr>
                     <tr>
                         <td>source</td>
@@ -423,13 +453,13 @@ pak mode debug</pre>
                         <td><p>Set of property keys that map server-side properties to client-side properties to send to the client. 
                         Mappings select a subset of properties so the entire JSON configuration is not sent to the client.
                         For example: </p>
-<pre class="ui code segment">
+<code class="inverted">
 mappings: {
     auth: 'http.auth',
     timeouts: {
         session: 'http.timeouts.session',
     }
-}</pre>
+}</code>
                             <p>This computes a JSON string with properties "auth" and "timeouts" to send to the client.</p>
                             </td>
                         </tr>
@@ -439,7 +469,7 @@ mappings: {
                         <td><p>Ordered set of scripts to send to the client when parsing the ESP <em>scripts()</em> 
                             API. This may include the "*" wildcard to match any file or "**" to match any file in 
                             any directory. For example:</p>
-                  <pre class="ui code segment">render: {                    
+                  <code class="inverted">render: {                    
     js: [
         'lib/angular/angular.js',
         'lib/angular/angular-animate.js',
@@ -447,7 +477,7 @@ mappings: {
         'main.js',
         '*/**.js*'
     ]
-}</pre></td>
+}</code></td>
                     </tr>
                 </tbody>
             </table>
@@ -464,12 +494,13 @@ mappings: {
                         <td><p>Define external ESP applications to load. ESP can host multiple applications by defining
                             the URI prefix and ESP configuration file for each application. This directive takes three
                             forms. The first is just a simple string with the path to the configuration file for a single
-                            application. The URI prefix is determined by the last path segment before the esp.json 
-                            filename.
-                            The second form takes an array of esp configuration file names. Both these forms may use
+                            application. The URI prefix is determined by the last path segment before the 
+                            <em>esp.json</em> filename.</p>
+                            <p>The second form takes an array of esp configuration file names. Both these forms may use
                             wild-cards in the filename. The last form is an array of URI prefix and config file 
                             properties for each application.</p>
-                        <p>Examples: <pre class="ui code segment">
+
+                        <p>Examples: <code class="inverted">
 apps: 'blog/esp.json',
 apps: [ 'apps/*/esp.json', 'test/*/esp.json' ],
 apps: [ 
@@ -478,7 +509,17 @@ apps: [
         config: 'apps/blog/esp.json' 
     }
 ]
-</pre></p></td>
+</code></p></td>
+                    </tr>
+                    <tr>
+                        <td>build</td>
+                        <td>Collection of compilation and link command lines for various platforms.</td>
+                    </tr>
+                    <tr>
+                        <td>compile</td>
+                        <td>Path to the JSON file containing the compilation rules. Defaults to 
+                            <em>esp-compile.json</em> in the ESP installation directory. If you want to modify 
+                            this file, take a copy and then set the <em>compile</em> property to point to it.</td>
                     </tr>
                     <tr>
                         <td>combine</td>
@@ -498,11 +539,7 @@ apps: [
                     <tr>
                         <td>preload</td>
                         <td>List of source files to preload when starting the application.
-                        For example: <pre class="ui code segment">preload: [ 'auth.c' ]</pre></td>
-                    </tr>
-                    <tr>
-                        <td>build</td>
-                        <td>Collection of compilation and link command lines for various platforms.</td>
+                        For example: <code class="inverted">preload: [ 'auth.c' ]</code></td>
                     </tr>
                 </tbody>
             </table>
@@ -536,10 +573,10 @@ apps: [
                         <td><p>Enable serving of compressed content. ESP can serve files compressed with gzip and with an
                             additional <b>.gz</b> extension. ESP adds the appropriate HTTP header so the browser can
                             automatically decompress. Ideal for big files or slow networks.</p>
-                            <pre class="ui code segment">compress: true
+                            <code class="inverted">compress: true
   or
 compress: [ 'html', 'js', 'css' ]
-</pre>
+</code>
                             <p>If the Expansive exp-gzip extension is installed, suitable static content will be 
                                 automatically gzipped.</p>
                             </td>
@@ -560,14 +597,14 @@ compress: [ 'html', 'js', 'css' ]
                     <tr>
                         <td>domain</td>
                         <td>Matching domain for virtual hosting. 
-                        For example: <pre class="ui code segment">domain: '*embedthis',</pre></td>
+                        For example: <code class="inverted">domain: '*embedthis',</code></td>
                     </tr>
                     <tr>
                         <td>errors</td>
                         <td>Collection of error pages to serve for various HTTP status codes.
-                        For example: <pre class="ui code segment">errors: {
+                        For example: <code class="inverted">errors: {
     '404': '/notFound.html,
-},</pre></td>
+},</code></td>
                     </tr>
 <!--
                     <tr>
@@ -578,11 +615,11 @@ compress: [ 'html', 'js', 'css' ]
                         <a href="https://docs.angularjs.org/api/ng/filter/date">Angular</a> style date format. For
                         floats, it specifies the default number of decimal places.
                         For example:
-                        <pre class="ui code segment">formats': {
+                        <code class="inverted">formats': {
     response: 'json',
     date: 'yyyy-MM-dd',
     float: 2,
-},</pre></td>
+},</code></td>
                     </tr>
 -->
                     <tr>
@@ -591,7 +628,7 @@ compress: [ 'html', 'js', 'css' ]
                             "<em>add</em>", "<em>remove</em>"" and "<em>set</em>". The "<em>remove</em>"" collection is a list, whereas 
                             "<em>add</em>" and "<em>set</em>" are collections.
                             For example:
-<pre class="ui code segment">headers: {
+<code class="inverted">headers: {
     add: {
         'Content-Security-Policy': 'allow "self"; unsafe-inline; img-src "self"',
     },
@@ -599,16 +636,16 @@ compress: [ 'html', 'js', 'css' ]
     set: {
         'Custom-Header': '43',
     }
-},</pre>
+},</code>
                             </td>
                     </tr>
                     <tr>
                         <td>indexes</td>
                         <td>Ordered list of index documents to serve for directory level requests. For example:
-<pre class="ui code segment">indexes: [
+<code class="inverted">indexes: [
     'index.esp',
     'index.html'
-],</pre>
+],</code>
                         </td>
                     </tr>
                     <tr>
@@ -618,14 +655,14 @@ compress: [ 'html', 'js', 'css' ]
                     <tr>
                         <td>languages</td>
                         <td>Collection of language definitions to customize served content based on preferred language.
-                        For example: <pre class="ui code segment">languages: {
+                        For example: <code class="inverted">languages: {
     en: {
         path: '/path/to/english'
         prefix: 'en',
         suffix: 'en',
         default: true,
     }
-}</pre>             Typically, you would choose one of <em>prefix</em>, <em>suffix</em> or <em>path</em></td>
+}</code>             Typically, you would choose one of <em>prefix</em>, <em>suffix</em> or <em>path</em></td>
                     </tr>
                     <tr>
                         <td>limits</td>
@@ -635,7 +672,7 @@ compress: [ 'html', 'js', 'css' ]
                         Note that values may either be numbers or strings using natural language suffixes like 
                         <em>MB</em> or <em>GB</em>.
                         For example:
-<pre class="ui code segment">limits: {
+<code class="inverted">limits: {
     buffer:             '32KB',
     cache:              '10MB',
     cacheItem:          '200KB',
@@ -659,16 +696,16 @@ compress: [ 'html', 'js', 'css' ]
     webSocketsPacket:   '50K',
     webSocketsFrame:    '4K',
     workers:            4,
-},</pre></td>
+},</code></td>
                     </tr>
                     <tr>
                         <td>methods</td>
                         <td>List of acceptable HTTP methods. For example:
-<pre class="ui code segment">
+<code class="inverted">
 methods: [
     'get',
     'post',
-],</pre>
+],</code>
                         Can also set "*" for all possible methods. 
                         The default set of methods is: "DELETE, GET, OPTIONS, POST, PUT".
                         </td>
@@ -677,7 +714,7 @@ methods: [
                         <td>params</td>
                         <td>List of required parameters before the request will match the current route.
                         For example:
-<pre class="ui code segment">
+<code class="inverted">
 params: [
     {
         name:   'name',
@@ -685,14 +722,14 @@ params: [
         equals: true,
     }
 ],
-</pre>
+</code>
                         </td>
                     </tr>
                     <tr>
                         <td>pattern</td>
                         <td>Matching URI regular expression for requests to be served by the current route.
                         For example:
-                        <pre class="ui code segment">pattern: '^/route/auth',</pre>
+                        <code class="inverted">pattern: '^/route/auth',</code>
                         Use <em>^</em> to anchor to the start of the URI and $ for the end of the URI.
                         </td>
                     </tr>
@@ -703,7 +740,7 @@ params: [
                         Each entry specifies the filter name and the matching URI extensions. Use "*" to match all extensions.
                         The handlers hash specifies supported handlers and the matching URI extensions.
                         For example:
-<pre class="ui code segment">
+<code class="inverted">
 pipeline: {
     filters: [{
         name: 'uploadFilter',
@@ -714,7 +751,7 @@ pipeline: {
         espHandler:  [ '*' ],
     },
 },
-</pre>
+</code>
                         </td>
                     </tr>
                     <tr>
@@ -725,13 +762,13 @@ pipeline: {
                         <td>redirect</td>
                         <td><p>Collection of redirection rules. These include the failing URI, destination URI and
                         redirection status.</p>
-<pre class="ui code segment"> redirect: [
+<code class="inverted"> redirect: [
     {
         from: '/pressRelease',
         status: 301,
         to: 'https://${request:serverName}/fixedPressRelease.html'
     } 
-]</pre>
+]</code>
                     <p>Alternatively, a rule may be just the string "https://" in which case all HTTP content 
                     will be redirected over HTTPS.</p></td>
                     </tr>
@@ -741,19 +778,19 @@ pipeline: {
                         pre-defined route sets. Some of the available sets are: 'esp-server' and 'esp-restful'.
                         Resource groups greate RESTful routes for a resource that has multiple 
                         instances. Singletons create RESTful routes for singleton resources.</p>
-<pre class="ui code segment">
+<code class="inverted">
 resources: {
     sets: [ 'esp-restful' ],
     groups: [ 'users', 'administrators' ],
     singletons: [ 'profile' ],
 }
-</pre></td>
+</code></td>
                     </tr>
                     <tr>
                         <td>routes</td>
                         <td>Ordered list of routes. This may be a pre-defined route set name or it may be an 
                         array of routes. Examples:
-                            <pre class="ui code segment">
+                            <code class="inverted">
 routes: 'esp-restful',
 routes [ 'esp-restful'],
 routes [ {
@@ -762,7 +799,7 @@ routes [ {
     }
     /* Any collection of properties */
 }
-</pre>
+</code>
                            </td>
                     </tr>
                     <tr>
@@ -823,16 +860,16 @@ routes [ {
                         <td>Control if an XSRF anti-forgery token should be checked for POST forms.
                             If enabled, server side ESP form pages should use the following to
                             generate a hidden input field that contains the XSRF token. 
-                            <pre class="ui code segment">&lt;% inputSecurityToken(); %&gt;</pre> 
+                            <code class="inverted">&lt;% inputSecurityToken(); %&gt;</code> 
                             Ajax requests should use the following to add the security token to the Ajax request payload.
                             Both mechanisms will add an XSRF HTTP header named <em>X-XSRF-TOKEN</em> to the response.
                             For example, this code generates the token on the server and utilizes its value in
                             client-side Javascript.
-<pre class="ui code segment">
+<code class="inverted">
 &lt;script&gt;
     var token = &lt;%= securityToken(); %&gt;;
 &lt;/script&gt;
-</pre>
+</code>
                             <p>Note: restarting the server or creating a new ESP session will invalidate XSRF tokens. In this
                             case, the form will need to be reloaded to generate a new token.</p>
                         </td>
@@ -856,12 +893,12 @@ routes [ {
                         <td>account</td>
                         <td>User and group account names. If defined, ESP must be run as super-user to be able to change
                         accounts. For example:
-                        <pre class="ui code segment">http: {
+                        <code class="inverted">http: {
 server: {
     account: {
         user: 'www-data',
         group: 'www-data',
-    },</pre></td>
+    },</code></td>
                     </tr>
                     <tr>
                         <td>chroot</td>
@@ -871,7 +908,7 @@ server: {
                         <td>defenses</td>
                         <td>Set of defense rules that can be utilized by <em>monitors</em>. 
                             
-                            <pre class="ui code segment">defenses: {
+                            <code class="inverted">defenses: {
     block: {
         args: {
             status: 406,
@@ -880,7 +917,7 @@ server: {
             period: '30mins',
         },
     },
-},</pre>
+},</code>
                         </td>
                     </tr>
                     <tr>
@@ -888,35 +925,35 @@ server: {
                         <td>List of IP:PORT endpoints on which to listen for requests.
                         To listen on all network interfaces, use "<em>*</em>". To listen using SSL, add https:// as a prefix.
                         For example:
-<pre class="ui code segment">listen: [
+<code class="inverted">listen: [
     '*:4000',
     'https://127.0.0.1:4443',
-],</pre>
+],</code>
                         </td>
                     </tr>
                     <tr>
                         <td>log</td>
                         <td>Log file configuration.
                         For example:
-<pre class="ui code segment">log: {
+<code class="inverted">log: {
     location: 'stdout',
     level: '2',
     backup: 5,
     anew: true,
     size: '10MB',
     timestamp: '1hr',
-},</pre></td>
+},</code></td>
                     </tr>
                     <tr>
                         <td>monitors</td>
                         <td>Set of counters to monitor for unusual activity.
                         For example:
-                        <pre class="ui code segment">missing: {
+                        <code class="inverted">missing: {
     expression: 'NotFoundErrors &gt; 5',
     period: '10 secs',
     defenses: [ 'block' ],
     enable: true,
-},</pre> </td>
+},</code> </td>
                     </tr>
                 </tbody>
             </table>
@@ -937,7 +974,7 @@ server: {
                     </tr>
                     <tr>
                         <td>login</td>
-                        <td>Login page when using the 'form' authentication scheme. If the user is not logged in, they
+                        <td>Login page when using the <em>form</em> authentication scheme. If the user is not logged in, they
                             will be redirected to this page.</td>
                     </tr>
                     <tr>
@@ -948,10 +985,10 @@ server: {
                         <td>require</td>
                         <td>The permitted user account names or roles that are required before authorization for this route. For
                         example:
-<pre class="ui code segment">require: {
+<code class="inverted">require: {
     roles: [ 'administrator'],
     users: [ 'julie' ]
-}, </pre>
+}, </code>
                         If <em>users</em> is defined, then a user must login before using the application. The
                         <em>users</em> property may be set to a list of users, a string with a single 
                         user name or <em>true</em> to imply any authenticated user. Note: it is 
@@ -966,11 +1003,11 @@ server: {
                         <td>roles</td>
                         <td>Definition of roles that users may perform. Each role consists of a set of abilities or roles.
                         For example:
-                        <pre class="ui code segment">roles: {
+                        <code class="inverted">roles: {
     executive:      ['manage', 'direct'],
     user:           ['view'],
     administrator:  ['view', 'edit'],
-},</pre></td>
+},</code></td>
                     </tr>
                     <tr>
                         <td>session</td>
@@ -980,14 +1017,19 @@ server: {
                             emitted. The <em>visible</em>propery specifies whether the cookie is readable by scripts in the browser.
                             By default, the session cookie is not visible to Javascript. It is desirable to keep the 
                             session cookie invisible to minimize XSS security vulnerabilities.</p>
-                            <p>ESP implements this by adding the <i>"httpOnly"</i> option on the "Set-Cookie" 
+                            <p>ESP implements this by adding the <em>httpOnly</em> option on the <em>Set-Cookie</em>
                             response header.</p>
-<pre class="ui code segment">
+
+                            <p>The <em>persist</em> property defines if the cookie is persisted to disk in the browser.
+                            If false, the browser discards the cookie when the browser exits. Otherwise the cookie is
+                            retained until the session timeout limit expires.</p>
+<code class="inverted">
 session: {
     cookie: "-esp-cookie-",
+    persist: true,
     visible: true,
 },
-</pre>
+</code>
                         </td>
                     </tr>
                     <tr>
@@ -1003,12 +1045,12 @@ session: {
                         <td>users</td>
                         <td>Definition of users, their passwords and roles if using the "config" authentication
                             store.  For example:
-                        <pre class="ui code segment">users: {
+                        <code class="inverted">users: {
     ralph: {
         password: 'BF1:00128:bWFC5x45BYfuf2GW:w+zzIU0wTZQYaNae0sPecWyry8Z9GrKH',
         roles:    ['user', 'administrator', 'purchase'],
     },
-},</pre>
+},</code>
                         </td>
                     </tr>
                 </tbody>
@@ -1017,10 +1059,10 @@ session: {
             <a name="cache"></a>
             <h3>Cache Collection &mdash; http.cache.*</h3>
             <p>The cache property contains a list of cache records. For example:</p>
-<pre class="ui code segment">cache: [{
+<code class="inverted">cache: [{
     client: '1day',
     extensions: [ 'css', 'html', 'js' ],
-}],</pre>
+}],</code>
             <p>The cache property may also be set to <em>true</em> which is equivalent to defining
             caching on the client side for one day for common static file types.</p>
 
@@ -1053,7 +1095,7 @@ session: {
                     <tr>
                         <td>mime</td>
                         <td>List of request content mime types to cache. For example:
-                        <pre class="ui code segment">mime: [ 'image/jpeg', 'image/png' ]</pre></td>
+                        <code class="inverted">mime: [ 'image/jpeg', 'image/png' ]</code></td>
                     </tr>
                     <tr>
                         <td>unique</td>
@@ -1071,7 +1113,7 @@ session: {
             <h3>SSL Collection &mdash; http.ssl.*</h3>
             <p>The content property describes how web content should be built and processed.
             The SSL directives may be used globally or per-route.</p>
-<pre class="ui code segment">ssl {
+<code class="inverted">ssl {
     authority: {
         file:       'ca.crt',
         directory:  './ca-dir',
@@ -1086,7 +1128,7 @@ session: {
         client:     true,
         issuer:     true,
     },
-},</pre>
+},</code>
             <table title="ssl" class="ui table segment">
                 <thead>
                     <tr><th>Name</th><th>Description</th></tr>
@@ -1191,19 +1233,6 @@ session: {
     </script> 
 
         
-    <script>
-        (function() {
-            var r = new XMLHttpRequest();
-            r.onreadystatechange = function() {
-                if (r.readyState >= 3 && r.status == 200) {
-                    window.location.reload();
-                }
-            }
-            r.open("GET", "/reload-service", true);
-            r.send();
-        })();
-    </script>
-    
 
 </body>
 </html>

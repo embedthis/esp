@@ -1,5 +1,12 @@
 {
     meta: {
         url: 'https://embedthis.com/esp/doc/'
+    },
+    control: {
+        listen: '127.0.0.1:5000'
+    },
+    services: {
+        reload: false
     }
+
 }

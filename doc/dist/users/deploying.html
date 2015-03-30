@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Deploying ESP Applications</title>
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.css" rel="stylesheet" type="text/css" />
+    
+
+</head>
+<body>
+        <div class="sidebar">
+        <div class="ui large left vertical inverted labeled menu">
+            <div class="item">
+                <a href="../index.html" class="logo">ESP Docs</a>
+            </div>
+            <div class="item">
+                <a href="../index.html">
+                    <b>General</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../index.html">ESP Overview</a>
+                    <a class="item" href="../users/features.html">ESP Features</a>
+                    <a class="item" href="https://embedthis.com/esp/download.html">Download</a>
+                    <a class="item" href="../licensing/index.html">Licensing</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../start/index.html">
+                    <b>Getting Started</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../start/quick.html">Quick Start</a>
+                    <a class="item" href="../start/index.html">Installing ESP</a>
+                    <a class="item" href="../start/tour.html">ESP Tour</a>
+                    <a class="item" href="../start/pages-tour.html">ESP Pages Tour</a>
+                    <a class="item" href="../start/mvc-tour.html">ESP MVC Tour</a>
+                    <a class="item" href="../start/releaseNotes.html">Release Notes</a>
+                    <a class="item" href="../start/source.html">Building from Source</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/index.html"><b>User's Guide</b></a>
+                <div class="menu">
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
+                    <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
+                    <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
+                    <a class="item" href="../users/program.html">ESP Utility</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
+                    <a class="item" href="../users/security.html">Security Considerations</a>
+                    <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
+                    <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/man.html">Manual Pages</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../ref/index.html">Reference Guide</a>
+                <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/compatibility.html">Compatibility</a>
+                    <a class="item" href="../ref/native.html">API Library</a>
+                    <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
+                    <a class="item" href="../ref/multithread.html">Multithreaded Programming</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/samples.html">Samples</a>
+                <div class="menu">
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/project.html">Project Resources</a>
+                <div class="menu">
+                    <a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
+                    <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
+                    <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
+                    <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a>
+                    <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a>
+                    <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a>
+                </div>
+            </div>
+            <div class="item">
+                <b>Links</b>
+                <div class="menu">
+                    <a class="item" href="https://embedthis.com/">Embedthis Web Site</a>
+                    <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a>
+                    <a class="item" href="http://twitter.com/mobstream">Twitter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="ui inverted masthead">
+         
+        <div class="ui fixed inverted menu">
+            <div class="ui sidebar-launch button">
+                <i class="icon list layout"></i>
+            </div>
+            <div class="right menu">
+                 
+                    <a class="item" href="https://embedthis.com/">Embedthis</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Site</a>
+                    <span class="desktop-only">
+                        <a class="item" href="http://goo.gl/66rlSc">ESP News</a>
+                        <a class="item" href="https://github.com/embedthis/esp">Repository</a>
+                        <a class="item" href="https://embedthis.com/blog/">Blog</a>
+                        <a class="item" href="https://twitter.com/mobstream">Twitter</a>
+                    </span>
+
+            </div>
+        </div>
+        
+        <div class="ui breadcrumb">
+            <a class="section" href="../">Home</a>
+            
+            <div class="divider">/</div>
+            <a class="section" href="index.html">
+                User's Guide
+            </a>
+            
+            
+            <div class="divider">/</div>
+            <a class="active section" href="deploying.html">Deploying ESP Applications</a>
+            
+        </div>
+        
+        <div class="version desktop-only">
+            v5.4.0
+        </div>
+
+    </div>
+    <div class="content">
+
+           
+            <h3>Production Deployment</h3>
+            <p>For deployment in a production environment, it optimal to compile the entire application including
+            all controllers, views and web pages into a single library. This is refered to as "combined" mode.
+            The normal mode is called "discrete" mode. To do a combined compile, set the <em>esp.combine</em>
+                property in <em>esp.json</em> to true, and then invoke <em>esp compile</em>. For example:</p>
+
+            <code class="inverted">esp: {
+    combine: true
+}</code>
+
+    </div>
+    <div class="terms ui basic center aligned segment">
+        <p>&copy; Embedthis Software, 2003-2014. All rights reserved.</p>
+    </div>
+
+    <script src="../jquery/jquery.min.js"></script>
+    <script src="../semantic-ui/semantic.js"></script>
+    <script>
+        var sl = $('.sidebar-launch');
+        $('.sidebar-launch').click(function() {
+            var body = $('body');
+            if (!body.hasClass('show-sidebar')) {
+                body.addClass('show-sidebar');
+                $('.sidebar').css('visibility', 'visible');
+            } else {
+                body.removeClass('show-sidebar');
+                $('.sidebar').css('visibility', 'hidden');
+            }
+        });
+        $('.sidebar-launch').trigger('click');
+        $('.sidebar a.item').click(function(e) {
+            sessionStorage.setItem('scroll-top', $('.sidebar').scrollTop());
+        });
+        $(function() {
+            var url = '../users/deploying.html';
+            var active = $('.sidebar a[href="' + url +'"]');
+            active.addClass('active');
+            $('.sidebar').scrollTop(sessionStorage.getItem('scroll-top'));
+        });
+    </script> 
+
+        
+
+</body>
+</html>

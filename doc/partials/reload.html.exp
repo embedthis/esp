@@ -1,4 +1,4 @@
-    <@ if (expansive.package.pak.mode == 'debug') { @>
+    <@ if (false && expansive.package.pak.mode == 'debug') { @>
     <script>
         (function() {
             var r = new XMLHttpRequest();

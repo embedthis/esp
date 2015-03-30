@@ -51,15 +51,22 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
                     <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../users/database.html">ESP Databases</a>
-                    <a class="item" href="../users/sessions.html">ESP Sessions</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -67,6 +74,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -160,89 +168,15 @@
     <div class="content">
 
             <h1>Installing on Linux</h1>
-            <p>Running Appweb on Linux is supported by building from source code. </p>
+            <p>Running ESP on Linux is supported by building from source code. </p>
             <p>Please see instructions at <a href="source.html">Building from Source</a>.</p>
-<!--
-            <p>The Appweb install distribution for LINUX is published in three formats:</p>
-            <ul>
-                <li>Native RPM format for RPM based systems such as Fedora</li>
-                <li>Native Debian format for Debian based systems such as Ubuntu</li>
-                <li>Tar format for custom/self installs</li>
-            </ul>
-            <p>It is recommended that you use either the native formats (if your system supports it) as these will
-            register the software installation with the system's software manager. The self-install format consists of
-            tar archives that you can manually extract for maximum control over the placement of the product files.</p>
-            <p>All formats contain a binary distribution, documentation and development headers and libraries in the
-            one package. During installation you will have the option of installing the full distribution or just
-            portions.</p><a id="native"></a>
-            <h2 >Installing the RPM or Debian Images</h2>
-            <ol>
-                <li>Uncompress and extract the image:
-                    <pre class="ui code segment">
-tar xvfz appweb-VERSION-DIST-LINUX-CPU.FMT.tgz
-</pre>
-                    <p>Where VERSION is the current version (e.g. 1.2.3-1), and DIST is the name of the Linux
-                    distribution (e.g. fedora), and FMT is either <b>rpm</b> or <b>deb</b>.</p>
-                </li>
-                <li>Then start the installation with administrator privilege:
-                    <pre class="ui code segment">
-sudo ./install
-</pre>
-                </li>
-            </ol><a id="self"></a>
-            <h2 >Installing the Self-Install Image</h2>
-            <ol>
-                <li>Uncompress and extract the image:
-                    <pre class="ui code segment">
-tar xvfz appweb-VERSION-DIST-LINUX-CPU.tgz
-</pre>
-                </li>
-                <li>Then start the installation with administrator privilege:
-                    <pre class="ui code segment">
-sudo ./install
-</pre>
-                </li>
-            </ol><a id="removing"></a>
-            <h2 >Removing Appweb</h2>
-            <ol>
-                <li>Change directory to the installation directory for Appweb. This is usually
-                <b>/usr/lib/appweb</b></li>
-                <li>Run the uninstall script in the install directory for appweb:
-                    <pre class="ui code segment">
-sudo ./uninstall
-</pre>
-                </li>
-            </ol>
--->
             
             <a id="running"></a>
-            <h2 >Running Appweb</h2>
-            <p>Appweb will start when the Appweb installation procedure completes and on some systems, will launch your
-            browser directed at the Appweb local home page.Thereafter, Appweb will automatically start if the system is
-            rebooted.</p>
-            <p>If you wish to manually stop Appweb, type:</p>
-            <pre class="ui code segment">
-appman start
-</pre>
-            <p>To restart Appweb:</p>
-            <pre class="ui code segment">
-appman stop
-</pre>
-            <p>Alternatively, you can run appweb manually:</p>
-            <pre class="ui code segment">
-cd /etc/appweb
-appweb
-</pre>
-            <p>Appweb is configured by default to listen on port 7777. To test that it is serving pages, point your
-            browser at http://localhost:7777. To tailor the Embedthis Appweb configuration, including the default port,
-            you may wish to edit the appweb.conf configuration file.</p>
-            <p>To get all the options for Appweb, read the man page via:</p>
-            <pre class="ui code segment">
-man appweb
-</pre>or get the command help via:
-            <pre class="ui code segment">
-appweb --help
-</pre>
+            <h2 >Running ESP</h2>
+            <p>To run esp and display command options</p>
+            <code class="inverted">
+esp --help
+</code>
 
     </div>
     <div class="terms ui basic center aligned segment">
@@ -276,19 +210,6 @@ appweb --help
     </script> 
 
         
-    <script>
-        (function() {
-            var r = new XMLHttpRequest();
-            r.onreadystatechange = function() {
-                if (r.readyState >= 3 && r.status == 200) {
-                    window.location.reload();
-                }
-            }
-            r.open("GET", "/reload-service", true);
-            r.send();
-        })();
-    </script>
-    
 
 </body>
 </html>

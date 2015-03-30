@@ -51,15 +51,22 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
                     <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../users/database.html">ESP Databases</a>
-                    <a class="item" href="../users/sessions.html">ESP Sessions</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -67,6 +74,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -157,14 +165,15 @@
             <h1>ESP Pages Tour</h1>
             <p>This tour of ESP Pages provides an overview of how to create ESP Pages. 
             First make sure you have ESP installed on your system so you can type along as you go, and
-            have read the quick tour <a href="tour.html">Quick Tour</a>.</p>
+            read the <a href="tour.html">Quick Tour</a>.</p>
             
             <a id="run"></a>
             <h2 >Running ESP</h2>
             <p>The first step is to create a directory for your ESP pages and run the <em>esp</em> utility to start
             listening for web requests from your browser.
             In this example, we create a directory called "<em>test</em>".</p>
-<pre class="ui code segment"><b>$ mkdir test
+            
+            <pre class="code"><b>$ mkdir test
 $ cd test
 $ esp</b>
 esp: 2: Started HTTP service on "127.0.0.1:4000"
@@ -176,14 +185,16 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             <p>The first step is to create a dynamic "Hello World" web page. ESP pages have an <em>.esp</em>
             extension, so create a file called <em>hello.esp</em> in the <em>test</em> directory.
             Use your favorite text editor with the following content. </p>
-            <pre class="ui code segment">
+            
+            <pre class="code">
 &lt;h1&gt;Hello Bright World&lt;/h1&gt;
 &lt;h2&gt;Generated on <b>&lt;%= mprGetDate(0); %&gt;</b>&lt;/h2&gt;
 </pre>
-            <p>This code blends HTML with embedded "C" language code inside a special ESP web page 
+            <p>This code blends HTML with embedded <em>C</em> language code inside a special ESP web page 
             directive. This code will be executed and converted to HTML before being sent to the client. 
             There are a variety of ESP page directives, the one you'll use first, is: </p>
-<pre class="ui code segment"><b>&lt;%= expression %&gt;</b></pre>
+            
+            <pre class="code"><b>&lt;%= expression %&gt;</b></pre>
 
             <p>Now when you re-run the page, it will display the current date and time. If you refresh the page by
             pressing reload, the new date and time will be displayed.</p>
@@ -195,7 +206,8 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             web page had been modified and it re-parsed and compiled it into a loadable module ready for execution. 
             This web module is then cached in-memory and on-disk for fast execution.</p>
             <p>You can also embed more complex ESP into our page, like:</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 <b>&lt;h3&gt;&lt;% render("Request method is %s", getMethod()); %&gt;&lt;/h3&gt;</b>
 <b>&lt;% 
     int i;
@@ -204,7 +216,7 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
     } 
 %&gt;</b>
 </pre>
-            <p>By using the ESP statement directive <b>&lt;% code %&gt;</b>, you can embed arbitrary "C" language
+            <p>By using the ESP statement directive <b>&lt;% code %&gt;</b>, you can embed arbitrary <em>C</em> language
             statements in your web page. The <em>render</em> function allows you to write arbitrary data which is patched
             back where the directive was defined in the page. See the 
             <a href="../users/pages.html">Web Pages and Templates</a> document for full details about all 
@@ -212,12 +224,13 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             
             <a id="declarations"></a>
             <h2 >Declarations</h2>
-            <p>Some compilers (Microsoft Visual Studio) do not permit "C" declarations except at the 
-            start of a block. When ESP compiles an ESP web page, it converts it to "C" code and wraps it inside a function that will be invoked
+            <p>Some compilers (Microsoft Visual Studio) do not permit <em>C</em> declarations except at the 
+            start of a block. When ESP compiles an ESP web page, it converts it to <em>C</em> code and wraps it inside a function that will be invoked
             at run-time in response to client requests. ESP supports such compilers by controlling 
             where ESP code will be placed in the web page function. To ensure that declarations are emitted at the start of the function block 
             use the <em>^start</em> directive.</p>
-<pre class="ui code segment">&lt;%^start
+
+            <pre class="code">&lt;%^start
     char *msg = "hello world";
     int  x = 42;
 %&gt;
@@ -232,7 +245,8 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             and if not found, the session data store for the variable, and then substitute its value.</p>
             <p>If an HTTP request has the URI: <em>http://localhost/submit.esp?name=julie</em>, then the following
             ESP code could access the user name directly.</p>
-<pre class="ui code segment">&lt;p&gt;User Name: <b>&#64;$name</b>&lt;/p&gt;</pre>
+
+            <pre class="code">&lt;p&gt;User Name: <b>&#64;$name</b>&lt;/p&gt;</pre>
 
             <h3>Varible Access</h3>
             <p>ESP provides other short-forms for convenience.</p>
@@ -254,9 +268,10 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             <h3>XSS Security</h3>
             <p>Normally, echoing user input back to the client in a web page is bad practice and can invite XSS security
             attacks. Fortunately, ESP HTML escapes the &#64;$variable value to prevent such attacks. </p>
-            <p>General ESP output can also be escaped by using a "safe" "%S" format specifier. The renderSafe function
+            <p>General ESP output can also be escaped by using a <em>safe</em> "%S" format specifier. The renderSafe function
             can also be used.</p>
-<pre class="ui code segment">&lt;p&gt;User Name: <b>&lt;%=%S param("name"); %&gt;</b>&lt;/p&gt;
+
+            <pre class="code">&lt;p&gt;User Name: <b>&lt;%=%S param("name"); %&gt;</b>&lt;/p&gt;
 &lt;p&gt;User Name: <b>&lt;%= renderSafe(param("name")); %&gt;</b>&lt;/p&gt;
 </pre>
             <a id="sessions"></a>
@@ -267,7 +282,8 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             <p>Flash storage is a portion of the session storage used to pass messages and state to the next request 
             controller only. This is useful after an error, to pass information to the next controller. 
             Messages can be added to flash storage via the <em>flash</em> API.</p>
-<pre class="ui code segment">&lt;% <b>flash</b>("inform", Record updated"); %&gt;</pre>
+
+            <pre class="code">&lt;% <b>flash</b>("inform", Record updated"); %&gt;</pre>
             
             <!--
             <a id="layouts"></a>
@@ -281,7 +297,8 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             
             <p>A layout page provides template for the page and defines the location for the content via a
                 <em>&lt;%@ content %&gt;</em> directive. For example, this is a simple ESP layout page:</p>
-<pre class="ui code segment">
+
+            <pre class="code">
 &lt;html&gt;
 &lt;body&gt;
     &lt;div class="top"&gt;
@@ -299,7 +316,8 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             <p>To use a layout page, create a layout page called <em>default.esp</em> under the <em>client/layouts</em> 
             directory. Create the directory if it does not exist.</p>
             <p>ESP pages can specify a different layout page using the layout directive. For example:</p>
-<pre class="ui code segment">
+
+            <pre class="code">
 &lt;%@ layout "custom-layout.esp" %&gt;
 &lt;h1&gt;Hello Bright World&lt;/h1&gt;
 </pre>
@@ -347,19 +365,6 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
     </script> 
 
         
-    <script>
-        (function() {
-            var r = new XMLHttpRequest();
-            r.onreadystatechange = function() {
-                if (r.readyState >= 3 && r.status == 200) {
-                    window.location.reload();
-                }
-            }
-            r.open("GET", "/reload-service", true);
-            r.send();
-        })();
-    </script>
-    
 
 </body>
 </html>

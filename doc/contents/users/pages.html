@@ -24,6 +24,7 @@
             "C" is the fastest, closest to the hardware, language available. By using "C", invoking device APIs 
             and other system APIs are easy, fast and compact. There is no translation or coupling required getting 
             into and out of another language.</p>
+
             <h3>Transparent Compiling</h3>
             <p>However, ESP is not a traditional low-level environment. When a client request for an ESP page 
             is received, the ESP page is transparently parsed, converted into "C" code, compiled and saved as 
@@ -31,7 +32,7 @@
             code without any access to the original ESP page. If the system is rebooted, the on-disk cached module 
             will be loaded without recompilation.</p>
             
-            <img src="../images/esp/template/compile.jpeg" alt="compile" />
+            <img class="ui centered image" src="../images/esp/template/compile.jpg" alt="compile" />
             <p>The compilation of ESP pages happens automatically and quickly in the background when in development mode. 
             If the original web page is modified, the page is transparently recompiled and re-cached. For production, 
             pages can be pre-compiled, and locked-down without recompiling in the field. This updating behavior can 
@@ -63,7 +64,7 @@
             <table class="ui table" title="directives">
                 <thead>
                     <tr>
-                        <th class="four wide">Directive</th>
+                        <th class="five wide">Directive</th>
                         <th>Purpose</th>
                     </tr>
                 </thead>
@@ -291,75 +292,12 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             For example:</p>
             <pre class="ui code segment">setHeader("X-ACCESS_CODE", "42");</pre>
            
-            <a id="expansive"></a>
-            <h2>Using Expansive for Layouts</h2>
-            <p>Highly usable applications have consistent structure, menus and appearance so the user can easily 
-            navigate that application. Such applications may consist of many web pages that share a common look
-            and feel.  However, designing and maintaining that consistency is sometimes a challenge.</p>
-            
-            <p>ESP uses the <a href="http://embedthis.com/expansive/">Expansive</a> tool to provide a powerful and flexible solution for implementing a consistent UI via layout pages.
-            Layouts pages define the look and feel of an application while content pages provide page specific
-            content. HTML pages are then rendered to clients by merging content pages with one or more layout pages. 
-            This creates a composite page for what the user will actually see. In this way, a web application 
-            can easily maintain a consistent look and feel without repeating boilerplate code from page to page. 
-            ESP believes strongly in the DRY principle: <em>"Don't Repeat Yourself"</em>. </p>
-            
-            <img src="../images/esp/template/layout.jpeg" alt="layout" />
-            <p>For example: consider the layout page below named "<em>layouts/default.esp</em>". This will will
-            define the top level HTML layout page for content pages. It has a banner image and division tags that 
-            structure the page:</p>
-            <pre class="ui code segment">
-&lt;html&gt;
-&lt;body&gt;
-    &lt;div class="top"&gt;
-        &lt;img src="banner.jpg" /&gt;
-    &lt;/div&gt;
-    &lt;div class="content"&gt;
-        <b>&lt;&#64; content &#64;&gt;</b>
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</pre>
-            <p>Modifications to this page, will be reflected automatically in all content pages.</p>
-            
-            <a id="content"></a>
-            <h3>Content Pages</h3>
-            <p>A content page defines only the HTML and code that is unique for a specific page. It is merged with a
-            layout page by inserting the content and replacing the <em>&lt;&#64; content &#64;&gt;</em> tag in the layout
-            page before rendering to the client.</p>
-            <p>For example, consider the content page named "<em>demo-index.esp</em>":</p>
-            <pre class="ui code segment">
-<b>&lt;h1&gt;Content Page&lt;/h1&gt;
-&lt;p&gt;Hello World&lt;/p&gt;</b>
-</pre>
-            <p>This would render a composite web page back to the user:</p>
-            <pre class="ui code segment">
-&lt;html&gt;
-&lt;body&gt;
-    &lt;div class="top"&gt;
-        &lt;img src="banner.jpg" /&gt;
-    &lt;/div&gt;
-    &lt;div class="content"&gt;
-        <b>&lt;h1&gt;Content Page&lt;/h1&gt;
-        &lt;p&gt;Hello World&lt;/p&gt;</b>
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</pre>
-            <p>Note that the blending of layout and content page happens only once and the result is save under
-            the "documents" directory. For more information, read the
-            <a href="https://embedthis.com/expansive/doc/">Expansive Documentation</a>.</p>
-
-            <a id="include"></a>
-            <h3>Include Pages</h3>
-            <p>Sometimes you need to just include some arbitrary HTML file at any point in a page. Use the <em>
-            include</em> directive at any point in the page you wish to include another file. For example:</p>
-            <pre class="ui code segment">&lt;&#37;@ include "common/header.html" &#37;&gt;</pre> 
             <a id="debugging"></a>
             <h2 >Debugging</h2>
-            <p>You can inject debugging code into your views to trace data to the appweb log file or back to the client's
+            <p>You can inject debugging code into your views to trace data to the esp log file or back to the client's
             browser. The <a href="../ref/api/mpr.html#group___mpr_log_1ga21fa2199e7f70707c1fb3b63daed6ecf">mprLog</a> 
-            function  will print its arguments to appweb log file. 
+            function will print its arguments to esp log file. 
+
             <p>To send trace to the browser, use the <em>
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a></em> function 
             to write data back to the browser. </p>

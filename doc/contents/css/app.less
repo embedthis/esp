@@ -230,7 +230,7 @@ em {
 
 code {
     display: block;
-    white-space: pre;
+    white-space: pre-wrap;
     margin: 1rem 0;
     padding: 1rem 1rem;
     font-family: monospace;
@@ -247,6 +247,26 @@ code {
             color: @inverted-code-bold;
             font-weight: normal;
         }
+    }
+}
+
+pre.code {
+    display: block;
+    white-space: pre-wrap;
+    margin: 1rem 0;
+    padding: 1rem 1rem;
+    font-family: monospace;
+    font-style: normal;
+    border: 1px solid #C2C2C2;
+    border-radius: 0.3rem;
+    line-height: 1.25em;
+    background-color: #EEE;
+    color: #333;
+    background: @inverted-code-background;
+    color: @inverted-code-color;
+    b {
+        color: @inverted-code-bold;
+        font-weight: normal;
     }
 }
 

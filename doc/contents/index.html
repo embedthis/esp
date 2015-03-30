@@ -7,11 +7,13 @@
             <div class="floated">
                 <img src="images/esp-icon-128.png" class="ui left floated image">
                 <p>ESP is a web framework that makes it dramatically easier to create blazing fast,
-                dynamic web applications. ESP uses the "C" language for server-side web programming which allows easy
-                access to system or hardware data to create fast, vibrant management user interfaces. </p>
+                dynamic web applications. ESP applications uses the <em>C</em> language for server-side 
+                programming, which allows easy access to system or hardware data. The result is fast and 
+                responsive web applications.</p>
 
                 <p>ESP is not a traditional low-level environment. It is a powerhouse MVC framework in a tiny footprint.
-                Further, if web pages or controllers are modified during development, the code is transparently 
+                ESP has all the features you would normally expect from an enterprise web framework. ESP is also 
+                great for developement. If web pages or controllers are modified, the code is transparently 
                 recompiled and reloaded. This enables unparalleled performance with "script-like" flexibility for 
                 web applications. </p>
             </div>
@@ -27,6 +29,8 @@
                 <li>Embedded databases</li>
                 <li>Database migrations</li>
                 <li>Extensive programmer API</li>
+                <li>Library of extension packages</li>
+                <li>Complete tooling for web applications</li>
             </ul>
             <p>This document describes the ESP web framework and how to use ESP.</p>
             
@@ -45,7 +49,7 @@
                 single application if desired.</p>
             <a name="standalone"></a>
             <h2>Stand-alone Pages</h2>
-            <p>An ESP page is a standard HTML web page with embedded "C" code that executes at run-time to create a dynamic
+            <p>An ESP page is a standard HTML web page with embedded <em>C</em> code that executes at run-time to create a dynamic
             client response. Pages typically have a "<em>.esp</em>" extension and may use ESP layout pages to
             define the look and feel of the application in one place.</p>
             <p>The C code is embedded between <em>&lt;%</em> and <em>%&gt;</em> tags. For example:
@@ -53,16 +57,16 @@
 &lt;p&gt;<b>&lt;% render("A random number %d", rand(0)); %&gt;</b>&lt;/p&gt;</pre>
             <p>When the web page is requested, the web page including the code inside the ESP tags is compiled
             and saved as a shared library. When the page is requested, the call to <em>render</em> will 
-            replace the code between <em>&lt;% ... %&gt;</em> with the result of the render call and then the composite page 
-            will be sent to the client. The code inside the ESP tags is any standard C code.</p>
-            <p>The next time the page is requested, it will be transparently recompiled and reloaded if the source
-            web page has been modified</p>
-            <p>See <a href="#pages">ESP Pages</a> below for more details.</p>
+            replace the code between <em>&lt;% ... %&gt;</em> with the result of the render call. Finally,
+            then the composite page will be sent to the client. The next time the page is requested, it will 
+            be transparently recompiled and reloaded if the source web page has been modified
+            See <a href="#pages">ESP Pages</a> below for more details.</p>
+
             <a name="webservices"></a>
             <h2>Web Services</h2>
             <p>ESP is especially well suited for high performance web services. ESP permits the binding of URLs 
             directly to C functions. When the URL is requested, the corresponding C function, typically
-            called an <em>"action"</em>, is executed to dynamically generate a response. 
+            called an <em>action</em>, is executed to dynamically generate a response. 
             The actions are typically grouped into a loadable ESP controller file. For example:</p>
             <pre class="ui code segment">
 /* Hello Action */
@@ -70,16 +74,18 @@ static void <b>hello()</b> {
     render("{greeting: 'Hello World'}\n");
     finalize();
 }
+
 /* Initialization of Actions */
 ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
     espDefineAction(route, "greeting-hello", <b>hello</b>);
     return 0;
 } 
 </pre>
-            <p>This example is a loadable ESP controller with one action function. The actions are published by binding
-            functions to route names. When the appropriate URL is requested, the "hello" function is run to generate the response. 
-            During development, if the file containing this code is modified, the page will be transparently 
-           recompiled and reloaded before running the new code.</p>
+            <p>This example is a loadable ESP controller with one action function. The actions are published by 
+            binding functions to route names. When the appropriate URL is requested, the <em>hello</em> function 
+            is run to generate the response. During development, if the file containing this code is modified, 
+            the page will be transparently recompiled and reloaded before running the new code.</p>
+
             <a name="mvc"></a>
             <h2>Model-View-Controller</h2>
             <p>A Model-View Controller application, also known as an MVC app, is a proven paradigm for organizing larger web
@@ -95,10 +101,14 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
                 <li>Server-side MVC Applications</li>
                 <li>Single Page Applications</li>
             </ul>
+
             <h3>Server-side MVC Applications</h3>
-            <p>ESP implements server-side MVC applications by providing a powerful HTML templating engine. This engine
-            permits the easy insertion of dynamic data into web pages before they are delivered to the client.
-            A common look-and-feel is achieved by using master layout pages.</p>
+            <p>ESP implements server-side MVC applications by providing using the 
+            <a href="http://embedthis.com/expansive/">Expansive</a> web site generator. Expansive provides
+            development time scripting, layout pages, partial pages to support the easy insertion of dynamic 
+            data into web pages before they are delivered to the client. A common look-and-feel is achieved 
+            by using master layout pages.</p>
+
             <a name="spa"></a>
             <h3>Single Page Applications</h3>
             <p>Single page applications deliver the entire web application as a single page and then incrementally
@@ -112,7 +122,7 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             <img src="images/espArchitecture.jpg" alt="ESP Web Framework Architecture" class="centered" />
             <p>The main components of the ESP Web Framework are:</p>
             <ul>
-                <li><a href="#http">Embedthis Http Engine</a></li>
+                <li><a href="#http">Embedthis HTTP Engine</a></li>
                 <li><a href="#pages">ESP Pages</a></li>
                 <li><a href="#controllers">ESP Controllers</a></li>
                 <li><a href="#models">ESP Models</a></li>
@@ -122,18 +132,19 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             </ul> 
             
             <a id="http"></a>
-            <h2 >ESP HTTP Server</h2>
+            <h2 >Embedthis HTTP Server</h2>
             <p>ESP includes and embedded copy of the 
-                <a href="https://embedthis.com/appweb/">Appweb HTTP engine</a>. This is an high performance,
+                <a href="https://embedthis.com/appweb/">Embedthis HTTP engine</a> that has been used for years
+                in <a href="https://embedthis.com/appweb/">Appweb</a>. This is a high performance,
                event-based, multithreaded HTTP engine. It fully supports HTTP/1.1 with extensions for WebSockets,
                Sessions, SSL, Security Limits and Defensive counter-measures.</p>
+
             <a id="pages"></a>
             <h2 >ESP Pages</h2>
             <p>The ESP Pages provide the "View" portion of MVC frameworks and are responsible for generating 
-            the user interface. They provid: </p>
+            the user interface. They provide: </p>
             <ul>
-                <li>Embedded "C" language code for dynamic HTML responses</li>
-                <li>Master layout pages for consistent UI look and feel</li>
+                <li>Embedded <em>C</em> language code for dynamic HTML responses</li>
                 <li>An ESP API library to render output</li>
             </ul>
             <p>Note that if using ESP for a <a href="#spa">Single Page Architecture</a> application, the views are
@@ -141,124 +152,55 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             <a href="http://aurelia.io">Aurelia</a>. In this case, ESP views are used for the initial, "single" 
             home page.</p>
 
-            <a id="pipeline"></a>
-            <h3>ESP Pipeline</h3>
-            <p>The ESP pipeline processes ESP pages to generate client responses. The process begins with
-            with an HTML page which typically, though not always, contains embedded "C" code. This is
-            parsed by the ESP Template Engine and combined with layout pages to create a single composite web page. 
-            This is then converted to pure "C" code that is compiled, linked and saved as a native-code shared library. 
-            The library is loaded and the code run whenever a client request is received for that page. If the web page
-            or template is modified, the pipeline recompiles the page and regenerates the code library.</p>
-            <p>This entire pipeline process happens transparently in the background with only a momentary pause in 
-            processing. For production, you can pre-compile web pages so that a compiler is not required on the target.</p>
-            
-            <img src="images/esp/template/layout.jpeg" alt="View Pipeline" class="centered" />
-            
-            <a id= "layouts"></a>
-            <h3>Layout Pages</h3>
-            <p>Layout pages allow you to define the "look and feel" of the user interface and specify
-            the standard elements of all web pages in one place. 
-            ESP pages reuse the "look and feel" by simply referencing a layout page.</p>
-            <p>The layout page is structurally just an ESP Page that typically contains the top level HTML
-            structure, style sheets and graphic content to be included on every page. It may contain embedded "C" 
-            code, and most importantly, it specifies the location to insert content from content pages.</p>
-            <p>The ESP content pages supply the content and data that is unique to that page. Content pages 
-            do not replicate the layout and look and feel that is specified in the layout page.  In this way, changing
-            the layout page in once place will automatically change every web page in the application.</p>
-            <p>Here is a simple layout page:</p>
-            <pre class="ui code segment">
-&lt;html&gt;
-&lt;body&gt;
-    &lt;img src="banner.jpg"&gt;
-    <b>&lt;%@ content %&gt;</b>
-&lt;/body&gt;
-&lt;/html&gt;
-</pre>
-            <p>The <b>&lt;%@ content %&gt;</b> directive instructs the Template Engine to insert the content page at
-            this location. </p>
-            <p>Here is a simple content page. Note that this is missing the &lt;html&gt; and &lt;body&gt; tags:</p>
-            <pre class="ui code segment">
-&lt;h1&gt;Hello World&lt;/h1&gt;
-&lt;p&gt;Today is &lt;%= mprGetDate(0) %&gt;
-</pre>
-            <p>ESP pages are not required to use layout pages. To specify that no layout page is required, use an
-                empty layout directive in the content page. For example: </p>
-                <pre class="ui code segment">
-&lt;%@ layout "" %&gt;
-</pre>
-            <p>By default, stand-alone ESP pages do not use a layout page, whereas ESP view pages in an MVC application
-            do.</p>
             <h3>ESP Page Directives</h3>
-<p>ESP Template Engine supports the following web page directives. These can be used in layout or content pages:</p>
-<pre class="ui code segment">
-&lt;% C-code %&gt;
-&lt;%= C-expression %&gt;
-@!variable
-&#64;&#64;param
-@#field
-@|
-@~
-&lt;%@ include "filename" %&gt;
-&lt;%@ layout "file" %&gt;
-</pre>
-            <p>The &lt;% "C" code %&gt; directive will insert the given code at this location. At run-time, this 
-            code will execute. A typical use of this directive is to call 
-            the <a href="ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a> API
-            to write data back to the client at this position in the web page.</p>
-            <p>The &lt;%= "C" expression %&gt; directive will evaluate the expression and substitute the resulting
-            string value into the web page. A printf format specifier can be used to specify a different variable type.
-            For example, if <em>ivar</em> is an integer:</p>
-            <pre class="ui code segment">&lt;%= %d ivar %&gt;</pre>
-            <p>The <em>@!variable</em> directive is a shortcut for &lt;%= expression %&gt;.</p>
-            <p>The <em>&#64;&#64;param</em> directive substitutes the value of a request parameter or session variable 
-                of the same name after HTML escaping the value.</p>
-            <p>The <em>@~</em> is replaced with a URL to the top of the application. This addresses the "client" 
-            documents directory.</p>
+            <p>ESP supports the following web page directives.</p>
+            <table class="ui table">
+                <thead><tr><th class="three wide">Directive</th><th>Purpose</th></tr></thead>
+                <tbody>
+                    <tr><td class="">&lt;% code %&gt;</td><td>Insert code at this location. At run-time, this 
+                        <em>C</em> code will execute.</td></tr>
+                    <tr><td>&lt;%= code %&gt;</td><td>Evaluate the expression and substitute the resulting value 
+                        into the web page at this position. A printf format specifier can be used to specify a 
+                        different variable type. For example, <em>&lt;%= %d ivar %&gt;</em>
+                        <em>C</em> code will execute.</td></tr>
+                    <tr><td>@!variable</td><td>Shortcut for &lt;%= variable %&gt;</td></tr>
+                    <tr><td>@!{expression}</td><td>Shortcut for &lt;%= expression %&gt;</td></tr>
+                    <tr><td>&#64;&#64;param</td><td>Substitutes the value of a request parameter or session 
+                        variable of the same name after HTML escaping the value.</td></tr>
+                    <tr><td>@#field</td><td>Substitute the field name in the current database record.</td></tr>
+                    <tr><td>@&#126;</td><td>Insert a URL to the top of the application.</td></tr>
+                </tbody>
+            </table>
 
-            <p>The <em>@|</em> is replaced with a URL to the top server-side prefix of the application. This addresses 
-                the server-side controllers.</p>
-            <p>The <em>&lt;% include "filename" %&gt;</em> directive will include the given file name at the location of the
-            directive when parsing the web page. Included files may contain ESP directives and
-            include directives can be nested.</p>
-            <p>The <em>&lt;%@ layout "file" %&gt;</em> directive specifies the name of the layout page. By using 
-            this directive in layout pages, you can build up the web page layout by nesting layout pages. If omitted 
-            in content pages, which is usually the case, the default layout of <em>layouts/default.esp</em> will be used. 
-            If omitted in layout pages, it is assumed the layout page is the top level layout page.</p>
-            <p>The template engine additionally supports the following web page directive in layout pages:</p>
-            <pre class="ui code segment">&lt;%@ content %&gt;</pre>
-            <p>This specifies the location for the content page data.</p>
-            <p>Note: you do not have to use layout pages. Simple stand-alone web pages without layouts code are
-            supported. To disable use of a layout page, use a <em>&lt;%@ layout="" %&gt;</em> directive.</p>
-            <p>See <a href="users/pages.html#directives">ESP Page Directives</a>
-            for more directives.</p>
-            <a id="controllers"></a>
+            <p>See <a href="users/pages.html#directives">ESP Page Directives</a> for more directives.</p>
+
+                        <a id="controllers"></a>
             <h2 >ESP Controllers</h2>
-            <p>Controllers are collections of ESP action functions that are bound to specific URLs. Controllers group
-            a set of actions that operate on a resource or group of resources. A controller may be advertised by
-            one or more routes. Often a controller will use 
-            <a href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a>
-            routes to map URLs to specific actions.</p>
+            <p>ESP Controllers are collections of <em>C</em> functions that are bound to specific URLs for the purpose
+            of managing a resource or group of resources. Often a controller will use 
+            <a href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a> routes to map 
+            URLs to specific actions.</p>
 
             <p>A controller is typically coded in a single source file, though it can reference any external libraries.
-            The controller will be dynamically compiled, saved and loaded when a request
-            is received for any action in the controller. If the source code is modified, the controller will be 
-            recompiled and reloaded. Alternatively, the ESP generator utility can be used to precompile controllers so that
-            a compiler is not required on the target system in production. Compiled controllers are saved in a
+            The controller will be dynamically compiled, saved and loaded when a request is received for any action 
+            in the controller. If the source code is modified, the controller will be recompiled and reloaded. 
+            Alternatively, the <em>esp</em> command can be used to precompile controllers so that a compiler 
+            is not required on the target system in production. Compiled controllers are saved in a 
             <em>cache</em> directory as shared libraries.</p>
             
             <a id="actions"></a>
             <h3>Actions</h3>
             <p>When ESP receives a request to service, the request is parsed and then dispatched to a specific 
-            function in the controller called an "action". The job of the action function is to:</p>
+            function in the controller called an <em>action</em>. The job of the action function is to:</p>
             <ol>
                 <li>Respond to the request</li>
                 <li>Render a response view back to the client</li>
             </ol>
-            <p>How the action responds to the request depends on the request parameters, that include the 
+            <p>How the action responds to the request depends on the request parameters, the 
             query information, form parameters and other HTTP and application state information.</p>
             <p>Here is a sample action function that updates a database table based on user submitted form data in
             <em>"params"</em>.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 static void update() {
     if (updateFields("post", params())) {
         inform("Post updated successfully.");
@@ -284,7 +226,7 @@ static void update() {
             <p>The Model part of an MVC framework stores the application data and access logic and may provide an 
             Object Relational Mapping (ORM) layer. Unfortunately, while being powerful and extensive, ORMs often 
             consume considerable amounts of memory and can be slow at run-time. ESP avoids this problem by providing 
-            a simple mapping from relational database data to "C" based records and grids. This results in a 
+            a simple mapping from relational database data to <em>C</em> based records and grids. This results in a 
             high-performance database interface with very low memory requirements.</p>
             <h3>Embedded Database Interface</h3>
             <p>ESP supports an Embedded Database Interface (EDI) above a user-selectable database such as:
@@ -294,46 +236,6 @@ static void update() {
             <h3>Migrations</h3>
             <p>The ESP generator program can create database migration modules. These are mini-programs that create and
             modify database tables. Migrations are useful to create databases and test data.</p>
-            <a id="compiler"></a>
-            <h2 >C Compiler</h2>
-            <p>To compile ESP pages and controllers into native code for execution, a "C" language compiler is required. 
-            When developing, the compiler is used to transparently compile and recompile ESP pages and controllers as
-            they are modified. This results in a set of shared-library files that represent the ESP application. </p>
-            <h3>Deployment</h3>
-            <p>To deploy an ESP application, only the saved library files are required. The source code for the ESP pages 
-            and controllers is typically not deployed. Of course, if you wish to continue to provide transparent compilation 
-            once deployed, then include the source and enable <em>http.update</em> in the esp.json 
-            configuration file.</p>
-
-            <p>The <em>esp</em> generator program can also be used to compile an ESP application including all ESP 
-            pages and controllers. For example:</p>
-            <pre class="ui code segment">esp compile</pre>
-            <h3>Cross Compilation</h3>
-
-            <p>If your target system is of a different architecture to your development system, you will need to 
-            cross-compile your ESP application for the target using the <em>esp --platform</em> swtich. See
-            <a href="users/program.html#cross">Cross Compiling with ESP</a> for more details.</p>
-
-            <pre class="ui code segment">esp --platform vxworks-arm-debug compile</pre>
-            <p>If you have specific cross-compilation requirements, you may need to edit the <em>esp.conf</em> 
-            file to define the appropriate compilation command line for your target. </p>
-            <a id="generator"></a>
-            <h2 >ESP Generator</h2>
-            <p>The ESP framework includes a utility program called <em>esp</em> that is used to generate new 
-            applications, controllers, models, migrations and scaffolds. It is also used to serve the application.</p>
-           
-            <p>To create a new bare-bones application called demo:</p>
-            <pre class="ui code segment">$ mkdir demo
-$ cd demo
-$ pak install esp-server</pre>
-            <p>This will create the following files:</p>
-            <ul>
-                <li>package.json</li>
-                <li>client/*</li>
-            </ul>
-            <p>The <em>esp</em> program creates the application directory and populates it with the necessary
-            directories, configuration files and stubs to begin the application. When you run, 
-            ESP will automatically compile components as required. </p>
 
             <a id="api"></a>
             <h2 >ESP API</h2>
@@ -341,5 +243,4 @@ $ pak install esp-server</pre>
             defines an expressive, terse, short-form API that makes common tasks simple. 
             See the <a href="ref/api/esp.html">ESP API Reference</a> for more details.</p>
             <p>ESP uses a garbage collector so that you never need to free ESP memory allocated in web pages or
-            in controllers. This allows you to use the <a href="http://en.wikipedia.org/wiki/Decorator_pattern">Decorator</a>
-            pattern and function chaining in your C code without complex memory freeing or error handling.</p>
+            in controllers. This results in more secure, reliable web applications.</p>

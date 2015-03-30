@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ESP Layouts</title>
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.css" rel="stylesheet" type="text/css" />
+    
+
+</head>
+<body>
+        <div class="sidebar">
+        <div class="ui large left vertical inverted labeled menu">
+            <div class="item">
+                <a href="../index.html" class="logo">ESP Docs</a>
+            </div>
+            <div class="item">
+                <a href="../index.html">
+                    <b>General</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../index.html">ESP Overview</a>
+                    <a class="item" href="../users/features.html">ESP Features</a>
+                    <a class="item" href="https://embedthis.com/esp/download.html">Download</a>
+                    <a class="item" href="../licensing/index.html">Licensing</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../start/index.html">
+                    <b>Getting Started</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../start/quick.html">Quick Start</a>
+                    <a class="item" href="../start/index.html">Installing ESP</a>
+                    <a class="item" href="../start/tour.html">ESP Tour</a>
+                    <a class="item" href="../start/pages-tour.html">ESP Pages Tour</a>
+                    <a class="item" href="../start/mvc-tour.html">ESP MVC Tour</a>
+                    <a class="item" href="../start/releaseNotes.html">Release Notes</a>
+                    <a class="item" href="../start/source.html">Building from Source</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/index.html"><b>User's Guide</b></a>
+                <div class="menu">
+                    <a class="item" href="../users/apps.html">ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
+                    <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
+                    <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
+                    <a class="item" href="../users/program.html">ESP Utility</a>
+                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/sessions.html">Sessions</a>
+                    <a class="item" href="../users/security.html">Security Considerations</a>
+                    <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
+                    <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/man.html">Manual Pages</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../ref/index.html">Reference Guide</a>
+                <div class="menu">
+                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/compatibility.html">Compatibility</a>
+                    <a class="item" href="../ref/native.html">API Library</a>
+                    <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
+                    <a class="item" href="../ref/multithread.html">Multithreaded Programming</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/samples.html">Samples</a>
+                <div class="menu">
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/project.html">Project Resources</a>
+                <div class="menu">
+                    <a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
+                    <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
+                    <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
+                    <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a>
+                    <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a>
+                    <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a>
+                </div>
+            </div>
+            <div class="item">
+                <b>Links</b>
+                <div class="menu">
+                    <a class="item" href="https://embedthis.com/">Embedthis Web Site</a>
+                    <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a>
+                    <a class="item" href="http://twitter.com/mobstream">Twitter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="ui inverted masthead">
+         
+        <div class="ui fixed inverted menu">
+            <div class="ui sidebar-launch button">
+                <i class="icon list layout"></i>
+            </div>
+            <div class="right menu">
+                 
+                    <a class="item" href="https://embedthis.com/">Embedthis</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Site</a>
+                    <span class="desktop-only">
+                        <a class="item" href="http://goo.gl/66rlSc">ESP News</a>
+                        <a class="item" href="https://github.com/embedthis/esp">Repository</a>
+                        <a class="item" href="https://embedthis.com/blog/">Blog</a>
+                        <a class="item" href="https://twitter.com/mobstream">Twitter</a>
+                    </span>
+
+            </div>
+        </div>
+        
+        <div class="ui breadcrumb">
+            <a class="section" href="../">Home</a>
+            
+            <div class="divider">/</div>
+            <a class="section" href="index.html">
+                User's Guide
+            </a>
+            
+            
+            <div class="divider">/</div>
+            <a class="active section" href="layouts.html">ESP Layouts</a>
+            
+        </div>
+        
+        <div class="version desktop-only">
+            v5.4.0
+        </div>
+
+    </div>
+    <div class="content">
+
+            <h1>ESP Layouts</h1>
+            <p>Highly usable applications have consistent structure, menus and appearance so the user can easily 
+            navigate that application. Such applications may consist of many web pages that share a common look
+            and feel.  However, designing and maintaining that consistency is sometimes a challenge.</p>
+            
+            <p>ESP uses the <a href="http://embedthis.com/expansive/">Expansive</a> tool to provide a powerful and flexible solution for implementing a consistent UI via layout pages.
+            Layouts pages define the look and feel of an application while content pages provide page specific
+            content. HTML pages are then rendered to clients by merging content pages with one or more layout pages. 
+            This creates a composite page for what the user will actually see. In this way, a web application 
+            can easily maintain a consistent look and feel without repeating boilerplate code from page to page. 
+            ESP believes strongly in the DRY principle: <em>"Don't Repeat Yourself"</em>. </p>
+            
+            <img src="../images/esp/template/layout.jpeg" alt="layout" />
+            <p>For example: consider the layout page below named "<em>layouts/default.esp</em>". This will will
+            define the top level HTML layout page for content pages. It has a banner image and division tags that 
+            structure the page:</p>
+            <pre class="ui code segment">
+&lt;html&gt;
+&lt;body&gt;
+    &lt;div class="top"&gt;
+        &lt;img src="banner.jpg" /&gt;
+    &lt;/div&gt;
+    &lt;div class="content"&gt;
+        <b>&lt;&#64; content &#64;&gt;</b>
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+            <p>Modifications to this page, will be reflected automatically in all content pages.</p>
+            
+            <a id="content"></a>
+            <h3>Content Pages</h3>
+            <p>A content page defines only the HTML and code that is unique for a specific page. It is merged with a
+            layout page by inserting the content and replacing the <em>&lt;&#64; content &#64;&gt;</em> tag in the layout
+            page before rendering to the client.</p>
+            <p>For example, consider the content page named "<em>demo-index.esp</em>":</p>
+            <pre class="ui code segment">
+<b>&lt;h1&gt;Content Page&lt;/h1&gt;
+&lt;p&gt;Hello World&lt;/p&gt;</b>
+</pre>
+            <p>This would render a composite web page back to the user:</p>
+            <pre class="ui code segment">
+&lt;html&gt;
+&lt;body&gt;
+    &lt;div class="top"&gt;
+        &lt;img src="banner.jpg" /&gt;
+    &lt;/div&gt;
+    &lt;div class="content"&gt;
+        <b>&lt;h1&gt;Content Page&lt;/h1&gt;
+        &lt;p&gt;Hello World&lt;/p&gt;</b>
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+            <p>Note that the blending of layout and content page happens only once and the result is save under
+            the "documents" directory. For more information, read the
+            <a href="https://embedthis.com/expansive/doc/">Expansive Documentation</a>.</p>
+
+            <a id="include"></a>
+            <h3>Include Pages</h3>
+            <p>Sometimes you need to just include some arbitrary HTML file at any point in a page. Use the <em>
+            include</em> directive at any point in the page you wish to include another file. For example:</p>
+            <pre class="ui code segment">&lt;&#37;@ include "common/header.html" &#37;&gt;</pre> 
+  
+  ======
+
+  <a id="pipeline"></a>
+            <h3>ESP Pipeline</h3>
+            <p>The ESP pipeline processes ESP pages to generate client responses. The process begins with
+            with an HTML page which typically, though not always, contains embedded <em>C</em> code. This is
+            parsed by the ESP Template Engine and combined with layout pages to create a single composite web page. 
+            This is then converted to pure <em>C</em> code that is compiled, linked and saved as a native-code shared library. 
+            The library is loaded and the code run whenever a client request is received for that page. If the web page
+            or template is modified, the pipeline recompiles the page and regenerates the code library.</p>
+            <p>This entire pipeline process happens transparently in the background with only a momentary pause in 
+            processing. For production, you can pre-compile web pages so that a compiler is not required on the target.</p>
+            
+            <img src="images/esp/template/layout.jpeg" alt="View Pipeline" class="centered" />
+            
+            <a id= "layouts"></a>
+            <h3>Layout Pages</h3>
+            <p>Layout pages allow you to define the "look and feel" of the user interface and specify
+            the standard elements of all web pages in one place. 
+            ESP pages reuse the "look and feel" by simply referencing a layout page.</p>
+            <p>The layout page is structurally just an ESP Page that typically contains the top level HTML
+            structure, style sheets and graphic content to be included on every page. It may contain embedded <em>C</em> 
+            code, and most importantly, it specifies the location to insert content from content pages.</p>
+            <p>The ESP content pages supply the content and data that is unique to that page. Content pages 
+            do not replicate the layout and look and feel that is specified in the layout page.  In this way, changing
+            the layout page in once place will automatically change every web page in the application.</p>
+            <p>Here is a simple layout page:</p>
+            <pre class="ui code segment">
+&lt;html&gt;
+&lt;body&gt;
+    &lt;img src="banner.jpg"&gt;
+    <b>&lt;%@ content %&gt;</b>
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+            <p>The <b>&lt;%@ content %&gt;</b> directive instructs the Template Engine to insert the content page at
+            this location. </p>
+            <p>Here is a simple content page. Note that this is missing the &lt;html&gt; and &lt;body&gt; tags:</p>
+            <pre class="ui code segment">
+&lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;p&gt;Today is &lt;%= mprGetDate(0) %&gt;
+</pre>
+            <p>ESP pages are not required to use layout pages. To specify that no layout page is required, use an
+                empty layout directive in the content page. For example: </p>
+                <pre class="ui code segment">
+&lt;%@ layout "" %&gt;
+</pre>
+            <p>By default, stand-alone ESP pages do not use a layout page, whereas ESP view pages in an MVC application
+            do.</p>
+
+
+            <p>The <em>&lt;%@ layout "file" %&gt;</em> directive specifies the name of the layout page. By using 
+            this directive in layout pages, you can build up the web page layout by nesting layout pages. If omitted 
+            in content pages, which is usually the case, the default layout of <em>layouts/default.esp</em> will be used. 
+            If omitted in layout pages, it is assumed the layout page is the top level layout page.</p>
+            <p>The template engine additionally supports the following web page directive in layout pages:</p>
+
+            <pre class="ui code segment">&lt;%@ content %&gt;</pre>
+
+            <p>This specifies the location for the content page data.</p>
+            <p>Note: you do not have to use layout pages. Simple stand-alone web pages without layouts code are
+            supported. To disable use of a layout page, use a <em>&lt;%@ layout="" %&gt;</em> directive.</p>
+
+
+
+    </div>
+    <div class="terms ui basic center aligned segment">
+        <p>&copy; Embedthis Software, 2003-2014. All rights reserved.</p>
+    </div>
+
+    <script src="../jquery/jquery.min.js"></script>
+    <script src="../semantic-ui/semantic.js"></script>
+    <script>
+        var sl = $('.sidebar-launch');
+        $('.sidebar-launch').click(function() {
+            var body = $('body');
+            if (!body.hasClass('show-sidebar')) {
+                body.addClass('show-sidebar');
+                $('.sidebar').css('visibility', 'visible');
+            } else {
+                body.removeClass('show-sidebar');
+                $('.sidebar').css('visibility', 'hidden');
+            }
+        });
+        $('.sidebar-launch').trigger('click');
+        $('.sidebar a.item').click(function(e) {
+            sessionStorage.setItem('scroll-top', $('.sidebar').scrollTop());
+        });
+        $(function() {
+            var url = '../users/layouts.html';
+            var active = $('.sidebar a[href="' + url +'"]');
+            active.addClass('active');
+            $('.sidebar').scrollTop(sessionStorage.getItem('scroll-top'));
+        });
+    </script> 
+
+        
+
+</body>
+</html>

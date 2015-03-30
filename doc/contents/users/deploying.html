@@ -1,0 +1,16 @@
+{
+    title:  'Deploying ESP Applications',
+    crumbs: [
+        { "User's Guide": 'index.html' },
+    ],
+}
+           
+            <h3>Production Deployment</h3>
+            <p>For deployment in a production environment, it optimal to compile the entire application including
+            all controllers, views and web pages into a single library. This is refered to as "combined" mode.
+            The normal mode is called "discrete" mode. To do a combined compile, set the <em>esp.combine</em>
+                property in <em>esp.json</em> to true, and then invoke <em>esp compile</em>. For example:</p>
+
+            <code class="inverted">esp: {
+    combine: true
+}</code>
