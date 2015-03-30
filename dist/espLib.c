@@ -4576,14 +4576,15 @@ static int runAction(HttpConn *conn)
         }
         return 1;
     }
-    if ((controllers = httpGetDir(route, "CONTROLLERS")) == 0) {
-        controllers = ".";
-    }
-    controllers = mprJoinPath(route->home, controllers);
 
 #if !ME_STATIC
     if (!eroute->combine && (route->update || !mprLookupKey(eroute->actions, rx->target))) {
         cchar *errMsg;
+        if ((controllers = httpGetDir(route, "CONTROLLERS")) == 0) {
+            controllers = ".";
+        }
+        controllers = mprJoinPath(route->home, controllers);
+
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
         if (mprPathExists(controller, R_OK)) {
@@ -4591,7 +4592,6 @@ static int runAction(HttpConn *conn)
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
             }
-            controllers = mprGetPathDir(controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -5337,7 +5337,7 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 
 PUBLIC void espSetDefaultDirs(HttpRoute *route)
 {
-    cchar   *documents;
+    cchar   *controllers, *documents, *path;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATE || 1
@@ -5358,8 +5358,13 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
         documents = route->home;
     }
 #endif
+    controllers = "controllers";
+    path = mprJoinPath(route->home, controllers);
+    if (!mprPathExists(path, X_OK)) {
+        controllers = ".";
+    }
     httpSetDir(route, "CACHE", 0);
-    httpSetDir(route, "CONTROLLERS", 0);
+    httpSetDir(route, "CONTROLLERS", controllers);
     httpSetDir(route, "CONTENTS", 0);
     httpSetDir(route, "DB", 0);
     httpSetDir(route, "DOCUMENTS", documents);
