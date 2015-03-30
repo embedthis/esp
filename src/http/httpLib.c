@@ -125,7 +125,7 @@ PUBLIC Http *httpCreate(int flags)
     http->startLevel = 2;
     http->localPlatform = slower(sfmt("%s-%s-%s", ME_OS, ME_CPU, ME_PROFILE));
     httpSetPlatform(http->localPlatform);
-    httpSetPlatformDir(0);
+    httpSetPlatformDir(NULL);
 
     updateCurrentDate();
     http->statusCodes = mprCreateHash(41, MPR_HASH_STATIC_VALUES | MPR_HASH_STATIC_KEYS | MPR_HASH_STABLE);
@@ -1254,7 +1254,17 @@ PUBLIC int httpSetPlatformDir(cchar *path)
 
     http = HTTP;
     if (path) {
-        http->platformDir = mprGetAbsPath(path);
+        if (mprPathExists(path, X_OK)) {
+            http->platformDir = mprGetAbsPath(path);
+        } else {
+            /*
+                Possible source tree platform directory
+             */
+            http->platformDir = mprJoinPath(mprGetPathDir(mprGetPathDir(mprGetPathDir(mprGetAppPath()))), path);
+            if (!mprPathExists(http->platformDir, X_OK)) {
+                http->platformDir = mprGetAbsPath(path);
+            }
+        }
     } else {
         http->platformDir = mprGetPathDir(mprGetPathDir(mprGetAppPath()));
     }
@@ -1836,11 +1846,11 @@ PUBLIC void httpSetAuthFormDetails(HttpRoute *route, cchar *loginPage, cchar *lo
 
     auth = route->auth;
 
+    if (!route->cookie) {
+        httpSetRouteCookie(route, HTTP_SESSION_COOKIE);
+    }
     if (loggedInPage) {
         auth->loggedInPage = sclone(loggedInPage);
-#if UNUSED
-        createLoginRoute(route, auth->loggedInPage, 0);
-#endif
     }
     if (loginPage) {
         auth->loginPage = sclone(loginPage);
@@ -2209,7 +2219,6 @@ PUBLIC bool httpBasicSetHeaders(HttpConn *conn, cchar *username, cchar *password
 
 static void cacheAtClient(HttpConn *conn);
 static bool fetchCachedResponse(HttpConn *conn);
-static HttpCache *lookupCacheControl(HttpConn *conn);
 static char *makeCacheKey(HttpConn *conn);
 static void manageHttpCache(HttpCache *cache, int flags);
 static int matchCacheFilter(HttpConn *conn, HttpRoute *route, int dir);
@@ -2254,24 +2263,64 @@ PUBLIC int httpOpenCacheHandler()
 static int matchCacheHandler(HttpConn *conn, HttpRoute *route, int dir)
 {
     HttpCache   *cache;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    cchar       *mimeType, *ukey;
+    int         next;
 
-    if ((cache = conn->tx->cache = lookupCacheControl(conn)) == 0) {
-        /* Caching not configured for this route */
-        return HTTP_ROUTE_REJECT;
-    }
-    if (cache->flags & HTTP_CACHE_CLIENT) {
-        cacheAtClient(conn);
-    }
-    if (cache->flags & HTTP_CACHE_SERVER) {
-        if (!(cache->flags & HTTP_CACHE_MANUAL) && fetchCachedResponse(conn)) {
-            /* Found cached content */
-            return HTTP_ROUTE_OK;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    /*
+        Find first qualifying cache control entry. Any configured uri,method,extension,type must match.
+     */
+    for (next = 0; (cache = mprGetNextItem(rx->route->caching, &next)) != 0; ) {
+        if (cache->uris) {
+            if (cache->flags & HTTP_CACHE_HAS_PARAMS) {
+                ukey = sfmt("%s?%s", rx->pathInfo, httpGetParamsString(conn));
+            } else {
+                ukey = rx->pathInfo;
+            }
+            if (!mprLookupKey(cache->uris, ukey)) {
+                continue;
+            }
         }
-        /*
-            Caching is configured but no acceptable cached content. Create a capture buffer for the cacheFilter.
-         */
-        conn->tx->cacheBuffer = mprCreateBuf(-1, -1);
+        if (cache->methods && !mprLookupKey(cache->methods, rx->method)) {
+            continue;
+        }
+        if (cache->extensions && !mprLookupKey(cache->extensions, tx->ext)) {
+            continue;
+        }
+        if (cache->types) {
+            if ((mimeType = (char*) mprLookupMime(rx->route->mimeTypes, tx->ext)) == 0) {
+                continue;
+            }
+            if (!mprLookupKey(cache->types, mimeType)) {
+                continue;
+            }
+        }
+        tx->cache = cache;
+
+        if (cache->flags & HTTP_CACHE_CLIENT) {
+            cacheAtClient(conn);
+        }
+        if (cache->flags & HTTP_CACHE_SERVER) {
+            if (!(cache->flags & HTTP_CACHE_MANUAL) && fetchCachedResponse(conn)) {
+                /* Found cached content, so we can use the cache handler */
+                return HTTP_ROUTE_OK;
+            }
+            /*
+                Caching is configured but no acceptable cached content yet. 
+                Create a capture buffer for the cacheFilter.
+             */
+            if (!tx->cacheBuffer) {
+                tx->cacheBuffer = mprCreateBuf(-1, -1);
+            }
+        }
     }
+    /*
+        Cannot use the cache handler. Note: may still be using the cache filter.
+     */
     return HTTP_ROUTE_REJECT;
 }
 
@@ -2403,52 +2452,6 @@ static void outgoingCacheFilterService(HttpQueue *q)
 /*
     Find a qualifying cache control entry. Any configured uri,method,extension,type must match.
  */
-static HttpCache *lookupCacheControl(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpCache   *cache;
-    cchar       *mimeType, *ukey;
-    int         next;
-
-    rx = conn->rx;
-    tx = conn->tx;
-
-    /*
-        Find first qualifying cache control entry. Any configured uri,method,extension,type must match.
-     */
-    for (next = 0; (cache = mprGetNextItem(rx->route->caching, &next)) != 0; ) {
-        if (cache->uris) {
-            if (cache->flags & HTTP_CACHE_HAS_PARAMS) {
-                ukey = sfmt("%s?%s", rx->pathInfo, httpGetParamsString(conn));
-            } else {
-                ukey = rx->pathInfo;
-            }
-            if (!mprLookupKey(cache->uris, ukey)) {
-                continue;
-            }
-        }
-        if (cache->methods && !mprLookupKey(cache->methods, rx->method)) {
-            continue;
-        }
-        if (cache->extensions && !mprLookupKey(cache->extensions, tx->ext)) {
-            continue;
-        }
-        if (cache->types) {
-            if ((mimeType = (char*) mprLookupMime(rx->route->mimeTypes, tx->ext)) == 0) {
-                continue;
-            }
-            if (!mprLookupKey(cache->types, mimeType)) {
-                continue;
-            }
-        }
-        /* All match */
-        break;
-    }
-    return cache;
-}
-
-
 static void cacheAtClient(HttpConn *conn)
 {
     HttpTx      *tx;
@@ -4109,6 +4112,18 @@ static void parseAuthSessionCookie(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseAuthSessionCookiePersist(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetRouteCookiePersist(route, smatch(prop->value, "true"));
+}
+
+
+static void parseAuthSessionEnable(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetAuthSession(route->auth, 0);
+}
+
+
 static void parseAuthSessionVisibility(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetRouteSessionVisibility(route, scaselessmatch(prop->value, "visible"));
@@ -4170,7 +4185,7 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprJson     *child;
     MprTicks    clientLifespan, serverLifespan;
-    cchar       *methods, *extensions, *uris, *mimeTypes, *client, *server;
+    cchar       *methods, *extensions, *urls, *mimeTypes, *client, *server;
     int         flags, ji;
 
     clientLifespan = serverLifespan = 0;
@@ -4188,7 +4203,14 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
                 serverLifespan = httpGetTicks(server);
             }
             methods = getList(mprReadJsonObj(child, "methods"));
-            uris = getList(mprReadJsonObj(child, "uris"));
+            urls = getList(mprReadJsonObj(child, "urls"));
+#if DEPRECATE || 1
+            if (urls == 0) {
+                if ((urls = getList(mprReadJsonObj(child, "urls"))) != 0) {
+                    mprLog("error http config", 0, "Using deprecated property \"uris\", use \"urls\" instead");
+                }
+            }
+#endif
             mimeTypes = getList(mprReadJsonObj(child, "mime"));
             extensions = getList(mprReadJsonObj(child, "extensions"));
             if (smatch(mprReadJson(child, "unique"), "true")) {
@@ -4199,7 +4221,7 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
                 /* User must manually call httpWriteCache */
                 flags |= HTTP_CACHE_MANUAL;
             }
-            httpAddCache(route, methods, uris, extensions, mimeTypes, clientLifespan, serverLifespan, flags);
+            httpAddCache(route, methods, urls, extensions, mimeTypes, clientLifespan, serverLifespan, flags);
         }
     }
 }
@@ -4583,7 +4605,13 @@ static void parseParams(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parsePattern(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    httpSetRoutePattern(route, prop->value, 0);
+    cchar   *pattern;
+
+    pattern = prop->value;
+    if (pattern && *pattern != '^') {
+        pattern = sfmt("^%s%s", route->parent->prefix, pattern);
+    }
+    httpSetRoutePattern(route, pattern, 0);
 }
 
 
@@ -4593,25 +4621,22 @@ static void parsePipelineFilters(HttpRoute *route, cchar *key, MprJson *prop)
     cchar       *name, *extensions;
     int         flags, ji;
 
-    for (ITERATE_CONFIG(route, prop, child, ji)) {
-        if (child->type & MPR_JSON_STRING) {
-            flags = HTTP_STAGE_RX | HTTP_STAGE_TX;
-            extensions = 0;
-            name = child->value;
-        } else {
-            name = mprReadJson(child, "name");
-            extensions = getList(mprReadJsonObj(child, "extensions"));
-#if KEEP
-            direction = mprReadJson(child, "direction");
-            flags |= smatch(direction, "input") ? HTTP_STAGE_RX : 0;
-            flags |= smatch(direction, "output") ? HTTP_STAGE_TX : 0;
-            flags |= smatch(direction, "both") ? HTTP_STAGE_RX | HTTP_STAGE_TX : 0;
-#else
-            flags = HTTP_STAGE_RX | HTTP_STAGE_TX;
-#endif
+    flags = HTTP_STAGE_RX | HTTP_STAGE_TX;
+
+    if (prop->type & MPR_JSON_STRING) {
+        name = prop->value;
+        if (httpAddRouteFilter(route, prop->value, NULL, flags) < 0) {
+            httpParseWarn(route, "Cannot add filter %s", name);
         }
+    } else if (prop->type & MPR_JSON_OBJ) {
+        name = mprReadJson(prop, "name");
+        extensions = getList(mprReadJsonObj(prop, "extensions"));
         if (httpAddRouteFilter(route, name, extensions, flags) < 0) {
             httpParseWarn(route, "Cannot add filter %s", name);
+        }
+    } else if (prop->type & MPR_JSON_ARRAY) {
+        for (ITERATE_CONFIG(route, prop, child, ji)) {
+            parsePipelineFilters(route, key, child);
         }
     }
 }
@@ -5039,6 +5064,9 @@ static void parseShowErrors(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseSource(HttpRoute *route, cchar *key, MprJson *prop)
 {
+/*  UNUSED - messes up esp controllers/source
+    httpSetRouteSource(route, mprJoinPath(route->home, prop->value));
+*/
     httpSetRouteSource(route, prop->value);
 }
 
@@ -5335,6 +5363,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.require.users", parseAuthRequireUsers);
     httpAddConfig("http.auth.roles", parseAuthRoles);
     httpAddConfig("http.auth.session.cookie", parseAuthSessionCookie);
+    httpAddConfig("http.auth.session.persist", parseAuthSessionCookiePersist);
+    httpAddConfig("http.auth.session.enable", parseAuthSessionEnable);
     httpAddConfig("http.auth.session.vibility", parseAuthSessionVisibility);
     httpAddConfig("http.auth.store", parseAuthStore);
     httpAddConfig("http.auth.type", parseAuthType);
@@ -6378,8 +6408,8 @@ PUBLIC HttpLimits *httpSetUniqueConnLimits(HttpConn *conn)
     Test if a request has expired relative to the default inactivity and request timeout limits.
     Set timeout to a non-zero value to apply an overriding smaller timeout
     Set timeout to a value in msec. If timeout is zero, override default limits and wait forever.
-    If timeout is < 0, use default inactivity and duration timeouts. If timeout is > 0, then use this timeout as an additional
-    timeout.
+    If timeout is < 0, use default inactivity and duration timeouts. 
+    If timeout is > 0, then use this timeout as an additional timeout.
  */
 PUBLIC bool httpRequestExpired(HttpConn *conn, MprTicks timeout)
 {
@@ -13122,8 +13152,7 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
             return 0;
         }
     }
-    stage = httpLookupStage(name);
-    if (stage == 0) {
+    if ((stage = httpLookupStage(name)) == 0) {
         mprLog("error http route", 0, "Cannot find filter %s", name);
         return MPR_ERR_CANT_FIND;
     }
@@ -13142,6 +13171,8 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
             } else if (*word == '.') {
                 word++;
             } else if (*word == '\"' && word[1] == '\"') {
+                word = "";
+            } else if (*word == '*' && word[1] == '\0') {
                 word = "";
             }
             mprAddKey(filter->extensions, word, filter);
@@ -13705,7 +13736,16 @@ PUBLIC void httpSetRouteCookie(HttpRoute *route, cchar *cookie)
 {
     assert(route);
     assert(cookie && *cookie);
-    route->cookie = cookie;
+    route->cookie = sclone(cookie);
+}
+
+
+PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable)
+{
+    route->flags &= ~HTTP_ROUTE_PERSIST_COOKIE;
+    if (enable) {
+        route->flags |= HTTP_ROUTE_PERSIST_COOKIE;
+    }
 }
 
 
@@ -14671,6 +14711,7 @@ static int cmdUpdate(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
         httpTrace(conn, "request.run.error", "error", "command:'%s',error:'%s'", command, conn->errorMsg);
         /* Continue */
     }
+    mprDestroyCmd(cmd);
     return HTTP_ROUTE_OK;
 }
 
@@ -18181,6 +18222,7 @@ PUBLIC HttpSession *httpGetSession(HttpConn *conn, int create)
 {
     Http        *http;
     HttpRx      *rx;
+    MprTicks    lifespan;
     cchar       *cookie, *data, *id;
     static int  seqno = 0;
     int         flags, thisSeqno, activeSessions;
@@ -18215,7 +18257,8 @@ PUBLIC HttpSession *httpGetSession(HttpConn *conn, int create)
             rx->session = allocSessionObj(conn, id, NULL);
             flags = (rx->route->flags & HTTP_ROUTE_VISIBLE_SESSION) ? 0 : HTTP_COOKIE_HTTP;
             cookie = rx->route->cookie ? rx->route->cookie : HTTP_SESSION_COOKIE;
-            httpSetCookie(conn, cookie, rx->session->id, "/", NULL, rx->session->lifespan, flags);
+            lifespan = (rx->route->flags & HTTP_ROUTE_PERSIST_COOKIE) ? rx->session->lifespan : 0;
+            httpSetCookie(conn, cookie, rx->session->id, "/", NULL, lifespan, flags);
             httpTrace(conn, "request.session.create", "context", "cookie:'%s',session:'%s'", cookie, rx->session->id);
 
             if ((rx->route->flags & HTTP_ROUTE_XSRF) && rx->securityToken) {
@@ -19936,12 +19979,16 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
         }
     }
     domainAtt = domain ? "; domain=" : "";
-    if (domain && !strchr(domain, '.')) {
-        if (smatch(domain, "localhost")) {
-            domainAtt = domain = "";
-        } else {
-            domain = sjoin(".", domain, NULL);
+    if (domain) {
+        if (!strchr(domain, '.')) {
+            if (smatch(domain, "localhost")) {
+                domainAtt = domain = "";
+            } else {
+                domain = sjoin(".", domain, NULL);
+            }
         }
+    } else {
+        domain = "";
     }
     if (lifespan) {
         expiresAtt = "; expires=";

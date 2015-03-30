@@ -5067,6 +5067,7 @@ PUBLIC char *mprReadCache(MprCache *cache, cchar *key, MprTime *modified, int64 
         return 0;
     }
     if (item->expires && item->expires <= mprGetTicks()) {
+        removeItem(cache, item);
         unlock(cache);
         return 0;
     }
@@ -5161,7 +5162,8 @@ PUBLIC void mprSetCacheLimits(MprCache *cache, int64 keys, MprTicks lifespan, in
 }
 
 
-PUBLIC ssize mprWriteCache(MprCache *cache, cchar *key, cchar *value, MprTime modified, MprTicks lifespan, int64 version, int options)
+PUBLIC ssize mprWriteCache(MprCache *cache, cchar *key, cchar *value, MprTime modified, MprTicks lifespan, 
+    int64 version, int options)
 {
     CacheItem   *item;
     MprKey      *kp;
@@ -5551,7 +5553,6 @@ PUBLIC MprCmd *mprCreateCmd(MprDispatcher *dispatcher)
         files[i].fd = -1;
     }
     cmd->mutex = mprCreateLock();
-    mprAddItem(MPR->cmdService->cmds, cmd);
     return cmd;
 }
 
@@ -5830,9 +5831,11 @@ PUBLIC int mprRunCmdV(MprCmd *cmd, int argc, cchar **argv, cchar **envp, cchar *
         return 0;
     }
     if (mprWaitForCmd(cmd, timeout) < 0) {
+        mprRemoveItem(MPR->cmdService->cmds, cmd);
         return MPR_ERR_NOT_READY;
     }
     if ((status = mprGetCmdExitStatus(cmd)) < 0) {
+        mprRemoveItem(MPR->cmdService->cmds, cmd);
         return MPR_ERR;
     }
     if (err && flags & MPR_CMD_ERR) {
@@ -5966,7 +5969,9 @@ PUBLIC int mprStartCmd(MprCmd *cmd, int argc, cchar **argv, cchar **envp, int fl
         return MPR_ERR_CANT_OPEN;
     }
     rc = startProcess(cmd);
+
     cmd->originalPid = cmd->pid;
+    mprAddItem(MPR->cmdService->cmds, cmd);
     sunlock(cmd);
 #if ME_WIN_LIKE
     if (!rc) {

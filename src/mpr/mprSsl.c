@@ -579,8 +579,6 @@ static void estTrace(void *fp, int level, char *str)
     }
 }
 
-#else
-void estDummy() {}
 #endif /* ME_COM_EST */
 
 /*
@@ -1683,8 +1681,6 @@ static DH *get_dh1024()
     return dh;
 }
 
-#else
-void opensslDummy() {}
 #endif /* ME_COM_OPENSSL */
 
 /*
@@ -1723,6 +1719,7 @@ void opensslDummy() {}
 #include    "mpr.h"
 
 /********************************** Globals ***********************************/
+#if ME_COM_SSL
 
 /*
     See: http://www.iana.org/assignments/tls-parameters/tls-parameters.xml
@@ -1871,6 +1868,9 @@ PUBLIC int mprGetSslCipherCode(cchar *cipher)
     return 0;
 }
 
+#else
+PUBLIC void sslFiller() {}
+#endif /* ME_COM_SSL */
 /*
     @copy   default
 

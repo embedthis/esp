@@ -2219,7 +2219,6 @@ PUBLIC bool httpBasicSetHeaders(HttpConn *conn, cchar *username, cchar *password
 
 static void cacheAtClient(HttpConn *conn);
 static bool fetchCachedResponse(HttpConn *conn);
-static HttpCache *lookupCacheControl(HttpConn *conn);
 static char *makeCacheKey(HttpConn *conn);
 static void manageHttpCache(HttpCache *cache, int flags);
 static int matchCacheFilter(HttpConn *conn, HttpRoute *route, int dir);
@@ -2264,24 +2263,64 @@ PUBLIC int httpOpenCacheHandler()
 static int matchCacheHandler(HttpConn *conn, HttpRoute *route, int dir)
 {
     HttpCache   *cache;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    cchar       *mimeType, *ukey;
+    int         next;
 
-    if ((cache = conn->tx->cache = lookupCacheControl(conn)) == 0) {
-        /* Caching not configured for this route */
-        return HTTP_ROUTE_REJECT;
-    }
-    if (cache->flags & HTTP_CACHE_CLIENT) {
-        cacheAtClient(conn);
-    }
-    if (cache->flags & HTTP_CACHE_SERVER) {
-        if (!(cache->flags & HTTP_CACHE_MANUAL) && fetchCachedResponse(conn)) {
-            /* Found cached content */
-            return HTTP_ROUTE_OK;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    /*
+        Find first qualifying cache control entry. Any configured uri,method,extension,type must match.
+     */
+    for (next = 0; (cache = mprGetNextItem(rx->route->caching, &next)) != 0; ) {
+        if (cache->uris) {
+            if (cache->flags & HTTP_CACHE_HAS_PARAMS) {
+                ukey = sfmt("%s?%s", rx->pathInfo, httpGetParamsString(conn));
+            } else {
+                ukey = rx->pathInfo;
+            }
+            if (!mprLookupKey(cache->uris, ukey)) {
+                continue;
+            }
         }
-        /*
-            Caching is configured but no acceptable cached content. Create a capture buffer for the cacheFilter.
-         */
-        conn->tx->cacheBuffer = mprCreateBuf(-1, -1);
+        if (cache->methods && !mprLookupKey(cache->methods, rx->method)) {
+            continue;
+        }
+        if (cache->extensions && !mprLookupKey(cache->extensions, tx->ext)) {
+            continue;
+        }
+        if (cache->types) {
+            if ((mimeType = (char*) mprLookupMime(rx->route->mimeTypes, tx->ext)) == 0) {
+                continue;
+            }
+            if (!mprLookupKey(cache->types, mimeType)) {
+                continue;
+            }
+        }
+        tx->cache = cache;
+
+        if (cache->flags & HTTP_CACHE_CLIENT) {
+            cacheAtClient(conn);
+        }
+        if (cache->flags & HTTP_CACHE_SERVER) {
+            if (!(cache->flags & HTTP_CACHE_MANUAL) && fetchCachedResponse(conn)) {
+                /* Found cached content, so we can use the cache handler */
+                return HTTP_ROUTE_OK;
+            }
+            /*
+                Caching is configured but no acceptable cached content yet. 
+                Create a capture buffer for the cacheFilter.
+             */
+            if (!tx->cacheBuffer) {
+                tx->cacheBuffer = mprCreateBuf(-1, -1);
+            }
+        }
     }
+    /*
+        Cannot use the cache handler. Note: may still be using the cache filter.
+     */
     return HTTP_ROUTE_REJECT;
 }
 
@@ -2413,52 +2452,6 @@ static void outgoingCacheFilterService(HttpQueue *q)
 /*
     Find a qualifying cache control entry. Any configured uri,method,extension,type must match.
  */
-static HttpCache *lookupCacheControl(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpCache   *cache;
-    cchar       *mimeType, *ukey;
-    int         next;
-
-    rx = conn->rx;
-    tx = conn->tx;
-
-    /*
-        Find first qualifying cache control entry. Any configured uri,method,extension,type must match.
-     */
-    for (next = 0; (cache = mprGetNextItem(rx->route->caching, &next)) != 0; ) {
-        if (cache->uris) {
-            if (cache->flags & HTTP_CACHE_HAS_PARAMS) {
-                ukey = sfmt("%s?%s", rx->pathInfo, httpGetParamsString(conn));
-            } else {
-                ukey = rx->pathInfo;
-            }
-            if (!mprLookupKey(cache->uris, ukey)) {
-                continue;
-            }
-        }
-        if (cache->methods && !mprLookupKey(cache->methods, rx->method)) {
-            continue;
-        }
-        if (cache->extensions && !mprLookupKey(cache->extensions, tx->ext)) {
-            continue;
-        }
-        if (cache->types) {
-            if ((mimeType = (char*) mprLookupMime(rx->route->mimeTypes, tx->ext)) == 0) {
-                continue;
-            }
-            if (!mprLookupKey(cache->types, mimeType)) {
-                continue;
-            }
-        }
-        /* All match */
-        break;
-    }
-    return cache;
-}
-
-
 static void cacheAtClient(HttpConn *conn)
 {
     HttpTx      *tx;
@@ -4211,6 +4204,13 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
             }
             methods = getList(mprReadJsonObj(child, "methods"));
             urls = getList(mprReadJsonObj(child, "urls"));
+#if DEPRECATE || 1
+            if (urls == 0) {
+                if ((urls = getList(mprReadJsonObj(child, "urls"))) != 0) {
+                    mprLog("error http config", 0, "Using deprecated property \"uris\", use \"urls\" instead");
+                }
+            }
+#endif
             mimeTypes = getList(mprReadJsonObj(child, "mime"));
             extensions = getList(mprReadJsonObj(child, "extensions"));
             if (smatch(mprReadJson(child, "unique"), "true")) {
@@ -5064,7 +5064,10 @@ static void parseShowErrors(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseSource(HttpRoute *route, cchar *key, MprJson *prop)
 {
+/*  UNUSED - messes up esp controllers/source
     httpSetRouteSource(route, mprJoinPath(route->home, prop->value));
+*/
+    httpSetRouteSource(route, prop->value);
 }
 
 
