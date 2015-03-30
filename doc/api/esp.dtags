@@ -116,6 +116,13 @@
     </member>
     <member kind="function">
       <type>int</type>
+      <name>espLoadCompilerRules</name>
+      <anchorfile>group___esp_route.html</anchorfile>
+      <anchor>ga619751fdfd2aa494d0074bd661e5e103</anchor>
+      <arglist>(HttpRoute *route)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
       <name>espLoadConfig</name>
       <anchorfile>group___esp_route.html</anchorfile>
       <anchor>ga8719b78bdfb4e3228c6e9be843f45140</anchor>

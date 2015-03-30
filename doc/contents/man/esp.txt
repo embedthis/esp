@@ -48,7 +48,7 @@ SYNOPSIS
            esp migrate [forward|backward|NNN]
            esp mode [debug|release|otherMode]
            esp role [add|remove] rolename
-           esp [run] [ip]:[port]
+           esp serve [ip]:[port]
            esp user [add|compute] username password roles...
            esp user [remove|show] username
 
@@ -68,7 +68,7 @@ RUNNING ESP
        To run ESP to serve documents from the current directory, type:
              esp
              # or
-             esp run
+             esp serve
 
 
 GENERATING APPLICATIONS
@@ -240,9 +240,9 @@ MODE
 
 
 RUNNING
-       To run your application:
+       To run your application, start the esp command to serve pages:
 
-             esp run
+             esp serve
 
 CLEANING
        To clean all generated module files:
@@ -271,8 +271,8 @@ COMMANDS
              esp generate controllers name [action [, action] ...]
              esp generate scaffold model [field:type [, field:type] ...]
              esp generate table name model [field:type [, field:type] ...]
-             esp run
-             esp run 4000
+             esp serve
+             esp serve 4000
              esp mode debug
              esp init appName version
 

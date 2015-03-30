@@ -51,7 +51,7 @@ ESP(1)                           User Commands                          ESP(1)
            esp migrate [forward|backward|NNN]
            esp mode [debug|release|otherMode]
            esp role [add|remove] rolename
-           esp [run] [ip]:[port]
+           esp serve [ip]:[port]
            esp user [add|compute] username password roles...
            esp user [remove|show] username
 
@@ -70,7 +70,7 @@ ESP(1)                           User Commands                          ESP(1)
        To run ESP to serve documents from the current directory, type:
              <B>esp</B>
              # or
-             <B>esp run</B>
+             <B>esp serve</B>
 
 <B>GENERATING APPLICATIONS</B>
        To start a new web application, create a directory named for the appli-
@@ -230,9 +230,9 @@ ESP(1)                           User Commands                          ESP(1)
        to "release".
 
 <B>RUNNING</B>
-       To run your application:
+       To run your application, start the esp command to serve pages:
 
-             <B>esp run</B>
+             <B>esp serve</B>
 
 <B>CLEANING</B>
        To clean all generated module files:
@@ -258,8 +258,8 @@ ESP(1)                           User Commands                          ESP(1)
              esp generate controllers name [action [, action] ...]
              esp generate scaffold model [field:type [, field:type] ...]
              esp generate table name model [field:type [, field:type] ...]
-             esp run
-             esp run 4000
+             esp serve
+             esp serve 4000
              esp mode debug
              esp init appName version
 
