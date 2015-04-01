@@ -4,10 +4,15 @@
         { "User's Guide": 'index.html' },
     ],
 }
-            <a id="controllers"></a>
             <h2>Generating Controllers</h2>
+            <a id="controllers"></a>
             <p>Controllers are the primary mechanism for responding to client requests. 
-            To generate a controller:</p>
+            Controllers may be generated directly or as part of a scaffold that includes database 
+            schema and web pages. Before generating a controller, you must have installed an ESP skeleton
+            that includes support for generating controllers such as: <em>esp-html-skeleton</em> or
+                <em>esp-angular-skeleton</em>.</p>
+
+            <p>To generate a controller, use <em>esp generate controller</em>.</p>
 
             <code class="inverted">$ <b>esp generate controller NAME [actions...]</b></code>
 

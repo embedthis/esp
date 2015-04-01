@@ -1,8 +1,68 @@
 {
-    title:  'Installing Packages',
+    title:  'Extension Packages',
     crumbs: [
         { "User's Guide": 'index.html' },
     ],
 }
-            <h1>Installing Packages &mdash; <em>esp</em></h1>
-            
+        <h1>Extension Packages</h1>
+ 
+		<p>ESP can be extended by installable packages to provide content and extended functionality.
+        ESP uses packages to deliver client libraries, frameworks, plugins and skeletons. ESP has a 
+        wide variety of extension packages to make your development more productive.</p>
+
+		<h2>The Pak Manager</h2>
+		<p>ESP uses the amazing <a href="https://embedthis.com/pak/">Pak</a> 
+		package manager and the online <a href="https://embedthis.com/catalog/">Pak Catalog</a> of 
+		packages. The Pak utility is used to install, manage, upgrade and uninstall packages for ESP.
+
+		<p>For example, to install <a href="http://getbootstrap.com">Bootstrap</a> using Pak:</p>
+		<pre class="code">$ <b>pak install bootstrap</b>
+   [Install] jquery 2.1.3
+   [Install] bootstrap 3.3.4</pre>
+
+		<p>Behinds the scenes, Pak has downloaded Bootstrap into your local Pak cache &mdash; 
+            typically <em>~/.paks</em>, installed Bootstrap into the local <em>paks</em> directory, 
+            and added bootstrap to the list of dependencies in the <em>package.json</em>. It also 
+            downloaded and installed the <em>jQuery</em> required dependency.</p>
+
+
+        <h2>ESP Packages</h2>
+        <p>ESP publishes many packages to support creating ESP applications. ESP skeletons are packages
+        that include page layouts, navigation, stylesheets, fonts, other content and dependent packages.</p>
+
+        <table class="ui table">
+        <thead>
+            <tr><th class="four wide">Package Name</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>esp-server</td><td>Basic server-side ESP support for serving ESP pages (only).</td></tr>
+            <tr><td>esp-skeleton</td><td>ESP application starter skeleton. Supports controllers and 
+                ESP pages.</td></tr>
+            <tr><td>esp-mvc</td><td>ESP MVC support. Includes scaffold templates to generate 
+                controllers, migrations, scaffolds.</a></td></tr>
+            <tr><td>esp-html-skeleton</td><td>ESP application starter skeleton for HTML5 MVC 
+                applications.</td></tr>
+            <tr><td>esp-angular</td><td>ESP support for <a href="http://angularjs.org">AngularJS</a>.</td></tr>
+            <tr><td>esp-angular-skeleton</td><td>ESP application starter skeleton for 
+                client-side <a href="http://angular.org">AngularJS Applications</a>.</td></tr>
+        </tbody>
+        </table>
+
+		<h2>Third Party Packages</h2>
+		<p>See the <a href="https://embedthis.com/catalog/exp">Pak Catalog</a> for more ESP 
+			plugins and packages, including: </p>
+        <ul>
+			<li><a href="https://embedthis.com/catalog/search/bootstrap">Bootstrap</a></li>
+			<li><a href="https://embedthis.com/catalog/search/angular">Angular</a></li>
+			<li><a href="https://embedthis.com/catalog/search/font-awesome">Font Awesome</a></li>
+			<li><a href="https://embedthis.com/catalog/search/semantic">Semantic UI</a></li>
+			<li><a href="https://embedthis.com/catalog/search/sass">Sass</a></li>
+            <li><a href="https://embedthis.com/catalog/">And many, many more.</a></li>
+        </ul>
+
+        <h2>Want More?</h2>
+        <p>Read more about packages with:</p> 
+        <ul>
+            <li><a href="skeletons.html">Skeletons</a></li>
+        </ul>
+		

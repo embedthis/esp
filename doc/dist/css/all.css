@@ -204,6 +204,9 @@ h4 {
 h3 + ul {
   margin-top: -0.85rem;
 }
+li {
+  padding-bottom: 0.75em;
+}
 em {
   padding: 3px;
   font-family: monospace;

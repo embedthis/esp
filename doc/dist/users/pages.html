@@ -42,8 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/pages-tour.html">ESP Pages Tour</a>
-                    <a class="item" href="../start/mvc-tour.html">ESP MVC Tour</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -51,8 +50,8 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/apps.html">ESP Applications</a>
-                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/create.html">Creating ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Extension Packages</a>
                     <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
                     <a class="item" href="../users/components.html">Generating Components</a>
@@ -66,7 +65,6 @@
                     <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
-                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -74,7 +72,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -172,7 +170,7 @@
             <p>ESP pages are in essence, HTML pages with embedded "C" code. They are parsed into pure "C"
             code and then compiled into native machine binary for exceptionally fast execution. </p>
             
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;h1&gt;Hello World&lt;/h1&gt;
 &lt;h2&gt;Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;/h2&gt;
 </pre>
@@ -197,7 +195,9 @@
             be controlled by the 
             <em><a href="config.html">http.update</a></em> configuration directive.</p>
             <p>Alternatively, ESP pages can be precompiled via the <em>esp</em> generator program. For example:</p>
-            <pre class="ui code segment">$ <b>esp compile</b></pre>
+
+            <pre class="code">$ <b>esp compile</b></pre>
+
             <p>In fact, the entire application can be compiled into a single combined module by compiling in combined mode.
             In this mode, all the ESP pages, controllers and source code can be compiled into a single, managable
             flexible library file.</p>
@@ -210,7 +210,9 @@
             <p>The use of garbage collection enables the use of decorator patterns and API chaining where the outputs of one
             function can be used as arguments to others. If you need to manually free memory, this style of programming
             is often quite difficult, ... but with ESP, it is much easier. For example:</p>
-<pre class="ui code segment">Resource name: &lt;&#37;= mprJoinExt(mprJoinPath(dir, supper(name)), "jpg") &#37;&gt; </pre>
+
+            <pre class="code">Resource name: &lt;&#37;= mprJoinExt(mprJoinPath(dir, supper(name)), "jpg") &#37;&gt; </pre>
+
             <p>This joins the directory with an upper-case of "name" and appends a "jpg" extension if one is not already
             in the name. All allocated memory is automatically freed ensuring no memory leaks.</p>
             
@@ -302,15 +304,18 @@
             This example below calls the 
             <a href="../ref/api/mpr.html#mpr_8h_1a8ecdc6cb45d8758203e09764faaf5e2d">mprGetDate</a>
             function which returns the local date and time as a string.</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 </pre>
+
             <h3>&lt;&#37; statements &#37;&gt;</h3>
             <p>Use this directive to run "C" code statements. No value is substituted back into the page in
             place of the directive. If you need to write data inside a statement block, use the 
             <!--TODO-->
             render API.</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 &lt;&#37; 
     for (i = 0; i &lt; 10; i++) {
         render("I is &#37;d &lt;br/&gt;\n", i);
@@ -324,7 +329,8 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             to avoid XSS and other security issues.</p>
             <p>You can also iterate over regular HTML code. The following code will display <b>Hello World</b> ten
             times in the web page.</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 &lt;&#37; for (i = 0; i &lt; 10; i++) { &#37;&gt;
     Hello World
 &lt;&#37; } &#37;&gt;
@@ -341,21 +347,24 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             are examined (in that order) for the given variable name.</p>
             <p>In this example below if the URI: <em>http://example.com/test.esp?name=John</em> was used the following ESP
             template could be used to access the "<em>name</em>" query value.</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 &lt;h2&gt;My name is <b>&#37;&#36;name</b>&lt;/h2&gt;
 </pre>
             <p>This directive is very useful for accessing any request, form, query or session data.</p>
 
             <h3>&#37;!variables</h3>
             <p>ESP provides a shorthand for accessing C string variables inline.</p>
-<pre class="ui code segment">
+
+            <pre class="code">
 &lt;&#37;^start
     char *weather = "fine";
 &#37;&gt;
 &lt;h2&gt;Current weather is <b>&#37;!fine</b>&lt;/h2&gt;
 </pre>
             <p>This is equivalent to:</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 &lt;&#37;= fine &#37;&gt;
 </pre>
             <h3>&#37;#field</h3>
@@ -364,7 +373,8 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             The <em>&#37;#field</em> directive provides an easy way to access any field in the current record. </p>
             <p>If a controller defined a current "<em>user</em>" record, this example below would extract the 
             "<em>name</em>" field for display.</p>
-            <pre class="ui code segment">
+
+            <pre class="code">
 &lt;h2&gt;My name is <b>&#37;#name</b>&lt;/h2&gt;
 </pre>
         <a id="context"></a>
@@ -415,7 +425,9 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <p>ESP provides a set of rendering APIs to send formatted and unformatted data in the response.
             The most common is <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a>
             which uses printf style formatting before sending the data to the client. For example:</p>
-            <pre class="ui code segment">render("Today, the temp is &#37;d", temp);</pre>
+
+            <pre class="code">render("Today, the temp is &#37;d", temp);</pre>
+
             <p>Other useful render routines include:</p>
             <ul>
                 <li><a href="../ref/api/esp.html#group___esp_abbrev_1ga40445cbba9d5b3a5baec51e59e3d6340">renderSafe</a> which
@@ -434,21 +446,28 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <p>To redirect the client to a new URL, use the 
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga79cf206805a9595395af14e7c35f289d">redirect</a> API. For
             example:</p>
-            <pre class="ui code segment">redirect("checkout.html");</pre>
+
+            <pre class="code">redirect("checkout.html");</pre>
+
             <p>For more control over the HTTP status code, use 
             <a href="../ref/api/esp.html#group___esp_req_1ga2b1dc5b4a688fc1062395d6420e85ef9">espRedirect</a> API. For 
             example:</p>
-            <pre class="ui code segment">espRedirect(getConn(), 302, "checkout.html");</pre>
+
+            <pre class="code">espRedirect(getConn(), 302, "checkout.html");</pre>
+
             <h3>Setting the HTTP Response Code</h3>
             <p>Use the 
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga63470999d986c7d2d064dc44cdc2fcac">setStatus</a> API to
             set the HTTP status response code. For example:</p>
-            <pre class="ui code segment">setStatus(404); /* Not found */</pre>
+
+            <pre class="code">setStatus(404); /* Not found */</pre>
+
             <h3>Adding a HTTP Header</h3>
             <p>To add a custom HTTP response header, use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaf4cbdf3eef410884ed0928066d0503f2">setHeader</a> API.
             For example:</p>
-            <pre class="ui code segment">setHeader("X-ACCESS_CODE", "42");</pre>
+            
+            <pre class="code">setHeader("X-ACCESS_CODE", "42");</pre>
            
             <a id="debugging"></a>
             <h2 >Debugging</h2>

@@ -10,8 +10,9 @@
 
             <code class="inverted">$ <b>esp serve</b></code>
 
-            <p>However, larger ESP applications are configured via the <em>esp.json</em> and <em>package.json</em>
-            files that permits fine-grained control over how the application will run. 
+            <p>However, larger ESP applications are configured via the 
+                <em>esp.json</em>, <em>package.json</em> and <em>expansive.json</em>
+                files that permits fine-grained control over how the application will run. 
             <p>The <em>package.json</em> file manages:</p>
             <ul>
                 <li>Application name, title and description</li>
@@ -30,8 +31,17 @@
                 <li>Database name and location</li>
                 <li>Default data formats</li>
             </ul>
+            <p>The <em>expansive.json</em> will be installed by most skeletons. It manages:</p>
+            <ul>
+                <li>Expansive layouts and partial pages</li>
+                <li>Expansive tooling</li>
+                <li>Expansive plugins for processing content</li>
+            </ul>
+
             <p>This document will cover the various <em>esp.json</em> properties and the steps to configure ESP 
-            applications. If you are hosting your application in Appweb you will need to specify additional 
+            applications. See the <a href="https://embedthis.com/expansive/doc/">Expansive Documentation</a>
+            for details about the <em>expansive.json</em>.</p>
+            <p>If you are hosting your application in Appweb you will need to specify additional 
             configuration in the <em>appweb.conf</em> configuration file. For details, see
                 the <a href="hosting.html">Hosting in Appweb</a>.</p>
 
@@ -569,10 +579,20 @@ params: [
                     </tr>
                     <tr>
                         <td>pattern</td>
-                        <td>Matching URI regular expression for requests to be served by the current route.
-                        For example:
-                        <code class="inverted">pattern: '^/route/auth',</code>
-                        Use <em>^</em> to anchor to the start of the URI and $ for the end of the URI.
+                        <td><p>Matching URI regular expression for requests to be served by the current route.
+                        The route pattern is an enhanced JavaScript-compatibile regular expression. It is enhanced by 
+                        optionally embedding braced tokens "{name}" in the pattern. During request URI matching, 
+                        these tokens are extracted and defined in the request params and are available to the request 
+                        and to route targets. To use the standard regular expression repeat syntax <em>{}</em>, quote
+                        the braces with back quote <em>\</em>.</p>
+                        <p>Sub-expressions and token expressions are also available in route targets as numbered 
+                        tokens <em>$N</em>. For example:</p>
+                        <code class="inverted">pattern: '^/app/(.*)(\.html)$',</code>
+
+                        <p>This will enable the target <em>$1.${request.Language=fr}.$2</em>.</p>
+                        <p>Use <em>^</em> to anchor to the start of the URI and $ for the end of the URI.
+                        If the pattern does not start with <em>^</em>, the route pattern will have its parent 
+                        route prefix prepended to the pattern.</p>
                         </td>
                     </tr>
                     <tr>

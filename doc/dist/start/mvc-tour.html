@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ESP MVC Tour</title>
+    <title>ESP Applications Tour</title>
     <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
@@ -42,8 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/pages-tour.html">ESP Pages Tour</a>
-                    <a class="item" href="../start/mvc-tour.html">ESP MVC Tour</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -51,8 +50,8 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/apps.html">ESP Applications</a>
-                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/create.html">Creating ESP Apps</a>
+                    <a class="item" href="../users/packages.html">Extension Packages</a>
                     <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
                     <a class="item" href="../users/components.html">Generating Components</a>
@@ -66,7 +65,6 @@
                     <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
-                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -74,7 +72,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -151,7 +149,7 @@
             
             
             <div class="divider">/</div>
-            <a class="active section" href="mvc-tour.html">ESP MVC Tour</a>
+            <a class="active section" href="mvc-tour.html">ESP Applications Tour</a>
             
         </div>
         
@@ -162,23 +160,50 @@
     </div>
     <div class="content">
 
-            <h1>ESP MVC Tour</h1>
-            <p>This quick tour of the ESP MVC Framework provides an overview of the ESP generator for 
-            Model-View-Controller applications. The generated application will use the 
-            <em>esp-html-skeleton</em> Pak which provides a server-side MVC framework.</p>
+            <h1>ESP Applications Tour</h1>
+            <p>This tour provides and overview of the ESP applications and the ESP MVC Framework.
+
+            <p>To create more complex ESP applications than a simple hello-world, we will typically want a bit 
+            more structure and content. The ESP MVC framework provides this structure and with sensible defaults,
+            it greatly minimizes your workload.</p>
+
+            <h2>Essential Tools</h2>
+            <p>So you can work along as the tour progresses, install the following products and tools. 
+            ESP applications and this tour make heavy use of 
+                <a href="https://embedthis.com/pak/">Pak</a> and
+                <a href="https://embedthis.com/expansive/">Expansive</a> tools from Embedthis.</p>
+            <ul>
+                <li><a href="https://embedthis.com/pak/">Pak</a> manager to install and manage extension packages.</li>
+                <li><a href="https://embedthis.com/expansive/">Expansive</a> site manager for layout pages
+                    and web site tooling.</li>
+            </ul>
+            <p>Please download and install these three products.</p>
+            <p>
+                <a class="ui labeled small icon blue button" href="https://embedthis.com/esp/download.html">
+                    <i class="download cloud icon"></i>
+                    Download ESP</a></li>
+                <a class="ui labeled small icon purple button" href="https://embedthis.com/pak/download.html">
+                    <i class="download cloud icon"></i>
+                    Download Pak
+                </a>
+                <a class="ui labeled small icon red button" href="https://embedthis.com/expansive/download.html">
+                    <i class="download cloud icon"></i>
+                    Download Expansive
+                </a>
+            </p>
+
             <p>Before starting, first make sure you have read the <a href="quick.html">Quick Start</a>,
-            and the <a href="tour.html">ESP Tour</a> and that you have ESP installed on your system so you
-            can type along as you go. This tour uses the <em><a href="../users/program.html">esp</a></em> application
-            generator.</p>
+            and the <a href="tour.html">ESP Tour</a> and that you have ESP, Pak and Expansive installed on your 
+            system so you can type along as you go.</p>
+            
             <a id="blog"></a>
             <h2>Creating a New Application</h2>
             <p>To create a new ESP application, you will use <a href="http://embedthis.com/pak/">Pak</a>
             package manager to install the <em>esp-html-skeleton</em>.
-            Make a directory named <em>blog</em> and then install the esp-html-skeleton Pak.</p>
+            Make a directory named <em>blog</em> and then install the esp-html-skeleton package.</p>
             <pre class="code"><b>$ mkdir blog
 $ cd blog
 $ pak install esp-html-skeleton</b>
-/Users/mob/dev/demo> pak install esp-html-skeleton
    [Install] esp-server 5.4.0
    [Install] esp-mvc 5.4.0
    [Install] exp-js 0.2.0
@@ -239,7 +264,7 @@ $ pak install esp-html-skeleton</b>
                     </tr>
                     <tr>
                         <td>paks</td>
-                        <td>Locally installed extension Paks</td>
+                        <td>Locally installed extension packages</td>
                     </tr>
                     <tr>
                         <td>partials</td>
@@ -395,7 +420,7 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
             <p>To learn more, please read:
             <ul>
                 <li><a href="index.html">ESP Documentation</a></li>
-                <li><a href="pages-tour.html">ESP Pages Tour</a></li>
+                <li><a href="../users/pages.html">ESP Pages</a></li>
             </ul>
 
     </div>

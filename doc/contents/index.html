@@ -7,7 +7,7 @@
             <div class="floated">
                 <img src="images/esp-icon-128.png" class="ui left floated image">
                 <p>ESP is a web framework that makes it dramatically easier to create blazing fast,
-                dynamic web applications. ESP applications uses the <em>C</em> language for server-side 
+                dynamic web applications and web sites. ESP applications uses the <em>C</em> language for server-side 
                 programming, which allows easy access to system or hardware data. The result is fast and 
                 responsive web applications.</p>
 
@@ -21,21 +21,22 @@
             <h2>ESP Components</h2>
             <p>The ESP web framework provides a complete set of components including</p>
             <ul>
+                <li>HTTP web server</li>
                 <li>Model-View-Controller framework</li>
+                <li>Dynamic loader for <em>C</em> controllers</li>
+                <li>Templating with embedded <em>C</em> code in web pages</li>
                 <li>Application and scaffold generator</li> 
-                <li>Integrated Appweb HTTP engine</li>
-                <li>Web page templating engine</li>
                 <li>Web Sockets</li>
                 <li>Embedded databases</li>
                 <li>Database migrations</li>
                 <li>Extensive programmer API</li>
                 <li>Library of extension packages</li>
-                <li>Complete tooling for web applications</li>
+                <li>Complete tooling for deploying web applications</li>
             </ul>
             <p>This document describes the ESP web framework and how to use ESP.</p>
             
             <a id="patterns"></a>
-            <h2 >ESP Patterns</h2>
+            <h2>ESP Patterns</h2>
             <p>ESP supports several design patterns:</p>
             <ul>
                 <li>Stand-alone ESP web pages</li>
@@ -45,6 +46,7 @@
                 <li>Single Page Applications 
                     (<a href="http://en.wikipedia.org/wiki/Single-page_application">SPA</a>)</li>
             </ul>
+
             <p>Your applications can choose a predominating pattern or you can mix patterns in a 
                 single application if desired.</p>
             <a name="standalone"></a>
@@ -65,7 +67,7 @@
             <a name="webservices"></a>
             <h2>Web Services</h2>
             <p>ESP is especially well suited for high performance web services. ESP permits the binding of URLs 
-            directly to C functions. When the URL is requested, the corresponding C function, typically
+            directly to <em>C</em> functions. When the URL is requested, the corresponding <em>C</em> function, typically
             called an <em>action</em>, is executed to dynamically generate a response. 
             The actions are typically grouped into a loadable ESP controller file. For example:</p>
             <pre class="ui code segment">
@@ -94,9 +96,8 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             user interface. Originally developed in the '70s, it has been more recently adapted for web applications and been
             popularized by frameworks such as <a href="http://www.rubyonrails.org">Ruby on Rails</a>. ESP uses the
             same paradigm with an embedded spin.</p>
-            <p>ESP supports MVC applications and provides an <em>esp</em> application generator to generate MVC 
-            application skeletons and scaffolds.</p>
-            <p>ESP support two styles of MVC applications:</p>
+            <p>ESP supports MVC applications and provides an <em>esp</em> application generator to create MVC 
+            applications and scaffolds. ESP support two styles of MVC applications:</p>
             <ul>
                 <li>Server-side MVC Applications</li>
                 <li>Single Page Applications</li>
@@ -114,15 +115,16 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             <p>Single page applications deliver the entire web application as a single page and then incrementally
             download resources and data in the background as required. With this paradigm, it is the client that 
             defines the entire user interface via a client-side Javascript framework such as 
-            <a href="http://aurelia.io">Aurelia</a>. The server 
-            provides the initial page load and ongoing data. This approach can provide a more responsive and 
-            fluid user experience without the delays caused by page reloads.</p>
-            <p>ESP is well suited to SPA applications and can deliver all the required resources and data for such apps.</p>
-            <h2 >ESP Web Framework</h2>
+            <a href="http://aurelia.io">Aurelia</a>. The server provides the initial page load and ongoing data. 
+            This approach can provide a more responsive and fluid user experience without the delays caused by 
+            page reloads. ESP is well suited to SPA applications and can deliver all the required resources and 
+            data for such apps.</p>
+
+            <h2>ESP Web Framework</h2>
             <img src="images/espArchitecture.jpg" alt="ESP Web Framework Architecture" class="centered" />
             <p>The main components of the ESP Web Framework are:</p>
             <ul>
-                <li><a href="#http">Embedthis HTTP Engine</a></li>
+                <li><a href="#http">HTTP Web Server</a></li>
                 <li><a href="#pages">ESP Pages</a></li>
                 <li><a href="#controllers">ESP Controllers</a></li>
                 <li><a href="#models">ESP Models</a></li>
@@ -132,28 +134,27 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             </ul> 
             
             <a id="http"></a>
-            <h2 >Embedthis HTTP Server</h2>
-            <p>ESP includes and embedded copy of the 
+            <h2>HTTP Web Server</h2>
+            <p>ESP includes the 
                 <a href="https://embedthis.com/appweb/">Embedthis HTTP engine</a> that has been used for years
                 in <a href="https://embedthis.com/appweb/">Appweb</a>. This is a high performance,
                event-based, multithreaded HTTP engine. It fully supports HTTP/1.1 with extensions for WebSockets,
                Sessions, SSL, Security Limits and Defensive counter-measures.</p>
 
             <a id="pages"></a>
-            <h2 >ESP Pages</h2>
-            <p>The ESP Pages provide the "View" portion of MVC frameworks and are responsible for generating 
+            <h2>ESP Pages</h2>
+            <p>ESP Pages provide the "View" portion of MVC frameworks and are responsible for generating 
             the user interface. They provide: </p>
             <ul>
                 <li>Embedded <em>C</em> language code for dynamic HTML responses</li>
-                <li>An ESP API library to render output</li>
+                <li>An ESP API library of convenience routines to manage web requests, sesion state and render output</li>
             </ul>
             <p>Note that if using ESP for a <a href="#spa">Single Page Architecture</a> application, the views are
             typically generated by the client using a client-side framework such as 
-            <a href="http://aurelia.io">Aurelia</a>. In this case, ESP views are used for the initial, "single" 
-            home page.</p>
+            <a href="http://aurelia.io">Aurelia</a>. In this case, ESP views are used for the initial, single home page.</p>
 
             <h3>ESP Page Directives</h3>
-            <p>ESP supports the following web page directives.</p>
+            <p>ESP supports the following special sequences for use in web pages.</p>
             <table class="ui table">
                 <thead><tr><th class="three wide">Directive</th><th>Purpose</th></tr></thead>
                 <tbody>
@@ -163,19 +164,19 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
                         into the web page at this position. A printf format specifier can be used to specify a 
                         different variable type. For example, <em>&lt;%= %d ivar %&gt;</em>
                         <em>C</em> code will execute.</td></tr>
-                    <tr><td>@!variable</td><td>Shortcut for &lt;%= variable %&gt;</td></tr>
-                    <tr><td>@!{expression}</td><td>Shortcut for &lt;%= expression %&gt;</td></tr>
-                    <tr><td>&#64;&#64;param</td><td>Substitutes the value of a request parameter or session 
+                    <tr><td>%!variable</td><td>Shortcut for &lt;%= variable %&gt;</td></tr>
+                    <tr><td>%!{expression}</td><td>Shortcut for &lt;%= expression %&gt;</td></tr>
+                    <tr><td>%$param</td><td>Substitutes the value of a request parameter or session 
                         variable of the same name after HTML escaping the value.</td></tr>
-                    <tr><td>@#field</td><td>Substitute the field name in the current database record.</td></tr>
-                    <tr><td>@&#126;</td><td>Insert a URL to the top of the application.</td></tr>
+                    <tr><td>%#field</td><td>Substitute the field name in the current database record.</td></tr>
+                    <tr><td>%&#126;</td><td>Insert a URL to the top of the application.</td></tr>
                 </tbody>
             </table>
 
-            <p>See <a href="users/pages.html#directives">ESP Page Directives</a> for more directives.</p>
+            <p>See <a href="users/pages.html#directives">ESP Page Directives</a> for more details.</p>
 
                         <a id="controllers"></a>
-            <h2 >ESP Controllers</h2>
+            <h2>ESP Controllers</h2>
             <p>ESP Controllers are collections of <em>C</em> functions that are bound to specific URLs for the purpose
             of managing a resource or group of resources. Often a controller will use 
             <a href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful</a> routes to map 
@@ -204,7 +205,7 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
 static void update() {
     if (updateFields("post", params())) {
         inform("Post updated successfully.");
-        redirect("@");
+        redirect("list");
     } else {
         renderView("post-edit");
     }
@@ -222,7 +223,7 @@ static void update() {
             client.</p>
 
             <a id="models"></a>
-            <h2 >ESP Models and Databases</h2>
+            <h2>ESP Models and Databases</h2>
             <p>The Model part of an MVC framework stores the application data and access logic and may provide an 
             Object Relational Mapping (ORM) layer. Unfortunately, while being powerful and extensive, ORMs often 
             consume considerable amounts of memory and can be slow at run-time. ESP avoids this problem by providing 
@@ -238,7 +239,7 @@ static void update() {
             modify database tables. Migrations are useful to create databases and test data.</p>
 
             <a id="api"></a>
-            <h2 >ESP API</h2>
+            <h2>ESP API</h2>
             <p>The ESP web framework has an extensive suite of APIs to cover all possible design needs. It also
             defines an expressive, terse, short-form API that makes common tasks simple. 
             See the <a href="ref/api/esp.html">ESP API Reference</a> for more details.</p>

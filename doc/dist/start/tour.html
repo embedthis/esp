@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ESP MVC Tour</title>
+    <title>ESP Tour</title>
     <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
@@ -42,8 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/pages-tour.html">ESP Pages Tour</a>
-                    <a class="item" href="../start/mvc-tour.html">ESP MVC Tour</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -51,8 +50,8 @@
             <div class="item">
                 <a href="../users/index.html"><b>User's Guide</b></a>
                 <div class="menu">
-                    <a class="item" href="../users/apps.html">ESP Applications</a>
-                    <a class="item" href="../users/packages.html">Installing Packages</a>
+                    <a class="item" href="../users/create.html">Creating ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Extension Packages</a>
                     <a class="item" href="../users/skeletons.html">Application Skeletons</a>
                     <a class="item" href="../users/config.html">Configuring ESP</a>
                     <a class="item" href="../users/components.html">Generating Components</a>
@@ -66,7 +65,6 @@
                     <a class="item" href="../users/sessions.html">Sessions</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
-                    <a class="item" href="../users/tooling.html">Expansive Tooling</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
@@ -74,7 +72,7 @@
             <div class="item">
                 <a href="../ref/index.html">Reference Guide</a>
                 <div class="menu">
-                    <a class="item" href="../users/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/mvc.html">ESP MVC Framework</a>
                     <a class="item" href="../ref/compatibility.html">Compatibility</a>
                     <a class="item" href="../ref/native.html">API Library</a>
                     <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
@@ -151,7 +149,7 @@
             
             
             <div class="divider">/</div>
-            <a class="active section" href="tour.html">ESP MVC Tour</a>
+            <a class="active section" href="tour.html">ESP Tour</a>
             
         </div>
         
@@ -164,32 +162,36 @@
 
             <h1>ESP Tour</h1>
             <p>This quick tour of the ESP Web Framework provides an overview of ESP and how to use it 
-            to create ESP pages and ESP applications.
-            Before you start, make sure you have read the <a href="start.html">Quick Start</a> and
+            to create ESP pages and ESP applications.</p>
+
+            <p>Before you start, make sure you have read the <a href="quick.html">Quick Start</a> and
             that you have ESP installed on your system so you can try the commands as you go.</p>
-            
+            <p>
+                <a class="ui labeled small icon blue button" href="https://embedthis.com/esp/download.html">
+                    <i class="download cloud icon"></i>
+                    Download ESP</a>
+            </p>
+
             <a id="run"></a>
-            <h2 >Running ESP</h2>
-            <p>The ESP web framework includes a utility program called <em>esp</em> that is used to serve 
-                your application but it can also be used to install extension packages, generate scaffolds, and 
-                otherwise manage your application.</p>
-                <p>To run esp, create a directory to contain your ESP application and then from that directory,
-                run <em>esp</em>. In this example, we create a directory called "<em>test</em>".</p>
-                <pre class="code">
+            <h2>Running ESP</h2>
+            <p>The ESP web framework includes a utility program called <em>esp</em> that is used to initialize and
+                then run your application.</p>
+            <p>To start the tour, create a directory to contain your ESP application and then from that directory,
+                run <em>esp</em>. In this example, we create a directory called "<em>test</em>". The directory
+                name is used as the default name for your application, so choose a name that can be a valid 
+                <em>C</em> identifier.</p>
+
+            <pre class="code">
 <b>$ mkdir test
 $ cd test
 $ esp</b>
 esp: 2: Started HTTP service on "127.0.0.1:4000"
 esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             <p>ESP is now running and ready to serve documents from the "<em>test</em>" directory.</p>
-            <p>For help on the <em>esp</em> utility, type:</p>
-            <pre class="code"><b>man esp</b>
 
-# or
 
-<b>esp -help</b></pre>
             <a id="hello"></a>
-            <h2 >Hello World</h2>
+            <h2>Hello World</h2>
             <p>The first step in any tour is to create a simple "Hello World" web page. ESP web pages have 
             an <em>.esp</em> extension.
             Create a file called <em>hello.esp</em> using your favorite text editor in the <em>test</em> directory
@@ -203,13 +205,16 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             <p>To view the "Hello" web page, type the following URL: 
             <em>http://localhost:4000/hello.esp</em> into your browser.</p>
             <img src="../images/esp/tour/hello.png" alt="hello" class="bare-screen" /> 
+
             <a id="dynamic"></a>
-            <h2 >Dynamic Content</h2>
+            <h2>Dynamic Content</h2>
             <p>While that was fun, the output is static and boring, so let's add some dynamic content. You can embed
-            "C" language code and ESP function calls  by including them inside a special ESP web page directive that 
+            <em>C</em> language code and ESP function calls  by including them inside a special ESP web page directive that 
             will be executed and converted to HTML before being sent to the client. There are a variety of server-side 
             ESP web page directives, the one you'll use first, is: </p>
-            <p><em>&lt;%= expression %&gt;</em>.</p>
+
+            <pre class="code">&lt;%= expression %&gt;</pre>
+
             <p>To add the current date and time, modify the hello.esp web page and add the highlighted line:</p>
             <pre class="code">
 &lt;h1&gt;Hello Bright World&lt;/h1&gt;
@@ -219,13 +224,16 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
             pressing reload, the new date and time will be displayed.</p>
             
             <img src="../images/esp/tour/hello-dynamic.png" alt="hello" class="bare-screen" />
+
             <h3>No Restart Required</h3>
             <p>Notice that you did not have to restart the web server, nor did you have to manually recompile the
             ESP code. Rather, ESP transparently recompiled the web page in the background. ESP noticed that the 
             hello.esp web page had been modified and it re-parsed and compiled it into a loadable module 
             ready for execution. The loaded module is cached in-memory and on-disk for fast execution by 
             subsequent requests.</p>
+
             <p>In the output from the <em>esp</em> command, you may have noticed:</p>
+
             <pre class="code">
 esp: 2: GET /hello.esp HTTP/1.1
 esp: 2: esp: compile hello.esp
@@ -234,6 +242,7 @@ esp: 2:   HTTP/1.1 200 OK</pre>
             <p>This output traces each request and response, but also notifies you that the page was recompiled.
             Any request or page syntax errors will be show in the esp log output.</p>
             <p>You can also embed arbitrary C code in your ESP page, like:</p>
+
             <pre class="code">
 <b>&lt;h3&gt;&lt;% render("Request method is %s", getMethod()); %&gt;&lt;/h3&gt;</b>
 <b>&lt;% 
@@ -243,104 +252,23 @@ esp: 2:   HTTP/1.1 200 OK</pre>
     } 
 %&gt;</b>
 </pre>
-            <p>By using the ESP statement directive <em>&lt;% code %&gt;</em>, you can embed arbitrary "C" language
+            <p>By using the ESP statement directive <em>&lt;% code %&gt;</em>, you can embed arbitrary <em>C</em> language
             statements in your web page. The <em>render</em> function allows you to write arbitrary data which is patched
             back where the directive was defined in the page. See the <a href="../users/pages.html">ESP Pages</a>
             document for full details about all the ESP web page directives.</p>
- 
-            <a id="applications"></a>
-            <h2 >ESP Applications</h2>
-            <p>To create more complex ESP applications than a simple hello-world, we will typically want a bit 
-            more structure and content. The <a href="https://embedthis.com/pak/">Pak</a> package manager can 
-            quickly assemble pieces of an application by installing skeletons and packages.</p>
+            <p>For help on the <em>esp</em> utility, use <em>man esp</em> or invoke esp with the 
+                <em>esp -help</em> switch.</p>
+            <pre class="code">$ <b>man esp</b>
+$ <b>esp -help</b></pre> 
 
-            <h3>Using the Pak Manager</h3>
-            <p>The <a href="https://embedthis.com/pak/">Pak</a> Manager is used to select, install and manage
-            extension packages for ESP. You can search for
-            extension packages from the online <a href="https://embedthis.com/catalog/">Pak Catalog</a> or simply
-            install via <em>pak install</em>.</p>
-
-            <p>For example to install the <a href="http://getbootstrap.com">Bootstrap</a> library:</p>
-            <pre class="code">
-<b>$ pak install bootstrap</b>
-   [Install] jquery 2.1.3
-   [Install] bootstrap 3.3.4
-</pre>
-            <p>This installs the Bootstrap library and jQuery which is listed as a dependency.</p>
-
-            <h3>Installing Skeletons</h3>
-            <p>ESP provides skeletons packages to get you started quickly. These skeletons provide
-            the core structure of your application and include pages, templates, stylesheets and scaffolds 
-            that are used to generate models, views and controllers as your application grows. </p>
-            <ul>
-                <li>esp-html-skeleton &mdash; For a server-side MVC application</li>
-                <li>esp-angular-skeleton &mdash; For a client-side MVC application using 
-                    <a href="http://angularjs.org">AngularJS</a></li>
-            </ul>
-            <p>To use the esp-html-skeleton framework, type:</p>
-            <pre class="code">esp install esp-html-skeleton</pre>
-
-            <p>This will install the <em>esp-html-skeleton</em> skeleton, all dependent paks and create the 
-            necessary directories for your application to grow. It will create:</p>
-            <ul>
-                <li>esp.json &mdash; This stores key ESP configuration</li>
-                <li>package.json &mdash; This describes your application and installed packages</li>
-                <li>dist &mdash; Distribution directory of web content.</li>
-                <li>contents/index.esp &mdash; Home page for your application.</li>
-                <li>contents &mdash; Directory containing the client-side of your application.</li>
-                <li>contents/assets &mdash; Media assets for your application.</li>
-                <li>contents/css &mdash; CSS and Less stylesheets for your application.</li>
-                <li>layouts &mdash; Master ESP page layouts.</li>
-                <li>paks &mdash; Installed packages.</li>
-            </ul>
-            <p>Once installed, you can generate other assets such as controllers, database tables, migrations and 
-                MVC scaffolds.</p>
-
-            <h3>Generating Scaffolds</h3>
-            <p>Scaffods are stub MVC resource managers that provide basic Create-Read-Update-Delete (CRUD) for 
-            a resource or group of resources. ESP scaffolds include:</p>
-            <ul>
-                <li>Database table schema</li>
-                <li>Database migration to create the table</li>
-                <li>Controller logic to create and mange table records</li>
-                <li>Views to display table and record data</li>
-            </ul>
-            <p>Don't confused ESP <em>skeletons</em> which are ready-made application starters, with 
-            ESP <em>scaffolds</em> which are MVC resource managers.</p>
-
-            <p>For example, to generate an MVC blog scaffold.</p>
-            <pre class="code">$ esp generate scaffold post title:string body:text</pre>
-            <p>This will generate:
-            <ul>
-                <li>db/test.sdb</li>
-                <li>db/migrations</li>
-                <li>db/migrations/201404141540360_create_scaffold_post.c</li>
-                <li>source/post/edit.esp</li>
-                <li>source/post/list.esp</li>
-            </ul>
-            <p>Now run <em>esp</em> and navigate to in your browser to view a table of blog posts.</p>
-            <pre class="code">http://localhost:4000/post</pre> 
-            <p><img src="../images/esp/tour/scaffold.png" alt="hello" class= "bare-screen" /> </p>
-
-            <a id="hosting"></a>
-            <h2 >Hosting in Appweb</h2>
-            <p>If you want to host your application in <a href="https://embedthis.com/appweb/">Appweb</a>,
-            generate the required appweb.conf via:</p>
-
-            <pre class="code">esp generate appweb</pre>
-
-            <p>This will generate a stand-alone appweb.conf that includes the required 
-                EspApp directive to define your application. </p>
-            <pre class="code">EspApp prefix="/demo" config="/path/to/esp.json</pre>
-            
             <a id="learn"></a>
-            <h2 >Learn More ...</h2>
-            <p>That concludes a quick tour through some of the capabilities of the ESP web framework.</p>
-            <p>To learn more, please read:</p>
+            <h2>Learn More ...</h2>
+            <p>That concludes a quick tour through some of the capabilities of the ESP web framework. 
+            To learn more, please read:</p>
             <ul>
-                <li><a href="pages-tour.html">ESP Pages Tour</a>
-                <li><a href="mvc-tour.html">ESP MVC Tour</a>
-                <li><a href="index.html">ESP Documentation</a></li>
+                <li><a href="app-tour.html">ESP Applications Tour</a>
+                <li><a href="index.html">User's Guide</a></li>
+                <li><a href="../users/pages.html">ESP Pages</a></li>
                 <li><a href="../users/mvc.html">ESP MVC Framework</a></li>
             </ul>
 
