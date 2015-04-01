@@ -1,0 +1,42 @@
+{
+    title:  'ESP MVC',
+    crumbs: [
+        { "Reference Guide": 'index.html' },
+    ],
+}
+            <h1>Model-View-Controller Framework</h1>
+            <p>The Model-View-Controller (MVC) paradigm is a design pattern for creating and managing applications. It
+            partitions the separate concerns of application data, application logic and user interface into three
+            discrete components. It has proven to be highly successful in simplifying application design and
+            maintenance.</p>
+            
+            <img src="../images/mvc.jpg" alt="mvc" class="centered" />
+            <p>The ESP Web Framework supports the Model-View-Controller pattern to enable the creation of ESP MVC
+            applications. But it also permits you to use each component separately so that you can have stand-alone
+            controllers, views or database models. This flexibility allows you to pick and choose the components you
+            need or to embrace the entire MVC paradigm. You can also choose to create and render the views in 
+            the browser using a client-side Javascript MVC framework like <a href="http://aurelia.org">Aurelia</a>.</p>
+            
+            <a id="models"></a>
+            <h2>Models</h2>
+            <p>The model is responsible for managing access to application data and state. It is also responsible for
+            ensuring the data remains valid and consistent.</p>
+            <p>ESP provides a basic Object Relational Mapper (ORM) via the Embedded Database Interface (EDI).
+            This wraps database data in a "C" language Record and Grid data structure. It then allows you to use
+            object-oriented programming (OOP) when dealing with database data stored in rows and columns. </p>
+            
+            <a id="views"></a>
+            <h2>Views</h2>
+            <p>The view is responsible for rendering the user interface and presenting the application to the user.
+            Views should not manage incoming requests &mdash; that is the job of Controllers.</p>
+            <p>ESP provides the ESP web pages to assist in creating view web pages. ESP web pages are HTML
+            pages with embedded "C" code. They are compiled and run to render the user interface.</p>
+            
+            <a id="controllers"></a>
+            <h2>Controllers</h2>
+            <p>Controllers manage the application and respond to client requests. They orchestrate the application's
+            response, they access and update model data, and display views back to the client. Incoming requests invoke
+            <b>Actions</b> in the controller which modify the application state and ultimately render a view.</p>
+            <p>ESP controllers are "C" source files with one C function per action. Requests are routed by ESP 
+                by parsing and decoding request URIs and matching them with the appropriate Controller 
+                and Action function.</p>
