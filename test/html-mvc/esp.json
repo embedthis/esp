@@ -25,10 +25,10 @@
                 "location": "error.log",
                 "level": 4
             },
-            "trace": {
-                "location": "trace.log",
-                "level": 4
-            }
+        },
+        "trace": {
+            "location": "trace.log",
+            "level": 4
         }
     }
 }

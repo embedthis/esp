@@ -19,10 +19,6 @@
                 "location": "error.log",
                 "level": 4
             },
-            "trace": {
-                "location": "trace.log",
-                "level": 4
-            }
         },
         auth: {
             roles: {
@@ -58,6 +54,10 @@
                 espHandler:  [ '*.esp', '*.xesp' ],
                 fileHandler: [ '*' ],
             },
+        },
+        "trace": {
+            "location": "trace.log",
+            "level": 4
         },
         routes: [ 
             {

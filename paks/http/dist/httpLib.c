@@ -5304,8 +5304,8 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
         level = 5;
     }
     if (size < (10 * 1000)) {
-        httpParseError(route, "Trace log size is too small. Must be larger than 10K");
-        return;
+        size = 10 * 1000 * 1000;
+        mprLog("warn http config", 0, "Trace log size is too small, setting to 10MB. Must be larger than 10K.");
     }
     if (location == 0) {
         httpParseError(route, "Missing trace filename");
@@ -5445,6 +5445,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.log", parseServerLog);
     httpAddConfig("http.server.modules", parseServerModules);
     httpAddConfig("http.server.monitors", parseServerMonitors);
+
+#if DEPRECATED || 1
     httpAddConfig("http.server.ssl", parseSsl);
     httpAddConfig("http.server.ssl.authority", httpParseAll);
     httpAddConfig("http.server.ssl.authority.file", parseSslAuthorityFile);
@@ -5457,13 +5459,26 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.ssl.verify", httpParseAll);
     httpAddConfig("http.server.ssl.verify.client", parseSslVerifyClient);
     httpAddConfig("http.server.ssl.verify.issuer", parseSslVerifyIssuer);
-    httpAddConfig("http.server.trace", parseTrace);
+#endif
 
     httpAddConfig("http.showErrors", parseShowErrors);
     httpAddConfig("http.source", parseSource);
 #if DEPRECATE || 1
     httpAddConfig("http.serverPrefix", parseServerPrefix);
 #endif
+    httpAddConfig("http.ssl", parseSsl);
+    httpAddConfig("http.ssl.authority", httpParseAll);
+    httpAddConfig("http.ssl.authority.file", parseSslAuthorityFile);
+    httpAddConfig("http.ssl.authority.directory", parseSslAuthorityDirectory);
+    httpAddConfig("http.ssl.certificate", parseSslCertificate);
+    httpAddConfig("http.ssl.ciphers", parseSslCiphers);
+    httpAddConfig("http.ssl.key", parseSslKey);
+    httpAddConfig("http.ssl.provider", parseSslProvider);
+    httpAddConfig("http.ssl.protocols", parseSslProtocols);
+    httpAddConfig("http.ssl.verify", httpParseAll);
+    httpAddConfig("http.ssl.verify.client", parseSslVerifyClient);
+    httpAddConfig("http.ssl.verify.issuer", parseSslVerifyIssuer);
+
     httpAddConfig("http.stealth", parseStealth);
     httpAddConfig("http.target", parseTarget);
     httpAddConfig("http.timeouts", parseTimeouts);
@@ -5472,6 +5487,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.timeouts.inactivity", parseTimeoutsInactivity);
     httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
     httpAddConfig("http.timeouts.session", parseTimeoutsSession);
+    httpAddConfig("http.trace", parseTrace);
     httpAddConfig("http.update", parseUpdate);
     httpAddConfig("http.xsrf", parseXsrf);
     httpAddConfig("directories", parseDirectories);

@@ -11,15 +11,15 @@
             "log": {
                 "location": "error.log",
                 "level": 4
-            },
-            "trace": {
-                "location": "trace.log",
-                "level": 4
             }
         },
         limits: {
             requestBody: 'unlimited',
             cacheItem: '100k',
+        },
+        "trace": {
+            "location": "trace.log",
+            "level": 4
         },
         routes: [ {
             pattern: '^/caching/{action}$',

@@ -13,14 +13,6 @@
                 certificate: '../crt/test.crt',
                 key: '../crt/test.key'
             },
-            "log": {
-                "location": "error.log",
-                "level": 4
-            },
-            "trace": {
-                "location": "trace.log",
-                "level": 4
-            }
         },
         auth: {
             roles: {
@@ -50,6 +42,14 @@
                     roles:    [ 'user' ]
                 }
             }
+        },
+        "log": {
+            "location": "error.log",
+            "level": 4
+        },
+        "trace": {
+            "location": "trace.log",
+            "level": 4
         },
         routes: [ 
             {
