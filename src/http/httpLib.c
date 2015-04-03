@@ -4190,7 +4190,7 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
 
     clientLifespan = serverLifespan = 0;
     if (prop->type & MPR_JSON_STRING && smatch(prop->value, "true")) {
-        httpAddCache(route, 0, 0, 0, 0, 86400 * 1000, 0, HTTP_CACHE_CLIENT | HTTP_CACHE_STATIC);
+        httpAddCache(route, 0, 0, 0, 0, 3600 * 1000, 0, HTTP_CACHE_CLIENT | HTTP_CACHE_STATIC);
     } else {
         for (ITERATE_CONFIG(route, prop, child, ji)) {
             flags = 0;
@@ -8947,12 +8947,11 @@ static void printRoute(HttpRoute *route, int idx, bool full, int methodsLen, int
     target = (route->target && *route->target) ? route->target : "$&";
 
     if (full) {
-        printf("\n Route [%d]. %s\n", idx, route->pattern);
-        printf("    Pattern:      %s\n", pattern);
+        printf("\n Route [%d]. %s\n", idx, pattern);
         if (route->prefix && *route->prefix) {
-            printf("    RegExp:       %s\n", route->optimizedPattern);
             printf("    Prefix:       %s\n", route->prefix);
         }
+        printf("    RegExp:       %s\n", route->optimizedPattern);
         printf("    Methods:      %s\n", methods);
         printf("    Target:       %s\n", target);
         printf("    Auth:         %s\n", auth->type ? auth->type->name : "-");
@@ -12100,7 +12099,7 @@ static void outgoingRangeService(HttpQueue *q)
     conn = q->conn;
     tx = conn->tx;
 
-    if (!(q->flags & HTTP_QUEUE_SERVICED)) {
+    if (!(q->flags & HTTP_QUEUE_SERVICED || q->servicing)) {
         /*
             The httpContentNotModified routine can set outputRanges to zero if returning not-modified.
          */
@@ -12515,9 +12514,6 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     route->languages = parent->languages;
     route->lifespan = parent->lifespan;
     route->limits = parent->limits;
-#if UNUSED
-    route->loaded = parent->loaded;
-#endif
     route->map = parent->map;
     route->methods = parent->methods;
     route->mimeTypes = parent->mimeTypes;
@@ -13998,6 +13994,10 @@ static void finalizePattern(HttpRoute *route)
      */
     len = strcspn(startPattern, "^$*+?.(|{[\\");
     if (len) {
+        /* Handle /pattern / * */
+        if (startPattern[len] == '*' && len > 0) {
+            len--;
+        }
         route->startWith = snclone(startPattern, len);
         route->startWithLen = len;
         if ((cp = strchr(&route->startWith[1], '/')) != 0) {

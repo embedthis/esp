@@ -2354,6 +2354,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpSetRouteCookiePersist</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga48a8b6e95ed34d5d0872bca393849141</anchor>
+      <arglist>(HttpRoute *route, int enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpSetRouteData</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gaf63bed103e906efe134668c20e5338ef</anchor>
