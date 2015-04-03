@@ -1573,11 +1573,12 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
     if (app->error) {
         return;
     }
-    if (mprLookupKey(app->built, source)) {
-        return;
+    if (app->built) {
+        if (mprLookupKey(app->built, source)) {
+            return;
+        }
+        mprAddKey(app->built, source, source);
     }
-    mprAddKey(app->built, source, source);
-
     cacheDir = httpGetDir(route, "CACHE");
     eroute = route->eroute;
     defaultLayout = 0;

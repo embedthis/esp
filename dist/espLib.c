@@ -4685,21 +4685,21 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 
     /*
         Internal directory redirection
+        Target will be empty for path of "" and "/"
+        rx->pathInfo will always be set to have a leading "/".
      */
-    if (*target == '\0' || sends(target, "/")) {
+    if (sends(target, "/") || (*target == '\0' && sends(rx->parsedUri->path, "/"))) {
         target = sjoin(target, "index.esp", NULL);
     }
     if (sends(target, ".esp")) {
         if (espRenderView(conn, target, 0)) {
             return;
         } 
-    } else if (rx->flags & (HTTP_GET | HTTP_HEAD)) {
+    } else if (espRenderView(conn, sjoin(target, ".esp", NULL), 0)) {
         /*
-            Support pretty URLs without ".esp"
+            Pretty URLs without ".esp"
          */
-        if (espRenderView(conn, sjoin(target, ".esp", NULL), 0)) {
-            return;
-        }
+        return;
     }
 #if DEPRECATED || 1
     /*
