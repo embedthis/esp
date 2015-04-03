@@ -2332,20 +2332,19 @@ static void makeEspFile(cchar *path, cchar *data, ssize len)
 
 static cchar *getCachedPaks()
 {
-    MprDirEntry     *dp;
     MprJson         *config, *keyword;
     MprList         *files, *result;
-    cchar           *base, *path, *version;
+    cchar           *base, *dir, *path, *version;
     int             index, next, show;
 
     if (!app->paksCacheDir) {
         return 0;
     }
     result = mprCreateList(0, 0);
-    files = mprGetPathFiles(app->paksCacheDir, 0);
-    for (ITERATE_ITEMS(files, dp, next)) {
-        version = getPakVersion(dp->name, NULL);
-        path = mprJoinPaths(dp->name, version, "package.json", NULL);
+    files = mprGlobPathFiles(app->paksCacheDir, "*/*", 0);
+    for (ITERATE_ITEMS(files, dir, next)) {
+        version = getPakVersion(dir, NULL);
+        path = mprJoinPaths(dir, version, "package.json", NULL);
         if (mprPathExists(path, R_OK)) {
             if ((config = loadJson(path)) != 0) {
                 base = mprGetPathBase(path);
