@@ -6,13 +6,14 @@
 }
         <h1>Extension Packages</h1>
  
-		<p>ESP can be extended by installable packages to provide content and extended functionality.
-        ESP uses packages to deliver client libraries, frameworks, plugins and skeletons. ESP has a 
-        wide variety of extension packages to make your development more productive.</p>
+		<p>ESP can be augmented by installing packages to provide content and extended functionality.
+        ESP uses packages to deliver client libraries, frameworks, plugins and application skeletons. ESP has a 
+        wide variety of extension <a href="https://embedthis.com/catalog/search?esp">ESP packages</a> 
+        to make your development more productive.</p>
 
 		<h2>The Pak Manager</h2>
 		<p>ESP uses the amazing <a href="https://embedthis.com/pak/">Pak</a> 
-		package manager and the online <a href="https://embedthis.com/catalog/">Pak Catalog</a> of 
+		package manager and the online <a href="https://embedthis.com/catalog/search?esp">Pak Catalog</a> of 
 		packages. The Pak utility is used to install, manage, upgrade and uninstall packages for ESP.
 
 		<p>For example, to install <a href="http://getbootstrap.com">Bootstrap</a> using Pak:</p>
@@ -25,40 +26,113 @@
             and added bootstrap to the list of dependencies in the <em>package.json</em>. It also 
             downloaded and installed the <em>jQuery</em> required dependency.</p>
 
+        <h2>Package Documentation</h2>
+        <p>Each package should include documentation in its README file. Clicking on the package
+        in the Catalog listing will take you to the repository for the package and display the package README.
+        For example, click on <a href="https://embedthis.com/catalog/search/esp-html-skeleton">esp-html-skeleton</a>
+        in the catalog.</p>
 
-        <h2>ESP Packages</h2>
-        <p>ESP publishes many packages to support creating ESP applications. ESP skeletons are packages
+        <h2>Packages</h2>
+        <p>ESP uses several packages published by <a href="https://embedthis.com/expansive/">Expansive</a> to
+            render and manage content.</p>
+        <table class="ui table">
+            <thead>
+                <th>Pacakge Name</th><th>Description</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-babel">exp-babel</a></td>
+                    <td>Convert client-side ES6 Javascript to ES5 for current browsers.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-css">exp-css</a></td>
+                    <td>Process CSS files to add browser specific prefixes and
+                        minify the output.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-esp">exp-esp</a></td>
+                    <td>Compile ESP pages, controllers and applications.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-gzip">exp-gzip</a></td>
+                    <td>Compress final content using gzip.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-js">exp-js</a></td>
+                    <td>Process Javascript files to minify.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-less">exp-less</a></td>
+                    <td>Process Less stylesheets into CSS.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-md">exp-md</a></td>
+                    <td>Process markdown pages into HTML.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-ng">exp-ng</a></td>
+                    <td>Manage building Angular applications.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-reload">exp-reload</a></td>
+                    <td>Live reload in the browser for Expansive when content is updated.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-sass">exp-sass</a></td>
+                    <td>Process SASS files into css.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/exp-shell">exp-shell</a></td>
+                    <td>Run shell scripts and capture the output.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>ESP Skeleton Packages</h2>
+        <p>ESP publishes application skeletons to support creating ESP applications. Skeletons are starter packages
         that include page layouts, navigation, stylesheets, fonts, other content and dependent packages.</p>
 
         <table class="ui table">
-        <thead>
-            <tr><th class="four wide">Package Name</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>esp-server</td><td>Basic server-side ESP support for serving ESP pages (only).</td></tr>
-            <tr><td>esp-skeleton</td><td>ESP application starter skeleton. Supports controllers and 
-                ESP pages.</td></tr>
-            <tr><td>esp-mvc</td><td>ESP MVC support. Includes scaffold templates to generate 
-                controllers, migrations, scaffolds.</a></td></tr>
-            <tr><td>esp-html-skeleton</td><td>ESP application starter skeleton for HTML5 MVC 
-                applications.</td></tr>
-            <tr><td>esp-angular</td><td>ESP support for <a href="http://angularjs.org">AngularJS</a>.</td></tr>
-            <tr><td>esp-angular-skeleton</td><td>ESP application starter skeleton for 
-                client-side <a href="http://angular.org">AngularJS Applications</a>.</td></tr>
-        </tbody>
+            <thead>
+                <tr><th class="four wide">Package Name</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="https://github.com/embedthis/">esp-skeleton</a></td>
+                    <td>ESP application starter skeleton. Supports ESP pages, controllers and database migrations.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/">esp-html-skeleton</a></td>
+                    <td>ESP application starter skeleton for HTML5 MVC applications. This skeleton builds upon 
+                    esp-skeleton and adds support for scaffolds and server-side scaffold views.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/">esp-angular</a></td>
+                    <td>ESP support for <a href="http://angularjs.org">AngularJS</a>.</td>
+                </tr>
+                <tr>
+                    <td><a href="https://github.com/embedthis/">esp-angular-skeleton</a></td>
+                    <td>ESP application starter skeleton for client-side <a href="http://angular.org">AngularJS 
+                    Applications</a>. Builds upon <em>esp-angular</em> and <em>esp-skeleton</em> to provide a 
+                    client-side UI paradigm.</td>
+                </tr>
+            </tbody>
         </table>
 
-		<h2>Third Party Packages</h2>
-		<p>See the <a href="https://embedthis.com/catalog/exp">Pak Catalog</a> for more ESP 
-			plugins and packages, including: </p>
+
+        <h2>Third Party Packages</h2>
+        <p>See the <a href="https://embedthis.com/catalog/search/esp">Pak Catalog</a> for more ESP 
+            plugins and packages, including: </p>
         <ul>
-			<li><a href="https://embedthis.com/catalog/search/bootstrap">Bootstrap</a></li>
-			<li><a href="https://embedthis.com/catalog/search/angular">Angular</a></li>
-			<li><a href="https://embedthis.com/catalog/search/font-awesome">Font Awesome</a></li>
-			<li><a href="https://embedthis.com/catalog/search/semantic">Semantic UI</a></li>
-			<li><a href="https://embedthis.com/catalog/search/sass">Sass</a></li>
+            <li><a href="https://embedthis.com/catalog/search/bootstrap">Bootstrap</a></li>
+            <li><a href="https://embedthis.com/catalog/search/angular">Angular</a></li>
+            <li><a href="https://embedthis.com/catalog/search/font-awesome">Font Awesome</a></li>
+            <li><a href="https://embedthis.com/catalog/search/semantic">Semantic UI</a></li>
+            <li><a href="https://embedthis.com/catalog/search/sass">Sass</a></li>
             <li><a href="https://embedthis.com/catalog/">And many, many more.</a></li>
         </ul>
+
+
 
         <h2>Want More?</h2>
         <p>Read more about packages with:</p> 

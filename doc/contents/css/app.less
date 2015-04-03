@@ -87,8 +87,8 @@ body {
     }
 }
 
+
 .sidebar {
-    position: fixed;
     left: 0;
     padding-top: 35px;
     width: 240px;
@@ -96,6 +96,7 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     visibility: hidden;
+
     .ui.vertical.menu {
         background: @gray-dark;
         .logo {
@@ -123,6 +124,10 @@ body {
             border-right: 18px solid @body-highlight;
         }
     }
+    &::-webkit-scrollbar { 
+        width: 0px !important;
+    }
+    position: fixed;
 }
 
 .ui.sidebar-launch.button {

@@ -20,12 +20,13 @@
             "normal" operation.</p>
             <p>For example: an embedded system may expect to be accessed by at most 1 or 2 clients at a time. ESP can then be
             configured to regard it as threat if the system is accessed by more than 2 clients.</p>
+
             <a id="monitors"></a>
-            <h2 >Monitors</h2>
+            <h2>Monitors</h2>
             <p>Monitors are defined in the ESP package.json configuration file via the 
             <em>http.montiors</em> directive.
             The monitor directive takes the form:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 monitors: {
     "NAME": {
         "expression": "EXPRESSION",
@@ -37,7 +38,7 @@ monitors: {
             <p>A monitor defines an <em>expression</em> to be regularly tested. 
             The <em>period</em> defines how often it will be tested. If the expression is true, 
             the list of <em>defenses</em> will be invoked to address the threat. For example:</p>
-<pre class="ui code segment">
+<pre class="code">
 monitors: {
     missing: {
         "expression": "NotFoundErrors &gt; 50",
@@ -52,10 +53,11 @@ monitors: {
             <h3>Monitor Expressions</h3>
             <p>Monitor expressions are simple comparisons between a server Counter and a limit wrapped in quotes. 
             They take the form:</p>
-            <pre class="ui code segment">"Counter [&lt;|&gt;] Limit"</pre>
+            <pre class="code">"Counter [&lt;|&gt;] Limit"</pre>
             <p>Although a monitor can only access one counter, multiple monitors can be created. </p>
+
             <a id="counters"></a>
-            <h2 >Counters</h2>
+            <h2>Counters</h2>
             <p>Counters are metrics defined and maintained by ESP for monitoring purposes.</p>
             <p>ESP provides three classes of of counters:</p>
             <ul>
@@ -119,7 +121,7 @@ monitors: {
             Defenses invoke remedies to mitigate the threat.</p>
             <p>Defenses are user-define rules file that specify a remedy to invoke. 
             The Defenses directive takes the form:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     "NAME": {
         remedy: "REMEDY",
@@ -131,7 +133,7 @@ defenses: {
 </pre>
             <p>The defense <em>Name</em> is the name used by Monitors running the defense. Multiple Monitors may 
             reference a single defense. Remedy arguments are provided as properties in the defense. For example:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     report: {
         remedy: "email",
@@ -164,7 +166,7 @@ defenses: {
                 The default action is to simply close the socket and ignore the request. This is most efficient
                 and gives the offending client the minimum of information. Alternatively, you can specify a
                 response STATUS and MESSAGE. For example, to ban without a response message:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     mydefense: {
         remedy: "ban",
@@ -173,7 +175,7 @@ defenses: {
 }
 </pre>
                 <p>To ban with a response message:</p>
-                <pre class="ui code segment">
+                <pre class="code">
 defenses: {
     mydefense: {
         remedy: "ban",
@@ -186,7 +188,7 @@ defenses: {
             <h3>Cmd Remedy</h3>
             <p>The <i>Cmd</i> remedy invokes an external command. This is an open interface to permit you to run
             a program of your choosing. The command line is specified by the <i>CMD</i> keyword. For example:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     mydefense: {
         remedy: "cmd",
@@ -196,7 +198,7 @@ defenses: {
 </pre>
             <p>To send data to the standard input of the command, use the pipe symbol: <i>|</i>. This will
             send a generic message to the sendmail program</p>
-            <pre class="ui code segment">
+            <pre class="code">
 defenses: {
     mydefense: {
         remedy: "cmd",
@@ -209,7 +211,7 @@ defenses: {
             <p>Sometimes a complete ban is too much, so the <i>Delay</i> remedy continues to serve the offending client,
             but with a delay to reduce their impact on the server. This remedy can be effective to prevent brute-force 
             attacks the enumerate URLs or potential vulnerabilities. For example:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     mydefense: {
         remedy: "delay",
@@ -226,7 +228,7 @@ defenses: {
             <p>The destination is specified by the <i>TO</i> keyword. ESP will provide a default subject and from address.
             These can be overridden via the <i>SUBJECT</i> and <i>FROM</i> keywords.</p> 
             <p>For example:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     mydefense: {
         remedy: "email",
@@ -242,7 +244,7 @@ defenses: {
             A default message is posted and this can be overridden by the <em>message</em> property.</p>
             <p>The HTTP request will wait for a response for up to the configured request timeout.</p>
             <p>Some examples:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     report: {
         remedy: "http",
@@ -259,7 +261,7 @@ defenses: {
             <h3>Log Remedy</h3>
             <p>The log remedy simply writes a message to the error log file.</p>
             <p>The message can be augmented or overridden via the <em>message</em> property.</p> 
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     record: {
         remedy: "log",
@@ -291,7 +293,7 @@ defenses: {
             </table>
             <a id="examples"></a>
             <h2>More Examples</h2>
-            <pre class="ui code segment">
+            <pre class="code">
 defenses: {
     block: {
         remedy: "ban",

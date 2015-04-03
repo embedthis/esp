@@ -42,7 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -59,13 +59,14 @@
                     <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
                     <a class="item" href="../users/layouts.html">Expansive Layouts</a>
-                    <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
                     <a class="item" href="../users/database.html">Databases</a>
-                    <a class="item" href="../users/sessions.html">Sessions</a>
+                    <a class="item" href="../users/migrations.html">Database Migrations</a>
+                    <a class="item" href="../users/sessions.html">Session Storage</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/command.html">ESP Command</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
             </div>
@@ -165,7 +166,9 @@
             <p>Controllers are the primary mechanism for responding to client requests. 
             Controllers may be generated directly or as part of a scaffold that includes database 
             schema and web pages. Before generating a controller, you must have installed an ESP skeleton
-            that includes support for generating controllers such as: <em>esp-html-skeleton</em> or
+            that includes support for generating controllers such as: 
+                <em>esp-skeleton</em>, 
+                <em>esp-html-skeleton</em> or
                 <em>esp-angular-skeleton</em>.</p>
 
             <p>To generate a controller, use <em>esp generate controller</em>.</p>
@@ -243,12 +246,13 @@ ESP_EXPORT int esp_module_admin(HttpRoute *route)
             <a id="scaffolds"></a>
             <h2>Generating Scaffolds</h2>
             <p>Scaffolds enable you to quickly create sections of your application. A scaffold provides CRUD 
-            functionality (create, read, update and delete) for a database table. 
-            Generating a scaffold will create a database table, controller and a set of views that provide
-            add, edit and list functionality for a database table. Scaffolds are useful to quickly generate prototype
-            web pages and actions for managing a database table. </p>
+            functionality (create, read, update and delete) for a database table. Generating a scaffold 
+            will create a database table, controller and actions to add-edit-delete. Depending on the 
+            skeleton, a set of views may also be generated that provide add, edit and list functionality 
+            for a database table. The <em>esp-skeleton</em> does not provide scaffold view. The
+            <em>esp-html-skeleton</em> provides basic HTML view pages, and the <em>esp-angular-skeleton</em>
+            provide client-side Angular views.</p>
 
-            <p>Generating scaffolds is available if you are using the <em>esp-html-skeleton</em> skeleton.</p>
             <p>To generate a scaffold:</p>
 
             <code class="inverted">$ <b>esp generate scaffold NAME [field:type ...]</b></code>
@@ -256,9 +260,8 @@ ESP_EXPORT int esp_module_admin(HttpRoute *route)
             <p>This will create a scaffold for the named database table and will generate a controller of the same name. 
             If field:type values are supplied, the database will be updated with columns for
             each specified field of the requested type. The valid database types are: <em>binary, bool, date, 
-                float, int, string, text</em>. The scaffold controller will include a create, get, index, remove and 
-                update actions. Under <em>client/app</em> the scaffold views will be generated. These include an
-                edit and list HTML template with supporting Javascripts. </p>
+            float, int, string, text</em>. The scaffold controller will include a create, get, index, remove 
+            and update actions. </p>
 
             
     </div>

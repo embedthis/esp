@@ -42,7 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -59,13 +59,14 @@
                     <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
                     <a class="item" href="../users/layouts.html">Expansive Layouts</a>
-                    <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
                     <a class="item" href="../users/database.html">Databases</a>
-                    <a class="item" href="../users/sessions.html">Sessions</a>
+                    <a class="item" href="../users/migrations.html">Database Migrations</a>
+                    <a class="item" href="../users/sessions.html">Session Storage</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/command.html">ESP Command</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
             </div>
@@ -172,11 +173,11 @@
             can easily maintain a consistent look and feel without repeating boilerplate code from page to page. 
             ESP believes strongly in the DRY principle: <em>"Don't Repeat Yourself"</em>. </p>
             
-            <img src="../images/esp/template/layout.jpeg" alt="layout" />
+            <img class="centered" src="../images/esp/template/layout.jpg" alt="layout" />
             <p>For example: consider the layout page below named "<em>layouts/default.esp</em>". This will will
             define the top level HTML layout page for content pages. It has a banner image and division tags that 
             structure the page:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;html&gt;
 &lt;body&gt;
     &lt;div class="top"&gt;
@@ -196,12 +197,12 @@
             layout page by inserting the content and replacing the <em>&lt;&#64; content &#64;&gt;</em> tag in the layout
             page before rendering to the client.</p>
             <p>For example, consider the content page named "<em>demo-index.esp</em>":</p>
-            <pre class="ui code segment">
+            <pre class="code">
 <b>&lt;h1&gt;Content Page&lt;/h1&gt;
 &lt;p&gt;Hello World&lt;/p&gt;</b>
 </pre>
             <p>This would render a composite web page back to the user:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;html&gt;
 &lt;body&gt;
     &lt;div class="top"&gt;
@@ -222,7 +223,7 @@
             <h3>Include Pages</h3>
             <p>Sometimes you need to just include some arbitrary HTML file at any point in a page. Use the <em>
             include</em> directive at any point in the page you wish to include another file. For example:</p>
-            <pre class="ui code segment">&lt;&#37;@ include "common/header.html" &#37;&gt;</pre> 
+            <pre class="code">&lt;&#37;@ include "common/header.html" &#37;&gt;</pre> 
   
   ======
 
@@ -237,7 +238,7 @@
             <p>This entire pipeline process happens transparently in the background with only a momentary pause in 
             processing. For production, you can pre-compile web pages so that a compiler is not required on the target.</p>
             
-            <img src="images/esp/template/layout.jpeg" alt="View Pipeline" class="centered" />
+            <img src="../images/esp/template/layout.jpg" alt="View Pipeline" class="centered" />
             
             <a id= "layouts"></a>
             <h3>Layout Pages</h3>
@@ -251,7 +252,7 @@
             do not replicate the layout and look and feel that is specified in the layout page.  In this way, changing
             the layout page in once place will automatically change every web page in the application.</p>
             <p>Here is a simple layout page:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;html&gt;
 &lt;body&gt;
     &lt;img src="banner.jpg"&gt;
@@ -262,13 +263,13 @@
             <p>The <b>&lt;%@ content %&gt;</b> directive instructs the Template Engine to insert the content page at
             this location. </p>
             <p>Here is a simple content page. Note that this is missing the &lt;html&gt; and &lt;body&gt; tags:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;h1&gt;Hello World&lt;/h1&gt;
 &lt;p&gt;Today is &lt;%= mprGetDate(0) %&gt;
 </pre>
             <p>ESP pages are not required to use layout pages. To specify that no layout page is required, use an
                 empty layout directive in the content page. For example: </p>
-                <pre class="ui code segment">
+                <pre class="code">
 &lt;%@ layout "" %&gt;
 </pre>
             <p>By default, stand-alone ESP pages do not use a layout page, whereas ESP view pages in an MVC application
@@ -281,7 +282,7 @@
             If omitted in layout pages, it is assumed the layout page is the top level layout page.</p>
             <p>The template engine additionally supports the following web page directive in layout pages:</p>
 
-            <pre class="ui code segment">&lt;%@ content %&gt;</pre>
+            <pre class="code">&lt;%@ content %&gt;</pre>
 
             <p>This specifies the location for the content page data.</p>
             <p>Note: you do not have to use layout pages. Simple stand-alone web pages without layouts code are

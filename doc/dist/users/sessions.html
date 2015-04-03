@@ -42,7 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -59,13 +59,14 @@
                     <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
                     <a class="item" href="../users/layouts.html">Expansive Layouts</a>
-                    <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
                     <a class="item" href="../users/database.html">Databases</a>
-                    <a class="item" href="../users/sessions.html">Sessions</a>
+                    <a class="item" href="../users/migrations.html">Database Migrations</a>
+                    <a class="item" href="../users/sessions.html">Session Storage</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/command.html">ESP Command</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
             </div>
@@ -161,40 +162,42 @@
     <div class="content">
 
             <h1>Session Storage</h1>
-            <p>Session storage is a limited, semi-permanent store for keeping state information across web requests.
-            The HTTP protocol by design, encourages stateless implementations and so Session state storage provides an
-            essential context for a series of requests by a specific client.</p>
+            <p>Session storage is a limited, server-side, semi-permanent store for keeping state information across 
+            web requests. The HTTP protocol by design, encourages stateless implementations and so session state 
+            storage provides an essential context for a series of requests by a specific client.</p>
+
             <p>ESP provides a high performance, in-process session state store. The store is managed in that ESP
-            imposes a session timeout on information and will automatically prune stale information. It uses the memory limit configured by the 
-            <a href="config.html#limits">http.limits</a> directive
+            imposes a session timeout on information and will automatically prune stale information. It uses the 
+            memory limit configured by the <a href="config.html#limits">http.limits</a> directive
             to restrict the amount of memory that is devoted to session state.</p>
+            
             <a id="sample"></a>
             <h2>Sample Code</h2>
-            <pre class="ui code segment">
+            <pre class="code">
 if (!(id = <b>getSessionVar</b>("user-id")) != 0) {
     redirect("/login");
 }
 </pre>
             <p>You can also use the abbreviated API form: 
                 <a href="../ref/api/esp.html#group___esp_abbrev_1ga45c8bf65c9eacac2512533dbc006db2b">session()</a></p>
-            <pre class="ui code segment">
+            <pre class="code">
 if (!(id = <b>session</b>("user-id")) != 0) {
     redirect("/login");
 }
 </pre>
             <p>This example (above) tests if a "<em>user-id</em>" is defined in the session store. If not, the user must
             login and is redirect to the login page.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 destroySession();
 createSession();
 </pre>
             <p>This forces the creation of a new session.</p>
-<pre class="ui code segment">
+<pre class="code">
 setSessionVar("Name", "John");
 </pre>
             <p>This defines the "<em>Name</em>" variable to the value "<em>John</em>".</p>
             <a id="apis"></a>
-            <h2 >ESP APIs</h2>
+            <h2>ESP APIs</h2>
             <p>The ESP session state API is comprised of four key APIs:
             <ul>
                 <li><a href="../ref/api/esp.html#group___esp_abbrev_1gab7b4049b554576b57f8cc49efc9e3a95">createSession</a></li>
@@ -203,7 +206,7 @@ setSessionVar("Name", "John");
                 <li><a href="../ref/api/esp.html#group___esp_abbrev_1gadb4f7bc3020ab9c481f1ebcaf1ed3f2a">setSessionVar</a></li>
             </ul>
             <a id="feedback"></a>
-            <h2 >Client Feedback</h2>
+            <h2>Client Feedback</h2>
             <p>Controllers often need to provide out-of-band feedback to the client. This may be a simple notification that
             a record has been updated or deleted. Or it may be details of an error condition. ESP provides a simple 
             feedback API to send such messages to the client.</p>
@@ -222,7 +225,7 @@ setSessionVar("Name", "John");
             <p>To issue a flash message for the next web page, use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga360dc386da496f54f3131da667f7926b">feedback</a>
             API.</p>
-<pre class="ui code segment">
+<pre class="code">
 feedback("inform", Document saved");
 feedback("warn", "Session is about to expire in %d seconds", seconds);
 feedback("error", "Could not save document");
@@ -230,20 +233,20 @@ feedback("custom", "Error code %d", code);
 </pre>
             <p>To read a feedback message, use 
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaaef4ca7c60c2fd04b5c34fdc72f047d3">getFlash</a>:</p>
-            <pre class="ui code segment">char *msg = getFeedback("inform");</pre>
+            <pre class="code">char *msg = getFeedback("inform");</pre>
             
             <p>If you need to pass a message from the controller into the next controller, use the flash message
             facility below.</p>
             <h3>Displaying Feedback Messages</h3>
             <p>To display feedback messages in a web page, use the 
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga8953966bf16fa8134e011a2b60bd0f4b">renderFeedback</a> API.
-<pre class="ui code segment">
+<pre class="code">
 &lt;% renderFeedback("all"); %&gt;
 </pre>
             <p>This will display all feedback messages.</p>
             
             <a id="flash"></a>
-            <h2 >Flash Storage</h2>
+            <h2>Flash Storage</h2>
             <p>ESP also provides a layer over session storage called "flash" storage that is useful for passing
             information into the next controller and request action. Thereafter, the flash information is 
             automatically removed. Using bare session state for this is problematic as the message can easily 
@@ -255,7 +258,7 @@ feedback("custom", "Error code %d", code);
             <p>To issue a flash message for the next web page, use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga71d13cb7c477077d3fa31d855442deff">flash</a>
             API.</p>
-<pre class="ui code segment">
+<pre class="code">
 flash("inform", Document saved");
 falsh("warn", "Session is about to expire in %d seconds", seconds);
 flash("error", "Could not save document");
@@ -263,13 +266,13 @@ flash("custom", "Error code %d", code);
 </pre>
             <p>To read a flash message, use 
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga99b145381ebe019cea05e3405d51c684">getFlash</a>:</p>
-            <pre class="ui code segment">char *msg = getFlash("inform");</pre>
+            <pre class="code">char *msg = getFlash("inform");</pre>
             
             <p>If you only need to pass a message from the controller into the view page, then feedback messages above
             are a better choice.</p>
             
             <a id="configuring"></a>
-            <h2 >Configuring Session</h2>
+            <h2>Configuring Session</h2>
             <p>Session data has a lifespan defined by the <a
                 href="config.html#timeouts">http.timeouts</a> 
                configuration directive. When this timeout expires, ESP will prune the data from the session 
@@ -278,7 +281,7 @@ flash("custom", "Error code %d", code);
             The maximum memory limit may be configured by the 
             <a href="config.html#limits">http.limits</a> configuration directive.</p>
             <a id="performance"></a>
-            <h2 >Performance Considerations</h2>
+            <h2>Performance Considerations</h2>
             <h3>Minimize Session Data Size</h3>
             <p>To maximize the performance of your application, try to minimize the size of data stored in the session
             state store. Session data is copied to and from the store. Unnecessary copies will slow your

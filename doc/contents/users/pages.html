@@ -5,29 +5,30 @@
     ],
 }
             <h1>ESP Pages</h1>
-            <p>ESP Pages are HTML pages with embedded "C" code that renders what is sent to the client at runtime. 
+            <p>ESP Pages are HTML pages with embedded <em>C</em> code that renders what is sent to the client at runtime. 
             Whereas static HTML pages must be fixed at development time, ESP pages can generate HTML and data at 
             runtime and on a per-user basis. ESP provides one of the easiest and most powerful web frameworks 
             without compromising speed or memory footprint.</p>
+
             <a id="embedded"></a>
-            <h2 >Embedded C Code </h2>
-            <p>ESP pages are in essence, HTML pages with embedded "C" code. They are parsed into pure "C"
-            code and then compiled into native machine binary for exceptionally fast execution. </p>
+            <h2>Embedded C Code </h2>
+            <p>ESP pages are in essence, HTML pages with embedded <em>C</em> code. They are parsed into pure 
+            <em>C</em> code and then compiled into native machine binary for exceptionally fast execution. </p>
             
             <pre class="code">
 &lt;h1&gt;Hello World&lt;/h1&gt;
 &lt;h2&gt;Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;/h2&gt;
 </pre>
             
-            <h3>Why "C"?</h3>
-            <p>Why "C" code, you may ask? Because "C" enables ESP to provide the ultimate in speed and efficiency.
-            "C" is the fastest, closest to the hardware, language available. By using "C", invoking device APIs 
-            and other system APIs are easy, fast and compact. There is no translation or coupling required getting 
-            into and out of another language.</p>
+            <h3>Why C?</h3>
+            <p>Why <em>C</em> code, you may ask? Because <em>C</em> enables ESP to provide the ultimate in speed and 
+            efficiency. <em>C</em> is the fastest, closest to the hardware, language available. By using 
+            <em>C</em>, invoking device APIs and other system APIs are easy, fast and compact. There is no 
+            translation or coupling required getting into and out of another language.</p>
 
             <h3>Transparent Compiling</h3>
             <p>However, ESP is not a traditional low-level environment. When a client request for an ESP page 
-            is received, the ESP page is transparently parsed, converted into "C" code, compiled and saved as 
+            is received, the ESP page is transparently parsed, converted into <em>C</em> code, compiled and saved as 
             a native code shared library. Once loaded, subsequent requests will use the in-memory
             code without any access to the original ESP page. If the system is rebooted, the on-disk cached module 
             will be loaded without recompilation.</p>
@@ -48,7 +49,7 @@
             <h3>Garbage Collection</h3>
             <p>ESP uses <a href="../ref/memory.html#collector">Garbage Collection</a> 
             for managing memory. This makes working with ESP pages 
-            and embedded "C" code simpler and more secure. Any memory allocated by ESP is automatically
+            and embedded <em>C</em> code simpler and more secure. Any memory allocated by ESP is automatically
             managed by the garbage collector. You do not need to free such memory. You can still use the normal
             malloc and free APIs if you wish. Just don't mix the two kinds of memory.</p>
             <p>The use of garbage collection enables the use of decorator patterns and API chaining where the outputs of one
@@ -61,8 +62,8 @@
             in the name. All allocated memory is automatically freed ensuring no memory leaks.</p>
             
             <a id="directives"></a>
-            <h2 >ESP Page Directives</h2>
-            <p>ESP pages support a suite of page directives to control how embedded "C" code will be processed and at
+            <h2>ESP Page Directives</h2>
+            <p>ESP pages support a suite of page directives to control how embedded <em>C</em> code will be processed and at
             what scope in the generated page the code should be positioned.
             The following directives are provided:</p>
             <table class="ui table" title="directives">
@@ -93,16 +94,16 @@
                             generated function for the template.</td>
                     <tr>
                         <td>&lt;&#37;= expression &#37;&gt;</td>
-                        <td>"C" expression</td>
+                        <td><em>C</em> expression</td>
                     </tr>
                     <tr>
                         <td class="nowrap">&lt;&#37;= [&#37;fmt] expression &#37;&gt;</td>
-                        <td>Formatted "C" expression. The expression is passed through a "printf" style formatter.
+                        <td>Formatted <em>C</em> expression. The expression is passed through a "printf" style formatter.
                             Use "&#37;S" for HTML-escaped safe strings.</td>
                     </tr>
                     <tr>
                         <td>&lt;&#37; statements &#37;&gt;</td>
-                        <td>"C" statements</td>
+                        <td><em>C</em> statements</td>
                     </tr>
                     <tr>
                         <td>-&#37;&gt;</td>
@@ -138,13 +139,13 @@
                 for global declarations, extern statements and #include statements.</p>
             <h3>&lt;&#37;^ start ...</h3>
             <p>This directive specifies that the code from this block will be positioned at the start of the
-            generated function for the template. Some "C" compilers do not allow variable declarations to be placed other
+            generated function for the template. Some <em>C</em> compilers do not allow variable declarations to be placed other
             than at the start of a block. So this directive is useful for local variable declarations.</p>
             <h3>&lt;&#37;^ end ...</h3>
             <p>This directive specifies that the code from this block will be positioned at the end of the
                 generated function for the template.</p>
             <h3>&lt;&#37;= expression &#37;&gt;</h3>
-            <p>Use this directive to embed the result of a "C" expression. The result must be a null-terminated string.
+            <p>Use this directive to embed the result of a <em>C</em> expression. The result must be a null-terminated string.
             This example below calls the 
             <a href="../ref/api/mpr.html#mpr_8h_1a8ecdc6cb45d8758203e09764faaf5e2d">mprGetDate</a>
             function which returns the local date and time as a string.</p>
@@ -154,7 +155,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 </pre>
 
             <h3>&lt;&#37; statements &#37;&gt;</h3>
-            <p>Use this directive to run "C" code statements. No value is substituted back into the page in
+            <p>Use this directive to run <em>C</em> code statements. No value is substituted back into the page in
             place of the directive. If you need to write data inside a statement block, use the 
             <!--TODO-->
             render API.</p>
@@ -221,8 +222,8 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <pre class="code">
 &lt;h2&gt;My name is <b>&#37;#name</b>&lt;/h2&gt;
 </pre>
-        <a id="context"></a>
-        <h2 >Request Context </h2>
+            <a id="context"></a>
+            <h2>Request Context </h2>
             <p>The full HTTP request context is provided by a set of objects. These include:</p>
             <ul>
                 <li>Request 
@@ -264,7 +265,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <p>See the <a href="../ref/native.html">Native APIs</a> document for more details about the available
             APIs. See the <a href="program.html">ESP Generator</a> documentation for full details.</p>
             
-            <h2 >Common Tasks</h2>
+            <h2>Common Tasks</h2>
             <h3>Writing Data</h3>
             <p>ESP provides a set of rendering APIs to send formatted and unformatted data in the response.
             The most common is <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a>
@@ -314,7 +315,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <pre class="code">setHeader("X-ACCESS_CODE", "42");</pre>
            
             <a id="debugging"></a>
-            <h2 >Debugging</h2>
+            <h2>Debugging</h2>
             <p>You can inject debugging code into your views to trace data to the esp log file or back to the client's
             browser. The <a href="../ref/api/mpr.html#group___mpr_log_1ga21fa2199e7f70707c1fb3b63daed6ecf">mprLog</a> 
             function will print its arguments to esp log file. 

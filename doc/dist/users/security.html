@@ -42,7 +42,7 @@
                     <a class="item" href="../start/quick.html">Quick Start</a>
                     <a class="item" href="../start/index.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/app-tour.html">ESP Applications</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -59,13 +59,14 @@
                     <a class="item" href="../users/deploying.html">Deploying Applications</a>
                     <a class="item" href="../users/pages.html">ESP Pages</a>
                     <a class="item" href="../users/layouts.html">Expansive Layouts</a>
-                    <a class="item" href="../users/program.html">ESP Utility</a>
-                    <a class="item" href="../users/controllers.html">Controllers</a>
+                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
                     <a class="item" href="../users/database.html">Databases</a>
-                    <a class="item" href="../users/sessions.html">Sessions</a>
+                    <a class="item" href="../users/migrations.html">Database Migrations</a>
+                    <a class="item" href="../users/sessions.html">Session Storage</a>
                     <a class="item" href="../users/security.html">Security Considerations</a>
                     <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
                     <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/command.html">ESP Command</a>
                     <a class="item" href="../users/man.html">Manual Pages</a>
                 </div>
             </div>
@@ -178,8 +179,8 @@
             </ul>
             
             <a id="updates"></a>
-            <h2 >Updates</h2>
-            <p>Even the best application or HTTP server can experience some security vulnerabilities that are
+            <h2>Updates</h2>
+            <p>Even the best application or web framework can experience some security vulnerabilities that are
             discovered after being deployed in the field. It is highly recommended that you stay up to date with the
             latest version of ESP.</p>
             <p><a href="http://www.embedthis.com/">Embedthis</a> provides security protection 
@@ -187,7 +188,7 @@
             and will expedite fixes or workarounds to minimize any vulnerabilities.</p>
             
             <a id="sandBoxing"></a>
-            <h2 >Sandboxing</h2>
+            <h2>Sandboxing</h2>
             <p>Sandboxing is the term applied to running ESP in a confined environment. When embedding,
             the profile of client access is often well known, and the profile of malicious attacks are often well 
             outside the bounds of this expected profile. The profile includes the rate of accesses, the length of 
@@ -203,12 +204,12 @@
             <p>Setting the <a href="config.html#limits">http.limits.requests</a> to a low value can restrict the ability of a malicious client to monopolize
             the server. One attack method for denial of service attacks is to initiate requests, but not conclude the
             request headers. The server is then forced to wait for the client to complete the request before it can
-            act. However, setting the RequestParseTimeout directive to a low value will abort such requests and prevent
-            such attacks.</p>
+            act. However, setting the <em>http.timeouts.parse</em> property to a low value will abort such requests 
+            and prevent such attacks.</p>
+
             <p>ESP can monitor sandbox limits and trigger defensive responses if access is outside defined norms. See the
             <a href="#dos">Denial of Service</a> section for more details.</p>
             <h3>Sandbox Limit Properties</h3>
-            <p>Some of the more useful sandbox limit properties are:</p>
             <table title="sandbox" class="ui table segment">
                 <thead>
                     <tr>
@@ -280,7 +281,6 @@
                 </tbody>
             </table>
             <h3>Sandbox Timeout Properties</h3>
-            <p>The important security timeout properties are:</p>
             <table title="sandbox" class="ui table segment">
                 <thead>
                     <tr>
@@ -309,13 +309,13 @@
                 </tbody>
             </table>
             <p>See the <a href="config.html">Configuring ESP</a> for further details.</p>
-            <h2 >Defensive Countermeasures</h2>
+            <h2>Defensive Countermeasures</h2>
             <p>ESP includes a monitoring and defensive response framework to mitigate against denial-of-service (DOS) 
             attacks and vulnerability probing. This framework monitors the security sandbox and triggers defenses 
             should any sandbox metric be outside anticipated norms. Monitored metrics can also include the 
             number of requests that result in an error, the number of SSL errors and the total number of requests.</p>
             <p>For example, to ban any client that requests more than 50 unknown URIs per minute:</p>
-<pre class="ui code segment">
+<pre class="code">
 defenses: {
     block: {
         "remedy": "ban",
@@ -334,57 +334,67 @@ monitors: {
 </pre>
             <p>See the <a href="monitor.html">Monitoring and Defending</a> for further details.</p>
             <a id="account"></a>
-            <h2 >ESP User Account</h2>
+            <h2>ESP User Account</h2>
             <p>It is important that you run ESP with the lowest system privilege that will get the job done. If any
             application is compromised, including ESP, then the system will be safest if the compromised application
             has as few privileges as possible.</p>
             <h3>Unix Account</h3>
             <p>On Unix, ESP initially runs as root or administrator and then changes to the user account defined in
             the ESP configuration file via the <em>http.server.account.user</em> property. 
+
             <a id="chroot"></a>
-            <h2 >Chroot Jail</h2>
+            <h2>Chroot Jail</h2>
             <p>One of the best forms of isolation for the server is to run inside a 
             <a href="http://en.wikipedia.org/wiki/Chroot">chroot</a> jail. A chroot jail is when an application changes
             its root directory to be isolated from the real file system root directory. Any access then to files 
             outside the jail is protected and impossible. ESP supports chroot jails via the 
             <em>http.server.chroot</em> property.</p>
+
             <a id="ssl"></a>
-            <h2 >Securing SSL</h2>
+            <h2>Securing SSL</h2>
             <h3>Cipher Selection</h3>
             <p>It is important to select a sufficiently long key length and strong cipher to protect SSL communications. 
             It is recommended to use the AES cipher and avoid the older RC4 cipher suite. See the section below regarding 
-            <a href="#threats">Common Security Threats</a> for threats against the RC4 ciphers. </p>
+            <a href="#high">High Profile Threats</a> for threats against the RC4 ciphers. </p>
+
             <h3>SSL Forms</h3>
             <p>A common practice is to use HTTP for regular communications and to post login forms using SSL. 
             However, this approach is flawed. The web form itself must be served using SSL as well as the URL 
-            receiving the login information. This prevents attackers injecting code into the form and hijacking 
+            receiving the login information. This prevents attackers injecting code into the login form and hijacking 
             login credentials.</p>
+
             <a id="authentication"></a>
-            <h2 >Authentication</h2>
+            <h2>Authentication</h2>
             <p>It is important to adequately secure all passwords stored at the server. 
             Simply hashing the passwords with MD5 is now insufficient as MD5 and other "fast" hashing techniques 
             can be quickly compromised by dedicated password cracking and hashing tools.</p>
+
             <p>ESP includes the blowfish cipher as an alternative that is more secure than MD5. 
             The <a href="http://en.wikipedia.org/wiki/Blowfish_(cipher)">Blowfish</a> cipher is especially well 
             suited for password hashing partly. Partly because it is slow, it does not easily succumb to 
             brute-force cracking. </p>
+
             <p>If you wish to use the Digest authentication scheme, unfortunately you cannot use blowfish as the 
             browser uses MD5 to encrypt the password before transmitting over the wire. This and other 
             shortcomings of Digest authentication should encourage you to select other schemes. A better 
             alternative is Basic authentication over SSL using blowfish to encrypt the passwords. Alternatively, 
             use web form authentication with blowfish for password storage.</p> 
+
             <p>If using a web page for users to submit their credentials, it is strongly recommended that you use 
             SSL for both the web form page and for the request validating the user credentials.</p>
+
             <a id="logFiles"></a>
-            <h2 >Log Files</h2>
+            <h2>Log Files</h2>
             <p>ESP will log errors to the error log and request trace to the trace log. 
             These It is recommended that you regularly review these logs for suspicious activity.</p>
+
             <a id="threats"></a>
-            <h2 >Common Security Threats</h2>
+            <h2>Common Security Threats</h2>
             <p>This section details some common security threats and issues and the steps you can take to mitigate them.</p>
+            
             <h3>Server Information Disclosure</h3>
             <p>HTTP responses often disclose information that an attacker can use to refine their attack. At a minimum, too much information enables the attack to proceed faster. ESP includes a stealth directive that suppresses unnecessary information. Here is a typical HTTP response from ESP</p>
-            <pre class="ui code segment">
+            <pre class="code">
 HTTP/1.1 200 OK
 Content-Type: text/html
 <b>Server: Embedthis-http</b>
@@ -397,8 +407,8 @@ Accept-Ranges: bytes</pre>
             <p>Note that by default, ESP does not disclose the web server version number in HTTP headers. 
             You can further restrict information disclosure by defining the <em>http.stealth</em> property.</p>
             
-            <pre class="ui code segment">stealth: true</pre>
-            <pre class="ui code segment">
+            <pre class="code">stealth: true</pre>
+            <pre class="code">
 HTTP/1.1 200 OK
 Content-Type: text/html
 Date: Thu, 15 Aug 2014 22:11:46 GMT
@@ -415,7 +425,7 @@ Accept-Ranges: bytes
             <p>Cookies are used to identify authenticated user sessions. As such, they are a prized piece of information 
             by attackers. The HTTP Set-Cookie response header has an option to prevent client side scripts from ascertaining
             the session cookie value. This can greatly reduce the risk of session hijacking via cross-site scripting.</p>
-<pre class="ui code segment">
+<pre class="code">
 auth: {
     session: {
         visible: false
@@ -423,7 +433,7 @@ auth: {
 }</pre>
             <p>The <em>visible</em> session property appends the "httpOnly" value to the Set-Cookie response so 
             the cookie will only be accessible to HTTP requests.</p>
-            <pre class="ui code segment">Set-Cookie: key=value; httpOnly</pre>
+            <pre class="code">Set-Cookie: key=value; httpOnly</pre>
             <a name="mixed"></a>
             <h3>Mixed Transports</h3>
             <p>Is is a bad idea to mix secure and non-secure content in one page. This means a web page should be totally served by HTTP or by HTTPS but not mix transports on one page. The reason is that a page served by HTTP can be compromised and the guarantee of HTTPS and that green-browser https logo is diminished if the form page from
@@ -441,22 +451,23 @@ auth: {
             service. It is recommended that all systems consider this framework.</p>
             <h3>Cross Site Scripting</h3>
             <p>Cross-site vulnerabilities have ballooned over recent years. Unfortunately, there is no, single complete cure.
-            However, ESP supports the <a href="http://en.wikipedia.org/wiki/Content_Security_Policy"
-                >Content Security Policy (CSP)</a> scheme that can go a long way to reduce the exposure. It does this by
+            However, ESP supports the 
+            <a href="http://en.wikipedia.org/wiki/Content_Security_Policy">Content Security Policy (CSP)</a> 
+            scheme that can go a long way to reduce the exposure. It does this by
             exactly specifying and restricting what cross-site access is permitted.</p>
             <p>The following ESP directive enables the Content Security Policy and restricts all access to the origin
             site. This is a good starting point.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 headers: {
     add: {
         "Content-Security-Policy: "default-src 'self'
     }
 }</pre>
-            <p>See <a href="http://www.html5rocks.com/en/tutorials/security/content-security-policy/"
-                >An introduction to Content Security Policy</a> for more information.</p>
+            <p>See <a href="http://www.html5rocks.com/en/tutorials/security/content-security-policy/">An 
+                introduction to Content Security Policy</a> for more information.</p>
             <p>For Microsoft IE, there is another step specific for IE that is useful. The following ESP directive
             invokes some additional IE cross site protections.</p>
-<pre class="ui code segment">
+<pre class="code">
 headers: {
     add: {
         "X-XSS-Protection": "1; mode=block"
@@ -478,21 +489,21 @@ headers: {
             form page, use the <em>inputSecurityToken</em> API. This generates a hidden input field containing the XSRF
             token.</p>
 
-            <pre class="ui code segment">&lt;% inputSecurityToken(); %&gt;</pre>
+            <pre class="code">&lt;% inputSecurityToken(); %&gt;</pre>
 
             <p>This generates:</p>
-            <pre class="ui code segment">&lt;input name='-xsrf-' type='hidden' value='TOKEN-VALUE'&gt;</pre>
+            <pre class="code">&lt;input name='-xsrf-' type='hidden' value='TOKEN-VALUE'&gt;</pre>
             <p>If using Ajax to issue POST requests, you will need to add the security token to the posted data fields
             manually. You can call securityToken to add the token to the page HTTTP headers. For example:
 
-<pre class="ui code segment">
+<pre class="code">
 &lt;script&gt;
     securityToken();
 &lt;/script&gt;
 </pre>
             Then you can extract the security token from the HTTP headers and add to any POST request form fields.
             If you need to access the token value directly in Javascript client-side code, use:
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;script&gt;
     var token = "&lt;%= getSecurityToken(); %&gt";
 &lt;/script&gt;
@@ -501,8 +512,8 @@ headers: {
             <p>Hidden frames may be inserted by attackers to provide a launch-pad for running malicious scripts. Denying 
             the ability to run frames can close of this attack vector.</p>
             <p>The following ESP directive will prevent frames or iframes from running in the web page.</p>
-            <pre class="ui code segment">Header set X-Frame-Options deny</pre>
-<pre class="ui code segment">
+            <pre class="code">Header set X-Frame-Options deny</pre>
+<pre class="code">
 headers: {
     add: {
         "X-Frame-Options": "deny"
@@ -510,7 +521,7 @@ headers: {
 }
 </pre>
             <a name="high"></a>
-            <h2 >High Profile Threats</h2>
+            <h2>High Profile Threats</h2>
             <p>There have been several high profile exploits that pose specific risks and have captured media attention.
             These are addressed specifically below with details on how to mitigate their effects.</p>
             <h3>Crime Exploit</h3>
@@ -570,18 +581,18 @@ headers: {
                 <li>RC4 was not the default cipher in any ESP release</li>
             </ul>
             <a name="cve"></a>
-            <h2 >Documented Vulnerabilities</h2>
+            <h2>Documented Vulnerabilities</h2>
             <p>ESP documents discovered security errors in its GitHub issue database 
             at </p>
-            <pre class="ui code segment"><a href="https://github.com/embedthis/esp/issues?state=open"
+            <pre class="code"><a href="https://github.com/embedthis/esp/issues?state=open"
             >https://github.com/embedthis/esp/issues?state=open</a></pre>
             <p>Specific issue reports are created for all confirmed or erroneous 
             security reports that receive a CVE classification. You can search for specific 
             CVE numbers or see all via:</p>
-            <pre class="ui code segment"><a
+            <pre class="code"><a
 href="https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues">https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues</a></pre>
             <p>Unfortunately some security researchers publish poorly diagnosed security alerts and sometimes do not contact the vendor for confirmation of the report. Consequently there exist some security CVE reports which are bogus. ESP creates parallel CVE issues in the ESP GitHub issue database to comment on these reports and provide accurate resolution information.</p>
-            <h2 >Other Security References</h2>
+            <h2>Other Security References</h2>
             <p>Some of these articles may provide good background regarding security web servers.</p>
             <ul>
                 <li><a href="http://www.isg.rhul.ac.uk/tls/TLStiming.pdf"
@@ -602,19 +613,19 @@ href="https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues">https://gi
                 <li><a href="https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf"
                     >https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf</a></li>
             </ul>
-            <h2 >C Code</h2>
+            <h2>C Code</h2>
             <p>ESP applications are not immune to security flaws. It is highly recommended that
             you use the <a href="../ref/api/mpr.html">MPR</a> services for all your ESP code. This portable runtime
             has been extensively tested and includes routines to guard against common buffer overflows and other such
             exploits.</p>
             <a name="securedefaults"></a>
-            <h2 >ESP Secure By Default</h2>
+            <h2>ESP Secure By Default</h2>
             <p>ESP is designed to be secure by default. This means that the default configuration enables 
             security best-practices to limit cross-site-scripting vulnerabilities. It also implies a fairly
             restrictive security sandbox. This default configuration may be a little too restrictive for your application. 
             In that case, you can easily remove or override these defaults by the relevant ESP directives.</p>
             <p>ESP uses the following built-in configuration for the default route.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 SessionCookie           invisible
 app: {
   http: {

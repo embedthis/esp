@@ -8,15 +8,14 @@
             <p>ESP applications can run stand-alone via the <em>esp</em> utility command. Alternatively, they
             can be hosted in the Appweb web server as part of a broader set of web services and content.</p>
 
-            <p>ESP is included by default in Appweb. However ESP can be omitted in custom Appweb builds. If 
-            you have trouble activating ESP, ensure it was included in your build of Appweb.</p>
+            <p>ESP is included by default in Appweb. However, Appweb can be configured and built to exclude ESP.
+            If you have trouble activating ESP in Appweb, ensure it was included in your build of Appweb.</p>
 
             <a id="app"></a>
             <h2>ESP Applications</h2>
-            <p>ESP applications are configured via their <em>esp.json</em> file. This file provides 
-            the configuration for the ESP application. However, when hosted in Appweb, Appweb manages 
-            the listening endpoints, user accounts, logging and other properties defined in
-            the <a href="config.html#server"><em>http.server</em></a> collection in <em>esp.json</em>.</p>
+            <p>ESP applications hosted in Appweb are still are configured via their <em>esp.json</em> file. 
+            However, Appweb manages the listening endpoints, user accounts, logging and properties defined in
+            the <a href="config.html#server"><em>http.server</em></a> collection of the <em>esp.json</em> file.</p>
 
             <p>For more information, please read <a href="config.html">Configuring ESP</a> and the relevant sections of the
             <a href="https://embedthis.com/appweb/doc/users/configuration.html">Appweb Configuration Guide</a>

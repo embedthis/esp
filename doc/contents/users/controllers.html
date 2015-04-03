@@ -11,11 +11,12 @@
         <p>An ESP controller is a "C" source file that contains action functions to receive to incoming client 
         requests and manage the applications response. The controller may be part of an ESP MVC application or it
         may be a stand-alone controller.</p>
+
         <a id="example"></a>
-        <h2 >Example of a Controller</h2>
+        <h2>Example of a Controller</h2>
         <p>So what does a controller look like? Here is a partial example called <em>controllers/greeting.c</em>
         that has one action to say "Hello World".</p>
-        <pre class="ui code segment">
+        <pre class="code">
 #include "esp.h"
 
 static void hello() { 
@@ -29,12 +30,12 @@ ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
 }
 </pre>
         <p>If the client browser issues a request for:</p>
-        <pre class="ui code segment">http://localhost/greeting/hello</pre>
+        <pre class="code">http://localhost/greeting/hello</pre>
         <p>ESP will compile the greeting.c controller and then load the controller and
         run the <em>hello</em> function which will respond to the client with "Hello World\n".</p>
  
         <a id="flow"></a>
-        <h2 >Controller Processing</h2>
+        <h2>Controller Processing</h2>
         <p>ESP process requests in stages:</p>
         <ol>
             <li>Decode the URI and web request</li>
@@ -46,14 +47,14 @@ ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
         </ol>
   
         <a id="routing"></a>
-        <h2 >Routing Requests</h2>
+        <h2>Routing Requests</h2>
         <p>At the heart of understanding how controllers are loaded and actions are run, is understanding request
         routing. When the HTTP server inside <em>esp</em>receives a client request, it examines each of the 
         configured request routes. These may are configured via the <em>esp.json</em> file. 
         Esp then searches the route table, until it finds a matching route for the request URI. The 
         selected route will then break the URI into tokens and save the token values as request parameters.</p>
         <p>For example: consider the URI format:</p>
-        <pre class="ui code segment">
+        <pre class="code">
 http://example.com/APP/CONTROLLER/ACTION/ID
 </pre>
         <p>In this example, <em>APP</em> is the (optional) name of the application, <em>CONTROLLER</em> is the controller
@@ -88,8 +89,9 @@ http://example.com/APP/CONTROLLER/ACTION/ID
     <p>The delete route is a POST method variant of remove. The stream route is for WebSockets streaming of
     updates. </p>
 <!-- MOB
-       <a id="config"></a>
-        <h2 >Configuring Controllers</h2>
+
+        <a id="config"></a>
+        <h2>Configuring Controllers</h2>
         <p>Controllers may be configured in two ways:</p>
         <ul>
             <li>As a stand-alone controller function.</li>
@@ -100,7 +102,7 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         Such controllers are very useful for web services and for discrete interfaces to server-side functions.</p>
         <p>To define a controller, you create a route in the <em>esp.json</em> file that specifies
             the route URI, the controller source file and the target mapping from URI to controller action. For example</p>
-        <pre class="ui code segment">
+        <pre class="code">
 &lt;Route ^/greeting/{action}$ &gt;
     SetHandler espHandler
     Source greeting.c
@@ -123,24 +125,24 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         <a href="generator.html">esp</a> generator command. The <em>esp</em> command is used to create a bare ESP 
         MVC application with a directory for controllers, views, databases and other necessary configuration files. 
         For example:</p> 
-        <pre class="ui code segment">esp generate app demo</pre>
+        <pre class="code">esp generate app demo</pre>
         <p>The generated <em>appweb.conf</em> file will have an EspApp directive that defines the application and 
         creates an initial set of MVC routes for the application.
 
         For example:</p>
-        <pre class="ui code segment">EspApp prefix="/store" config="applications/store/esp.json"</pre>
+        <pre class="code">EspApp prefix="/store" config="applications/store/esp.json"</pre>
 -->
             <a id="actions"></a>
-            <h2 >Actions</h2>
+            <h2>Actions</h2>
             <p>Actions are where the controller does its work. In ESP, actions are simple "C" functions and thus
             they need to be registered with ESP before use. This is done in the controller module initialization function. 
-            The initialization function is named: "<em>esp_controller_NAME</em>", where NAME is the unique 
+            The initialization function is named: <em>esp_controller_NAME</em>, where NAME is the unique 
             name of the controller. The first time the controller is invoked, the controller
             module will be loaded and the initialization function will be run. Typically, the initialization function 
             will then call
             <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espDefineAction</a> 
             to bind action functions to route actions.</p>
-<pre class="ui code segment">
+<pre class="code">
 #include "esp.h"
 /* Actions */
 static FUNCTION() {
@@ -161,7 +163,7 @@ ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
             API. This will create a new route by inheriting settings from an existing route and then define an action
             based on the supplied URI pattern. Because this creates a new route for each callback, it is best not to use
             if you have many callbacks.</p>
-            <pre class="ui code segment">espBindProc(route, "/do/something", callback);</pre>
+            <pre class="code">espBindProc(route, "/do/something", callback);</pre>
             <h3>Missing Actions</h3>
             <p>When responding to a request, if the required controller and action is not found, ESP will look for a
             corresponding ESP page of the same name. If that is not defined, ESP will respond with an HTTP 404 
@@ -184,7 +186,7 @@ ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
                 to complete the request. To force output to the client, without finalizing, use 
                 <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">flush</a>.</p>
             <p>For example:</p>
-<pre class="ui code segment">
+<pre class="code">
 static void second(HttpConn *conn) {
     setConn(conn);
     render("World\n");
@@ -228,8 +230,9 @@ static void first() {
             <p>If ESP was configured and built in debug mode, the default value for <em>EspUpdate</em> will be
             <em>on</em>. If ESP was built in release mode, the default value is <em>off</em>. In release mode is it
             common practice to lock down the compiled controllers and not auto-recompile once deployed.</p>
+
             <a id="context"></a>
-            <h2 >Controller Context</h2>
+            <h2>Controller Context</h2>
             <p>ESP establishes a request context for the controller before invoking the controller action. The top level 
             of the context is represented by the <a href="../ref/api/http.html#group___http_conn">HttpConn</a> 
             connection object. From this, all other request information can be reached, including the:</p>
@@ -250,7 +253,7 @@ static void first() {
             <p>If explicit access to the connection object is required, action functions may
             define a connection argument as 
             which is passed into all actions.</p>
-<pre class="ui code segment">static void ACTION(HttpConn *conn) {
+<pre class="code">static void ACTION(HttpConn *conn) {
     /* Use the conn reference here */
 }</pre> 
             <p>Alternatively, the connection object can can be retrieved using the <a
@@ -403,7 +406,7 @@ static void first() {
             </table>
             
             <a id="parameters"></a>
-            <h2 >Request Parameters</h2>
+            <h2>Request Parameters</h2>
             <p>ESP will collect request query, form data and route parameters into one
             <em>params</em> object which is accessible to actions via the 
             <a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">param</a> API. Each query key/value pair and all
@@ -422,15 +425,42 @@ static void first() {
             
             If the action method does not explicitly generate any response, ESP will invoke a view with the same name as
             the action method.</p>
+
             <a id="generating"></a>
-            <h2 >Generating Controllers and Actions</h2>
+            <h2>Generating Controllers and Actions</h2>
             <p>If you are creating an MVC application, you may use the ESP application generator, called <em>esp</em> to
-            make it quick and easy to create controllers, actions and controller scaffolds. To generate a new
-            controller, run:</p>
-            <pre class="ui code segment">
-esp generate CONTROLLER ACTIONS...
+            generate controllers, actions and controller scaffolds. To generate a new controller, run:</p>
+            <pre class="code">
+esp generate controller name [actions...]
 </pre>
-            <p><em>CONTROLLER</em> is the controller name. <em>ACTIONS...</em> are the names of the actions you want to
-            generate. This command will create the controller source file under the <em>controllers</em> directory. The
-            controller source will contain empty functions for each of the requested actions.
-            You can edit the controller source to meet your needs.</p>
+            <p><em>name</em> is the controller name. <em>actions...</em> are the names of the action functions you 
+            want to generate. This command will create the controller source file under the <em>controllers</em> directory. 
+            <p>If no actions are requested when generating, <em>esp</em> will create a controller with 
+            an initialization function but without any actions. If actions are specified, <em>esp</em> 
+            will create an empty action method for each specified action. You can safel edit the
+            controller source to meet your needs.</p>
+
+            <p>For example, if you use the command:</p>
+
+            <pre class="code">$ <b>esp generate controller admin edit login logout command</b></pre>
+
+            <p>The following controller code will be generated. There is one function generated for each action 
+            and a call to <em>espDefineAction</em> is added to register the controller. The <em>esp_controller_admin</em>
+            initialization function is invoked once when the controller is first loaded.</p>
+
+            <pre class="code">#include "esp.h"
+
+static void edit() {}
+static void login() {}
+static void logout() {}
+static void command() {}
+
+ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route) 
+{
+    espDefineAction(route, "admin/edit", edit);
+    espDefineAction(route, "admin/login", login);
+    espDefineAction(route, "admin/logout", logout);
+    espDefineAction(route, "admin/command", command);
+    return 0;
+}
+</pre>

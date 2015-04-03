@@ -8,5 +8,4 @@
     services: {
         reload: false
     }
-
 }

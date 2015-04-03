@@ -16,7 +16,7 @@
             Update and Delete (CRUD) semantics. It also provides functions to manage and manipulate database schema.</p>
  
             <a id="record"></a>
-            <h2 >Fields, Records and Grids</h2>
+            <h2>Fields, Records and Grids</h2>
             <p>Programs interact with the EDI using EDI Records. When a record is read from the
             database, EDI extracts the database data and copies it into an EdiRec structure. This structure
             efficiently stores data with database scheme information necessary for data formatting and display. </p>
@@ -72,7 +72,7 @@
             <em>id</em>. </p>
             
             <p>The following code demonstrates some typical uses:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 /* Open the database */
 <b>Edi *db = ediOpen("store.mdb", "mdb", EDI_AUTO_SAVE);</b>
 /* Read the first product */
@@ -91,7 +91,7 @@ ediUpdateRec(db, product);</b>
 </pre>
             
             <a id="types"></a>
-            <h2 >Data Types</h2>
+            <h2>Data Types</h2>
             <p>EDI maps database types to the corresponding "C" language data types. The
             following type conversions will occur when reading and writing data to and from the database.</p>
             <table title="providers" class="ui table segment">
@@ -150,15 +150,16 @@ ediUpdateRec(db, product);</b>
             </table>
             
             <a id="connections"></a>
-            <h2 >Database Connections</h2>
+            <h2>Database Connections</h2>
             <p>Database connections are one of the few items that are setup at configuration time. The 
             <em>package.json</em> file defines the database name, username, password, and other
             configuration parameters via the <em>database</em> property.</p>
-            <pre class="ui code segment">database: "mdb://test.mdb"</pre>
+            <pre class="code">database: "mdb://test.mdb"</pre>
+
             <a id="tables"></a>
-            <h2 >Creating Database Tables</h2>
+            <h2>Creating Database Tables</h2>
             <p>If creating an MVC application, The <em>esp</em> command can be used to create database tables for you:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 esp generate table [field:type ...]
 </pre>
             <p>If field:type pairs are supplied, columns will be created for the specified type. The valid 
@@ -166,14 +167,14 @@ esp generate table [field:type ...]
             <em>string</em> and <em>text</em>.</p>
             
             <a id="crud"></a>
-            <h2 >Create, Read, Update and Delete (CRUD)</h2>
+            <h2>Create, Read, Update and Delete (CRUD)</h2>
             <p>It should be easy to do simple things like implementing the basic database operations: create, read,
             update and delete. EDI makes this easy. 
             
             <a id="create"></a></p>
             <h3>Create a new Record</h3>
             <p>To create a new table record:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 <b>product = ediCreateRec(db, "product");</b>
 ediSetFields(product, ediMakeHash("{ \
     name: 'Race Car', \
@@ -189,7 +190,7 @@ ediUpdateRec(db, product);
             <p>Reading a record from the database is done with the <em>ediRead</em> family of record static methods. The
             basic <em>ediReadRec</em> method will return a record with a given <em>id</em> field. Other read methods include:
             ediReadRecWhere, ediReadTable and ediReadField.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 product = ediReadRec(db, "product", "2");
 product = ediReadRecWhere(db, "product", "price", "&lt;", "5.0");
 </pre>
@@ -197,7 +198,7 @@ product = ediReadRecWhere(db, "product", "price", "&lt;", "5.0");
             <h3>Updating a Record</h3>
             <p>To update a record, first read it using one of the <em>ediReadRec</em> methods. Then update any of the object
             properties. Finally, call the <em>ediUpdateRec</em> method to save the changes to the database.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 product = ediReadRecWhere(db, "product", "name", "==", "Ferarri");
 ediSetField(product, "description", "458 Spider");
 <b>ediUpdateRec(db, product);</b>
@@ -206,11 +207,11 @@ ediSetField(product, "description", "458 Spider");
             <a id="delete"></a>
             <h3>Deleting a Record</h3>
             <p>To delete a record, use ediRemoveRec:</p>
-            <pre class="ui code segment">
+            <pre class="code">
 <b>ediRemoveRec(db, "product", "1");</b>
 </pre>
             <a id="accessing"></a>
-            <h2 >Accessing Records from Web Pages</h2>
+            <h2>Accessing Records from Web Pages</h2>
             <p>ESP web pages can access database data via two methods:
             <ul>
                 <li>Direct API calls</li>
@@ -219,7 +220,7 @@ ediSetField(product, "description", "458 Spider");
             <h3>Direct API Access</h3>
             <p>In <em>direct model</em> access, ESP web pages or controllers query the database using 
             EDI APIs which return EdiRec instances. They then directly access field values using <em>ediGetField</em>.</p>
-            <pre class="ui code segment">
+            <pre class="code">
 &lt;p&gt;Price: &lt;%= ediGetField(product, "price"); &lt;/p&gt;
 </pre>
             <p>In this example, the form control binds the userRecord. The input controls then retrieve the 
@@ -229,13 +230,13 @@ ediSetField(product, "description", "458 Spider");
             <p>When using the ESP MVC application support, controllers will frequently read a record, prepare
             some data for viewing, and then invoke a view to render a response. In this pattern, the controller
             defines a "current" database record which can then be used by views to conveniently display field data.</p>
-            <p>To make this easy, ESP supports an inline "<em>@#</em>" directive. If the controller defined a
+            <p>To make this easy, ESP supports an inline "<em>$#</em>" directive. If the controller defined a
             current product record, this example would render the product price.</p>
-<pre class="ui code segment">
-&lt;p&gt;Price: <b>@#price</b>&lt;/p&gt;
+<pre class="code">
+&lt;p&gt;Price: <b>$#price</b>&lt;/p&gt;
 </pre>
             <a id="validation"></a>
-            <h2 >Record Validation</h2>
+            <h2>Record Validation</h2>
             <p>EDI can validate fields before saving records to the database. It provides a set of pre-defined 
             validation routines that cover the most common validation needs such as ensuring a field is unique 
             or numeric, or conforms to a specific format.</p>
@@ -251,7 +252,7 @@ ediSetField(product, "description", "458 Spider");
             <a href="../ref/api/esp.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944"><em>ediAddValidation</em></a> 
             call in the load initialization routine for a controller. This happens when the controller is 
             first loaded and after that database has been opened. 
-            <pre class="ui code segment">
+            <pre class="code">
 ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module) 
 {
     Edi     *edi = eroute-&gt;edi;
@@ -277,9 +278,10 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
             <p>You can define new validation routines via the 
             <a href="../ref/api/esp.html#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46">
                 <em>ediDefineValidation</em></a> call.
-            <h2 >Learn More ...</h2>
+            <h2>Learn More ...</h2>
             <p>To learn more, please read:</p>
             <ul>
+                <li><a href="migrations.html">Database Migrations</a></li>
                 <li><a href="../ref/api/esp.html#group___edi">EDI Documentation</a></li>
                 <li><a href="mvc.html">ESP MVC Framework</a></li>
                 <li><a href="../start/app-tour.html">ESP Applications Tour</a>.

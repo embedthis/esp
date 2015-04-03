@@ -90,7 +90,6 @@ body.show-sidebar {
   opacity: 0.75;
 }
 .sidebar {
-  position: fixed;
   left: 0;
   padding-top: 35px;
   width: 240px;
@@ -98,6 +97,7 @@ body.show-sidebar {
   overflow-y: auto;
   overflow-x: hidden;
   visibility: hidden;
+  position: fixed;
 }
 .sidebar .ui.vertical.menu {
   background: #333333;
@@ -125,6 +125,9 @@ body.show-sidebar {
 }
 .sidebar .ui.vertical.menu a.item.active {
   border-right: 18px solid #0688ff;
+}
+.sidebar::-webkit-scrollbar {
+  width: 0px !important;
 }
 .ui.sidebar-launch.button {
   position: absolute;

@@ -121,7 +121,7 @@
             <h3>Allocating Memory</h3>
             <p>Managers are defined when allocating a block of memory. For example, this code will allocate a block
             that will contain a reference to a managed string and a reference to an un-managed malloc block.</p>
-<pre class="ui code segment">
+<pre class="code">
 typedef struct MyBlock
     char    *managedString;
     void    *privateMalloc;
@@ -151,7 +151,7 @@ blk-&gt;privateMalloc = malloc(1024);
             the manager is passed a reference to the block and a flags word. The flags are set to either MPR_MANAGE_MARK
             during the Mark phase and to MPR_MANAGE_FREE during the sweep phase if the collector determines the block 
             is to be freed.</p> 
-<pre class="ui code segment">
+<pre class="code">
 void manageBlock(MyBlock *blk, int flags) 
 {
     if (flags & MPR_MANAGE_MARK) {

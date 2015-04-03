@@ -1,0 +1,144 @@
+{
+    title:  'ESP Command',
+    crumbs: [
+        { "User's Guide": 'index.html' },
+    ],
+}
+            <h1>ESP Command</h1>
+            <a id="options"></a>
+            <p>To see the <em>esp</em> command options, run <em>esp -help</em>. This produces:</p>
+            <pre class="code">$ <b>esp -help</b>
+
+  esp [options] [commands]
+
+  Options:
+    --cipher cipher            # Password cipher 'md5' or 'blowfish'
+    --database name            # Database provider 'mdb|sdb'
+    --force                    # Force requested action
+    --home directory           # Change to directory first
+    --keep                     # Keep intermediate source
+    --listen [ip:]port         # Generate app to listen at address
+    --log logFile:level        # Log to file at verbosity level (0-5)
+    --name appName             # Name for the app when combining
+    --noupdate                 # Do not update the esp.json
+    --optimize                 # Compile optimized without symbols
+    --quiet                    # Don't emit trace
+    --platform os-arch-profile # Target platform
+    --rebuild                  # Force a rebuild
+    --route pattern            # Route pattern to select
+    --routePrefix prefix       # Prefix of route to select
+    --single                   # Generate a singleton controller
+    --show                     # Show routes and compile commands
+    --symbols                  # Compile for debug with symbols
+    --table name               # Override table name if plural required
+    --trace traceFile:level    # Trace to file at verbosity level (0-5)
+    --verbose                  # Emit more verbose trace
+    --why                      # Why compile or skip building
+
+  Commands:
+    esp clean
+    esp compile [pathFilters ...]
+    esp config
+    esp edit key[=value]
+    esp generate controller name [action [, action] ...
+    esp generate migration description model [field:type [, field:type] ...]
+    esp generate scaffold model [field:type [, field:type] ...]
+    esp generate table name [field:type [, field:type] ...]
+    esp init [name [version]]
+    esp migrate [forward|backward|NNN]
+    esp mode [debug|release|...]
+    esp role [add|remove] rolename abilities...
+    esp [run] [ip]:[port] ...
+    esp user [add|compute] username password roles...
+    esp user [remove|show] username
+</pre>
+            <table class="ui table" title="switches">
+                <thead>
+                    <tr>
+                        <th class="four wide">Switch</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>--chdir dir</td>
+                        <td>Change to the specified directory.</td>
+                    </tr>
+                    <tr>
+                        <td class="nowrap">--database connector</td>
+                        <td>Select a database connector to use. Currently, this switch is not implemented and sqlite is
+                        the only connector supported.</td>
+                    </tr>
+<!--
+                    <tr>
+                        <td>--genlink slink.c</td>
+                        <td>Generate a file of ESP initializers when using --static in combined mode.</td>
+                    </tr>
+-->
+                    <tr>
+                        <td>--keep</td>
+                        <td>Preserve intermediate files. Useful for debugging.</td>
+                    </tr>
+                    <tr>
+                        <td>--listen [ip:]port</td>
+                        <td>Listen on the specified address. Overrides the Listen directive in package.json.</td>
+                    </tr>
+                    <tr>
+                        <td>--log logFile:level</td>
+                        <td>Log errors and trace to the log file at the given verbosity level. Levels are 0-9 with
+                            nine being the most verbose.</td>
+                    </tr>
+                    <tr>
+                        <td>--name</td>
+                        <td>Name for the application when combining.</td>
+                    </tr>
+                    <tr>
+                        <td>--overwrite</td>
+                        <td>Overwrite existing files. The <em>esp</em> command normally will not overwrite 
+                            existing files. This is to preserve user changes to previously generated files.</td>
+                    </tr>
+                    <tr>
+                        <td>--quiet or -q</td>
+                        <td>Run quietly and don't trace actions to the console.</td>
+                    </tr>
+                    <tr>
+                        <td class="nowrap">--platform os-arch-profile</td>
+                        <td>Target platform. This may be a full path to an ESP platform directory in an
+                            ESP source tree.</td>
+                    </tr>
+                    <tr>
+                        <td>--rebuild</td>
+                        <td>Force a rebuild of all components.</td>
+                    </tr>
+                    <tr>
+                        <td>--reverse</td>
+                        <td>Reverse migrations.</td>
+                    </tr>
+                    <tr>
+                        <td>--routeName name</td>
+                        <td>This selects the ESP route by name that will be used for the ESP configuration.</td>
+                    </tr>
+                    <tr>
+                        <td>--routePrefix prefix</td>
+                        <td>This selects the ESP route by prefix that will be used for the ESP configuration.</td>
+                    </tr>
+                    <tr>
+                        <td>--show</td>
+                        <td>Show all commands invoked by esp.</td>
+                    </tr>
+<!--
+                    <tr>
+                        <td>--static</td>
+                        <td>Use static linking when compiling ESP components.</td>
+                    </tr>
+-->
+                    <tr>
+                        <td>--verbose or -v</td>
+                        <td>Run in verbose mode and trace actions to the console (default).</td>
+                    </tr>
+                    <tr>
+                        <td>--why</td>
+                        <td>Show why a compile was performed or omitted.</td>
+                    </tr>
+                </tbody>
+            </table>
