@@ -5457,6 +5457,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.ssl.verify", httpParseAll);
     httpAddConfig("http.server.ssl.verify.client", parseSslVerifyClient);
     httpAddConfig("http.server.ssl.verify.issuer", parseSslVerifyIssuer);
+    httpAddConfig("http.server.trace", parseTrace);
 
     httpAddConfig("http.showErrors", parseShowErrors);
     httpAddConfig("http.source", parseSource);
@@ -5471,7 +5472,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.timeouts.inactivity", parseTimeoutsInactivity);
     httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
     httpAddConfig("http.timeouts.session", parseTimeoutsSession);
-    httpAddConfig("http.trace", parseTrace);
     httpAddConfig("http.update", parseUpdate);
     httpAddConfig("http.xsrf", parseXsrf);
     httpAddConfig("directories", parseDirectories);

@@ -11,3 +11,5 @@ testme/
 .gitattributes
 *.bak
 .DS_Store
+error.log
+trace.log

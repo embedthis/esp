@@ -9,6 +9,14 @@
             listen: [
                 'http://127.0.0.1:4100',
             ],
+            "log": {
+                "location": "error.log",
+                "level": 4
+            },
+            "trace": {
+                "location": "trace.log",
+                "level": 4
+            }
         },
         routes: [
             {
