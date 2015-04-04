@@ -156,7 +156,7 @@
 
             <h1>Embedthis ESP&trade;</h1>
             <div class="floated">
-                <img src="images/esp-icon-128.png" class="ui left floated image">
+                <img src="images/esp-icon-128.png" class="ui left floated image" alt="esp">
                 <p>ESP is a web framework that makes it dramatically easier to create blazing fast,
                 dynamic web applications and web sites. ESP applications uses the <em>C</em> language for server-side 
                 programming, which allows easy access to system or hardware data. The result is fast and 
@@ -279,8 +279,8 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
                 <li><a href="#pages">ESP Pages</a></li>
                 <li><a href="#controllers">ESP Controllers</a></li>
                 <li><a href="#models">ESP Models</a></li>
-                <li><a href="#compiler">ESP Compilation</a></li>
-                <li><a href="#generator">ESP Generator</a></li>
+                <li>ESP Compilation</li>
+                <li>ESP Generator</li>
                 <li><a href="#api">ESP API</a></li>
             </ul> 
             
@@ -306,7 +306,7 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
 
             <h3>ESP Page Directives</h3>
             <p>ESP supports the following special sequences for use in web pages.</p>
-            <table class="ui table">
+            <table class="ui table" title="directives">
                 <thead><tr><th class="three wide">Directive</th><th>Purpose</th></tr></thead>
                 <tbody>
                     <tr><td class="">&lt;% code %&gt;</td><td>Insert code at this location. At run-time, this 
@@ -326,7 +326,7 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
 
             <p>See <a href="users/pages.html#directives">ESP Page Directives</a> for more details.</p>
 
-                        <a id="controllers"></a>
+            <a id="controllers"></a>
             <h2>ESP Controllers</h2>
             <p>ESP Controllers are collections of <em>C</em> functions that are bound to specific URLs for the purpose
             of managing a resource or group of resources. Often a controller will use 

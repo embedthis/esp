@@ -38,5 +38,7 @@ ttrue(http.status == 200)
 ttrue(http.response.contains('<h1>Create Post</h1>'))
 if (http.status != 200) {
     print(http.response)
+    print("SLEEPING")
+    App.sleep(999999)
 }
 http.close()
