@@ -575,7 +575,7 @@
             webSockets:         20,             /* Maximum number of Web Sockets */
             webSocketsMessage:  "50K",          /* Maximum WebSockets message size */
             webSocketsPacket:   "50K",          /* Maximum WebSockets packet size */
-            webSocketsFrame:    "4K",           /* Maximum Websockts frame size */
+            webSocketsFrame:    "4K",           /* Maximum Websockets frame size */
             workers:            4,              /* Maximum number of worker threads */
         },
 

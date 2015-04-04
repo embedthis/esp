@@ -132,7 +132,7 @@
                 <tbody>
                     <tr>
                         <td>description</td>
-                        <td>Sort-sentance description of the application.</td>
+                        <td>Short sentance description of the application.</td>
                     </tr>
                     <tr>
                         <td>dependencies</td>
@@ -187,10 +187,10 @@
             <code class="inverted">MAJOR.MINOR.PATCH-PRERELEASE</code> 
             <p>Dependency versions may also include expressions that describe a range of acceptable pak versions.</p>
             <ul>
-                <li>version &mdash; (allows prereleases)</li>
-                <li>^ version &mdash; (same as &gt;=1.2.3 &lt;2.0.0, does not allow prereleases)</li>
-                <li>~ version &mdash; (same as &gt;=1.2.3 &lt;2.0.0, allows prereleases)</li>
-                <li>1.2.X &mdash; (any version starting with 1.2 (allows prereleases)</li>
+                <li>version &mdash; (allows pre-releases)</li>
+                <li>^ version &mdash; (same as &gt;=1.2.3 &lt;2.0.0, does not allow pre-releases)</li>
+                <li>~ version &mdash; (same as &gt;=1.2.3 &lt;2.0.0, allows pre-releases)</li>
+                <li>1.2.X &mdash; (any version starting with 1.2 (allows pre-releases)</li>
                 <li>[&gt;, &gt;=, &lt;, &lt;=, ==, !=] version</li>
                 <li>expression || expression ... (either expression qualifies)</li>
                 <li>expression &amp;&amp; expression ... (both expressions must qualify)</li>
@@ -199,9 +199,9 @@
             <p>For example:</p>
 
             <code class="inverted">"dependencies": {
-    "bootstrap": "~3",     /* Versions 3.0.0 or later including prereleases */
-    "jquery": "^1.9.1",    /* Version 1.9.1 and not prereleases */
-    "less": "1.3.x",       /* Version 1.3.x and prereleases /
+    "bootstrap": "~3",     /* Versions 3.0.0 or later including pre-releases */
+    "jquery": "^1.9.1",    /* Version 1.9.1 and not pre-releases */
+    "less": "1.3.x",       /* Version 1.3.x and pre-releases /
 }</code>
 
             <a name="directories"></a>
@@ -438,7 +438,7 @@ compress: [ 'html', 'js', 'css' ]
                     </tr>
                     <tr>
                         <td>database</td>
-                        <td>Datebase to create and open for the application. Of the form:
+                        <td>Database to create and open for the application. Of the form:
                             <em>provider://name.ext</em> where provider is set to either "mdb" for the
                             embedded memory database or "sdb" for SQLite. The extensions are "mdb" or "sdb"
                             by convention. Set to "<em>default</em>" for a database named after the application with
@@ -641,7 +641,7 @@ pipeline: {
                         <td>resources</td>
                         <td><p>Create routes sets for the requested resources. Route sets select 
                         pre-defined route sets. Some of the available sets are: 'esp-server' and 'esp-restful'.
-                        Resource groups greate RESTful routes for a resource that has multiple 
+                        Resource groups create RESTful routes for a resource that has multiple 
                         instances. Singletons create RESTful routes for singleton resources.</p>
 <code class="inverted">
 resources: {
@@ -669,7 +669,7 @@ routes [ {
                     </tr>
                     <tr>
                         <td>scheme</td>
-                        <td>Define the required HTTP protcol scheme for all requests. Set to "https" to permit only
+                        <td>Define the required HTTP protocol scheme for all requests. Set to "https" to permit only
                         secure connections. Alternatively use <em>redirect: "https://"</em> to redirect HTTPS traffic over
                         to HTTPS.</td>
                     </tr>
@@ -844,7 +844,7 @@ server: {
                     </tr>
                     <tr>
                         <td>realm</td>
-                        <td>Login realm string if using Basic or Digest authenticationabilities.</td>
+                        <td>Login realm string if using Basic or Digest authentication abilities.</td>
                     </tr>
                     <tr>
                         <td>require</td>
@@ -879,7 +879,7 @@ server: {
                         <td><p>Configure the user session details. 
                             The <em>cookie</em> property can define a unique prefix to use for the session cookie.
                             The default session cookie prefix is: "-http-session-". If set to 'none', then no cookie is 
-                            emitted. The <em>visible</em>propery specifies whether the cookie is readable by scripts in the browser.
+                            emitted. The <em>visible</em>property specifies whether the cookie is readable by scripts in the browser.
                             By default, the session cookie is not visible to Javascript. It is desirable to keep the 
                             session cookie invisible to minimize XSS security vulnerabilities.</p>
                             <p>ESP implements this by adding the <em>httpOnly</em> option on the <em>Set-Cookie</em>
@@ -938,7 +938,7 @@ session: {
                 <tbody>
                     <tr>
                         <td>extensions</td>
-                        <td>List of exensions to cache</td>
+                        <td>List of extensions to cache</td>
                     </tr>
                     <tr>
                         <td>client</td>
@@ -1026,7 +1026,7 @@ session: {
                         <td>verify</td>
                         <td>Control whether client certificates are required and verified. If 
                         <em>verify.client</em> is true, the client must provide a valid certificate. If 
-                        <em>verify.issuer</em> is true, the client's certificate must be verifyable by the
+                        <em>verify.issuer</em> is true, the client's certificate must be verifiable by the
                         specified <em>authority</em> certificate.</td>
                     </tr>
             </table>
@@ -1050,7 +1050,7 @@ session: {
                     </tr>
                     <tr>
                         <td>inactivity</td>
-                        <td>Maximum time a connection will be preserved in the absense of I/O activity. Default 30 seconds.</td>
+                        <td>Maximum time a connection will be preserved in the absence of I/O activity. Default 30 seconds.</td>
                     </tr>
                     <tr>
                         <td>refresh</td>

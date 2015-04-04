@@ -224,7 +224,7 @@
                 <li>Short yields &mdash; used to yield to the GC once </li>
                 <li>Long or sticky yields &mdash; used to put the thread into a semi-permanent yielded state</li>
             </ul>
-            <p>A short yield is achived by calling mprYield(0) which will test if garbage collection is required and
+            <p>A short yield is achieved by calling mprYield(0) which will test if garbage collection is required and
             if so, will wait until the collection is complete. If no collection is required, the call returns immediately
             without blocking.</p>
             <p>A long yield is achieved by calling mprYield(MPR_YIELD_STICKY). This will yield to the garbage collector and
@@ -331,7 +331,7 @@ void manageBlock(MyBlock *blk, int flags)
             need to test if the element is null or not.</p>
             <h3>Order of Invocation</h3>
             <p>During the mark phase, managers are called recursively from parent calls to mprMark. Thus the blocks are
-            visited top down. During the sweep phase, managers are called in any order, i.e. children may be visted before
+            visited top down. During the sweep phase, managers are called in any order, i.e. children may be visited before
             their parents. It is important to write manager free code to handle this. Note: the actual memory for the 
             blocks to be freed will only be unpinned once all managers have been invoked. So whether the child or parent
             is visited last, the memory for both will be accessible until the end of the sweep phase when all freed blocks
