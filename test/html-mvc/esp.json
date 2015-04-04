@@ -15,7 +15,6 @@
         "auth": {
             "store": "app"
         },
-        "routes": "esp-restful",
         "server": {
             listen: [
                 'http://127.0.0.1:4100',
@@ -29,6 +28,7 @@
         "trace": {
             "location": "trace.log",
             "level": 4
-        }
+        },
+        "routes": "esp-restful"
     }
 }
