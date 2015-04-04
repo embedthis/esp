@@ -162,7 +162,7 @@
     <div class="content">
 
             <h1>ESP Applications Tour</h1>
-            <p>This tour provides an overview of creating ESP applications and the ESP MVC Framework.
+            <p>This tour provides an overview of creating ESP applications and the ESP MVC Framework.</p>
 
             <p>To create more complex ESP applications than a simple hello-world, we will typically 
             want a bit more structure and content. The ESP MVC framework provides this structure 
@@ -174,6 +174,7 @@
                 <a href="https://embedthis.com/pak/">Pak</a> and
                 <a href="https://embedthis.com/expansive/">Expansive</a> tools from Embedthis.
             </p>
+
             <ul>
                 <li><a href="https://embedthis.com/pak/">Pak</a> manager to install and manage extension packages.</li>
                 <li><a href="https://embedthis.com/expansive/">Expansive</a> site manager for layout pages
@@ -307,12 +308,14 @@ $ pak install esp-html-skeleton</b>
             <p>Scaffolding is a quick way to generate pieces of your application. Scaffods are stub MVC resource 
             managers that provide basic Create-Read-Update-Delete (CRUD) for a resource or group of resources. 
             ESP scaffolds include:</p>
-           <ul>
+
+            <ul>
                 <li>Database table schema</li>
                 <li>Database migration to create the table</li>
                 <li>Controller logic to create and mange table records</li>
                 <li>Views to display table and record data</li>
             </ul>
+
             <p>Don't confuse ESP <em>scaffolds</em> with ESP <em>skeletons</em>. Skeletons are installable packages that are
             ready-made application starters. Scaffolds are generated MVC resource managers.</p>
 
@@ -335,12 +338,14 @@ $ <b>esp generate scaffold post title:string body:text</b>
   [Generate] Complete
 </pre>
             <p>This command created:</p>
+
             <ul>
                 <li>A server-side post Controller <em>controllers/post.c</em></li>
                 <li>Server-side HTML views for listing posts <em>contents/post/list.esp</em> and editing posts 
                     <em>contents/post/edit.esp</em>.</li>
                 <li>A database migration to create the post database table.</li>
             </ul>
+
             <p>The command also ran the migration to create the database and table.</p>
             <p>Now if you set your browser to the home page, you will now see an empty listing of blog posts.
             <img src="../images/esp/app-tour/post-list.png" alt="postList" class="bare-screen" /> 
@@ -357,6 +362,7 @@ $ <b>esp generate scaffold post title:string body:text</b>
             <img src= "../images/esp/app-tour/post-list-2.png" alt="postList" class="bare-screen" />
             <p>The home page is now updated with the first post.  You can click on the post title or body
             to edit its contents. This will run the same post-edit.html template that was used to create the post.</p>
+
             <h2 class=section>On the Server</h2>
             <p>When <em>OK</em> button is clicked to create a post, the browser invokes the
             <em>/post/</em> URL with the HTTP <em>POST</em> method to create the blog post. Esp
