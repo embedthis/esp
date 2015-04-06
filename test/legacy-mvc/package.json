@@ -24,6 +24,7 @@
                 },
             },
             "trace": {
+                "anew": true,
                 "location": "trace.log",
                 "level": 4
             },
