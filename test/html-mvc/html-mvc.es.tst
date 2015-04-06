@@ -40,6 +40,5 @@ if (http.status != 200) {
     print("status", http.status)
     print("response", http.response)
     print("SLEEPING")
-    App.sleep(999999)
 }
 http.close()
