@@ -4647,9 +4647,11 @@ static bool espRenderView(HttpConn *conn, cchar *target, int flags)
     if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, target))) {
         cchar *errMsg;
         /* WARNING: GC yield */
+httpTrace(conn, "TARGET", "error", "TARGET %s", target);
         if (espLoadModule(route, conn->dispatcher, "view", mprJoinPath(route->documents, target), &errMsg) < 0) {
             return 0;
         }
+httpTrace(conn, "AFTER", "error", "TARGET %s", target);
     }
 #endif
     if ((viewProc = mprLookupKey(eroute->views, target)) == 0) {
@@ -4726,7 +4728,9 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         WARNING: espRenderView may yield 
      */
     if (sends(dest, ".esp")) {
+        mprHold(dest);
         espRenderView(conn, dest, 0);
+        mprRelease(dest);
     } else {
         /*
             Last chance, forward to the file handler ... not an ESP request. 
