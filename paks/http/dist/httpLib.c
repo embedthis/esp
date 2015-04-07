@@ -20694,12 +20694,9 @@ static void manageUpload(Upload *up, int flags)
 static void closeUpload(HttpQueue *q)
 {
     HttpUploadFile  *file;
-    HttpRx          *rx;
     Upload          *up;
 
-    rx = q->conn->rx;
     up = q->queueData;
-
     cleanUploadedFiles(q->conn);
     if (up->currentFile) {
         file = up->currentFile;
