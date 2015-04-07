@@ -16,6 +16,10 @@ Me.load({
                     trace('Clean', dir)
                     dir.removeAll()
                 }
+                for each (file in Path().files('**/*.log')) {
+                    trace('Clean', file)
+                    file.remove()
+                }
             `
         },  
     },

@@ -79,7 +79,8 @@
                 ]
             }, {
                 pattern: '^/tmp/',
-                methods: [ 'DELETE', 'PUT', 'OPTIONS' ]
+                methods: [ 'DELETE', 'PUT', 'OPTIONS' ],
+                handler: 'fileHandler'
             }, {
                 pattern: '^/trace/',
                 prefix: '/trace',
