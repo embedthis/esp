@@ -6289,7 +6289,7 @@ static int getEspToken(EspParse *parse)
                             <%^ control
                          */
                         if (*next == '@') {
-                            mprLog("esp warn", 0, "Using deprecated \"@%c\" control directive in esp page", *next);
+                            mprLog("esp warn", 0, "Using deprecated \"%%%c\" control directive in esp page", *next);
                         }
                         tid = ESP_TOK_CONTROL;
                         next = eatSpace(parse, ++next);
@@ -8116,6 +8116,7 @@ static MdbSchema *growSchema(MdbTable *table)
                 (sizeof(MdbCol) * (table->schema->capacity + MDB_INCR)))) == 0) {
             return 0;
         }
+        memset(&table->schema->cols[table->schema->capacity], 0, MDB_INCR * sizeof(MdbCol));
         table->schema->capacity += MDB_INCR;
     }
     return table->schema;

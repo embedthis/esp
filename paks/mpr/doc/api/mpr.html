@@ -8541,8 +8541,8 @@ Freeq index.
 Always less than 512 queues.
 </td>
     <tr><td class="param">MprMemSize</td><td><td>size</td><td>
-Size in bytes. 
-This is a 32-bit quantity on all systems unless ME_MPR_ALLOC_BIG is defined and then it will be 64 bits.
+Size of the block in bytes. 
+Not the amount requested by the user which may be smaller. This is a 32-bit quantity on all systems unless ME_MPR_ALLOC_BIG is defined and then it will be 64 bits.
 </td>
     </table></dd></dl>
   </div>
@@ -8979,7 +8979,7 @@ This is used to test if a block has been dynamically allocated
   </div>
   <div class="apiDetail">
 <p>Reallocate a block.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Reallocates a block increasing its size. If the specified size is less than the current block size, the call will ignore the request and simply return the existing block. The memory is zeroed.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Reallocates a block increasing its size. If the specified size is less than the current block size, the call will ignore the request and simply return the existing block. The new memory portion is not zeroed.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Memory to reallocate. If NULL, call malloc.</td>
@@ -8987,7 +8987,7 @@ This is used to test if a block has been dynamically allocated
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Returns a pointer to the allocated block. If memory is not available the memory exhaustion handler specified via mprCreate will be called to allow global recovery.</dd></dl>
     <dl><dt>Remarks:</dt><dd>Do not mix calls to realloc and mprRealloc.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_mpr_free_mem" class="ref">MprFreeMem</a>, <a href="#struct_mpr_heap" class="ref">MprHeap</a>, <a href="#group___mpr_mem_1gaacdb6d1a5cec32a0758f636353fff782" class="ref">MprManager</a>, <a href="#group___mpr_mem_1gab4363881401c3bc6f7703f65041c5f02" class="ref">MprMemNotifier</a>, <a href="#struct_mpr_region" class="ref">MprRegion</a>, <a href="#group___mpr_mem_1ga3b66bfcf86dc9f50510341e7b5490326" class="ref">mprAddRoot</a>, <a href="#group___mpr_mem_1ga1c64a2b782ccf3c39d0befa55a2fecd1" class="ref">mprAlloc</a>, <a href="#group___mpr_mem_1ga2d0dd74759a43f2a35e8c4d8f0e65460" class="ref">mprAllocMem</a>, <a href="#group___mpr_mem_1gae3b5d2bd89f53f1d28b1d6c7e299158a" class="ref">mprAllocObj</a>, <a href="#group___mpr_mem_1ga38cd3a3b91e522d48f2d9167f38a51e6" class="ref">mprAllocZeroed</a>, <a href="#group___mpr_mem_1ga68aa995754d9494d3df0f7877a71aba4" class="ref">mprCreateMemService</a>, <a href="#group___mpr_mem_1ga4e34537a9123922eb0bac5e9844c68b1" class="ref">mprEnableGC</a>, <a href="#group___mpr_mem_1ga748a0f879d3b5ce8cb8eb23b01392552" class="ref">mprGC</a>, <a href="#group___mpr_mem_1ga4c9028aba8f82b48191035aa3a191d81" class="ref">mprGetBlockSize</a>, <a href="#group___mpr_mem_1ga837eb8267bbdf52649d94b5625823ad9" class="ref">mprGetMem</a>, <a href="#group___mpr_mem_1gababda33b29cf78e2b8a2300882a7598d" class="ref">mprGetMemStats</a>, <a href="#group___mpr_1gad3afdd3e6a541b8b55d7c7a72fcc734b" class="ref">mprGetMpr</a>, <a href="#group___mpr_mem_1ga36c229b490da17109e4342139775fbfa" class="ref">mprGetPageSize</a>, <a href="#group___mpr_mem_1gabeb48547e7598825b6268f8a8c7ed70b" class="ref">mprHasMemError</a>, <a href="#group___mpr_mem_1gaac8a75ae42130538e13d4e84ccb030f4" class="ref">mprHold</a>, <a href="#group___mpr_path_1gaf9bf23ba3a4c680f860f8d392b17576c" class="ref">mprIsPathContained</a>, <a href="#group___mpr_mem_1ga60f5c1f8065e2d164160fbc71275d300" class="ref">mprIsValid</a>, <a href="#mpr_8h_1ac1eebe67d99890d0156d6fdd7fc2c7c8" class="ref">mprMark</a>, <a href="#group___mpr_mem_1ga1e8d2072b9923ca7a579d9dabbad1ea3" class="ref">mprMemcmp</a>, <a href="#group___mpr_mem_1ga115724cd4423263288212f7a300f21d7" class="ref">mprMemcpy</a>, <a href="#group___mpr_mem_1ga9bdfbcc455be78a590f23f80b28c0e2b" class="ref">mprMemdup</a>, <a href="#group___mpr_mem_1gae5a3493548a457c179c0f7006d6171a9" class="ref">mprPrintMem</a>, <a href="#group___mpr_mem_1ga4816868550ad8a21b914de2fbe720767" class="ref">mprRelease</a>, <a href="#group___mpr_mem_1ga369beaea43886e4fdd3d4549a2c13cb7" class="ref">mprRemoveRoot</a>, <a href="#group___mpr_mem_1gaccaaba6bc0501553b0c44d8514795b7a" class="ref">mprResetMemError</a>, <a href="#group___mpr_mem_1gaf3bf4cede9edc8e7ee5b159db9347ba6" class="ref">mprSetManager</a>, <a href="#group___mpr_mem_1gaaeec30c055cc1a8fc21ff954e8d7da23" class="ref">mprSetMemError</a>, <a href="#group___mpr_mem_1gab0b7e384d28606a450f21bc50a8b0c12" class="ref">mprSetMemLimits</a>, <a href="#group___mpr_mem_1ga32742d6a82477fabee9c821138ffd824" class="ref">mprSetMemNotifier</a>, <a href="#group___mpr_mem_1ga282926d76d53bde980ec5f5c5004a3b3" class="ref">mprSetMemPolicy</a>, <a href="#group___mpr_mem_1gafdfd96c56ccc80e5bccd634daaa7c47c" class="ref">mprVirtAlloc</a>, <a href="#group___mpr_mem_1ga6d3bd582a0bdcafa69428aa29c0279c8" class="ref">mprVirtFree</a></dd></dl>
   </div>
