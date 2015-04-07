@@ -35,7 +35,9 @@ static void getPost() {
     Initialize a new resource for the client to complete
  */
 static void initPost() { 
+    httpTrace(getConn(), "INIT POST", "context", NULL);
     createRec("post", 0);
+    httpTrace(getConn(), "RENDER VIEW", "context", NULL);
     renderView("post/post-edit");
 }
 
@@ -86,6 +88,7 @@ static void common(HttpConn *conn) {
     Dynamic module initialization
  */
 ESP_EXPORT int esp_controller_blog_post(HttpRoute *route, MprModule *module) {
+    httpTrace(getConn(), "LOAD MODULE", "context", NULL);
     espDefineBase(route, common);
     espDefineAction(route, "post-create", createPost);
     espDefineAction(route, "post-remove", removePost);
