@@ -21,7 +21,6 @@
                 'https://127.0.0.1:4443',
             ],
             "log": {
-                "anew": true,
                 "location": "error.log",
                 "level": 4
             },

@@ -266,11 +266,12 @@ static void startEsp(HttpQueue *q)
     rx = conn->rx;
     req = conn->reqData;
 
+#if ME_WIN_LIKE
+    rx->target = mprGetPortablePath(rx->target);
+#endif
+
     if (req) {
         mprSetThreadData(req->esp->local, conn);
-        httpAuthenticate(conn);
-        setupFlash(conn);
-
         /* WARNING: GC yield */
         if (!runAction(conn)) {
             pruneFlash(conn);
@@ -335,6 +336,10 @@ static int runAction(HttpConn *conn)
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
         if (mprPathExists(controller, R_OK)) {
+            /* UNUSED */
+            if (conn->sock->handler) {
+                assert(conn->sock->handler->desiredMask == 0);
+            }
             if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
@@ -361,6 +366,8 @@ static int runAction(HttpConn *conn)
         }
     }
     if (action) {
+        httpAuthenticate(conn);
+        setupFlash(conn);
         if (eroute->commonController) {
             (eroute->commonController)(conn);
         }
@@ -378,22 +385,16 @@ static bool espRenderView(HttpConn *conn, cchar *target, int flags)
     HttpRoute   *route;
     EspRoute    *eroute;
     EspViewProc viewProc;
-    cchar       *path;
 
     rx = conn->rx;
     route = rx->route;
     eroute = route->eroute;
 
-#if ME_WIN_LIKE
-    target = mprGetPortablePath(target);
-#endif
-    path = mprJoinPath(route->documents, target);
-
 #if !ME_STATIC
     if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, target))) {
         cchar *errMsg;
         /* WARNING: GC yield */
-        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg) < 0) {
+        if (espLoadModule(route, conn->dispatcher, "view", mprJoinPath(route->documents, target), &errMsg) < 0) {
             return 0;
         }
     }
@@ -407,7 +408,7 @@ static bool espRenderView(HttpConn *conn, cchar *target, int flags)
             httpAddSecurityToken(conn, 1);
         }
         httpSetContentType(conn, "text/html");
-        httpSetFilename(conn, path, 0);
+        httpSetFilename(conn, mprJoinPath(route->documents, target), 0);
         /* WARNING: may GC yield */
         (viewProc)(conn);
     }
@@ -415,66 +416,72 @@ static bool espRenderView(HttpConn *conn, cchar *target, int flags)
 }
 
 
-/*
-    Target is a pathname relative to route->documents
-    If pathname is a directory without trailing "/" do external redirect to index.esp
-    If pathname is a directory with trailing "/", do internal redirect to index.esp
-    if pathname is not a directory and does not exist, then retry with .esp appended.
+static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
+{
+    MprPath     info;
 
-    WARNING: may yield
+    if (filename) {
+        target = mprJoinPath(target, filename);
+    }
+    if (ext) {
+        target = mprJoinPathExt(target, ext);
+    }
+    if (mprGetPathInfo(mprJoinPath(conn->rx->route->documents, target), &info) == 0 && !info.isDir) {
+        return target;
+    }
+    return 0;
+}
+
+
+/*
+    Render a document by mapping a URL target to a document.
+    Target is interpreted as a pathname relative to route->documents.
+    If pathname exists, then serve that.
+    If pathname + .esp exists, serve that.
+    If pathname is a directory with trailing "/" and an index.esp, return the index.esp without a redirect.
+    If pathname is a directory without a trailing "/" but with an index.esp, do an external redirect to "URI/".
+    If pathname does not end with ".esp", then do not serve that.
  */
 PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 {
-    HttpRx      *rx;
     HttpUri     *up;
+    cchar       *dest;
 
-    rx = conn->rx;
+    assert(target);
 
-    /*
-        Internal directory redirection
-        Target will be empty for path of "" and "/"
-        rx->pathInfo will always be set to have a leading "/".
-     */
-    if (sends(target, "/") || (*target == '\0' && sends(rx->parsedUri->path, "/"))) {
-        target = sjoin(target, "index.esp", NULL);
-    }
-    if (sends(target, ".esp")) {
-        if (espRenderView(conn, target, 0)) {
-            return;
-        } 
-    } else if (espRenderView(conn, sjoin(target, ".esp", NULL), 0)) {
-        /*
-            Pretty URLs without ".esp"
-         */
-        return;
-    }
+    if ((dest = checkView(conn, target, 0, 0)) == 0) {
+        if ((dest = checkView(conn, target, 0, ".esp")) == 0) {
+            if ((dest = checkView(conn, target, "index.esp", 0)) == 0) {
 #if DEPRECATED || 1
-    /*
-        legacy-mvc applications have views under client/app
-     */
-    if (espRenderView(conn, sjoin("app/", target, ".esp", NULL), 0)) {
-        return;
-    }
+                /* Remove in version 6 */
+                dest = checkView(conn, sjoin("app/", target, NULL), 0, ".esp");
 #endif
-    if (!sends(target, "index.esp")) {
-        /*
-            Target may be a directory, so pre-flight a test to see if it has an index.
-            If so, then do an external redirect. This is needed to keep browser relative URLs working.
-         */
-        if (espRenderView(conn, mprJoinPath(target, "index.esp"), ESP_DONT_RENDER)) {
-            up = rx->parsedUri;
-            httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
-                httpFormatUri(up->scheme, up->host, up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
-            return;
+            } else {
+                /*
+                    Workaround for target being empty when the URL exactly matches a route prefix (http://embedthis.com/catalog)
+                 */
+                if (!sends(conn->rx->parsedUri->path, "/")) {
+                    up = conn->rx->parsedUri;
+                    httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host, 
+                        up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
+                    return;
+                }
+            }
         }
     }
-    /*
-        Last chance, forward to the file handler ... not an ESP request. 
-        This enables static file requests within ESP routes.
+    /* 
+        WARNING: espRenderView may yield 
      */
-    // httpSetFileHandler(conn, mprJoinPath(rx->route->documents, target));
-    httpMapFile(conn);
-    httpSetFileHandler(conn, 0);
+    if (sends(dest, ".esp")) {
+        espRenderView(conn, dest, 0);
+    } else {
+        /*
+            Last chance, forward to the file handler ... not an ESP request. 
+            This enables static file requests within ESP routes.
+         */
+        httpMapFile(conn);
+        httpSetFileHandler(conn, 0);
+    }
 }
 
 
