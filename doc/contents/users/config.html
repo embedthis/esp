@@ -713,7 +713,28 @@ routes [ {
                     </tr>
                     <tr>
                         <td>trace</td>
-                        <td>Log trace filtering collection.</td>
+                        <td>Trace filtering collection.
+                        For example:
+<code class="inverted">trace: {
+    location: 'stdout',
+    level: '2',
+    backup: 5,
+    anew: true,
+    size: '10MB',
+    timestamp: '1hr',
+    maxContent: 50000,
+},</code>
+                        <p>The trace properties are:</p>
+                        <ul>
+                            <li>location &mdash; Filename to trace to. May also be 'stdout', or 'stderr'.</li>
+                            <li>level &mdash; Trace level (0-5) with 5 being the most verbose.</li>
+                            <li>backup &mdash; Number of trace backups to keep.</li>
+                            <li>anew &mdash; Start trace log anew each time the application restarts.</li>
+                            <li>size &mdash; Maximum size of the trace log before it will be restarted.</li>
+                            <li>timestamp &mdash; Write a timestamp at this frequency.</li>
+                            <li>maxContent &mdash; Maximum size of request body content to trace. Defaults to 40K.</li>
+                        </ul>
+                        </td>
                     </tr>
                     <tr>
                         <td>update</td>
@@ -807,7 +828,16 @@ server: {
     anew: true,
     size: '10MB',
     timestamp: '1hr',
-},</code></td>
+},</code>
+                        <ul>
+                            <li>location &mdash; Filename to log to. May also be 'stdout', or 'stderr'.</li>
+                            <li>level &mdash; Trace level (0-5) with 5 being the most verbose.</li>
+                            <li>backup &mdash; Number of log backups to keep.</li>
+                            <li>anew &mdash; Start log anew each time the application restarts.</li>
+                            <li>size &mdash; Maximum size of the log before it will be restarted.</li>
+                            <li>timestamp &mdash; Write a timestamp at this frequency.</li>
+                        </ul>
+                        </td>
                     </tr>
                     <tr>
                         <td>monitors</td>
