@@ -5993,6 +5993,15 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     assert(conn->tx);
     assert(conn->rx);
 
+#if DEPRECATE || 1
+    /* Just IO state asserting */
+    if (conn->io) {
+        assert(!conn->io);
+        return;
+    }
+    conn->io = 1;
+#endif
+
     if ((eventMask & MPR_WRITABLE) && conn->connectorq) {
         httpResumeQueue(conn->connectorq);
     }
@@ -6026,6 +6035,7 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     } else if (conn->async && !mprIsSocketEof(conn->sock) && !conn->delay) {
         httpEnableConnEvents(conn);
     }
+    conn->io = 0;
 }
 
 
