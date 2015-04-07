@@ -3371,9 +3371,12 @@ PUBLIC char *httpReadString(HttpConn *conn)
             remaining -= nbytes;
         }
     } else {
-        content = mprAlloc(ME_MAX_BUFFER);
+        content = NULL;
         sofar = 0;
         while (1) {
+            if ((content = mprRealloc(content, sofar + ME_MAX_BUFFER)) == 0) {
+                return 0;
+            }
             nbytes = httpRead(conn, &content[sofar], ME_MAX_BUFFER);
             if (nbytes < 0) {
                 return 0;
@@ -3381,7 +3384,6 @@ PUBLIC char *httpReadString(HttpConn *conn)
                 break;
             }
             sofar += nbytes;
-            content = mprRealloc(content, sofar + ME_MAX_BUFFER);
         }
     }
     content[sofar] = '\0';
@@ -9573,8 +9575,10 @@ PUBLIC int64 httpMonitorEvent(HttpConn *conn, int counterIndex, int64 adj)
             ncounters = ((counterIndex + 0xF) & ~0xF);
             if (address) {
                 address = mprRealloc(address, sizeof(HttpAddress) * ncounters * sizeof(HttpCounter));
+                memset(&address[address->ncounters], 0, (ncounters - address->ncounters) * sizeof(HttpCounter));
             } else {
-                address = mprAllocBlock(sizeof(HttpAddress) * ncounters * sizeof(HttpCounter), MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO);
+                address = mprAllocBlock(sizeof(HttpAddress) * ncounters * sizeof(HttpCounter), 
+                    MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO);
                 mprSetManager(address, (MprManager) manageAddress);
             }
             if (!address) {

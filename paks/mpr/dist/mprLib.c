@@ -353,6 +353,10 @@ PUBLIC void *mprAllocFast(size_t usize)
 }
 
 
+/*
+    This routine is defined to not zero. However, we zero for some legacy applications.
+    This is not guaranteed by the API definition.
+ */
 PUBLIC void *mprReallocMem(void *ptr, size_t usize)
 {
     MprMem      *mp, *newb;
@@ -379,10 +383,6 @@ PUBLIC void *mprReallocMem(void *ptr, size_t usize)
     }
     oldSize = mp->size;
     memcpy(newptr, ptr, oldSize - sizeof(MprMem));
-    /*
-        New memory is zeroed
-     */
-    memset(&((char*) newptr)[oldUsize], 0, GET_USIZE(newb) - oldUsize);
     return newptr;
 }
 
@@ -6683,11 +6683,21 @@ static void prepWinProgram(MprCmd *cmd)
                         shell = mprJoinPath(mprGetPathDir(path), shell);
                     }
                 }
+                /*
+                    Get length of argv with NULL and add one
+                 */
+                assert(cmd->argv[cmd->argc] == 0);
                 cmd->argv = mprRealloc((void*) cmd->argv, (cmd->argc + 2) * sizeof(char*));
+                cmd->argv[cmd->argc + 1] = 0;
+
+                /*
+                    Copy up to make room to insert the shell argument. This copies the original NULL
+                 */
                 memmove((void*) &cmd->argv[1], (void*) cmd->argv, sizeof(char*) * cmd->argc);
                 cmd->argv[0] = sclone(shell);
                 cmd->argv[1] = path;
                 cmd->argc += 1;
+                assert(cmd->argv[cmd->argc] == 0);
             }
         } else {
             mprCloseFile(file);
@@ -6722,7 +6732,10 @@ static void prepWinCommand(MprCmd *cmd)
      */
     argc = 0;
     for (len = 0, ap = cmd->argv; *ap; ap++) {
-        len += (slen(*ap) * 2) + 1 + 2;         /* Space and possible quotes and worst case backquoting */
+        /* 
+            Space and possible quotes and worst case backquoting 
+         */
+        len += (slen(*ap) * 2) + 2 + 1;
         argc++;
     }
     cmd->command = mprAlloc(len + 1);
@@ -15300,6 +15313,7 @@ static int growList(MprList *lp, int incr)
         assert(!MPR_ERR_MEMORY);
         return MPR_ERR_MEMORY;
     }
+    memset(&lp->items[lp->size], 0, (len - lp->size) * sizeof(void*));
     lp->size = len;
     return 0;
 }
@@ -17159,7 +17173,9 @@ PUBLIC MprModule *mprCreateModule(cchar *name, cchar *path, cchar *entry, void *
         return 0;
     }
     mp->name = sclone(name);
-    mp->path = sclone(path);
+    if (path && *path) {
+        mp->path = sclone(path);
+    }
     if (entry && *entry) {
         mp->entry = sclone(entry);
     }

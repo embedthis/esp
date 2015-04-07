@@ -1307,6 +1307,7 @@ static MdbSchema *growSchema(MdbTable *table)
                 (sizeof(MdbCol) * (table->schema->capacity + MDB_INCR)))) == 0) {
             return 0;
         }
+        memset(&table->schema->cols[table->schema->capacity], 0, MDB_INCR * sizeof(MdbCol));
         table->schema->capacity += MDB_INCR;
     }
     return table->schema;

@@ -878,8 +878,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
         mprSetName mprVerifyMem mprVirtAlloc mprVirtFree
  */
 typedef struct MprMem {
-    MprMemSize  size;                   /**< Size in bytes. This is a 32-bit quantity on all systems unless ME_MPR_ALLOC_BIG
-                                             is defined and then it will be 64 bits. */
+    MprMemSize  size;                   /**< Size of the block in bytes. Not the amount requested by the user which
+                                             may be smaller. This is a 32-bit quantity on all systems unless 
+                                             ME_MPR_ALLOC_BIG is defined and then it will be 64 bits. */
     uchar       qindex;                 /**< Freeq index. Always less than 512 queues. */
     uchar       eternal;                /**< Immune from GC. Implemented as a byte to be atomic */
     uchar       free: 1;                /**< Block not in use */
@@ -1334,14 +1335,14 @@ PUBLIC void mprPrintMem(cchar *msg, int flags);
 /**
     Reallocate a block
     @description Reallocates a block increasing its size. If the specified size is less than the current block size,
-        the call will ignore the request and simply return the existing block. The memory is zeroed.
+        the call will ignore the request and simply return the existing block. The new memory portion is not zeroed.
     @param ptr Memory to reallocate. If NULL, call malloc.
     @param size New size of the required memory block.
     @return Returns a pointer to the allocated block. If memory is not available the memory exhaustion handler
         specified via mprCreate will be called to allow global recovery.
     @remarks Do not mix calls to realloc and mprRealloc.
     @ingroup MprMem
-    @stability Stable.
+    @stability Evolving.
  */
 PUBLIC void *mprRealloc(void *ptr, size_t size);
 

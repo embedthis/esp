@@ -837,7 +837,7 @@ static int getEspToken(EspParse *parse)
                             <%^ control
                          */
                         if (*next == '@') {
-                            mprLog("esp warn", 0, "Using deprecated \"@%c\" control directive in esp page", *next);
+                            mprLog("esp warn", 0, "Using deprecated \"%%%c\" control directive in esp page", *next);
                         }
                         tid = ESP_TOK_CONTROL;
                         next = eatSpace(parse, ++next);
