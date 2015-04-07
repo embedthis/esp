@@ -2452,6 +2452,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpSetRouteRenameUploads</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga1965bd3f5f2033f365a0fde8a61069fe</anchor>
+      <arglist>(HttpRoute *route, bool enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpSetRouteScript</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gae797cd54af2ee6cafccb89b1590feeb7</anchor>
@@ -2684,20 +2691,6 @@
     <name>HttpUploadFile</name>
     <title>HttpUploadFile</title>
     <filename>group___http_upload_file.html</filename>
-    <member kind="function">
-      <type>void</type>
-      <name>httpAddUploadFile</name>
-      <anchorfile>group___http_upload_file.html</anchorfile>
-      <anchor>ga2a146a8d8b856ac9bfc9aff458cb9bbd</anchor>
-      <arglist>(HttpConn *conn, HttpUploadFile *file)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>httpRemoveAllUploadedFiles</name>
-      <anchorfile>group___http_upload_file.html</anchorfile>
-      <anchor>gaf0783c034eabeefdde3e194e7f773711</anchor>
-      <arglist>(HttpConn *conn)</arglist>
-    </member>
   </compound>
   <compound kind="group">
     <name>HttpRx</name>

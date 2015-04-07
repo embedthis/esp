@@ -5546,7 +5546,7 @@ PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on);
 /**
     Control the renaming of uploaded filenames
     @param route Route to modify
-    @param on Set to true to enable renaming to the client specified filename. Renaming is disabled by default.
+    @param enable Set to true to enable renaming to the client specified filename. Renaming is disabled by default.
     @ingroup HttpRoute
     @stability Prototype
  */
