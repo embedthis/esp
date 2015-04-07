@@ -4,15 +4,27 @@
 
 require support
 
-let uploadDir = Path('web/tmp')
+let upfile = 'support.es.com'
+let updir = Path('uploaded')
 
-cleanDir(uploadDir)
+cleanDir(updir)
+ttrue(updir.files().length == 0)
 
-data = http("--upload support.es.com /upload/uploadFile.html")
+//  Upload to html
+data = http("--upload support.es.com /upload/upload.html")
 ttrue(data.contains('Upload Complete'))
+ttrue(updir.files().length > 0)
+ttrue(updir.join(upfile).exists)
+ttrue(updir.join(upfile).readString().contains('support.es.com --'))
+cleanDir(updir)
+ttrue(updir.files().length == 0)
 
-for each (file in uploadDir) {
-    ttrue(file.readString() == Path('support.es.com').readString())
-    break
-}
-cleanDir(uploadDir)
+//  Upload to esp
+data = http("--upload support.es.com /upload/upload.esp")
+ttrue(data.contains('Upload Complete'))
+ttrue(updir.files().length > 0)
+ttrue(updir.join(upfile).exists)
+ttrue(updir.join(upfile).readString().contains('support.es.com --'))
+
+cleanDir(updir)
+ttrue(updir.files().length == 0)

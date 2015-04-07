@@ -4507,6 +4507,7 @@ typedef struct HttpRoute {
     void            *context;               /**< Hosting context (Appweb == EjsPool) */
     void            *eroute;                /**< Extended route information for handler (only) */
     int             autoDelete;             /**< Automatically delete uploaded files */
+    int             renameUploads;          /**< Rename uploaded files */
 
     HttpLimits      *limits;                /**< Host resource limits */
     MprHash         *mimeTypes;             /**< Hash table of mime types (key is extension) */
@@ -5532,19 +5533,6 @@ PUBLIC void httpSetRoutePattern(HttpRoute *route, cchar *pattern, int flags);
  */
 PUBLIC void httpSetRoutePrefix(HttpRoute *route, cchar *prefix);
 
-#if DEPRECATE || 1
-/**
-    Set the route prefix for server-side URIs
-    @description The server-side route prefix is appended to the route prefix to create the complete prefix
-    to issue server-side requests. The prefix is made available as the "${request:serverPrefix}" token.
-    @param route Route to modify
-    @param prefix URI prefix to define for server-side routes.
-    @ingroup HttpRoute
-    @stability Evolving
- */
-PUBLIC void httpSetRouteServerPrefix(HttpRoute *route, cchar *prefix);
-#endif
-
 /**
     Set the route to preserve WebSocket frames boundaries
     @description When enabled, the WebSocketFilter will not merge or fragment frames.
@@ -5554,6 +5542,15 @@ PUBLIC void httpSetRouteServerPrefix(HttpRoute *route, cchar *prefix);
     @stability Evolving
  */
 PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on);
+
+/**
+    Control the renaming of uploaded filenames
+    @param route Route to modify
+    @param on Set to true to enable renaming to the client specified filename. Renaming is disabled by default.
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
 
 /**
     Set the script to service the route.
@@ -5567,6 +5564,19 @@ PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on);
     @internal
  */
 PUBLIC void httpSetRouteScript(HttpRoute *route, cchar *script, cchar *scriptPath);
+
+#if DEPRECATE || 1
+/**
+    Set the route prefix for server-side URIs
+    @description The server-side route prefix is appended to the route prefix to create the complete prefix
+    to issue server-side requests. The prefix is made available as the "${request:serverPrefix}" token.
+    @param route Route to modify
+    @param prefix URI prefix to define for server-side routes.
+    @ingroup HttpRoute
+    @stability Evolving
+ */
+PUBLIC void httpSetRouteServerPrefix(HttpRoute *route, cchar *prefix);
+#endif
 
 /**
     Define whether to show errors to the client
@@ -6015,6 +6025,7 @@ typedef struct HttpUploadFile {
     ssize           size;                   /**< Uploaded file size */
 } HttpUploadFile;
 
+#if UNUSED
 /**
     Add an Uploaded file
     @description Add an uploaded file to the Rx.files collection.
@@ -6035,6 +6046,7 @@ PUBLIC void httpAddUploadFile(HttpConn *conn, HttpUploadFile *file);
     @internal
  */
 PUBLIC void httpRemoveAllUploadedFiles(HttpConn *conn);
+#endif
 
 /********************************** HttpRx *********************************/
 /*
@@ -6113,6 +6125,7 @@ typedef struct HttpRx {
     bool            ifMatch: 1;             /**< If-Match processing requested */
     bool            needInputPipeline: 1;   /**< Input pipeline required to process received data */
     bool            ownParams: 1;           /**< Do own parameter handling */
+    bool            renameUploads: 1;       /**< Rename uploaded files to the client specified filename */
     bool            sessionProbed: 1;       /**< Session has been resolved */
     bool            skipTrace: 1;           /**< Omit trace for this request */
     bool            streaming: 1;           /**< Stream incoming content. Forms typically buffer and dont stream */

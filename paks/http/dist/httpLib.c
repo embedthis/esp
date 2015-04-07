@@ -4736,6 +4736,12 @@ static void parseRedirect(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseRenameUploads(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetRouteRenameUploads(route, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
+}
+
+
 /*
     Create RESTful routes
  */
@@ -5441,6 +5447,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.pipeline.handlers", parsePipelineHandlers);
     httpAddConfig("http.prefix", parsePrefix);
     httpAddConfig("http.redirect", parseRedirect);
+    httpAddConfig("http.renameUploads", parseRenameUploads);
     httpAddConfig("http.routes", parseRoutes);
     httpAddConfig("http.resources", parseResources);
     httpAddConfig("http.scheme", parseScheme);
@@ -12553,6 +12560,7 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     route->patternCompiled = parent->patternCompiled;
     route->prefix = parent->prefix;
     route->prefixLen = parent->prefixLen;
+    route->renameUploads = parent->renameUploads;
     route->requestHeaders = parent->requestHeaders;
     route->responseFormat = parent->responseFormat;
     route->responseStatus = parent->responseStatus;
@@ -13586,6 +13594,13 @@ PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool enable)
 {
     assert(route);
     route->autoDelete = enable;
+}
+
+
+PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable)
+{
+    assert(route);
+    route->renameUploads = enable;
 }
 
 
@@ -20540,6 +20555,7 @@ typedef struct Upload {
 
 /********************************** Forwards **********************************/
 
+static void addUploadFile(HttpConn *conn, HttpUploadFile *upfile);
 static void closeUpload(HttpQueue *q);
 static char *getBoundary(char *buf, ssize bufLen, char *boundary, ssize boundaryLen, bool *pureData);
 static void incomingUpload(HttpQueue *q, HttpPacket *packet);
@@ -20550,6 +20566,7 @@ static int openUpload(HttpQueue *q);
 static int  processUploadBoundary(HttpQueue *q, char *line);
 static int  processUploadHeader(HttpQueue *q, char *line);
 static int  processUploadData(HttpQueue *q);
+static void cleanUploadedFiles(HttpConn *conn);
 
 /************************************* Code ***********************************/
 
@@ -20630,6 +20647,7 @@ static int openUpload(HttpQueue *q)
     q->queueData = up;
     up->contentState = HTTP_UPLOAD_BOUNDARY;
     rx->autoDelete = rx->route->autoDelete;
+    rx->renameUploads = rx->route->renameUploads;
 
     uploadDir = getUploadDir(rx->route);
     httpSetParam(conn, "UPLOAD_DIR", uploadDir);
@@ -20672,9 +20690,7 @@ static void closeUpload(HttpQueue *q)
     rx = q->conn->rx;
     up = q->queueData;
 
-    if (rx->autoDelete) {
-        httpRemoveAllUploadedFiles(q->conn);
-    }
+    cleanUploadedFiles(q->conn);
     if (up->currentFile) {
         file = up->currentFile;
         file->filename = 0;
@@ -20873,6 +20889,16 @@ static int processUploadHeader(HttpQueue *q, char *line)
                     httpError(conn, HTTP_CODE_BAD_REQUEST, "Bad upload state. Missing name field");
                     return MPR_ERR_BAD_STATE;
                 }
+                /*
+                    Client filenames must be simple filenames without illegal characters or path separators.
+                    We are deliberately restrictive here to assist users that may use the clientFilename in shell scripts.
+                    They MUST still sanitize for their environment, but some extra caution is worthwhile.
+                 */
+                value = mprNormalizePath(value);
+                if (*value == '.' || !httpValidUriChars(value) || strpbrk(value, "\\/:*?<>|~\"'%`^\n\r\t\f")) {
+                    httpError(conn, HTTP_CODE_BAD_REQUEST, "Bad upload client filename.");
+                    return MPR_ERR_BAD_STATE;
+                }
                 up->clientFilename = sclone(value);
                 /*
                     Create the file to hold the uploaded data
@@ -20902,7 +20928,7 @@ static int processUploadHeader(HttpQueue *q, char *line)
                 file->clientFilename = up->clientFilename;
                 file->filename = up->tmpPath;
                 file->name = up->name;
-                httpAddUploadFile(conn, file);
+                addUploadFile(conn, file);
             }
             key = nextPair;
         }
@@ -21132,6 +21158,45 @@ static char *getBoundary(char *buf, ssize bufLen, char *boundary, ssize boundary
     }
     *pureData = 0;
     return 0;
+}
+
+
+static void addUploadFile(HttpConn *conn, HttpUploadFile *upfile)
+{
+    HttpRx   *rx;
+
+    rx = conn->rx;
+    if (rx->files == 0) {
+        rx->files = mprCreateList(0, MPR_LIST_STABLE);
+    }
+    mprAddItem(rx->files, upfile);
+}
+
+
+static void cleanUploadedFiles(HttpConn *conn)
+{
+    HttpRx          *rx;
+    HttpUploadFile  *file;
+    cchar           *path, *uploadDir;
+    int             index;
+
+    rx = conn->rx;
+    uploadDir = getUploadDir(rx->route);
+
+    for (ITERATE_ITEMS(rx->files, file, index)) {
+        if (file->filename) {
+            if (rx->autoDelete) {
+                mprDeletePath(file->filename);
+
+            } else if (rx->renameUploads) {
+                path = mprJoinPath(uploadDir, file->clientFilename);
+                if (rename(file->filename, path) != 0) {
+                    mprLog("http error", 0, "Cannot rename %s to %s", file->filename, path);
+                }
+            }
+            file->filename = 0;
+        }
+    }
 }
 
 /*
@@ -22687,34 +22752,6 @@ PUBLIC bool httpMatchParam(HttpConn *conn, cchar *var, cchar *value)
     return smatch(value, httpGetParam(conn, var, " __UNDEF__ "));
 }
 
-
-PUBLIC void httpAddUploadFile(HttpConn *conn, HttpUploadFile *upfile)
-{
-    HttpRx   *rx;
-
-    rx = conn->rx;
-    if (rx->files == 0) {
-        rx->files = mprCreateList(0, MPR_LIST_STABLE);
-    }
-    mprAddItem(rx->files, upfile);
-}
-
-
-PUBLIC void httpRemoveAllUploadedFiles(HttpConn *conn)
-{
-    HttpRx          *rx;
-    HttpUploadFile  *file;
-    int             index;
-
-    rx = conn->rx;
-
-    for (ITERATE_ITEMS(rx->files, file, index)) {
-        if (file->filename) {
-            mprDeletePath(file->filename);
-            file->filename = 0;
-        }
-    }
-}
 
 /*
     @copy   default

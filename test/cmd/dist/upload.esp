@@ -1,0 +1,31 @@
+<html><head><title>upload.esp</title></head>
+<body>
+    <pre><% {
+        HttpConn        *conn;
+        HttpUploadFile  *file;
+        char            *path;
+        int             index;
+
+        conn = getConn();
+        for (ITERATE_ITEMS(conn->rx->files, file, index)) {
+            mprTrace(0, "FILE %x\n", file);
+            render("NAME %s\n", file->name);
+            render("FILENAME %s\n", file->filename);
+            render("CLIENT_NAME %s\n", file->clientFilename);
+            render("TYPE %s\n", file->contentType);
+            render("SIZE %d\n", file->size);
+            path = mprJoinPath(httpGetRouteVar(getRoute(), "UPLOAD_DIR"), file->clientFilename);
+            rename(file->filename, path);
+            /*
+                Just for this unit test. Don't copy this pattern.
+                We are being lazy and using one route for uploads to *.html and *.esp.
+                HTML needs renameUploads and ESP does not.
+             */
+            conn->rx->renameUploads = 0;
+        }
+        if (conn->rx->files->length > 0) {
+            render("Upload Complete");
+        }
+    } %></pre>
+</body>
+</html>

@@ -88,6 +88,8 @@
             }, {
                 pattern: '^/upload/',
                 prefix: '/upload',
+                deleteUploads: false,
+                renameUploads: true,
                 pipeline: {
                     filters: [{
                         name: 'uploadFilter',

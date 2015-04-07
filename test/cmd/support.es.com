@@ -1,5 +1,5 @@
 /*
-    Support functions for the Http unit tests
+    support.es.com -- Support functions for the Http unit tests
  */
 
 module support {
