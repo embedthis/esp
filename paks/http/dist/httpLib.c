@@ -6952,8 +6952,8 @@ static void sortList(HttpConn *conn, MprList *list);
 
 /************************************* Code ***********************************/
 /*
-    Test if this request is for a directory listing. This routine is called directly by the fileHandler.
-    Directory listings are enabled in a route via "Options Indexes".
+    Test if this request is for a directory listing. This routine is called directly by the
+    fileHandler. Directory listings are enabled in a route via "Options Indexes".
  */
 PUBLIC bool httpShouldRenderDirListing(HttpConn *conn)
 {
@@ -19288,7 +19288,9 @@ PUBLIC void httpWriteTraceLogFile(HttpTrace *trace, cchar *buf, ssize len)
         unlock(trace);
         return;
     }
-    mprWriteFile(trace->file, buf, len);
+	if (trace->file) {
+		mprWriteFile(trace->file, buf, len);
+	}
     unlock(trace);
 }
 
