@@ -1332,6 +1332,10 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Default delay IP period.</td></tr>
 <tr class="apiDef">
+<td>#define</td><td><a href="#http_8h_1a288dc2d3432018e743617a5fa0489185" class="nameRef">ME_HTTP_MONITOR_PERIOD</a>&nbsp;&nbsp;&nbsp;(15 * 1000)</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Monitor prune period.</td></tr>
+<tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a50fd0105c180339e16ff8ba763b5afa7" class="nameRef">ME_HTTP_REMEDY_TIMEOUT</a>&nbsp;&nbsp;&nbsp;(60 * 1000)</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Default remedy command timeout.</td></tr>
@@ -1436,11 +1440,11 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Maximum concurrent sessions.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#http_8h_1a9c1f73d094ff79f83e9ab70182e6003e" class="nameRef">ME_MAX_TX_BODY</a>&nbsp;&nbsp;&nbsp;(INT_MAX)</td>
+<td>#define</td><td><a href="#http_8h_1a9c1f73d094ff79f83e9ab70182e6003e" class="nameRef">ME_MAX_TX_BODY</a>&nbsp;&nbsp;&nbsp;HTTP_UNLIMITED</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Maximum buffer for response data.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#http_8h_1aac077877210a7713b482e54b2acd8eda" class="nameRef">ME_MAX_UPLOAD</a>&nbsp;&nbsp;&nbsp;(INT_MAX)</td>
+<td>#define</td><td><a href="#http_8h_1aac077877210a7713b482e54b2acd8eda" class="nameRef">ME_MAX_UPLOAD</a>&nbsp;&nbsp;&nbsp;HTTP_UNLIMITED</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Maximum file upload size.</td></tr>
 <tr class="apiDef">
@@ -1714,10 +1718,7 @@ Invoked when creating listeners.
     <tr><td class="param">cchar *</td><td><td>localPlatform</td><td>
 Local (dev) platform os-arch-profile (lower case).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="mpr.dtags">MprTicks</a></td><td><td>monitorMaxPeriod</td><td>
-Maximum monitor period.
-</td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="mpr.dtags">MprTicks</a></td><td><td>monitorMinPeriod</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="mpr.dtags">MprTicks</a></td><td><td>monitorPeriod</td><td>
 Minimum monitor period.
 </td>
     <tr><td class="param">MprList *</td><td><td>monitors</td><td>
@@ -5597,12 +5598,6 @@ Maximum number of Keep-Alive requests to perform per socket.
     <tr><td class="param">int</td><td><td>processMax</td><td>
 Maximum number of processes (CGI).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>receiveBodySize</td><td>
-Maximum size of receive body data.
-</td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>receiveFormSize</td><td>
-Maximum size of form data.
-</td>
     <tr><td class="param">int</td><td><td>requestMax</td><td>
 Maximum number of simultaneous concurrent requests.
 </td>
@@ -5615,13 +5610,19 @@ Maximum number of requests per client IP.
     <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="mpr.dtags">MprTicks</a></td><td><td>requestTimeout</td><td>
 Time a request can take (msec).
 </td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>rxBodySize</td><td>
+Maximum size of receive body data.
+</td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>rxFormSize</td><td>
+Maximum size of form data.
+</td>
     <tr><td class="param">int</td><td><td>sessionMax</td><td>
 Maximum number of sessions.
 </td>
     <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="mpr.dtags">MprTicks</a></td><td><td>sessionTimeout</td><td>
 Time a session can persist (msec).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>transmissionBodySize</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>txBodySize</td><td>
 Maximum size of transmission body content.
 </td>
     <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="mpr.dtags">MprOff</a></td><td><td>uploadSize</td><td>
@@ -11635,7 +11636,7 @@ This is used internally by the http library
   </div>
   <div class="apiDetail">
 <p>Indicate the request is finalized.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Calling this routine indicates that the handler has fully finished processing the request including processing all input, generating a full response and any other required processing. This call will invoke <a class="ref" href="#group___http_tx_1ga49edf0602dd2143b518c247f9cee8720">httpFinalizeOutput</a> and then set the request finalized flag. If the request is already finalized, this call does nothing. A handler MUST call httpFinalize when it has completed processing a request. As background: there are three finalize concepts: HttpTx.finalizedConnector means the connector has sent all the output to the network. HttpTx.finalizedOutput means the handler has generated all the response output but it may not yet be fully transmited through the pipeline and to the network by the connector. HttpTx.finalized means the application has fully processed the request including reading all the input data it wishes to read and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized and HttpTx.finalizedConnector true.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Calling this routine indicates that the handler has fully finished processing the request including processing all input, generating a full response and any other required processing. This call will invoke <a class="ref" href="#group___http_tx_1ga49edf0602dd2143b518c247f9cee8720">httpFinalizeOutput</a> and then set the request finalized flag. If the request is already finalized, this call does nothing. A handler MUST call httpFinalize when it has completed processing a request. As background: there are three finalize concepts: HttpTx.finalizedOutput means the handler has generated all the response output but it may not yet be fully transmited through the pipeline and to the network by the connector. HttpTx.finalizedConnector means the connector has sent all the output to the network. HttpTx.finalized means the application has fully processed the request including reading all the input data it wishes to read and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized and HttpTx.finalizedConnector true.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>

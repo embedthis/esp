@@ -41,155 +41,165 @@ struct HttpWebSocket;
 #endif
 
 /********************************** Tunables **********************************/
+/*
+    Unlimited limit value
+ */
+#define HTTP_UNLIMITED MAXINT64
 
 #if ME_TUNE_SIZE
     #ifndef ME_MAX_QBUFFER
-        #define ME_MAX_QBUFFER         (4 * 1024)       /**< Maximum buffer for any pipeline queue */
+        #define ME_MAX_QBUFFER     (4 * 1024)           /**< Maximum buffer for any pipeline queue */
     #endif
-    #ifndef ME_MAX_CHUNK
-        #define ME_MAX_CHUNK           (4 * 1024)          /**< Maximum chunk size for transfer chunk encoding */
+    #ifndef ME_CHUNK
+        #define ME_CHUNK           (4 * 1024)           /**< Maximum chunk size for transfer chunk encoding */
     #endif
 #elif ME_TUNE_SPEED
     #ifndef ME_MAX_QBUFFER
-        #define ME_MAX_QBUFFER         (32 * 1024)
+        #define ME_MAX_QBUFFER     (32 * 1024)
     #endif
-    #ifndef ME_MAX_CHUNK
-        #define ME_MAX_CHUNK           (8 * 1024)          /**< Maximum chunk size for transfer chunk encoding */
+    #ifndef ME_CHUNK
+        #define ME_CHUNK           (8 * 1024)
     #endif
 #else
     #ifndef ME_MAX_QBUFFER
-        #define ME_MAX_QBUFFER         (8 * 1024)
+        #define ME_MAX_QBUFFER     (8 * 1024)
     #endif
-    #ifndef ME_MAX_CHUNK
-        #define ME_MAX_CHUNK           (8 * 1024)          /**< Maximum chunk size for transfer chunk encoding */
+    #ifndef ME_CHUNK
+        #define ME_CHUNK           (8 * 1024)
     #endif
+#endif
+#ifndef ME_SANITY_QBUFFER
+    #define ME_SANITY_QBUFFER        (128 * 1024)
 #endif
 
 #ifndef ME_HTTP_WEB_SOCKETS
     #define ME_HTTP_WEB_SOCKETS     1
 #endif
 #ifndef ME_HTTP_DEFAULT_METHODS
-    #define ME_HTTP_DEFAULT_METHODS "GET,POST"         /**< Default methods for routes */
+    #define ME_HTTP_DEFAULT_METHODS "GET,POST"          /**< Default methods for routes */
 #endif
 #ifndef ME_HTTP_PORT
     #define ME_HTTP_PORT           80
 #endif
 #ifndef ME_HTTP_SOFTWARE
-    #define ME_HTTP_SOFTWARE       "Embedthis-http"    /**< Default Http protocol name used in Http Server header */
+    #define ME_HTTP_SOFTWARE       "Embedthis-http"     /**< Default Http protocol name used in Http Server header */
 #endif
 #ifndef ME_HTTP_BAN_PERIOD
-    #define ME_HTTP_BAN_PERIOD     (5 * 60 * 1000)     /**< Default ban IP period */
+    #define ME_HTTP_BAN_PERIOD     (5 * 60 * 1000)      /**< Default ban IP period */
 #endif
 #ifndef ME_HTTP_DELAY_PERIOD
-    #define ME_HTTP_DELAY_PERIOD   (5 * 60 * 1000)     /**< Default delay IP period */
+    #define ME_HTTP_DELAY_PERIOD   (5 * 60 * 1000)      /**< Default delay IP period */
+#endif
+#ifndef ME_HTTP_MONITOR_PERIOD
+    #define ME_HTTP_MONITOR_PERIOD (15 * 1000)          /**< Monitor prune period */
 #endif
 #ifndef ME_HTTP_REMEDY_TIMEOUT
-    #define ME_HTTP_REMEDY_TIMEOUT (60 * 1000)         /**< Default remedy command timeout */
+    #define ME_HTTP_REMEDY_TIMEOUT (60 * 1000)          /**< Default remedy command timeout */
 #endif
 #ifndef ME_HTTP_DELAY
-    #define ME_HTTP_DELAY          (2000)              /**< 2 second delay per request - while delay enforced */
+    #define ME_HTTP_DELAY          (2000)               /**< 2 second delay per request - while delay enforced */
 #endif
 #ifndef ME_MAX_URI
-    #define ME_MAX_URI             512                 /**< Reasonable URI size */
+    #define ME_MAX_URI             512                  /**< Reasonable URI size */
 #endif
 #ifndef ME_MAX_IOVEC
-    #define ME_MAX_IOVEC           16                  /**< Number of fragments in a single socket write */
+    #define ME_MAX_IOVEC           16                   /**< Number of fragments in a single socket write */
 #endif
 #ifndef ME_MAX_CLIENTS_HASH
-    #define ME_MAX_CLIENTS_HASH    131                 /**< Hash table for client IP addresses */
+    #define ME_MAX_CLIENTS_HASH    131                  /**< Hash table for client IP addresses */
 #endif
 #ifndef  ME_MAX_CACHE_ITEM
-    #define ME_MAX_CACHE_ITEM      (256 * 1024)        /**< Maximum cachable item size */
+    #define ME_MAX_CACHE_ITEM      (256 * 1024)         /**< Maximum cachable item size */
 #endif
 #ifndef ME_MAX_CHUNK
-    #define ME_MAX_CHUNK           (8 * 1024)          /**< Maximum chunk size for transfer chunk encoding */
+    #define ME_MAX_CHUNK           (8 * 1024)           /**< Maximum chunk size for transfer chunk encoding */
 #endif
 #ifndef ME_MAX_CLIENTS
-    #define ME_MAX_CLIENTS         32                  /**< Maximum unique client IP addresses */
+    #define ME_MAX_CLIENTS         32                   /**< Maximum unique client IP addresses */
 #endif
 #ifndef ME_MAX_CONNECTIONS
-    #define ME_MAX_CONNECTIONS     50                  /**< Maximum concurrent client endpoints */
+    #define ME_MAX_CONNECTIONS     50                    /**< Maximum concurrent client endpoints */
 #endif
 #ifndef ME_MAX_HEADERS
-    #define ME_MAX_HEADERS         8192                /**< Maximum size of the headers (8K) */
+    #define ME_MAX_HEADERS         8192                 /**< Maximum size of the headers (8K) */
 #endif
 #ifndef ME_MAX_KEEP_ALIVE
-    #define ME_MAX_KEEP_ALIVE      200                 /**< Maximum requests per connection */
+    #define ME_MAX_KEEP_ALIVE      200                  /**< Maximum requests per connection */
 #endif
 #ifndef ME_MAX_NUM_HEADERS
-    #define ME_MAX_NUM_HEADERS     64                  /**< Maximum number of header lines */
+    #define ME_MAX_NUM_HEADERS     64                   /**< Maximum number of header lines */
 #endif
 #ifndef ME_MAX_PROCESSES
-    #define ME_MAX_PROCESSES       10                  /**< Maximum concurrent processes */
+    #define ME_MAX_PROCESSES       10                   /**< Maximum concurrent processes */
 #endif
 #ifndef ME_MAX_RECEIVE_BODY
-    #define ME_MAX_RECEIVE_BODY    (512 * 1024)        /**< Maximum incoming body size (512K) */
+    #define ME_MAX_RECEIVE_BODY    (512 * 1024)         /**< Maximum incoming body size (512K) */
 #endif
 #ifndef ME_MAX_RECEIVE_FORM
-    #define ME_MAX_RECEIVE_FORM    (512 * 1024)        /**< Maximum incoming form size (512K) */
+    #define ME_MAX_RECEIVE_FORM    (512 * 1024)         /**< Maximum incoming form size (512K) */
 #endif
 #ifndef ME_MAX_REQUESTS_PER_CLIENT
-    #define ME_MAX_REQUESTS_PER_CLIENT 20              /**< Maximum concurrent requests per client */
+    #define ME_MAX_REQUESTS_PER_CLIENT 20               /**< Maximum concurrent requests per client */
 #endif
 #ifndef ME_MAX_REWRITE
-    #define ME_MAX_REWRITE         20                  /**< Maximum URI rewrites */
+    #define ME_MAX_REWRITE         20                   /**< Maximum URI rewrites */
 #endif
 #ifndef ME_MAX_ROUTE_MATCHES
-    #define ME_MAX_ROUTE_MATCHES   32                  /**< Maximum number of submatches in routes */
+    #define ME_MAX_ROUTE_MATCHES   32                   /**< Maximum number of submatches in routes */
 #endif
 #ifndef ME_MAX_ROUTE_MAP_HASH
-    #define ME_MAX_ROUTE_MAP_HASH  17                  /**< Size of the route mapping hash */
+    #define ME_MAX_ROUTE_MAP_HASH  17                   /**< Size of the route mapping hash */
 #endif
 #ifndef ME_MAX_SESSIONS
-    #define ME_MAX_SESSIONS        100                 /**< Maximum concurrent sessions */
+    #define ME_MAX_SESSIONS        100                  /**< Maximum concurrent sessions */
 #endif
 #ifndef ME_MAX_SESSION_HASH
-    #define ME_MAX_SESSION_HASH    31                  /**< Hash table for session data */
+    #define ME_MAX_SESSION_HASH    31                   /**< Hash table for session data */
 #endif
 #ifndef ME_MAX_TX_BODY
-    #define ME_MAX_TX_BODY         (INT_MAX)           /**< Maximum buffer for response data */
+    #define ME_MAX_TX_BODY         HTTP_UNLIMITED       /**< Maximum buffer for response data */
 #endif
 #ifndef ME_MAX_UPLOAD
-    #define ME_MAX_UPLOAD          (INT_MAX)           /**< Maximum file upload size */
+    #define ME_MAX_UPLOAD          HTTP_UNLIMITED       /**< Maximum file upload size */
 #endif
 #ifndef ME_MAX_WSS_FRAME
-    #define ME_MAX_WSS_FRAME       (4 * 1024)          /**< Default max WebSockets message frame size */
+    #define ME_MAX_WSS_FRAME       (4 * 1024)           /**< Default max WebSockets message frame size */
 #endif
 #ifndef ME_MAX_WSS_PACKET
-    #define ME_MAX_WSS_PACKET      (8 * 1024)          /**< Default size to provide to application in one packet */
+    #define ME_MAX_WSS_PACKET      (8 * 1024)           /**< Default size to provide to application in one packet */
 #endif
 #ifndef ME_MAX_WSS_SOCKETS
-    #define ME_MAX_WSS_SOCKETS     25                  /**< Default max WebSockets */
+    #define ME_MAX_WSS_SOCKETS     25                   /**< Default max WebSockets */
 #endif
 #ifndef ME_MAX_WSS_MESSAGE
-    #define ME_MAX_WSS_MESSAGE     (2147483647)        /**< Default max WebSockets message size (2GB) */
+    #define ME_MAX_WSS_MESSAGE     (2147483647)         /**< Default max WebSockets message size (2GB) */
 #endif
 #ifndef ME_MAX_CACHE_DURATION
-    #define ME_MAX_CACHE_DURATION  (86400 * 1000)      /**< Default cache lifespan to 1 day */
+    #define ME_MAX_CACHE_DURATION  (86400 * 1000)       /**< Default cache lifespan to 1 day */
 #endif
 #ifndef ME_MAX_INACTIVITY_DURATION
-    #define ME_MAX_INACTIVITY_DURATION (30  * 1000)    /**< Default keep connection alive between requests timeout (30 sec) */
+    #define ME_MAX_INACTIVITY_DURATION (30  * 1000)     /**< Default keep connection alive between requests timeout (30 sec) */
 #endif
 #ifndef ME_MAX_PARSE_DURATION
-    #define ME_MAX_PARSE_DURATION  (5  * 1000)         /**< Default request parse header timeout (5 sec) */
+    #define ME_MAX_PARSE_DURATION  (5  * 1000)          /**< Default request parse header timeout (5 sec) */
 #endif
 #ifndef ME_MAX_REQUEST_DURATION
-    #define ME_MAX_REQUEST_DURATION (5 * 60 * 1000)    /**< Default request timeout (5 minutes) */
+    #define ME_MAX_REQUEST_DURATION (5 * 60 * 1000)     /**< Default request timeout (5 minutes) */
 #endif
 #ifndef ME_MAX_SESSION_DURATION
-    #define ME_MAX_SESSION_DURATION (5 * 60 * 1000)    /**< Default session inactivity timeout (5 mins) */
+    #define ME_MAX_SESSION_DURATION (5 * 60 * 1000)     /**< Default session inactivity timeout (5 mins) */
 #endif
 #ifndef ME_MAX_PING_DURATION
-    #define ME_MAX_PING_DURATION   (30 * 1000)         /**< WSS ping defeat Keep-Alive timeouts (30 sec) */
+    #define ME_MAX_PING_DURATION   (30 * 1000)          /**< WSS ping defeat Keep-Alive timeouts (30 sec) */
 #endif
 #ifndef ME_XSRF_COOKIE
-    #define ME_XSRF_COOKIE        "XSRF-TOKEN"         /**< CSRF token cookie name */
+    #define ME_XSRF_COOKIE        "XSRF-TOKEN"          /**< CSRF token cookie name */
 #endif
 #ifndef ME_XSRF_HEADER
-    #define ME_XSRF_HEADER        "X-XSRF-TOKEN"       /**< CSRF token name in Http headers */
+    #define ME_XSRF_HEADER        "X-XSRF-TOKEN"        /**< CSRF token name in Http headers */
 #endif
 #ifndef ME_XSRF_PARAM
-    #define ME_XSRF_PARAM         "-xsrf-"             /**< CSRF parameter in form fields */
+    #define ME_XSRF_PARAM         "-xsrf-"              /**< CSRF parameter in form fields */
 #endif
 
 #ifndef ME_HTTP_LOG
@@ -925,8 +935,7 @@ typedef struct Http {
     void            *forkData;
 
     int             monitorsStarted;        /**< Monitors are running */
-    MprTicks        monitorMaxPeriod;       /**< Maximum monitor period */
-    MprTicks        monitorMinPeriod;       /**< Minimum monitor period */
+    MprTicks        monitorPeriod;          /**< Minimum monitor period */
 
     int             nextAuth;               /**< Auth object version vector */
     int             activeProcesses;        /**< Count of active external processes */
@@ -1310,9 +1319,9 @@ typedef struct HttpLimits {
     ssize    uriSize;                   /**< Maximum size of a uri */
     ssize    cacheItemSize;             /**< Maximum size of a cachable item */
 
-    MprOff   receiveFormSize;           /**< Maximum size of form data */
-    MprOff   receiveBodySize;           /**< Maximum size of receive body data */
-    MprOff   transmissionBodySize;      /**< Maximum size of transmission body content */
+    MprOff   rxFormSize;                /**< Maximum size of form data */
+    MprOff   rxBodySize;                /**< Maximum size of receive body data */
+    MprOff   txBodySize;                /**< Maximum size of transmission body content */
     MprOff   uploadSize;                /**< Maximum size of an uploaded file */
 
     int      clientMax;                 /**< Maximum number of unique clients IP addresses */
@@ -1328,8 +1337,8 @@ typedef struct HttpLimits {
     MprTicks requestParseTimeout;       /**< Time a request can take to parse the request headers (msec) */
     MprTicks requestTimeout;            /**< Time a request can take (msec) */
     MprTicks sessionTimeout;            /**< Time a session can persist (msec) */
-    MprTicks webSocketsPing;            /**< Time between pings */
 
+    MprTicks webSocketsPing;            /**< Time between pings */
     int      webSocketsMax;             /**< Maximum number of WebSockets */
     ssize    webSocketsMessageSize;     /**< Maximum total size of a WebSocket message including all frames */
     ssize    webSocketsFrameSize;       /**< Maximum size of sent WebSocket frames. Incoming frames have no limit
@@ -6802,13 +6811,14 @@ PUBLIC void httpDestroyTx(HttpTx *tx);
     Indicate the request is finalized.
     @description Calling this routine indicates that the handler has fully finished processing the request including
         processing all input, generating a full response and any other required processing. This call will invoke
-        #httpFinalizeOutput and then set the request finalized flag. If the request is already finalized, this call does nothing.
-        A handler MUST call httpFinalize when it has completed processing a request.
-        As background: there are three finalize concepts: HttpTx.finalizedConnector means the connector has sent all the output
-        to the network. HttpTx.finalizedOutput means the handler has generated all the response output but it may not yet be fully
-        transmited through the pipeline and to the network by the connector. HttpTx.finalized means the application has fully
-        processed the request including reading all the input data it wishes to read and has generated all the output that will
-        be generated. A fully finalized request has both HttpTx.finalized and HttpTx.finalizedConnector true.
+        #httpFinalizeOutput and then set the request finalized flag. If the request is already finalized, this call 
+        does nothing. A handler MUST call httpFinalize when it has completed processing a request.
+        As background: there are three finalize concepts: HttpTx.finalizedOutput means the handler has generated all 
+        the response output but it may not yet be fully transmited through the pipeline and to the network by the 
+        connector. HttpTx.finalizedConnector means the connector has sent all the output to the network.  HttpTx.finalized 
+        means the application has fully processed the request including reading all the input data it wishes to read 
+        and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized 
+        and HttpTx.finalizedConnector true.
     @param conn HttpConn connection object
     @ingroup HttpTx
     @stability Stable

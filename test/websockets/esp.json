@@ -43,9 +43,9 @@
                     webSocketsMessage: '10MB',
                     webSocketsPacket: '8K',
                     webSocketsFrame: '4K',
-                    requestBody: 'unlimited',
-                },
-            },
-        ],
-    },
+                    rxBody: 'unlimited',
+                }
+            }
+        ]
+    }
 }

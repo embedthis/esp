@@ -118,8 +118,7 @@ PUBLIC Http *httpCreate(int flags)
     http->routeSets = mprCreateHash(-1, MPR_HASH_STATIC_VALUES | MPR_HASH_STABLE);
     http->booted = mprGetTime();
     http->flags = flags;
-    http->monitorMaxPeriod = 0;
-    http->monitorMinPeriod = MAXINT;
+    http->monitorPeriod = ME_HTTP_MONITOR_PERIOD;
     http->secret = mprGetRandomString(HTTP_MAX_SECRET);
     http->trace = httpCreateTrace(0);
     http->startLevel = 2;
@@ -477,15 +476,15 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->webSocketsPing = ME_MAX_PING_DURATION;
 
     if (serverSide) {
-        limits->receiveFormSize = ME_MAX_RECEIVE_FORM;
-        limits->receiveBodySize = ME_MAX_RECEIVE_BODY;
-        limits->transmissionBodySize = ME_MAX_TX_BODY;
+        limits->rxFormSize = ME_MAX_RECEIVE_FORM;
+        limits->rxBodySize = ME_MAX_RECEIVE_BODY;
+        limits->txBodySize = ME_MAX_TX_BODY;
         limits->uploadSize = ME_MAX_UPLOAD;
     } else {
-        limits->receiveFormSize = MAXOFF;
-        limits->receiveBodySize = MAXOFF;
-        limits->transmissionBodySize = MAXOFF;
-        limits->uploadSize = MAXOFF;
+        limits->rxFormSize = HTTP_UNLIMITED;
+        limits->rxBodySize = HTTP_UNLIMITED;
+        limits->txBodySize = HTTP_UNLIMITED;
+        limits->uploadSize = HTTP_UNLIMITED;
     }
 
 #if KEEP
@@ -520,10 +519,10 @@ PUBLIC HttpLimits *httpCreateLimits(int serverSide)
 
 PUBLIC void httpEaseLimits(HttpLimits *limits)
 {
-    limits->receiveFormSize = MAXOFF;
-    limits->receiveBodySize = MAXOFF;
-    limits->transmissionBodySize = MAXOFF;
-    limits->uploadSize = MAXOFF;
+    limits->rxFormSize = HTTP_UNLIMITED;
+    limits->rxBodySize = HTTP_UNLIMITED;
+    limits->txBodySize = HTTP_UNLIMITED;
+    limits->uploadSize = HTTP_UNLIMITED;
 }
 
 
@@ -3274,6 +3273,7 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
 {
     HttpPacket  *packet;
     HttpQueue   *q;
+    HttpLimits  *limits;
     MprBuf      *content;
     MprTicks    start, delay;
     ssize       nbytes, len;
@@ -3282,12 +3282,13 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
     q = conn->readq;
     assert(q->count >= 0);
     assert(size >= 0);
+    limits = conn->limits;
 
     if (flags == 0) {
         flags = conn->async ? HTTP_NON_BLOCK : HTTP_BLOCK;
     }
     if (timeout < 0) {
-        timeout = conn->limits->inactivityTimeout;
+        timeout = limits->inactivityTimeout;
     } else if (timeout == 0) {
         timeout = MPR_MAX_TIMEOUT;
     }
@@ -3298,7 +3299,7 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
             if (httpRequestExpired(conn, -1)) {
                 break;
             }
-            delay = min(conn->limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
+            delay = min(limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
             httpEnableConnEvents(conn);
             mprWaitForEvent(conn->dispatcher, delay, dispatcherMark);
             if (mprGetRemainingTicks(start, timeout) <= 0) {
@@ -3520,10 +3521,12 @@ PUBLIC ssize httpWriteUploadData(HttpConn *conn, MprList *fileData, MprList *for
  */
 PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
 {
+    HttpLimits  *limits;
     MprTicks    delay, start;
     int64       dispatcherMark;
     int         justOne;
 
+    limits = conn->limits;
     if (conn->endpoint) {
         assert(!conn->endpoint);
         return MPR_ERR_BAD_STATE;
@@ -3545,7 +3548,7 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
         return MPR_ERR_BAD_STATE;
     }
     if (timeout < 0) {
-        timeout = conn->limits->requestTimeout;
+        timeout = limits->requestTimeout;
     } else if (timeout == 0) {
         timeout = MPR_MAX_TIMEOUT;
     }
@@ -3559,10 +3562,10 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
             return MPR_ERR_TIMEOUT;
         }
         httpEnableConnEvents(conn);
-        delay = min(conn->limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
+        delay = min(limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
         delay = max(delay, 0);
         mprWaitForEvent(conn->dispatcher, delay, dispatcherMark);
-        if (justOne || mprGetRemainingTicks(start, timeout) <= 0) {
+        if (justOne || (mprGetRemainingTicks(start, timeout) <= 0)) {
             break;
         }
         dispatcherMark = mprGetEventMark(conn->dispatcher);
@@ -4403,8 +4406,8 @@ static void parseLimitsBuffer(HttpRoute *route, cchar *key, MprJson *prop)
     int     size;
 
     size = httpGetInt(prop->value);
-    if (size > (1048576)) {
-        size = 1048576;
+    if (size > ME_SANITY_QBUFFER) {
+        size = ME_SANITY_QBUFFER;
     }
     route->limits->bufferSize = size;
 }
@@ -4497,27 +4500,27 @@ static void parseLimitsRequests(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseLimitsRequestBody(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseLimitsRxBody(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    route->limits->receiveBodySize = httpGetNumber(prop->value);
+    route->limits->rxBodySize = httpGetNumber(prop->value);
 }
 
 
-static void parseLimitsRequestForm(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseLimitsRxForm(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    route->limits->receiveFormSize = httpGetNumber(prop->value);
+    route->limits->rxFormSize = httpGetNumber(prop->value);
 }
 
 
-static void parseLimitsRequestHeader(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseLimitsRxHeader(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->limits->headerSize = httpGetInt(prop->value);
 }
 
 
-static void parseLimitsResponseBody(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseLimitsTxBody(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    route->limits->transmissionBodySize = httpGetNumber(prop->value);
+    route->limits->txBodySize = httpGetNumber(prop->value);
 }
 
 
@@ -4568,7 +4571,7 @@ static void parseLimitsWorkers(HttpRoute *route, cchar *key, MprJson *prop)
     int     count;
 
     count = atoi(prop->value);
-    if (count < 1) {
+    if (count <= 0) {
         count = MAXINT;
     }
     mprSetMaxWorkers(count);
@@ -5353,6 +5356,61 @@ static void parseXsrf(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+PUBLIC uint64 httpGetNumber(cchar *value)
+{
+    uint64  number;
+
+    if (smatch(value, "unlimited") || smatch(value, "infinite") || smatch(value, "never")) {
+        return HTTP_UNLIMITED;
+    }
+    value = strim(slower(value), " \t", MPR_TRIM_BOTH);
+    if (sends(value, "sec") || sends(value, "secs") || sends(value, "seconds") || sends(value, "seconds")) {
+        number = stoi(value);
+    } else if (sends(value, "min") || sends(value, "mins") || sends(value, "minute") || sends(value, "minutes")) {
+        number = stoi(value) * 60;
+    } else if (sends(value, "hr") || sends(value, "hrs") || sends(value, "hour") || sends(value, "hours")) {
+        number = stoi(value) * 60 * 60;
+    } else if (sends(value, "day") || sends(value, "days")) {
+        number = stoi(value) * 60 * 60 * 24;
+    } else if (sends(value, "kb") || sends(value, "k")) {
+        number = stoi(value) * 1024;
+    } else if (sends(value, "mb") || sends(value, "m")) {
+        number = stoi(value) * 1024 * 1024;
+    } else if (sends(value, "gb") || sends(value, "g")) {
+        number = stoi(value) * 1024 * 1024 * 1024;
+    } else if (sends(value, "byte") || sends(value, "bytes")) {
+        number = stoi(value);
+    } else {
+        number = stoi(value);
+    }
+    return number;
+}
+
+
+PUBLIC MprTicks httpGetTicks(cchar *value)
+{
+    uint64  num;
+
+    num = httpGetNumber(value);
+    if (num >= (MAXINT64 / MPR_TICKS_PER_SEC)) {
+        num = MAXINT64 / MPR_TICKS_PER_SEC;
+    }
+    return num * MPR_TICKS_PER_SEC;
+}
+
+
+PUBLIC int httpGetInt(cchar *value)
+{
+    uint64  num;
+
+    num = httpGetNumber(value);
+    if (num >= MAXINT) {
+        num = MAXINT;
+    }
+    return (int) num;
+}
+
+
 PUBLIC int httpInitParser()
 {
     HTTP->parsers = mprCreateHash(0, MPR_HASH_STATIC_VALUES);
@@ -5360,9 +5418,7 @@ PUBLIC int httpInitParser()
     /*
         Parse callbacks keys are specified as they are defined in the json files
      */
-#if DEPRECATED || 1
-    httpAddConfig("app", parseApp);
-#endif
+    httpAddConfig("directories", parseDirectories);
     httpAddConfig("http", parseHttp);
     httpAddConfig("http.aliases", parseAliases);
     httpAddConfig("http.auth", parseAuth);
@@ -5386,15 +5442,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.cgi", httpParseAll);
     httpAddConfig("http.cgi.escape", parseCgiEscape);
     httpAddConfig("http.cgi.prefix", parseCgiPrefix);
-#if KEEP
-    httpAddConfig("http.content", httpParseAll);
-    httpAddConfig("http.content.combine", parseContentCombine);
-    httpAddConfig("http.content.minify", parseContentMinify);
-    httpAddConfig("http.content.compress", parseContentCompress);
-#if DEPRECATED
-    httpAddConfig("http.content.keep", parseContentKeep);
-#endif
-#endif
     httpAddConfig("http.compress", parseCompress);
     httpAddConfig("http.database", parseDatabase);
     httpAddConfig("http.deleteUploads", parseDeleteUploads);
@@ -5424,13 +5471,13 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.keepAlive", parseLimitsKeepAlive);
     httpAddConfig("http.limits.files", parseLimitsFiles);
     httpAddConfig("http.limits.memory", parseLimitsMemory);
-    httpAddConfig("http.limits.requestBody", parseLimitsRequestBody);
-    httpAddConfig("http.limits.requestForm", parseLimitsRequestForm);
-    httpAddConfig("http.limits.requestHeader", parseLimitsRequestHeader);
-    httpAddConfig("http.limits.responseBody", parseLimitsResponseBody);
+    httpAddConfig("http.limits.rxBody", parseLimitsRxBody);
+    httpAddConfig("http.limits.rxForm", parseLimitsRxForm);
+    httpAddConfig("http.limits.rxHeader", parseLimitsRxHeader);
     httpAddConfig("http.limits.processes", parseLimitsProcesses);
     httpAddConfig("http.limits.requests", parseLimitsRequests);
     httpAddConfig("http.limits.sessions", parseLimitsSessions);
+    httpAddConfig("http.limits.txBody", parseLimitsTxBody);
     httpAddConfig("http.limits.upload", parseLimitsUpload);
     httpAddConfig("http.limits.uri", parseLimitsUri);
     httpAddConfig("http.limits.webSockets", parseLimitsWebSockets);
@@ -5451,7 +5498,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.routes", parseRoutes);
     httpAddConfig("http.resources", parseResources);
     httpAddConfig("http.scheme", parseScheme);
-
     httpAddConfig("http.server", httpParseAll);
     httpAddConfig("http.server.account", parseServerAccount);
     httpAddConfig("http.server.defenses", parseServerDefenses);
@@ -5459,8 +5505,39 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.log", parseServerLog);
     httpAddConfig("http.server.modules", parseServerModules);
     httpAddConfig("http.server.monitors", parseServerMonitors);
+    httpAddConfig("http.showErrors", parseShowErrors);
+    httpAddConfig("http.source", parseSource);
+    httpAddConfig("http.ssl", parseSsl);
+    httpAddConfig("http.ssl.authority", httpParseAll);
+    httpAddConfig("http.ssl.authority.file", parseSslAuthorityFile);
+    httpAddConfig("http.ssl.authority.directory", parseSslAuthorityDirectory);
+    httpAddConfig("http.ssl.certificate", parseSslCertificate);
+    httpAddConfig("http.ssl.ciphers", parseSslCiphers);
+    httpAddConfig("http.ssl.key", parseSslKey);
+    httpAddConfig("http.ssl.provider", parseSslProvider);
+    httpAddConfig("http.ssl.protocols", parseSslProtocols);
+    httpAddConfig("http.ssl.verify", httpParseAll);
+    httpAddConfig("http.ssl.verify.client", parseSslVerifyClient);
+    httpAddConfig("http.ssl.verify.issuer", parseSslVerifyIssuer);
+    httpAddConfig("http.stealth", parseStealth);
+    httpAddConfig("http.target", parseTarget);
+    httpAddConfig("http.timeouts", parseTimeouts);
+    httpAddConfig("http.timeouts.exit", parseTimeoutsExit);
+    httpAddConfig("http.timeouts.parse", parseTimeoutsParse);
+    httpAddConfig("http.timeouts.inactivity", parseTimeoutsInactivity);
+    httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
+    httpAddConfig("http.timeouts.session", parseTimeoutsSession);
+    httpAddConfig("http.trace", parseTrace);
+    httpAddConfig("http.update", parseUpdate);
+    httpAddConfig("http.xsrf", parseXsrf);
 
 #if DEPRECATED || 1
+    httpAddConfig("app", parseApp);
+    httpAddConfig("http.limits.requestBody", parseLimitsRxBody);
+    httpAddConfig("http.limits.responseBody", parseLimitsTxBody);
+    httpAddConfig("http.limits.requestForm", parseLimitsRxForm);
+    httpAddConfig("http.limits.requestHeader", parseLimitsRxHeader);
+    httpAddConfig("http.serverPrefix", parseServerPrefix);
     httpAddConfig("http.server.ssl", parseSsl);
     httpAddConfig("http.server.ssl.authority", httpParseAll);
     httpAddConfig("http.server.ssl.authority.file", parseSslAuthorityFile);
@@ -5474,38 +5551,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.ssl.verify.client", parseSslVerifyClient);
     httpAddConfig("http.server.ssl.verify.issuer", parseSslVerifyIssuer);
 #endif
-
-    httpAddConfig("http.showErrors", parseShowErrors);
-    httpAddConfig("http.source", parseSource);
-#if DEPRECATE || 1
-    httpAddConfig("http.serverPrefix", parseServerPrefix);
-#endif
-    httpAddConfig("http.ssl", parseSsl);
-    httpAddConfig("http.ssl.authority", httpParseAll);
-    httpAddConfig("http.ssl.authority.file", parseSslAuthorityFile);
-    httpAddConfig("http.ssl.authority.directory", parseSslAuthorityDirectory);
-    httpAddConfig("http.ssl.certificate", parseSslCertificate);
-    httpAddConfig("http.ssl.ciphers", parseSslCiphers);
-    httpAddConfig("http.ssl.key", parseSslKey);
-    httpAddConfig("http.ssl.provider", parseSslProvider);
-    httpAddConfig("http.ssl.protocols", parseSslProtocols);
-    httpAddConfig("http.ssl.verify", httpParseAll);
-    httpAddConfig("http.ssl.verify.client", parseSslVerifyClient);
-    httpAddConfig("http.ssl.verify.issuer", parseSslVerifyIssuer);
-
-    httpAddConfig("http.stealth", parseStealth);
-    httpAddConfig("http.target", parseTarget);
-    httpAddConfig("http.timeouts", parseTimeouts);
-    httpAddConfig("http.timeouts.exit", parseTimeoutsExit);
-    httpAddConfig("http.timeouts.parse", parseTimeoutsParse);
-    httpAddConfig("http.timeouts.inactivity", parseTimeoutsInactivity);
-    httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
-    httpAddConfig("http.timeouts.session", parseTimeoutsSession);
-    httpAddConfig("http.trace", parseTrace);
-    httpAddConfig("http.update", parseUpdate);
-    httpAddConfig("http.xsrf", parseXsrf);
-    httpAddConfig("directories", parseDirectories);
-
     return 0;
 }
 
@@ -5963,6 +6008,10 @@ static void readPeerData(HttpConn *conn)
         if (conn->lastRead > 0) {
             mprAdjustBufEnd(packet->content, conn->lastRead);
         } else if (conn->lastRead < 0 && mprIsSocketEof(conn->sock)) {
+            if (conn->state < HTTP_STATE_PARSED) {
+                conn->error = 1;
+                conn->rx->eof = 1;
+            }
             conn->errorMsg = conn->sock->errorMsg;
             conn->keepAliveCount = 0;
             conn->lastRead = 0;
@@ -6030,9 +6079,9 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     /*
         When a request completes, prepForNext will reset the state to HTTP_STATE_BEGIN
      */
-    if (conn->endpoint && conn->keepAliveCount <= 0 && conn->state < HTTP_STATE_PARSED) {
+    if (conn->state < HTTP_STATE_PARSED && conn->endpoint && (mprIsSocketEof(conn->sock) || (conn->keepAliveCount <= 0))) {
         httpDestroyConn(conn);
-    } else if (conn->async && !mprIsSocketEof(conn->sock) && !conn->delay) {
+    } else if (!mprIsSocketEof(conn->sock) && conn->async && !conn->delay) {
         httpEnableConnEvents(conn);
     }
     conn->io = 0;
@@ -6417,14 +6466,14 @@ PUBLIC void httpSetTimeout(HttpConn *conn, MprTicks requestTimeout, MprTicks ina
 {
     if (requestTimeout >= 0) {
         if (requestTimeout == 0) {
-            conn->limits->requestTimeout = MAXINT;
+            conn->limits->requestTimeout = HTTP_UNLIMITED;
         } else {
             conn->limits->requestTimeout = requestTimeout;
         }
     }
     if (inactivityTimeout >= 0) {
         if (inactivityTimeout == 0) {
-            conn->limits->inactivityTimeout = MAXINT;
+            conn->limits->inactivityTimeout = HTTP_UNLIMITED;
         } else {
             conn->limits->inactivityTimeout = inactivityTimeout;
         }
@@ -8376,10 +8425,10 @@ static int openFileHandler(HttpQueue *q)
                 tx->filename);
             httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot serve document");
             
-        } else if (tx->fileInfo.size > conn->limits->transmissionBodySize) {
+        } else if (tx->fileInfo.size > conn->limits->txBodySize && 
+                conn->limits->txBodySize != HTTP_UNLIMITED) {
             httpError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Http transmission aborted. File size exceeds max body of %'lld bytes",
-                    conn->limits->transmissionBodySize);
+                "Http transmission aborted. File size exceeds max body of %lld bytes", conn->limits->txBodySize);
             
         } else if (!(tx->connector == conn->http->sendConnector)) {
             /*
@@ -9384,7 +9433,7 @@ PUBLIC void httpPruneMonitors()
     MprKey      *kp;
 
     http = HTTP;
-    period = max(http->monitorMaxPeriod, 15 * MPR_TICKS_PER_SEC);
+    period = max(http->monitorPeriod, ME_HTTP_MONITOR_PERIOD);
     lock(http->addresses);
     for (ITERATE_KEY_DATA(http->addresses, kp, address)) {
         if (address->banUntil && address->banUntil < http->now) {
@@ -9510,8 +9559,7 @@ PUBLIC int httpAddMonitor(cchar *counterName, cchar *expr, uint64 limit, MprTick
     monitor->period = period;
     monitor->defenses = defenseList;
     monitor->http = http;
-    http->monitorMinPeriod = min(http->monitorMinPeriod, period);
-    http->monitorMaxPeriod = max(http->monitorMaxPeriod, period);
+    http->monitorPeriod = min(http->monitorPeriod, period);
     mprAddItem(http->monitors, monitor);
     return 0;
 }
@@ -10013,9 +10061,9 @@ static void netOutgoingService(HttpQueue *q)
     if (tx->flags & HTTP_TX_NO_BODY) {
         httpDiscardQueueData(q, 1);
     }
-    if ((tx->bytesWritten + q->count) > conn->limits->transmissionBodySize && !conn->rx->webSocket) {
+    if ((tx->bytesWritten + q->count) > conn->limits->txBodySize && conn->limits->txBodySize != HTTP_UNLIMITED) {
         httpLimitError(conn, HTTP_CODE_REQUEST_TOO_LARGE | ((tx->bytesWritten) ? HTTP_ABORT : 0),
-            "Http transmission aborted. Exceeded transmission max body of %'lld bytes", conn->limits->transmissionBodySize);
+            "Http transmission aborted. Exceeded transmission max body of %lld bytes", conn->limits->txBodySize);
         if (tx->bytesWritten) {
             httpFinalizeConnector(conn);
             return;
@@ -14988,6 +15036,7 @@ PUBLIC void httpAddPermResource(HttpRoute *parent, cchar *resource)
 PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *parent, cchar *action)
 {
     HttpRoute   *route;
+    HttpLimits  *limits;
     cchar       *path, *pattern;
 
 #if DEPRECATE || 1
@@ -14998,13 +15047,15 @@ PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *parent, cchar *action)
     path = sjoin("$1/", action, NULL);
     route = httpDefineRoute(parent, "GET", pattern, path, "${controller}.c");
     httpAddRouteFilter(route, "webSocketFilter", "", HTTP_STAGE_RX | HTTP_STAGE_TX);
-    httpGraduateLimits(route, 0);
 
     /*
-        Set some reasonable defaults. 5 minutes for inactivity and no request timeout limit
+        Set some reasonable defaults. 5 minutes for inactivity and no request timeout limit.
      */
-    route->limits->inactivityTimeout = ME_MAX_INACTIVITY_DURATION * 10;
-    route->limits->requestTimeout = MPR_MAX_TIMEOUT;
+    limits = httpGraduateLimits(route, 0);
+    limits->inactivityTimeout = ME_MAX_INACTIVITY_DURATION * 10;
+    limits->requestTimeout = HTTP_UNLIMITED;
+    limits->rxBodySize = HTTP_UNLIMITED;
+    limits->txBodySize = HTTP_UNLIMITED;
     return route;
 }
 
@@ -15771,61 +15822,6 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits)
 }
 
 
-PUBLIC uint64 httpGetNumber(cchar *value)
-{
-    uint64  number;
-
-    if (smatch(value, "unlimited") || smatch(value, "infinite") || smatch(value, "never")) {
-        return MAXINT64;
-    }
-    value = strim(slower(value), " \t", MPR_TRIM_BOTH);
-    if (sends(value, "sec") || sends(value, "secs") || sends(value, "seconds") || sends(value, "seconds")) {
-        number = stoi(value);
-    } else if (sends(value, "min") || sends(value, "mins") || sends(value, "minute") || sends(value, "minutes")) {
-        number = stoi(value) * 60;
-    } else if (sends(value, "hr") || sends(value, "hrs") || sends(value, "hour") || sends(value, "hours")) {
-        number = stoi(value) * 60 * 60;
-    } else if (sends(value, "day") || sends(value, "days")) {
-        number = stoi(value) * 60 * 60 * 24;
-    } else if (sends(value, "kb") || sends(value, "k")) {
-        number = stoi(value) * 1024;
-    } else if (sends(value, "mb") || sends(value, "m")) {
-        number = stoi(value) * 1024 * 1024;
-    } else if (sends(value, "gb") || sends(value, "g")) {
-        number = stoi(value) * 1024 * 1024 * 1024;
-    } else if (sends(value, "byte") || sends(value, "bytes")) {
-        number = stoi(value);
-    } else {
-        number = stoi(value);
-    }
-    return number;
-}
-
-
-PUBLIC MprTicks httpGetTicks(cchar *value)
-{
-    uint64  num;
-
-    num = httpGetNumber(value);
-    if (num >= (MAXINT64 / MPR_TICKS_PER_SEC)) {
-        num = MAXINT64 / MPR_TICKS_PER_SEC;
-    }
-    return num * MPR_TICKS_PER_SEC;
-}
-
-
-PUBLIC int httpGetInt(cchar *value)
-{
-    uint64  num;
-
-    num = httpGetNumber(value);
-    if (num >= MAXINT) {
-        num = MAXINT;
-    }
-    return (int) num;
-}
-
-
 #undef  GRADUATE_HASH
 #undef  GRADUATE_LIST
 
@@ -16067,8 +16063,7 @@ static bool parseIncoming(HttpConn *conn)
         conn->activeRequest = 1;
         if ((value = httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) >= limits->requestsPerClientMax) {
             httpError(conn, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
-                "Too many concurrent requests for client: %s %d/%d", conn->ip, (int) value,
-                limits->requestsPerClientMax);
+                "Too many concurrent requests for client: %s %d/%d", conn->ip, (int) value, limits->requestsPerClientMax);
             return 0;
         }
         httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
@@ -16271,7 +16266,7 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
     conn->protocol = supper(protocol);
     if (strcmp(conn->protocol, "HTTP/1.0") == 0) {
         if (rx->flags & (HTTP_POST|HTTP_PUT)) {
-            rx->remainingContent = MAXINT;
+            rx->remainingContent = HTTP_UNLIMITED;
             rx->needInputPipeline = 1;
         }
         conn->http10 = 1;
@@ -16317,7 +16312,7 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
     if (strcmp(protocol, "HTTP/1.0") == 0) {
         conn->http10 = 1;
         if (!scaselessmatch(tx->method, "HEAD")) {
-            rx->remainingContent = MAXINT;
+            rx->remainingContent = HTTP_UNLIMITED;
         }
     } else if (strcmp(protocol, "HTTP/1.1") != 0) {
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
@@ -16629,7 +16624,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                      */
                     rx->flags |= HTTP_CHUNKED;
                     rx->chunkState = HTTP_CHUNK_START;
-                    rx->remainingContent = MAXINT;
+                    rx->remainingContent = HTTP_UNLIMITED;
                     rx->needInputPipeline = 1;
                 }
             }
@@ -16678,9 +16673,9 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
             break;
         }
     }
-    if (rx->form && rx->length >= conn->limits->receiveFormSize) {
+    if (rx->form && rx->length >= conn->limits->rxFormSize && conn->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Request form of %'lld bytes is too big. Limit %'lld", rx->length, conn->limits->receiveFormSize);
+            "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
     }
     if (conn->error) {
         /* Cannot continue with keep-alive as the headers have not been correctly parsed */
@@ -16696,7 +16691,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 Connection: close
                 Location: URI
          */
-        rx->remainingContent = rx->redirect ? 0 : MAXINT;
+        rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
     }
     if (!(rx->flags & HTTP_CHUNKED)) {
         /*
@@ -16733,12 +16728,12 @@ static bool processParsed(HttpConn *conn)
             httpRouteRequest(conn);
         }
         /*
-            Delay testing receiveBodySize till after routing for streaming requests. This way, recieveBodySize
+            Delay testing rxBodySize till after routing for streaming requests. This way, recieveBodySize
             can be defined per route.
          */
-        if (!rx->upload && rx->length >= conn->limits->receiveBodySize) {
+        if (!rx->upload && rx->length >= conn->limits->rxBodySize && conn->limits->rxBodySize != HTTP_UNLIMITED) {
             httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Request content length %'lld bytes is too big. Limit %'lld", rx->length, conn->limits->receiveBodySize);
+                "Request content length %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxBodySize);
             return 0;
         }
         if (rx->streaming) {
@@ -16782,10 +16777,12 @@ static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
     HttpRx      *rx;
     HttpTx      *tx;
     MprOff      size;
+    HttpLimits  *limits;
     ssize       nbytes;
 
     rx = conn->rx;
     tx = conn->tx;
+    limits = conn->limits;
     *more = 0;
 
     if (mprIsSocketEof(conn->sock) || conn->connError) {
@@ -16808,22 +16805,25 @@ static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
     assert(nbytes >= 0);
     rx->bytesRead += nbytes;
     if (!conn->upgraded) {
-        rx->remainingContent -= nbytes;
+        if (rx->remainingContent != HTTP_UNLIMITED) {
+            rx->remainingContent -= nbytes;
+        }
         assert(rx->remainingContent >= 0);
     }
 
-    /*
-        Enforce sandbox limits
-     */
-    size = rx->bytesRead - rx->bytesUploaded;
-    if (size >= conn->limits->receiveBodySize) {
-        if (!rx->webSocket) {
+    if (limits->rxBodySize < HTTP_UNLIMITED) {
+        /*
+            Enforce sandbox limits
+         */
+        size = rx->bytesRead - rx->bytesUploaded;
+        if (size >= limits->rxBodySize) {
             httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Receive body of %'lld bytes (sofar) is too big. Limit %'lld", size, conn->limits->receiveBodySize);
+                "Receive body of %lld bytes (sofar) is too big. Limit %lld", size, limits->rxBodySize);
+
+        } else if (rx->form && size >= limits->rxFormSize) {
+            httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+                "Receive form of %lld bytes (sofar) is too big. Limit %lld", size, limits->rxFormSize);
         }
-    } else if (rx->form && size >= conn->limits->receiveFormSize) {
-        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Receive form of %'lld bytes (sofar) is too big. Limit %'lld", size, conn->limits->receiveFormSize);
     }
     if (packet && httpTracing(conn)) {
         httpTraceBody(conn, 0, packet, nbytes);
@@ -16876,7 +16876,7 @@ static bool processContent(HttpConn *conn)
     /* Packet may be null */
 
     if ((nbytes = filterPacket(conn, packet, &moreData)) > 0) {
-        if (conn->state < HTTP_STATE_FINALIZED) {
+        if (!tx->finalized) {
             if (rx->inputPipeline) {
                 httpPutPacketToNext(q, packet);
             } else {
@@ -17083,8 +17083,6 @@ static bool processFinalized(HttpConn *conn)
     }
     return 1;
 }
-
-
 
 
 static bool processCompletion(HttpConn *conn)
@@ -17870,9 +17868,10 @@ PUBLIC int httpSendOpen(HttpQueue *q)
     }
     if (!(tx->flags & HTTP_TX_NO_BODY)) {
         assert(tx->fileInfo.valid);
-        if (tx->fileInfo.size > conn->limits->transmissionBodySize) {
+        if (tx->fileInfo.size > conn->limits->txBodySize && 
+                conn->limits->txBodySize < HTTP_UNLIMITED) {
             httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Http transmission aborted. File size exceeds max body of %'lld bytes", conn->limits->transmissionBodySize);
+                "Http transmission aborted. File size exceeds max body of %lld bytes", conn->limits->txBodySize);
             return MPR_ERR_CANT_OPEN;
         }
         tx->file = mprOpenFile(tx->filename, O_RDONLY | O_BINARY, 0);
@@ -17914,9 +17913,9 @@ PUBLIC void httpSendOutgoingService(HttpQueue *q)
     if (tx->flags & HTTP_TX_NO_BODY) {
         httpDiscardQueueData(q, 1);
     }
-    if ((tx->bytesWritten + q->ioCount) > conn->limits->transmissionBodySize && !conn->rx->webSocket) {
+    if ((tx->bytesWritten + q->ioCount) > conn->limits->txBodySize && conn->limits->txBodySize < HTTP_UNLIMITED) {
         httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE | ((tx->bytesWritten) ? HTTP_ABORT : 0),
-            "Http transmission aborted. Exceeded max body of %'lld bytes", conn->limits->transmissionBodySize);
+            "Http transmission aborted. Exceeded max body of %lld bytes", conn->limits->txBodySize);
         if (tx->bytesWritten) {
             httpFinalizeConnector(conn);
             return;
@@ -20436,7 +20435,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     tx->responded = 1;
 
     for (totalWritten = 0; len > 0; ) {
-        if (conn->state >= HTTP_STATE_FINALIZED) {
+        if (conn->state >= HTTP_STATE_FINALIZED || conn->connError) {
             return MPR_ERR_CANT_WRITE;
         }
         if (q->last && q->last != q->first && q->last->flags & HTTP_PACKET_DATA && mprGetBufSpace(q->last->content) > 0) {
@@ -21006,7 +21005,7 @@ static int writeToFile(HttpQueue *q, char *data, ssize len)
         /*
             Abort the connection as we don't want the load of receiving the entire body
          */
-        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE, "Uploaded file exceeds maximum %'lld", 
+        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE, "Uploaded file exceeds maximum %lld", 
             limits->uploadSize);
         return MPR_ERR_CANT_WRITE;
     }
@@ -23016,9 +23015,10 @@ static int matchWebSock(HttpConn *conn, HttpRoute *route, int dir)
         if (ws->subProtocol && *ws->subProtocol) {
             httpSetHeaderString(conn, "Sec-WebSocket-Protocol", ws->subProtocol);
         }
+#if !ME_HTTP_WEB_SOCKETS_STEALTH
         httpSetHeader(conn, "X-Request-Timeout", "%lld", conn->limits->requestTimeout / MPR_TICKS_PER_SEC);
         httpSetHeader(conn, "X-Inactivity-Timeout", "%lld", conn->limits->inactivityTimeout / MPR_TICKS_PER_SEC);
-
+#endif
         if (route->webSocketsPingPeriod) {
             ws->pingEvent = mprCreateEvent(conn->dispatcher, "webSocket", route->webSocketsPingPeriod,
                 webSockPing, conn, MPR_EVENT_CONTINUOUS);
@@ -23026,7 +23026,7 @@ static int matchWebSock(HttpConn *conn, HttpRoute *route, int dir)
         conn->keepAliveCount = 0;
         conn->upgraded = 1;
         rx->eof = 0;
-        rx->remainingContent = MAXINT;
+        rx->remainingContent = HTTP_UNLIMITED;
         return HTTP_ROUTE_OK;
     }
     return HTTP_ROUTE_OMIT_FILTER;
@@ -23521,7 +23521,7 @@ PUBLIC ssize httpSendBlock(HttpConn *conn, int type, cchar *buf, ssize len, int 
         Note: we can come here before the handshake is complete. The data is queued and if the connection handshake
         succeeds, then the data is sent.
      */
-    if (!(HTTP_STATE_CONNECTED <= conn->state && conn->state < HTTP_STATE_FINALIZED) || !conn->upgraded) {
+    if (!(HTTP_STATE_CONNECTED <= conn->state && conn->state < HTTP_STATE_FINALIZED) || !conn->upgraded || conn->error) {
         return MPR_ERR_BAD_STATE;
     }
     if (type != WS_MSG_CONT && type != WS_MSG_TEXT && type != WS_MSG_BINARY && type != WS_MSG_CLOSE &&
@@ -23941,7 +23941,7 @@ PUBLIC int httpUpgradeWebSocket(HttpConn *conn)
 
     conn->upgraded = 1;
     conn->keepAliveCount = 0;
-    conn->rx->remainingContent = MAXINT;
+    conn->rx->remainingContent = HTTP_UNLIMITED;
     return 0;
 }
 

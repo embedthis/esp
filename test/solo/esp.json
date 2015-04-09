@@ -28,8 +28,8 @@
                     handlers: 'espHandler',
                 },
                 limits: {
-                    requestBody: 'unlimited',
-                },
+                    rxBody: 'unlimited',
+                }
             }
         ]
     }

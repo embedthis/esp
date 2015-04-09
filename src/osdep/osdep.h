@@ -927,16 +927,19 @@ typedef int64 Ticks;
     }
  */
 #ifndef ME_MAX_FNAME
-    #define ME_MAX_FNAME      256          /**< Reasonable filename size */
+    #define ME_MAX_FNAME        256         /**< Reasonable filename size */
 #endif
 #ifndef ME_MAX_PATH
-    #define ME_MAX_PATH       1024         /**< Reasonable filename size */
+    #define ME_MAX_PATH         1024        /**< Reasonable filename size */
 #endif
 #ifndef ME_MAX_BUFFER
-    #define ME_MAX_BUFFER     4096         /**< Reasonable size for buffers */
+    #define ME_MAX_BUFFER       4096        /**< Reasonable size for buffers */
 #endif
 #ifndef ME_MAX_ARGC
-    #define ME_MAX_ARGC       32           /**< Maximum number of command line args if using MAIN()*/
+    #define ME_MAX_ARGC         32          /**< Maximum number of command line args if using MAIN()*/
+#endif
+#ifndef ME_DOUBLE_BUFFER
+    #define ME_DOUBLE_BUFFER    (DBL_MANT_DIG - DBL_MIN_EXP + 4)
 #endif
 
 #ifndef ME_STACK_SIZE

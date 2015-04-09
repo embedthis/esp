@@ -4302,7 +4302,11 @@ PUBLIC int espOpen(MprModule *module)
     handler->open = openEsp;
     handler->close = closeEsp;
     handler->start = startEsp;
-    
+    /* 
+        Using the standard 'incoming' callback that simply transfers input to the queue head 
+        Applications should read by defining a notifier for READABLE events and then calling httpGetPacket
+        on the read queue.
+     */
     if ((esp = mprAllocObj(Esp, manageEsp)) == 0) {
         return MPR_ERR_MEMORY;
     }

@@ -4,7 +4,7 @@
     This tests a receiving each frame separately.
  */
 
-const PORT = tget('TM_HTTP_PORT') || "5100"
+const PORT = tget('TM_HTTP_PORT') || "4100"
 const WS = "ws://127.0.0.1:" + PORT + "/websockets/basic/frames"
 const TIMEOUT = 5000 * 1000
 

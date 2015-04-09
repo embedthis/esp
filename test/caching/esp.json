@@ -14,7 +14,7 @@
             }
         },
         limits: {
-            requestBody: 'unlimited',
+            rxBody: 'unlimited',
             cacheItem: '100k',
         },
         "trace": {

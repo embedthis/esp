@@ -563,13 +563,13 @@
             files:              "unlimited",    /* Maximum number of open files */
             keepAlive:          200,            /* Number of request to permit on a connection */
             processes:          "unlimited",    /* Maximum number of processes to run */
-            requestBody:        100K,           /* Maximum request body data */
-            requestForm:        32K,            /* Maximum request form body data */
-            requestHeader:      32K,            /* Maximum request HTTP headers size */
-            responseBody:       "2GB",          /* Maximum response body size */
+            rxBody:             "100K",         /* Maximum receive body data */
+            rxForm:             "32K",          /* Maximum receive form body data */
+            rxHeader:           "32K",          /* Maximum receive HTTP headers size */
             memory:             "200MB",        /* Maximum memory heap usage */
             requests:           20,             /* Maximum simultaneous requests */
             sessions:           100,            /* Maximum client sessions */
+            txBody:             "2GB",          /* Maximum transmit body size */
             upload:             "2GB",          /* Maximum file upload size */
             uri:                "8K",           /* Maximum URL size */
             webSockets:         20,             /* Maximum number of Web Sockets */

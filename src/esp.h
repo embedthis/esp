@@ -706,10 +706,17 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
     cchar *message, MprList *files);
 
 /**
-    Finalize processing of the http request.
-    @description Finalize the response by writing buffered HTTP data and by writing the final chunk trailer if required. If
-    using chunked transfers, a null chunk trailer is required to signify the end of write data.
-    If the request is already finalized, this call does nothing.
+    Indicate the request is finalized.
+    @description Calling this routine indicates that the handler has fully finished processing the request including
+        processing all input, generating a full response and any other required processing. This call will invoke
+        #httpFinalizeOutput and then set the request finalized flag. If the request is already finalized, this call
+        does nothing. A handler MUST call httpFinalize when it has completed processing a request.
+        As background: there are three finalize concepts: HttpTx.finalizedOutput means the handler has generated all
+        the response output but it may not yet be fully transmited through the pipeline and to the network by the
+        connector. HttpTx.finalizedConnector means the connector has sent all the output to the network.  HttpTx.finalized
+        means the application has fully processed the request including reading all the input data it wishes to read
+        and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized
+        and HttpTx.finalizedConnector true.
     @param conn HttpConn connection object
     @ingroup EspReq
     @stability Evolving

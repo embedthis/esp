@@ -62,7 +62,7 @@ typedef struct App {
     MprSsl   *ssl;               /* SSL configuration */
     char     *target;            /* Destination url */
     int      text;               /* Emit errors in plain text */
-    int      timeout;            /* Timeout in msecs for a non-responsive server */
+    MprTicks timeout;            /* Timeout in msecs for a non-responsive server */
     int      upload;             /* Upload using multipart mime */
     char     *username;          /* User name for authentication of requests */
     int      verifyPeer;         /* Validate server certs */
@@ -306,7 +306,7 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "--debugger") || smatch(argp, "-D")) {
             mprSetDebugMode(1);
             app->retries = 0;
-            app->timeout = MAXINT;
+            app->timeout = HTTP_UNLIMITED;
 
         } else if (smatch(argp, "--delete")) {
             app->method = "DELETE";
@@ -890,7 +890,7 @@ static int issueRequest(HttpConn *conn, cchar *url, MprList *files)
         } else if (!conn->error) {
             if (rc == MPR_ERR_TIMEOUT) {
                 httpError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TIMEOUT,
-                    "Inactive request timed out, exceeded request timeout %d", app->timeout);
+                    "Inactive request timed out, exceeded request timeout %lld", app->timeout);
             } else {
                 httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Connection I/O error");
             }
