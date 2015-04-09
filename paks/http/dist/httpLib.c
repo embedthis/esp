@@ -476,8 +476,8 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->webSocketsPing = ME_MAX_PING_DURATION;
 
     if (serverSide) {
-        limits->rxFormSize = ME_MAX_RECEIVE_FORM;
-        limits->rxBodySize = ME_MAX_RECEIVE_BODY;
+        limits->rxFormSize = ME_MAX_RX_FORM;
+        limits->rxBodySize = ME_MAX_RX_BODY;
         limits->txBodySize = ME_MAX_TX_BODY;
         limits->uploadSize = ME_MAX_UPLOAD;
     } else {
@@ -16795,7 +16795,7 @@ static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
             assert(rx->remainingContent == 0);
         }
     } else {
-        nbytes = min((ssize) rx->remainingContent, conn->lastRead);
+        nbytes = (ssize) min(rx->remainingContent, conn->lastRead);
         if (!conn->upgraded && (rx->remainingContent - nbytes) <= 0) {
             httpSetEof(conn);
         }

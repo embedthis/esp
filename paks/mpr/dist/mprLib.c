@@ -953,18 +953,9 @@ static ME_INLINE void triggerGC(int always)
  */
 PUBLIC int mprGC(int flags)
 {
-    MprThreadService    *ts;
-
-    ts = MPR->threadService;
     heap->freedBlocks = 0;
     if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || (heap->workDone > heap->workQuota)) {
-#if XXX || 1
-        lock(ts->threads);
-#endif
         triggerGC(flags & (MPR_GC_FORCE | MPR_GC_COMPLETE));
-#if XXX || 1
-        unlock(ts->threads);
-#endif
     }
     if (!(flags & MPR_GC_NO_BLOCK)) {
         mprYield((flags & MPR_GC_COMPLETE) ? MPR_YIELD_COMPLETE : 0);
@@ -2905,9 +2896,7 @@ PUBLIC bool mprDestroy()
     if (mprState < MPR_STOPPING) {
         mprShutdown(MPR->exitStrategy, mprExitStatus, MPR->exitTimeout);
     }
-#if XXX
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
-#endif
 
     timeout = MPR->exitTimeout;
     if (MPR->shutdownStarted) {
