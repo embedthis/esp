@@ -340,10 +340,6 @@ static int runAction(HttpConn *conn)
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
         if (mprPathExists(controller, R_OK)) {
-            /* UNUSED */
-            if (conn->sock->handler) {
-                assert(conn->sock->handler->desiredMask == 0);
-            }
             if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
@@ -383,7 +379,7 @@ static int runAction(HttpConn *conn)
 }
 
 
-static bool espRenderView(HttpConn *conn, cchar *target, int flags)
+PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 {
     HttpRx      *rx;
     HttpRoute   *route;

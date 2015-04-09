@@ -6,7 +6,6 @@
             'appweb': 'esp-server/appweb.conf',
             'migration': 'esp-server/migration.c',
             'controller': 'esp-server/controller.c',
-            //  MOB - was controller-singleton
             'controllerSingleton': 'esp-server/controller.c',
             'clientModel': 'esp-angular-mvc/model.js',
             'clientController': 'esp-angular-mvc/controller.js',

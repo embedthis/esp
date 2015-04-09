@@ -2509,7 +2509,6 @@ PUBLIC ssize espRenderString(HttpConn *conn, cchar *s);
  */
 PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
 
-#if UNUSED
 /**
     Render an ESP view page to the client
     @param conn Http connection object
@@ -2521,7 +2520,6 @@ PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
     @stability Evolving
  */
 PUBLIC bool espRenderView(HttpConn *conn, cchar *view, int flags);
-#endif
 
 /**
     Send a database grid as a JSON string
