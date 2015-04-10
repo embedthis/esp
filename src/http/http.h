@@ -4488,9 +4488,6 @@ typedef struct HttpRoute {
 
     bool            error: 1;               /**< Parse or runtime error */
     bool            keepSource: 1;          /**< Preserve generated source */
-#if UNUSED
-    bool            loaded: 1;              /**< App has been loaded */
-#endif
     bool            update: 1;              /**< Auto-update modified ESP source */
     bool            debug: 1;               /**< Application running in debug mode */
     bool            ignoreEncodingErrors: 1;/**< Ignore UTF8 encoding errors */
@@ -5087,19 +5084,6 @@ PUBLIC cchar *httpExpandRouteVars(HttpRoute *route, cchar *str);
     @stability Evolving
  */
 PUBLIC void httpFinalizeRoute(HttpRoute *route);
-
-#if UNUSED
-/**
-    Finalize loading JSON configuration files
-    @description This performs final processing of configuration files. It blends in the app.modes[] properties,
-    processes the app.http.mappings to create a client mappings string and registers defined endpoints.
-    @param route Parent route to configure
-    @return 'Zero' if successful, otherwise a negative MPR error code.
-    @ingroup HttpRoute
-    @stability Prototype
- */
-PUBLIC int httpFinalizeConfig(HttpRoute *route);
-#endif
 
 /**
     Get a route directory variable
@@ -6033,29 +6017,6 @@ typedef struct HttpUploadFile {
     cchar           *contentType;           /**< Content type */
     ssize           size;                   /**< Uploaded file size */
 } HttpUploadFile;
-
-#if UNUSED
-/**
-    Add an Uploaded file
-    @description Add an uploaded file to the Rx.files collection.
-    @param conn HttpConn connection object created via #httpCreateConn
-    @param file Instance of HttpUploadFile
-    @ingroup HttpUploadFile
-    @stability Internal
-    @internal
- */
-PUBLIC void httpAddUploadFile(HttpConn *conn, HttpUploadFile *file);
-
-/**
-    Remove all uploaded files
-    @description Remove all uploaded files from the temporary file store
-    @param conn HttpConn connection object created via #httpCreateConn
-    @ingroup HttpUploadFile
-    @stability Internal
-    @internal
- */
-PUBLIC void httpRemoveAllUploadedFiles(HttpConn *conn);
-#endif
 
 /********************************** HttpRx *********************************/
 /*

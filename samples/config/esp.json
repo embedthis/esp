@@ -639,6 +639,12 @@
         ],
 
         /*
+            Automatically rename file uploads to use the client specified filename after sanitizing.
+            Recommended to NOT use this on any public network. Defaults to false.
+         */
+        renameUploads: true,
+
+        /*
             List of routes
          */
         routes: [
