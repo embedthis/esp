@@ -33,7 +33,7 @@
                 urls: '/caching/client',
             }, {
                 server: '1day',
-                urls: [ '/small', '/big', '/huge' ],
+                urls: [ '/caching/small', '/caching/big', '/caching/huge' ],
             }, {
                 server: '1day',
                 manual: true,

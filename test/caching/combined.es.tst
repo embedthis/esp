@@ -27,8 +27,6 @@ ttrue(resp.number == first)
 ttrue(resp.uri == "/combined/caching.esp")
 ttrue(resp.query == "null")
 
-/*
-
 //  2. Test that different request parameters cache the same
 http.get(HTTP + "/combined/caching.esp?a=b&c=d")
 ttrue(http.status == 200)
@@ -37,6 +35,5 @@ let firstQuery = resp.number
 ttrue(resp.number == first)
 ttrue(resp.uri == "/combined/caching.esp")
 ttrue(resp.query == "null")
-*/
 
 http.close()
