@@ -525,7 +525,8 @@ compress: [ 'html', 'js', 'css' ]
                         <a name="limits"></a>
                         Resource limits to "<em>sandbox</em>" the server.
                         Note that values may either be numbers or strings using natural language suffixes like 
-                        <em>MB</em> or <em>GB</em>.
+                        <em>MB</em> or <em>GB</em>. The <em>rxBody</em>, <em>rxForm</em>, <em>txBody</em> and 
+                        <em>upload</em> properties may be set to <em>unlimited</em> to disable the limit checking.
                         For example:
 <code class="inverted">limits: {
     buffer:             '32KB',
@@ -537,13 +538,13 @@ compress: [ 'html', 'js', 'css' ]
     files:              0,
     keepAlive:          200,
     processes:          0,
-    requestBody:        100K,
-    requestForm:        32K,
-    requestHeader:      32K,
-    responseBody:       '2GB',
+    rxBody:             '100K',
+    rxForm:             '32K',
+    rxHeader:           '32K',
     memory:             '200MB',
     requests:           20,
     sessions:           100,
+    txBody:             '2GB',
     upload:             '2GB',
     uri:                '8K',
     webSockets:         20,
@@ -638,6 +639,14 @@ pipeline: {
                     will be redirected over HTTPS.</p></td>
                     </tr>
                     <tr>
+                        <td>renameUploads</td>
+                        <td>Automatically rename uploaded files to use the client supplied filename after sanitizing.
+                            ESP typically does not use this property and rather, an ESP controller or ESP page should
+                            validate the client details and copy / rename the uploaded temporary file as required.
+                            Recommended to not use this with ESP and only ever use on a private network. Defaults to false.
+                            accumulate in the upload directory.</td>
+                    </tr>
+                    <tr>
                         <td>resources</td>
                         <td><p>Create routes sets for the requested resources. Route sets select 
                         pre-defined route sets. Some of the available sets are: 'esp-server' and 'esp-restful'.
@@ -709,7 +718,14 @@ routes [ {
                     <tr>
                         <td><a href="#timeouts">timeouts</a></td>
                         <td>Collection of timeouts. The timeout units are in seconds but may also be defined as
-                            strings with natural suffixes such as "20secs", "1day" or "never".</td>
+                            strings with natural suffixes such as "20secs", "1day" or "unlimited".
+                        <pre class="code">timeouts: {
+    exit: '5secs',
+    parse: '5secs',
+    inactivity: '30secs',
+    request: 'unlimited',
+    session: '30mins',
+}</pre>
                     </tr>
                     <tr>
                         <td>trace</td>
