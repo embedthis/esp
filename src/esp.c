@@ -513,7 +513,7 @@ static void parseCommand(int argc, char **argv)
     } else if (smatch(cmd, "role")) {
         app->require = REQ_CONFIG;
 
-    } else if (smatch(cmd, "serve")) {
+    } else if (smatch(cmd, "serve") || smatch(cmd, "run")) {
         app->require = REQ_SERVE;
         if (argc > 1) {
             app->require = REQ_NO_CONFIG;
