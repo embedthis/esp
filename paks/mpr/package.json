@@ -30,8 +30,10 @@
         }
     ],
     "dependencies": {
+        "osdep": "^0.8"
+    },
+    "optionalDependencies": {
         "est": "^0.6",
-        "osdep": "^0.8",
         "ssl": "^0.8"
     },
     "files": [
