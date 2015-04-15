@@ -13,3 +13,5 @@ testme/
 .DS_Store
 error.log
 trace.log
+.cdrc
+.cdrc
