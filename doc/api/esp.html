@@ -112,6 +112,7 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1ga743eec6372aeb305a939bc9b0026281e" class="nameRef">espRenderSafeString</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *s)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a safe string of data to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1ga2bc125ce68d2a8a8992228f0232c9b6f" class="nameRef">espRenderString</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *s)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a string of data to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gad0c3cc923d09313ed81476b74c32ab00" class="nameRef">espRenderVar</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the value of a request variable to the client.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gaef2c8a287bbbd155ceeb919f281e8e5b" class="nameRef">espRenderView</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *view, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an ESP view page to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#group___esp_route_1ga1f27d029ea92c75a16d2c67d31f64141" class="nameRef">espRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Return the corresponding EspRoute for the given Route.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gacd7c962cf79038c3d7604c72dc43bbdb" class="nameRef">espSaveConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Save the in-memory ESP package.json configuration to the default location for the ESP application defined by the specified route.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gaed0422d33553efa73195661fd80efaee" class="nameRef">espSendGrid</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a database grid as a JSON string.</td></tr>
@@ -3475,6 +3476,27 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">name</td><td>Form variable name.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#struct_esp" class="ref">Esp</a></dd></dl>
+  </div>
+</div>
+<a name="group___esp_req_1gaef2c8a287bbbd155ceeb919f281e8e5b"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
+    espRenderView
+(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *view, int flags)
+  </div>
+  <div class="apiDetail">
+<p>Render an ESP view page to the client.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">conn</td><td>Http connection object.</td>
+    <tr><td class="param">view</td><td>View name. The view name is interpreted relative to the matching route documents directory and may omit an ESP extension.</td>
+    <tr><td class="param">flags</td><td>Reserved. Set to zero.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>True if a vew can be rendered.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>

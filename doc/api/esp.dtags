@@ -638,6 +638,13 @@
       <arglist>(HttpConn *conn, cchar *name)</arglist>
     </member>
     <member kind="function">
+      <type>bool</type>
+      <name>espRenderView</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>gaef2c8a287bbbd155ceeb919f281e8e5b</anchor>
+      <arglist>(HttpConn *conn, cchar *view, int flags)</arglist>
+    </member>
+    <member kind="function">
       <type>ssize</type>
       <name>espSendGrid</name>
       <anchorfile>group___esp_req.html</anchorfile>

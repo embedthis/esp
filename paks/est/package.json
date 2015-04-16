@@ -2,7 +2,7 @@
     "name": "est",
     "title": "Embethis EST",
     "description": "Embedthis Security Transport",
-    "version": "0.6.3",
+    "version": "0.6.4",
     "keywords": [
         "est",
         "ssl",
@@ -32,14 +32,15 @@
         }
     ],
     "dependencies": {
-        "osdep": "^0.8"
+        "osdep": "^0.8",
+        "ssl": "^0.8"
     },
     "files": [
         "dist/"
     ],
     "pak": {
         "import": true,
-        "version": ">=0.10.0",
+        "pak": ">=0.10.0",
         "origin": "embedthis/est"
     }
 }
