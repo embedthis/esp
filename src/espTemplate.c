@@ -33,6 +33,7 @@ typedef struct EspParse {
     int     lineNumber;                     /**< Line number for error reporting */
     char    *data;                          /**< Input data to parse */
     char    *next;                          /**< Next character in input */
+    cchar   *path;                          /**< Filename being parsed */
     MprBuf  *token;                         /**< Input token */
 } EspParse;
 
@@ -554,6 +555,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     parse.next = parse.data;
     parse.lineNumber = 0;
     parse.token = mprCreateBuf(0, 0);
+    parse.path = path;
     tid = getEspToken(&parse);
 
     while (tid != ESP_TOK_EOF) {
@@ -612,7 +614,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
 
 #if DEPRECATE || 1
             } else if (smatch(control, "layout")) {
-                mprLog("esp warn", 0, "Using deprecated \"layout\" control directive in esp page");
+                mprLog("esp warn", 0, "Using deprecated \"layout\" control directive in esp page: %s", path);
                 token = strim(token, " \t\r\n\"", MPR_TRIM_BOTH);
                 if (*token == '\0') {
                     layout = 0;
@@ -692,7 +694,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
         //  DEPRECATE serverPrefix in version 6
         case ESP_TOK_SERVER:
             /* @| Server URL */
-            mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page");
+            mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page: %s", path);
             mprPutToBuf(body, "  espRenderString(conn, sjoin(conn->rx->route->prefix ? conn->rx->route->prefix : \"\", conn->rx->route->serverPrefix, NULL));");
             break;
 #endif
@@ -725,7 +727,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
         }
 #endif
         bodyCode = sreplace(layoutCode, ESP_CONTENT_MARKER, mprGetBufStart(body));
-        mprLog("esp warn", 0, "Using deprecated layouts in esp page, use Expansive instead");
+        mprLog("esp warn", 0, "Using deprecated layouts in esp page: %s, use Expansive instead", path);
     } else
 #endif
     bodyCode = mprGetBufStart(body);
@@ -837,7 +839,8 @@ static int getEspToken(EspParse *parse)
                             <%^ control
                          */
                         if (*next == '@') {
-                            mprLog("esp warn", 0, "Using deprecated \"%%%c\" control directive in esp page", *next);
+                            mprLog("esp warn", 0, "Using deprecated \"%%%c\" control directive in esp page: %s", 
+                                *next, parse->path);
                         }
                         tid = ESP_TOK_CONTROL;
                         next = eatSpace(parse, ++next);
@@ -881,7 +884,7 @@ static int getEspToken(EspParse *parse)
 #if DEPRECATE || 1
         case '@':
             if (c == '@') {
-                mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page");
+                mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page: %s", parse->path);
             }
 #endif
             if ((next == start) || next[-1] != '\\') {
@@ -901,7 +904,7 @@ static int getEspToken(EspParse *parse)
 
 #if DEPRECATE || 1
                 } else if (t == '|') {
-                    mprLog("esp warn", 0, "CC Using deprecated \"|\" control directive in esp page");
+                    mprLog("esp warn", 0, "CC Using deprecated \"|\" control directive in esp page: %s", parse->path);
                     next += 2;
                     if (mprGetBufLength(parse->token) > 0) {
                         next -= 3;
