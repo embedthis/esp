@@ -19948,11 +19948,11 @@ static char classMap[] = {
 /*
     Flags
  */
-#define SPRINTF_LEFT        0x1         /* Left align */
-#define SPRINTF_SIGN        0x2         /* Always sign the result */
-#define SPRINTF_LEAD_SPACE  0x4         /* put leading space for +ve numbers */
-#define SPRINTF_ALTERNATE   0x8         /* Alternate format */
-#define SPRINTF_LEAD_ZERO   0x10        /* Zero pad */
+#define SPRINTF_LEFT_ALIGN  0x1         /* Left align the result */
+#define SPRINTF_LEAD_SIGN   0x2         /* Always sign the result */
+#define SPRINTF_LEAD_SPACE  0x4         /* Put a single leading space for +ve numbers before +/- sign */
+#define SPRINTF_LEAD_ZERO   0x8         /* Zero pad the field width after +/- sign to fill the field width */
+#define SPRINTF_ALTERNATE   0x10        /* Alternate format */
 #define SPRINTF_SHORT       0x20        /* 16-bit */
 #define SPRINTF_LONG        0x40        /* 32-bit */
 #define SPRINTF_INT64       0x80        /* 64-bit */
@@ -20236,20 +20236,20 @@ PUBLIC char *mprPrintfCore(char *buf, ssize maxsize, cchar *spec, va_list args)
 
         case STATE_MODIFIER:
             switch (c) {
-            case '+':
-                fmt.flags |= SPRINTF_SIGN;
-                break;
             case '-':
-                fmt.flags |= SPRINTF_LEFT;
+                fmt.flags |= SPRINTF_LEFT_ALIGN;
                 break;
             case '#':
                 fmt.flags |= SPRINTF_ALTERNATE;
                 break;
-            case '0':
-                fmt.flags |= SPRINTF_LEAD_ZERO;
+            case '+':
+                fmt.flags |= SPRINTF_LEAD_SIGN;
                 break;
             case ' ':
                 fmt.flags |= SPRINTF_LEAD_SPACE;
+                break;
+            case '0':
+                fmt.flags |= SPRINTF_LEAD_ZERO;
                 break;
             case ',':
             case '\'':
@@ -20263,7 +20263,7 @@ PUBLIC char *mprPrintfCore(char *buf, ssize maxsize, cchar *spec, va_list args)
                 fmt.width = va_arg(args, int);
                 if (fmt.width < 0) {
                     fmt.width = -fmt.width;
-                    fmt.flags |= SPRINTF_LEFT;
+                    fmt.flags |= SPRINTF_LEFT_ALIGN;
                 }
             } else {
                 while (isdigit((uchar) c)) {
@@ -20415,10 +20415,10 @@ PUBLIC char *mprPrintfCore(char *buf, ssize maxsize, cchar *spec, va_list args)
                     iValue = (int) va_arg(args, int);
                 }
                 if (iValue >= 0) {
-                    if (fmt.flags & SPRINTF_LEAD_SPACE) {
-                        outNum(&fmt, " ", iValue);
-                    } else if (fmt.flags & SPRINTF_SIGN) {
+                    if (fmt.flags & SPRINTF_LEAD_SIGN) {
                         outNum(&fmt, "+", iValue);
+                    } else if (fmt.flags & SPRINTF_LEAD_SPACE) {
+                        outNum(&fmt, " ", iValue);
                     } else {
                         outNum(&fmt, 0, iValue);
                     }
@@ -20524,7 +20524,7 @@ static void outString(Format *fmt, cchar *str, ssize len)
     } else if (len < 0) {
         len = slen(str);
     }
-    if (!(fmt->flags & SPRINTF_LEFT)) {
+    if (!(fmt->flags & SPRINTF_LEFT_ALIGN)) {
         for (i = len; i < fmt->width; i++) {
             BPUT(fmt, (char) ' ');
         }
@@ -20532,7 +20532,7 @@ static void outString(Format *fmt, cchar *str, ssize len)
     for (i = 0; i < len && *str; i++) {
         BPUT(fmt, *str++);
     }
-    if (fmt->flags & SPRINTF_LEFT) {
+    if (fmt->flags & SPRINTF_LEFT_ALIGN) {
         for (i = len; i < fmt->width; i++) {
             BPUT(fmt, (char) ' ');
         }
@@ -20564,7 +20564,7 @@ static void outWideString(Format *fmt, wchar *str, ssize len)
     } else if (len < 0) {
         for (cp = str, len = 0; *cp++ == 0; len++) ;
     }
-    if (!(fmt->flags & SPRINTF_LEFT)) {
+    if (!(fmt->flags & SPRINTF_LEFT_ALIGN)) {
         for (i = len; i < fmt->width; i++) {
             BPUT(fmt, (char) ' ');
         }
@@ -20572,7 +20572,7 @@ static void outWideString(Format *fmt, wchar *str, ssize len)
     for (i = 0; i < len && *str; i++) {
         BPUT(fmt, *str++);
     }
-    if (fmt->flags & SPRINTF_LEFT) {
+    if (fmt->flags & SPRINTF_LEFT_ALIGN) {
         for (i = len; i < fmt->width; i++) {
             BPUT(fmt, (char) ' ');
         }
@@ -20583,18 +20583,15 @@ static void outWideString(Format *fmt, wchar *str, ssize len)
 
 static void outNum(Format *fmt, cchar *prefix, uint64 value)
 {
-    char    numBuf[64];
-    char    *cp;
-    char    *endp;
-    char    c;
-    int     letter, len, leadingZeros, i, fill;
+    char    numBuf[64], *cp, *endp;
+    int     letter, len, leadingZeros, i, spaces;
 
     endp = &numBuf[sizeof(numBuf) - 1];
     *endp = '\0';
     cp = endp;
 
     /*
-     *  Convert to ascii
+        Convert to ascii
      */
     if (fmt->radix == 16) {
         do {
@@ -20627,20 +20624,24 @@ static void outNum(Format *fmt, cchar *prefix, uint64 value)
             value /= fmt->radix;
         } while (value > 0);
     }
-
     len = (int) (endp - cp);
-    fill = fmt->width - len;
+    spaces = fmt->width - len;
 
-    if (prefix != 0) {
-        fill -= (int) slen(prefix);
+    if (prefix) {
+        spaces -= (int) slen(prefix);
     }
-    leadingZeros = (fmt->precision > len) ? fmt->precision - len : 0;
-    fill -= leadingZeros;
+    if (fmt->precision > 0) {
+        leadingZeros = (fmt->precision > len) ? fmt->precision - len : 0;
+    } else if (fmt->flags & SPRINTF_LEAD_ZERO) {
+        leadingZeros = spaces;
+    } else {
+        leadingZeros = 0;
+    }
+    spaces -= leadingZeros;
 
-    if (!(fmt->flags & SPRINTF_LEFT)) {
-        c = (fmt->flags & SPRINTF_LEAD_ZERO) ? '0': ' ';
-        for (i = 0; i < fill; i++) {
-            BPUT(fmt, c);
+    if (!(fmt->flags & SPRINTF_LEFT_ALIGN)) {
+        for (i = 0; i < spaces; i++) {
+            BPUT(fmt, ' ');
         }
     }
     if (prefix != 0) {
@@ -20655,8 +20656,8 @@ static void outNum(Format *fmt, cchar *prefix, uint64 value)
         BPUT(fmt, *cp);
         cp++;
     }
-    if (fmt->flags & SPRINTF_LEFT) {
-        for (i = 0; i < fill; i++) {
+    if (fmt->flags & SPRINTF_LEFT_ALIGN) {
+        for (i = 0; i < spaces; i++) {
             BPUT(fmt, ' ');
         }
     }
@@ -20684,12 +20685,11 @@ static void outFloat(Format *fmt, char specChar, double value)
             fill -= (len - 1) / 3;
         }
     }
-
-    if (fmt->flags & SPRINTF_SIGN && value > 0) {
+    if (fmt->flags & SPRINTF_LEAD_SIGN && value >= 0) {
         BPUT(fmt, '+');
         fill--;
     }
-    if (!(fmt->flags & SPRINTF_LEFT)) {
+    if (!(fmt->flags & SPRINTF_LEFT_ALIGN)) {
         c = (fmt->flags & SPRINTF_LEAD_ZERO) ? '0': ' ';
         for (i = 0; i < fill; i++) {
             BPUT(fmt, c);
@@ -20704,7 +20704,7 @@ static void outFloat(Format *fmt, char specChar, double value)
             }
         }
     }
-    if (fmt->flags & SPRINTF_LEFT) {
+    if (fmt->flags & SPRINTF_LEFT_ALIGN) {
         for (i = 0; i < fill; i++) {
             BPUT(fmt, ' ');
         }
