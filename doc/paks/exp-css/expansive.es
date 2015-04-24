@@ -40,10 +40,11 @@ Expansive.load({
                  */
                 let files
                 if (service.files) {
-                    files = expansive.directories.top.files(service.files, {directories: false, relative: true})
+                    files = expansive.directories.top.files(service.files, 
+                        {contents: true, directories: false, relative: true})
                 } else {
                     let list = expansive.directories.top.files(expansive.control.documents, 
-                        {directories: false, relative: true})
+                        {contents: true, directories: false, relative: true})
                     list = list.filter(function(path) path.glob(['**/*.css', '**.css.map']))
                     files = expansive.orderFiles(list, "css")
                 }
@@ -127,6 +128,7 @@ Expansive.load({
         mappings: {
             'css',
             'min.css'
+            'css.map'
         },
         minify: false,
         dotmin: true,

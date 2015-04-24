@@ -8911,7 +8911,7 @@ static void printRoute(HttpRoute *route, int idx, bool full, int methodsLen, int
     cchar       *methods, *pattern, *target, *index;
     int         nextIndex;
 
-    if (route->flags & HTTP_ROUTE_HIDDEN) {
+    if (route->flags & HTTP_ROUTE_HIDDEN && !full) {
         return;
     }
     auth = route->auth;
@@ -8925,7 +8925,7 @@ static void printRoute(HttpRoute *route, int idx, bool full, int methodsLen, int
         if (route->prefix && *route->prefix) {
             printf("    Prefix:       %s\n", route->prefix);
         }
-        printf("    RegExp:       %s\n", route->optimizedPattern);
+        printf("    RegExp:       %s\n", route->optimizedPattern ? route->optimizedPattern : "");
         printf("    Methods:      %s\n", methods);
         printf("    Target:       %s\n", target);
         printf("    Auth:         %s\n", auth->type ? auth->type->name : "-");

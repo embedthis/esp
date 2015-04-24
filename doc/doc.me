@@ -45,8 +45,8 @@ Me.load({
                 for each (f in Path('public/man').files('*.html')) {
                     f.write(f.readString().toLowerCase())
                 }
-                trace('Listen', 'exp --nowatch')
-                run('exp --nowatch')
+                trace('Listen', 'expansive --nowatch')
+                run('expansive --nowatch')
             `
         },
     },

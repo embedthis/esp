@@ -28,7 +28,8 @@ Expansive.load({
                 if (service.files) {
                     files = directories.top.files(service.files, { directories: false, relative: true})
                 } else {
-                    let list = directories.top.files(expansive.control.documents, {directories: false, relative: true })
+                    let list = directories.top.files(expansive.control.documents, 
+                        {contents: true, directories: false, relative: true })
                     list = list.filter(function(path) path.glob(['**.js', '**.min.map', '**.min.js.map']))
                     files = expansive.orderFiles(list, "js")
                 }

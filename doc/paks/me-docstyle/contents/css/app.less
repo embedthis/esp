@@ -123,6 +123,9 @@ body {
             border-right: 18px solid @body-highlight;
         }
     }
+    &::-webkit-scrollbar {
+        width: 0px !important;
+    }
 }
 
 .ui.sidebar-launch.button {
@@ -162,9 +165,11 @@ body {
 }
 
 .ui.segment.terms {
-    margin: 6px 0 16px 0;
+    margin: 0;
+    padding: 10px 0 20px 0;
     height: @terms-height;
     color: @gray-lightest;
+    background: rgba(256, 256, 256, 0.75);
     font-size: 0.75rem;
     a:link, a:visited {
         color: @gray-lighter;
@@ -218,6 +223,10 @@ h3 + ul {
   margin-top: -0.85rem;
 }
 
+li {
+    padding-bottom: 0.75em;
+}
+
 em {
     padding: 3px;
     font-family: monospace;
@@ -230,7 +239,7 @@ em {
 
 code {
     display: block;
-    white-space: pre;
+    white-space: pre-wrap;
     margin: 1rem 0;
     padding: 1rem 1rem;
     font-family: monospace;
@@ -247,6 +256,26 @@ code {
             color: @inverted-code-bold;
             font-weight: normal;
         }
+    }
+}
+
+pre.code {
+    display: block;
+    white-space: pre-wrap;
+    margin: 1rem 0;
+    padding: 1rem 1rem;
+    font-family: monospace;
+    font-style: normal;
+    border: 1px solid #C2C2C2;
+    border-radius: 0.3rem;
+    line-height: 1.25em;
+    background-color: #EEE;
+    color: #333;
+    background: @inverted-code-background;
+    color: @inverted-code-color;
+    b {
+        color: @inverted-code-bold;
+        font-weight: normal;
     }
 }
 

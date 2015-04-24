@@ -87,8 +87,8 @@ body {
     }
 }
 
-
 .sidebar {
+    position: fixed;
     left: 0;
     padding-top: 35px;
     width: 240px;
@@ -96,7 +96,6 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     visibility: hidden;
-
     .ui.vertical.menu {
         background: @gray-dark;
         .logo {
@@ -124,10 +123,9 @@ body {
             border-right: 18px solid @body-highlight;
         }
     }
-    &::-webkit-scrollbar { 
+    &::-webkit-scrollbar {
         width: 0px !important;
     }
-    position: fixed;
 }
 
 .ui.sidebar-launch.button {
@@ -167,9 +165,11 @@ body {
 }
 
 .ui.segment.terms {
-    margin: 6px 0 16px 0;
+    margin: 0;
+    padding: 10px 0 20px 0;
     height: @terms-height;
     color: @gray-lightest;
+    background: rgba(256, 256, 256, 0.75);
     font-size: 0.75rem;
     a:link, a:visited {
         color: @gray-lighter;
