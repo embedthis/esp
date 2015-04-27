@@ -352,6 +352,17 @@ $ <b>esp compile /directory/of/apps</b>
         <code class="inverted">esp: {
     combine: true
 }</code>
+        <p>This will catenate all the controller and view page source into a single file. This is then compiled
+        into a single library. This source file will contain a single initializer function:
+        <em>esp_app_NAME_combine</em> that will register all your controller actions and view pages. If you are using
+        static linking, you must call this function from your main program. For example:</p>
+        <pre class="code">
+ESP_EXPORT int esp_app_kickstart_combine(HttpRoute *route, MprModule *module) {
+    esp_controller_kickstart_port(route, module);
+    esp_view_b839216b9138e38baf8851c81761c2d5(route, module);
+    return 0;
+}
+</pre>
 
             <a id="cleaning"></a>
             <h2>Cleaning</h2>
