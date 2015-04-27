@@ -21898,12 +21898,6 @@ static void standardSignalHandler(void *ignored, MprSignal *sp)
 #define ME_COMPILER_HAS_GETADDRINFO 1
 #endif
 
-/********************************** Defines ***********************************/
-
-#ifndef ME_MAX_IP
-    #define ME_MAX_IP 1024
-#endif
-
 /********************************** Forwards **********************************/
 
 static void closeSocket(MprSocket *sp, bool gracefully);

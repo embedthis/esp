@@ -1,5 +1,5 @@
 /**
-    osdep.h -- Embedthis O/S abstraction
+    osdep.h -- Embedthis O/S abstraction for products using MakeMe. 
  */
 
 #ifndef _h_OSDEP
@@ -941,6 +941,10 @@ typedef int64 Ticks;
 #ifndef ME_DOUBLE_BUFFER
     #define ME_DOUBLE_BUFFER    (DBL_MANT_DIG - DBL_MIN_EXP + 4)
 #endif
+#ifndef ME_MAX_IP
+    #define ME_MAX_IP           1024
+#endif
+
 
 #ifndef ME_STACK_SIZE
 #if ME_COMPILER_HAS_MMU && !VXWORKS
