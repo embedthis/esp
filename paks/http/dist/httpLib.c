@@ -3796,7 +3796,7 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
     if ((obj = mprGetJsonObj(config, "include")) != 0) {
         parseInclude(route, config, obj);
     }
-#if DEPRECATE || 1
+#if DEPRECATED || 1
 {
     MprJson *obj;
     if ((obj = mprGetJsonObj(config, "app.http")) != 0) {
@@ -4112,7 +4112,7 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
             }
             methods = getList(mprReadJsonObj(child, "methods"));
             urls = getList(mprReadJsonObj(child, "urls"));
-#if DEPRECATE || 1
+#if DEPRECATED || 1
             if (urls == 0) {
                 if ((urls = getList(mprReadJsonObj(child, "urls"))) != 0) {
                     mprLog("error http config", 0, "Using deprecated property \"uris\", use \"urls\" instead");
@@ -5936,7 +5936,7 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     assert(conn->tx);
     assert(conn->rx);
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     /* Just IO state asserting */
     if (conn->io) {
         assert(!conn->io);
@@ -12406,7 +12406,7 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     route->workers = -1;
     route->prefix = MPR->emptyString;
     route->trace = http->trace;
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     route->serverPrefix = MPR->emptyString;
 #endif
 
@@ -12519,7 +12519,7 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     route->updates = parent->updates;
     route->vars = parent->vars;
     route->workers = parent->workers;
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     route->serverPrefix = parent->serverPrefix;
 #endif
     return route;
@@ -12584,7 +12584,7 @@ static void manageRoute(HttpRoute *route, int flags)
         mprMark(route->updates);
         mprMark(route->vars);
         mprMark(route->webSocketsProtocol);
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         mprMark(route->serverPrefix);
 #endif
 
@@ -13778,7 +13778,7 @@ PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on)
 }
 
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
 PUBLIC void httpSetRouteServerPrefix(HttpRoute *route, cchar *prefix)
 {
     assert(route);
@@ -14276,10 +14276,10 @@ PUBLIC char *httpTemplate(HttpConn *conn, cchar *template, MprHash *options)
         if (cp == template && *cp == '~') {
             mprPutStringToBuf(buf, route->prefix);
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         } else if (cp == template && *cp == '|') {
             mprPutStringToBuf(buf, route->prefix);
-            //  DEPRECATE in version 6
+            //  DEPRECATED in version 6
             mprPutStringToBuf(buf, route->serverPrefix);
 #endif
 
@@ -14813,7 +14813,7 @@ PUBLIC HttpRoute *httpDefineRoute(HttpRoute *parent, cchar *methods, cchar *patt
     if ((route = httpCreateInheritedRoute(parent)) == 0) {
         return 0;
     }
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     /* Keep till version 6 */
         /*
             Keep till version 6
@@ -14841,7 +14841,7 @@ PUBLIC HttpRoute *httpAddRestfulRoute(HttpRoute *parent, cchar *methods, cchar *
 {
     cchar   *source;
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     if (*resource == '{') {
         pattern = sfmt("^%s%s/%s%s", parent->prefix, parent->serverPrefix, resource, pattern);
     } else {
@@ -14924,7 +14924,7 @@ PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *parent, cchar *action)
     HttpLimits  *limits;
     cchar       *path, *pattern;
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     pattern = sfmt("^%s%s/{controller}/%s", parent->prefix, parent->serverPrefix, action);
 #else
     pattern = sfmt("^%s/{controller}/%s", parent->prefix, action);
@@ -22023,8 +22023,8 @@ static cchar *expandRouteName(HttpConn *conn, cchar *routeName)
     if (sstarts(routeName, "${app}")) {
         return sjoin(route->prefix, &routeName[6], NULL);
     }
-#if DEPRECATE || 1
-    //  DEPRECATE in version 6
+#if DEPRECATED || 1
+    //  DEPRECATED in version 6
     if (routeName[0] == '|') {
         assert(routeName[0] != '|');
         return sjoin(route->prefix, &routeName[1], NULL);

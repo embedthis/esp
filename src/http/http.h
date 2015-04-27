@@ -3874,7 +3874,7 @@ PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth 
  */
 PUBLIC void httpSetAuthSession(HttpAuth *auth, bool noSession);
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
 #define httpAddAuthType httpCreateAuthType
 #endif
 
@@ -4429,7 +4429,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_NO_LISTEN            0x20000     /**< Not listening on endpoints */
 #define HTTP_ROUTE_PERSIST_COOKIE       0x40000     /**< Persist session cookie to disk */
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
 #define HTTP_ROUTE_SET_DEFINED          0x10000     /**< Route set defined */
 #endif
 
@@ -4460,7 +4460,7 @@ typedef struct HttpRoute {
     char            *startWith;             /**< Starting literal portion of pattern */
     char            *optimizedPattern;      /**< Processed pattern (excludes prefix) */
     char            *prefix;                /**< Application scriptName prefix. Set to '' for '/'. Always set */
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     char            *serverPrefix;          /**< Prefix for the server-side. Does not include prefix. Always set */
 #endif
     char            *tplate;                /**< URI template for forming links based on this route (includes prefix) */
@@ -5558,7 +5558,7 @@ PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
  */
 PUBLIC void httpSetRouteScript(HttpRoute *route, cchar *script, cchar *scriptPath);
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
 /**
     Set the route prefix for server-side URIs
     @description The server-side route prefix is appended to the route prefix to create the complete prefix

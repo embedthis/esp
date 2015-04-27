@@ -126,7 +126,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (target) {
-#if DEPRECATE || 1 
+#if DEPRECATED || 1 
         /* 
             Keep till version 6
          */

@@ -952,7 +952,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
     if (modified) {
         lock(esp);
         httpInitConfig(route);
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         /* Don't reload if configFile == package.json */
         if (!mprSamePath(package, eroute->configFile)) {
 #endif
@@ -1096,7 +1096,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
     cchar   *controllers, *documents, *path;
 
     documents = mprJoinPath(route->home, "dist");
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     if (!mprPathExists(documents, X_OK)) {
         documents = mprJoinPath(route->home, "documents");
         if (!mprPathExists(documents, X_OK)) {
