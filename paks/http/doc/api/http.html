@@ -427,9 +427,10 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_tx_1ga48d151787b55f20e0b4fdeb725264c25" class="nameRef">httpSetHeader</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...) PRINTF_ATTRIBUTE(3</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a transmission header.</td></tr>
 <tr class="apiDef"><td class="apiType">void void</td><td><a href="#group___http_tx_1gac491e9c2510c0bd9052563af59f38a00" class="nameRef">httpSetHeaderString</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a simple key/value transmission header.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_conn_1ga5407927519c3619f8b3173a19c7cab31" class="nameRef">httpSetHeadersCallback</a>(struct HttpConn *conn, <a href="#group___http_conn_1gaf11f6724913441eab0f9c8a6e139569e" class="ref">HttpHeadersCallback</a> fn, void *arg)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a headers callback.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___http_host_1gaa7f76785d293869ec8fef4ff3055b5a5" class="nameRef">httpSetHostCanonicalName</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the host canonical name.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_host_1ga393e177fad929d5ca96379e9270b6842" class="nameRef">httpSetHostDefaultEndpoint</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="#group___http_endpoint" class="ref">HttpEndpoint</a> *endpoint)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the default endpoint for a host.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_host_1gae8d3b5ebddb6c740c738befee3c78efb" class="nameRef">httpSetHostDefaultRoute</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the default route for a host.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="nameRef">httpSetHostName</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the host name.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="nameRef">httpSetHostName</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the host name.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="nameRef">httpSetHostProtocol</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *protocol)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the host HTTP protocol version.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_host_1ga2302c34632a1b72ec759533ee9d7ad10" class="nameRef">httpSetHostRoot</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *root)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the server root for a host.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_host_1ga0c90d5255c39ee470811df672867a6db" class="nameRef">httpSetHostSecureEndpoint</a>(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="#group___http_endpoint" class="ref">HttpEndpoint</a> *endpoint)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the default secure endpoint for a host.</td></tr>
@@ -944,25 +945,25 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>HEAD method.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#http_8h_1ab87c17e25fdc51d53de17fbc98b804ae" class="nameRef">HTTP_HOST_NAMED_VHOST</a>&nbsp;&nbsp;&nbsp;0x2</td>
+<td>#define</td><td><a href="#http_8h_1a8be2818c93806e66b03a6c8eeedcdc9d" class="nameRef">HTTP_HOST_ATTACHED</a>&nbsp;&nbsp;&nbsp;0x100</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Host flag for a named virtual host.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Host name attached to an endpoint.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a1cf2efd1fd71077c859dbb6ce22e126e" class="nameRef">HTTP_HOST_NO_TRACE</a>&nbsp;&nbsp;&nbsp;0x10</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Host flag to disable the of TRACE HTTP method.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#http_8h_1a48a9ec41b94ea54638900dfd81e6f940" class="nameRef">HTTP_HOST_VHOST</a>&nbsp;&nbsp;&nbsp;0x1</td>
-</tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Host flag to signify host is a virtual host.</td></tr>
-<tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1aa78283e9d37cfe996823097220012497" class="nameRef">HTTP_HOST_WILD_CONTAINS</a>&nbsp;&nbsp;&nbsp;0x40</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Host header contains the host name.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Host name contains the host name.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#http_8h_1a6a093a328ac44346902d2918b1850517" class="nameRef">HTTP_HOST_WILD_REGEXP</a>&nbsp;&nbsp;&nbsp;0x80</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Host name is a regular expression.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a0c0e3cfb2c93256b3e63583f9928b5f5" class="nameRef">HTTP_HOST_WILD_STARTS</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Host header starts with pattern.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Host name starts with pattern.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1ac3b6b875fb79bd40dc978676f52d3a87" class="nameRef">HTTP_IF_MODIFIED</a>&nbsp;&nbsp;&nbsp;0x100</td>
 </tr>
@@ -5235,10 +5236,13 @@ Accept a new client connection on a new socket. If multithreaded, this will come
 <p>Host Object.</p>
     <dl><dt><b>Description</b>:</dt><dd>A Host object represents a logical host. Several logical hosts may share a single HttpEndpoint.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
+    <tr><td class="param">HttpUri *</td><td><td>canonical</td><td>
+Canonical host name (optional canonial public name for redirections).
+</td>
     <tr><td class="param">HttpEndpoint *</td><td><td>defaultEndpoint</td><td>
 Default endpoint for host.
 </td>
@@ -5249,7 +5253,11 @@ Default route for the host.
 Host flags.
 </td>
     <tr><td class="param">char *</td><td><td>name</td><td>
-Host name.
+Host name or names to be served. 
+Flags defines the type of name.
+</td>
+    <tr><td class="param">void *</td><td><td>nameCompiled</td><td>
+Compiled name regular expression (not alloced).
 </td>
     <tr><td class="param">struct HttpHost *</td><td><td>parent</td><td>
 Parent host to inherit aliases, dirs, routes.
@@ -5287,7 +5295,7 @@ Hash of mime-types to stream record.
     <dl><dt>Returns:</dt><dd>&quot;Zero&quot; if the route can be added.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b"></a>
@@ -5307,7 +5315,7 @@ Hash of mime-types to stream record.
     <dl><dt>Returns:</dt><dd>The new HttpHost object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1gadb6fd2b408b3ac58e44e2324b66ea33b"></a>
@@ -5323,7 +5331,7 @@ Hash of mime-types to stream record.
     <dl><dt>Returns:</dt><dd>The new HttpHost object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b"></a>
@@ -5339,7 +5347,7 @@ Hash of mime-types to stream record.
     <dl><dt>Returns:</dt><dd>The new HttpHost object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1gae764c0d5e2a2a6bb13ff3dc86172fa06"></a>
@@ -5354,7 +5362,7 @@ Hash of mime-types to stream record.
     <dl><dt>Returns:</dt><dd>The defaul thost object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1ga19ac2afb766c2b4d074c1823dc233246"></a>
@@ -5376,7 +5384,7 @@ Hash of mime-types to stream record.
     <dl><dt>Returns:</dt><dd>True if input should be streamed. False if it should be buffered.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa"></a>
@@ -5394,7 +5402,7 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1gacba7af49f198c1ac13e6cadd2673956f"></a>
@@ -5412,7 +5420,28 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+  </div>
+</div>
+<a name="group___http_host_1gaa7f76785d293869ec8fef4ff3055b5a5"></a>
+<div class="api">
+  <div class="prototype">
+    int
+    httpSetHostCanonicalName
+(<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)
+  </div>
+  <div class="apiDetail">
+<p>Set the host canonical name.</p>
+    <dl><dt><b>Description</b>:</dt><dd>The host canonical name is the public perferred name to use for the server. This is used when redirecting client requests for directories.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">host</td><td>HttpHost object.</td>
+    <tr><td class="param">name</td><td>Host canonical name to use.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot be compiled.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1ga393e177fad929d5ca96379e9270b6842"></a>
@@ -5432,7 +5461,7 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1gae8d3b5ebddb6c740c738befee3c78efb"></a>
@@ -5452,26 +5481,26 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
-<a name="group___http_host_1ga446cc7ba87875c92e544e035a404f33f"></a>
+<a name="group___http_host_1ga33b7032734638ffede31fd72b4d777d3"></a>
 <div class="api">
   <div class="prototype">
-    void
+    int
     httpSetHostName
 (<a href="#group___http_host" class="ref">HttpHost</a> *host, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)
   </div>
   <div class="apiDetail">
 <p>Set the host name.</p>
-    <dl><dt><b>Description</b>:</dt><dd>The host name is used when matching virtual hosts with the Http Host header. The host name is also used for some redirections. in order, so it is important to define routes in the order in which you wish to match them.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>The host name is used when matching client requests to virtual hosts using the Http request Host header. If the host name starts with &quot;*&quot;, it will match names that contain the name. If the host name ends with &quot;*&quot;, it will match names that start with the name. If the host name begins and ends with a &quot;/&quot;, the name is assumed to be a regular expression. Regular expressions may match multiple host names by using the &quot;|&quot; character to separate names.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">host</td><td>HttpHost object.</td>
     <tr><td class="param">name</td><td>Host name to use.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>Zero if the route can be added.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt>Returns:</dt><dd>Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot be compiled.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
@@ -5493,7 +5522,7 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1ga2302c34632a1b72ec759533ee9d7ad10"></a>
@@ -5513,7 +5542,7 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1ga0c90d5255c39ee470811df672867a6db"></a>
@@ -5533,7 +5562,7 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <a name="group___http_host_1gaca8368bbeb0057c4d5119374f464a0ed"></a>
@@ -5554,7 +5583,7 @@ Hash of mime-types to stream record.
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
-    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga446cc7ba87875c92e544e035a404f33f" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
+    <a href="#group___http_host" class="ref">HttpHost</a>, <a href="#group___http_host_1gadcbb2c44a2ae32546fbdcccbfec64c0a" class="ref">httpAddRoute</a>, <a href="#group___http_host_1ga1fbea76e46959e0f9fd0c8f38090cb8b" class="ref">httpCloneHost</a>, <a href="#group___http_host_1ga3e6e98147b766aeff4cbfebe8146998b" class="ref">httpCreateHost</a>, <a href="#group___http_host_1gaaaa414cbf0f8cacd73ce305927b78efa" class="ref">httpResetRoutes</a>, <a href="#group___http_host_1ga33b7032734638ffede31fd72b4d777d3" class="ref">httpSetHostName</a>, <a href="#group___http_host_1ga0f04d9504cb2005ef7f0f4ba2d653581" class="ref">httpSetHostProtocol</a></dd></dl>
   </div>
 </div>
 <h1>HttpLimits</h1>
@@ -7625,7 +7654,7 @@ Number of workers to use for this route.
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>
-    <tr><td class="param">set</td><td>Route set to select. Use &apos;angular-mvc&apos;, or &apos;html-mvc&apos;.</td>
+    <tr><td class="param">set</td><td>Route set name to select.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>

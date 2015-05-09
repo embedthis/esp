@@ -4201,7 +4201,7 @@ static void parseCanonicalName(HttpRoute *route, cchar *key, MprJson *prop)
     condition: '[!] secure'
     condition: '[!] unauthorized'
  */
-static void parseCondition(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseConditions(HttpRoute *route, cchar *key, MprJson *prop)
 {
     char    *name, *details;
     int     not;
@@ -5489,7 +5489,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.users", parseAuthUsers);
     httpAddConfig("http.cache", parseCache);
     httpAddConfig("http.canonical", parseCanonicalName);
-    httpAddConfig("http.condition", parseCondition);
+    httpAddConfig("http.conditions", parseConditions);
     httpAddConfig("http.cgi", httpParseAll);
     httpAddConfig("http.cgi.escape", parseCgiEscape);
     httpAddConfig("http.cgi.prefix", parseCgiPrefix);
@@ -8117,7 +8117,6 @@ PUBLIC HttpHost *httpLookupHostOnEndpoint(HttpEndpoint *endpoint, cchar *name)
                     sizeof(matches) / sizeof(int)) >= 1) {
                 return host;
             }
-            free(host->nameCompiled);
         }
     }
     return 0;
@@ -8823,19 +8822,6 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
     req = rx->parsedUri;
     route = rx->route;
     
-#if UNUSED
-    if (conn->host->canonical) {
-        hostName = conn->host->canonical->host;
-        port = conn->host->canonical->port;
-    }
-    if (!hostName) {
-        hostName = req->host;
-    }
-    if (!port) {
-        port = req->port;
-    }
-#endif
-
     /*
         Manage requests for directories
      */
@@ -8843,13 +8829,8 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
         /*
            Append "/" and do an external redirect. Use the original request URI. Use httpFormatUri to preserve query.
          */
-#if UNUSED
-        httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
-            httpFormatUri(req->scheme, hostName, port, sjoin(req->path, "/", NULL), req->reference, req->query, 0));
-#else
         httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
             httpFormatUri(0, 0, 0, sjoin(req->path, "/", NULL), req->reference, req->query, 0));
-#endif
         return HTTP_ROUTE_OK;
     }
     if (route->indexes) {
@@ -9020,6 +9001,10 @@ static void manageHost(HttpHost *host, int flags)
         mprMark(host->defaultEndpoint);
         mprMark(host->secureEndpoint);
         mprMark(host->streams);
+    } else if (flags & MPR_MANAGE_FREE) {
+        if (host->nameCompiled) {
+            free(host->nameCompiled);
+        }
     }
 }
 

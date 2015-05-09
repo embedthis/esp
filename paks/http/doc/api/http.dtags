@@ -3426,6 +3426,13 @@
       <arglist>(HttpHost *host)</arglist>
     </member>
     <member kind="function">
+      <type>int</type>
+      <name>httpSetHostCanonicalName</name>
+      <anchorfile>group___http_host.html</anchorfile>
+      <anchor>gaa7f76785d293869ec8fef4ff3055b5a5</anchor>
+      <arglist>(HttpHost *host, cchar *name)</arglist>
+    </member>
+    <member kind="function">
       <type>void</type>
       <name>httpSetHostDefaultEndpoint</name>
       <anchorfile>group___http_host.html</anchorfile>
@@ -3440,10 +3447,10 @@
       <arglist>(HttpHost *host, HttpRoute *route)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>int</type>
       <name>httpSetHostName</name>
       <anchorfile>group___http_host.html</anchorfile>
-      <anchor>ga446cc7ba87875c92e544e035a404f33f</anchor>
+      <anchor>ga33b7032734638ffede31fd72b4d777d3</anchor>
       <arglist>(HttpHost *host, cchar *name)</arglist>
     </member>
     <member kind="function">
