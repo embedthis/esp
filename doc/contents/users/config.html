@@ -416,6 +416,16 @@ apps: [
                             and the value is the directory</td>
                     </tr>
                     <tr>
+                        <td>attach</td>
+                        <td>List of listen endpoints on which to attach a virtual host.
+                        For example:
+<code class="inverted">attach: [
+    '*:80',
+],</code>
+                        <p>If there is no attach property, the virtual host will attach to all listening endpoints.</p>
+                        </td>
+                    </tr>
+                    <tr>
                         <td><a href="#auth">auth</a></td>
                         <td>Collection of authentication configuration.</td>
                     </tr>
@@ -423,6 +433,38 @@ apps: [
                         <td><a href="#cache">cache</a></td>
                         <td>List of cache directives.</td>
                     </tr>
+                    <!--
+                    <tr>
+                        <td><a href="#condition">condition</a></td>
+                        <td><p>Define a pre-condition that must be true for the route to be selected.
+                        <p>The Condition directive supports four rule varieties: </p>
+                        <ul>
+                            <li>missing &mdash; True if the default request filename is missing.</li>
+                            <li>directory &mdash; True the if rule argument evaluates to a directory</li>
+                            <li>exists &mdash; True if the rule argument evaluates to an existing file</li>
+                            <li>match &mdash; True if the regular expression pattern matches the string argument</li>
+                        </ul>
+
+                        <p>The rule result can be negated by prefixing with "<em>!</em>".</p>
+                        <p>The condition property supports the following forms:</p>
+                        <ul>
+                            <li>Condition [!] rule details ...</li>
+                            <li>Condition [!] missing</li>
+                            <li>Condition [!] directory string</li>
+                            <li>Condition [!] exists string</li>
+                            <li>Condition [!] match string regular-expression-pattern</li>
+                        </ul>
+                        <p>For example:</p>
+                        <pre class="code">
+conditions: {
+    missing: 'true'
+    directory: '${request:filename}
+    exists: '! exists ${request:filename}
+    match: '${header:User-Agent} (Chrome|Safari) 
+</pre>
+                        </td>
+                    </tr>
+                        -->
                     <tr>
                         <td>compress</td>
                         <td><p>Enable serving of compressed content. ESP can serve files compressed with gzip and with an
@@ -494,6 +536,34 @@ compress: [ 'html', 'js', 'css' ]
 },</code>
                             </td>
                     </tr>
+
+                    <tr>
+                        <td>hosts</td>
+                        <td><p>A single server may support multiple virtual hosts on a shared IP address endpoint. 
+                        The client HTTP request includes a <em>Host</em> header that specifies the desired hostname.
+                        The supported virtual hosts are configured via the <em>hosts</em> directive which specifies one
+                        more more virtual host configurations.</p>
+
+                        <p>Each virtual host may include other directives to customize the configuration and routes for that
+                        specific host. Each host may nominate the specific listen endpoints for the host via the
+                        <a href="attach">attach</a> property. Without an attach property, the virtual host will attach
+                        to all listening endpoints.</p>
+
+                        <p>Example:</p>
+                            <pre class="code">
+hosts: [ {
+    name: '*embedthis.com',
+    attach: '*:80',
+}, {
+    name: '*appwebserver.org',
+    attach: [
+        '*:80',
+        '*:4443'
+    ],
+}]
+</pre>
+                           </td>
+                    </tr>                   
                     <tr>
                         <td>indexes</td>
                         <td>Ordered list of index documents to serve for directory level requests. For example:

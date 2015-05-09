@@ -2982,7 +2982,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (target) {
-#if DEPRECATE || 1 
+#if DEPRECATED || 1 
         /* 
             Keep till version 6
          */
@@ -4589,11 +4589,10 @@ static int runAction(HttpConn *conn)
             controllers = ".";
         }
         controllers = mprJoinPath(route->home, controllers);
-
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
-        if (mprPathExists(controller, R_OK)) {
-            if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
+        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
+            if (mprPathExists(controller, R_OK)) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
             }
@@ -4729,6 +4728,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         mprHold(dest);
         espRenderView(conn, dest, 0);
         mprRelease(dest);
+        
     } else {
         /*
             Last chance, forward to the file handler ... not an ESP request. 
@@ -4866,25 +4866,27 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 
     lock(esp);
     if (route->update) {
-        if (!mprPathExists(source, R_OK)) {
-            *errMsg = sfmt("Cannot find %s \"%s\" to load", kind, source);
-            unlock(esp);
-            return MPR_ERR_CANT_FIND;
-        }
-        isView = smatch(kind, "view");
-        if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
-            if (recompile) {
-                mprHoldBlocks(source, module, cacheName, NULL);
-                if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
+        if (mprPathExists(source, R_OK)) {
+            isView = smatch(kind, "view");
+            if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
+                if (recompile) {
+                    mprHoldBlocks(source, module, cacheName, NULL);
+                    if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
+                        mprReleaseBlocks(source, module, cacheName, NULL);
+                        unlock(esp);
+                        return MPR_ERR_CANT_WRITE;
+                    }
                     mprReleaseBlocks(source, module, cacheName, NULL);
-                    unlock(esp);
-                    return MPR_ERR_CANT_WRITE;
                 }
-                mprReleaseBlocks(source, module, cacheName, NULL);
             }
         }
     }
     if (mprLookupModule(source) == 0) {
+        if (!mprPathExists(module, R_OK)) {
+            *errMsg = "Module does not exist";
+            unlock(esp);
+            return MPR_ERR_CANT_FIND;
+        }
         entry = getModuleEntry(eroute, kind, source, cacheName);
         if ((mp = mprCreateModule(source, module, entry, route)) == 0) {
             *errMsg = "Memory allocation error loading module";
@@ -5205,7 +5207,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
     if (modified) {
         lock(esp);
         httpInitConfig(route);
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         /* Don't reload if configFile == package.json */
         if (!mprSamePath(package, eroute->configFile)) {
 #endif
@@ -5253,10 +5255,10 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
         }
         lock(esp);
-        if (mprPathExists(source, R_OK)) {
-            if (espLoadModule(route, NULL, "app", source, &errMsg) < 0) {
-                unlock(esp);
+        if (espLoadModule(route, NULL, "app", source, &errMsg) < 0) {
+            if (eroute->combine) {
                 mprLog("error esp", 0, "%s", errMsg);
+                unlock(esp);
                 return MPR_ERR_CANT_LOAD;
             }
         }
@@ -5268,8 +5270,8 @@ PUBLIC int espLoadConfig(HttpRoute *route)
                 }
                 source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
                 if (espLoadModule(route, NULL, kind, source, &errMsg) < 0) {
-                    unlock(esp);
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);
+                    unlock(esp);
                     return MPR_ERR_CANT_LOAD;
                 }
             }
@@ -5349,7 +5351,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
     cchar   *controllers, *documents, *path;
 
     documents = mprJoinPath(route->home, "dist");
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     if (!mprPathExists(documents, X_OK)) {
         documents = mprJoinPath(route->home, "documents");
         if (!mprPathExists(documents, X_OK)) {
@@ -5474,7 +5476,7 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
 #define ESP_TOK_VAR             6            /* %!var */
 #define ESP_TOK_HOME            7            /* %~ Home URL */
 #define ESP_TOK_LITERAL         8            /* literal HTML */
-#if DEPRECATE || 1
+#if DEPRECATED || 1
 #define ESP_TOK_SERVER          9            /* %| Server URL  */
 #endif
 
@@ -5782,7 +5784,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
             *errMsg = sfmt("Cannot read %s", source);
             return 0;
         }
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         if ((layoutsDir = httpGetDir(route, "LAYOUTS")) != 0) {
             layout = mprJoinPath(layoutsDir, "default.esp");
         }
@@ -5978,7 +5980,7 @@ static char *joinLine(cchar *str, ssize *lenp)
         <%^ include "file"  Include an esp file
  */
 
-//  DEPRECATE layout
+//  DEPRECATED layout
 PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *cacheName, cchar *layout, 
         EspState *state, char **err)
 {
@@ -6019,7 +6021,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
 #endif
         switch (tid) {
         case ESP_TOK_CODE:
-#if DEPRECATE || 1
+#if DEPRECATED || 1
             if (*token == '^') {
                 for (token++; *token && isspace((uchar) *token); token++) ;
                 where = ssplit(token, " \t\r\n", &rest);
@@ -6044,7 +6046,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             if (smatch(control, "content")) {
                 mprPutStringToBuf(body, ESP_CONTENT_MARKER);
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
             } else if (smatch(control, "include")) {
                 token = strim(token, " \t\r\n\"", MPR_TRIM_BOTH);
                 token = mprNormalizePath(token);
@@ -6064,7 +6066,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
                 mprPutStringToBuf(body, incCode);
 #endif
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
             } else if (smatch(control, "layout")) {
                 mprLog("esp warn", 0, "Using deprecated \"layout\" control directive in esp page: %s", path);
                 token = strim(token, " \t\r\n\"", MPR_TRIM_BOTH);
@@ -6143,7 +6145,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             break;
 
 #if DEPRECATED || 1
-        //  DEPRECATE serverPrefix in version 6
+        //  DEPRECATED serverPrefix in version 6
         case ESP_TOK_SERVER:
             /* @| Server URL */
             mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page: %s", path);
@@ -6163,7 +6165,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     }
     mprAddNullToBuf(body);
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     if (layout && mprPathExists(layout, R_OK)) {
         if ((layoutPage = mprReadPathContents(layout, &len)) == 0) {
             *err = sfmt("Cannot read layout page: %s", layout);
@@ -6285,7 +6287,7 @@ static int getEspToken(EspParse *parse)
                             }
                         }
 
-                    //  DEPRECATE '@'
+                    //  DEPRECATED '@'
                     } else if (*next == '@' || *next == '^') {
                         /*
                             <%^ control
@@ -6333,7 +6335,7 @@ static int getEspToken(EspParse *parse)
             if (next > start && (next[-1] == '\\' || next[-1] == '%')) {
                 break;
             }
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         case '@':
             if (c == '@') {
                 mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page: %s", parse->path);
@@ -6354,7 +6356,7 @@ static int getEspToken(EspParse *parse)
                     }
                     done++;
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
                 } else if (t == '|') {
                     mprLog("esp warn", 0, "CC Using deprecated \"|\" control directive in esp page: %s", parse->path);
                     next += 2;
@@ -6370,7 +6372,7 @@ static int getEspToken(EspParse *parse)
                     done++;
 #endif
 
-                //  DEPRECATE '@'
+                //  DEPRECATED '@'
                 } else if (t == '!' || t == '@' || t == '#' || t == '$') {
                     next += 2;
                     if (mprGetBufLength(parse->token) > 0) {
@@ -6378,7 +6380,7 @@ static int getEspToken(EspParse *parse)
                     } else {
                         if (t == '!') {
                            tid = ESP_TOK_VAR;
-#if DEPRECATE || 1
+#if DEPRECATED || 1
                         } else if (t == '@') {
                             tid = ESP_TOK_PARAM;
 #endif

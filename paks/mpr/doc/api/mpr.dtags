@@ -1193,6 +1193,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_PROTO_TLSV1_0</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a20571df5bf7608fa64cffa1d357c68f1</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_PROTO_TLSV1_1</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>aa66454bfc118af48a0d0df362211d9ad</anchor>
@@ -3017,6 +3024,13 @@
       <anchorfile>group___mpr_buf.html</anchorfile>
       <anchor>gaf128b71005bdd12507110e1f21b483d4</anchor>
       <arglist>(MprBuf *buf)</arglist>
+    </member>
+    <member kind="function">
+      <type>int *</type>
+      <name>mprGetCipherSuite</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga5717729f618db099ee57ff01fc55ad5d</anchor>
+      <arglist>(cchar *ciphers, int *len)</arglist>
     </member>
     <member kind="function">
       <type>MprBuf *</type>
@@ -9470,6 +9484,13 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gac6a41e387c7475251098f237f5f0a802</anchor>
       <arglist>(int server)</arglist>
+    </member>
+    <member kind="function">
+      <type>int *</type>
+      <name>mprGetCipherSuite</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga5717729f618db099ee57ff01fc55ad5d</anchor>
+      <arglist>(cchar *ciphers, int *len)</arglist>
     </member>
     <member kind="function">
       <type>int</type>

@@ -1,11 +1,12 @@
 {
-    "name": "ssl",
-    "description": "Embedthis SSL Interface",
-    "title": "Embedthis Development",
-    "version": "0.9.0",
+    "name": "mpr-est",
+    "title": "EST support",
+    "description": "EST Support for the MPR",
+    "version": "0.1.0",
     "keywords": [
         "me",
-        "ssl"
+        "ssl",
+        "est"
     ],
     "author": {
         "name": "Embedthis Software",
@@ -14,10 +15,13 @@
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/embedthis/ssl.git"
+        "url": "git://github.com/embedthis/mpr-est.git"
     },
     "bugs": {
-        "url": "http://github.com/embedthis/ssl/issues"
+        "url": "http://github.com/embedthis/mpr-est/issues"
+    },
+    "dependencies": {
+        "est": "^0.6"
     },
     "licenses": [
         {
@@ -30,6 +34,10 @@
         }
     ],
     "pak": {
-        "origin": "embedthis/ssl"
+        "export": [
+            "*.c",
+            "*.me"
+        ],
+        "origin": "embedthis/mpr-est"
     }
 }

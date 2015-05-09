@@ -424,7 +424,9 @@ PUBLIC HttpEndpoint *httpGetFirstEndpoint()
  */
 PUBLIC void httpAddHost(HttpHost *host)
 {
-    mprAddItem(HTTP->hosts, host);
+    if (mprLookupItem(HTTP->hosts, host) < 0) {
+        mprAddItem(HTTP->hosts, host);
+    }
 }
 
 
@@ -3163,7 +3165,11 @@ static void setDefaultHeaders(HttpConn *conn)
         }
     }
     if (conn->port != 80 && conn->port != 443) {
-        httpAddHeader(conn, "Host", "%s:%d", conn->ip, conn->port);
+        if (schr(conn->ip, ':')) {
+            httpAddHeader(conn, "Host", "[%s]:%d", conn->ip, conn->port);
+        } else {
+            httpAddHeader(conn, "Host", "%s:%d", conn->ip, conn->port);
+        }
     } else {
         httpAddHeaderString(conn, "Host", conn->ip);
     }
@@ -3630,7 +3636,6 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
 
 static void parseAuthRoles(HttpRoute *route, cchar *key, MprJson *prop);
 static void parseAuthStore(HttpRoute *route, cchar *key, MprJson *prop);
-static void parseRoutes(HttpRoute *route, cchar *key, MprJson *prop);
 
 /************************************** Code **********************************/
 /*
@@ -3693,7 +3698,19 @@ static cchar *getList(MprJson *prop)
         cp = strim(cp, "[]", 0);
     }
     for (p = cp; *p; p++) {
-        if (*p == '"' || *p == ',') {
+        if (*p == '"') {
+            if (p[1] == '"') {
+                p++;
+            } else {
+                *p = ' ';
+            }
+        } else if (*p == '\'') {
+            if (p[1] == '\'') {
+                p++;
+            } else {
+                *p = ' ';
+            }
+        } else if (*p == ',') {
             *p = ' ';
         }
     }
@@ -3907,6 +3924,39 @@ static void parseAliases(HttpRoute *route, cchar *key, MprJson *prop)
     }
 }
 
+
+static void parseAttach(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    HttpEndpoint    *endpoint;
+    MprJson         *child;
+    char            *ip;
+    int             ji, port;
+
+    if (prop->type & MPR_JSON_VALUE) {
+        if (mprParseSocketAddress(prop->value, &ip, &port, NULL, -1) < 0) {
+            httpParseError(route, "Bad attach address: %s", prop->value);
+            return;
+        }
+        if ((endpoint = httpLookupEndpoint(ip, port)) == 0) {
+            httpParseError(route, "Cannot find endpoint %s to attach for host %s", prop->value, route->host->name);
+            return;
+        }
+        httpAddHostToEndpoint(endpoint, route->host);
+
+    } else if (prop->type == MPR_JSON_ARRAY) {
+        for (ITERATE_CONFIG(route, prop, child, ji)) {
+            if (mprParseSocketAddress(child->value, &ip, &port, NULL, -1) < 0) {
+                httpParseError(route, "Bad attach address: %s", child->value);
+                return;
+            }
+            if ((endpoint = httpLookupEndpoint(ip, port)) == 0) {
+                httpParseError(route, "Cannot find endpoint %s to attach for host %s", child->value, route->host->name);
+                return;
+            }
+            httpAddHostToEndpoint(endpoint, route->host);
+        }
+    }
+}
 
 static void parseAuth(HttpRoute *route, cchar *key, MprJson *prop)
 {
@@ -4135,6 +4185,37 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseCanonicalName(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    if (httpSetHostCanonicalName(route->host, prop->value) < 0) {
+        httpParseError(route, "Bad host canonical name: %s", prop->value);
+    }
+}
+
+/*
+    condition: '[!] auth'
+    condition: '[!] condition'
+    condition: '[!] exists string'
+    condition: '[!] directory string'
+    condition: '[!] match string valuePattern'
+    condition: '[!] secure'
+    condition: '[!] unauthorized'
+ */
+static void parseCondition(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    char    *name, *details;
+    int     not;
+
+    if (!httpTokenize(route, prop->value, "%! ?S ?*", &not, &name, &details)) {
+        httpParseError(route, "Bad condition: %s", prop->value);
+        return;
+    }
+    if (httpAddRouteCondition(route, name, details, not ? HTTP_ROUTE_NOT : 0) < 0) {
+        httpParseError(route, "Bad condition: %s", prop->value);
+        return;
+    }
+}
+
 static void parseCgiEscape(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetRouteEnvEscape(route, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
@@ -4166,12 +4247,6 @@ static void parseDatabase(HttpRoute *route, cchar *key, MprJson *prop)
 static void parseDeleteUploads(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetRouteAutoDelete(route, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
-}
-
-
-static void parseDomain(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    httpSetHostName(route->host, strim(prop->value, "http://", MPR_TRIM_START));
 }
 
 
@@ -4252,6 +4327,40 @@ static void parseHome(HttpRoute *route, cchar *key, MprJson *prop)
         httpParseError(route, "Cannot locate home directory %s", prop->value);
     } else {
         httpSetRouteHome(route, prop->value);
+    }
+}
+
+
+static void parseHost(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    HttpHost    *host;
+    HttpRoute   *newRoute;
+
+    host = httpCloneHost(route->host);
+    newRoute = httpCreateInheritedRoute(route);
+    httpSetRouteHost(newRoute, host);
+    httpSetHostDefaultRoute(host, newRoute);
+    httpParseAll(newRoute, key, prop);
+    httpFinalizeRoute(newRoute);
+    if (!(host->flags & HTTP_HOST_ATTACHED)) {
+        httpAddHostToEndpoints(host);
+    }
+}
+
+
+static void parseHosts(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    MprJson     *child;
+    int         ji;
+
+    if (prop->type & MPR_JSON_OBJ) {
+        parseHost(route, sreplace(key, ".hosts", ""), prop);
+
+    } else if (prop->type & MPR_JSON_ARRAY) {
+        key = sreplace(key, ".hosts", "");
+        for (ITERATE_CONFIG(route, prop, child, ji)) {
+            parseHost(route, key, child);
+        }
     }
 }
 
@@ -4493,6 +4602,14 @@ static void parseMode(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseName(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    if (httpSetHostName(route->host, prop->value) < 0) {
+        httpParseError(route, "Bad host name: %s", prop->value);
+    }
+}
+
+
 /*
     Match route only if param matches
  */
@@ -4608,6 +4725,17 @@ static void createRedirectAlias(HttpRoute *route, int status, cchar *from, cchar
 }
 
 
+/*
+    redirect: 'secure'
+    redirect: [
+        '/to/url',
+        {
+            from: '/somewhere.html',
+            to:   '/elsewhere.html',
+            status: 302,
+        }
+    }
+ */
 static void parseRedirect(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprJson     *child;
@@ -4631,6 +4759,11 @@ static void parseRedirect(HttpRoute *route, cchar *key, MprJson *prop)
                 from = mprReadJson(child, "from");
                 to = mprReadJson(child, "to");
                 status = mprReadJson(child, "status");
+                if (smatch(status, "permanent")) {
+                    status = "301";
+                } else if (smatch(status, "temporary")) {
+                    status = "302";
+                }
             }
             if (smatch(child->value, "secure")) {
                 httpAddRouteCondition(route, "secure", "https://", HTTP_ROUTE_REDIRECT);
@@ -4711,7 +4844,13 @@ static void parseRoute(HttpRoute *route, cchar *key, MprJson *prop)
     cchar       *pattern;
 
     if (prop->type & MPR_JSON_STRING) {
-        httpAddRouteSet(route, prop->value);
+        if (smatch(prop->value, "reset")) {
+            httpResetRoutes(route->host);
+        } else if (smatch(prop->value, "print")) {
+            httpLogRoutes(route->host, 0);
+        } else {
+            httpAddRouteSet(route, prop->value);
+        }
 
     } else if (prop->type & MPR_JSON_OBJ) {
         newRoute = 0;
@@ -4739,7 +4878,7 @@ static void parseRoutes(HttpRoute *route, cchar *key, MprJson *prop)
     int         ji;
 
     if (prop->type & MPR_JSON_STRING) {
-        httpAddRouteSet(route, prop->value);
+        parseRoute(route, key, prop);
 
     } else if (prop->type & MPR_JSON_OBJ) {
         key = sreplace(key, ".routes", "");
@@ -4751,6 +4890,18 @@ static void parseRoutes(HttpRoute *route, cchar *key, MprJson *prop)
             parseRoute(route, key, child);
         }
     }
+}
+
+
+static void parseRoutesPrint(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpLogRoutes(route->host, 0);
+}
+
+
+static void parseRoutesReset(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpResetRoutes(route->host);
 }
 
 
@@ -4806,7 +4957,10 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
     }
     host = route->host;
     for (ITERATE_CONFIG(route, prop, child, ji)) {
-        mprParseSocketAddress(child->value, &ip, &port, &secure, 80);
+        if (mprParseSocketAddress(child->value, &ip, &port, &secure, 80) < 0) {
+            httpParseError(route, "Bad listen address: %s", child->value);
+            return;
+        }
         if (port == 0) {
             httpParseError(route, "Bad or missing port %d in Listen directive", port);
             return;
@@ -5113,8 +5267,8 @@ static void parseStealth(HttpRoute *route, cchar *key, MprJson *prop)
 
 
 /*
-    Names: "close", "redirect", "run", "write"
-    Rules:
+    Operations: "close", "redirect", "run", "write"
+    Args:
         close:      [immediate]
         redirect:   status URI
         run:        ${DOCUMENT_ROOT}/${request:uri}
@@ -5315,6 +5469,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("directories", parseDirectories);
     httpAddConfig("http", parseHttp);
     httpAddConfig("http.aliases", parseAliases);
+    httpAddConfig("http.attach", parseAttach);
     httpAddConfig("http.auth", parseAuth);
     httpAddConfig("http.auth.auto", httpParseAll);
     httpAddConfig("http.auth.auto.name", parseAuthAutoName);
@@ -5333,6 +5488,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.type", parseAuthType);
     httpAddConfig("http.auth.users", parseAuthUsers);
     httpAddConfig("http.cache", parseCache);
+    httpAddConfig("http.canonical", parseCanonicalName);
+    httpAddConfig("http.condition", parseCondition);
     httpAddConfig("http.cgi", httpParseAll);
     httpAddConfig("http.cgi.escape", parseCgiEscape);
     httpAddConfig("http.cgi.prefix", parseCgiPrefix);
@@ -5341,7 +5498,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.deleteUploads", parseDeleteUploads);
     httpAddConfig("http.directories", parseDirectories);
     httpAddConfig("http.documents", parseDocuments);
-    httpAddConfig("http.domain", parseDomain);
     httpAddConfig("http.errors", parseErrors);
     httpAddConfig("http.formats", httpParseAll);
     httpAddConfig("http.formats.response", parseFormatsResponse);
@@ -5351,6 +5507,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.headers.remove", parseHeadersRemove);
     httpAddConfig("http.headers.set", parseHeadersSet);
     httpAddConfig("http.home", parseHome);
+    httpAddConfig("http.hosts", parseHosts);
     httpAddConfig("http.indexes", parseIndexes);
     httpAddConfig("http.keep", parseKeep);
     httpAddConfig("http.languages", parseLanguages);
@@ -5381,6 +5538,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.workers", parseLimitsWorkers);
     httpAddConfig("http.methods", parseMethods);
     httpAddConfig("http.mode", parseMode);
+    httpAddConfig("http.name", parseName);
     httpAddConfig("http.params", parseParams);
     httpAddConfig("http.pattern", parsePattern);
     httpAddConfig("http.pipeline", httpParseAll);
@@ -5390,6 +5548,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.redirect", parseRedirect);
     httpAddConfig("http.renameUploads", parseRenameUploads);
     httpAddConfig("http.routes", parseRoutes);
+    httpAddConfig("http.routes.print", parseRoutesPrint);
+    httpAddConfig("http.routes.reset", parseRoutesReset);
     httpAddConfig("http.resources", parseResources);
     httpAddConfig("http.scheme", parseScheme);
     httpAddConfig("http.server", httpParseAll);
@@ -5427,6 +5587,7 @@ PUBLIC int httpInitParser()
 
 #if DEPRECATED || 1
     httpAddConfig("app", parseApp);
+    httpAddConfig("http.domain", parseName);
     httpAddConfig("http.limits.requestBody", parseLimitsRxBody);
     httpAddConfig("http.limits.responseBody", parseLimitsTxBody);
     httpAddConfig("http.limits.requestForm", parseLimitsRxForm);
@@ -7543,6 +7704,7 @@ PUBLIC int httpOpenDirHandler()
 /********************************* Includes ***********************************/
 
 
+#include    "pcre.h"
 
 /********************************** Forwards **********************************/
 
@@ -7645,9 +7807,6 @@ PUBLIC HttpEndpoint *httpCreateConfiguredEndpoint(HttpHost *host, cchar *home, c
 }
 
 
-/*
-    Add the default host to the unassigned endpoints
- */
 PUBLIC void httpAddHostToEndpoints(HttpHost *host)
 {
     HttpEndpoint    *endpoint;
@@ -7792,6 +7951,9 @@ PUBLIC void httpMatchHost(HttpConn *conn)
 
     listenSock = conn->sock->listenSock;
 
+    /*
+        The connection must match an endpoint and then the hostHeader must match a specific Host
+     */
     if ((endpoint = httpLookupEndpoint(listenSock->ip, listenSock->port)) == 0) {
         conn->host = mprGetFirstItem(endpoint->hosts);
         httpError(conn, HTTP_CODE_NOT_FOUND, "No listening endpoint for request from %s:%d", 
@@ -7894,7 +8056,10 @@ PUBLIC int httpSecureEndpointByName(cchar *name, struct MprSsl *ssl)
     char            *ip;
     int             port, next, count;
 
-    mprParseSocketAddress(name, &ip, &port, NULL, -1);
+    if (mprParseSocketAddress(name, &ip, &port, NULL, -1) < 0) {
+        mprLog("error http", 0, "Bad endpoint address: %s", name);
+        return MPR_ERR_BAD_ARGS;
+    }
     if (ip == 0) {
         ip = "";
     }
@@ -7915,6 +8080,7 @@ PUBLIC void httpAddHostToEndpoint(HttpEndpoint *endpoint, HttpHost *host)
 {
     if (mprLookupItem(endpoint->hosts, host) < 0) {
         mprAddItem(endpoint->hosts, host);
+        host->flags |= HTTP_HOST_ATTACHED;
     }
     if (endpoint->limits == 0) {
         endpoint->limits = host->defaultRoute->limits;
@@ -7922,30 +8088,36 @@ PUBLIC void httpAddHostToEndpoint(HttpEndpoint *endpoint, HttpHost *host)
 }
 
 
-PUBLIC HttpHost *httpLookupHostOnEndpoint(HttpEndpoint *endpoint, cchar *hostHeader)
+PUBLIC HttpHost *httpLookupHostOnEndpoint(HttpEndpoint *endpoint, cchar *name)
 {
     HttpHost    *host;
+    int         matches[ME_MAX_ROUTE_MATCHES * 2];
     int         next;
 
-    if (hostHeader == 0 || *hostHeader == '\0' || mprGetListLength(endpoint->hosts) <= 1) {
+    if (mprGetListLength(endpoint->hosts) <= 1) {
         return mprGetFirstItem(endpoint->hosts);
     }
+    if (name == 0 || *name == '\0') {
+        return 0;
+    }
     for (next = 0; (host = mprGetNextItem(endpoint->hosts, &next)) != 0; ) {
-        if (smatch(host->name, hostHeader)) {
-            return host;
-        }
-        if (*host->name == '\0') {
-            /* Match all hosts */
+        if (smatch(host->name, name)) {
             return host;
         }
         if (host->flags & HTTP_HOST_WILD_STARTS) {
-            if (sstarts(hostHeader, host->name)) {
+            if (sstarts(name, host->name)) {
                 return host;
             }
         } else if (host->flags & HTTP_HOST_WILD_CONTAINS) {
-            if (scontains(hostHeader, host->name)) {
+            if (scontains(name, host->name)) {
                 return host;
             }
+        } else if (host->flags & HTTP_HOST_WILD_REGEXP) {
+            if (pcre_exec(host->nameCompiled, NULL, name, (int) slen(name), 0, 0, matches, 
+                    sizeof(matches) / sizeof(int)) >= 1) {
+                return host;
+            }
+            free(host->nameCompiled);
         }
     }
     return 0;
@@ -8642,7 +8814,7 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
     HttpTx      *tx;
     HttpRoute   *route;
     HttpUri     *req;
-    cchar       *index, *pathInfo;
+    cchar       *index, *pathInfo; 
     char        *path;
     int         next;
 
@@ -8650,6 +8822,19 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
     tx = conn->tx;
     req = rx->parsedUri;
     route = rx->route;
+    
+#if UNUSED
+    if (conn->host->canonical) {
+        hostName = conn->host->canonical->host;
+        port = conn->host->canonical->port;
+    }
+    if (!hostName) {
+        hostName = req->host;
+    }
+    if (!port) {
+        port = req->port;
+    }
+#endif
 
     /*
         Manage requests for directories
@@ -8658,8 +8843,13 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
         /*
            Append "/" and do an external redirect. Use the original request URI. Use httpFormatUri to preserve query.
          */
+#if UNUSED
         httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
-            httpFormatUri(req->scheme, req->host, req->port, sjoin(req->path, "/", NULL), req->reference, req->query, 0));
+            httpFormatUri(req->scheme, hostName, port, sjoin(req->path, "/", NULL), req->reference, req->query, 0));
+#else
+        httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, 
+            httpFormatUri(0, 0, 0, sjoin(req->path, "/", NULL), req->reference, req->query, 0));
+#endif
         return HTTP_ROUTE_OK;
     }
     if (route->indexes) {
@@ -8763,6 +8953,7 @@ PUBLIC int httpOpenFileHandler()
 /********************************* Includes ***********************************/
 
 
+#include    "pcre.h"
 
 /*********************************** Locals ***********************************/
 
@@ -8800,21 +8991,19 @@ PUBLIC HttpHost *httpCloneHost(HttpHost *parent)
 {
     HttpHost    *host;
 
-    if ((host = mprAllocObj(HttpHost, manageHost)) == 0) {
+    if ((host = httpCreateHost()) == 0) {
         return 0;
     }
     /*
         The dirs and routes are all copy-on-write.
-        Don't clone ip, port and name
+        Do not clone routes, ip, port and name
      */
     host->parent = parent;
-    host->responseCache = parent->responseCache;
-    host->routes = parent->routes;
-    host->flags = parent->flags | HTTP_HOST_VHOST;
+    host->flags = parent->flags & HTTP_HOST_NO_TRACE;
     host->streams = parent->streams;
     host->secureEndpoint = parent->secureEndpoint;
     host->defaultEndpoint = parent->defaultEndpoint;
-    httpAddHost(host);
+    host->routes = mprCreateList(-1, MPR_LIST_STABLE);
     return host;
 }
 
@@ -8823,6 +9012,7 @@ static void manageHost(HttpHost *host, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(host->name);
+        mprMark(host->canonical);
         mprMark(host->parent);
         mprMark(host->responseCache);
         mprMark(host->routes);
@@ -8898,7 +9088,9 @@ static void printRouteHeader(HttpHost *host, int *methodsLen, int *patternLen, i
         *patternLen = (int) max(*patternLen, slen(route->pattern));
         *methodsLen = (int) max(*methodsLen, slen(httpGetRouteMethods(route)));
     }
-    printf("\n%-*s %-*s %-*s\n", *patternLen, "Route", *methodsLen, "Methods", *targetLen, "Target");
+    printf("\nRoutes for host: %s\n\n", host->name ? host->name : "default");
+    printf("%-*s %-*s %-*s\n", *patternLen, "Route", *methodsLen, "Methods", *targetLen, "Target");
+    printf("%-*s %-*s %-*s\n", *patternLen, "-----", *methodsLen, "-------", *targetLen, "------");
 }
 
 
@@ -8911,9 +9103,11 @@ static void printRoute(HttpRoute *route, int idx, bool full, int methodsLen, int
     cchar       *methods, *pattern, *target, *index;
     int         nextIndex;
 
+#if UNUSED
     if (route->flags & HTTP_ROUTE_HIDDEN && !full) {
         return;
     }
+#endif
     auth = route->auth;
     methods = httpGetRouteMethods(route);
     methods = methods ? methods : "*";
@@ -8921,7 +9115,8 @@ static void printRoute(HttpRoute *route, int idx, bool full, int methodsLen, int
     target = (route->target && *route->target) ? route->target : "$&";
 
     if (full) {
-        printf("\n Route [%d]. %s\n", idx, pattern);
+        printf("\nRoutes for host: %s\n", route->host->name ? route->host->name : "default");
+        printf("\n  Route [%d]. %s\n", idx, pattern);
         if (route->prefix && *route->prefix) {
             printf("    Prefix:       %s\n", route->prefix);
         }
@@ -8975,28 +9170,68 @@ PUBLIC void httpLogRoutes(HttpHost *host, bool full)
     if (!host) {
         host = httpGetDefaultHost();
     }
-    if (!full) {
-        printRouteHeader(host, &methodsLen, &patternLen, &targetLen);
-    }
-    for (index = 0; (route = mprGetNextItem(host->routes, &index)) != 0; ) {
-        printRoute(route, index - 1, full, methodsLen, patternLen, targetLen);
+    if (mprGetListLength(host->routes) == 0) {
+        printf("\nRoutes for host: %s: none\n", host->name ? host->name : "default");
+    } else {
+        if (!full) {
+            printRouteHeader(host, &methodsLen, &patternLen, &targetLen);
+        }
+        for (index = 0; (route = mprGetNextItem(host->routes, &index)) != 0; ) {
+            printRoute(route, index - 1, full, methodsLen, patternLen, targetLen);
+        }
     }
     printf("\n");
 }
 
 
-PUBLIC void httpSetHostName(HttpHost *host, cchar *name)
+PUBLIC int httpSetHostCanonicalName(HttpHost *host, cchar *name)
 {
     if (!name || *name == '\0') {
-        mprLog("error http", 0, "Host name is empty");
+        mprLog("error http", 0, "Empty host name");
+        return MPR_ERR_BAD_ARGS;
     }
+    if (schr(name, ':')) {
+        host->canonical = httpCreateUri(name, 0);
+    } else {
+        host->canonical = httpCreateUri(sjoin(name, ":", 0), 0);
+    }
+    return 0;
+}
+
+
+PUBLIC int httpSetHostName(HttpHost *host, cchar *name)
+{
+    cchar   *errMsg;
+    int     column;
+
+    if (!name || *name == '\0') {
+        mprLog("error http", 0, "Empty host name");
+        return MPR_ERR_BAD_ARGS;
+    }
+    host->flags &= ~(HTTP_HOST_WILD_STARTS | HTTP_HOST_WILD_CONTAINS | HTTP_HOST_WILD_REGEXP);
     if (sends(name, "*")) {
         host->flags |= HTTP_HOST_WILD_STARTS;
+        host->name = strim(name, "*", MPR_TRIM_END);
 
-    } else if (name && *name == '*') {
+    } else if (*name == '*') {
         host->flags |= HTTP_HOST_WILD_CONTAINS;
+        host->name = strim(name, "*", MPR_TRIM_START);
+
+    } else if (*name == '/') {
+        host->flags |= HTTP_HOST_WILD_REGEXP;
+        host->name = strim(name, "/", MPR_TRIM_BOTH);
+        if (host->nameCompiled) {
+            free(host->nameCompiled);
+        }
+        if ((host->nameCompiled = pcre_compile2(host->name, 0, 0, &errMsg, &column, NULL)) == 0) {
+            mprLog("error http route", 0, "Cannot compile condition match pattern. Error %s at column %d", errMsg, column);
+            return MPR_ERR_BAD_SYNTAX;
+        }
+
+    } else {
+        host->name = sclone(name);
     }
-    host->name = strim(name, "*", 0);
+    return 0;
 }
 
 
@@ -12323,10 +12558,7 @@ static bool fixRangeLength(HttpConn *conn)
 /********************************* Includes ***********************************/
 
 
-
-#if ME_COM_PCRE
- #include    "pcre.h"
-#endif
+#include    "pcre.h"
 
 /********************************** Forwards **********************************/
 
@@ -15757,6 +15989,7 @@ static bool parseIncoming(HttpConn *conn);
 static bool parseRange(HttpConn *conn, char *value);
 static bool parseRequestLine(HttpConn *conn, HttpPacket *packet);
 static bool parseResponseLine(HttpConn *conn, HttpPacket *packet);
+static void parseUri(HttpConn *conn);
 static bool processCompletion(HttpConn *conn);
 static bool processFinalized(HttpConn *conn);
 static bool processContent(HttpConn *conn);
@@ -15764,7 +15997,6 @@ static void parseMethod(HttpConn *conn);
 static bool processParsed(HttpConn *conn);
 static bool processReady(HttpConn *conn);
 static bool processRunning(HttpConn *conn);
-static int setParsedUri(HttpConn *conn);
 static int sendContinue(HttpConn *conn);
 
 /*********************************** Code *************************************/
@@ -15992,9 +16224,8 @@ static bool parseIncoming(HttpConn *conn)
     }
     if (httpServerConn(conn)) {
         httpMatchHost(conn);
-        if (setParsedUri(conn) < 0) {
-            return 0;
-        }
+        parseUri(conn);
+
     } else if (rx->status != HTTP_CODE_CONTINUE) {
         /*
             Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
@@ -16391,7 +16622,12 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
 
         case 'h':
             if (strcasecmp(key, "host") == 0) {
-                rx->hostHeader = sclone(value);
+                if (strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:") 
+                        < (int) slen(value)) {
+                    httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host header");
+                } else {
+                    rx->hostHeader = sclone(value);
+                }
             }
             break;
 
@@ -17230,53 +17466,64 @@ PUBLIC void httpSetMethod(HttpConn *conn, cchar *method)
 }
 
 
-static int setParsedUri(HttpConn *conn)
+static void parseUri(HttpConn *conn)
 {
     HttpRx      *rx;
     HttpUri     *up;
     cchar       *hostname;
 
     rx = conn->rx;
-    if (httpSetUri(conn, rx->uri) < 0 || rx->pathInfo[0] != '/') {
+    if (httpSetUri(conn, rx->uri) < 0) {
         httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad URL");
         rx->parsedUri = httpCreateUri("", 0);
-        /* Continue to render a response */
+
+    } else {
+        /*
+            Complete the URI based on the connection state.
+            Must have a complete scheme, host, port and path.
+         */
+        up = rx->parsedUri;
+        up->scheme = sclone(conn->secure ? "https" : "http");
+        hostname = rx->hostHeader ? rx->hostHeader : conn->host->name;
+        if (!hostname) {
+            hostname = conn->sock->acceptIp;
+        }
+        if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0) {
+            if (!conn->error) {
+                httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host");
+            }
+        } else {
+            up->port = conn->sock->listenSock->port;
+        }
     }
-    /*
-        Complete the URI based on the connection state.
-        Must have a complete scheme, host, port and path.
-     */
-    up = rx->parsedUri;
-    up->scheme = sclone(conn->secure ? "https" : "http");
-    hostname = rx->hostHeader ? rx->hostHeader : conn->host->name;
-    if (!hostname) {
-        hostname = conn->sock->acceptIp;
-    }
-    mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0);
-    up->port = conn->sock->listenSock->port;
-    return 0;
 }
 
 
 PUBLIC int httpSetUri(HttpConn *conn, cchar *uri)
 {
     HttpRx      *rx;
+    HttpUri     *parsedUri;
     char        *pathInfo;
 
     rx = conn->rx;
-    if ((rx->parsedUri = httpCreateUri(uri, 0)) == 0) {
+    if ((parsedUri = httpCreateUri(uri, 0)) == 0) {
         return MPR_ERR_BAD_ARGS;
     }
-    if ((pathInfo = httpValidateUriPath(rx->parsedUri->path)) == 0) {
+    if (parsedUri->host && !rx->hostHeader) {
+        rx->hostHeader = parsedUri->host;
+    }
+    if ((pathInfo = httpValidateUriPath(parsedUri->path)) == 0) {
         return MPR_ERR_BAD_ARGS;
     }
     rx->pathInfo = pathInfo;
-    rx->uri = rx->parsedUri->path;
+    rx->uri = parsedUri->path;
     conn->tx->ext = httpGetExt(conn);
+
     /*
         Start out with no scriptName and the entire URI in the pathInfo. Stages may rewrite.
      */
     rx->scriptName = mprEmptyString();
+    rx->parsedUri = parsedUri;
     return 0;
 }
 
@@ -19906,7 +20153,10 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
             /* Omit domain if set to empty string */
         }
     } else if (rx->hostHeader) {
-        mprParseSocketAddress(rx->hostHeader, &domain, &port, NULL, 0);
+        if (mprParseSocketAddress(rx->hostHeader, &domain, &port, NULL, 0) < 0) {
+            mprLog("error http", 4, "Bad host header for cookie: %s", rx->hostHeader);
+            return;
+        }
         if (domain && port) {
             domain = 0;
         }
@@ -21157,6 +21407,9 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
     if ((up = mprAllocObj(HttpUri, manageUri)) == 0) {
         return 0;
     }
+    if (!httpValidUriChars(uri)) {
+        return 0;
+    }
     tok = sclone(uri);
 
     /*
@@ -21455,8 +21708,9 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
 
     portDelim = "";
     portStr = "";
+    hostDelim = "";
 
-    if ((flags & HTTP_COMPLETE_URI) || host || scheme) {
+    if (flags & HTTP_COMPLETE_URI) {
         if (scheme == 0 || *scheme == '\0') {
             scheme = "http";
         }
@@ -21465,9 +21719,11 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
                 host = "localhost";
             }
         }
+    } else if (!host) {
+        host = "";
+    }
+    if (scheme) {
         hostDelim = "://";
-    } else {
-        host = hostDelim = "";
     }
     if (host) {
         if (mprIsIPv6(host)) {
@@ -21805,7 +22061,7 @@ PUBLIC HttpUri *httpLinkUri(HttpConn *conn, cchar *target, MprHash *options)
 {
     HttpRoute       *route, *lroute;
     HttpRx          *rx;
-    HttpUri         *uri;
+    HttpUri         *base, *uri, *canonical;
     cchar           *routeName, *action, *controller, *originalAction, *tplate;
     char            *rest;
 
@@ -21898,11 +22154,23 @@ PUBLIC HttpUri *httpLinkUri(HttpConn *conn, cchar *target, MprHash *options)
     uri = httpCreateUri(target, 0);
 
     /*
-        This was changed from: httpCreateUri(rx->uri) to rx->parsedUri.
-        The use case was appweb: /auth/form/login which redirects using: https:///auth/form/login on localhost:4443
-        This must extract the existing host and port from the prior request
+        This was changed from: httpCreateUri(rx->uri) to rx->parsedUri because we must extract the existing host and 
+        port from the prior request. The use case was appweb: 
+            /auth/form/login which redirects using: https:///auth/form/login on localhost:4443
      */
-    uri = httpResolveUri(rx->parsedUri, 1, &uri, 0);
+    canonical = conn->host->canonical;
+    if (canonical) {
+        base = httpCloneUri(rx->parsedUri, 0);
+        if (canonical->host) {
+            base->host = canonical->host;
+        }
+        if (canonical->port) {
+            base->port = canonical->port;
+        }
+    } else {
+        base = rx->parsedUri;
+    }
+    uri = httpResolveUri(base, 1, &uri, 0);
     return httpNormalizeUri(uri);
 }
 

@@ -1,0 +1,21 @@
+/*
+    est.me -- EST Component
+ */
+
+Me.load({ 
+    targets: {
+        est: {
+            configurable: true,
+            location:     'src/est',
+            path:         '${BIN}/libestssl${ARLIB}',
+            type:         'lib',
+            static:       true,
+            ifdef:        [ 'ssl' ],
+            conflicts:    [ 'openssl', 'matrixssl', 'nanossl' ]
+            libraries:    [ 'estssl' ],
+            sources:      [ '*.c' ],
+            depends:      [ 'libest' ],
+            ifdef:        [ 'ssl' ],
+        }
+    }
+})

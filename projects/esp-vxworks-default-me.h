@@ -108,9 +108,6 @@
 #ifndef ME_MANIFEST
     #define ME_MANIFEST "installs/manifest.me"
 #endif
-#ifndef ME_ME
-    #define ME_ME "=>0.8.4"
-#endif
 #ifndef ME_MPR_LOGGING
     #define ME_MPR_LOGGING 1
 #endif
@@ -235,14 +232,8 @@
 #endif
 
 /* Components */
-#ifndef ME_COM_CGI
-    #define ME_COM_CGI 0
-#endif
 #ifndef ME_COM_CC
     #define ME_COM_CC 1
-#endif
-#ifndef ME_COM_DIR
-    #define ME_COM_DIR 0
 #endif
 #ifndef ME_COM_EST
     #define ME_COM_EST 0
@@ -256,11 +247,17 @@
 #ifndef ME_COM_LINK
     #define ME_COM_LINK 1
 #endif
+#ifndef ME_COM_MATRIXSSL
+    #define ME_COM_MATRIXSSL 0
+#endif
 #ifndef ME_COM_MDB
     #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1
+#endif
+#ifndef ME_COM_NANOSSL
+    #define ME_COM_NANOSSL 0
 #endif
 #ifndef ME_COM_OPENSSL
     #define ME_COM_OPENSSL 1

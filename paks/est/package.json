@@ -33,7 +33,7 @@
     ],
     "dependencies": {
         "osdep": "^0.8",
-        "ssl": "^0.8"
+        "ssl": "^0.9"
     },
     "files": [
         "dist/"

@@ -39,7 +39,9 @@
     },
     "optionalDependencies": {
         "est": "^0.6",
-        "ssl": "^0.8"
+        "mpr-est": "^0.1",
+        "mpr-openssl": "^0.1",
+        "ssl": "^0.9"
     },
     "devDependencies": {
         "me": ">0.8.0"

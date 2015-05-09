@@ -336,11 +336,10 @@ static int runAction(HttpConn *conn)
             controllers = ".";
         }
         controllers = mprJoinPath(route->home, controllers);
-
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
-        if (mprPathExists(controller, R_OK)) {
-            if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
+        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
+            if (mprPathExists(controller, R_OK)) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
             }
@@ -476,6 +475,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         mprHold(dest);
         espRenderView(conn, dest, 0);
         mprRelease(dest);
+        
     } else {
         /*
             Last chance, forward to the file handler ... not an ESP request. 
@@ -613,25 +613,27 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 
     lock(esp);
     if (route->update) {
-        if (!mprPathExists(source, R_OK)) {
-            *errMsg = sfmt("Cannot find %s \"%s\" to load", kind, source);
-            unlock(esp);
-            return MPR_ERR_CANT_FIND;
-        }
-        isView = smatch(kind, "view");
-        if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
-            if (recompile) {
-                mprHoldBlocks(source, module, cacheName, NULL);
-                if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
+        if (mprPathExists(source, R_OK)) {
+            isView = smatch(kind, "view");
+            if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
+                if (recompile) {
+                    mprHoldBlocks(source, module, cacheName, NULL);
+                    if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
+                        mprReleaseBlocks(source, module, cacheName, NULL);
+                        unlock(esp);
+                        return MPR_ERR_CANT_WRITE;
+                    }
                     mprReleaseBlocks(source, module, cacheName, NULL);
-                    unlock(esp);
-                    return MPR_ERR_CANT_WRITE;
                 }
-                mprReleaseBlocks(source, module, cacheName, NULL);
             }
         }
     }
     if (mprLookupModule(source) == 0) {
+        if (!mprPathExists(module, R_OK)) {
+            *errMsg = "Module does not exist";
+            unlock(esp);
+            return MPR_ERR_CANT_FIND;
+        }
         entry = getModuleEntry(eroute, kind, source, cacheName);
         if ((mp = mprCreateModule(source, module, entry, route)) == 0) {
             *errMsg = "Memory allocation error loading module";
@@ -1000,10 +1002,10 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
         }
         lock(esp);
-        if (mprPathExists(source, R_OK)) {
-            if (espLoadModule(route, NULL, "app", source, &errMsg) < 0) {
-                unlock(esp);
+        if (espLoadModule(route, NULL, "app", source, &errMsg) < 0) {
+            if (eroute->combine) {
                 mprLog("error esp", 0, "%s", errMsg);
+                unlock(esp);
                 return MPR_ERR_CANT_LOAD;
             }
         }
@@ -1015,8 +1017,8 @@ PUBLIC int espLoadConfig(HttpRoute *route)
                 }
                 source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
                 if (espLoadModule(route, NULL, kind, source, &errMsg) < 0) {
-                    unlock(esp);
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);
+                    unlock(esp);
                     return MPR_ERR_CANT_LOAD;
                 }
             }

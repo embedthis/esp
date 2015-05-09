@@ -100,11 +100,8 @@ if not exist "$(ObjDir)" md "$(ObjDir)"
 if not exist "$(BinDir)" md "$(BinDir)"
 if not exist "$(IncDir)" md "$(IncDir)"
 if not exist "$(IncDir)\me.h" copy "..\esp-windows-default-me.h" "$(IncDir)\me.h"
-copy /Y /B ..\..\src\edi.h $(IncDir)
-copy /Y /B ..\..\src\esp.h $(IncDir)
 copy /Y /B ..\..\src\est\est.h $(IncDir)
 copy /Y /B ..\..\src\http\http.h $(IncDir)
-copy /Y /B ..\..\src\mdb.h $(IncDir)
 copy /Y /B ..\..\src\mpr\mpr.h $(IncDir)
 copy /Y /B ..\..\src\osdep\osdep.h $(IncDir)
 copy /Y /B ..\..\src\pcre\pcre.h $(IncDir)

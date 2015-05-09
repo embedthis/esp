@@ -8082,10 +8082,11 @@ typedef struct MprSsl {
  */
 #define MPR_PROTO_SSLV2    0x1              /**< SSL V2 protocol */
 #define MPR_PROTO_SSLV3    0x2              /**< SSL V3 protocol */
-#define MPR_PROTO_TLSV1_1  0x4              /**< TLS V1.1 protocol */
-#define MPR_PROTO_TLSV1_2  0x8              /**< TLS V1.2 protocol */
+#define MPR_PROTO_TLSV1_0  0x8              /**< TLS V1.0 protocol */
+#define MPR_PROTO_TLSV1_1  0x10             /**< TLS V1.1 protocol */
+#define MPR_PROTO_TLSV1_2  0x20             /**< TLS V1.2 protocol */
 #define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2)
-#define MPR_PROTO_ALL      0xF              /**< All protocols */
+#define MPR_PROTO_ALL      0x2F             /**< All protocols */
 
 /**
     Add the ciphers to use for SSL
@@ -8130,12 +8131,24 @@ PUBLIC cchar *mprGetSslCipherName(int cipher);
  */
 PUBLIC int mprGetSslCipherCode(cchar *cipher);
 
+/**
+    Convert a list of ciphers into an integer array of cipher codes
+    @param ciphers IANA cipher name. Ciphers may be space, tab, comma or colon separated.
+    @param len Integer reference to hold the number of cipher codes in the return array
+    @return String integers representing the IANA cipher codes. Null terminated.
+    @stability Prototype
+    @ingroup MprSsl
+ */
+PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len);
+
  /**
     Load the SSL module.
     @ingroup MprSsl
     @stability Stable
  */
 PUBLIC int mprLoadSsl();
+
+PUBLIC int mprSslInit(void *unused, MprModule *module);
 
 /**
     Set the key file to use for SSL
@@ -8250,7 +8263,7 @@ typedef struct MprCipher {
     cchar   *name;
 } MprCipher;
 
-PUBLIC_DATA MprCipher mprCiphers[];
+PUBLIC_DATA MprCipher *mprCiphers;
 
 /******************************* Worker Threads *******************************/
 /**

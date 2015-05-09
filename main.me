@@ -3,21 +3,20 @@
  */
 
 Me.load({
+    makeme: '>=0.8.6',
+
     plugins: [ 'configuration', 'installs' ],
 
     blend: [
-        'http',
-        'sqlite',
+        'src/*/*.me',
         'samples/samples.me',
-        'src/esp.me',
         'test/test.me',
         'doc/doc.me',
     ],
 
     configure: {
-        requires:  [ 'compiler', 'osdep', 'http', 'mpr', 'pcre'],
-        discovers: [ 'mdb', 'sqlite', 'ssl', ],
-        extras:    [ 'cgi', 'dir' ],
+        requires:  [ 'compiler', 'osdep', 'http', 'mpr', 'pcre' ],
+        discovers: [ 'mdb', 'sqlite', 'ssl' ],
     },
 
     customize: [
@@ -29,8 +28,6 @@ Me.load({
     ],
 
     settings: {
-        me: '=>0.8.4',
-
         integrate: true,
 
         /*
@@ -77,8 +74,7 @@ Me.load({
 
     scripts: {
         loaded: `
-            //MOB me.targets.httpcmd.enable = false
-            //MOB me.targets.makerom.enable = false
+            me.targets.httpcmd.enable = false
         `,
     },
 

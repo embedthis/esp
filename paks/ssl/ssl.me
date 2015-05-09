@@ -3,16 +3,12 @@
  */
 
 Me.load({
-    blend: [
-        '?est',
-        'openssl.me',
-    ],
     targets: {
         ssl: {
             configurable: true,
             description: 'Secure Socket Layer Interface',
-            discovers: [ 'openssl', 'est' ],
-            uses:      [ 'openssl', 'est' ],
+            discovers: [ 'openssl', 'est', 'matrixssl', 'nanossl' ],
+            uses:      [ 'openssl', 'est', 'matrixssl', 'nanossl' ],
             config: function (target) {
                 let provider
                 for each (p in target.discovers) {
@@ -40,7 +36,7 @@ Me.load({
                 if (provider) {
                     let from = me.targets[provider]
                     target.provider = provider
-                    for each (field in ['defines', 'includes', 'libraries', 'libpaths', 'imports']) {
+                    for each (field in ['defines', 'includes', 'libraries', 'libpaths']) {
                         if (from[field]) {
                             target[field] = from[field]
                         }
@@ -48,7 +44,7 @@ Me.load({
                     target.description += ' (' + me.targets[provider].description + ')'
 
                 } else {
-                    throw 'No enabled SSL providers'
+                    throw 'No enabled SSL providers.\n'
                 }
             },
             without: function(target) {

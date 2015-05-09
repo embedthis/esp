@@ -1,11 +1,12 @@
 {
-    "name": "ssl",
-    "description": "Embedthis SSL Interface",
-    "title": "Embedthis Development",
-    "version": "0.9.0",
+    "name": "mpr-openssl",
+    "title": "OpenSSL support",
+    "description": "OpenSSL Support for the MPR",
+    "version": "0.1.0",
     "keywords": [
         "me",
-        "ssl"
+        "ssl",
+        "openssl"
     ],
     "author": {
         "name": "Embedthis Software",
@@ -14,10 +15,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/embedthis/ssl.git"
+        "url": "git://github.com/embedthis/mpr-openssl.git"
     },
     "bugs": {
-        "url": "http://github.com/embedthis/ssl/issues"
+        "url": "http://github.com/embedthis/mpr-openssl/issues"
     },
     "licenses": [
         {
@@ -30,6 +31,10 @@
         }
     ],
     "pak": {
-        "origin": "embedthis/ssl"
+        "export": [
+            "*.c",
+            "*.me"
+        ],
+        "origin": "embedthis/mpr-openssl"
     }
 }

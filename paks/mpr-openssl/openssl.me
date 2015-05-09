@@ -1,28 +1,33 @@
 /*
-    openssl.me -- OpenSSL Component
+    openssl.me -- OpenSSL Component for the MPR
  */
 
 Me.load({ 
     targets: {
         openssl: {
-            description: 'OpenSSL',
+            description: 'OpenSSL Support',
             config: function (target) {
                 if (me.options.gen) {
-                    return {
+                    let result = {
                         /*
                             Static configuration to work for standard installations under /usr/lib and /usr/include
                             and in a custom user directory.
                          */
-                        path: target.withpath || Path('/usr/src/openssl'),
-                        defines: [ 'ME_COM_OPENSSL_PATH=/usr' ],
-                        includes: [ '$(ME_COM_OPENSSL_PATH)/include' ],
-                        libpaths: [ 
-                            '$(ME_COM_OPENSSL_PATH)/lib',
-                            '$(ME_COM_OPENSSL_PATH)', 
-                        ],
+                        path: me.dir.bin.join('libopenssl').joinExt(me.ext.lib),
+                        includes: [ me.dir.inc ],
                         libraries: me.platform.os == 'windows' 
                             ? ([ 'libeay32.lib', 'ssleay32.lib' ]) : ([ 'ssl', 'crypto' ]),
                     }
+                    if (me.options.gen == 'make') {
+                        result.defines = ['ME_COM_OPENSSL_PATH=/usr/lib']
+                    } else if (me.options.gen == 'nmake') {
+                        result.defines = ['ME_COM_OPENSSL_PATH=']
+                    }
+                    if (me.options.gen == 'make' || me.options.gen == 'nmake') {
+                        result.includes.push('$(ME_COM_OPENSSL_PATH)/include')
+                        result.libpaths = ['$(ME_COM_OPENSSL_PATH)']
+                    }
+                    return result
                 }
                 let lib, libraries, libpaths, imports, includes, path
                 let search = getComponentSearch(target, 'openssl')
@@ -47,17 +52,27 @@ Me.load({
                         lib.parent.files('libcrypto*.' + me.ext.shobj + '*')
                     includes = [ probe('openssl/ssl.h', {search: [ path.join('include'), '/usr/include']}).absolute ]
                 }
+                includes.push(me.dir.inc)
                 return {
-                    path:       lib.dirname,
+                    location:   path,
+                    path:       me.dir.bin.join('libopenssl').joinExt(me.ext.lib),
                     imports:    imports,
                     includes:   includes,
                     libpaths:   libpaths,
                     libraries,  libraries,
                 }
             },
-            ifdef: [ 'ssl' ],
-            conflicts: [ 'est' ],
-        },
-    },
+            ifdef:     [ 'ssl' ],
+            conflicts: [ 'est', 'matrixssl', 'nanossl' ],
+            type: 'lib',
+            static: true,
+            sources: [ '*.c' ],
+            postresolve: `
+                if (me.platform.os == 'macosx') {
+                    me.target.compiler.push('-Wno-deprecated-declarations')
+                }
+            `
+        }
+    }
 })
 

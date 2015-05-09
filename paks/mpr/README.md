@@ -1,4 +1,4 @@
-Embedthis Multithreaded Portable Runtime (MPR) 4.X
+Embedthis Multithreaded Portable Runtime (MPR)
 ===
 
 Licensing
@@ -10,8 +10,8 @@ See LICENSE.md for details.
   See doc/index.html
 
 ### Prerequisites:
+
     MakeMe (https://embedthis.com/makeme/download.html) for MakeMe to configure and build.
-    Ejscript (https://embedthis.com/ejscript/download.html) for utest to test.
 
 ### To Build:
 

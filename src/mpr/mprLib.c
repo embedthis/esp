@@ -21892,10 +21892,92 @@ static void standardSignalHandler(void *ignored, MprSignal *sp)
 
 
 #if !VXWORKS
-/*
-    On MAC OS X, getaddrinfo is not thread-safe and crashes when called by a 2nd thread at any time. ie. locking wont help.
- */
 #define ME_COMPILER_HAS_GETADDRINFO 1
+#endif
+
+/********************************** Defines ***********************************/
+#if ME_COM_SSL
+
+/*
+    See: http://www.iana.org/assignments/tls-parameters/tls-parameters.xml
+*/
+static MprCipher cipherList[] = {
+    { 0x0001, "SSL_RSA_WITH_NULL_MD5" },
+    { 0x0002, "SSL_RSA_WITH_NULL_SHA" },
+    { 0x0004, "TLS_RSA_WITH_RC4_128_MD5" },
+    { 0x0005, "TLS_RSA_WITH_RC4_128_SHA" },
+    { 0x0009, "SSL_RSA_WITH_DES_CBC_SHA" },
+    { 0x000A, "SSL_RSA_WITH_3DES_EDE_CBC_SHA" },
+    { 0x0015, "SSL_DHE_RSA_WITH_DES_CBC_SHA" },
+    { 0x0016, "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA" },
+    { 0x001A, "SSL_DH_ANON_WITH_DES_CBC_SHA" },
+    { 0x001B, "SSL_DH_ANON_WITH_3DES_EDE_CBC_SHA" },
+    { 0x002F, "TLS_RSA_WITH_AES_128_CBC_SHA" },
+    { 0x0033, "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" },
+    { 0x0034, "TLS_DH_ANON_WITH_AES_128_CBC_SHA" },
+    { 0x0035, "TLS_RSA_WITH_AES_256_CBC_SHA" },
+    { 0x0039, "TLS_DHE_RSA_WITH_AES_256_CBC_SHA" },
+    { 0x003A, "TLS_DH_ANON_WITH_AES_256_CBC_SHA" },
+    { 0x003B, "SSL_RSA_WITH_NULL_SHA256" },
+    { 0x003C, "TLS_RSA_WITH_AES_128_CBC_SHA256" },
+    { 0x003D, "TLS_RSA_WITH_AES_256_CBC_SHA256" },
+    { 0x0041, "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA" },
+    { 0x0067, "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256" },
+    { 0x006B, "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256" },
+    { 0x006C, "TLS_DH_ANON_WITH_AES_128_CBC_SHA256" },
+    { 0x006D, "TLS_DH_ANON_WITH_AES_256_CBC_SHA256" },
+    { 0x0084, "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA" },
+    { 0x0088, "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA" },
+    { 0x008B, "TLS_PSK_WITH_3DES_EDE_CBC_SHA" },
+    { 0x008C, "TLS_PSK_WITH_AES_128_CBC_SHA" },
+    { 0x008D, "TLS_PSK_WITH_AES_256_CBC_SHA" },
+    { 0x008F, "SSL_DHE_PSK_WITH_3DES_EDE_CBC_SHA" },
+    { 0x0090, "TLS_DHE_PSK_WITH_AES_128_CBC_SHA" },
+    { 0x0091, "TLS_DHE_PSK_WITH_AES_256_CBC_SHA" },
+    { 0x0093, "TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA" },
+    { 0x0094, "TLS_RSA_PSK_WITH_AES_128_CBC_SHA" },
+    { 0x0095, "TLS_RSA_PSK_WITH_AES_256_CBC_SHA" },
+    { 0xC001, "TLS_ECDH_ECDSA_WITH_NULL_SHA" },
+    { 0xC003, "SSL_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA" },
+    { 0xC004, "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA" },
+    { 0xC005, "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA" },
+    { 0xC006, "TLS_ECDHE_ECDSA_WITH_NULL_SHA" },
+    { 0xC008, "SSL_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA" },
+    { 0xC009, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA" },
+    { 0xC00A, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA" },
+    { 0xC00B, "TLS_ECDH_RSA_WITH_NULL_SHA" },
+    { 0xC00D, "SSL_ECDH_RSA_WITH_3DES_EDE_CBC_SHA" },
+    { 0xC00E, "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA" },
+    { 0xC00F, "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA" },
+    { 0xC010, "TLS_ECDHE_RSA_WITH_NULL_SHA" },
+    { 0xC012, "SSL_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA" },
+    { 0xC013, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA" },
+    { 0xC014, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA" },
+    { 0xC015, "TLS_ECDH_anon_WITH_NULL_SHA" },
+    { 0xC017, "SSL_ECDH_anon_WITH_3DES_EDE_CBC_SHA" },
+    { 0xC018, "TLS_ECDH_anon_WITH_AES_128_CBC_SHA" },
+    { 0xC019, "TLS_ECDH_anon_WITH_AES_256_CBC_SHA " },
+    { 0xC023, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" },
+    { 0xC024, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384" },
+    { 0xC025, "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256" },
+    { 0xC026, "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384" },
+    { 0xC027, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" },
+    { 0xC028, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384" },
+    { 0xC029, "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256" },
+    { 0xC02A, "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384" },
+    { 0xC02B, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256" },
+    { 0xC02C, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" },
+    { 0xC02D, "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256" },
+    { 0xC02E, "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384" },
+    { 0xC02F, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" },
+    { 0xC030, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" },
+    { 0xC031, "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256" },
+    { 0xC032, "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384" },
+    { 0xFFF0, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8" },
+    { 0x0, 0 },
+};
+
+MprCipher *mprCiphers = cipherList;
 #endif
 
 /********************************** Forwards **********************************/
@@ -22015,7 +22097,7 @@ PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider)
     if (ss->providers == 0 && (ss->providers = mprCreateHash(0, 0)) == 0) {
         return;
     }
-    provider->name = sclone(name);
+    ss->sslProvider = provider->name = sclone(name);
     mprAddKey(ss->providers, name, provider);
 }
 
@@ -23372,10 +23454,10 @@ PUBLIC int mprGetSocketInfo(cchar *ip, int port, int *family, int *protocol, str
  */
 static int getSocketIpAddr(struct sockaddr *addr, int addrlen, char *ip, int ipLen, int *port)
 {
-#if (ME_UNIX_LIKE || WIN)
+#if (ME_UNIX_LIKE || ME_WIN_LIKE)
     char    service[NI_MAXSERV];
 
-#ifdef IN6_IS_ADDR_V4MAPPED
+#if ME_WIN_LIKE || defined(IN6_IS_ADDR_V4MAPPED)
     if (addr->sa_family == AF_INET6) {
         struct sockaddr_in6* addr6 = (struct sockaddr_in6*) addr;
         if (IN6_IS_ADDR_V4MAPPED(&addr6->sin6_addr)) {
@@ -23452,8 +23534,16 @@ static int ipv6(cchar *ip)
 PUBLIC int mprParseSocketAddress(cchar *address, char **pip, int *pport, int *psecure, int defaultPort)
 {
     char    *ip, *cp;
+    ssize   pos;
     int     port;
 
+    if (!address || *address == 0) {
+        return MPR_ERR_BAD_ARGS;
+    }
+    pos = strspn(address, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=%");
+    if (pos < slen(address)) {
+        return MPR_ERR_BAD_ARGS;
+    }
     ip = 0;
     if (defaultPort < 0) {
         defaultPort = 80;
@@ -23641,12 +23731,13 @@ PUBLIC int mprLoadSsl()
 #if ME_COM_SSL
     MprSocketService    *ss;
     MprModule           *mp;
-    cchar               *path;
 
     ss = MPR->socketService;
     if (ss->providers) {
         return 0;
     }
+#if UNUSED
+    cchar               *path;
     path = mprJoinPath(mprGetAppDir(), "libmprssl");
     if (!mprPathExists(path, R_OK)) {
         path = mprSearchForModule("libmprssl");
@@ -23661,6 +23752,11 @@ PUBLIC int mprLoadSsl()
         mprLog("error mpr", 0, "Cannot load %s", path);
         return MPR_ERR_CANT_READ;
     }
+#endif
+    if ((mp = mprCreateModule("ssl", "builtin", "mprSslInit", NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    mprSslInit(MPR, mp);
     return 0;
 #else
     mprLog("error mpr", 0, "SSL communications support not included in build");
@@ -23821,6 +23917,65 @@ PUBLIC void mprVerifySslDepth(MprSsl *ssl, int depth)
     ssl->changed = 1;
 }
 
+
+PUBLIC cchar *mprGetSslCipherName(int code)
+{
+#if ME_COM_SSL
+    MprCipher   *cp;
+
+    for (cp = mprCiphers; cp->name; cp++) {
+        if (cp->code == code) {
+            return cp->name;
+        }
+    }
+#endif
+    return 0;
+}
+
+
+PUBLIC int mprGetSslCipherCode(cchar *cipher)
+{
+#if ME_COM_SSL
+    MprCipher   *cp;
+
+    for (cp = mprCiphers; cp->name; cp++) {
+        if (smatch(cp->name, cipher)) {
+            return cp->code;
+        }
+    }
+#endif
+    return 0;
+}
+
+
+PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len)
+{
+#if ME_COM_SSL
+    char    *cipher, *next;
+    int     nciphers, i, *result, code;
+
+    if (!ciphers || *ciphers == 0) {
+        return 0;
+    }
+    nciphers = sizeof(mprCiphers) / sizeof(MprCipher);
+    result = mprAlloc((nciphers + 1) * sizeof(int));
+
+    for (i = 0; (cipher = stok(sclone(ciphers), ":, \t", &next)) != 0; ) {
+        if ((code = mprGetSslCipherCode(cipher)) == 0) {
+            mprLog("error mpr", 0, "Cannot find cipher \"%s\"", cipher);
+            continue;
+        }
+        result[i++] = code;
+    }
+    result[i] = 0;
+    if (len) {
+        *len = i;
+    }
+    return result;
+#else
+    return 0;
+#endif
+}
 
 /*
     @copy   default

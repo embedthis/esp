@@ -44,7 +44,9 @@ typedef struct App {
     MprList     *files;                 /* List of files to process */
     MprHash     *build;                 /* Items to build */
     MprHash     *built;                 /* Items that have been built */
+#if DEPRECATED
     MprList     *slink;                 /* List of items for static link */
+#endif
     MprHash     *targets;               /* Command line targets */
     MprHash     *topDeps;               /* Top level dependencies */
     EdiGrid     *migrations;            /* Migrations table */
@@ -52,7 +54,7 @@ typedef struct App {
     cchar       *command;               /* Compilation or link command */
     cchar       *cacheName;             /* Cached MD5 name */
     cchar       *csource;               /* Name of "C" source for page or controller */
-    cchar       *genlink;               /* Static link resolution file */
+    cchar       *genlink;               /* DEPRECATED: Static link resolution file */
     cchar       *filterRoutePattern;    /* Poute pattern to use for filtering */
     cchar       *filterRoutePrefix;     /* Prefix of route to use for filtering */
     cchar       *logSpec;               /* Arg for --log */
@@ -266,7 +268,9 @@ static void manageApp(App *app, int flags)
         mprMark(app->platform);
         mprMark(app->route);
         mprMark(app->routes);
+#if DEPRECATED
         mprMark(app->slink);
+#endif
         mprMark(app->table);
         mprMark(app->targets);
         mprMark(app->title);
@@ -325,12 +329,14 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "force") || smatch(argp, "f")) {
             app->force = 1;
 
+#if DEPRECATED || 1
         } else if (smatch(argp, "genlink") || smatch(argp, "g")) {
             if (argind >= argc) {
                 usageError();
             } else {
                 app->genlink = sclone(argv[++argind]);
             }
+#endif
 
         } else if (smatch(argp, "keep") || smatch(argp, "k")) {
             app->keep = 1;
@@ -367,7 +373,7 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "optimized")) {
             app->compileMode = ESP_COMPILE_OPTIMIZED;
 
-#if DEPRECATE || 1
+#if DEPRECATED || 1
         } else if (smatch(argp, "overwrite")) {
             app->force = 1;
 #endif
@@ -385,7 +391,7 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "rebuild") || smatch(argp, "r")) {
             app->rebuild = 1;
 
-        //  DEPRECATE routeName
+        //  DEPRECATED routeName
         } else if (smatch(argp, "route") || smatch(argp, "routeName")) {
             if (argind >= argc) {
                 usageError();
@@ -678,7 +684,7 @@ static void initialize(int argc, char **argv)
             fail("Cannot define and load ESP app");
             return;
         }
-#if DEPRECATE || 1
+#if DEPRECATED || 1
     } else if (mprPathExists("package.json", R_OK)) {
         if (espLoadApp(route, 0, "package.json")) {
             fail("Cannot define and load ESP app");
@@ -1729,9 +1735,11 @@ static void compile(int argc, char **argv)
 {
     HttpRoute   *route;
     EspRoute    *eroute;
-    MprFile     *file;
     MprKey      *kp;
+#if DEPRECATED
+    MprFile     *file;
     cchar       *name;
+#endif
     int         next;
 
     if (app->error) {
@@ -1740,9 +1748,11 @@ static void compile(int argc, char **argv)
     app->combine = app->eroute->combine;
     vtrace("Info", "Compiling in %s mode", app->combine ? "combine" : "discrete");
 
+#if DEPRECATED
     if (app->genlink) {
         app->slink = mprCreateList(0, MPR_LIST_STABLE);
     }
+#endif
     app->built = mprCreateHash(0, MPR_HASH_STABLE | MPR_HASH_STATIC_VALUES);
     for (ITERATE_ITEMS(app->routes, route, next)) {
         eroute = route->eroute;
@@ -1765,6 +1775,7 @@ static void compile(int argc, char **argv)
             fail("Cannot find target %s to compile", kp->key);
         }
     }
+#if DEPRECATE
     if (app->slink) {
         qtrace("Generate", app->genlink);
         if ((file = mprOpenFile(app->genlink, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0664)) == 0) {
@@ -1790,6 +1801,7 @@ static void compile(int argc, char **argv)
         mprCloseFile(file);
         app->slink = 0;
     }
+#endif
 }
 
 
@@ -1973,9 +1985,11 @@ static void compileCombined(HttpRoute *route)
             }
             compileFile(route, kp->key, kind);
         }
+#if DEPRECATE
         if (app->slink) {
             mprAddItem(app->slink, route);
         }
+#endif
         mprWriteFileFmt(app->combineFile, 
             "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {
@@ -2408,7 +2422,7 @@ static cchar *getTemplate(cchar *key, MprHash *tokens)
         if (mprPathExists(app->paksDir, X_OK)) {
             return readTemplate(mprJoinPath(app->paksDir, pattern), tokens, NULL);
         }
-#if DEPRECATE
+#if DEPRECATED
         if (mprPathExists(app->eroute->generateDir, X_OK)) {
             return readTemplate(mprJoinPath(app->eroute->generateDir, pattern), tokens, NULL);
         }

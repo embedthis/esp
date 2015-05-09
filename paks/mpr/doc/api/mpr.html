@@ -258,6 +258,7 @@
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a151d6b4fc026bbbf0b057d78f2543f50" class="ref">uint64</a></td><td><a href="#group___mpr_mem_1gad5c9bf331c8c5dc9f586625e86818154" class="nameRef">mprGetCPU</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Return the process CPU usage.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_cache_1ga4eecd5e609a315224aed035c3351d836" class="nameRef">mprGetCacheStats</a>(<a href="#group___mpr_cache" class="ref">MprCache</a> *cache, int *numKeys, <a href="osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a> *mem)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the Cache statistics.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_buf_1gaf128b71005bdd12507110e1f21b483d4" class="nameRef">mprGetCharFromBuf</a>(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a character from the buffer.</td></tr>
+<tr class="apiDef"><td class="apiType">int*</td><td><a href="#group___mpr_ssl_1ga5717729f618db099ee57ff01fc55ad5d" class="nameRef">mprGetCipherSuite</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers, int *len)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Convert a list of ciphers into an integer array of cipher codes.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_buf" class="ref">MprBuf*</a></td><td><a href="#group___mpr_cmd_1ga68cf4226027c07ba3f3e5b30ecd48590" class="nameRef">mprGetCmdBuf</a>(<a href="#group___mpr_cmd" class="ref">MprCmd</a> *cmd, int channel)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the underlying buffer for a channel.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_cmd_1gaf75f9ee1ad6ce783f18263761fde73c3" class="nameRef">mprGetCmdExitStatus</a>(<a href="#group___mpr_cmd" class="ref">MprCmd</a> *cmd)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the command exit status.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_cmd_1gab286ce3b057579a16b84ec56997ae63f" class="nameRef">mprGetCmdFd</a>(<a href="#group___mpr_cmd" class="ref">MprCmd</a> *cmd, int channel)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the underlying file descriptor for an I/O channel.</td></tr>
@@ -1419,7 +1420,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Flag for mprGetPathFiles to return paths relative to the directory.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a3865b9d22e4cf35a4bbb06fe282ed0b4" class="nameRef">MPR_PROTO_ALL</a>&nbsp;&nbsp;&nbsp;0xF</td>
+<td>#define</td><td><a href="#mpr_8h_1a3865b9d22e4cf35a4bbb06fe282ed0b4" class="nameRef">MPR_PROTO_ALL</a>&nbsp;&nbsp;&nbsp;0x2F</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>All protocols.</td></tr>
 <tr class="apiDef">
@@ -1431,11 +1432,15 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>SSL V3 protocol.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1aa66454bfc118af48a0d0df362211d9ad" class="nameRef">MPR_PROTO_TLSV1_1</a>&nbsp;&nbsp;&nbsp;0x4</td>
+<td>#define</td><td><a href="#mpr_8h_1a20571df5bf7608fa64cffa1d357c68f1" class="nameRef">MPR_PROTO_TLSV1_0</a>&nbsp;&nbsp;&nbsp;0x8</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>TLS V1.0 protocol.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1aa66454bfc118af48a0d0df362211d9ad" class="nameRef">MPR_PROTO_TLSV1_1</a>&nbsp;&nbsp;&nbsp;0x10</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>TLS V1.1 protocol.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a7216cd86a972299f47f8f450371874c8" class="nameRef">MPR_PROTO_TLSV1_2</a>&nbsp;&nbsp;&nbsp;0x8</td>
+<td>#define</td><td><a href="#mpr_8h_1a7216cd86a972299f47f8f450371874c8" class="nameRef">MPR_PROTO_TLSV1_2</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>TLS V1.2 protocol.</td></tr>
 <tr class="apiDef">
@@ -11831,6 +11836,26 @@ Verify the peer verificate.
     <tr><td class="param">server</td><td>True if the SSL configuration will be used on the server side.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___mpr_ssl_1ga5717729f618db099ee57ff01fc55ad5d"></a>
+<div class="api">
+  <div class="prototype">
+    int *
+    mprGetCipherSuite
+(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers, int *len)
+  </div>
+  <div class="apiDetail">
+<p>Convert a list of ciphers into an integer array of cipher codes.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ciphers</td><td>IANA cipher name. Ciphers may be space, tab, comma or colon separated.</td>
+    <tr><td class="param">len</td><td>Integer reference to hold the number of cipher codes in the return array.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>String integers representing the IANA cipher codes. Null terminated.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>

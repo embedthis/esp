@@ -4645,7 +4645,7 @@ PUBLIC HttpRouteSetProc httpDefineRouteSet(cchar *name, HttpRouteSetProc fn);
         <tr><td>home</td><td>GET,POST,PUT</td><td>^/$</td><td>index.esp</td></tr>
     </table>
     @param route Parent route from which to inherit configuration.
-    @param set Route set to select. Use 'angular-mvc', or 'html-mvc'.
+    @param set Route set name to select.
     @ingroup HttpRoute
     @stability Prototype
  */
@@ -7443,11 +7443,11 @@ PUBLIC void httpStopEndpoint(HttpEndpoint *endpoint);
 /*
     Flags
  */
-#define HTTP_HOST_VHOST         0x1         /**< Host flag to signify host is a virtual host */
-#define HTTP_HOST_NAMED_VHOST   0x2         /**< Host flag for a named virtual host */
 #define HTTP_HOST_NO_TRACE      0x10        /**< Host flag to disable the of TRACE HTTP method */
-#define HTTP_HOST_WILD_STARTS   0x20        /**< Host header starts with pattern */
-#define HTTP_HOST_WILD_CONTAINS 0x40        /**< Host header contains the host name */
+#define HTTP_HOST_WILD_STARTS   0x20        /**< Host name starts with pattern */
+#define HTTP_HOST_WILD_CONTAINS 0x40        /**< Host name contains the host name */
+#define HTTP_HOST_WILD_REGEXP   0x80        /**< Host name is a regular expression */
+#define HTTP_HOST_ATTACHED      0x100       /**< Host name attached to an endpoint */
 
 /**
     Host Object
@@ -7461,7 +7461,8 @@ typedef struct HttpHost {
     /*
         NOTE: A host may be associated with multiple listening endpoints.
      */
-    char            *name;                  /**< Host name */
+    char            *name;                  /**< Host name or names to be served. Flags defines the type of name */
+    HttpUri         *canonical;             /**< Canonical host name (optional canonial public name for redirections) */
     struct HttpHost *parent;                /**< Parent host to inherit aliases, dirs, routes */
     MprCache        *responseCache;         /**< Response content caching store */
     MprList         *routes;                /**< List of Route defintions */
@@ -7469,6 +7470,7 @@ typedef struct HttpHost {
     HttpEndpoint    *defaultEndpoint;       /**< Default endpoint for host */
     HttpEndpoint    *secureEndpoint;        /**< Secure endpoint for host */
     MprHash         *streams;               /**< Hash of mime-types to stream record */
+    void            *nameCompiled;          /**< Compiled name regular expression (not alloced) */
     int             flags;                  /**< Host flags */
 } HttpHost;
 
@@ -7572,6 +7574,19 @@ PUBLIC HttpRoute *httpLookupRoute(HttpHost *host, cchar *pattern);
 PUBLIC void httpResetRoutes(HttpHost *host);
 
 /**
+    Set the host canonical name
+    @description The host canonical name is the public perferred name to use for the server. This is
+    used when redirecting client requests for directories.
+    @param host HttpHost object
+    @param name Host canonical name to use
+    @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
+        be compiled.
+    @ingroup HttpHost
+    @stability Stable
+ */
+PUBLIC int httpSetHostCanonicalName(HttpHost *host, cchar *name);
+
+/**
     Set the default host for all servers.
     @param host Host to define as the default host
     @ingroup HttpHost
@@ -7602,6 +7617,22 @@ PUBLIC void httpSetHostDefaultEndpoint(HttpHost *host, HttpEndpoint *endpoint);
 PUBLIC void httpSetHostDefaultRoute(HttpHost *host, HttpRoute *route);
 
 /**
+    Set the host name
+    @description The host name is used when matching client requests to virtual hosts using the Http request Host header. 
+        If the host name starts with "*", it will match names that contain the name.
+        If the host name ends with "*", it will match names that start with the name.
+        If the host name begins and ends with a "/", the name is assumed to be a regular expression. Regular expressions
+        may match multiple host names by using the "|" character to separate names.
+    @param host HttpHost object
+    @param name Host name to use
+    @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
+        be compiled.
+    @ingroup HttpHost
+    @stability Evolving
+ */
+PUBLIC int httpSetHostName(HttpHost *host, cchar *name);
+
+/**
     Set the default secure endpoint for a host
     @description The host may have a default secure endpoint that is used when doing redirections to https.
     @param host Host to examine.
@@ -7620,19 +7651,6 @@ PUBLIC void httpSetHostSecureEndpoint(HttpHost *host, HttpEndpoint *endpoint);
     @stability Stable
  */
 PUBLIC void httpSetHostRoot(HttpHost *host, cchar *root);
-
-/**
-    Set the host name
-    @description The host name is used when matching virtual hosts with the Http Host header. The host name is also
-        used for some redirections.
-    in order, so it is important to define routes in the order in which you wish to match them.
-    @param host HttpHost object
-    @param name Host name to use
-    @return Zero if the route can be added.
-    @ingroup HttpHost
-    @stability Stable
- */
-PUBLIC void httpSetHostName(HttpHost *host, cchar *name);
 
 /**
     Set the host HTTP protocol version
