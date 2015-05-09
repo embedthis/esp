@@ -1,0 +1,17 @@
+/*
+    watchdog.me -- MakeMe file for the watchdog library
+ */
+
+Me.load({
+    targets: {
+        watchdog: {
+            enable: 'me.settings.watchdog',
+            type: 'exe',
+            path: '${BIN}/${settings.watchdog.name}${EXE}',
+            rule: 'gui',
+            sources: [ 'watchdog.c' ],
+            depends: [ 'libmpr' ],
+            scripts: { prebuild: "if (me.settings.watchdog) { me.settings.watchdog.name ||= 'watchdog'}" },
+        },
+	},
+})

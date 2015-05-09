@@ -1,0 +1,46 @@
+{
+    "name": "watchdog",
+    "description": "Embedthis Watchdog",
+    "title": "Embedthis Watchdog",
+    "version": "0.1.0",
+    "keywords": [
+        "watchdog",
+        "mpr"
+    ],
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "https://embedthis.com"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/watchdog/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/watchdog.git"
+    },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
+    "dependencies": {
+        "mpr": "^6.0"
+    },
+    "files": [
+        "dist/**"
+    ],
+    "ignore": [
+        "*.tmp"
+    ],
+    "pak": {
+        "import": true,
+        "pak": ">=0.10.0",
+        "origin": "embedthis/watchdog"
+    }
+}
