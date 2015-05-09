@@ -35,7 +35,8 @@
         "mpr": "^6.0",
         "osdep": "^0.8",
         "pcre": "^1.0",
-        "sqlite": "^1.0"
+        "sqlite": "^1.0",
+        "watchdog": "^0.1"
     },
     "optionalDependencies": {
         "est": "^0.6",

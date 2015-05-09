@@ -103,7 +103,6 @@ Me.load({
                     from: [
                                 'libhttp${SHOBJ}',
                                 'libmpr${SHOBJ}',
-                                'libmprssl${SHOBJ}',
                                 'libpcre${SHOBJ}',
                                 'libsql${SHOBJ}',
                                 'libesp${SHOBJ}',
@@ -126,12 +125,6 @@ Me.load({
                                 'libmpr${SHLIB}',
                     ],
                     to:         '${abin}/',
-                    enable:     "me.platform.os == 'windows' && !me.settings.static",
-
-                }, { 
-                    from:       'libmprssl${SHLIB}',
-                    to:         '${abin}/',
-                    ifdef:      'ssl',
                     enable:     "me.platform.os == 'windows' && !me.settings.static",
 
                 }, {

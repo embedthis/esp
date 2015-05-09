@@ -8,6 +8,7 @@ Me.load({
     plugins: [ 'configuration', 'installs' ],
 
     blend: [
+        'src/*.me',
         'src/*/*.me',
         'samples/samples.me',
         'test/test.me',
@@ -66,7 +67,10 @@ Me.load({
                 The default is to enable logging for both debug and release builds.
              */
             logging: true,
-            manager: 'espman',
+        },
+
+        watchdog: {
+            name: 'espman',
         },
 
         tune: 'speed',
