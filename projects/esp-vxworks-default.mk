@@ -522,13 +522,10 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_37 += -lcrypto
     LIBPATHS_37 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_37 += -lestssl
-endif
 
 $(BUILD)/bin/libmpr.out: $(DEPS_37)
 	@echo '      [Link] $(BUILD)/bin/libmpr.out'
-	$(CC) -r -o $(BUILD)/bin/libmpr.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/mprLib.o" $(LIBPATHS_37) $(LIBS_37) $(LIBS_37) $(LIBS) 
+	$(CC) -r -o $(BUILD)/bin/libmpr.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/mprLib.o" -lestssl $(LIBPATHS_37) $(LIBS_37) $(LIBS_37) $(LIBS) 
 
 ifeq ($(ME_COM_PCRE),1)
 #
@@ -565,13 +562,10 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_39 += -lcrypto
     LIBPATHS_39 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_39 += -lestssl
-endif
 
 $(BUILD)/bin/libhttp.out: $(DEPS_39)
 	@echo '      [Link] $(BUILD)/bin/libhttp.out'
-	$(CC) -r -o $(BUILD)/bin/libhttp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/httpLib.o" $(LIBPATHS_39) $(LIBS_39) $(LIBS_39) $(LIBS) 
+	$(CC) -r -o $(BUILD)/bin/libhttp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/httpLib.o" $(LIBPATHS_39) $(LIBS_39) $(LIBS_39) $(LIBS) -lestssl 
 endif
 
 #
@@ -608,13 +602,10 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_40 += -lcrypto
     LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_40 += -lestssl
-endif
 
 $(BUILD)/bin/libesp.out: $(DEPS_40)
 	@echo '      [Link] $(BUILD)/bin/libesp.out'
-	$(CC) -r -o $(BUILD)/bin/libesp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/edi.o" "$(BUILD)/obj/espAbbrev.o" "$(BUILD)/obj/espConfig.o" "$(BUILD)/obj/espFramework.o" "$(BUILD)/obj/espHtml.o" "$(BUILD)/obj/espRequest.o" "$(BUILD)/obj/espTemplate.o" "$(BUILD)/obj/mdb.o" "$(BUILD)/obj/sdb.o" $(LIBPATHS_40) $(LIBS_40) $(LIBS_40) $(LIBS) 
+	$(CC) -r -o $(BUILD)/bin/libesp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/edi.o" "$(BUILD)/obj/espAbbrev.o" "$(BUILD)/obj/espConfig.o" "$(BUILD)/obj/espFramework.o" "$(BUILD)/obj/espHtml.o" "$(BUILD)/obj/espRequest.o" "$(BUILD)/obj/espTemplate.o" "$(BUILD)/obj/mdb.o" "$(BUILD)/obj/sdb.o" $(LIBPATHS_40) $(LIBS_40) $(LIBS_40) $(LIBS) -lestssl 
 
 #
 #   espcmd
@@ -637,13 +628,10 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_41 += -lcrypto
     LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_41 += -lestssl
-endif
 
 $(BUILD)/bin/esp.out: $(DEPS_41)
 	@echo '      [Link] $(BUILD)/bin/esp.out'
-	$(CC) -o $(BUILD)/bin/esp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_41) $(LIBS_41) $(LIBS_41) $(LIBS) -Wl,-r 
+	$(CC) -o $(BUILD)/bin/esp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_41) $(LIBS_41) $(LIBS_41) $(LIBS) -lestssl -Wl,-r 
 
 #
 #   http-ca-crt
@@ -673,13 +661,10 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_43 += -lcrypto
     LIBPATHS_43 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_43 += -lestssl
-endif
 
 $(BUILD)/bin/espman.out: $(DEPS_43)
 	@echo '      [Link] $(BUILD)/bin/espman.out'
-	$(CC) -o $(BUILD)/bin/espman.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/watchdog.o" $(LIBPATHS_43) $(LIBS_43) $(LIBS_43) $(LIBS) -Wl,-r 
+	$(CC) -o $(BUILD)/bin/espman.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/watchdog.o" $(LIBPATHS_43) $(LIBS_43) $(LIBS_43) $(LIBS) -lestssl -Wl,-r 
 
 #
 #   installPrep

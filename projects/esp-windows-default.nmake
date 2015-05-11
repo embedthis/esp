@@ -193,7 +193,6 @@ clean:
 	if exist "build\$(CONFIG)\bin\esp.lib" del /Q "build\$(CONFIG)\bin\esp.lib"
 	if exist "build\$(CONFIG)\bin\esp.pdb" del /Q "build\$(CONFIG)\bin\esp.pdb"
 	if exist "build\$(CONFIG)\bin\esp.exp" del /Q "build\$(CONFIG)\bin\esp.exp"
-	if exist "build\$(CONFIG)\bin\libestssl.lib" del /Q "build\$(CONFIG)\bin\libestssl.lib"
 	if exist "build\$(CONFIG)\bin\ca.crt" del /Q "build\$(CONFIG)\bin\ca.crt"
 	if exist "build\$(CONFIG)\bin\libesp.dll" del /Q "build\$(CONFIG)\bin\libesp.dll"
 	if exist "build\$(CONFIG)\bin\libesp.lib" del /Q "build\$(CONFIG)\bin\libesp.lib"
@@ -203,6 +202,7 @@ clean:
 	if exist "build\$(CONFIG)\bin\libest.lib" del /Q "build\$(CONFIG)\bin\libest.lib"
 	if exist "build\$(CONFIG)\bin\libest.pdb" del /Q "build\$(CONFIG)\bin\libest.pdb"
 	if exist "build\$(CONFIG)\bin\libest.exp" del /Q "build\$(CONFIG)\bin\libest.exp"
+	if exist "build\$(CONFIG)\bin\libestssl.lib" del /Q "build\$(CONFIG)\bin\libestssl.lib"
 	if exist "build\$(CONFIG)\bin\libhttp.dll" del /Q "build\$(CONFIG)\bin\libhttp.dll"
 	if exist "build\$(CONFIG)\bin\libhttp.lib" del /Q "build\$(CONFIG)\bin\libhttp.lib"
 	if exist "build\$(CONFIG)\bin\libhttp.pdb" del /Q "build\$(CONFIG)\bin\libhttp.pdb"
@@ -381,13 +381,11 @@ build\$(CONFIG)\obj\est.obj: \
 	@echo .. [Compile] build\$(CONFIG)\obj\est.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\est.obj -Fd$(BUILD)\obj\est.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\mpr-est\est.c $(LOG)
 
-!IF "$(ME_COM_SSL)" == "1"
-#
-#   est
-#
 !IF "$(ME_COM_EST)" == "1"
+#
+#   libestssl
+#
 DEPS_17 = $(DEPS_17) build\$(CONFIG)\bin\libest.dll
-!ENDIF
 DEPS_17 = $(DEPS_17) build\$(CONFIG)\obj\est.obj
 
 build\$(CONFIG)\bin\libestssl.lib: $(DEPS_17)
@@ -415,21 +413,21 @@ build\$(CONFIG)\obj\mprLib.obj: \
 #   libmpr
 #
 DEPS_20 = $(DEPS_20) build\$(CONFIG)\inc\osdep.h
-!IF "$(ME_COM_SSL)" == "1"
+!IF "$(ME_COM_EST)" == "1"
 DEPS_20 = $(DEPS_20) build\$(CONFIG)\bin\libestssl.lib
 !ENDIF
 DEPS_20 = $(DEPS_20) build\$(CONFIG)\inc\mpr.h
 DEPS_20 = $(DEPS_20) build\$(CONFIG)\obj\mprLib.obj
 
 !IF "$(ME_COM_EST)" == "1"
+LIBS_20 = $(LIBS_20) libestssl.lib
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
 LIBS_20 = $(LIBS_20) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_20 = $(LIBS_20) libopenssl.lib
 LIBPATHS_20 = $(LIBPATHS_20) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_20 = $(LIBS_20) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_20 = $(LIBS_20) libeay32.lib
@@ -527,14 +525,14 @@ LIBS_28 = $(LIBS_28) libpcre.lib
 !ENDIF
 LIBS_28 = $(LIBS_28) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
+LIBS_28 = $(LIBS_28) libestssl.lib
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
 LIBS_28 = $(LIBS_28) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_28 = $(LIBS_28) libopenssl.lib
 LIBPATHS_28 = $(LIBPATHS_28) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_28 = $(LIBS_28) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_28 = $(LIBS_28) libeay32.lib
@@ -697,14 +695,14 @@ LIBS_41 = $(LIBS_41) libpcre.lib
 !ENDIF
 LIBS_41 = $(LIBS_41) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
+LIBS_41 = $(LIBS_41) libestssl.lib
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
 LIBS_41 = $(LIBS_41) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libopenssl.lib
 LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_41 = $(LIBS_41) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libeay32.lib
@@ -750,14 +748,14 @@ LIBS_43 = $(LIBS_43) libpcre.lib
 !ENDIF
 LIBS_43 = $(LIBS_43) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
+LIBS_43 = $(LIBS_43) libestssl.lib
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
 LIBS_43 = $(LIBS_43) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libopenssl.lib
 LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_43 = $(LIBS_43) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libeay32.lib
@@ -811,14 +809,14 @@ DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\watchdog.obj
 
 LIBS_47 = $(LIBS_47) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
+LIBS_47 = $(LIBS_47) libestssl.lib
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
 LIBS_47 = $(LIBS_47) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_47 = $(LIBS_47) libopenssl.lib
 LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_47 = $(LIBS_47) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_47 = $(LIBS_47) libeay32.lib

@@ -6,16 +6,16 @@ Me.load({
     targets: {
         est: {
             configurable: true,
-            location:     'src/est',
-            path:         '${BIN}/libestssl${ARLIB}',
+            conflicts:    [ 'openssl', 'matrixssl', 'nanossl' ]
+            depends:      [ 'libestssl' ],
+            ifdef:        [ 'ssl' ],
+        },
+        libestssl: {
             type:         'lib',
             static:       true,
-            ifdef:        [ 'ssl' ],
-            conflicts:    [ 'openssl', 'matrixssl', 'nanossl' ]
-            libraries:    [ 'estssl' ],
             sources:      [ '*.c' ],
             depends:      [ 'libest' ],
-            ifdef:        [ 'ssl' ],
+            ifdef:        [ 'est' ],
         }
     }
 })
