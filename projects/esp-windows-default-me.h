@@ -96,9 +96,6 @@
 #ifndef ME_MPR_LOGGING
     #define ME_MPR_LOGGING 1
 #endif
-#ifndef ME_MPR_MANAGER
-    #define ME_MPR_MANAGER "espman"
-#endif
 #ifndef ME_NAME
     #define ME_NAME "esp"
 #endif
@@ -116,6 +113,9 @@
 #endif
 #ifndef ME_VERSION
     #define ME_VERSION "5.4.1"
+#endif
+#ifndef ME_WATCHDOG_NAME
+    #define ME_WATCHDOG_NAME "espman"
 #endif
 
 /* Prefixes */

@@ -2,7 +2,7 @@
     <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{c29b740d-1a14-47b8-8d2d-55b7ccd461b6}</ProjectGuid>
+        <ProjectGuid>{8018f930-a3ae-485f-abfa-7d350d4af48e}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -72,19 +72,19 @@
         <_ProjectFileVersion>10</_ProjectFileVersion>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ObjDir)\esp-compile.json\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ObjDir)\esp-compile.json\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ObjDir)\esp-compile.json\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\esp-compile.json\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PreBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
 
@@ -95,22 +95,11 @@
       </Link>
 
       <CustomBuildStep>
-        <Command>cd .
-if not exist "$(ObjDir)" md "$(ObjDir)"
-if not exist "$(BinDir)" md "$(BinDir)"
-if not exist "$(IncDir)" md "$(IncDir)"
-if not exist "$(IncDir)\me.h" copy "..\esp-windows-default-me.h" "$(IncDir)\me.h"
-copy /Y /B ..\..\src\edi.h $(IncDir)
-copy /Y /B ..\..\src\esp.h $(IncDir)
-copy /Y /B ..\..\src\est\est.h $(IncDir)
-copy /Y /B ..\..\src\http\http.h $(IncDir)
-copy /Y /B ..\..\src\mdb.h $(IncDir)
-copy /Y /B ..\..\src\mpr\mpr.h $(IncDir)
-copy /Y /B ..\..\src\osdep\osdep.h $(IncDir)
-copy /Y /B ..\..\src\pcre\pcre.h $(IncDir)
-copy /Y /B ..\..\src\sqlite\sqlite3.h $(IncDir)
-cd .</Command>
-        <Outputs>always</Outputs>
+        <Command>cd ..\..\src
+if exist $(BinDir)\esp-compile.json del /Q $(BinDir)\esp-compile.json
+copy /Y esp-compile.json $(BinDir)\esp-compile.json
+cd ..\projects\esp-windows-default</Command>
+        <Outputs>$(BinDir)\esp-compile.json</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>
 
