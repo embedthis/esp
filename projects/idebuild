@@ -7,7 +7,7 @@ PRODUCT=esp
 XCODE=/usr/bin/xcodebuild
 PROFILE=default
 BINARIES="esp"
-LIBRARIES="libhttp libmpr libmprssl libpcre libsql"
+LIBRARIES="libhttp libmpr libpcre libsql"
 
 # Just for VS
 unset TEMP TMP
