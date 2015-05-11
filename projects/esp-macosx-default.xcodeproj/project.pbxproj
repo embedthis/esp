@@ -84,18 +84,18 @@
 		11815D9E1181767E00000038 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000039 /* sqlite3.c */; };
 		11815D9E1181767E0000003A /* openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E0000003B /* openssl.c */; };
 		11815D9E1181767E0000003C /* watchdog.c in Sources */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E0000003D /* watchdog.c */; };
-		11815D9E1181767E0000003E /* libsql.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E0000003F; };
-		11815D9E1181767E00000040 /* libesp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000041; };
+		11815D9E1181767E0000003E /* libesp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E0000003F; };
+		11815D9E1181767E00000040 /* libsql.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000041; };
 		11815D9E1181767E00000042 /* libhttp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000043; };
-		11815D9E1181767E00000044 /* libmpr.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
-		11815D9E1181767E00000046 /* libpcre.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
-		11815D9E1181767E00000048 /* libsql.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E0000003F; };
-		11815D9E1181767E00000049 /* libhttp.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000043; };
-		11815D9E1181767E0000004A /* libmpr.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
-		11815D9E1181767E0000004B /* libpcre.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
-		11815D9E1181767E0000004C /* libmpr.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
-		11815D9E1181767E0000004D /* libpcre.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
-		11815D9E1181767E0000004E /* libmpr.dylib for watchdog */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
+		11815D9E1181767E00000044 /* libpcre.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
+		11815D9E1181767E00000046 /* libmpr.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
+		11815D9E1181767E00000048 /* libhttp.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000043; };
+		11815D9E1181767E00000049 /* libsql.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000041; };
+		11815D9E1181767E0000004A /* libpcre.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
+		11815D9E1181767E0000004B /* libmpr.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
+		11815D9E1181767E0000004C /* libpcre.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000045; };
+		11815D9E1181767E0000004D /* libmpr.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
+		11815D9E1181767E0000004E /* libmpr.dylib for watchdog */ = {isa = PBXBuildFile; fileRef = 11815D9E1181767E00000047; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -384,20 +384,20 @@
 		11815D9E1181767E00000081 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = build/macosx-x64-default/inc/http.h; sourceTree = "<group>"; };
 		11815D9E1181767E00000082 /* mdb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mdb.h; path = src/mdb.h; sourceTree = "<group>"; };
 		11815D9E1181767E00000031 /* sdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sdb.c; path = src/sdb.c; sourceTree = "<group>"; };
-		11815D9E1181767E00000041 /* libesp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libesp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		11815D9E1181767E0000003F /* libesp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libesp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		11815D9E1181767E00000033 /* httpLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = httpLib.c; path = src/http/httpLib.c; sourceTree = "<group>"; };
 		11815D9E1181767E00000083 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = src/http/http.h; sourceTree = "<group>"; };
 		11815D9E1181767E00000043 /* libhttp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhttp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		11815D9E1181767E00000035 /* mprLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprLib.c; path = src/mpr/mprLib.c; sourceTree = "<group>"; };
 		11815D9E1181767E00000084 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = src/mpr/mpr.h; sourceTree = "<group>"; };
-		11815D9E1181767E00000045 /* libmpr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		11815D9E1181767E00000047 /* libmpr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		11815D9E1181767E00000037 /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = src/pcre/pcre.c; sourceTree = "<group>"; };
 		11815D9E1181767E00000085 /* me.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = me.h; path = build/macosx-x64-default/inc/me.h; sourceTree = "<group>"; };
 		11815D9E1181767E00000086 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = src/pcre/pcre.h; sourceTree = "<group>"; };
-		11815D9E1181767E00000047 /* libpcre */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpcre.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		11815D9E1181767E00000045 /* libpcre */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpcre.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		11815D9E1181767E00000039 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = src/sqlite/sqlite3.c; sourceTree = "<group>"; };
 		11815D9E1181767E00000087 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = src/sqlite/sqlite3.h; sourceTree = "<group>"; };
-		11815D9E1181767E0000003F /* libsql */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsql.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		11815D9E1181767E00000041 /* libsql */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsql.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		11815D9E1181767E0000003B /* openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = openssl.c; path = src/mpr-openssl/openssl.c; sourceTree = "<group>"; };
 		11815D9E1181767E00000088 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-default/inc/mpr.h; sourceTree = "<group>"; };
 		11815D9E1181767E00000089 /* openssl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libopenssl.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -410,11 +410,11 @@
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				11815D9E1181767E0000003E /* libsql */,
-				11815D9E1181767E00000040 /* libesp */,
+    				11815D9E1181767E0000003E /* libesp */,
+				11815D9E1181767E00000040 /* libsql */,
 				11815D9E1181767E00000042 /* libhttp */,
-				11815D9E1181767E00000044 /* libmpr */,
-				11815D9E1181767E00000046 /* libpcre */,				
+				11815D9E1181767E00000044 /* libpcre */,
+				11815D9E1181767E00000046 /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
@@ -422,10 +422,10 @@
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				11815D9E1181767E00000048 /* libsql */,
-				11815D9E1181767E00000049 /* libhttp */,
-				11815D9E1181767E0000004A /* libmpr */,
-				11815D9E1181767E0000004B /* libpcre */,				
+    				11815D9E1181767E00000048 /* libhttp */,
+				11815D9E1181767E00000049 /* libsql */,
+				11815D9E1181767E0000004A /* libpcre */,
+				11815D9E1181767E0000004B /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
@@ -433,8 +433,8 @@
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				11815D9E1181767E0000004C /* libmpr */,
-				11815D9E1181767E0000004D /* libpcre */,				
+    				11815D9E1181767E0000004C /* libpcre */,
+				11815D9E1181767E0000004D /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
@@ -595,11 +595,11 @@
                 isa = PBXGroup;
                 children = (
 				11815D9E1181767E0000007E /* espcmd */,
-				11815D9E1181767E00000041 /* libesp */,
+				11815D9E1181767E0000003F /* libesp */,
 				11815D9E1181767E00000043 /* libhttp */,
-				11815D9E1181767E00000045 /* libmpr */,
-				11815D9E1181767E00000047 /* libpcre */,
-				11815D9E1181767E0000003F /* libsql */,
+				11815D9E1181767E00000047 /* libmpr */,
+				11815D9E1181767E00000045 /* libpcre */,
+				11815D9E1181767E00000041 /* libsql */,
 				11815D9E1181767E00000089 /* openssl */,
 				11815D9E1181767E0000008A /* watchdog */,
 			);
@@ -652,7 +652,7 @@
     			);
     			name = libesp;
     			productName = esp;
-    			productReference = 11815D9E1181767E00000041 /* libesp */;
+    			productReference = 11815D9E1181767E0000003F /* libesp */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
 		11815D9E1181767E0000005A /* libhttp */ = {
@@ -690,7 +690,7 @@
     			);
     			name = libmpr;
     			productName = esp;
-    			productReference = 11815D9E1181767E00000045 /* libmpr */;
+    			productReference = 11815D9E1181767E00000047 /* libmpr */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
 		11815D9E1181767E00000058 /* libpcre */ = {
@@ -707,7 +707,7 @@
     			);
     			name = libpcre;
     			productName = esp;
-    			productReference = 11815D9E1181767E00000047 /* libpcre */;
+    			productReference = 11815D9E1181767E00000045 /* libpcre */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
 		11815D9E1181767E00000052 /* libsql */ = {
@@ -724,7 +724,7 @@
     			);
     			name = libsql;
     			productName = esp;
-    			productReference = 11815D9E1181767E0000003F /* libsql */;
+    			productReference = 11815D9E1181767E00000041 /* libsql */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
 		11815D9E1181767E00000054 /* openssl */ = {
@@ -1345,9 +1345,9 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1361,9 +1361,9 @@ fi";
     
     				OTHER_LDFLAGS = (
 					"-lpam",
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1402,9 +1402,9 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1418,9 +1418,9 @@ fi";
     
     				OTHER_LDFLAGS = (
 					"-lpam",
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1438,9 +1438,9 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1454,9 +1454,9 @@ fi";
     
     				OTHER_LDFLAGS = (
 					"-lpam",
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1473,9 +1473,9 @@ fi";
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1488,9 +1488,9 @@ fi";
     				PRODUCT_NAME = libmpr;
     
     				OTHER_LDFLAGS = (
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1589,9 +1589,9 @@ fi";
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 
@@ -1604,9 +1604,9 @@ fi";
     				PRODUCT_NAME = espman;
     
     				OTHER_LDFLAGS = (
+					"-lopenssl",
 					"-lssl",
 					"-lcrypto",
-					"-lopenssl",
 					"$(inherited)"
 				);
 

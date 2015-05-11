@@ -422,11 +422,14 @@ DEPS_20 = $(DEPS_20) build\$(CONFIG)\inc\mpr.h
 DEPS_20 = $(DEPS_20) build\$(CONFIG)\obj\mprLib.obj
 
 !IF "$(ME_COM_EST)" == "1"
-LIBS_20 = $(LIBS_20) libestssl.lib
+LIBS_20 = $(LIBS_20) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_20 = $(LIBS_20) libopenssl.lib
 LIBPATHS_20 = $(LIBPATHS_20) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
+LIBS_20 = $(LIBS_20) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_20 = $(LIBS_20) libeay32.lib
@@ -435,9 +438,6 @@ LIBPATHS_20 = $(LIBPATHS_20) -libpath:$(ME_COM_OPENSSL_PATH)
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_20 = $(LIBS_20) libssleay32.lib
 LIBPATHS_20 = $(LIBPATHS_20) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_20 = $(LIBS_20) libest.lib
 !ENDIF
 
 build\$(CONFIG)\bin\libmpr.dll: $(DEPS_20)
@@ -522,13 +522,19 @@ DEPS_28 = $(DEPS_28) build\$(CONFIG)\bin\libpcre.dll
 DEPS_28 = $(DEPS_28) build\$(CONFIG)\inc\http.h
 DEPS_28 = $(DEPS_28) build\$(CONFIG)\obj\httpLib.obj
 
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_28 = $(LIBS_28) libpcre.lib
+!ENDIF
 LIBS_28 = $(LIBS_28) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
-LIBS_28 = $(LIBS_28) libestssl.lib
+LIBS_28 = $(LIBS_28) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_28 = $(LIBS_28) libopenssl.lib
 LIBPATHS_28 = $(LIBPATHS_28) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
+LIBS_28 = $(LIBS_28) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_28 = $(LIBS_28) libeay32.lib
@@ -537,12 +543,6 @@ LIBPATHS_28 = $(LIBPATHS_28) -libpath:$(ME_COM_OPENSSL_PATH)
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_28 = $(LIBS_28) libssleay32.lib
 LIBPATHS_28 = $(LIBPATHS_28) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_28 = $(LIBS_28) libest.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_28 = $(LIBS_28) libpcre.lib
 !ENDIF
 
 build\$(CONFIG)\bin\libhttp.dll: $(DEPS_28)
@@ -686,19 +686,25 @@ DEPS_41 = $(DEPS_41) build\$(CONFIG)\obj\espTemplate.obj
 DEPS_41 = $(DEPS_41) build\$(CONFIG)\obj\mdb.obj
 DEPS_41 = $(DEPS_41) build\$(CONFIG)\obj\sdb.obj
 
-!IF "$(ME_COM_SQLITE)" == "1"
-LIBS_41 = $(LIBS_41) libsql.lib
-!ENDIF
 !IF "$(ME_COM_HTTP)" == "1"
 LIBS_41 = $(LIBS_41) libhttp.lib
 !ENDIF
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_41 = $(LIBS_41) libsql.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_41 = $(LIBS_41) libpcre.lib
+!ENDIF
 LIBS_41 = $(LIBS_41) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
-LIBS_41 = $(LIBS_41) libestssl.lib
+LIBS_41 = $(LIBS_41) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libopenssl.lib
 LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
+LIBS_41 = $(LIBS_41) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libeay32.lib
@@ -707,12 +713,6 @@ LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libssleay32.lib
 LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_41 = $(LIBS_41) libest.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_41 = $(LIBS_41) libpcre.lib
 !ENDIF
 
 build\$(CONFIG)\bin\libesp.dll: $(DEPS_41)
@@ -738,20 +738,26 @@ DEPS_43 = $(DEPS_43) build\$(CONFIG)\bin\libsql.dll
 DEPS_43 = $(DEPS_43) build\$(CONFIG)\bin\libesp.dll
 DEPS_43 = $(DEPS_43) build\$(CONFIG)\obj\esp.obj
 
+LIBS_43 = $(LIBS_43) libesp.lib
 !IF "$(ME_COM_SQLITE)" == "1"
 LIBS_43 = $(LIBS_43) libsql.lib
 !ENDIF
-LIBS_43 = $(LIBS_43) libesp.lib
 !IF "$(ME_COM_HTTP)" == "1"
 LIBS_43 = $(LIBS_43) libhttp.lib
 !ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_43 = $(LIBS_43) libpcre.lib
+!ENDIF
 LIBS_43 = $(LIBS_43) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
-LIBS_43 = $(LIBS_43) libestssl.lib
+LIBS_43 = $(LIBS_43) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libopenssl.lib
 LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
+LIBS_43 = $(LIBS_43) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libeay32.lib
@@ -760,12 +766,6 @@ LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libssleay32.lib
 LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_43 = $(LIBS_43) libest.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_43 = $(LIBS_43) libpcre.lib
 !ENDIF
 
 build\$(CONFIG)\bin\esp.exe: $(DEPS_43)
@@ -811,11 +811,14 @@ DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\watchdog.obj
 
 LIBS_47 = $(LIBS_47) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
-LIBS_47 = $(LIBS_47) libestssl.lib
+LIBS_47 = $(LIBS_47) libest.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_47 = $(LIBS_47) libopenssl.lib
 LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
+!ENDIF
+!IF "$(ME_COM_EST)" == "1"
+LIBS_47 = $(LIBS_47) libestssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_47 = $(LIBS_47) libeay32.lib
@@ -824,9 +827,6 @@ LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_47 = $(LIBS_47) libssleay32.lib
 LIBPATHS_47 = $(LIBPATHS_47) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
-!IF "$(ME_COM_EST)" == "1"
-LIBS_47 = $(LIBS_47) libest.lib
 !ENDIF
 
 build\$(CONFIG)\bin\espman.exe: $(DEPS_47)

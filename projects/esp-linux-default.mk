@@ -510,6 +510,13 @@ endif
 DEPS_38 += $(BUILD)/inc/mpr.h
 DEPS_38 += $(BUILD)/obj/mprLib.o
 
+ifeq ($(ME_COM_EST),1)
+    LIBS_38 += -lest
+endif
+ifeq ($(ME_COM_OPENSSL),1)
+    LIBS_38 += -lopenssl
+    LIBPATHS_38 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_38 += -lssl
     LIBPATHS_38 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -517,13 +524,6 @@ endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_38 += -lcrypto
     LIBPATHS_38 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_38 += -lopenssl
-    LIBPATHS_38 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_38 += -lest
 endif
 ifeq ($(ME_COM_EST),1)
     LIBS_38 += -lestssl
@@ -556,7 +556,17 @@ endif
 DEPS_40 += $(BUILD)/inc/http.h
 DEPS_40 += $(BUILD)/obj/httpLib.o
 
+ifeq ($(ME_COM_PCRE),1)
+    LIBS_40 += -lpcre
+endif
 LIBS_40 += -lmpr
+ifeq ($(ME_COM_EST),1)
+    LIBS_40 += -lest
+endif
+ifeq ($(ME_COM_OPENSSL),1)
+    LIBS_40 += -lopenssl
+    LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_40 += -lssl
     LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -565,18 +575,8 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_40 += -lcrypto
     LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_40 += -lopenssl
-    LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_40 += -lest
-endif
 ifeq ($(ME_COM_EST),1)
     LIBS_40 += -lestssl
-endif
-ifeq ($(ME_COM_PCRE),1)
-    LIBS_40 += -lpcre
 endif
 
 $(BUILD)/bin/libhttp.so: $(DEPS_40)
@@ -606,13 +606,23 @@ DEPS_41 += $(BUILD)/obj/espTemplate.o
 DEPS_41 += $(BUILD)/obj/mdb.o
 DEPS_41 += $(BUILD)/obj/sdb.o
 
-ifeq ($(ME_COM_SQLITE),1)
-    LIBS_41 += -lsql
-endif
 ifeq ($(ME_COM_HTTP),1)
     LIBS_41 += -lhttp
 endif
+ifeq ($(ME_COM_SQLITE),1)
+    LIBS_41 += -lsql
+endif
+ifeq ($(ME_COM_PCRE),1)
+    LIBS_41 += -lpcre
+endif
 LIBS_41 += -lmpr
+ifeq ($(ME_COM_EST),1)
+    LIBS_41 += -lest
+endif
+ifeq ($(ME_COM_OPENSSL),1)
+    LIBS_41 += -lopenssl
+    LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_41 += -lssl
     LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -621,18 +631,8 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_41 += -lcrypto
     LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_41 += -lopenssl
-    LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_41 += -lest
-endif
 ifeq ($(ME_COM_EST),1)
     LIBS_41 += -lestssl
-endif
-ifeq ($(ME_COM_PCRE),1)
-    LIBS_41 += -lpcre
 endif
 
 $(BUILD)/bin/libesp.so: $(DEPS_41)
@@ -648,14 +648,24 @@ endif
 DEPS_42 += $(BUILD)/bin/libesp.so
 DEPS_42 += $(BUILD)/obj/esp.o
 
+LIBS_42 += -lesp
 ifeq ($(ME_COM_SQLITE),1)
     LIBS_42 += -lsql
 endif
-LIBS_42 += -lesp
 ifeq ($(ME_COM_HTTP),1)
     LIBS_42 += -lhttp
 endif
+ifeq ($(ME_COM_PCRE),1)
+    LIBS_42 += -lpcre
+endif
 LIBS_42 += -lmpr
+ifeq ($(ME_COM_EST),1)
+    LIBS_42 += -lest
+endif
+ifeq ($(ME_COM_OPENSSL),1)
+    LIBS_42 += -lopenssl
+    LIBPATHS_42 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_42 += -lssl
     LIBPATHS_42 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -664,18 +674,8 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_42 += -lcrypto
     LIBPATHS_42 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_42 += -lopenssl
-    LIBPATHS_42 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_42 += -lest
-endif
 ifeq ($(ME_COM_EST),1)
     LIBS_42 += -lestssl
-endif
-ifeq ($(ME_COM_PCRE),1)
-    LIBS_42 += -lpcre
 endif
 
 $(BUILD)/bin/esp: $(DEPS_42)
@@ -699,6 +699,13 @@ DEPS_44 += $(BUILD)/bin/libmpr.so
 DEPS_44 += $(BUILD)/obj/watchdog.o
 
 LIBS_44 += -lmpr
+ifeq ($(ME_COM_EST),1)
+    LIBS_44 += -lest
+endif
+ifeq ($(ME_COM_OPENSSL),1)
+    LIBS_44 += -lopenssl
+    LIBPATHS_44 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_44 += -lssl
     LIBPATHS_44 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -706,13 +713,6 @@ endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_44 += -lcrypto
     LIBPATHS_44 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_44 += -lopenssl
-    LIBPATHS_44 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_EST),1)
-    LIBS_44 += -lest
 endif
 ifeq ($(ME_COM_EST),1)
     LIBS_44 += -lestssl

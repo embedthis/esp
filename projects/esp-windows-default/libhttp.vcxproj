@@ -109,7 +109,7 @@
 
       <ItemDefinitionGroup>
       <Link>
-        <AdditionalDependencies>libmpr.lib;estssl;libest.lib;libpcre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libpcre.lib;libmpr.lib;libest.lib;estssl;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 
