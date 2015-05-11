@@ -21591,6 +21591,9 @@ PUBLIC HttpUri *httpCloneUri(HttpUri *base, int flags)
     HttpUri     *up;
     char        *path, *cp, *tok;
 
+    if (!base) {
+        return 0;
+    }
     if ((up = mprAllocObj(HttpUri, manageUri)) == 0) {
         return 0;
     }
@@ -21647,6 +21650,12 @@ PUBLIC HttpUri *httpCloneUri(HttpUri *base, int flags)
  */
 PUBLIC HttpUri *httpCompleteUri(HttpUri *uri, HttpUri *base)
 {
+    if (!uri) {
+        return 0;
+    }
+    if (!base) {
+        return uri;
+    }
     if (!base) {
         if (!uri->scheme) {
             uri->scheme = sclone("http");
@@ -21748,7 +21757,8 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
         queryDelim = query = "";
     }
     if (portDelim) {
-        uri = sjoin(scheme, hostDelim, host, portDelim, portStr, pathDelim, path, referenceDelim, reference, queryDelim, query, NULL);
+        uri = sjoin(scheme, hostDelim, host, portDelim, portStr, pathDelim, path, referenceDelim, reference, 
+            queryDelim, query, NULL);
     } else {
         uri = sjoin(scheme, hostDelim, host, pathDelim, path, referenceDelim, reference, queryDelim, query, NULL);
     }
@@ -21767,6 +21777,9 @@ PUBLIC HttpUri *httpGetRelativeUri(HttpUri *base, HttpUri *target, int clone)
     char        *basePath, *bp, *cp, *tp, *startDiff;
     int         i, baseSegments, commonSegments;
 
+    if (base == 0) {
+        return target;
+    }
     if (target == 0) {
         return (clone) ? httpCloneUri(base, 0) : base;
     }
@@ -21862,8 +21875,9 @@ PUBLIC HttpUri *httpJoinUri(HttpUri *uri, int argc, HttpUri **others)
     HttpUri     *other;
     int         i;
 
-    uri = httpCloneUri(uri, 0);
-
+    if ((uri = httpCloneUri(uri, 0)) == 0) {
+        return 0;
+    }
     for (i = 0; i < argc; i++) {
         other = others[i];
         if (other->scheme) {
@@ -21905,6 +21919,9 @@ PUBLIC HttpUri *httpMakeUriLocal(HttpUri *uri)
 
 PUBLIC HttpUri *httpNormalizeUri(HttpUri *uri)
 {
+    if (!uri) {
+        return 0;
+    }
     uri->path = httpNormalizeUriPath(uri->path);
     return uri;
 }
@@ -22006,7 +22023,7 @@ PUBLIC HttpUri *httpResolveUri(HttpUri *base, int argc, HttpUri **others, bool l
     current->query = 0;
     current->reference = 0;
 
-    for (i = 0; i < argc; i++) {
+    for (i = 0; i < argc && others; i++) {
         other = others[i];
         if (other->scheme && !smatch(current->scheme, other->scheme)) {
             current->scheme = sclone(other->scheme);
@@ -22136,8 +22153,9 @@ PUBLIC HttpUri *httpLinkUri(HttpConn *conn, cchar *target, MprHash *options)
         }
     }
     target = httpTemplate(conn, tplate, options);
-    uri = httpCreateUri(target, 0);
-
+    if ((uri = httpCreateUri(target, 0)) == 0) {
+        return 0;
+    }
     /*
         This was changed from: httpCreateUri(rx->uri) to rx->parsedUri because we must extract the existing host and 
         port from the prior request. The use case was appweb: 
@@ -22174,6 +22192,9 @@ PUBLIC char *httpLinkEx(HttpConn *conn, cchar *target, MprHash *options)
 
 PUBLIC char *httpUriToString(HttpUri *uri, int flags)
 {
+    if (!uri) {
+        return "";
+    }
     return httpFormatUri(uri->scheme, uri->host, uri->port, uri->path, uri->reference, uri->query, flags);
 }
 
@@ -22224,6 +22245,9 @@ PUBLIC bool httpValidUriChars(cchar *uri)
 
 static int getPort(HttpUri *uri)
 {
+    if (!uri) {
+        return 0;
+    }
     if (uri->port) {
         return uri->port;
     }
