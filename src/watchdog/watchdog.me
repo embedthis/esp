@@ -7,6 +7,7 @@ Me.load({
         watchdog: {
             enable: 'me.settings.watchdog',
             type: 'exe',
+            pname: '${settings.watchdog.name}',
             path: '${BIN}/${settings.watchdog.name}${EXE}',
             rule: 'gui',
             sources: [ 'watchdog.c' ],
