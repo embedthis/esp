@@ -3197,6 +3197,10 @@ PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *uri, struct MprSsl 
         httpPrepClientConn(conn, 0);
     }
     assert(conn->state == HTTP_STATE_BEGIN);
+
+    /*
+        Do not test if the URI is valid. Some test clients need the ability to create invalid URIs
+     */
     conn->tx->parsedUri = httpCreateUri(uri, HTTP_COMPLETE_URI_PATH);
 
     if (openConnection(conn, ssl) == 0) {
@@ -17494,7 +17498,7 @@ PUBLIC int httpSetUri(HttpConn *conn, cchar *uri)
     char        *pathInfo;
 
     rx = conn->rx;
-    if ((parsedUri = httpCreateUri(uri, 0)) == 0) {
+    if ((parsedUri = httpCreateUri(uri, 0)) == 0 || !parsedUri->valid) {
         return MPR_ERR_BAD_ARGS;
     }
     if (parsedUri->host && !rx->hostHeader) {
@@ -21395,10 +21399,6 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
     if ((up = mprAllocObj(HttpUri, manageUri)) == 0) {
         return 0;
     }
-    if (!httpValidUriChars(uri)) {
-        up->valid = 0;
-        return up;
-    }
     tok = sclone(uri);
 
     /*
@@ -21509,7 +21509,7 @@ PUBLIC HttpUri *httpCreateUri(cchar *uri, int flags)
             up->port = up->secure ? 443 : 80;
         }
     }
-    up->valid = 1;
+    up->valid = httpValidUriChars(uri);
     return up;
 }
 

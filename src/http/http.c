@@ -869,6 +869,10 @@ static int issueRequest(HttpConn *conn, cchar *url, MprList *files)
                 if (redirect) {
                     httpRemoveHeader(conn, "Host");
                     location = httpCreateUri(redirect, 0);
+                    if (!location || !location->valid) {
+                        httpError(conn, HTTP_ABORT, "Invalid location URI");
+                        break;
+                    }
                     target = httpJoinUri(conn->tx->parsedUri, 1, &location);
                     url = httpUriToString(target, HTTP_COMPLETE_URI);
                     count = 0;
