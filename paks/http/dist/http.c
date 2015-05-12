@@ -128,11 +128,6 @@ MAIN(httpMain, int argc, char **argv, char **envp)
     }
     start = mprGetTime();
 
-#if ME_STATIC && ME_COM_SSL
-    extern MprModuleEntry mprSslInit;
-    mprNop(mprSslInit);
-#endif
-
     processing();
     mprServiceEvents(-1, 0);
 

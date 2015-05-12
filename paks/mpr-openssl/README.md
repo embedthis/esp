@@ -7,11 +7,9 @@ OpenSSL stack interface.
 
     pak install mpr-openssl
 
-
 ## Configuration
 
     ./configure --with openssl
-
 
 ## Building
 

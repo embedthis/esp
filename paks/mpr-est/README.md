@@ -1,7 +1,7 @@
 mpr-est
 ===
 
-EST stack interface. 
+EST SSL stack interface. 
 
 ## Installation
 

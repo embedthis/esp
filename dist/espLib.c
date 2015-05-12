@@ -4560,14 +4560,11 @@ static int runAction(HttpConn *conn)
     EspRoute    *eroute;
     EspReq      *req;
     EspAction   action;
-    cchar       *controllers;
-    char        *controller;
 
     rx = conn->rx;
     req = conn->reqData;
     route = rx->route;
     eroute = route->eroute;
-    controller = 0;
     assert(eroute);
 
     if (eroute->edi && eroute->edi->flags & EDI_PRIVATE) {
@@ -4584,7 +4581,7 @@ static int runAction(HttpConn *conn)
 
 #if !ME_STATIC
     if (!eroute->combine && (route->update || !mprLookupKey(eroute->actions, rx->target))) {
-        cchar *errMsg;
+        cchar *errMsg, *controllers, *controller;
         if ((controllers = httpGetDir(route, "CONTROLLERS")) == 0) {
             controllers = ".";
         }
