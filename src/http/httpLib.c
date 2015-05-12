@@ -9165,6 +9165,9 @@ PUBLIC void httpLogRoutes(HttpHost *host, bool full)
             printRoute(route, index - 1, full, methodsLen, patternLen, targetLen);
         }
     }
+    if (mprLookupItem(host->routes, host->defaultRoute) < 0) {
+        printRoute(host->defaultRoute, index, full, methodsLen, patternLen, targetLen);
+    }
     printf("\n");
 }
 
@@ -16607,7 +16610,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
 
         case 'h':
             if (strcasecmp(key, "host") == 0) {
-                if (strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:") 
+                if ((int) strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:") 
                         < (int) slen(value)) {
                     httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host header");
                 } else {

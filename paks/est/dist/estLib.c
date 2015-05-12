@@ -11570,6 +11570,7 @@ void ssl_free(ssl_context * ssl)
 #if ME_EST_TIMING
 
 #if WINDOWS
+#define gettimeofday est_gettimeofday
 struct _hr_time {
     LARGE_INTEGER start;
 };
