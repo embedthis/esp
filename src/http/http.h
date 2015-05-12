@@ -1396,6 +1396,7 @@ typedef struct HttpUri {
     int         port;                   /**< Port number */
     int         secure;                 /**< Using https */
     int         webSockets;             /**< Using WebSockets */
+    int         valid;                  /**< Uri was successfully created */
 } HttpUri;
 
 #define HTTP_COMPLETE_URI       0x1     /**< Complete all missing URI fields. Set from "http://localhost/" */
