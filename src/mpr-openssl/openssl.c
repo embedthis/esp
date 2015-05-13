@@ -1,6 +1,8 @@
 /*
     openssl.c - Support for secure sockets via OpenSSL
 
+    This is the interface between the MPR Socket layer and the OpenSSL stack.
+
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
 
@@ -11,6 +13,9 @@
 #if ME_COM_OPENSSL
 
 #if ME_UNIX_LIKE
+    /*
+        Mac OS X stack is deprecated. Suppress those warnings.
+     */
     #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
@@ -27,7 +32,9 @@
  #include    <openssl/dh.h>
 
 /************************************* Defines ********************************/
-
+/*
+    Configuration for a route/host
+ */
 typedef struct OpenConfig {
     SSL_CTX         *context;
     RSA             *rsaKey512;
@@ -94,7 +101,7 @@ static DH       *get_dh1024();
 
 /************************************* Code ***********************************/
 /*
-    Create the Openssl module. This is called only once
+    Initialize the MPR SSL layer
  */
 PUBLIC int mprSslInit(void *unused, MprModule *module)
 {
@@ -150,7 +157,6 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
         CRYPTO_set_dynlock_destroy_callback(sslDestroyDynLock);
         CRYPTO_set_dynlock_lock_callback(sslDynLock);
 #if !ME_WIN_LIKE
-        /* OPT - Should be a configure option to specify desired ciphers */
         OpenSSL_add_all_algorithms();
 #endif
         /*
@@ -163,10 +169,13 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
 }
 
 
+/*
+    MPR Garbage collector manager callback for OpenConfig. Called on each GC sweep.
+ */
 static void manageOpenConfig(OpenConfig *cfg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        ;
+        /* Nothing to do  */
     } else if (flags & MPR_MANAGE_FREE) {
         if (cfg->context != 0) {
             SSL_CTX_free(cfg->context);
@@ -194,6 +203,9 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
 }
 
 
+/*
+    MPR Garbage collector manager callback for MprSocketProvider. Called on each GC sweep.
+ */
 static void manageOpenProvider(MprSocketProvider *provider, int flags)
 {
     int     i;
@@ -310,6 +322,9 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
     SSL_CTX_set_tmp_rsa_callback(context, rsaCallback);
     SSL_CTX_set_tmp_dh_callback(context, dhCallback);
 
+    /*
+        Elliptic Curve initialization
+     */
 #if SSL_OP_SINGLE_ECDH_USE
 {
     EC_KEY  *ecdh;
@@ -426,6 +441,9 @@ static int configureCertificateFiles(MprSsl *ssl, SSL_CTX *ctx, char *key, char 
 }
 
 
+/*
+    MPR Garbage collector manager callback for OpenSocket. Called on each GC sweep.
+ */
 static void manageOpenSocket(OpenSocket *osp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
@@ -448,6 +466,9 @@ static void closeOss(MprSocket *sp, bool gracefully)
     OpenSocket    *osp;
 
     osp = sp->sslSocket;
+    /*
+        Locking not really required as use of the socket should be single-threaded on a dispatcher.
+     */
     lock(sp);
     sp->service->standardProvider->closeSocket(sp, gracefully);
     SSL_free(osp->handle);
@@ -541,30 +562,34 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
 
 
 /*
-    Parse the cert info and write properties to the buffer
-    Modifies the info argument
+    Parse the cert info and write properties to the buffer. Modifies the info argument.
  */
 static void parseCertFields(MprBuf *buf, char *prefix, char *prefix2, char *info)
 {
     char    c, *cp, *term, *key, *value;
 
-    term = cp = info;
-    do {
-        c = *cp;
-        if (c == '/' || c == '\0') {
-            *cp = '\0';
-            key = ssplit(term, "=", &value);
-            if (smatch(key, "emailAddress")) {
-                key = "EMAIL";
+    if (info) {
+        term = cp = info;
+        do {
+            c = *cp;
+            if (c == '/' || c == '\0') {
+                *cp = '\0';
+                key = ssplit(term, "=", &value);
+                if (smatch(key, "emailAddress")) {
+                    key = "EMAIL";
+                }
+                mprPutToBuf(buf, "%s%s%s=%s,", prefix, prefix2, key, value);
+                term = &cp[1];
+                *cp = c;
             }
-            mprPutToBuf(buf, "%s%s%s=%s,", prefix, prefix2, key, value);
-            term = &cp[1];
-            *cp = c;
-        }
-    } while (*cp++ != '\0');
+        } while (*cp++ != '\0');
+    }
 }
 
 
+/*
+    Get the SSL state of the socket in a buffer
+ */
 static char *getOssState(MprSocket *sp)
 {
     OpenSocket      *osp;
@@ -614,7 +639,7 @@ static void disconnectOss(MprSocket *sp)
 
 
 /*
-    Check the certificate peer name
+    Check the certificate peer name validates and matches the desired name
  */
 static int checkCert(MprSocket *sp)
 {
@@ -687,7 +712,9 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
     OpenSocket      *osp;
     int             rc, error, retries, i;
 
-    //  OPT - should not need these locks
+    /*
+        Locks not really needed. Should be single-threaded on dispatcher
+     */
     lock(sp);
     osp = (OpenSocket*) sp->sslSocket;
     assert(osp);
@@ -723,7 +750,6 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
         if (error == SSL_ERROR_WANT_READ) {
             rc = 0;
         } else if (error == SSL_ERROR_WANT_WRITE) {
-            mprNap(10);
             rc = 0;
         } else if (error == SSL_ERROR_ZERO_RETURN) {
             sp->flags |= MPR_SOCKET_EOF;
@@ -755,7 +781,6 @@ static ssize writeOss(MprSocket *sp, cvoid *buf, ssize len)
     ssize       totalWritten;
     int         rc;
 
-    //  OPT - should not need these locks
     lock(sp);
     osp = (OpenSocket*) sp->sslSocket;
 
@@ -899,8 +924,6 @@ static ulong sslThreadId()
 }
 
 
-//  OPT - should not need these locks
-
 static void sslStaticLock(int mode, int n, const char *file, int line)
 {
     assert(0 <= n && n < numLocks);
@@ -915,7 +938,6 @@ static void sslStaticLock(int mode, int n, const char *file, int line)
 }
 
 
-//  OPT - should not need these locks
 static DynLock *sslCreateDynLock(const char *file, int line)
 {
     DynLock     *dl;

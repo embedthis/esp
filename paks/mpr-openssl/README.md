@@ -1,7 +1,7 @@
 mpr-openssl
 ===
 
-OpenSSL stack interface. 
+OpenSSL stack interface. This provides the interface between the MPR Socket layer and the OpenSSL stack.
 
 ## Installation
 
