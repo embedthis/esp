@@ -10751,7 +10751,9 @@ PUBLIC void httpPutPacket(HttpQueue *q, HttpPacket *packet)
     assert(packet);
     assert(q->put);
 
-    q->put(q, packet);
+    if (q->put) {
+        q->put(q, packet);
+    }
 }
 
 
@@ -10763,7 +10765,9 @@ PUBLIC void httpPutPacketToNext(HttpQueue *q, HttpPacket *packet)
     assert(packet);
     assert(q->nextQ->put);
 
-    q->nextQ->put(q->nextQ, packet);
+    if (q->nextQ && q->nextQ->put) {
+        q->nextQ->put(q->nextQ, packet);
+    }
 }
 
 
@@ -16447,6 +16451,11 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
         len = (endp) ? (int) (endp - content->start + 4) : 0;
         httpTraceContent(conn, "rx.headers.client", "context", content->start, len, NULL);
     }
+    if (rx->status == HTTP_CODE_CONTINUE) {
+        /* Eat the blank line and wait for the real response */
+        mprAdjustBufStart(content, 2);
+        return 0;
+    }
     return 1;
 }
 
@@ -17897,12 +17906,15 @@ PUBLIC void httpTrimExtraPath(HttpConn *conn)
 static int sendContinue(HttpConn *conn)
 {
     cchar      *response;
+    int         mode;
 
     assert(conn);
 
     if (!conn->tx->finalized && !conn->tx->bytesWritten) {
         response = sfmt("%s 100 Continue\r\n\r\n", conn->protocol);
+        mode = mprGetSocketBlockingMode(conn->sock);
         mprWriteSocket(conn->sock, response, slen(response));
+        mprSetSocketBlockingMode(conn->sock, mode);
         mprFlushSocket(conn->sock);
     }
     return 0;
@@ -19635,8 +19647,10 @@ PUBLIC HttpTx *httpCreateTx(HttpConn *conn, MprHash *headers)
     tx->chunkSize = -1;
     tx->cookies = mprCreateHash(HTTP_SMALL_HASH_SIZE, 0);
     tx->headers = mprCreateHash(HTTP_SMALL_HASH_SIZE, 0);
+
     tx->queue[HTTP_QUEUE_TX] = httpCreateQueueHead(conn, "TxHead");
     conn->writeq = tx->queue[HTTP_QUEUE_TX]->nextQ;
+
     tx->queue[HTTP_QUEUE_RX] = httpCreateQueueHead(conn, "RxHead");
     conn->readq = tx->queue[HTTP_QUEUE_RX]->prevQ;
 
