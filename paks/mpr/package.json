@@ -34,6 +34,7 @@
         "ssl": "^0.9"
     },
     "optionalDependencies": {
+        "certs": "^0.1",
         "est": "^0.6",
         "mpr-est": "^0.1",
         "mpr-openssl": "^0.1"

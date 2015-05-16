@@ -35,6 +35,9 @@
         "osdep": "^0.8",
         "ssl": "^0.9"
     },
+    "optionalDependencies": {
+        "certs": "^0.1"
+    },
     "files": [
         "dist/"
     ],

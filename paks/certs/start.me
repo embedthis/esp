@@ -1,5 +1,5 @@
 /*
-    start.me -- Appweb SSL certificate generation
+    certs.me -- Test certificate generation
  
     This file provides targets to help you get going with SSL (using OpenSSL). 
     WARNING: All these certificates are for internal use only.
@@ -7,33 +7,47 @@
     To generate a certificate request to send to a certificate authority like Verisign, do:
     This will create a certificate request file in "server.csr" and a private key in "server.key"
 
-        me request
+        me cert-request
  
-    To use esp with HTTP, you need a server certificate. 
+    To use appweb with HTTP, you need a server certificate. 
     This command will generate a self-signed test certificate called "self.crt" with a private key "self.key".
  
-        me selfSigned
+        me self-signed-cert
  
-    To create a CA and then a server cert based on this CA, do:
+    To create a CA and then a server cert based on this CA.
     This command will generate a CA certificate in ca.crt with a CA private key in ca.key. The last minted certificate
     serial number is in ca.srl.
  
-        me ca
+        me ca-cert
 
-    To generate a certificate signed by the test CA, do:
+    To generate a certificate signed by the test CA.
     This will generate a certificate in "test.crt" with a private key in "test.key".
-        me cert
+
+        me test-cert
 
     For all cert targets:
 
-        me certs
+        me test-certs
  */
 
 Me.load({
     targets: {
-        certs: {
-            depends: ['ca', 'self', 'cert', 'request'],
+        postcache: {
+            depends: [ 'test-certs' ],
         },
+
+        'test-certs': {
+            depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'get-roots' ],
+        },
+
+        'get-roots': {
+            action: `
+                let http = Http()
+                http.verify = false
+                http.get('https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt')
+                Path('roots.crt').write(http.response)
+            `
+        }
 
         /*
             WARNING: Self-signed server certificate for testing ONLY.
@@ -43,53 +57,61 @@ Me.load({
 
             See: http://www.sslshopper.com/article-most-common-openssl-commands.html
          */
-        self: {
-            shell: "
-                umask 77
+        'self-signed-cert': {
+            shell: `
+                set -x
                 openssl genrsa -out self.key 2048
-                openssl req -new -x509 -days 365 -key self.key -out self.crt < self.ans
-            ",
+                openssl req -new -x509 -days 3650 -key self.key -out self.crt < self.ans
+            `,
         },
 
         /*
              Setup a test certificate authority. Use this if you will be generating multiple certificates for clients and 
              servers.  NOTE: this is only for test. The certificate authority is not a real entity!
          */
-        ca: {
-            shell: "
-                umask 77 ; OPENSSL_CONF=openssl.ca ; export OPENSSL_CONF
+        'ca-cert': {
+            shell: `
+                set -x
                 openssl genrsa -out ca.key 2048
-                openssl req -new -x509 -days 365 -key ca.key -out ca.crt
+                openssl req -config openssl.conf -sha1 -new -x509 -days 3650 -key ca.key -out ca.crt -extensions caExtensions
                 echo '01' >ca.srl
                 >ca.db
-            ",
+                openssl x509 -in ca.crt -noout -text
+            `,
         },
 
         /*
             Test cert signed by the test CA above. This is used for test as the server cert and on the client side
             when validating client certs.
          */
-        cert: {
-            shell: "
-                umask 77 ; OPENSSL_CONF=openssl.conf ; export OPENSSL_CONF
-                rm -f test.crt test.key
+        'test-cert': {
+            shell: `
+                set -x
                 openssl genrsa -out test.key 2048
                 openssl req -new -key test.key -out test.csr < test.ans
-                OPENSSL_CONF=openssl.ca openssl x509 -req -days 365 -in test.csr -CA ca.crt -CAkey ca.key -out test.crt
-            ",
+                # openssl x509 -extfile openssl.conf -req -days 3650 -in test.csr -CA ca.crt -CAkey ca.key -out test.crt
+                openssl ca -batch -config openssl.conf -in test.csr -out test.crt -extensions server
+                openssl x509 -in test.crt -noout -text
+                rm -f *.old 01.pem
+            `,
         },
 
         /*
             Generate a certificate request to send to a certificate authority like Verisign
             Generates a server key in "server.key"
          */
-        request: {
-            shell: "
-                umask 77 ; OPENSSL_CONF=openssl.conf ; export OPENSSL_CONF
+        'cert-request': {
+            shell: `
+                set -x
                 openssl genrsa -out server.key 2048
                 openssl req -new -key server.key -out server.csr < test.ans
-            ",
+            `,
         },
+
+        'show-test-cert': {
+            shell: `
+                openssl x509 -in test.crt -noout -text
+            `
+        }
     },
 })
-

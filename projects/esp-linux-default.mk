@@ -690,7 +690,7 @@ DEPS_43 += src/http/ca.crt
 $(BUILD)/bin/ca.crt: $(DEPS_43)
 	@echo '      [Copy] $(BUILD)/bin/ca.crt'
 	mkdir -p "$(BUILD)/bin"
-	cp src/http/ca.crt $(BUILD)/bin/ca.crt
+	cp src/http/src/http/ca.crt $(BUILD)/bin/ca.crt
 
 #
 #   watchdog
@@ -756,8 +756,10 @@ installBinary: $(DEPS_47)
 	mkdir -p "$(ME_BIN_PREFIX)" ; \
 	rm -f "$(ME_BIN_PREFIX)/espman" ; \
 	ln -s "$(ME_VAPP_PREFIX)/bin/espman" "$(ME_BIN_PREFIX)/espman" ; \
+	if [ "$(ME_COM_SSL)" = 1 ]; then true ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \
-	cp $(BUILD)/bin/ca.crt $(ME_VAPP_PREFIX)/bin/ca.crt ; \
+	cp src/certs/roots.crt $(ME_VAPP_PREFIX)/bin/roots.crt ; \
+	fi ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \
 	cp $(BUILD)/bin/esp-compile.json $(ME_VAPP_PREFIX)/bin/esp-compile.json ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \

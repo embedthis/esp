@@ -778,7 +778,7 @@ DEPS_44 = $(DEPS_44) src\http\ca.crt
 build\$(CONFIG)\bin\ca.crt: $(DEPS_44)
 	@echo ..... [Copy] build\$(CONFIG)\bin\ca.crt
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
-	copy /Y /B src\http\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
+	copy /Y /B src\http\src\http\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
 
 #
 #   sqlite.obj

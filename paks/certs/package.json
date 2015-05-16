@@ -1,0 +1,45 @@
+{
+    "name": "certs",
+    "title": "Test Certificates",
+    "description": "Test Certificates",
+    "version": "0.1.0",
+    "keywords": [
+        "me",
+        "ssl",
+        "openssl"
+    ],
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "https://embedthis.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/certs.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/certs/issues"
+    },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
+    "pak": {
+        "export": [
+            "*.key",
+            "*.crt",
+            "*.ca",
+            "*.ans",
+            "*.srl",
+            "*.me",
+            "*.conf"
+        ],
+        "origin": "embedthis/certs"
+    }
+}

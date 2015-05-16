@@ -78,7 +78,9 @@ Me.load({
 
     scripts: {
         loaded: `
-            me.targets.httpcmd.enable = false
+            if (me.targets.httpcmd) {
+                me.targets.httpcmd.enable = false
+            }
         `,
     },
 

@@ -9159,7 +9159,7 @@ PUBLIC void httpLogRoutes(HttpHost *host, bool full)
     if (!host) {
         host = httpGetDefaultHost();
     }
-    if (mprGetListLength(host->routes) == 0) {
+    if (mprGetListLength(host->routes) == 0 && !host->defaultRoute) {
         printf("\nRoutes for host: %s: none\n", host->name ? host->name : "default");
     } else {
         if (!full) {
@@ -9168,9 +9168,9 @@ PUBLIC void httpLogRoutes(HttpHost *host, bool full)
         for (index = 0; (route = mprGetNextItem(host->routes, &index)) != 0; ) {
             printRoute(route, index - 1, full, methodsLen, patternLen, targetLen);
         }
-    }
-    if (mprLookupItem(host->routes, host->defaultRoute) < 0) {
-        printRoute(host->defaultRoute, index, full, methodsLen, patternLen, targetLen);
+        if (mprLookupItem(host->routes, host->defaultRoute) < 0) {
+            printRoute(host->defaultRoute, index, full, methodsLen, patternLen, targetLen);
+        }
     }
     printf("\n");
 }
@@ -16453,7 +16453,7 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
     }
     if (rx->status == HTTP_CODE_CONTINUE) {
         /* Eat the blank line and wait for the real response */
-        mprAdjustBufStart(content, 2);
+        mprAdjustBufStart(packet->content, 2);
         return 0;
     }
     return 1;
@@ -21705,16 +21705,15 @@ PUBLIC HttpUri *httpCompleteUri(HttpUri *uri, HttpUri *base)
                 uri->reference = base->reference;
             }
         }
-    } else {
-        if (!uri->scheme) {
-            uri->scheme = sclone("http");
-        }
-        if (!uri->host) {
-            uri->host = sclone("localhost");
-        }
-        if (!uri->path) {
-            uri->path = sclone("/");
-        }
+    }
+    if (!uri->scheme) {
+        uri->scheme = sclone("http");
+    }
+    if (!uri->host) {
+        uri->host = sclone("localhost");
+    }
+    if (!uri->path) {
+        uri->path = sclone("/");
     }
     uri->secure = (smatch(uri->scheme, "https") || smatch(uri->scheme, "wss"));
     uri->webSockets = (smatch(uri->scheme, "ws") || smatch(uri->scheme, "wss"));
@@ -21743,22 +21742,21 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
                 host = "localhost";
             }
         }
-    } else if (!host) {
-        host = "";
-    }
+    } 
     if (scheme) {
         hostDelim = "://";
     }
-    if (host) {
-        if (mprIsIPv6(host)) {
-            if (*host != '[') {
-                host = sfmt("[%s]", host);
-            } else if ((cp = scontains(host, "]:")) != 0) {
-                port = 0;
-            }
-        } else if (schr(host, ':')) {
+    if (!host) {
+        host = "";
+    }
+    if (mprIsIPv6(host)) {
+        if (*host != '[') {
+            host = sfmt("[%s]", host);
+        } else if ((cp = scontains(host, "]:")) != 0) {
             port = 0;
         }
+    } else if (schr(host, ':')) {
+        port = 0;
     }
     if (port != 0 && port != getDefaultPort(scheme)) {
         portStr = itos(port);
@@ -21768,7 +21766,7 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
         scheme = "";
     }
     if (path && *path) {
-        if (*hostDelim) {
+        if (*host) {
             pathDelim = (*path == '/') ? "" :  "/";
         } else {
             pathDelim = "";

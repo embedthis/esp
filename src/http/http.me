@@ -36,12 +36,6 @@ Me.load({
             sources:   [ 'http.c' ],
             depends:   [ 'libhttp' ],
             ifdef:     [ 'http' ],
-        },
-
-        'http-ca-crt': {
-            type: 'file',
-            files: [ 'ca.crt' ],
-            path: '${BIN}/ca.crt',
-        },
-	},
+        }
+	}
 })

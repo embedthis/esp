@@ -44,12 +44,14 @@ Me.load({
                     includes = [ probe('openssl/ssl.h', {search: [path.join('inc32')]}).absolute ]
 
                 } else {
-                    lib = probe('libcrypto.' + me.ext.shobj, {fullpath: true, search: search, nopath: true}).absolute
+                    let opt = {fullpath: true, search: search, nopath: true}
+                    lib = probe('libcrypto.' + me.ext.lib, blend({nothrow: true}, opt)).absolute ||
+                          probe('libcrypto.' + me.ext.shobj, opt).absolute
                     path = lib.dirname
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
-                    imports = lib.parent.files('libssl*.' + me.ext.shobj + '*') + 
-                        lib.parent.files('libcrypto*.' + me.ext.shobj + '*')
+                    let ext = lib.extension
+                    imports = lib.parent.files('libssl*.' + ext + '*') + lib.parent.files('libcrypto*.' + ext + '*')
                     includes = [ probe('openssl/ssl.h', {search: [ path.join('include'), '/usr/include']}).absolute ]
                 }
                 includes.push(me.dir.inc)

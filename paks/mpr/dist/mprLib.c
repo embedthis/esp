@@ -11764,24 +11764,23 @@ PUBLIC ssize mprWriteFile(MprFile *file, cvoid *buf, ssize count)
 
     fs = file->fileSystem;
     bp = file->buf;
-    if (bp == 0) {
-        if ((written = fs->writeFile(file, buf, count)) < 0) {
-            return written;
-        }
-    } else {
-        written = 0;
-        while (count > 0) {
-            bytes = mprPutBlockToBuf(bp, buf, count);
-            if (bytes < 0) {
+    written = 0;
+    while (count > 0) {
+        if (bp == 0) {
+            if ((bytes = fs->writeFile(file, buf, count)) < 0) {
+                return bytes;
+            }
+        } else {
+            if ((bytes = mprPutBlockToBuf(bp, buf, count)) < 0) {
                 return bytes;
             } 
             if (bytes != count) {
                 mprFlushFile(file);
             }
-            count -= bytes;
-            written += bytes;
-            buf = (char*) buf + bytes;
         }
+        count -= bytes;
+        written += bytes;
+        buf = (char*) buf + bytes;
     }
     file->pos += (MprOff) written;
     if (file->pos > file->size) {

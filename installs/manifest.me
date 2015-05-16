@@ -70,8 +70,9 @@ Me.load({
                     ifdef:      'openssl',
 
                 }, { 
-                    from:       'ca.crt',
+                    from:       '${TOP}/src/certs/roots.crt',
                     to:         '${abin}/',
+                    ifdef:      'ssl',
 
                 }, {
                     //  UNUSED

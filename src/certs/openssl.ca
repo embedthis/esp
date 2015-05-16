@@ -3,17 +3,22 @@ default_ca				= httpTestCa
 
 [ httpTestCa ]
 dir						= .						# Where everything is kept
+new_certs_dir			= .						# default place for new certs.
 certificate				= ca.crt				# The CA certificate
 database				= ca.db					# database index file.
-new_certs_dir			= .						# default place for new certs.
 private_key				= ca.key    			# The private key
 serial					= ca.srl 			    # The current serial number
 default_crl_days		= 7						# how long before next CRL
-default_days			= 365					# how long to certify for
-default_md				= md5					# which md to use.
+default_days			= 3650					# how long to certify for
+default_md				= default	            # which md to use.
 
 policy					= httpTestPolicy
 x509_extensions			= userCert				# The ext to add to the cert
+copy_extensions         = copy
+extensions              = v3Extensions
+
+name_opt                = httpTestCa
+cert_opt                = httpTestCa
 
 [ httpTestPolicy ]
 countryName				= supplied
@@ -25,14 +30,20 @@ emailAddress			= supplied
 
 [ userCert ]
 basicConstraints		= CA:FALSE
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer
 
 [ req ]
 default_bits			= 2048
 default_keyfile 		= ca.key
-default_md				= md5
+default_md				= default
 prompt					= no
 distinguished_name		= rootCaDistinguishedName
 X509_extensions			= rootCaExtensions
+req_extensions          = reqExtensions
+attributes              = reqAttributes
+
+[ reqAttributes ]
 
 [ rootCaDistinguishedName ]
 countryName				= US
@@ -43,6 +54,18 @@ organizationalUnitName	= Licensing
 commonName				= www.example.com
 emailAddress			= licensing@example.com
 
-[ rootCaExtensions]
-basicConstraints 		= CA:true
+[ reqExtensions ]
+subjectAltName          = email:move
 
+[ rootCaExtensions ]
+basicConstraints 		= CA:true
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always,issuer:always
+
+# For client certificates
+# keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+
+[ v3Extensions ]
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
