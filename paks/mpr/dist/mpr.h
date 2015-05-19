@@ -7569,6 +7569,7 @@ typedef struct MprSocket {
     void            *sslSocket;         /**< Extended SSL socket state */
     struct MprSsl   *ssl;               /**< SSL configuration */
     char            *cipher;            /**< Selected SSL cipher */
+    char            *session;           /**< SSL session ID (dependent on SSL provider) */
     char            *peerName;          /**< Peer common SSL name */
     char            *peerCert;          /**< Peer SSL certificate */
     char            *peerCertIssuer;    /**< Issuer of peer certificate */
@@ -8049,8 +8050,12 @@ PUBLIC ssize mprWriteSocketString(MprSocket *sp, cchar *str);
 PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
 
 /************************************ SSL *************************************/
-
-#define MPR_CA_CERT "ca.crt"
+/*
+    Root certificates for verifying peer certs.
+ */
+#ifndef ME_SSL_ROOTS_CERT
+    #define ME_SSL_ROOTS_CERT "roots.crt"
+#endif
 
 /**
     SSL control structure

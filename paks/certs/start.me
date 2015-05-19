@@ -58,10 +58,10 @@ Me.load({
             See: http://www.sslshopper.com/article-most-common-openssl-commands.html
          */
         'self-signed-cert': {
+            message: [ 'Make', 'Self-signed Certificate', 'self.crt' ],
             shell: `
-                set -x
-                openssl genrsa -out self.key 2048
-                openssl req -new -x509 -days 3650 -key self.key -out self.crt < self.ans
+                ossl genrsa -out self.key 2048
+                ossl req -new -x509 -days 3650 -key self.key -out self.crt < self.ans
             `,
         },
 
@@ -70,13 +70,12 @@ Me.load({
              servers.  NOTE: this is only for test. The certificate authority is not a real entity!
          */
         'ca-cert': {
+            message: [ 'Make', 'CA Certificate', 'ca.crt' ],
             shell: `
-                set -x
-                openssl genrsa -out ca.key 2048
-                openssl req -config openssl.conf -sha1 -new -x509 -days 3650 -key ca.key -out ca.crt -extensions caExtensions
+                ossl genrsa -out ca.key 2048
+                ossl req -config openssl.conf -new -x509 -days 3650 -key ca.key -out ca.crt -extensions caExtensions
                 echo '01' >ca.srl
                 >ca.db
-                openssl x509 -in ca.crt -noout -text
             `,
         },
 
@@ -85,13 +84,13 @@ Me.load({
             when validating client certs.
          */
         'test-cert': {
+            message: [ 'Make', 'Test Certificate', 'test.crt' ],
             shell: `
-                set -x
-                openssl genrsa -out test.key 2048
-                openssl req -new -key test.key -out test.csr < test.ans
-                # openssl x509 -extfile openssl.conf -req -days 3650 -in test.csr -CA ca.crt -CAkey ca.key -out test.crt
-                openssl ca -batch -config openssl.conf -in test.csr -out test.crt -extensions server
-                openssl x509 -in test.crt -noout -text
+                ossl genrsa -out test.key 2048
+                ossl req -new -key test.key -out test.csr < test.ans
+                # ossl x509 -extfile openssl.conf -req -days 3650 -in test.csr -CA ca.crt -CAkey ca.key -out test.crt
+                ossl ca -batch -config openssl.conf -in test.csr -out test.crt -extensions server
+                # ossl x509 -in test.crt -noout -text
                 rm -f *.old 01.pem
             `,
         },
@@ -102,15 +101,16 @@ Me.load({
          */
         'cert-request': {
             shell: `
-                set -x
-                openssl genrsa -out server.key 2048
-                openssl req -new -key server.key -out server.csr < test.ans
+                ossl genrsa -out server.key 2048
+                ossl req -new -key server.key -out server.csr < test.ans
             `,
         },
 
-        'show-test-cert': {
+        'show-certs': {
             shell: `
-                openssl x509 -in test.crt -noout -text
+                ossl x509 -in ca.crt -noout -text
+                ossl x509 -in test.crt -noout -text
+                ossl x509 -in self.crt -noout -text
             `
         }
     },

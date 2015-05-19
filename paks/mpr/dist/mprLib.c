@@ -1194,9 +1194,9 @@ static void markAndSweep()
     if (!pauseThreads()) {
         if (!pauseGC && warnOnce == 0 && !mprGetDebugMode()) {
             warnOnce++;
-            mprLog("error mpr memory", 5, "GC synchronization timed out, some threads did not yield.");
-            mprLog("error mpr memory", 5, "This can be caused by a thread doing a long running operation and not first calling mprYield.");
-            mprLog("error mpr memory", 5, "If debugging, run the process with -D to enable debug mode.");
+            mprLog("error mpr memory", 6, "GC synchronization timed out, some threads did not yield.");
+            mprLog("error mpr memory", 6, "This can be caused by a thread doing a long running operation and not first calling mprYield.");
+            mprLog("error mpr memory", 6, "If debugging, run the process with -D to enable debug mode.");
         }
         resumeThreads(YIELDED_THREADS | WAITING_THREADS);
         return;
@@ -22162,20 +22162,21 @@ PUBLIC MprSocket *mprCloneSocket(MprSocket *sp)
 static void manageSocket(MprSocket *sp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(sp->handler);
         mprMark(sp->acceptIp);
-        mprMark(sp->ip);
-        mprMark(sp->errorMsg);
-        mprMark(sp->provider);
-        mprMark(sp->listenSock);
-        mprMark(sp->sslSocket);
-        mprMark(sp->ssl);
         mprMark(sp->cipher);
+        mprMark(sp->errorMsg);
+        mprMark(sp->handler);
+        mprMark(sp->ip);
+        mprMark(sp->listenSock);
+        mprMark(sp->mutex);
         mprMark(sp->peerName);
         mprMark(sp->peerCert);
         mprMark(sp->peerCertIssuer);
+        mprMark(sp->provider);
+        mprMark(sp->ssl);
+        mprMark(sp->sslSocket);
         mprMark(sp->service);
-        mprMark(sp->mutex);
+        mprMark(sp->session);
 
     } else if (flags & MPR_MANAGE_FREE) {
         if (sp->fd != INVALID_SOCKET) {
@@ -23697,7 +23698,7 @@ PUBLIC MprSsl *mprCreateSsl(int server)
         if (MPR->verifySsl) {
             ssl->verifyPeer = MPR->verifySsl;
             ssl->verifyIssuer = MPR->verifySsl;
-            path = mprJoinPath(mprGetAppDir(), MPR_CA_CERT);
+            path = mprJoinPath(mprGetAppDir(), ME_SSL_ROOTS_CERT);
             if (mprPathExists(path, R_OK)) {
                 ssl->caFile = path;
             }
@@ -23756,6 +23757,7 @@ PUBLIC int mprLoadSsl()
         return MPR_ERR_CANT_CREATE;
     }
     mprSslInit(MPR, mp);
+    mprLog("info ssl", 5, "Loaded %s SSL provider", ss->sslProvider);
     return 0;
 #else
     mprLog("error mpr", 0, "SSL communications support not included in build");
