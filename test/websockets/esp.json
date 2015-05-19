@@ -12,8 +12,8 @@
                 'https://127.0.0.1:4443',
             ],
             ssl: {
-                key: '../crt/test.key',
-                certificate: '../crt/test.crt',
+                key: '../../src/certs/test.key',
+                certificate: '../../src/certs/test.crt',
             },
             "log": {
                 "location": "error.log",
