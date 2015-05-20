@@ -81,7 +81,7 @@ ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)$(NAME)-$(VERSION)
 
 TARGETS               += $(BUILD)/bin/esp-compile.json
 TARGETS               += $(BUILD)/bin/esp
-TARGETS               += $(BUILD)/bin/ca.crt
+TARGETS               += $(BUILD)/bin/roots.crt
 TARGETS               += $(BUILD)/bin/espman
 
 unexport CDPATH
@@ -132,13 +132,13 @@ clean:
 	rm -f "$(BUILD)/obj/watchdog.o"
 	rm -f "$(BUILD)/bin/esp-compile.json"
 	rm -f "$(BUILD)/bin/esp"
-	rm -f "$(BUILD)/bin/ca.crt"
 	rm -f "$(BUILD)/bin/libesp.dylib"
 	rm -f "$(BUILD)/bin/libhttp.dylib"
 	rm -f "$(BUILD)/bin/libmpr.dylib"
 	rm -f "$(BUILD)/bin/libpcre.dylib"
 	rm -f "$(BUILD)/bin/libsql.dylib"
 	rm -f "$(BUILD)/bin/libopenssl.a"
+	rm -f "$(BUILD)/bin/roots.crt"
 	rm -f "$(BUILD)/bin/espman"
 
 clobber: clean
@@ -672,14 +672,14 @@ $(BUILD)/bin/esp: $(DEPS_41)
 	$(CC) -o $(BUILD)/bin/esp -arch $(CC_ARCH) $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_41) $(LIBS_41) $(LIBS_41) $(LIBS) -lpam 
 
 #
-#   http-ca-crt
+#   roots.crt
 #
-DEPS_42 += src/http/ca.crt
+DEPS_42 += src/certs/roots.crt
 
-$(BUILD)/bin/ca.crt: $(DEPS_42)
-	@echo '      [Copy] $(BUILD)/bin/ca.crt'
+$(BUILD)/bin/roots.crt: $(DEPS_42)
+	@echo '      [Copy] $(BUILD)/bin/roots.crt'
 	mkdir -p "$(BUILD)/bin"
-	cp src/http/src/http/ca.crt $(BUILD)/bin/ca.crt
+	cp src/certs/roots.crt $(BUILD)/bin/roots.crt
 
 #
 #   watchdog

@@ -137,7 +137,7 @@ ME_SRC_PREFIX         = $(ME_VAPP_PREFIX)\src
 
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\esp-compile.json
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\esp.exe
-TARGETS               = $(TARGETS) build\$(CONFIG)\bin\ca.crt
+TARGETS               = $(TARGETS) build\$(CONFIG)\bin\roots.crt
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\espman.exe
 
 !IFNDEF SHOW
@@ -193,7 +193,6 @@ clean:
 	if exist "build\$(CONFIG)\bin\esp.lib" del /Q "build\$(CONFIG)\bin\esp.lib"
 	if exist "build\$(CONFIG)\bin\esp.pdb" del /Q "build\$(CONFIG)\bin\esp.pdb"
 	if exist "build\$(CONFIG)\bin\esp.exp" del /Q "build\$(CONFIG)\bin\esp.exp"
-	if exist "build\$(CONFIG)\bin\ca.crt" del /Q "build\$(CONFIG)\bin\ca.crt"
 	if exist "build\$(CONFIG)\bin\libesp.dll" del /Q "build\$(CONFIG)\bin\libesp.dll"
 	if exist "build\$(CONFIG)\bin\libesp.lib" del /Q "build\$(CONFIG)\bin\libesp.lib"
 	if exist "build\$(CONFIG)\bin\libesp.pdb" del /Q "build\$(CONFIG)\bin\libesp.pdb"
@@ -219,6 +218,7 @@ clean:
 	if exist "build\$(CONFIG)\bin\libsql.lib" del /Q "build\$(CONFIG)\bin\libsql.lib"
 	if exist "build\$(CONFIG)\bin\libsql.pdb" del /Q "build\$(CONFIG)\bin\libsql.pdb"
 	if exist "build\$(CONFIG)\bin\libsql.exp" del /Q "build\$(CONFIG)\bin\libsql.exp"
+	if exist "build\$(CONFIG)\bin\roots.crt" del /Q "build\$(CONFIG)\bin\roots.crt"
 	if exist "build\$(CONFIG)\bin\espman.exe" del /Q "build\$(CONFIG)\bin\espman.exe"
 	if exist "build\$(CONFIG)\bin\espman.lib" del /Q "build\$(CONFIG)\bin\espman.lib"
 	if exist "build\$(CONFIG)\bin\espman.pdb" del /Q "build\$(CONFIG)\bin\espman.pdb"
@@ -771,14 +771,14 @@ build\$(CONFIG)\bin\esp.exe: $(DEPS_43)
 	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\esp.obj" $(LIBPATHS_43) $(LIBS_43) $(LIBS_43) $(LIBS)  $(LOG)
 
 #
-#   http-ca-crt
+#   roots.crt
 #
-DEPS_44 = $(DEPS_44) src\http\ca.crt
+DEPS_44 = $(DEPS_44) src\certs\roots.crt
 
-build\$(CONFIG)\bin\ca.crt: $(DEPS_44)
-	@echo ..... [Copy] build\$(CONFIG)\bin\ca.crt
+build\$(CONFIG)\bin\roots.crt: $(DEPS_44)
+	@echo ..... [Copy] build\$(CONFIG)\bin\roots.crt
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
-	copy /Y /B src\http\src\http\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
+	copy /Y /B src\certs\roots.crt+modified build\$(CONFIG)\bin\roots.crt $(LOG)
 
 #
 #   sqlite.obj
