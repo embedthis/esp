@@ -133,6 +133,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     if ((defaultOpenConfig = mprAllocObj(OpenConfig, manageOpenConfig)) == 0) {
         return MPR_ERR_MEMORY;
     }
+//NOGO
     defaultOpenConfig->rsaKey512 = RSA_generate_key(512, RSA_F4, 0, 0);
     defaultOpenConfig->rsaKey1024 = RSA_generate_key(1024, RSA_F4, 0, 0);
     defaultOpenConfig->dhKey512 = get_dh512();
@@ -346,10 +347,6 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
 #endif
 
     SSL_CTX_set_options(context, SSL_OP_ALL);
-#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
-    /* SSL_OP_ALL enables this. Only needed for ancient browsers like IE-6 */
-    SSL_CTX_clear_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
-#endif
     SSL_CTX_set_mode(context, SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_AUTO_RETRY | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 #ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
     SSL_CTX_set_options(context, SSL_OP_MSIE_SSLV2_RSA_PADDING);
@@ -359,10 +356,6 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
 #endif
 #ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
     SSL_CTX_set_mode(context, SSL_OP_CIPHER_SERVER_PREFERENCE);
-#endif
-#if KEEP
-    SSL_CTX_set_read_ahead(context, 1);
-    SSL_CTX_set_info_callback(context, info_callback);
 #endif
 
     /*
@@ -390,6 +383,16 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
             SSL_CTX_clear_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
         } else {
             SSL_CTX_set_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+        }
+    #endif
+#endif
+#if defined(ME_MPR_SSL_EMPTY_FRAGMENTS)
+    #if defined(SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS)
+        if (ME_MPR_SSL_EMPTY_FRAGMENTS) {
+            /* SSL_OP_ALL disables empty fragments. Only needed for ancient browsers like IE-6 on SSL-3.0/TLS-1.0 */
+            SSL_CTX_clear_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+        } else {
+            SSL_CTX_set_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
         }
     #endif
 #endif
