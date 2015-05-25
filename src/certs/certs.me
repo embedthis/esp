@@ -35,6 +35,13 @@
  */
 
 Me.load({
+    settings: {
+        certs: {
+            days: 3650,
+            bits: 2048,
+            gendh: false,
+        }
+    },
     mixin: `
         function ossl(command, input) {
             trace('Run', 'openssl ' + command)
@@ -49,10 +56,12 @@ Me.load({
             if (cmd.status != 0) {
                 throw new IOError('Command failed, status ' + cmd.status + '\n' + cmd.error)
             }
+            return cmd.response
         }
     `,
     targets: {
         'generate-certs': {
+            build: true,
             depends: [ 'regenerate-certs' ],
             enable: 'me.dir.bin.join("ca.crt").exists == false',
         },
@@ -81,7 +90,7 @@ Me.load({
         'self-signed-cert': {
             message: 'Make: Self-signed Certificate: self.crt',
             action: `
-                ossl('req -nodes -x509 -newkey rsa:2048 -keyout ${BIN}/self.key -out ${BIN}/self.crt -days 3560', 'self.ans')
+                ossl('req -nodes -x509 -newkey rsa:${settings.certs.bits} -keyout ${BIN}/self.key -out ${BIN}/self.crt -days ${settings.certs.days}', 'self.ans')
             `,
         },
 
@@ -92,8 +101,8 @@ Me.load({
         'ca-cert': {
             message: 'Make: CA Certificate: ca.crt',
             action: `
-                ossl('genrsa -out ${BIN}/ca.key 2048')
-                ossl('req -config openssl.conf -new -x509 -days 3650 -key ${BIN}/ca.key -out ${BIN}/ca.crt -extensions caExtensions')
+                ossl('genrsa -out ${BIN}/ca.key ${settings.certs.bits}')
+                ossl('req -config openssl.conf -new -x509 -days ${settings.certs.days} -key ${BIN}/ca.key -out ${BIN}/ca.crt -extensions caExtensions')
                 me.dir.bin.join('ca.srl').write('01\n')
                 me.dir.bin.join('ca.db').write('')
             `,
@@ -106,7 +115,7 @@ Me.load({
         'test-cert': {
             message: 'Make: Test Certificate: test.crt',
             action: `
-                ossl('genrsa -out ${BIN}/test.key 2048')
+                ossl('genrsa -out ${BIN}/test.key ${settings.certs.bits}')
                 ossl('req -new -key ${BIN}/test.key -out ${BIN}/test.csr', 'test.ans')
                 ossl('ca -batch -config openssl.conf -notext -in ${BIN}/test.csr -out ${BIN}/test.crt -extensions server')
             `,
@@ -115,8 +124,9 @@ Me.load({
         'dhparams': {
             message: 'Generate: Local DH parameters for OpenSSL ... may take a few minutes',
             action: `
-                me.dir.bin.join('dh.c').write(Cmd.run('openssl dhparam -C 2048 -out ${BIN}/dh.pem') + '\n')
-            `
+                me.dir.bin.join('dh.c').write(Cmd.run('openssl dhparam -C ${settings.certs.bits} -out ${BIN}/dh.pem') + '\n')
+            `,
+            enable: '${settings.certs.gendh} == true'
         }
 
         /*
@@ -125,17 +135,29 @@ Me.load({
          */
         'cert-request': {
             action: `
-                ossl('genrsa -out ${BIN}/server.key 2048')
+                ossl('genrsa -out ${BIN}/server.key ${settings.certs.bits}')
                 ossl('req -new -key ${BIN}/server.key -out ${BIN}/server.csr', 'test.ans')
             `,
         },
 
         'show-certs': {
             action: `
-                ossl('x509 -in ${BIN}/ca.crt -noout -text')
-                ossl('x509 -in ${BIN}/test.crt -noout -text')
-                ossl('x509 -in ${BIN}/self.crt -noout -text')
+                print(ossl('x509 -in ${BIN}/ca.crt -noout -text'))
+                print(ossl('x509 -in ${BIN}/test.crt -noout -text'))
+                print(ossl('x509 -in ${BIN}/self.crt -noout -text'))
             `
+        },
+
+        /*
+            Just for importing certs from a MakeMe build into an Xcode project
+         */
+        'import-certs': {
+            build: ' ',
+            'generate-xcode': `
+                cd ${TOP}/build/${platform.os}-${platform.arch}-debug/bin
+                cp *.crt *.key *.pem ../../${platform.name}/bin
+            `
+            enable: '${platform.profile} = "mine"'
         }
     }
 })

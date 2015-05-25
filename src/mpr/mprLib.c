@@ -21259,7 +21259,7 @@ PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
 PUBLIC int mprNotifyOn(MprWaitHandler *wp, int mask)
 {
     MprWaitService  *ws;
-    int     fd;
+    int     fd, hd;
 
     ws = wp->service;
     fd = wp->fd;
@@ -21283,17 +21283,18 @@ PUBLIC int mprNotifyOn(MprWaitHandler *wp, int mask)
         if (mask & MPR_WRITABLE) {
             FD_SET(fd, &ws->writeMask);
         }
+        mprSetItem(ws->handlerMap, fd, mask ? wp : 0);
+
         wp->desiredMask = mask;
         ws->highestFd = max(fd, ws->highestFd);
         if (mask == 0 && fd == ws->highestFd) {
-            while (--fd > 0) {
-                if (FD_ISSET(fd, &ws->readMask) || FD_ISSET(fd, &ws->writeMask)) {
+            for (hd = fd - 1; hd >= 0; hd--) {
+                if (FD_ISSET(hd, &ws->readMask) || FD_ISSET(hd, &ws->writeMask)) {
                     break;
                 }
             }
-            ws->highestFd = fd;
+            ws->highestFd = hd;
         }
-        mprSetItem(ws->handlerMap, fd, mask ? wp : 0);
     }
     mprWakeEventService();
     unlock(ws);

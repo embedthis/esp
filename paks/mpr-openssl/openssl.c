@@ -36,7 +36,7 @@
     Default ciphers from Mozilla (https://wiki.mozilla.org/Security/Server_Side_TLS) without SSLv3 ciphers.
     TLSv1 and TLSv2 only. Recommended RSA and DH parameter size: 2048 bits.
  */
-#define OPENSSL_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
+#define OPENSSL_DEFAULT_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
 
 /*
     Configuration for a route/host
@@ -110,7 +110,6 @@ static ulong    sslThreadId(void);
 PUBLIC int mprSslInit(void *unused, MprModule *module)
 {
     RandBuf     randBuf;
-    int         i;
 
     randBuf.now = mprGetTime();
     randBuf.pid = getpid();
@@ -192,8 +191,6 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
  */
 static void manageOpenProvider(MprSocketProvider *provider, int flags)
 {
-    int     i;
-
     if (flags & MPR_MANAGE_MARK) {
 #if UNUSED
         /* Mark global locks */
@@ -278,7 +275,7 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
         }
     }
     if (!ssl->ciphers) {
-        ssl->ciphers = sclone(OPENSSL_CIPHERS);
+        ssl->ciphers = sclone(OPENSSL_DEFAULT_CIPHERS);
         mprLog("info openssl", 2, "Using OpenSSL ciphers: %s", ssl->ciphers);
     }
     if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
@@ -509,7 +506,6 @@ static void manageOpenSocket(OpenSocket *osp, int flags)
 static void closeOss(MprSocket *sp, bool gracefully)
 {
     OpenSocket    *osp;
-    int rc;
 
     osp = sp->sslSocket;
     if (osp->handle) {
@@ -827,12 +823,10 @@ static char *getOssState(MprSocket *sp)
 static int checkCertificateName(MprSocket *sp)
 {
     MprSsl      *ssl;
-    MprBuf      *buf;
     OpenSocket  *osp;
     X509        *cert;
     X509_NAME   *xSubject;
     char        subject[512], issuer[512], peerName[512], *target, *certName, *tp;
-    int         i;
 
     ssl = sp->ssl;
     osp = (OpenSocket*) sp->sslSocket;
@@ -1114,7 +1108,6 @@ static DH *dhcallback(SSL *handle, int isExport, int keyLength)
 {
     OpenSocket      *osp;
     OpenConfig      *cfg;
-    DH              *key;
 
     osp = (OpenSocket*) SSL_get_app_data(handle);
     cfg = osp->sock->ssl->config;
