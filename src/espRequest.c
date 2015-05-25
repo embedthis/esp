@@ -1092,18 +1092,24 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 
 PUBLIC void espSetDefaultDirs(HttpRoute *route)
 {
-    cchar   *controllers, *documents, *path;
+    cchar   *documents;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
+    /*
+        Consider keeping documents, web and public 
+     */
     if (!mprPathExists(documents, X_OK)) {
         documents = mprJoinPath(route->home, "documents");
         if (!mprPathExists(documents, X_OK)) {
-            documents = mprJoinPath(route->home, "client");
+            documents = mprJoinPath(route->home, "web");
             if (!mprPathExists(documents, X_OK)) {
-                documents = mprJoinPath(route->home, "public");
+                documents = mprJoinPath(route->home, "client");
                 if (!mprPathExists(documents, X_OK)) {
-                    documents = route->home;
+                    documents = mprJoinPath(route->home, "public");
+                    if (!mprPathExists(documents, X_OK)) {
+                        documents = route->home;
+                    }
                 }
             }
         }
@@ -1113,13 +1119,15 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
         documents = route->home;
     }
 #endif
+#if UNUSED
     controllers = "controllers";
     path = mprJoinPath(route->home, controllers);
     if (!mprPathExists(path, X_OK)) {
         controllers = ".";
     }
+#endif
     httpSetDir(route, "CACHE", 0);
-    httpSetDir(route, "CONTROLLERS", controllers);
+    httpSetDir(route, "CONTROLLERS", 0);
     httpSetDir(route, "CONTENTS", 0);
     httpSetDir(route, "DB", 0);
     httpSetDir(route, "DOCUMENTS", documents);
