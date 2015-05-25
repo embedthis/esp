@@ -1298,13 +1298,6 @@
     </member>
     <member kind="define">
       <type>#define</type>
-      <name>MPR_SOCKET_CHECKED</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>af0056860ee1675366998780a68b967a8</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
       <name>MPR_SOCKET_CLOSED</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a9899fbaf22958ef4d2fbb5bce6cbb898</anchor>
@@ -1406,13 +1399,6 @@
       <name>MPR_STOPPING</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>add77d7932ad074fe60c0782cafc78b72</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
-      <name>MPR_TICKS_PER_SEC</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a3d29febaeaca5d39a1ad539c1a3b6225</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">

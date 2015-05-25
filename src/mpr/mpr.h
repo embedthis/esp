@@ -157,7 +157,8 @@ struct  MprXml;
 #define MPR_TIMEOUT_NAP         20          /**< Short pause */
 
 #define MPR_MAX_TIMEOUT         MAXINT64
-#if DEPRECATED || 1
+
+#if DEPRECATED
 #define MPR_TICKS_PER_SEC       TPS        /**< Time ticks per second */
 #endif
 
@@ -7529,7 +7530,9 @@ PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider);
 #define MPR_SOCKET_SERVER           0x400   /**< Socket is on the server-side */
 #define MPR_SOCKET_BUFFERED_READ    0x800   /**< Socket has buffered read data (in SSL stack) */
 #define MPR_SOCKET_BUFFERED_WRITE   0x1000  /**< Socket has buffered write data (in SSL stack) */
+#if UNUSED
 #define MPR_SOCKET_CHECKED          0x2000  /**< Peer certificate has been checked */
+#endif
 #define MPR_SOCKET_DISCONNECTED     0x4000  /**< The mprDisconnectSocket has been called */
 #define MPR_SOCKET_HANDSHAKING      0x8000  /**< Doing an SSL handshake */
 
@@ -7548,9 +7551,9 @@ PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider);
         mprGetSocketHandle mprGetSocketInfo mprGetSocketPort mprGetSocketState mprHasSecureSockets mprIsSocketEof
         mprIsSocketSecure mprListenOnSocket mprLoadSsl mprParseIp mprReadSocket mprSendFileToSocket mprSetSecureProvider
         mprSetSocketBlockingMode mprSetSocketCallback mprSetSocketEof mprSetSocketNoDelay mprSetSslCaFile mprSetSslCaPath
-        mprSetSslCertFile mprSetSslCiphers mprSetSslKeyFile mprSetSslSslProtocols mprSetSslVerifySslClients mprWriteSocket
-        mprWriteSocketString mprWriteSocketVector mprSocketHandshaking mprSocketHasBufferedRead mprSocketHasBufferedWrite
-        mprUpgradeSocket
+        mprSetSslCertFile mprSetSslCiphers mprSetSslKeyFile mprSetSslDhFile mprSetSslSslProtocols mprSetSslVerifySslClients
+        mprWriteSocket mprWriteSocketString mprWriteSocketVector mprSocketHandshaking mprSocketHasBufferedRead 
+        mprSocketHasBufferedWrite mprUpgradeSocket
     @defgroup MprSocket MprSocket
     @stability Internal
  */
@@ -7568,11 +7571,11 @@ typedef struct MprSocket {
     struct MprSocket *listenSock;       /**< Listening socket */
     void            *sslSocket;         /**< Extended SSL socket state */
     struct MprSsl   *ssl;               /**< SSL configuration */
-    char            *cipher;            /**< Selected SSL cipher */
-    char            *session;           /**< SSL session ID (dependent on SSL provider) */
-    char            *peerName;          /**< Peer common SSL name */
-    char            *peerCert;          /**< Peer SSL certificate */
-    char            *peerCertIssuer;    /**< Issuer of peer certificate */
+    cchar           *cipher;            /**< Selected SSL cipher */
+    cchar           *session;           /**< SSL session ID (dependent on SSL provider) */
+    cchar           *peerName;          /**< Peer common SSL name */
+    cchar           *peerCert;          /**< Peer SSL certificate */
+    cchar           *peerCertIssuer;    /**< Issuer of peer certificate */
     bool            secured;            /**< SSL Peer verified */
     MprMutex        *mutex;             /**< Multi-thread sync */
 } MprSocket;
@@ -8071,8 +8074,9 @@ typedef struct MprSsl {
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
-    bool            verified;           /**< Peer has been verified */
     void            *config;            /**< Extended provider SSL configuration */
+    cchar           *dhFile;            /**< DH parameter file */
+    bool            verified;           /**< Peer has been verified */
     bool            configured;         /**< Set if this SSL configuration has been processed */
     bool            verifyPeer;         /**< Verify the peer verificate */
     bool            verifyIssuer;       /**< Set if the certificate issuer should be also verified */
@@ -8154,6 +8158,15 @@ PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len);
 PUBLIC int mprLoadSsl();
 
 PUBLIC int mprSslInit(void *unused, MprModule *module);
+
+/**
+    Set the DH params file to use for SSL
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param dhFile Path to the SSL DH Params file
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslDhFile(struct MprSsl *ssl, cchar *dhFile);
 
 /**
     Set the key file to use for SSL

@@ -33,6 +33,7 @@
     "pak": {
         "export": [
             "*.c",
+            "*.stock",
             "*.me"
         ],
         "origin": "embedthis/mpr-openssl"

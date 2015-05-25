@@ -1492,10 +1492,6 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Socket has buffered write data (in SSL stack).</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1af0056860ee1675366998780a68b967a8" class="nameRef">MPR_SOCKET_CHECKED</a>&nbsp;&nbsp;&nbsp;0x2000</td>
-</tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Peer certificate has been checked.</td></tr>
-<tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a9899fbaf22958ef4d2fbb5bce6cbb898" class="nameRef">MPR_SOCKET_CLOSED</a>&nbsp;&nbsp;&nbsp;0x4</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>MprSocket has been closed.</td></tr>
@@ -1555,10 +1551,6 @@
 <td>#define</td><td><a href="#mpr_8h_1add77d7932ad074fe60c0782cafc78b72" class="nameRef">MPR_STOPPING</a>&nbsp;&nbsp;&nbsp;3</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>App has been instructed to shutdown.</td></tr>
-<tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a3d29febaeaca5d39a1ad539c1a3b6225" class="nameRef">MPR_TICKS_PER_SEC</a>&nbsp;&nbsp;&nbsp;TPS</td>
-</tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Time ticks per second.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a1e93ff508c17a532675a9bb090d2bc7a" class="nameRef">MPR_TIMEOUT_GC_SYNC</a>&nbsp;&nbsp;&nbsp;100</td>
 </tr>
@@ -10874,7 +10866,7 @@ Server addresss that accepted a new connection (actual interface).
     <tr><td class="param">int</td><td><td>acceptPort</td><td>
 Server port doing the listening.
 </td>
-    <tr><td class="param">char *</td><td><td>cipher</td><td>
+    <tr><td class="param">cchar *</td><td><td>cipher</td><td>
 Selected SSL cipher.
 </td>
     <tr><td class="param">char *</td><td><td>errorMsg</td><td>
@@ -10898,13 +10890,13 @@ Listening socket.
     <tr><td class="param"><a class="ref" href="#struct_mpr_mutex">MprMutex</a> *</td><td><td>mutex</td><td>
 Multi-thread sync.
 </td>
-    <tr><td class="param">char *</td><td><td>peerCert</td><td>
+    <tr><td class="param">cchar *</td><td><td>peerCert</td><td>
 Peer SSL certificate.
 </td>
-    <tr><td class="param">char *</td><td><td>peerCertIssuer</td><td>
+    <tr><td class="param">cchar *</td><td><td>peerCertIssuer</td><td>
 Issuer of peer certificate.
 </td>
-    <tr><td class="param">char *</td><td><td>peerName</td><td>
+    <tr><td class="param">cchar *</td><td><td>peerName</td><td>
 Peer common SSL name.
 </td>
     <tr><td class="param">int</td><td><td>port</td><td>
@@ -10918,6 +10910,9 @@ SSL Peer verified.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_socket_service">MprSocketService</a> *</td><td><td>service</td><td>
 Socket service.
+</td>
+    <tr><td class="param">cchar *</td><td><td>session</td><td>
+SSL session ID (dependent on SSL provider).
 </td>
     <tr><td class="param">struct MprSsl *</td><td><td>ssl</td><td>
 SSL configuration.

@@ -2320,7 +2320,7 @@ PUBLIC uint64 mprGetCPU()
             ulong utime, stime;
             buf[nbytes] = '\0';
             sscanf(buf, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu", &utime, &stime);
-            ticks = (utime + stime) * MPR_TICKS_PER_SEC / sysconf(_SC_CLK_TCK);
+            ticks = (utime + stime) * TPS / sysconf(_SC_CLK_TCK);
         }
     }
 #elif MACOSX
@@ -2328,8 +2328,8 @@ PUBLIC uint64 mprGetCPU()
     mach_msg_type_number_t count = TASK_BASIC_INFO_COUNT;
     if (task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t) &info, &count) == KERN_SUCCESS) {
         uint64 utime, stime;
-        utime = info.user_time.seconds * MPR_TICKS_PER_SEC + info.user_time.microseconds / 1000;
-        stime = info.system_time.seconds * MPR_TICKS_PER_SEC + info.system_time.microseconds / 1000;
+        utime = info.user_time.seconds * TPS + info.user_time.microseconds / 1000;
+        stime = info.system_time.seconds * TPS + info.system_time.microseconds / 1000;
         ticks = utime + stime;
     }
 #endif
@@ -2808,7 +2808,7 @@ static void shutdownMonitor(void *data, MprEvent *event)
             }
         }
     } else {
-        mprLog("info mpr", 2, "Waiting for requests to complete, %lld secs remaining ...", remaining / MPR_TICKS_PER_SEC);
+        mprLog("info mpr", 2, "Waiting for requests to complete, %lld secs remaining ...", remaining / TPS);
         mprRescheduleEvent(event, 1000);
     }
 }
@@ -4886,8 +4886,8 @@ typedef struct CacheItem
     int64           version;
 } CacheItem;
 
-#define CACHE_TIMER_PERIOD      (60 * MPR_TICKS_PER_SEC)
-#define CACHE_LIFESPAN          (86400 * MPR_TICKS_PER_SEC)
+#define CACHE_TIMER_PERIOD      (60 * TPS)
+#define CACHE_LIFESPAN          (86400 * TPS)
 #define CACHE_HASH_SIZE         257
 
 /*********************************** Forwards *********************************/
@@ -5344,7 +5344,7 @@ static void pruneCache(MprCache *cache, MprEvent *event)
             if (excessKeys < 0) {
                 excessKeys = 0;
             }
-            factor = 5 * 60 * MPR_TICKS_PER_SEC; 
+            factor = 5 * 60 * TPS; 
             when += factor;
             while (excessKeys > 0 || cache->usedMem > cache->maxMem) {
                 for (kp = 0; (kp = mprGetNextKey(cache->store, kp)) != 0; ) {
@@ -7303,8 +7303,14 @@ PUBLIC int mprWaitForCond(MprCond *cp, MprTicks timeout)
      */
     rc = 0;
     if (timeout >= 0) {
+        if (timeout > MAXINT) {
+            timeout = MAXINT;
+        }
         now = mprGetTicks();
         expire = now + timeout;
+        if (expire < 0) {
+            expire = MPR_MAX_TIMEOUT;
+        }
 #if ME_UNIX_LIKE
         gettimeofday(&current, NULL);
         usec = current.tv_usec + ((int) (timeout % 1000)) * 1000;
@@ -9794,6 +9800,9 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     es = MPR->eventService;
     es->now = mprGetTicks();
     expires = timeout < 0 ? MPR_MAX_TIMEOUT : (es->now + timeout);
+    if (expires < 0) {
+        expires = MPR_MAX_TIMEOUT;
+    }
     delay = expires - es->now;
 
     lock(es);
@@ -14428,7 +14437,7 @@ PUBLIC int mprWaitForSingleIO(int fd, int mask, MprTicks timeout)
     struct kevent   interest[2], events[1];
     int             kq, interestCount, rc, result;
 
-    if (timeout < 0) {
+    if (timeout < 0 || timeout > MAXINT) {
         timeout = MAXINT;
     }
     interestCount = 0; 
@@ -14953,8 +14962,7 @@ PUBLIC int mprRemoveItem(MprList *lp, cvoid *item)
         return -1;
     }
     lock(lp);
-    index = mprLookupItem(lp, item);
-    if (index < 0) {
+    if ((index = mprLookupItem(lp, item)) < 0) {
         unlock(lp);
         return index;
     }
@@ -19771,6 +19779,9 @@ PUBLIC void mprNap(MprTicks timeout)
     assert(timeout >= 0);
 
     mark = mprGetTicks();
+    if (timeout < 0 || timeout > MAXINT) {
+        timeout = MAXINT;
+    }
     remaining = timeout;
     do {
         /* MAC OS X corrupts the timeout if using the 2nd paramater, so recalc each time */
@@ -21192,7 +21203,8 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
     for (rc = retries = 0; retries < maxTries; retries++) {
         breakSock = socket(AF_INET, SOCK_DGRAM, 0);
         if (breakSock < 0) {
-            mprLog("critical mpr select", 0, "Cannot open port %d to use for select. Retrying.");
+            mprLog("critical mpr select", 0, "Cannot create socket to use for select");
+            return MPR_ERR_CANT_OPEN;
         }
 #if ME_UNIX_LIKE
         fcntl(breakSock, F_SETFD, FD_CLOEXEC);
@@ -23667,6 +23679,7 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->caPath);
         mprMark(ssl->ciphers);
         mprMark(ssl->config);
+        mprMark(ssl->dhFile);
         mprMark(ssl->mutex);
     }
 }
@@ -23837,6 +23850,14 @@ PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers)
 {
     assert(ssl);
     ssl->ciphers = sclone(ciphers);
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslDhFile(MprSsl *ssl, cchar *dhFile)
+{
+    assert(ssl);
+    ssl->dhFile = (dhFile && *dhFile) ? sclone(dhFile) : 0;
     ssl->changed = 1;
 }
 
@@ -26214,10 +26235,10 @@ PUBLIC ssize mprGetBusyWorkerCount()
 
 /********************************** Defines ***********************************/
 
-#define MS_PER_SEC  (MPR_TICKS_PER_SEC)
-#define MS_PER_HOUR (60 * 60 * MPR_TICKS_PER_SEC)
-#define MS_PER_MIN  (60 * MPR_TICKS_PER_SEC)
-#define MS_PER_DAY  (86400 * MPR_TICKS_PER_SEC)
+#define MS_PER_SEC  (TPS)
+#define MS_PER_HOUR (60 * 60 * TPS)
+#define MS_PER_MIN  (60 * TPS)
+#define MS_PER_DAY  (86400 * TPS)
 #define MS_PER_YEAR (INT64(31556952000))
 
 /*
@@ -28190,7 +28211,9 @@ PUBLIC void mprNap(MprTicks milliseconds)
     struct timespec timeout;
     int             rc;
 
-    assert(milliseconds >= 0);
+    if (milliseconds < 0 || milliseconds > MAXINT) {
+        milliseconds = MAXINT;
+    }
     timeout.tv_sec = milliseconds / 1000;
     timeout.tv_nsec = (milliseconds % 1000) * 1000000;
     do {
@@ -28241,6 +28264,9 @@ PUBLIC int usleep(uint msec)
     struct timespec     timeout;
     int                 rc;
 
+    if (msec < 0 || msec > MAXINT) {
+        msec = MAXINT;
+    }
     timeout.tv_sec = msec / (1000 * 1000);
     timeout.tv_nsec = msec % (1000 * 1000) * 1000;
     do {
@@ -28449,19 +28475,17 @@ static void manageWaitHandler(MprWaitHandler *wp, int flags)
 }
 
 
-/*
-    This is a special case API, it is called by finalizers such as closeSocket.
-    It needs special handling for the shutdown case.
- */
 PUBLIC void mprRemoveWaitHandler(MprWaitHandler *wp)
 {
     if (wp) {
         if (!mprIsStopped()) {
-            /* Avoid locking APIs during shutdown - the locks may have been freed */
-            mprRemoveItem(wp->service->handlers, wp);
+            /*
+                It needs special handling for the shutdown case when the locks have been removed
+             */
             if (wp->fd >= 0 && wp->desiredMask) {
                 mprNotifyOn(wp, 0);
             }
+            mprRemoveItem(wp->service->handlers, wp);
         }
         wp->fd = INVALID_SOCKET;
     }

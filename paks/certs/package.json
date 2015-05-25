@@ -32,14 +32,16 @@
     ],
     "pak": {
         "export": [
-            "*.key",
-            "*.crt",
-            "*.ca",
+            "certs.me",
+            "ossl",
             "*.ans",
-            "*.srl",
-            "*.me",
             "*.conf"
         ],
         "origin": "embedthis/certs"
+    },
+    "scripts": {
+        "UNUSEDinstall": {
+            "script": "Cmd.run('me generate-certs') }"
+        }
     }
 }

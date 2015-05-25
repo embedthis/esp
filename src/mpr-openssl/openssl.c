@@ -33,14 +33,17 @@
 
 /************************************* Defines ********************************/
 /*
+    Default ciphers from Mozilla (https://wiki.mozilla.org/Security/Server_Side_TLS) without SSLv3 ciphers.
+    TLSv1 and TLSv2 only. Recommended RSA and DH parameter size: 2048 bits.
+ */
+#define OPENSSL_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
+
+/*
     Configuration for a route/host
  */
 typedef struct OpenConfig {
     SSL_CTX         *context;
-    RSA             *rsaKey512;
-    RSA             *rsaKey1024;
-    DH              *dhKey512;
-    DH              *dhKey1024;
+    DH              *dhKey;
 } OpenConfig;
 
 typedef struct OpenSocket {
@@ -56,15 +59,18 @@ typedef struct RandBuf {
     int         pid;
 } RandBuf;
 
-static int      numLocks;
-static MprMutex **olocks;
 static MprSocketProvider *openProvider;
 static OpenConfig *defaultOpenConfig;
+
+#if UNUSED
+static int      numLocks;
+static MprMutex **olocks;
 
 struct CRYPTO_dynlock_value {
     MprMutex    *mutex;
 };
 typedef struct CRYPTO_dynlock_value DynLock;
+#endif
 
 #ifndef ME_MPR_SSL_CURVE
     #define ME_MPR_SSL_CURVE "prime256v1"
@@ -73,31 +79,29 @@ typedef struct CRYPTO_dynlock_value DynLock;
 /***************************** Forward Declarations ***************************/
 
 static void     closeOss(MprSocket *sp, bool gracefully);
-static int      checkCert(MprSocket *sp);
-static int      configureCertificateFiles(MprSsl *ssl, SSL_CTX *ctx, char *key, char *cert);
+static int      checkCertificateName(MprSocket *sp);
 static OpenConfig *createOpenSslConfig(MprSocket *sp);
-static DH       *dhCallback(SSL *ssl, int isExport, int keyLength);
+static DH       *dhcallback(SSL *ssl, int isExport, int keyLength);
 static void     disconnectOss(MprSocket *sp);
 static ssize    flushOss(MprSocket *sp);
+static DH       *getDhKey(cchar *path);
 static char     *getOssState(MprSocket *sp);
 static char     *getOssError(MprSocket *sp);
 static void     manageOpenConfig(OpenConfig *cfg, int flags);
 static void     manageOpenProvider(MprSocketProvider *provider, int flags);
 static void     manageOpenSocket(OpenSocket *ssp, int flags);
 static ssize    readOss(MprSocket *sp, void *buf, ssize len);
-static RSA      *rsaCallback(SSL *ssl, int isExport, int keyLength);
 static int      upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName);
-static int      verifyX509Certificate(int ok, X509_STORE_CTX *ctx);
+static int      verifyPeerCertificate(int ok, X509_STORE_CTX *ctx);
 static ssize    writeOss(MprSocket *sp, cvoid *buf, ssize len);
 
+#if UNUSED
 static DynLock  *sslCreateDynLock(const char *file, int line);
 static void     sslDynLock(int mode, DynLock *dl, const char *file, int line);
 static void     sslDestroyDynLock(DynLock *dl, const char *file, int line);
 static void     sslStaticLock(int mode, int n, const char *file, int line);
 static ulong    sslThreadId(void);
-
-static DH       *get_dh512();
-static DH       *get_dh1024();
+#endif
 
 /************************************* Code ***********************************/
 /*
@@ -128,22 +132,11 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     mprAddSocketProvider("openssl", openProvider);
 
     /*
-        Pre-create expensive keys
-     */
-    if ((defaultOpenConfig = mprAllocObj(OpenConfig, manageOpenConfig)) == 0) {
-        return MPR_ERR_MEMORY;
-    }
-//NOGO
-    defaultOpenConfig->rsaKey512 = RSA_generate_key(512, RSA_F4, 0, 0);
-    defaultOpenConfig->rsaKey1024 = RSA_generate_key(1024, RSA_F4, 0, 0);
-    defaultOpenConfig->dhKey512 = get_dh512();
-    defaultOpenConfig->dhKey1024 = get_dh1024();
-
-    /*
         Configure the SSL library. Use the crypto ID as a one-time test. This allows
         users to configure the library and have their configuration used instead.
      */
     if (CRYPTO_get_id_callback() == 0) {
+#if UNUSED
         numLocks = CRYPTO_num_locks();
         if ((olocks = mprAlloc(numLocks * sizeof(MprMutex*))) == 0) {
             return MPR_ERR_MEMORY;
@@ -157,6 +150,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
         CRYPTO_set_dynlock_create_callback(sslCreateDynLock);
         CRYPTO_set_dynlock_destroy_callback(sslDestroyDynLock);
         CRYPTO_set_dynlock_lock_callback(sslDynLock);
+#endif
 #if !ME_WIN_LIKE
         OpenSSL_add_all_algorithms();
 #endif
@@ -177,27 +171,16 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         /* Nothing to do  */
+
     } else if (flags & MPR_MANAGE_FREE) {
         if (cfg->context != 0) {
             SSL_CTX_free(cfg->context);
             cfg->context = 0;
         }
         if (cfg == defaultOpenConfig) {
-            if (cfg->rsaKey512) {
-                RSA_free(cfg->rsaKey512);
-                cfg->rsaKey512 = 0;
-            }
-            if (cfg->rsaKey1024) {
-                RSA_free(cfg->rsaKey1024);
-                cfg->rsaKey1024 = 0;
-            }
-            if (cfg->dhKey512) {
-                DH_free(cfg->dhKey512);
-                cfg->dhKey512 = 0;
-            }
-            if (cfg->dhKey1024) {
-                DH_free(cfg->dhKey1024);
-                cfg->dhKey1024 = 0;
+            if (cfg->dhKey) {
+                DH_free(cfg->dhKey);
+                cfg->dhKey = 0;
             }
         }
     }
@@ -212,6 +195,7 @@ static void manageOpenProvider(MprSocketProvider *provider, int flags)
     int     i;
 
     if (flags & MPR_MANAGE_MARK) {
+#if UNUSED
         /* Mark global locks */
         if (olocks) {
             mprMark(olocks);
@@ -219,25 +203,29 @@ static void manageOpenProvider(MprSocketProvider *provider, int flags)
                 mprMark(olocks[i]);
             }
         }
+#endif
         mprMark(defaultOpenConfig);
         mprMark(provider->name);
 
     } else if (flags & MPR_MANAGE_FREE) {
+#if UNUSED
         olocks = 0;
+#endif
     }
 }
 
 
 /*
-    Create an SSL configuration for a route. An application can have multiple different SSL 
-    configurations for different routes. There is default SSL configuration that is used
-    when a route does not define a configuration and also for clients.
+    Create and initialize an SSL configuration for a route. This configuration is used by all requests for
+    a given route. An application can have different SSL configurations for different routes. There is also 
+    a default SSL configuration that is used when a route does not define a configuration and one for clients.
  */
 static OpenConfig *createOpenSslConfig(MprSocket *sp)
 {
     MprSsl          *ssl;
     OpenConfig      *cfg;
     SSL_CTX         *context;
+    cchar           *key;
     uchar           resume[16];
     int             verifyMode;
 
@@ -248,13 +236,6 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
         return 0;
     }
     cfg = ssl->config;
-    cfg->rsaKey512 = defaultOpenConfig->rsaKey512;
-    cfg->rsaKey1024 = defaultOpenConfig->rsaKey1024;
-    cfg->dhKey512 = defaultOpenConfig->dhKey512;
-    cfg->dhKey1024 = defaultOpenConfig->dhKey1024;
-
-    cfg = ssl->config;
-    assert(cfg);
 
     if ((context = SSL_CTX_new(SSLv23_method())) == 0) {
         mprLog("error openssl", 0, "Unable to create SSL context"); 
@@ -267,24 +248,45 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
         SSL_CTX_free(context);
         return 0;
     }
-    verifyMode = ssl->verifyPeer ? SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT : SSL_VERIFY_NONE;
 
     /*
         Configure the certificates
      */
-    if (ssl->keyFile || ssl->certFile) {
-        if (configureCertificateFiles(ssl, context, (char*) ssl->keyFile, (char*) ssl->certFile) != 0) {
-            SSL_CTX_free(context);
-            return 0;
+    if (ssl->certFile) {
+        if (SSL_CTX_use_certificate_chain_file(context, ssl->certFile) <= 0) {
+            if (SSL_CTX_use_certificate_file(context, ssl->certFile, SSL_FILETYPE_ASN1) <= 0) {
+                mprLog("error openssl", 0, "Cannot open certificate file: %s", ssl->certFile);
+                SSL_CTX_free(context);
+                return 0;
+            }
+        }
+        key = (ssl->keyFile == 0) ? ssl->certFile : ssl->keyFile;
+        if (key) {
+            if (SSL_CTX_use_PrivateKey_file(context, key, SSL_FILETYPE_PEM) <= 0) {
+                /* attempt ASN1 for self-signed format */
+                if (SSL_CTX_use_PrivateKey_file(context, key, SSL_FILETYPE_ASN1) <= 0) {
+                    mprLog("error openssl", 0, "Cannot open private key file: %s", key);
+                    SSL_CTX_free(context);
+                    return 0;
+                }
+            }
+            if (!SSL_CTX_check_private_key(context)) {
+                mprLog("error openssl", 0, "Check of private key file failed: %s", key);
+                SSL_CTX_free(context);
+                return 0;
+            }
         }
     }
-    if (ssl->ciphers) {
-        if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
-            sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp)); 
-            SSL_CTX_free(context);
-            return 0;
-        }
+    if (!ssl->ciphers) {
+        ssl->ciphers = sclone(OPENSSL_CIPHERS);
+        mprLog("info openssl", 2, "Using OpenSSL ciphers: %s", ssl->ciphers);
     }
+    if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
+        sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp)); 
+        SSL_CTX_free(context);
+        return 0;
+    }
+    verifyMode = ssl->verifyPeer ? SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT : SSL_VERIFY_NONE;
     if (verifyMode != SSL_VERIFY_NONE) {
         if (!(ssl->caFile || ssl->caPath)) {
             sp->errorMsg = sclone("No defined certificate authority file");
@@ -312,41 +314,64 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
             SSL_CTX_set_verify_depth(context, ssl->verifyDepth);
         }
     }
-    SSL_CTX_set_verify(context, verifyMode, verifyX509Certificate);
 
     /*
         Define callbacks
      */
-    SSL_CTX_set_tmp_rsa_callback(context, rsaCallback);
-    SSL_CTX_set_tmp_dh_callback(context, dhCallback);
+    SSL_CTX_set_verify(context, verifyMode, verifyPeerCertificate);
+
+    /*
+        Configure DH parameters
+     */
+    SSL_CTX_set_tmp_dh_callback(context, dhcallback);
+    cfg->dhKey = getDhKey(ssl->dhFile);
+
+    /*
+        Define default OpenSSL options
+     */
+    SSL_CTX_set_options(context, SSL_OP_ALL);
+
+    /*
+        Ensure we generate a new private key for each connection
+     */
+    SSL_CTX_set_options(context, SSL_OP_SINGLE_DH_USE);
+
+    /*
+        Define a session reuse context
+     */
+    RAND_bytes(resume, sizeof(resume));
+    SSL_CTX_set_session_id_context(context, resume, sizeof(resume));
 
     /*
         Elliptic Curve initialization
      */
 #if SSL_OP_SINGLE_ECDH_USE
-{
-    EC_KEY  *ecdh;
-    cchar   *name;
-    int      nid;
+    #ifdef SSL_CTX_set_ecdh_auto
+        SSL_CTX_set_ecdh_auto(context, 1);
+    #else
+        {
+            EC_KEY  *ecdh;
+            cchar   *name;
+            int      nid;
 
-    name = ME_MPR_SSL_CURVE;
-    if ((nid = OBJ_sn2nid(name)) == 0) {
-        sp->errorMsg = sfmt("Unknown curve name \"%s\"", name);
-        SSL_CTX_free(context);
-        return 0;
-    }
-    if ((ecdh = EC_KEY_new_by_curve_name(nid)) == 0) {
-        sp->errorMsg = sfmt("Unable to create curve \"%s\"", name);
-        SSL_CTX_free(context);
-        return 0;
-    }
-    SSL_CTX_set_options(context, SSL_OP_SINGLE_ECDH_USE);
-    SSL_CTX_set_tmp_ecdh(context, ecdh);
-    EC_KEY_free(ecdh);
-}
+            name = ME_MPR_SSL_CURVE;
+            if ((nid = OBJ_sn2nid(name)) == 0) {
+                sp->errorMsg = sfmt("Unknown curve name \"%s\"", name);
+                SSL_CTX_free(context);
+                return 0;
+            }
+            if ((ecdh = EC_KEY_new_by_curve_name(nid)) == 0) {
+                sp->errorMsg = sfmt("Unable to create curve \"%s\"", name);
+                SSL_CTX_free(context);
+                return 0;
+            }
+            SSL_CTX_set_options(context, SSL_OP_SINGLE_ECDH_USE);
+            SSL_CTX_set_tmp_ecdh(context, ecdh);
+            EC_KEY_free(ecdh);
+        }
+    #endif
 #endif
 
-    SSL_CTX_set_options(context, SSL_OP_ALL);
     SSL_CTX_set_mode(context, SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_AUTO_RETRY | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 #ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
     SSL_CTX_set_options(context, SSL_OP_MSIE_SSLV2_RSA_PADDING);
@@ -357,49 +382,6 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
 #ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
     SSL_CTX_set_mode(context, SSL_OP_CIPHER_SERVER_PREFERENCE);
 #endif
-
-    /*
-        Options set via main.me mpr.ssl.*
-     */
-#if defined(ME_MPR_SSL_TICKET) && defined(SSL_OP_NO_TICKET)
-    if (ME_MPR_SSL_TICKET) {
-        SSL_CTX_clear_options(context, SSL_OP_NO_TICKET);
-    } else {
-        SSL_CTX_set_options(context, SSL_OP_NO_TICKET);
-    }
-#endif
-#if defined(ME_MPR_SSL_COMPRESSION) && defined(SSL_OP_NO_COMPRESSION)
-    if (ME_MPR_SSL_COMPRESSION) {
-        SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
-    } else {
-        SSL_CTX_set_options(context, SSL_OP_NO_COMPRESSION);
-    }
-#endif
-#if defined(ME_MPR_SSL_RENEGOTIATE)
-    RAND_bytes(resume, sizeof(resume));
-    SSL_CTX_set_session_id_context(context, resume, sizeof(resume));
-    #if defined(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION)
-        if (ME_MPR_SSL_RENEGOTIATE) {
-            SSL_CTX_clear_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
-        } else {
-            SSL_CTX_set_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
-        }
-    #endif
-#endif
-#if defined(ME_MPR_SSL_EMPTY_FRAGMENTS)
-    #if defined(SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS)
-        if (ME_MPR_SSL_EMPTY_FRAGMENTS) {
-            /* SSL_OP_ALL disables empty fragments. Only needed for ancient browsers like IE-6 on SSL-3.0/TLS-1.0 */
-            SSL_CTX_clear_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
-        } else {
-            SSL_CTX_set_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
-        }
-    #endif
-#endif
-#if defined(ME_MPR_SSL_CACHE)
-    SSL_CTX_sess_set_cache_size(context, ME_MPR_SSL_CACHE);
-#endif
-
     /*
         Select the required protocols
         Disable SSLv2 and SSLv3 by default -- they are insecure.
@@ -421,46 +403,86 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
         SSL_CTX_set_options(context, SSL_OP_NO_TLSv1_2);
     }
 #endif
+
     /*
-        Ensure we generate a new private key for each connection
+        Options set via main.me mpr.ssl.*
      */
-    SSL_CTX_set_options(context, SSL_OP_SINGLE_DH_USE);
+#if defined(SSL_OP_NO_TICKET)
+    /*
+        Ticket based session reuse is enabled by default
+     */
+    #if defined(ME_MPR_SSL_TICKET)
+        if (ME_MPR_SSL_TICKET) {
+            SSL_CTX_clear_options(context, SSL_OP_NO_TICKET);
+        } else {
+            SSL_CTX_set_options(context, SSL_OP_NO_TICKET);
+        }
+    #else
+        SSL_CTX_clear_options(context, SSL_OP_NO_TICKET);
+    #endif
+#endif
+
+#if defined(SSL_OP_NO_COMPRESSION)
+    /* 
+        Use of compression is not secure. Disabled by default.
+     */
+    #if defined(ME_MPR_SSL_COMPRESSION)
+        if (ME_MPR_SSL_COMPRESSION) {
+            SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
+        } else {
+            SSL_CTX_set_options(context, SSL_OP_NO_COMPRESSION);
+        }
+    #else
+        /*
+            CRIME attack targets compression
+         */
+        SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
+    #endif
+#endif
+
+#if defined(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION)
+    /*
+        Force a new session on renegotiation. Default to true.
+     */
+    #if defined(ME_MPR_SSL_RENEGOTIATE)
+        if (ME_MPR_SSL_RENEGOTIATE) {
+            SSL_CTX_clear_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+        } else {
+            SSL_CTX_set_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+        }
+    #else
+        SSL_CTX_set_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+    #endif
+#endif
+
+#if defined(SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS)
+    /*
+        Disables a countermeasure against a SSL 3.0/TLS 1.0 protocol vulnerability affecting CBC ciphers.
+        Defaults to true.
+     */
+    #if defined(ME_MPR_SSL_EMPTY_FRAGMENTS)
+        if (ME_MPR_SSL_EMPTY_FRAGMENTS) {
+            /* SSL_OP_ALL disables empty fragments. Only needed for ancient browsers like IE-6 on SSL-3.0/TLS-1.0 */
+            SSL_CTX_clear_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+        } else {
+            SSL_CTX_set_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+        }
+    #else
+        SSL_CTX_set_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+    #endif
+#endif
+
+#if defined(ME_MPR_SSL_CACHE)
+    /*
+        Set the number of sessions supported. Default in OpenSSL is 20K.
+     */
+    SSL_CTX_sess_set_cache_size(context, ME_MPR_SSL_CACHE);
+#else
+    SSL_CTX_sess_set_cache_size(context, 1024);
+#endif
+
     cfg->context = context;
     return cfg;
-}
-
-
-/*
-    Configure the SSL certificate information using key and cert files
- */
-static int configureCertificateFiles(MprSsl *ssl, SSL_CTX *ctx, char *key, char *cert)
-{
-    assert(ctx);
-
-    if (cert == 0) {
-        return 0;
-    }
-    if (cert && SSL_CTX_use_certificate_chain_file(ctx, cert) <= 0) {
-        if (SSL_CTX_use_certificate_file(ctx, cert, SSL_FILETYPE_ASN1) <= 0) {
-            mprLog("error openssl", 0, "Cannot open certificate file: %s", cert);
-            return -1;
-        }
-    }
-    key = (key == 0) ? cert : key;
-    if (key) {
-        if (SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_PEM) <= 0) {
-            /* attempt ASN1 for self-signed format */
-            if (SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_ASN1) <= 0) {
-                mprLog("error openssl", 0, "Cannot open private key file: %s", key);
-                return -1;
-            }
-        }
-        if (!SSL_CTX_check_private_key(ctx)) {
-            mprLog("error openssl", 0, "Check of private key file failed: %s", key);
-            return -1;
-        }
-    }
-    return 0;
 }
 
 
@@ -490,20 +512,20 @@ static void closeOss(MprSocket *sp, bool gracefully)
     int rc;
 
     osp = sp->sslSocket;
-    /*
-        Locking not really required as use of the socket should be single-threaded on a dispatcher.
-     */
-    lock(sp);
-    SSL_shutdown(osp->handle);
+    if (osp->handle) {
+        SSL_shutdown(osp->handle);
+    }
     sp->service->standardProvider->closeSocket(sp, gracefully);
-    SSL_free(osp->handle);
-    osp->handle = 0;
-    unlock(sp);
+    if (osp->handle) {
+        SSL_free(osp->handle);
+        osp->handle = 0;
+    }
 }
 
 
 /*
-    Upgrade a standard socket to use SSL/TLS
+    Upgrade a standard socket to use SSL/TLS. Used by both clients and servers to upgrade a socket for SSL.
+    If a client, this may block while connecting.
  */
 static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
 {
@@ -524,6 +546,9 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
     sp->ssl = ssl;
 
     if (!ssl->config || ssl->changed) {
+        /*
+            On-demand creation of the SSL configuration 
+         */
         if ((ssl->config = createOpenSslConfig(sp)) == 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
@@ -540,10 +565,13 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
     SSL_set_app_data(osp->handle, (void*) osp);
 
     /*
-        Create a socket bio
+        Create a socket bio. We don't use the BIO except as storage for the fd
      */
-    osp->bio = BIO_new_socket((int) sp->fd, BIO_NOCLOSE);
+    if ((osp->bio = BIO_new_socket((int) sp->fd, BIO_NOCLOSE)) == 0) {
+        return MPR_ERR_BAD_STATE;
+    }
     SSL_set_bio(osp->handle, osp->bio, osp->bio);
+
     if (sp->flags & MPR_SOCKET_SERVER) {
         SSL_set_accept_state(osp->handle);
     } else {
@@ -563,12 +591,8 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
             }
             return MPR_ERR_CANT_CONNECT;
         }
-        if (rc > 0 && !(sp->flags & MPR_SOCKET_CHECKED)) {
-            if (checkCert(sp) < 0) {
-                return MPR_ERR_CANT_CONNECT;
-            }
-            sp->secured = 1;
-            sp->flags |= MPR_SOCKET_CHECKED;
+        if (rc > 0 && checkCertificateName(sp) < 0) {
+            return MPR_ERR_CANT_CONNECT;
         }
         mprSetSocketBlockingMode(sp, 0);
     }
@@ -586,6 +610,121 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
 }
 
 
+static void disconnectOss(MprSocket *sp)
+{
+    sp->service->standardProvider->disconnectSocket(sp);
+}
+
+
+/*
+    Return the number of bytes read. Return -1 on errors and EOF. Distinguish EOF via mprIsSocketEof.
+    If non-blocking, may return zero if no data or still handshaking.
+ */
+static ssize readOss(MprSocket *sp, void *buf, ssize len)
+{
+    OpenSocket      *osp;
+    int             rc, error, retries, i;
+
+    osp = (OpenSocket*) sp->sslSocket;
+    assert(osp);
+
+    if (osp->handle == 0) {
+        return MPR_ERR_BAD_STATE;
+    }
+    /*
+        Limit retries on WANT_READ. If non-blocking and no data, then this could spin forever.
+     */
+    retries = 5;
+    for (i = 0; i < retries; i++) {
+        rc = SSL_read(osp->handle, buf, (int) len);
+        if (rc < 0) {
+            error = SSL_get_error(osp->handle, rc);
+            if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_CONNECT || error == SSL_ERROR_WANT_ACCEPT) {
+                continue;
+            }
+            mprLog("info mpr ssl openssl", 5, "SSL_read %s", getOssError(sp));
+        }
+        break;
+    }
+    if (rc <= 0) {
+        error = SSL_get_error(osp->handle, rc);
+        if (error == SSL_ERROR_WANT_READ) {
+            rc = 0;
+        } else if (error == SSL_ERROR_WANT_WRITE) {
+            rc = 0;
+        } else if (error == SSL_ERROR_ZERO_RETURN) {
+            sp->flags |= MPR_SOCKET_EOF;
+            rc = -1;
+        } else if (error == SSL_ERROR_SYSCALL) {
+            sp->flags |= MPR_SOCKET_EOF;
+            rc = -1;
+        } else if (error != SSL_ERROR_ZERO_RETURN) {
+            /* SSL_ERROR_SSL */
+            mprLog("info mpr ssl openssl", 4, "%s", getOssError(sp));
+            rc = -1;
+            sp->flags |= MPR_SOCKET_EOF;
+        }
+    } else {
+        if (!sp->secured && checkCertificateName(sp) < 0) {
+            return MPR_ERR_BAD_STATE;
+        }
+        if (SSL_pending(osp->handle) > 0) {
+            sp->flags |= MPR_SOCKET_BUFFERED_READ;
+            mprRecallWaitHandlerByFd(sp->fd);
+        }
+    }
+    return rc;
+}
+
+
+/*
+    Write data. Return the number of bytes written or -1 on errors.
+ */
+static ssize writeOss(MprSocket *sp, cvoid *buf, ssize len)
+{
+    OpenSocket  *osp;
+    ssize       totalWritten;
+    int         error, rc;
+
+    osp = (OpenSocket*) sp->sslSocket;
+
+    if (osp->bio == 0 || osp->handle == 0 || len <= 0) {
+        return MPR_ERR_BAD_STATE;
+    }
+    totalWritten = 0;
+    ERR_clear_error();
+    error = 0;
+
+    do {
+        rc = SSL_write(osp->handle, buf, (int) len);
+        mprLog("info mpr ssl openssl", 7, "Wrote %d, requested len %zd", rc, len);
+        if (rc <= 0) {
+            error = SSL_get_error(osp->handle, rc);
+            if (error == SSL_ERROR_WANT_WRITE) {
+                break;
+            }
+            return MPR_ERR_CANT_WRITE;
+        }
+        totalWritten += rc;
+        buf = (void*) ((char*) buf + rc);
+        len -= rc;
+        mprLog("info mpr ssl openssl", 7, "write len %zd, written %d, total %zd", len, rc, totalWritten);
+    } while (len > 0);
+
+    if (totalWritten == 0 && error == SSL_ERROR_WANT_WRITE) {
+        mprSetError(EAGAIN);
+        return MPR_ERR_NOT_READY;
+    }
+    return totalWritten;
+}
+
+
+static ssize flushOss(MprSocket *sp)
+{
+    return 0;
+}
+
+ 
 /*
     Parse the cert info and write properties to the buffer. Modifies the info argument.
  */
@@ -682,16 +821,10 @@ static char *getOssState(MprSocket *sp)
 }
 
 
-static void disconnectOss(MprSocket *sp)
-{
-    sp->service->standardProvider->disconnectSocket(sp);
-}
-
-
 /*
     Check the certificate peer name validates and matches the desired name
  */
-static int checkCert(MprSocket *sp)
+static int checkCertificateName(MprSocket *sp)
 {
     MprSsl      *ssl;
     MprBuf      *buf;
@@ -705,8 +838,7 @@ static int checkCert(MprSocket *sp)
     osp = (OpenSocket*) sp->sslSocket;
     sp->cipher = sclone(SSL_get_cipher(osp->handle));
 
-    cert = SSL_get_peer_certificate(osp->handle);
-    if (cert == 0) {
+    if ((cert = SSL_get_peer_certificate(osp->handle)) == 0) {
         peerName[0] = '\0';
     } else {
         xSubject = X509_get_subject_name(cert);
@@ -724,12 +856,12 @@ static int checkCert(MprSocket *sp)
 
         if (target == 0 || *target == '\0' || strchr(target, '.') == 0) {
             sp->errorMsg = sfmt("Bad peer name");
-            return -1;
+            return MPR_ERR_BAD_VALUE;
         }
         if (!smatch(certName, "localhost")) {
             if (strchr(certName, '.') == 0) {
                 sp->errorMsg = sfmt("Peer certificate must have a domain: \"%s\"", certName);
-                return -1;
+                return MPR_ERR_BAD_VALUE;
             }
             if (*certName == '*' && certName[1] == '.') {
                 /* Wildcard cert */
@@ -737,7 +869,7 @@ static int checkCert(MprSocket *sp)
                 if (strchr(certName, '.') == 0) {
                     /* Peer must be of the form *.domain.tld. i.e. *.com is not valid */
                     sp->errorMsg = sfmt("Peer CN is not valid %s", peerName);
-                    return -1;
+                    return MPR_ERR_BAD_VALUE;
                 }
                 if ((tp = strchr(target, '.')) != 0 && strchr(&tp[1], '.')) {
                     /* Strip host name if target has a host name */
@@ -748,134 +880,16 @@ static int checkCert(MprSocket *sp)
         if (!smatch(target, certName)) {
             sp->errorMsg = sfmt("Certificate common name mismatch CN \"%s\" vs required \"%s\"", peerName,
                 osp->requiredPeerName);
-            return -1;
+            return MPR_ERR_BAD_VALUE;
         }
     }
     sp->session = getOssSession(sp);
+    sp->secured = 1;
     return 0;
 }
 
 
-/*
-    Return the number of bytes read. Return -1 on errors and EOF. Distinguish EOF via mprIsSocketEof.
-    If non-blocking, may return zero if no data or still handshaking.
- */
-static ssize readOss(MprSocket *sp, void *buf, ssize len)
-{
-    OpenSocket      *osp;
-    int             rc, error, retries, i;
-
-    /*
-        Locks not really needed. Should be single-threaded on dispatcher
-     */
-    lock(sp);
-    osp = (OpenSocket*) sp->sslSocket;
-    assert(osp);
-
-    if (osp->handle == 0) {
-        unlock(sp);
-        return -1;
-    }
-    /*
-        Limit retries on WANT_READ. If non-blocking and no data, then this can spin forever.
-     */
-    retries = 5;
-    for (i = 0; i < retries; i++) {
-        rc = SSL_read(osp->handle, buf, (int) len);
-        if (rc < 0) {
-            error = SSL_get_error(osp->handle, rc);
-            if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_CONNECT || error == SSL_ERROR_WANT_ACCEPT) {
-                continue;
-            }
-            mprLog("info mpr ssl openssl", 5, "SSL_read %s", getOssError(sp));
-        }
-        break;
-    }
-    if (rc > 0 && !(sp->flags & MPR_SOCKET_CHECKED)) {
-        if (checkCert(sp) < 0) {
-            return MPR_ERR_BAD_STATE;
-        }
-        sp->secured = 1;
-        sp->flags |= MPR_SOCKET_CHECKED;
-    }
-    if (rc <= 0) {
-        error = SSL_get_error(osp->handle, rc);
-        if (error == SSL_ERROR_WANT_READ) {
-            rc = 0;
-        } else if (error == SSL_ERROR_WANT_WRITE) {
-            rc = 0;
-        } else if (error == SSL_ERROR_ZERO_RETURN) {
-            sp->flags |= MPR_SOCKET_EOF;
-            rc = -1;
-        } else if (error == SSL_ERROR_SYSCALL) {
-            sp->flags |= MPR_SOCKET_EOF;
-            rc = -1;
-        } else if (error != SSL_ERROR_ZERO_RETURN) {
-            /* SSL_ERROR_SSL */
-            mprLog("info mpr ssl openssl", 4, "%s", getOssError(sp));
-            rc = -1;
-            sp->flags |= MPR_SOCKET_EOF;
-        }
-    } else if (SSL_pending(osp->handle) > 0) {
-        sp->flags |= MPR_SOCKET_BUFFERED_READ;
-        mprRecallWaitHandlerByFd(sp->fd);
-    }
-    unlock(sp);
-    return rc;
-}
-
-
-/*
-    Write data. Return the number of bytes written or -1 on errors.
- */
-static ssize writeOss(MprSocket *sp, cvoid *buf, ssize len)
-{
-    OpenSocket  *osp;
-    ssize       totalWritten;
-    int         rc;
-
-    lock(sp);
-    osp = (OpenSocket*) sp->sslSocket;
-
-    if (osp->bio == 0 || osp->handle == 0 || len <= 0) {
-        assert(0);
-        unlock(sp);
-        return -1;
-    }
-    totalWritten = 0;
-    ERR_clear_error();
-    rc = 0;
-
-    do {
-        rc = SSL_write(osp->handle, buf, (int) len);
-        mprLog("info mpr ssl openssl", 7, "Wrote %d, requested len %zd", rc, len);
-        if (rc <= 0) {
-            if (SSL_get_error(osp->handle, rc) == SSL_ERROR_WANT_WRITE) {
-                break;
-            }
-            unlock(sp);
-            return -1;
-        }
-        totalWritten += rc;
-        buf = (void*) ((char*) buf + rc);
-        len -= rc;
-        mprLog("info mpr ssl openssl", 7, "write len %zd, written %d, total %zd, error %d", len, rc, totalWritten,
-            SSL_get_error(osp->handle, rc));
-    } while (len > 0);
-    unlock(sp);
-
-    if (totalWritten == 0 && rc == SSL_ERROR_WANT_WRITE) {
-        mprSetError(EAGAIN);
-        return -1;
-    }
-    return totalWritten;
-}
-
-
-/*
-    Called to verify X509 client certificates
- */
-static int verifyX509Certificate(int ok, X509_STORE_CTX *xContext)
+static int verifyPeerCertificate(int ok, X509_STORE_CTX *xContext)
 {
     X509            *cert;
     SSL             *handle;
@@ -965,12 +979,7 @@ static int verifyX509Certificate(int ok, X509_STORE_CTX *xContext)
 }
 
 
-static ssize flushOss(MprSocket *sp)
-{
-    return 0;
-}
-
- 
+#if UNUSED
 static ulong sslThreadId()
 {
     return (long) mprGetCurrentOsThread();
@@ -1019,6 +1028,7 @@ static void sslDynLock(int mode, DynLock *dl, const char *file, int line)
         mprUnlock(dl->mutex);
     }
 }
+#endif
 
 
 static char *getOssError(MprSocket *sp)
@@ -1034,123 +1044,83 @@ static char *getOssError(MprSocket *sp)
 
 
 /*
-    Used for ephemeral RSA keys
+    Get the DH parameters. This tries to read the 
+    Default DH parameters used if the dh.pem file is not supplied.
+
+    Generated via
+        openssl dhparam -C 2048 -out /dev/null >dhparams.h
+
+    Though not essential, you should generate your own local DH parameters 
+    and supply a dh.pem file to make it a bit harder for attackers.
  */
-static RSA *rsaCallback(SSL *handle, int isExport, int keyLength)
+
+static DH *getDhKey(cchar *path)
 {
-    MprSocket       *sp;
-    OpenSocket      *osp;
-    OpenConfig      *cfg;
-    RSA             *key;
+	static unsigned char dh2048_p[] = {
+		0xDA,0xDD,0x26,0xAA,0xBF,0x0B,0x2D,0xC5,0x83,0x20,0x26,0xD3,
+		0x99,0x62,0x76,0xF6,0xF5,0x55,0x7F,0x84,0xB4,0x6A,0x7F,0x3E,
+		0xBF,0x1C,0xF8,0xB6,0xE9,0xD3,0x40,0x0A,0xBB,0xED,0xD9,0xFF,
+		0x3F,0x51,0x38,0xCC,0xFD,0x89,0x63,0x4C,0x0F,0x6C,0x9E,0x52,
+		0x90,0x14,0xC4,0x55,0x34,0xE8,0xF1,0xD9,0xEB,0x43,0xD4,0xAD,
+		0x27,0x67,0x4C,0x3A,0x0F,0x18,0x86,0x96,0x47,0x1D,0xA1,0x17,
+		0xE3,0x30,0xEF,0x3B,0x7D,0x34,0x45,0x4C,0x11,0x86,0xFB,0x29,
+		0xFC,0xB5,0x05,0x1B,0xC3,0xA8,0x22,0x38,0xC9,0xEA,0xD7,0x2D,
+		0x02,0x96,0x2D,0xD9,0x77,0xF8,0x87,0x31,0x96,0xAA,0x6A,0xFF,
+		0xEA,0xC1,0x78,0xBE,0x12,0xA2,0x78,0xBD,0x9A,0x78,0x7C,0xA5,
+		0x4D,0x2F,0x3B,0xE8,0x6F,0xAD,0xE6,0xBE,0x21,0x3E,0x6C,0x7D,
+		0xB5,0x53,0xE1,0x1E,0x83,0x81,0xBD,0x98,0x54,0x8E,0xE5,0x54,
+		0xEC,0x43,0x09,0x54,0x9A,0xDC,0x7C,0xC8,0xE9,0xBC,0x20,0x50,
+		0x31,0x28,0xE9,0xF5,0x99,0x60,0xE2,0x40,0x48,0x57,0x8D,0xD9,
+		0x29,0xF5,0x8B,0x22,0xDE,0x93,0xE2,0x56,0x0B,0x76,0xE3,0x8B,
+		0xC4,0x37,0x2F,0xD2,0xC1,0x34,0xF5,0x9B,0x12,0xD8,0x2B,0xE2,
+		0x98,0xBA,0x0C,0xBB,0xDC,0x7A,0x65,0x7C,0x2D,0xC2,0x56,0x01,
+		0x94,0x9F,0xB5,0xAE,0xC2,0xAA,0x6B,0x42,0x1B,0x54,0x36,0xE3,
+		0x86,0xAC,0x21,0x93,0xDD,0x8B,0xD1,0x0D,0xEF,0x39,0x20,0x14,
+		0x29,0xA1,0xB1,0xEE,0xE7,0xB1,0xA3,0x29,0x6C,0xD5,0xE6,0xD6,
+		0x23,0x20,0xDC,0xDC,0xFA,0x0A,0x06,0x81,0xB3,0xF4,0xEB,0xCE,
+		0xA6,0xD7,0x23,0x93,
+    };
+	static unsigned char dh2048_g[] = {
+		0x02,
+    };
+	DH      *dh;
+    BIO     *bio;
 
-    osp = (OpenSocket*) SSL_get_app_data(handle);
-    sp = osp->sock;
-    assert(sp);
-    cfg = sp->ssl->config;
-
-    key = 0;
-    switch (keyLength) {
-    case 512:
-        key = cfg->rsaKey512;
-        break;
-
-    case 1024:
-    default:
-        key = cfg->rsaKey1024;
+    dh = 0;
+    if (path && *path) {
+        if ((bio = BIO_new_file(path, "r")) != 0) {
+            dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
+        }
     }
-    return key;
+    if (dh == 0) {
+        if ((dh = DH_new()) == 0) {
+            return 0;
+        }
+        dh->p = BN_bin2bn(dh2048_p, sizeof(dh2048_p), NULL);
+        dh->g = BN_bin2bn(dh2048_g, sizeof(dh2048_g), NULL);
+        if ((dh->p == 0) || (dh->g == 0)) { 
+            DH_free(dh); 
+            return 0;
+        }
+    }
+	return dh;
 }
 
 
 /*
-    Used for ephemeral DH keys
+    Set the ephemeral DH key
  */
-static DH *dhCallback(SSL *handle, int isExport, int keyLength)
+static DH *dhcallback(SSL *handle, int isExport, int keyLength)
 {
-    MprSocket       *sp;
     OpenSocket      *osp;
     OpenConfig      *cfg;
     DH              *key;
 
     osp = (OpenSocket*) SSL_get_app_data(handle);
-    sp = osp->sock;
-    cfg = sp->ssl->config;
-
-    key = 0;
-    switch (keyLength) {
-    case 512:
-        key = cfg->dhKey512;
-        break;
-
-    case 1024:
-    default:
-        key = cfg->dhKey1024;
-    }
-    return key;
+    cfg = osp->sock->ssl->config;
+    return cfg->dhKey;
 }
 
-
-/*
-    openSslDh.c - OpenSSL DH get routines. Generated by openssl.
-    Use bit gendh to generate new content.
- */
-static DH *get_dh512()
-{
-    static unsigned char dh512_p[] = {
-        0x8E,0xFD,0xBE,0xD3,0x92,0x1D,0x0C,0x0A,0x58,0xBF,0xFF,0xE4,
-        0x51,0x54,0x36,0x39,0x13,0xEA,0xD8,0xD2,0x70,0xBB,0xE3,0x8C,
-        0x86,0xA6,0x31,0xA1,0x04,0x2A,0x09,0xE4,0xD0,0x33,0x88,0x5F,
-        0xEF,0xB1,0x70,0xEA,0x42,0xB6,0x0E,0x58,0x60,0xD5,0xC1,0x0C,
-        0xD1,0x12,0x16,0x99,0xBC,0x7E,0x55,0x7C,0xE4,0xC1,0x5D,0x15,
-        0xF6,0x45,0xBC,0x73,
-    };
-    static unsigned char dh512_g[] = {
-        0x02,
-    };
-    DH *dh;
-    if ((dh = DH_new()) == NULL) {
-        return(NULL);
-    }
-    dh->p = BN_bin2bn(dh512_p, sizeof(dh512_p), NULL);
-    dh->g = BN_bin2bn(dh512_g, sizeof(dh512_g), NULL);
-    if ((dh->p == NULL) || (dh->g == NULL)) { 
-        DH_free(dh); 
-        return(NULL); 
-    }
-    return dh;
-}
-
-
-static DH *get_dh1024()
-{
-    static unsigned char dh1024_p[] = {
-        0xCD,0x02,0x2C,0x11,0x43,0xCD,0xAD,0xF5,0x54,0x5F,0xED,0xB1,
-        0x28,0x56,0xDF,0x99,0xFA,0x80,0x2C,0x70,0xB5,0xC8,0xA8,0x12,
-        0xC3,0xCD,0x38,0x0D,0x3B,0xE1,0xE3,0xA3,0xE4,0xE9,0xCB,0x58,
-        0x78,0x7E,0xA6,0x80,0x7E,0xFC,0xC9,0x93,0x3A,0x86,0x1C,0x8E,
-        0x0B,0xA2,0x1C,0xD0,0x09,0x99,0x29,0x9B,0xC1,0x53,0xB8,0xF3,
-        0x98,0xA7,0xD8,0x46,0xBE,0x5B,0xB9,0x64,0x31,0xCF,0x02,0x63,
-        0x0F,0x5D,0xF2,0xBE,0xEF,0xF6,0x55,0x8B,0xFB,0xF0,0xB8,0xF7,
-        0xA5,0x2E,0xD2,0x6F,0x58,0x1E,0x46,0x3F,0x74,0x3C,0x02,0x41,
-        0x2F,0x65,0x53,0x7F,0x1C,0x7B,0x8A,0x72,0x22,0x1D,0x2B,0xE9,
-        0xA3,0x0F,0x50,0xC3,0x13,0x12,0x6C,0xD2,0x17,0xA9,0xA5,0x82,
-        0xFC,0x91,0xE3,0x3E,0x28,0x8A,0x97,0x73,
-    };
-    static unsigned char dh1024_g[] = {
-        0x02,
-    };
-    DH *dh;
-    if ((dh = DH_new()) == NULL) {
-        return(NULL);
-    }
-    dh->p = BN_bin2bn(dh1024_p, sizeof(dh1024_p), NULL);
-    dh->g = BN_bin2bn(dh1024_g, sizeof(dh1024_g), NULL);
-    if ((dh->p == NULL) || (dh->g == NULL)) {
-        DH_free(dh); 
-        return(NULL); 
-    }
-    return dh;
-}
 
 #endif /* ME_COM_OPENSSL */
 

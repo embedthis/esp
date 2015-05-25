@@ -1,14 +1,141 @@
 /*
-    certs.me - Test certificate generation
- */
-Me.load({
-    blend: ['start.me'],
+    certs.me -- Test certificate generation
+ 
+    This file provides targets to generate SSL test certificates using OpenSSL.
+    WARNING: All these certificates are for internal use only.
 
+    To generate a certificate request to send to a certificate authority like Verisign, do:
+    This will create a certificate request file in "server.csr" and a private key in "server.key"
+
+        me cert-request
+ 
+    To use appweb with HTTP, you need a server certificate. 
+    This command will generate a self-signed test certificate called "self.crt" with a private key "self.key".
+ 
+        me self-signed-cert
+ 
+    To create a CA and then a server cert based on this CA.
+    This command will generate a CA certificate in ca.crt with a CA private key in ca.key. The last minted certificate
+    serial number is in ca.srl.
+ 
+        me ca-cert
+
+    To generate a certificate signed by the test CA.
+    This will generate a certificate in "test.crt" with a private key in "test.key".
+
+        me test-cert
+
+    To generate DH parameters
+
+        me dhparams
+
+    For all cert targets:
+
+        me generate-certs
+ */
+
+Me.load({
+    mixin: `
+        function ossl(command, input) {
+            trace('Run', 'openssl ' + command)
+            let cmd = Cmd()
+            cmd.env = {BIN: me.dir.bin}
+            let result = cmd.start('openssl ' + command, {detach: true})
+            if (input) {
+                cmd.write(Path(input).readString())
+            }
+            cmd.finalize()
+            cmd.wait()
+            if (cmd.status != 0) {
+                throw new IOError('Command failed, status ' + cmd.status + '\n' + cmd.error)
+            }
+        }
+    `,
     targets: {
-        'roots.crt': {
-            type: 'file',
-            files: [ 'roots.crt' ],
-            path: '${BIN}/roots.crt',
+        'generate-certs': {
+            depends: [ 'regenerate-certs' ],
+            enable: 'me.dir.bin.join("ca.crt").exists == false',
+        },
+
+        'regenerate-certs': {
+            depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'get-roots', 'dhparams' ],
+        },
+
+        'get-roots': {
+            action: `
+                let http = Http()
+                http.verify = false
+                http.get('https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt')
+                Path('${BIN}/roots.crt').write(http.response)
+            `
+        }
+
+        /*
+            WARNING: Self-signed server certificate for testing ONLY.
+            Use a self-signed certificate when you just want quick and dirty testing.
+            The browser will say it doesn't recognize this certificate, but that is ok for testing only.
+            Creates a private key in self.key.
+
+            See: http://www.sslshopper.com/article-most-common-openssl-commands.html
+         */
+        'self-signed-cert': {
+            message: 'Make: Self-signed Certificate: self.crt',
+            action: `
+                ossl('req -nodes -x509 -newkey rsa:2048 -keyout ${BIN}/self.key -out ${BIN}/self.crt -days 3560', 'self.ans')
+            `,
+        },
+
+        /*
+             Setup a test certificate authority. Use this if you will be generating multiple certificates for clients and 
+             servers.  NOTE: this is only for test. The certificate authority is not a real entity!
+         */
+        'ca-cert': {
+            message: 'Make: CA Certificate: ca.crt',
+            action: `
+                ossl('genrsa -out ${BIN}/ca.key 2048')
+                ossl('req -config openssl.conf -new -x509 -days 3650 -key ${BIN}/ca.key -out ${BIN}/ca.crt -extensions caExtensions')
+                me.dir.bin.join('ca.srl').write('01\n')
+                me.dir.bin.join('ca.db').write('')
+            `,
+        },
+
+        /*
+            Test cert signed by the test CA above. This is used for test as the server cert and on the client side
+            when validating client certs.
+         */
+        'test-cert': {
+            message: 'Make: Test Certificate: test.crt',
+            action: `
+                ossl('genrsa -out ${BIN}/test.key 2048')
+                ossl('req -new -key ${BIN}/test.key -out ${BIN}/test.csr', 'test.ans')
+                ossl('ca -batch -config openssl.conf -notext -in ${BIN}/test.csr -out ${BIN}/test.crt -extensions server')
+            `,
+        },
+
+        'dhparams': {
+            message: 'Generate: Local DH parameters for OpenSSL ... may take a few minutes',
+            action: `
+                me.dir.bin.join('dh.c').write(Cmd.run('openssl dhparam -C 2048 -out ${BIN}/dh.pem') + '\n')
+            `
+        }
+
+        /*
+            Generate a certificate request to send to a certificate authority like Verisign
+            Generates a server key in "server.key"
+         */
+        'cert-request': {
+            action: `
+                ossl('genrsa -out ${BIN}/server.key 2048')
+                ossl('req -new -key ${BIN}/server.key -out ${BIN}/server.csr', 'test.ans')
+            `,
+        },
+
+        'show-certs': {
+            action: `
+                ossl('x509 -in ${BIN}/ca.crt -noout -text')
+                ossl('x509 -in ${BIN}/test.crt -noout -text')
+                ossl('x509 -in ${BIN}/self.crt -noout -text')
+            `
         }
     }
 })

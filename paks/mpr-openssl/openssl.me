@@ -23,7 +23,7 @@ Me.load({
                     } else if (me.options.gen == 'nmake') {
                         result.defines = ['ME_COM_OPENSSL_PATH=']
                     }
-                    if (me.options.gen == 'make' || me.options.gen == 'nmake') {
+                    if (me.options.gen == 'make' || me.options.gen == 'nmake' || me.options.gen == 'xcode') {
                         result.includes.push('$(ME_COM_OPENSSL_PATH)/include')
                         result.libpaths = ['$(ME_COM_OPENSSL_PATH)']
                     }

@@ -475,7 +475,7 @@ static int parseArgs(int argc, char **argv)
             if (nextArg >= argc) {
                 return showUsage();
             } else {
-                app->timeout = atoi(argv[++nextArg]) * MPR_TICKS_PER_SEC;
+                app->timeout = atoi(argv[++nextArg]) * TPS;
             }
 
         } else if (smatch(argp, "--trace")) {
