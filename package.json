@@ -34,16 +34,16 @@
         "http": "^6.0",
         "mpr": "^6.0",
         "osdep": "^0.8",
-        "pcre": "^1.0",
-        "sqlite": "^1.0",
-        "watchdog": "^0.1"
+        "pcre": "^1.0"
     },
     "optionalDependencies": {
         "certs": "^0.1",
         "est": "^0.6",
         "mpr-est": "^0.1",
         "mpr-openssl": "^0.1",
-        "ssl": "^0.9"
+        "sqlite": "^1.0",
+        "ssl": "^0.9",
+        "watchdog": "^0.1"
     },
     "devDependencies": {
         "me": ">0.8.0"
