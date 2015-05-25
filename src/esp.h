@@ -26,7 +26,7 @@ extern "C" {
 #define ESP_TOK_INCR        1024                        /**< Growth increment for ESP tokens */
 #define ESP_LISTEN          "4000"                      /**< Default listening endpoint for the esp program */
 #define ESP_UNLOAD_TIMEOUT  (10)                        /**< Very short timeout for reloading */
-#define ESP_LIFESPAN        (3600 * MPR_TICKS_PER_SEC)  /**< Default generated content cache lifespan */
+#define ESP_LIFESPAN        (3600 * TPS)                /**< Default generated content cache lifespan */
 #define ESP_COMPILE_JSON    "esp-compile.json"          /**< Compile rules filename */
 
 #if ME_64

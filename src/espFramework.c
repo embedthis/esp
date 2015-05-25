@@ -99,7 +99,7 @@ PUBLIC void espAutoFinalize(HttpConn *conn)
 
 PUBLIC int espCache(HttpRoute *route, cchar *uri, int lifesecs, int flags)
 {
-    httpAddCache(route, NULL, uri, NULL, NULL, 0, lifesecs * MPR_TICKS_PER_SEC, flags);
+    httpAddCache(route, NULL, uri, NULL, NULL, 0, lifesecs * TPS, flags);
     return 0;
 }
 
@@ -1069,7 +1069,7 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired)
 
 PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs)
 {
-    httpUpdateCache(conn, uri, data, lifesecs * MPR_TICKS_PER_SEC);
+    httpUpdateCache(conn, uri, data, lifesecs * TPS);
 }
 
 
