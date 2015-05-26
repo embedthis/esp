@@ -5345,7 +5345,7 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 
 PUBLIC void espSetDefaultDirs(HttpRoute *route)
 {
-    cchar   *documents;
+    cchar   *controllers, *documents, *path;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
@@ -5372,15 +5372,17 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
         documents = route->home;
     }
 #endif
-#if UNUSED
+    
+    /*
+        Detect if a controllers directory exists. Set controllers to "." if absent.
+     */
     controllers = "controllers";
     path = mprJoinPath(route->home, controllers);
     if (!mprPathExists(path, X_OK)) {
         controllers = ".";
     }
-#endif
     httpSetDir(route, "CACHE", 0);
-    httpSetDir(route, "CONTROLLERS", 0);
+    httpSetDir(route, "CONTROLLERS", controllers);
     httpSetDir(route, "CONTENTS", 0);
     httpSetDir(route, "DB", 0);
     httpSetDir(route, "DOCUMENTS", documents);
