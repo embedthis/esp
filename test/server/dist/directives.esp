@@ -11,14 +11,14 @@
     espSetIntParam(conn, "number", x);
 -%>
     <h1>ESP Directives</h1>
-    Today's Message: @@message
-    Lucky Number: @@number
+    Today's Message: %$message
+    Lucky Number: %$number
     Hostname: <%= mprGetDomainName() %>.<%= %s mprGetHostName() %>
     Time: <%= mprGetDate(0) %>
     Formatted Number: <%= %,d 12345678 %>
     Safe Strings: <%= %S "<bold>" %>
-    Safe Variables: @@exploit
-    Weather: @@weather
+    Safe Variables: %$exploit
+    Weather: %$weather
 </body>
 </html>
 

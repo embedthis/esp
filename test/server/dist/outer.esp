@@ -3,6 +3,6 @@
     <title>ESP Test Program</title>
 </head>
 <body>
-    <%@ include "inner.esp" %>
+    <%^ include "inner.esp" %>
 </body>
 </html>
