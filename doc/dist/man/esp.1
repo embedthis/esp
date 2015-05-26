@@ -6,20 +6,17 @@ esp \- ESP Application Generator for Server-Side Web Applications.
     \fB--cipher cipher\fR
     \fB--database DB\fR
     \fB--force\fR
-    \fB--genlink slink.c\fR
     \fB--home dir\fR
     \fB--keep\fR
     \fB--listen [ip:]port\fR
     \fB--log logFile:level\fR
     \fB--name appName\fR
     \fB--noupdate\fR
-    \fB--nodeps\fR
     \fB--optimized\fR
     \fB--quiet\fR
     \fB--platform [path/]os-arch-profile\fR
     \fB--rebuild\fR
-    \fB--routeName name\fR
-    \fB--routePrefix prefix\fR
+    \fB--route pattern\fR
     \fB--single\fR
     \fB--show\fR
     \fB--static\fR
@@ -315,10 +312,6 @@ When used with migrate, this will recreate the database and apply all migrations
 .TP 6
 \fB\--route pattern\fR
 This selects the route by pattern that will be used for the ESP configuration. 
-.TP 6
-\fB\--routePrefix prefix\fR
-This selects the route by prefix that will be used for the ESP configuration. 
-If the route prefix does not match, the first portion of the route pattern is tested against the requested prefix. 
 .TP 6
 \fB\--single\fR
 Generate a controller for a singleton resource instead of a group of resources. A singleton controller omits a list

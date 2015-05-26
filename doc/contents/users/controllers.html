@@ -88,50 +88,7 @@ http://example.com/APP/CONTROLLER/ACTION/ID
 </table>
     <p>The delete route is a POST method variant of remove. The stream route is for WebSockets streaming of
     updates. </p>
-<!-- MOB
 
-        <a id="config"></a>
-        <h2>Configuring Controllers</h2>
-        <p>Controllers may be configured in two ways:</p>
-        <ul>
-            <li>As a stand-alone controller function.</li>
-            <li>As part of an ESP MVC application</li>
-        </ul>
-        <h3>Stand-Alone Controllers</h3>
-        <p>A stand-alone controller is not part of a broader ESP MVC application. It is complete unto itself. 
-        Such controllers are very useful for web services and for discrete interfaces to server-side functions.</p>
-        <p>To define a controller, you create a route in the <em>esp.json</em> file that specifies
-            the route URI, the controller source file and the target mapping from URI to controller action. For example</p>
-        <pre class="code">
-&lt;Route ^/greeting/{action}$ &gt;
-    SetHandler espHandler
-    Source greeting.c
-    Target run greeting-$1
-&lt;/Route&gt;
-</pre>
-        <p>This set of directives will create a route that will invoke the controller <em>controllers/greeting.c</em>.
-        If the <em>/greeting/hello</em> URI is invoked, the <em>hello</em> action function will be invoked.
-        The Target directive defines how the action function name to invoke. You can optionally use the
-        <em>Methods</em> directive to specify the support HTTP method verbs.</p>
-
-        <h3>ESP MVC Applications</h3>
-        <p>The Model-view-controller (MVC) architecture is a well-proven organization for web applications. 
-        A key reason is that MVC apps separate the logic (<em>controllers</em>), from the presentation (<em>views</em>) 
-        and the application's data (<em>models</em>). This clear partition of responsibilities, scales well and helps to 
-        create maintainable applications.</p>
-        <p>In an ESP MVC application, there are typically many <em>controllers</em> located by default 
-        in the <em>controllers</em> directory.
-        <p>ESP MVC applications and their controllers can be easily created via the 
-        <a href="generator.html">esp</a> generator command. The <em>esp</em> command is used to create a bare ESP 
-        MVC application with a directory for controllers, views, databases and other necessary configuration files. 
-        For example:</p> 
-        <pre class="code">esp generate app demo</pre>
-        <p>The generated <em>appweb.conf</em> file will have an EspApp directive that defines the application and 
-        creates an initial set of MVC routes for the application.
-
-        For example:</p>
-        <pre class="code">EspApp prefix="/store" config="applications/store/esp.json"</pre>
--->
             <a id="actions"></a>
             <h2>Actions</h2>
             <p>Actions are where the controller does its work. In ESP, actions are simple "C" functions and thus

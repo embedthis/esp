@@ -14,20 +14,17 @@ ESP(1)                           User Commands                          ESP(1)
            <B>--cipher cipher</B>
            <B>--database DB</B>
            <B>--force</B>
-           <B>--genlink slink.c</B>
            <B>--home dir</B>
            <B>--keep</B>
            <B>--listen [ip:]port</B>
            <B>--log logFile:level</B>
            <B>--name appName</B>
            <B>--noupdate</B>
-           <B>--nodeps</B>
            <B>--optimized</B>
            <B>--quiet</B>
            <B>--platform [path/]os-arch-profile</B>
            <B>--rebuild</B>
-           <B>--routeName name</B>
-           <B>--routePrefix prefix</B>
+           <B>--route pattern</B>
            <B>--single</B>
            <B>--show</B>
            <B>--static</B>
@@ -322,12 +319,6 @@ ESP(1)                           User Commands                          ESP(1)
              This  selects  the route by pattern that will be used for the ESP
              configuration.
 
-       <B>--routePrefix prefix</B>
-             This selects the route by prefix that will be used  for  the  ESP
-             configuration.   If  the  route  prefix does not match, the first
-             portion of the route pattern is tested against the requested pre-
-             fix.
-
        <B>--single</B>
              Generate a controller for a singleton resource instead of a group
              of resources. A singleton controller omits a list action.
@@ -336,22 +327,22 @@ ESP(1)                           User Commands                          ESP(1)
              Display the route table to the console.
 
        <B>--static</B>
-             Use static linking when building ESP  applications.  This  causes
+             Use  static  linking  when building ESP applications. This causes
              esp to create archive libraries instead of shared libraries.
 
        <B>--symbols</B>
              Compile for debug with symbols.
 
        <B>--table name</B>
-             Override  the  database table name when generating tables, migra-
+             Override the database table name when generating  tables,  migra-
              tions or scaffolds. This is useful to request a plural version of
              the model name. Alternatively, specify the model name when gener-
-             ating the scaffold, table or migration with  the  desired  plural
+             ating  the  scaffold,  table or migration with the desired plural
              suffix. For example: "-s" or "-ies".
 
        <B>--trace traceFile:level</B>
-             Specify  a file for trace messages.  The syntax is: <B>"--trace tra-</B>
-             <B>ceName[:traceLevel]"</B>.   Level  3  will  trace  the  request   and
+             Specify a file for trace messages.  The syntax is: <B>"--trace  tra-</B>
+             <B>ceName[:traceLevel]"</B>.    Level  3  will  trace  the  request  and
              response headers.
 
        <B>--verbose </B>or <B>-v</B>
@@ -364,7 +355,7 @@ ESP(1)                           User Commands                          ESP(1)
        Report bugs to dev@embedthis.com.
 
 <B>COPYRIGHT</B>
-       Copyright  (C)  Embedthis  Software.  Embedthis  ESP  is a trademark of
+       Copyright (C) Embedthis Software.  Embedthis  ESP  is  a  trademark  of
        Embedthis Software.
 
 esp                              November 2014                          ESP(1)

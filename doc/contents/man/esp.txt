@@ -10,20 +10,17 @@ SYNOPSIS
            --cipher cipher
            --database DB
            --force
-           --genlink slink.c
            --home dir
            --keep
            --listen [ip:]port
            --log logFile:level
            --name appName
            --noupdate
-           --nodeps
            --optimized
            --quiet
            --platform [path/]os-arch-profile
            --rebuild
-           --routeName name
-           --routePrefix prefix
+           --route pattern
            --single
            --show
            --static
@@ -337,12 +334,6 @@ OPTIONS
              This  selects  the route by pattern that will be used for the ESP
              configuration.
 
-       --routePrefix prefix
-             This selects the route by prefix that will be used  for  the  ESP
-             configuration.   If  the  route  prefix does not match, the first
-             portion of the route pattern is tested against the requested pre-
-             fix.
-
        --single
              Generate a controller for a singleton resource instead of a group
              of resources. A singleton controller omits a list action.
@@ -351,22 +342,22 @@ OPTIONS
              Display the route table to the console.
 
        --static
-             Use static linking when building ESP  applications.  This  causes
+             Use  static  linking  when building ESP applications. This causes
              esp to create archive libraries instead of shared libraries.
 
        --symbols
              Compile for debug with symbols.
 
        --table name
-             Override  the  database table name when generating tables, migra-
+             Override the database table name when generating  tables,  migra-
              tions or scaffolds. This is useful to request a plural version of
              the model name. Alternatively, specify the model name when gener-
-             ating the scaffold, table or migration with  the  desired  plural
+             ating  the  scaffold,  table or migration with the desired plural
              suffix. For example: "-s" or "-ies".
 
        --trace traceFile:level
-             Specify  a file for trace messages.  The syntax is: "--trace tra-
-             ceName[:traceLevel]".   Level  3  will  trace  the  request   and
+             Specify a file for trace messages.  The syntax is: "--trace  tra-
+             ceName[:traceLevel]".    Level  3  will  trace  the  request  and
              response headers.
 
        --verbose or -v
@@ -381,7 +372,7 @@ REPORTING BUGS
 
 
 COPYRIGHT
-       Copyright  (C)  Embedthis  Software.  Embedthis  ESP  is a trademark of
+       Copyright (C) Embedthis Software.  Embedthis  ESP  is  a  trademark  of
        Embedthis Software.
 
 
