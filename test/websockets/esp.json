@@ -11,14 +11,14 @@
                 'http://127.0.0.1:4100',
                 'https://127.0.0.1:4443',
             ],
-            ssl: {
-                key: '../../src/certs/test.key',
-                certificate: '../../src/certs/test.crt',
-            },
             "log": {
                 "location": "error.log",
                 "level": 4
             },
+        },
+        ssl: {
+            key: '${BIN_DIR}/test.key',
+            certificate: '${BIN_DIR}/test.crt',
         },
         "trace": {
             "location": "trace.log",
