@@ -797,12 +797,14 @@ static void clean(int argc, char **argv)
         cacheDir = httpGetDir(route, "CACHE");
         if (cacheDir) {
             if (mprPathExists(cacheDir, X_OK)) {
-                trace("Clean", "%s", mprGetRelPath(cacheDir, 0));
                 files = mprGetPathFiles(cacheDir, MPR_PATH_RELATIVE);
+                if (mprGetListLength(files) > 0) {
+                    qtrace("Clean", "%s", mprGetRelPath(cacheDir, 0));
+                }
                 for (nextFile = 0; (dp = mprGetNextItem(files, &nextFile)) != 0; ) {
                     path = mprJoinPath(cacheDir, dp->name);
                     if (mprPathExists(path, R_OK)) {
-                        trace("Clean", "%s", mprGetRelPath(path, 0));
+                        qtrace("Clean", "%s", mprGetRelPath(path, 0));
                         mprDeletePath(path);
                     }
                 }
@@ -2610,12 +2612,8 @@ static void trace(cchar *tag, cchar *fmt, ...)
     if (!app->quiet) {
         va_start(args, fmt);
         msg = sfmtv(fmt, args);
-        if (mprGetLogLevel() > 0) {
-            mprPrintf("%s: %s\n", tag, msg);
-        } else {
             tag = sfmt("[%s]", tag);
             mprPrintf("%12s %s\n", tag, msg);
-        }
         va_end(args);
     }
 }
@@ -2632,12 +2630,8 @@ static void vtrace(cchar *tag, cchar *fmt, ...)
     if (app->verbose && !app->quiet) {
         va_start(args, fmt);
         msg = sfmtv(fmt, args);
-        if (mprGetLogLevel() > 0) {
-            mprPrintf("%s: %s\n", tag, msg);
-        } else {
             tag = sfmt("[%s]", tag);
             mprPrintf("%12s %s\n", tag, msg);
-        }
         va_end(args);
     }
 }
