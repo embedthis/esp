@@ -370,7 +370,7 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "noupdate")) {
             app->noupdate = 1;
 
-        } else if (smatch(argp, "optimized")) {
+        } else if (smatch(argp, "optimize") || smatch(argp, "optimized")) {
             app->compileMode = ESP_COMPILE_OPTIMIZED;
 
 #if DEPRECATED || 1
@@ -2508,7 +2508,7 @@ static void usageError()
     "    --log logFile:level        # Log to file at verbosity level (0-5)\n"
     "    --name appName             # Name for the app when combining\n"
     "    --noupdate                 # Do not update the esp.json\n"
-    "    --optimize                 # Compile optimized without symbols\n"
+    "    --optimized                # Compile optimized without symbols\n"
     "    --quiet                    # Don't emit trace\n"
     "    --platform os-arch-profile # Target platform\n"
     "    --rebuild                  # Force a rebuild\n"
