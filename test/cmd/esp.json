@@ -9,10 +9,10 @@
                 'http://127.0.0.1:4100',
                 'https://127.0.0.1:4443'
             ],
-            ssl: {
-                certificate: '../../src/certs/test.crt',
-                key: '../../src/certs/test.key'
-            },
+        },
+        ssl: {
+            certificate: '${BIN_DIR}/test.crt',
+            key: '${BIN_DIR}/test.key'
         },
         auth: {
             roles: {
