@@ -1758,15 +1758,12 @@ static void compile(int argc, char **argv)
     app->built = mprCreateHash(0, MPR_HASH_STABLE | MPR_HASH_STATIC_VALUES);
     for (ITERATE_ITEMS(app->routes, route, next)) {
         eroute = route->eroute;
-        if (!eroute->compiled) {
-            eroute->compiled = 1;
             if (app->combine) {
                 compileCombined(route);
             } else {
                 compileItems(route);
             }
         }
-    }
     app->built = 0;
 
     /*

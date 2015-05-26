@@ -185,7 +185,6 @@ typedef struct EspRoute {
     cchar           *link;                  /**< Link template */
     cchar           *searchPath;            /**< Search path to use when locating compiler/linker */
     cchar           *winsdk;                /**< Windows SDK */
-    int             compiled;               /**< Route has been compiled */
     int             combine;                /**< Combine C source into a single file */
     int             compileMode;            /**< Compile the application debug or release mode */
 #if DEPRECATED || 1
