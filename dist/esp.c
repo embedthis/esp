@@ -370,7 +370,7 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "noupdate")) {
             app->noupdate = 1;
 
-        } else if (smatch(argp, "optimized")) {
+        } else if (smatch(argp, "optimize") || smatch(argp, "optimized")) {
             app->compileMode = ESP_COMPILE_OPTIMIZED;
 
 #if DEPRECATED || 1
@@ -382,7 +382,7 @@ static int parseArgs(int argc, char **argv)
             if (argind >= argc) {
                 usageError();
             } else {
-                app->platform = slower(argv[++argind]);
+                app->platform = sclone(argv[++argind]);
             }
 
         } else if (smatch(argp, "quiet") || smatch(argp, "q")) {
@@ -1736,12 +1736,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
 static void compile(int argc, char **argv)
 {
     HttpRoute   *route;
-    EspRoute    *eroute;
     MprKey      *kp;
-#if DEPRECATED
-    MprFile     *file;
-    cchar       *name;
-#endif
     int         next;
 
     if (app->error) {
@@ -1750,14 +1745,8 @@ static void compile(int argc, char **argv)
     app->combine = app->eroute->combine;
     vtrace("Info", "Compiling in %s mode", app->combine ? "combine" : "discrete");
 
-#if DEPRECATED
-    if (app->genlink) {
-        app->slink = mprCreateList(0, MPR_LIST_STABLE);
-    }
-#endif
     app->built = mprCreateHash(0, MPR_HASH_STABLE | MPR_HASH_STATIC_VALUES);
     for (ITERATE_ITEMS(app->routes, route, next)) {
-        eroute = route->eroute;
         if (app->combine) {
             compileCombined(route);
         } else {
@@ -1774,33 +1763,6 @@ static void compile(int argc, char **argv)
             fail("Cannot find target %s to compile", kp->key);
         }
     }
-#if DEPRECATE
-    if (app->slink) {
-        qtrace("Generate", app->genlink);
-        if ((file = mprOpenFile(app->genlink, O_WRONLY | O_TRUNC | O_CREAT | O_BINARY, 0664)) == 0) {
-            fail("Cannot open %s", app->combinePath);
-            return;
-        }
-        mprWriteFileFmt(file, "/*\n    %s -- Static Initialization\n */\n", app->genlink);
-        mprWriteFileFmt(file, "#include \"mpr.h\"\n\n");
-        mprWriteFileFmt(file, "#include \"esp.h\"\n\n");
-        for (ITERATE_ITEMS(app->slink, route, next)) {
-            name = app->name ? app->name : mprGetPathBase(route->documents);
-            mprWriteFileFmt(file, "extern int esp_app_%s_combine(HttpRoute *route, MprModule *module);", name);
-            mprWriteFileFmt(file, "    /* SOURCE %s */\n",
-                mprGetRelPath(mprJoinPath(httpGetDir(route, "CACHE"), sjoin(name, ".c", NULL)), NULL));
-        }
-        mprWriteFileFmt(file, "\nPUBLIC void espStaticInitialize()\n{\n");
-        for (ITERATE_ITEMS(app->slink, route, next)) {
-            name = app->name ? app->name : mprGetPathBase(route->documents);
-            mprWriteFileFmt(file, "    espStaticInitialize(esp_app_%s_combine, \"%s\", \"%s\");\n", name, name, 
-                route->pattern);
-        }
-        mprWriteFileFmt(file, "}\n");
-        mprCloseFile(file);
-        app->slink = 0;
-    }
-#endif
 }
 
 
@@ -2508,7 +2470,7 @@ static void usageError()
     "    --log logFile:level        # Log to file at verbosity level (0-5)\n"
     "    --name appName             # Name for the app when combining\n"
     "    --noupdate                 # Do not update the esp.json\n"
-    "    --optimize                 # Compile optimized without symbols\n"
+    "    --optimized                # Compile optimized without symbols\n"
     "    --quiet                    # Don't emit trace\n"
     "    --platform os-arch-profile # Target platform\n"
     "    --rebuild                  # Force a rebuild\n"
