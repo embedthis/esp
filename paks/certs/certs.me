@@ -25,6 +25,12 @@
 
         me test-cert
 
+    To generate an Elliptic Curve certificate signed by the test CA.
+    This will generate a certificate in "ec.crt" with a private key in "ec.key".
+
+        me ec-cert
+
+
     To generate DH parameters
 
         me dhparams
@@ -60,18 +66,20 @@ Me.load({
         }
     `,
     targets: {
-        'generate-certs': {
-            build: true,
-            depends: [ 'regenerate-certs' ],
-            enable: 'me.dir.bin.join("ca.crt").exists == false',
+        'install-certs': {
+            type: 'file',
+            path: '${BIN}',
+            files: [ 'samples/**' ],
+            ifdef: [ 'ssl' ],
         },
 
-        'regenerate-certs': {
-            depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'get-roots', 'dhparams' ],
+        'generate-certs': {
+            depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'ec-cert', 'dhparams' ],
         },
 
         'get-roots': {
             action: `
+                /* WARNING: the default download has V1 certs which MatrixSSL cannot handle */
                 let http = Http()
                 http.verify = false
                 http.get('https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt')
@@ -90,7 +98,8 @@ Me.load({
         'self-signed-cert': {
             message: 'Make: Self-signed Certificate: self.crt',
             action: `
-                ossl('req -nodes -x509 -newkey rsa:${settings.certs.bits} -keyout ${BIN}/self.key -out ${BIN}/self.crt -days ${settings.certs.days}', 'self.ans')
+                ossl('genrsa -out ${BIN}/self.key ${settings.certs.bits}')
+                ossl('req -new -x509 -days ${settings.certs.days} -key ${BIN}/self.key -out ${BIN}/self.crt', 'self.ans')
             `,
         },
 
@@ -119,6 +128,15 @@ Me.load({
                 ossl('req -new -key ${BIN}/test.key -out ${BIN}/test.csr', 'test.ans')
                 ossl('ca -batch -config openssl.conf -notext -in ${BIN}/test.csr -out ${BIN}/test.crt -extensions server')
             `,
+        },
+
+        'ec-cert': {
+            message: 'Make: EC Test Certificate: ec.crt',
+            action: `
+                ossl('ecparam -genkey -name prime256v1 -out ${BIN}/ec.key')
+                ossl('req -new -key ${BIN}/ec.key -out ${BIN}/ec.csr', 'ec.ans')
+                ossl('req -x509 -days 365 -key ${BIN}/ec.key -in ${BIN}/ec.csr -out ${BIN}/ec.crt')
+            `
         },
 
         'dhparams': {
@@ -158,6 +176,6 @@ Me.load({
                 cp *.crt *.key *.pem ../../${platform.name}/bin
             `
             enable: '${platform.profile} = "mine"'
-        }
+        },
     }
 })

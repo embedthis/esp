@@ -35,7 +35,8 @@
             "certs.me",
             "ossl",
             "*.ans",
-            "*.conf"
+            "*.conf",
+            "samples/**"
         ],
         "origin": "embedthis/certs"
     }

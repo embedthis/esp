@@ -23117,6 +23117,12 @@ static char *socketState(MprSocket *sp)
 }
 
 
+PUBLIC bool mprGetSocketResumed(MprSocket *sp)
+{
+    return sp->flags & MPR_SOCKET_RESUMED ? 1 : 0;
+}
+
+
 PUBLIC char *mprGetSocketState(MprSocket *sp)
 {
     if (sp->provider == 0) {
@@ -23673,7 +23679,6 @@ static void manageSsl(MprSsl *ssl, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(ssl->providerName);
         mprMark(ssl->provider);
-        mprMark(ssl->key);
         mprMark(ssl->keyFile);
         mprMark(ssl->certFile);
         mprMark(ssl->caFile);
@@ -23682,6 +23687,7 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->config);
         mprMark(ssl->dhFile);
         mprMark(ssl->mutex);
+        mprMark(ssl->revokeList);
     }
 }
 
@@ -23715,6 +23721,8 @@ PUBLIC MprSsl *mprCreateSsl(int server)
             path = mprJoinPath(mprGetAppDir(), ME_SSL_ROOTS_CERT);
             if (mprPathExists(path, R_OK)) {
                 ssl->caFile = path;
+            } else {
+                mprLog("error mpr", 0, "Cannot locate root certificates file: %s", path);
             }
         }
     }
@@ -23750,23 +23758,6 @@ PUBLIC int mprLoadSsl()
     if (ss->providers) {
         return 0;
     }
-#if UNUSED
-    cchar               *path;
-    path = mprJoinPath(mprGetAppDir(), "libmprssl");
-    if (!mprPathExists(path, R_OK)) {
-        path = mprSearchForModule("libmprssl");
-    }
-    if (!path) {
-        return MPR_ERR_CANT_FIND;
-    }
-    if ((mp = mprCreateModule("sslModule", path, "mprSslInit", NULL)) == 0) {
-        return MPR_ERR_CANT_CREATE;
-    }
-    if (mprLoadModule(mp) < 0) {
-        mprLog("error mpr", 0, "Cannot load %s", path);
-        return MPR_ERR_CANT_READ;
-    }
-#endif
     if ((mp = mprCreateModule("ssl", "builtin", "mprSslInit", NULL)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
@@ -23913,6 +23904,14 @@ PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider)
 }
 
 
+PUBLIC void mprSetSslRevokeList(MprSsl *ssl, cchar *revokeList)
+{
+    assert(ssl);
+    ssl->revokeList = (revokeList && *revokeList) ? sclone(revokeList) : 0;
+    ssl->changed = 1;
+}
+
+
 PUBLIC void mprVerifySslPeer(MprSsl *ssl, bool on)
 {
     if (ssl) {
@@ -23983,7 +23982,8 @@ PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len)
     nciphers = sizeof(mprCiphers) / sizeof(MprCipher);
     result = mprAlloc((nciphers + 1) * sizeof(int));
 
-    for (i = 0; (cipher = stok(sclone(ciphers), ":, \t", &next)) != 0; ) {
+    next = sclone(ciphers);
+    for (i = 0; (cipher = stok(next, ":, \t", &next)) != 0; ) {
         if ((code = mprGetSslCipherCode(cipher)) == 0) {
             mprLog("error mpr", 0, "Cannot find cipher \"%s\"", cipher);
             continue;
@@ -23999,6 +23999,7 @@ PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len)
     return 0;
 #endif
 }
+
 
 /*
     @copy   default

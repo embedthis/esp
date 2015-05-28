@@ -7530,9 +7530,7 @@ PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider);
 #define MPR_SOCKET_SERVER           0x400   /**< Socket is on the server-side */
 #define MPR_SOCKET_BUFFERED_READ    0x800   /**< Socket has buffered read data (in SSL stack) */
 #define MPR_SOCKET_BUFFERED_WRITE   0x1000  /**< Socket has buffered write data (in SSL stack) */
-#if UNUSED
-#define MPR_SOCKET_CHECKED          0x2000  /**< Peer certificate has been checked */
-#endif
+#define MPR_SOCKET_RESUMED          0x2000  /**< SSL session has been resumed */
 #define MPR_SOCKET_DISCONNECTED     0x4000  /**< The mprDisconnectSocket has been called */
 #define MPR_SOCKET_HANDSHAKING      0x8000  /**< Doing an SSL handshake */
 
@@ -7747,6 +7745,14 @@ PUBLIC int mprGetSocketInfo(cchar *ip, int port, int *family, int *protocol, str
     @stability Stable
  */
 PUBLIC int mprGetSocketPort(MprSocket *sp);
+
+/**
+    Test if an SSL socket session has been resumed
+    @return True if the session has been resumed
+    @stability Prototype
+    @ingroup MprSocket
+ */
+PUBLIC bool mprGetSocketResumed(MprSocket *sp);
 
 /**
     Get the socket state
@@ -8068,9 +8074,9 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
 typedef struct MprSsl {
     cchar           *providerName;      /**< SSL provider to use - null if default */
     struct MprSocketProvider *provider; /**< Cached SSL provider to use */
-    cchar           *key;               /**< Key string */
     cchar           *keyFile;           /**< Alternatively, locate the key in a file */
-    cchar           *certFile;          /**< Alternatively, locate the cert in a file */
+    cchar           *certFile;          /**< Certificate filename */
+    cchar           *revokeList;        /**< Certificate revocation list */
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
@@ -8232,6 +8238,15 @@ PUBLIC void mprSetSslProtocols(struct MprSsl *ssl, int protocols);
     @stability Stable
  */
 PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider);
+
+/**
+    Define a list of certificates to revoke
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param revokeList Path to the SSL certificate revocation list
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslRevokeList(struct MprSsl *ssl, cchar *revokeList);
 
 /**
     Require verification of peer certificates
