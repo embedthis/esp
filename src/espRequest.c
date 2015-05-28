@@ -925,7 +925,7 @@ static int defineApp(HttpRoute *route, cchar *path)
     httpAddRouteIndex(route, "index.esp");
     httpAddRouteIndex(route, "index.html");
     httpSetRouteXsrf(route, 1);
-    mprLog("info esp", 2, "ESP app: %s", path);
+    mprLog("info esp", 3, "ESP app: %s", path);
     return 0;
 }
 
