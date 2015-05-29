@@ -89,7 +89,9 @@ ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)/usr/src/$(NAME)-$(VERSION)
 
 TARGETS               += $(BUILD)/bin/esp-compile.json
 TARGETS               += $(BUILD)/bin/esp.out
-TARGETS               += $(BUILD)/bin/roots.crt
+ifeq ($(ME_COM_SSL),1)
+    TARGETS           += $(BUILD)/bin
+endif
 TARGETS               += $(BUILD)/bin/espman.out
 
 unexport CDPATH
@@ -143,13 +145,13 @@ clean:
 	rm -f "$(BUILD)/obj/watchdog.o"
 	rm -f "$(BUILD)/bin/esp-compile.json"
 	rm -f "$(BUILD)/bin/esp.out"
+	rm -f "$(BUILD)/bin"
 	rm -f "$(BUILD)/bin/libesp.out"
 	rm -f "$(BUILD)/bin/libhttp.out"
 	rm -f "$(BUILD)/bin/libmpr.out"
 	rm -f "$(BUILD)/bin/libpcre.out"
 	rm -f "$(BUILD)/bin/libsql.out"
 	rm -f "$(BUILD)/bin/libopenssl.a"
-	rm -f "$(BUILD)/bin/roots.crt"
 	rm -f "$(BUILD)/bin/espman.out"
 
 clobber: clean
@@ -633,15 +635,35 @@ $(BUILD)/bin/esp.out: $(DEPS_41)
 	@echo '      [Link] $(BUILD)/bin/esp.out'
 	$(CC) -o $(BUILD)/bin/esp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_41) $(LIBS_41) $(LIBS_41) $(LIBS) -lestssl -Wl,-r 
 
+ifeq ($(ME_COM_SSL),1)
 #
-#   roots.crt
+#   install-certs
 #
-DEPS_42 += src/certs/roots.crt
+DEPS_42 += src/certs/samples/ca.crt
+DEPS_42 += src/certs/samples/ca.key
+DEPS_42 += src/certs/samples/dh.pem
+DEPS_42 += src/certs/samples/ec.crt
+DEPS_42 += src/certs/samples/ec.key
+DEPS_42 += src/certs/samples/roots.crt
+DEPS_42 += src/certs/samples/self.crt
+DEPS_42 += src/certs/samples/self.key
+DEPS_42 += src/certs/samples/test.crt
+DEPS_42 += src/certs/samples/test.key
 
-$(BUILD)/bin/roots.crt: $(DEPS_42)
-	@echo '      [Copy] $(BUILD)/bin/roots.crt'
+$(BUILD)/bin: $(DEPS_42)
+	@echo '      [Copy] $(BUILD)/bin'
 	mkdir -p "$(BUILD)/bin"
-	cp src/certs/roots.crt $(BUILD)/bin/roots.crt
+	cp src/certs/samples/ca.crt $(BUILD)/bin/ca.crt
+	cp src/certs/samples/ca.key $(BUILD)/bin/ca.key
+	cp src/certs/samples/dh.pem $(BUILD)/bin/dh.pem
+	cp src/certs/samples/ec.crt $(BUILD)/bin/ec.crt
+	cp src/certs/samples/ec.key $(BUILD)/bin/ec.key
+	cp src/certs/samples/roots.crt $(BUILD)/bin/roots.crt
+	cp src/certs/samples/self.crt $(BUILD)/bin/self.crt
+	cp src/certs/samples/self.key $(BUILD)/bin/self.key
+	cp src/certs/samples/test.crt $(BUILD)/bin/test.crt
+	cp src/certs/samples/test.key $(BUILD)/bin/test.key
+endif
 
 #
 #   watchdog

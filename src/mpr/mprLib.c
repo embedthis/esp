@@ -23966,7 +23966,7 @@ PUBLIC int mprGetSslCipherCode(cchar *cipher)
         }
     }
 #endif
-    return 0;
+    return MPR_ERR_CANT_FIND;
 }
 
 
@@ -23984,7 +23984,7 @@ PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len)
 
     next = sclone(ciphers);
     for (i = 0; (cipher = stok(next, ":, \t", &next)) != 0; ) {
-        if ((code = mprGetSslCipherCode(cipher)) == 0) {
+        if ((code = mprGetSslCipherCode(cipher)) <= 0) {
             mprLog("error mpr", 0, "Cannot find cipher \"%s\"", cipher);
             continue;
         }

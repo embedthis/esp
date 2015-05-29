@@ -82,7 +82,9 @@ ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)$(NAME)-$(VERSION)
 TARGETS               += init
 TARGETS               += $(BUILD)/bin/esp-compile.json
 TARGETS               += $(BUILD)/bin/esp
-TARGETS               += $(BUILD)/bin/roots.crt
+ifeq ($(ME_COM_SSL),1)
+    TARGETS           += $(BUILD)/bin
+endif
 TARGETS               += $(BUILD)/bin/espman
 
 unexport CDPATH
@@ -133,13 +135,13 @@ clean:
 	rm -f "$(BUILD)/obj/watchdog.o"
 	rm -f "$(BUILD)/bin/esp-compile.json"
 	rm -f "$(BUILD)/bin/esp"
+	rm -f "$(BUILD)/bin"
 	rm -f "$(BUILD)/bin/libesp.so"
 	rm -f "$(BUILD)/bin/libhttp.so"
 	rm -f "$(BUILD)/bin/libmpr.so"
 	rm -f "$(BUILD)/bin/libpcre.so"
 	rm -f "$(BUILD)/bin/libsql.so"
 	rm -f "$(BUILD)/bin/libopenssl.a"
-	rm -f "$(BUILD)/bin/roots.crt"
 	rm -f "$(BUILD)/bin/espman"
 
 clobber: clean
@@ -682,15 +684,35 @@ $(BUILD)/bin/esp: $(DEPS_42)
 	@echo '      [Link] $(BUILD)/bin/esp'
 	$(CC) -o $(BUILD)/bin/esp $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_42) $(LIBS_42) $(LIBS_42) $(LIBS) $(LIBS) 
 
+ifeq ($(ME_COM_SSL),1)
 #
-#   roots.crt
+#   install-certs
 #
-DEPS_43 += src/certs/roots.crt
+DEPS_43 += src/certs/samples/ca.crt
+DEPS_43 += src/certs/samples/ca.key
+DEPS_43 += src/certs/samples/dh.pem
+DEPS_43 += src/certs/samples/ec.crt
+DEPS_43 += src/certs/samples/ec.key
+DEPS_43 += src/certs/samples/roots.crt
+DEPS_43 += src/certs/samples/self.crt
+DEPS_43 += src/certs/samples/self.key
+DEPS_43 += src/certs/samples/test.crt
+DEPS_43 += src/certs/samples/test.key
 
-$(BUILD)/bin/roots.crt: $(DEPS_43)
-	@echo '      [Copy] $(BUILD)/bin/roots.crt'
+$(BUILD)/bin: $(DEPS_43)
+	@echo '      [Copy] $(BUILD)/bin'
 	mkdir -p "$(BUILD)/bin"
-	cp src/certs/roots.crt $(BUILD)/bin/roots.crt
+	cp src/certs/samples/ca.crt $(BUILD)/bin/ca.crt
+	cp src/certs/samples/ca.key $(BUILD)/bin/ca.key
+	cp src/certs/samples/dh.pem $(BUILD)/bin/dh.pem
+	cp src/certs/samples/ec.crt $(BUILD)/bin/ec.crt
+	cp src/certs/samples/ec.key $(BUILD)/bin/ec.key
+	cp src/certs/samples/roots.crt $(BUILD)/bin/roots.crt
+	cp src/certs/samples/self.crt $(BUILD)/bin/self.crt
+	cp src/certs/samples/self.key $(BUILD)/bin/self.key
+	cp src/certs/samples/test.crt $(BUILD)/bin/test.crt
+	cp src/certs/samples/test.key $(BUILD)/bin/test.key
+endif
 
 #
 #   watchdog
@@ -758,7 +780,7 @@ installBinary: $(DEPS_47)
 	ln -s "$(ME_VAPP_PREFIX)/bin/espman" "$(ME_BIN_PREFIX)/espman" ; \
 	if [ "$(ME_COM_SSL)" = 1 ]; then true ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \
-	cp src/certs/roots.crt $(ME_VAPP_PREFIX)/bin/roots.crt ; \
+	cp $(BUILD)/bin/roots.crt $(ME_VAPP_PREFIX)/bin/roots.crt ; \
 	fi ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \
 	cp $(BUILD)/bin/esp-compile.json $(ME_VAPP_PREFIX)/bin/esp-compile.json ; \

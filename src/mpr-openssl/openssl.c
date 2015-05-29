@@ -39,6 +39,122 @@
 #define OPENSSL_DEFAULT_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
 
 /*
+    Map Iana names to OpenSSL names
+ */
+typedef struct CipherMap {
+    int     code;
+    cchar   *name;
+    cchar   *ossName;
+} CipherMap;
+
+static CipherMap cipherMap[] = {
+    { 0x0004, "TLS_RSA_WITH_RC4_128_MD5", "RC4-MD5" },
+    { 0x0005, "TLS_RSA_WITH_RC4_128_SHA", "RC4-SHA" },
+    { 0x0007, "TLS_RSA_WITH_IDEA_CBC_SHA", "IDEA-CBC-SHA" },
+    { 0x0009, "TLS_RSA_WITH_DES_CBC_SHA", "DES-CBC-SHA" },
+    { 0x000A, "TLS_RSA_WITH_3DES_EDE_CBC_SHA", "DES-CBC3-SHA" },
+    { 0x000C, "TLS_DH_DSS_WITH_DES_CBC_SHA", "DH-DSS-DES-CBC-SHA" },
+    { 0x000D, "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA", "DH-DSS-DES-CBC3-SHA" },
+    { 0x000F, "TLS_DH_RSA_WITH_DES_CBC_SHA", "DH-RSA-DES-CBC-SHA" },
+    { 0x0010, "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA", "DH-RSA-DES-CBC3-SHA" },
+    { 0x0012, "TLS_DHE_DSS_WITH_DES_CBC_SHA", "EDH-DSS-DES-CBC-SHA" },
+    { 0x0013, "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA", "EDH-DSS-DES-CBC3-SHA" },
+    { 0x0015, "TLS_DHE_RSA_WITH_DES_CBC_SHA", "EDH-RSA-DES-CBC-SHA" },
+    { 0x0016, "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA", "EDH-RSA-DES-CBC3-SHA" },
+    { 0x002F, "TLS_RSA_WITH_AES_128_CBC_SHA", "AES128-SHA" },
+    { 0x0030, "TLS_DH_DSS_WITH_AES_128_CBC_SHA", "DH-DSS-AES128-SHA" },
+    { 0x0031, "TLS_DH_RSA_WITH_AES_128_CBC_SHA", "DH-RSA-AES128-SHA" },
+    { 0x0032, "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "DHE-DSS-AES128-SHA" },
+    { 0x0033, "TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "DHE-RSA-AES128-SHA" },
+    { 0x0035, "TLS_RSA_WITH_AES_256_CBC_SHA", "AES256-SHA" },
+    { 0x0036, "TLS_DH_DSS_WITH_AES_256_CBC_SHA", "DH-DSS-AES256-SHA" },
+    { 0x0037, "TLS_DH_RSA_WITH_AES_256_CBC_SHA", "DH-RSA-AES256-SHA" },
+    { 0x0038, "TLS_DHE_DSS_WITH_AES_256_CBC_SHA", "DHE-DSS-AES256-SHA" },
+    { 0x0039, "TLS_DHE_RSA_WITH_AES_256_CBC_SHA", "DHE-RSA-AES256-SHA" },
+    { 0x003C, "TLS_RSA_WITH_AES_128_CBC_SHA256", "AES128-SHA256" },
+    { 0x003D, "TLS_RSA_WITH_AES_256_CBC_SHA256", "AES256-SHA256" },
+    { 0x003E, "TLS_DH_DSS_WITH_AES_128_CBC_SHA256", "DH-DSS-AES128-SHA256" },
+    { 0x003F, "TLS_DH_RSA_WITH_AES_128_CBC_SHA256", "DH-RSA-AES128-SHA256" },
+    { 0x0040, "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256", "DHE-DSS-AES128-SHA256" },
+    { 0x0041, "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA", "CAMELLIA128-SHA" },
+    { 0x0042, "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA", "DH-DSS-CAMELLIA128-SHA" },
+    { 0x0043, "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA", "DH-RSA-CAMELLIA128-SHA" },
+    { 0x0044, "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA", "DHE-DSS-CAMELLIA128-SHA" },
+    { 0x0045, "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA", "DHE-RSA-CAMELLIA128-SHA" },
+    { 0x0067, "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256", "DHE-RSA-AES128-SHA256" },
+    { 0x0068, "TLS_DH_DSS_WITH_AES_256_CBC_SHA256", "DH-DSS-AES256-SHA256" },
+    { 0x0069, "TLS_DH_RSA_WITH_AES_256_CBC_SHA256", "DH-RSA-AES256-SHA256" },
+    { 0x006A, "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256", "DHE-DSS-AES256-SHA256" },
+    { 0x006B, "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256", "DHE-RSA-AES256-SHA256" },
+    { 0x0084, "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA", "CAMELLIA256-SHA" },
+    { 0x0085, "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA", "DH-DSS-CAMELLIA256-SHA" },
+    { 0x0086, "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA", "DH-RSA-CAMELLIA256-SHA" },
+    { 0x0087, "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA", "DHE-DSS-CAMELLIA256-SHA" },
+    { 0x0088, "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA", "DHE-RSA-CAMELLIA256-SHA" },
+    { 0x008A, "TLS_PSK_WITH_RC4_128_SHA", "PSK-RC4-SHA" },
+    { 0x008B, "TLS_PSK_WITH_3DES_EDE_CBC_SHA", "PSK-3DES-EDE-CBC-SHA" },
+    { 0x008C, "TLS_PSK_WITH_AES_128_CBC_SHA", "PSK-AES128-CBC-SHA" },
+    { 0x008D, "TLS_PSK_WITH_AES_256_CBC_SHA", "PSK-AES256-CBC-SHA" },
+    { 0x0096, "TLS_RSA_WITH_SEED_CBC_SHA", "SEED-SHA" },
+    { 0x0097, "TLS_DH_DSS_WITH_SEED_CBC_SHA", "DH-DSS-SEED-SHA" },
+    { 0x0098, "TLS_DH_RSA_WITH_SEED_CBC_SHA", "DH-RSA-SEED-SHA" },
+    { 0x0099, "TLS_DHE_DSS_WITH_SEED_CBC_SHA", "DHE-DSS-SEED-SHA" },
+    { 0x009A, "TLS_DHE_RSA_WITH_SEED_CBC_SHA", "DHE-RSA-SEED-SHA" },
+    { 0x009C, "TLS_RSA_WITH_AES_128_GCM_SHA256", "AES128-GCM-SHA256" },
+    { 0x009D, "TLS_RSA_WITH_AES_256_GCM_SHA384", "AES256-GCM-SHA384" },
+    { 0x009E, "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256", "DHE-RSA-AES128-GCM-SHA256" },
+    { 0x009F, "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384", "DHE-RSA-AES256-GCM-SHA384" },
+    { 0x00A0, "TLS_DH_RSA_WITH_AES_128_GCM_SHA256", "DH-RSA-AES128-GCM-SHA256" },
+    { 0x00A1, "TLS_DH_RSA_WITH_AES_256_GCM_SHA384", "DH-RSA-AES256-GCM-SHA384" },
+    { 0x00A2, "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256", "DHE-DSS-AES128-GCM-SHA256" },
+    { 0x00A3, "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384", "DHE-DSS-AES256-GCM-SHA384" },
+    { 0x00A4, "TLS_DH_DSS_WITH_AES_128_GCM_SHA256", "DH-DSS-AES128-GCM-SHA256" },
+    { 0x00A5, "TLS_DH_DSS_WITH_AES_256_GCM_SHA384", "DH-DSS-AES256-GCM-SHA384" },
+    { 0xC002, "TLS_ECDH_ECDSA_WITH_RC4_128_SHA", "ECDH-ECDSA-RC4-SHA" },
+    { 0xC003, "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA", "ECDH-ECDSA-DES-CBC3-SHA" },
+    { 0xC004, "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA", "ECDH-ECDSA-AES128-SHA" },
+    { 0xC005, "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA", "ECDH-ECDSA-AES256-SHA" },
+    { 0xC007, "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA", "ECDHE-ECDSA-RC4-SHA" },
+    { 0xC008, "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA", "ECDHE-ECDSA-DES-CBC3-SHA" },
+    { 0xC009, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA", "ECDHE-ECDSA-AES128-SHA" },
+    { 0xC00A, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA", "ECDHE-ECDSA-AES256-SHA" },
+    { 0xC00C, "TLS_ECDH_RSA_WITH_RC4_128_SHA", "ECDH-RSA-RC4-SHA" },
+    { 0xC00D, "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA", "ECDH-RSA-DES-CBC3-SHA" },
+    { 0xC00E, "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA", "ECDH-RSA-AES128-SHA" },
+    { 0xC00F, "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA", "ECDH-RSA-AES256-SHA" },
+    { 0xC011, "TLS_ECDHE_RSA_WITH_RC4_128_SHA", "ECDHE-RSA-RC4-SHA" },
+    { 0xC012, "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA", "ECDHE-RSA-DES-CBC3-SHA" },
+    { 0xC013, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "ECDHE-RSA-AES128-SHA" },
+    { 0xC014, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "ECDHE-RSA-AES256-SHA" },
+    { 0xC01A, "TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA", "SRP-3DES-EDE-CBC-SHA" },
+    { 0xC01B, "TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA", "SRP-RSA-3DES-EDE-CBC-SHA" },
+    { 0xC01C, "TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA", "SRP-DSS-3DES-EDE-CBC-SHA" },
+    { 0xC01D, "TLS_SRP_SHA_WITH_AES_128_CBC_SHA", "SRP-AES-128-CBC-SHA" },
+    { 0xC01E, "TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA", "SRP-RSA-AES-128-CBC-SHA" },
+    { 0xC01F, "TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA", "SRP-DSS-AES-128-CBC-SHA" },
+    { 0xC020, "TLS_SRP_SHA_WITH_AES_256_CBC_SHA", "SRP-AES-256-CBC-SHA" },
+    { 0xC021, "TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA", "SRP-RSA-AES-256-CBC-SHA" },
+    { 0xC022, "TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA", "SRP-DSS-AES-256-CBC-SHA" },
+    { 0xC023, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256", "ECDHE-ECDSA-AES128-SHA256" },
+    { 0xC024, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384", "ECDHE-ECDSA-AES256-SHA384" },
+    { 0xC025, "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256", "ECDH-ECDSA-AES128-SHA256" },
+    { 0xC026, "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384", "ECDH-ECDSA-AES256-SHA384" },
+    { 0xC027, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "ECDHE-RSA-AES128-SHA256" },
+    { 0xC028, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "ECDHE-RSA-AES256-SHA384" },
+    { 0xC029, "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256", "ECDH-RSA-AES128-SHA256" },
+    { 0xC02A, "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384", "ECDH-RSA-AES256-SHA384" },
+    { 0xC02B, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "ECDHE-ECDSA-AES128-GCM-SHA256" },
+    { 0xC02C, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "ECDHE-ECDSA-AES256-GCM-SHA384" },
+    { 0xC02D, "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256", "ECDH-ECDSA-AES128-GCM-SHA256" },
+    { 0xC02E, "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384", "ECDH-ECDSA-AES256-GCM-SHA384" },
+    { 0xC02F, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "ECDHE-RSA-AES128-GCM-SHA256" },
+    { 0xC030, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "ECDHE-RSA-AES256-GCM-SHA384" },
+    { 0xC031, "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256", "ECDH-RSA-AES128-GCM-SHA256" },
+    { 0xC032, "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384", "ECDH-RSA-AES256-GCM-SHA384" },
+    { 0x0000, 0 },
+};
+
+/*
     Configuration for a route/host
  */
 typedef struct OpenConfig {
@@ -80,17 +196,19 @@ typedef struct CRYPTO_dynlock_value DynLock;
 /***************************** Forward Declarations ***************************/
 
 static void     closeOss(MprSocket *sp, bool gracefully);
-static int      checkCertificateName(MprSocket *sp);
+static int      checkPeerCertName(MprSocket *sp);
 static OpenConfig *createOpenSslConfig(MprSocket *sp);
 static DH       *dhcallback(SSL *ssl, int isExport, int keyLength);
 static void     disconnectOss(MprSocket *sp);
 static ssize    flushOss(MprSocket *sp);
 static DH       *getDhKey(cchar *path);
+static char     *getOssSession(MprSocket *sp);
 static char     *getOssState(MprSocket *sp);
 static char     *getOssError(MprSocket *sp);
 static void     manageOpenConfig(OpenConfig *cfg, int flags);
 static void     manageOpenProvider(MprSocketProvider *provider, int flags);
 static void     manageOpenSocket(OpenSocket *ssp, int flags);
+static cchar    *mapCipherNames(cchar *ciphers);
 static ssize    readOss(MprSocket *sp, void *buf, ssize len);
 static DynLock  *sslCreateDynLock(cchar *file, int line);
 static void     sslDynLock(int mode, DynLock *dl, cchar *file, int line);
@@ -272,14 +390,19 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
             }
         }
     }
-    if (!ssl->ciphers) {
-        ssl->ciphers = sclone(OPENSSL_DEFAULT_CIPHERS);
-        mprLog("info openssl", 2, "Using OpenSSL ciphers: %s", ssl->ciphers);
+    if (ssl->ciphers) {
+        ssl->ciphers = mapCipherNames(ssl->ciphers);
     }
-    if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
-        sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp)); 
-        SSL_CTX_free(context);
-        return 0;
+    if (!ssl->ciphers && (sp->flags & MPR_SOCKET_SERVER)) {
+        ssl->ciphers = sclone(OPENSSL_DEFAULT_CIPHERS);
+    }
+    if (ssl->ciphers) {
+        mprLog("info openssl", 5, "Using SSL ciphers: %s", ssl->ciphers);
+        if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
+            sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp)); 
+            SSL_CTX_free(context);
+            return 0;
+        }
     }
     verifyMode = ssl->verifyPeer ? SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT : SSL_VERIFY_NONE;
     if (verifyMode != SSL_VERIFY_NONE) {
@@ -595,9 +718,10 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
             }
             return MPR_ERR_CANT_CONNECT;
         }
-        if (rc > 0 && checkCertificateName(sp) < 0) {
+        if (rc > 0 && checkPeerCertName(sp) < 0) {
             return MPR_ERR_CANT_CONNECT;
         }
+        sp->session = getOssSession(sp);
         mprSetSocketBlockingMode(sp, 0);
     }
 #if defined(ME_MPR_SSL_RENEGOTIATE) && !ME_MPR_SSL_RENEGOTIATE
@@ -669,9 +793,12 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
             sp->flags |= MPR_SOCKET_EOF;
         }
     } else {
-        if (!sp->secured && checkCertificateName(sp) < 0) {
-            return MPR_ERR_BAD_STATE;
+        if (!(sp->flags & MPR_SOCKET_SERVER) && !sp->secured) {
+            if (checkPeerCertName(sp) < 0) {
+                return MPR_ERR_BAD_STATE;
+            }
         }
+        sp->session = getOssSession(sp);
         if (SSL_pending(osp->handle) > 0) {
             sp->flags |= MPR_SOCKET_BUFFERED_READ;
             mprRecallWaitHandlerByFd(sp->fd);
@@ -755,7 +882,7 @@ static void parseCertFields(MprBuf *buf, char *prefix, char *prefix2, char *info
 }
 
 
-static char *getOssSession(MprSocket *sp) 
+static char *getOssSession(MprSocket *sp)
 {
     SSL_SESSION     *sess;
     OpenSocket      *osp;
@@ -775,6 +902,9 @@ static char *getOssSession(MprSocket *sp)
         }
         return mprBufToString(buf);
     }
+    sp->flags |= (SSL_session_reused(osp->handle) ? MPR_SOCKET_RESUMED : 0);
+    sp->cipher = sclone(SSL_get_cipher(osp->handle));
+    sp->secured = 1;
     return 0;
 }
 
@@ -828,7 +958,7 @@ static char *getOssState(MprSocket *sp)
 /*
     Check the certificate peer name validates and matches the desired name
  */
-static int checkCertificateName(MprSocket *sp)
+static int checkPeerCertName(MprSocket *sp)
 {
     MprSsl      *ssl;
     OpenSocket  *osp;
@@ -838,7 +968,6 @@ static int checkCertificateName(MprSocket *sp)
 
     ssl = sp->ssl;
     osp = (OpenSocket*) sp->sslSocket;
-    sp->cipher = sclone(SSL_get_cipher(osp->handle));
 
     if ((cert = SSL_get_peer_certificate(osp->handle)) == 0) {
         peerName[0] = '\0';
@@ -885,9 +1014,6 @@ static int checkCertificateName(MprSocket *sp)
             return MPR_ERR_BAD_VALUE;
         }
     }
-    sp->session = getOssSession(sp);
-    sp->secured = 1;
-    sp->flags |= (SSL_session_reused(osp->handle) ? MPR_SOCKET_RESUMED : 0);
     return 0;
 }
 
@@ -1043,6 +1169,34 @@ static char *getOssError(MprSocket *sp)
     return sp->errorMsg;
 }
 
+
+/*
+    Map iana names to OpenSSL names
+ */
+static cchar *mapCipherNames(cchar *ciphers)
+{
+    MprBuf      *buf;
+    CipherMap   *cp;
+    char        *cipher, *next;
+    int         code;
+
+    if (!ciphers || *ciphers == 0) {
+        return 0;
+    }
+    buf = mprCreateBuf(0, 0);
+    for (next = sclone(ciphers); (cipher = stok(next, ":, \t", &next)) != 0; ) {
+        for (cp = cipherMap; cp->name; cp++) {
+            if (smatch(cp->name, cipher)) {
+                mprPutToBuf(buf, "%s ", cp->ossName);
+                break;
+            }
+        }
+        if (cp->name == 0) {
+            mprPutToBuf(buf, "%s ", cipher);
+        }
+    }
+    return mprBufToString(buf);
+}
 
 /*
     Get the DH parameters. This tries to read the 
