@@ -9188,6 +9188,7 @@ PUBLIC void httpLogRoutes(HttpHost *host, bool full)
     if (mprGetListLength(host->routes) == 0 && !host->defaultRoute) {
         printf("\nRoutes for host: %s: none\n", host->name ? host->name : "default");
     } else {
+        methodsLen = patternLen = targetLen = 0;
         if (!full) {
             printRouteHeader(host, &methodsLen, &patternLen, &targetLen);
         }

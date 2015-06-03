@@ -1201,7 +1201,6 @@ static cchar *mapCipherNames(cchar *ciphers)
     MprBuf      *buf;
     CipherMap   *cp;
     char        *cipher, *next;
-    int         code;
 
     if (!ciphers || *ciphers == 0) {
         return 0;
@@ -1249,7 +1248,6 @@ static DH *getDhKey()
 		0x02,
     };
 	DH      *dh;
-    BIO     *bio;
 
     if ((dh = DH_new()) == 0) {
         return 0;
