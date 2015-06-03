@@ -913,7 +913,7 @@ static char *getOssSession(MprSocket *sp)
         }
         buf = mprCreateBuf((sess->session_id_length * 2) + 1, 0);
         assert(buf->start);
-        for (i = 0; i < sess->session_id_length; i++) {
+        for (i = 0; i < (int) sess->session_id_length; i++) {
             mprPutToBuf(buf, "%02X", (uchar) sess->session_id[i]);
         }
         return mprBufToString(buf);

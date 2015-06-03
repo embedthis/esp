@@ -191,7 +191,6 @@ clean:
 	if exist "build\$(CONFIG)\obj\mprLib.obj" del /Q "build\$(CONFIG)\obj\mprLib.obj"
 	if exist "build\$(CONFIG)\obj\openssl.obj" del /Q "build\$(CONFIG)\obj\openssl.obj"
 	if exist "build\$(CONFIG)\obj\pcre.obj" del /Q "build\$(CONFIG)\obj\pcre.obj"
-	if exist "build\$(CONFIG)\obj\removeFiles.obj" del /Q "build\$(CONFIG)\obj\removeFiles.obj"
 	if exist "build\$(CONFIG)\obj\sdb.obj" del /Q "build\$(CONFIG)\obj\sdb.obj"
 	if exist "build\$(CONFIG)\obj\sqlite.obj" del /Q "build\$(CONFIG)\obj\sqlite.obj"
 	if exist "build\$(CONFIG)\obj\sqlite3.obj" del /Q "build\$(CONFIG)\obj\sqlite3.obj"
@@ -909,29 +908,22 @@ build\$(CONFIG)\bin\http.exe: $(DEPS_47)
 	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_47) $(LIBS_47) $(LIBS_47) $(LIBS)  $(LOG)
 !ENDIF
 
-#
-#   import-certs
-#
-
-import-certs: $(DEPS_48)
-#  Omit build script import-certs
-
 !IF "$(ME_COM_SSL)" == "1"
 #
 #   install-certs
 #
-DEPS_49 = $(DEPS_49) src\certs\samples\ca.crt
-DEPS_49 = $(DEPS_49) src\certs\samples\ca.key
-DEPS_49 = $(DEPS_49) src\certs\samples\dh.pem
-DEPS_49 = $(DEPS_49) src\certs\samples\ec.crt
-DEPS_49 = $(DEPS_49) src\certs\samples\ec.key
-DEPS_49 = $(DEPS_49) src\certs\samples\roots.crt
-DEPS_49 = $(DEPS_49) src\certs\samples\self.crt
-DEPS_49 = $(DEPS_49) src\certs\samples\self.key
-DEPS_49 = $(DEPS_49) src\certs\samples\test.crt
-DEPS_49 = $(DEPS_49) src\certs\samples\test.key
+DEPS_48 = $(DEPS_48) src\certs\samples\ca.crt
+DEPS_48 = $(DEPS_48) src\certs\samples\ca.key
+DEPS_48 = $(DEPS_48) src\certs\samples\dh.pem
+DEPS_48 = $(DEPS_48) src\certs\samples\ec.crt
+DEPS_48 = $(DEPS_48) src\certs\samples\ec.key
+DEPS_48 = $(DEPS_48) src\certs\samples\roots.crt
+DEPS_48 = $(DEPS_48) src\certs\samples\self.crt
+DEPS_48 = $(DEPS_48) src\certs\samples\self.key
+DEPS_48 = $(DEPS_48) src\certs\samples\test.crt
+DEPS_48 = $(DEPS_48) src\certs\samples\test.key
 
-build\$(CONFIG)\bin: $(DEPS_49)
+build\$(CONFIG)\bin: $(DEPS_48)
 	@echo ..... [Copy] build\$(CONFIG)\bin
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
 	copy /Y /B src\certs\samples\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
@@ -947,68 +939,59 @@ build\$(CONFIG)\bin: $(DEPS_49)
 !ENDIF
 
 #
-#   removeFiles.obj
-#
-
-build\$(CONFIG)\obj\removeFiles.obj: \
-    package\windows\removeFiles.c $(DEPS_50)
-	@echo .. [Compile] build\$(CONFIG)\obj\removeFiles.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\removeFiles.obj -Fd$(BUILD)\obj\removeFiles.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) package\windows\removeFiles.c $(LOG)
-
-#
 #   sqlite.obj
 #
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\inc\me.h
-DEPS_51 = $(DEPS_51) src\sqlite\sqlite3.h
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\inc\me.h
+DEPS_49 = $(DEPS_49) src\sqlite\sqlite3.h
 
 build\$(CONFIG)\obj\sqlite.obj: \
-    src\sqlite\sqlite.c $(DEPS_51)
+    src\sqlite\sqlite.c $(DEPS_49)
 	@echo .. [Compile] build\$(CONFIG)\obj\sqlite.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\sqlite.obj -Fd$(BUILD)\obj\sqlite.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\sqlite\sqlite.c $(LOG)
 
 #
 #   watchdog.obj
 #
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\mpr.h
+DEPS_50 = $(DEPS_50) build\$(CONFIG)\inc\mpr.h
 
 build\$(CONFIG)\obj\watchdog.obj: \
-    src\watchdog\watchdog.c $(DEPS_52)
+    src\watchdog\watchdog.c $(DEPS_50)
 	@echo .. [Compile] build\$(CONFIG)\obj\watchdog.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\watchdog\watchdog.c $(LOG)
 
 #
 #   watchdog
 #
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libmpr.dll
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\obj\watchdog.obj
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmpr.dll
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\obj\watchdog.obj
 
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-openssl.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
+LIBS_51 = $(LIBS_51) libmpr-openssl.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libeay32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
+LIBS_51 = $(LIBS_51) libeay32.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libssleay32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)
+LIBS_51 = $(LIBS_51) libssleay32.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 !IF "$(ME_COM_EST)" == "1"
-LIBS_53 = $(LIBS_53) libest.lib
+LIBS_51 = $(LIBS_51) libest.lib
 !ENDIF
 !IF "$(ME_COM_EST)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-estssl.lib
+LIBS_51 = $(LIBS_51) libmpr-estssl.lib
 !ENDIF
 !IF "$(ME_COM_EST)" == "1"
-LIBS_53 = $(LIBS_53) libest.lib
+LIBS_51 = $(LIBS_51) libest.lib
 !ENDIF
-LIBS_53 = $(LIBS_53) libmpr.lib
+LIBS_51 = $(LIBS_51) libmpr.lib
 !IF "$(ME_COM_EST)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-estssl.lib
+LIBS_51 = $(LIBS_51) libmpr-estssl.lib
 !ENDIF
 
-build\$(CONFIG)\bin\espman.exe: $(DEPS_53)
+build\$(CONFIG)\bin\espman.exe: $(DEPS_51)
 	@echo ..... [Link] build\$(CONFIG)\bin\espman.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS_53) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS_51) $(LIBS)  $(LOG)
 
