@@ -1,7 +1,7 @@
 {
     "name": "osdep",
     "description": "Embedthis O/S Dependent Layer",
-    "version": "0.8.6",
+    "version": "0.8.7",
     "keywords": [
         "osdep",
         "me"

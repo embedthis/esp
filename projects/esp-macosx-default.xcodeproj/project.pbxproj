@@ -7,58 +7,58 @@
         objects = {
 
 /* Begin PBXAggregateTarget section */
-		DC7F9CC4DC7FB7EC00000006 /* esp-compile.json */ = {
+		9441AEA89441C80400000006 /* esp-compile.json */ = {
     			isa = PBXAggregateTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC00000005 /* Build configuration list for PBXAggregateTarget "esp-compile.json" */;
+    			buildConfigurationList = 9441AEA89441C80400000005 /* Build configuration list for PBXAggregateTarget "esp-compile.json" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC00000007,
+    				9441AEA89441C80400000007,
     			);
     			dependencies = (
-				DC7F9CC4DC7FB7EC00000008 /* PBXTargetDependency Prep */,
+				9441AEA89441C80400000008 /* PBXTargetDependency Prep */,
 			);
     			name = esp-compile.json;
     			productName = esp-compile.json;
     		};
-		DC7F9CC4DC7FB7EC0000000A /* install-certs */ = {
+		9441AEA89441C8040000000A /* install-certs */ = {
     			isa = PBXAggregateTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC00000009 /* Build configuration list for PBXAggregateTarget "install-certs" */;
+    			buildConfigurationList = 9441AEA89441C80400000009 /* Build configuration list for PBXAggregateTarget "install-certs" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC0000000B,
+    				9441AEA89441C8040000000B,
     			);
     			dependencies = (
-				DC7F9CC4DC7FB7EC0000000C /* PBXTargetDependency Prep */,
+				9441AEA89441C8040000000C /* PBXTargetDependency Prep */,
 			);
     			name = install-certs;
     			productName = install-certs;
     		};
-		DC7F9CC4DC7FB7EC0000000E /* All */ = {
+		9441AEA89441C8040000000E /* All */ = {
     			isa = PBXAggregateTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC0000000D /* Build configuration list for PBXAggregateTarget "All" */;
+    			buildConfigurationList = 9441AEA89441C8040000000D /* Build configuration list for PBXAggregateTarget "All" */;
     			buildPhases = (
     				
     			);
     			dependencies = (
-				DC7F9CC4DC7FB7EC0000000F /* PBXTargetDependency esp-compile.json */,
-				DC7F9CC4DC7FB7EC00000010 /* PBXTargetDependency espcmd */,
-				DC7F9CC4DC7FB7EC00000011 /* PBXTargetDependency install-certs */,
-				DC7F9CC4DC7FB7EC00000012 /* PBXTargetDependency libesp */,
-				DC7F9CC4DC7FB7EC00000013 /* PBXTargetDependency libhttp */,
-				DC7F9CC4DC7FB7EC00000014 /* PBXTargetDependency libmpr */,
-				DC7F9CC4DC7FB7EC00000015 /* PBXTargetDependency libpcre */,
-				DC7F9CC4DC7FB7EC00000016 /* PBXTargetDependency libsql */,
-				DC7F9CC4DC7FB7EC00000017 /* PBXTargetDependency openssl */,
-				DC7F9CC4DC7FB7EC00000018 /* PBXTargetDependency watchdog */,
-				DC7F9CC4DC7FB7EC00000019 /* PBXTargetDependency All */,
-				DC7F9CC4DC7FB7EC0000001A /* PBXTargetDependency Prep */,
+				9441AEA89441C8040000000F /* PBXTargetDependency esp-compile.json */,
+				9441AEA89441C80400000010 /* PBXTargetDependency espcmd */,
+				9441AEA89441C80400000011 /* PBXTargetDependency install-certs */,
+				9441AEA89441C80400000012 /* PBXTargetDependency libesp */,
+				9441AEA89441C80400000013 /* PBXTargetDependency libhttp */,
+				9441AEA89441C80400000014 /* PBXTargetDependency libmpr */,
+				9441AEA89441C80400000015 /* PBXTargetDependency libpcre */,
+				9441AEA89441C80400000016 /* PBXTargetDependency libsql */,
+				9441AEA89441C80400000017 /* PBXTargetDependency openssl */,
+				9441AEA89441C80400000018 /* PBXTargetDependency watchdog */,
+				9441AEA89441C80400000019 /* PBXTargetDependency All */,
+				9441AEA89441C8040000001A /* PBXTargetDependency Prep */,
 			);
     			name = All;
     			productName = All;
     		};
-		DC7F9CC4DC7FB7EC0000001C /* Prep */ = {
+		9441AEA89441C8040000001C /* Prep */ = {
     			isa = PBXAggregateTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC0000001B /* Build configuration list for PBXAggregateTarget "Prep" */;
+    			buildConfigurationList = 9441AEA89441C8040000001B /* Build configuration list for PBXAggregateTarget "Prep" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC0000001D,
+    				9441AEA89441C8040000001D,
     			);
     			dependencies = (
 			);
@@ -68,377 +68,377 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		DC7F9CC4DC7FB7EC0000001E /* esp.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000001F /* esp.c */; };
-		DC7F9CC4DC7FB7EC00000020 /* edi.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000021 /* edi.c */; };
-		DC7F9CC4DC7FB7EC00000022 /* espAbbrev.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000023 /* espAbbrev.c */; };
-		DC7F9CC4DC7FB7EC00000024 /* espConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000025 /* espConfig.c */; };
-		DC7F9CC4DC7FB7EC00000026 /* espFramework.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000027 /* espFramework.c */; };
-		DC7F9CC4DC7FB7EC00000028 /* espHtml.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000029 /* espHtml.c */; };
-		DC7F9CC4DC7FB7EC0000002A /* espRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000002B /* espRequest.c */; };
-		DC7F9CC4DC7FB7EC0000002C /* espTemplate.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000002D /* espTemplate.c */; };
-		DC7F9CC4DC7FB7EC0000002E /* mdb.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000002F /* mdb.c */; };
-		DC7F9CC4DC7FB7EC00000030 /* sdb.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000031 /* sdb.c */; };
-		DC7F9CC4DC7FB7EC00000032 /* httpLib.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000033 /* httpLib.c */; };
-		DC7F9CC4DC7FB7EC00000034 /* mprLib.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000035 /* mprLib.c */; };
-		DC7F9CC4DC7FB7EC00000036 /* pcre.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000037 /* pcre.c */; };
-		DC7F9CC4DC7FB7EC00000038 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000039 /* sqlite3.c */; };
-		DC7F9CC4DC7FB7EC0000003A /* openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000003B /* openssl.c */; };
-		DC7F9CC4DC7FB7EC0000003C /* watchdog.c in Sources */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000003D /* watchdog.c */; };
-		DC7F9CC4DC7FB7EC0000003E /* libesp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC0000003F; };
-		DC7F9CC4DC7FB7EC00000040 /* libsql.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000041; };
-		DC7F9CC4DC7FB7EC00000042 /* libhttp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000043; };
-		DC7F9CC4DC7FB7EC00000044 /* libpcre.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000045; };
-		DC7F9CC4DC7FB7EC00000046 /* libmpr.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000047; };
-		DC7F9CC4DC7FB7EC00000048 /* libhttp.dylib for libesp */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000043; };
-		DC7F9CC4DC7FB7EC00000049 /* libsql.dylib for libesp */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000041; };
-		DC7F9CC4DC7FB7EC0000004A /* libpcre.dylib for libesp */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000045; };
-		DC7F9CC4DC7FB7EC0000004B /* libmpr.dylib for libesp */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000047; };
-		DC7F9CC4DC7FB7EC0000004C /* libpcre.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000045; };
-		DC7F9CC4DC7FB7EC0000004D /* libmpr.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000047; };
-		DC7F9CC4DC7FB7EC0000004E /* libmpr.dylib for watchdog */ = {isa = PBXBuildFile; fileRef = DC7F9CC4DC7FB7EC00000047; };
+		9441AEA89441C8040000001E /* esp.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000001F /* esp.c */; };
+		9441AEA89441C80400000020 /* edi.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000021 /* edi.c */; };
+		9441AEA89441C80400000022 /* espAbbrev.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000023 /* espAbbrev.c */; };
+		9441AEA89441C80400000024 /* espConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000025 /* espConfig.c */; };
+		9441AEA89441C80400000026 /* espFramework.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000027 /* espFramework.c */; };
+		9441AEA89441C80400000028 /* espHtml.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000029 /* espHtml.c */; };
+		9441AEA89441C8040000002A /* espRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000002B /* espRequest.c */; };
+		9441AEA89441C8040000002C /* espTemplate.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000002D /* espTemplate.c */; };
+		9441AEA89441C8040000002E /* mdb.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000002F /* mdb.c */; };
+		9441AEA89441C80400000030 /* sdb.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000031 /* sdb.c */; };
+		9441AEA89441C80400000032 /* httpLib.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000033 /* httpLib.c */; };
+		9441AEA89441C80400000034 /* mprLib.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000035 /* mprLib.c */; };
+		9441AEA89441C80400000036 /* pcre.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000037 /* pcre.c */; };
+		9441AEA89441C80400000038 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000039 /* sqlite3.c */; };
+		9441AEA89441C8040000003A /* openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000003B /* openssl.c */; };
+		9441AEA89441C8040000003C /* watchdog.c in Sources */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000003D /* watchdog.c */; };
+		9441AEA89441C8040000003E /* libesp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C8040000003F; };
+		9441AEA89441C80400000040 /* libsql.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000041; };
+		9441AEA89441C80400000042 /* libhttp.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000043; };
+		9441AEA89441C80400000044 /* libpcre.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000045; };
+		9441AEA89441C80400000046 /* libmpr.dylib for espcmd */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000047; };
+		9441AEA89441C80400000048 /* libhttp.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000043; };
+		9441AEA89441C80400000049 /* libsql.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000041; };
+		9441AEA89441C8040000004A /* libpcre.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000045; };
+		9441AEA89441C8040000004B /* libmpr.dylib for libesp */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000047; };
+		9441AEA89441C8040000004C /* libpcre.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000045; };
+		9441AEA89441C8040000004D /* libmpr.dylib for libhttp */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000047; };
+		9441AEA89441C8040000004E /* libmpr.dylib for watchdog */ = {isa = PBXBuildFile; fileRef = 9441AEA89441C80400000047; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		DC7F9CC4DC7FB7EC0000004F /* PBXContainerItemProxy Prep from esp-compile.json */ = {
+		9441AEA89441C8040000004F /* PBXContainerItemProxy Prep from esp-compile.json */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC00000050 /* PBXContainerItemProxy Prep from espcmd */ = {
+		9441AEA89441C80400000050 /* PBXContainerItemProxy Prep from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC00000051 /* PBXContainerItemProxy libsql from espcmd */ = {
+		9441AEA89441C80400000051 /* PBXContainerItemProxy libsql from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000052;
+    			remoteGlobalIDString = 9441AEA89441C80400000052;
     			remoteInfo = libsql;
     		};
-		DC7F9CC4DC7FB7EC00000053 /* PBXContainerItemProxy openssl from espcmd */ = {
+		9441AEA89441C80400000053 /* PBXContainerItemProxy openssl from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000054;
+    			remoteGlobalIDString = 9441AEA89441C80400000054;
     			remoteInfo = openssl;
     		};
-		DC7F9CC4DC7FB7EC00000055 /* PBXContainerItemProxy libmpr from espcmd */ = {
+		9441AEA89441C80400000055 /* PBXContainerItemProxy libmpr from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000056;
+    			remoteGlobalIDString = 9441AEA89441C80400000056;
     			remoteInfo = libmpr;
     		};
-		DC7F9CC4DC7FB7EC00000057 /* PBXContainerItemProxy libpcre from espcmd */ = {
+		9441AEA89441C80400000057 /* PBXContainerItemProxy libpcre from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000058;
+    			remoteGlobalIDString = 9441AEA89441C80400000058;
     			remoteInfo = libpcre;
     		};
-		DC7F9CC4DC7FB7EC00000059 /* PBXContainerItemProxy libhttp from espcmd */ = {
+		9441AEA89441C80400000059 /* PBXContainerItemProxy libhttp from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000005A;
+    			remoteGlobalIDString = 9441AEA89441C8040000005A;
     			remoteInfo = libhttp;
     		};
-		DC7F9CC4DC7FB7EC0000005B /* PBXContainerItemProxy libesp from espcmd */ = {
+		9441AEA89441C8040000005B /* PBXContainerItemProxy libesp from espcmd */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000005C;
+    			remoteGlobalIDString = 9441AEA89441C8040000005C;
     			remoteInfo = libesp;
     		};
-		DC7F9CC4DC7FB7EC0000005D /* PBXContainerItemProxy Prep from install-certs */ = {
+		9441AEA89441C8040000005D /* PBXContainerItemProxy Prep from install-certs */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC0000005E /* PBXContainerItemProxy Prep from libesp */ = {
+		9441AEA89441C8040000005E /* PBXContainerItemProxy Prep from libesp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC0000005F /* PBXContainerItemProxy libsql from libesp */ = {
+		9441AEA89441C8040000005F /* PBXContainerItemProxy libsql from libesp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000052;
+    			remoteGlobalIDString = 9441AEA89441C80400000052;
     			remoteInfo = libsql;
     		};
-		DC7F9CC4DC7FB7EC00000060 /* PBXContainerItemProxy openssl from libesp */ = {
+		9441AEA89441C80400000060 /* PBXContainerItemProxy openssl from libesp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000054;
+    			remoteGlobalIDString = 9441AEA89441C80400000054;
     			remoteInfo = openssl;
     		};
-		DC7F9CC4DC7FB7EC00000061 /* PBXContainerItemProxy libmpr from libesp */ = {
+		9441AEA89441C80400000061 /* PBXContainerItemProxy libmpr from libesp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000056;
+    			remoteGlobalIDString = 9441AEA89441C80400000056;
     			remoteInfo = libmpr;
     		};
-		DC7F9CC4DC7FB7EC00000062 /* PBXContainerItemProxy libpcre from libesp */ = {
+		9441AEA89441C80400000062 /* PBXContainerItemProxy libpcre from libesp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000058;
+    			remoteGlobalIDString = 9441AEA89441C80400000058;
     			remoteInfo = libpcre;
     		};
-		DC7F9CC4DC7FB7EC00000063 /* PBXContainerItemProxy libhttp from libesp */ = {
+		9441AEA89441C80400000063 /* PBXContainerItemProxy libhttp from libesp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000005A;
+    			remoteGlobalIDString = 9441AEA89441C8040000005A;
     			remoteInfo = libhttp;
     		};
-		DC7F9CC4DC7FB7EC00000064 /* PBXContainerItemProxy Prep from libhttp */ = {
+		9441AEA89441C80400000064 /* PBXContainerItemProxy Prep from libhttp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC00000065 /* PBXContainerItemProxy openssl from libhttp */ = {
+		9441AEA89441C80400000065 /* PBXContainerItemProxy openssl from libhttp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000054;
+    			remoteGlobalIDString = 9441AEA89441C80400000054;
     			remoteInfo = openssl;
     		};
-		DC7F9CC4DC7FB7EC00000066 /* PBXContainerItemProxy libmpr from libhttp */ = {
+		9441AEA89441C80400000066 /* PBXContainerItemProxy libmpr from libhttp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000056;
+    			remoteGlobalIDString = 9441AEA89441C80400000056;
     			remoteInfo = libmpr;
     		};
-		DC7F9CC4DC7FB7EC00000067 /* PBXContainerItemProxy libpcre from libhttp */ = {
+		9441AEA89441C80400000067 /* PBXContainerItemProxy libpcre from libhttp */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000058;
+    			remoteGlobalIDString = 9441AEA89441C80400000058;
     			remoteInfo = libpcre;
     		};
-		DC7F9CC4DC7FB7EC00000068 /* PBXContainerItemProxy Prep from libmpr */ = {
+		9441AEA89441C80400000068 /* PBXContainerItemProxy Prep from libmpr */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC00000069 /* PBXContainerItemProxy openssl from libmpr */ = {
+		9441AEA89441C80400000069 /* PBXContainerItemProxy openssl from libmpr */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000054;
+    			remoteGlobalIDString = 9441AEA89441C80400000054;
     			remoteInfo = openssl;
     		};
-		DC7F9CC4DC7FB7EC0000006A /* PBXContainerItemProxy Prep from libpcre */ = {
+		9441AEA89441C8040000006A /* PBXContainerItemProxy Prep from libpcre */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC0000006B /* PBXContainerItemProxy Prep from libsql */ = {
+		9441AEA89441C8040000006B /* PBXContainerItemProxy Prep from libsql */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC0000006C /* PBXContainerItemProxy Prep from openssl */ = {
+		9441AEA89441C8040000006C /* PBXContainerItemProxy Prep from openssl */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC0000006D /* PBXContainerItemProxy Prep from watchdog */ = {
+		9441AEA89441C8040000006D /* PBXContainerItemProxy Prep from watchdog */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC0000006E /* PBXContainerItemProxy openssl from watchdog */ = {
+		9441AEA89441C8040000006E /* PBXContainerItemProxy openssl from watchdog */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000054;
+    			remoteGlobalIDString = 9441AEA89441C80400000054;
     			remoteInfo = openssl;
     		};
-		DC7F9CC4DC7FB7EC0000006F /* PBXContainerItemProxy libmpr from watchdog */ = {
+		9441AEA89441C8040000006F /* PBXContainerItemProxy libmpr from watchdog */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000056;
+    			remoteGlobalIDString = 9441AEA89441C80400000056;
     			remoteInfo = libmpr;
     		};
-		DC7F9CC4DC7FB7EC00000070 /* PBXContainerItemProxy Prep from All */ = {
+		9441AEA89441C80400000070 /* PBXContainerItemProxy Prep from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000001C;
+    			remoteGlobalIDString = 9441AEA89441C8040000001C;
     			remoteInfo = Prep;
     		};
-		DC7F9CC4DC7FB7EC00000071 /* PBXContainerItemProxy esp-compile.json from All */ = {
+		9441AEA89441C80400000071 /* PBXContainerItemProxy esp-compile.json from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000006;
+    			remoteGlobalIDString = 9441AEA89441C80400000006;
     			remoteInfo = esp-compile.json;
     		};
-		DC7F9CC4DC7FB7EC00000072 /* PBXContainerItemProxy libsql from All */ = {
+		9441AEA89441C80400000072 /* PBXContainerItemProxy libsql from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000052;
+    			remoteGlobalIDString = 9441AEA89441C80400000052;
     			remoteInfo = libsql;
     		};
-		DC7F9CC4DC7FB7EC00000073 /* PBXContainerItemProxy openssl from All */ = {
+		9441AEA89441C80400000073 /* PBXContainerItemProxy openssl from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000054;
+    			remoteGlobalIDString = 9441AEA89441C80400000054;
     			remoteInfo = openssl;
     		};
-		DC7F9CC4DC7FB7EC00000074 /* PBXContainerItemProxy libmpr from All */ = {
+		9441AEA89441C80400000074 /* PBXContainerItemProxy libmpr from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000056;
+    			remoteGlobalIDString = 9441AEA89441C80400000056;
     			remoteInfo = libmpr;
     		};
-		DC7F9CC4DC7FB7EC00000075 /* PBXContainerItemProxy libpcre from All */ = {
+		9441AEA89441C80400000075 /* PBXContainerItemProxy libpcre from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000058;
+    			remoteGlobalIDString = 9441AEA89441C80400000058;
     			remoteInfo = libpcre;
     		};
-		DC7F9CC4DC7FB7EC00000076 /* PBXContainerItemProxy libhttp from All */ = {
+		9441AEA89441C80400000076 /* PBXContainerItemProxy libhttp from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000005A;
+    			remoteGlobalIDString = 9441AEA89441C8040000005A;
     			remoteInfo = libhttp;
     		};
-		DC7F9CC4DC7FB7EC00000077 /* PBXContainerItemProxy libesp from All */ = {
+		9441AEA89441C80400000077 /* PBXContainerItemProxy libesp from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000005C;
+    			remoteGlobalIDString = 9441AEA89441C8040000005C;
     			remoteInfo = libesp;
     		};
-		DC7F9CC4DC7FB7EC00000078 /* PBXContainerItemProxy espcmd from All */ = {
+		9441AEA89441C80400000078 /* PBXContainerItemProxy espcmd from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC00000079;
+    			remoteGlobalIDString = 9441AEA89441C80400000079;
     			remoteInfo = espcmd;
     		};
-		DC7F9CC4DC7FB7EC0000007A /* PBXContainerItemProxy install-certs from All */ = {
+		9441AEA89441C8040000007A /* PBXContainerItemProxy install-certs from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000000A;
+    			remoteGlobalIDString = 9441AEA89441C8040000000A;
     			remoteInfo = install-certs;
     		};
-		DC7F9CC4DC7FB7EC0000007B /* PBXContainerItemProxy watchdog from All */ = {
+		9441AEA89441C8040000007B /* PBXContainerItemProxy watchdog from All */ = {
     			isa = PBXContainerItemProxy;
-    			containerPortal = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+    			containerPortal = 9441AEA89441C80400000001 /* Project object */;
     			proxyType = 1;
-    			remoteGlobalIDString = DC7F9CC4DC7FB7EC0000007C;
+    			remoteGlobalIDString = 9441AEA89441C8040000007C;
     			remoteInfo = watchdog;
     		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		DC7F9CC4DC7FB7EC0000001F /* esp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = esp.c; path = src/esp.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000007D /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = src/esp.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000007E /* espcmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = esp; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC00000021 /* edi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = edi.c; path = src/edi.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000007F /* edi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = edi.h; path = src/edi.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000080 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = build/macosx-x64-default/inc/pcre.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000023 /* espAbbrev.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espAbbrev.c; path = src/espAbbrev.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000025 /* espConfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espConfig.c; path = src/espConfig.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000027 /* espFramework.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espFramework.c; path = src/espFramework.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000029 /* espHtml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espHtml.c; path = src/espHtml.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000002B /* espRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espRequest.c; path = src/espRequest.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000002D /* espTemplate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espTemplate.c; path = src/espTemplate.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000002F /* mdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mdb.c; path = src/mdb.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000081 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = build/macosx-x64-default/inc/http.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000082 /* mdb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mdb.h; path = src/mdb.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000031 /* sdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sdb.c; path = src/sdb.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000003F /* libesp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libesp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC00000033 /* httpLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = httpLib.c; path = src/http/httpLib.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000083 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = src/http/http.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000043 /* libhttp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhttp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC00000035 /* mprLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprLib.c; path = src/mpr/mprLib.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000084 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = src/mpr/mpr.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000047 /* libmpr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC00000037 /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = src/pcre/pcre.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000085 /* me.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = me.h; path = build/macosx-x64-default/inc/me.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000086 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = src/pcre/pcre.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000045 /* libpcre */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpcre.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC00000039 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = src/sqlite/sqlite3.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000087 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = src/sqlite/sqlite3.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000041 /* libsql */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsql.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC0000003B /* openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = openssl.c; path = src/mpr-openssl/openssl.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000088 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-default/inc/mpr.h; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC00000089 /* openssl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libopenssl.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC7F9CC4DC7FB7EC0000003D /* watchdog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = watchdog.c; path = src/watchdog/watchdog.c; sourceTree = "<group>"; };
-		DC7F9CC4DC7FB7EC0000008A /* watchdog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = espman; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C8040000001F /* esp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = esp.c; path = src/esp.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000007D /* esp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = esp.h; path = src/esp.h; sourceTree = "<group>"; };
+		9441AEA89441C8040000007E /* espcmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = esp; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C80400000021 /* edi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = edi.c; path = src/edi.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000007F /* edi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = edi.h; path = src/edi.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000080 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = build/macosx-x64-default/inc/pcre.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000023 /* espAbbrev.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espAbbrev.c; path = src/espAbbrev.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000025 /* espConfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espConfig.c; path = src/espConfig.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000027 /* espFramework.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espFramework.c; path = src/espFramework.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000029 /* espHtml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espHtml.c; path = src/espHtml.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000002B /* espRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espRequest.c; path = src/espRequest.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000002D /* espTemplate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = espTemplate.c; path = src/espTemplate.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000002F /* mdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mdb.c; path = src/mdb.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000081 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = build/macosx-x64-default/inc/http.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000082 /* mdb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mdb.h; path = src/mdb.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000031 /* sdb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sdb.c; path = src/sdb.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000003F /* libesp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libesp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C80400000033 /* httpLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = httpLib.c; path = src/http/httpLib.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000083 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = http.h; path = src/http/http.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000043 /* libhttp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhttp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C80400000035 /* mprLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mprLib.c; path = src/mpr/mprLib.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000084 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = src/mpr/mpr.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000047 /* libmpr */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C80400000037 /* pcre.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre.c; path = src/pcre/pcre.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000085 /* me.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = me.h; path = build/macosx-x64-default/inc/me.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000086 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = src/pcre/pcre.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000045 /* libpcre */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libpcre.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C80400000039 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = src/sqlite/sqlite3.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000087 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = src/sqlite/sqlite3.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000041 /* libsql */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libsql.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C8040000003B /* openssl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = openssl.c; path = src/mpr-openssl/openssl.c; sourceTree = "<group>"; };
+		9441AEA89441C80400000088 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mpr.h; path = build/macosx-x64-default/inc/mpr.h; sourceTree = "<group>"; };
+		9441AEA89441C80400000089 /* openssl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libmpr-openssl.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		9441AEA89441C8040000003D /* watchdog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = watchdog.c; path = src/watchdog/watchdog.c; sourceTree = "<group>"; };
+		9441AEA89441C8040000008A /* watchdog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = espman; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		DC7F9CC4DC7FB7EC0000008B /* Frameworks and Libraries for espcmd */ = {
+		9441AEA89441C8040000008B /* Frameworks and Libraries for espcmd */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				DC7F9CC4DC7FB7EC0000003E /* libesp */,
-				DC7F9CC4DC7FB7EC00000040 /* libsql */,
-				DC7F9CC4DC7FB7EC00000042 /* libhttp */,
-				DC7F9CC4DC7FB7EC00000044 /* libpcre */,
-				DC7F9CC4DC7FB7EC00000046 /* libmpr */,				
+    				9441AEA89441C8040000003E /* libesp */,
+				9441AEA89441C80400000040 /* libsql */,
+				9441AEA89441C80400000042 /* libhttp */,
+				9441AEA89441C80400000044 /* libpcre */,
+				9441AEA89441C80400000046 /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC0000008C /* Frameworks and Libraries for libesp */ = {
+		9441AEA89441C8040000008C /* Frameworks and Libraries for libesp */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				DC7F9CC4DC7FB7EC00000048 /* libhttp */,
-				DC7F9CC4DC7FB7EC00000049 /* libsql */,
-				DC7F9CC4DC7FB7EC0000004A /* libpcre */,
-				DC7F9CC4DC7FB7EC0000004B /* libmpr */,				
+    				9441AEA89441C80400000048 /* libhttp */,
+				9441AEA89441C80400000049 /* libsql */,
+				9441AEA89441C8040000004A /* libpcre */,
+				9441AEA89441C8040000004B /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC0000008D /* Frameworks and Libraries for libhttp */ = {
+		9441AEA89441C8040000008D /* Frameworks and Libraries for libhttp */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				DC7F9CC4DC7FB7EC0000004C /* libpcre */,
-				DC7F9CC4DC7FB7EC0000004D /* libmpr */,				
+    				9441AEA89441C8040000004C /* libpcre */,
+				9441AEA89441C8040000004D /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC0000008E /* Frameworks and Libraries for libmpr */ = {
+		9441AEA89441C8040000008E /* Frameworks and Libraries for libmpr */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -446,7 +446,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC0000008F /* Frameworks and Libraries for libpcre */ = {
+		9441AEA89441C8040000008F /* Frameworks and Libraries for libpcre */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -454,7 +454,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC00000090 /* Frameworks and Libraries for libsql */ = {
+		9441AEA89441C80400000090 /* Frameworks and Libraries for libsql */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -462,7 +462,7 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC00000091 /* Frameworks and Libraries for openssl */ = {
+		9441AEA89441C80400000091 /* Frameworks and Libraries for openssl */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -470,130 +470,130 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		DC7F9CC4DC7FB7EC00000092 /* Frameworks and Libraries for watchdog */ = {
+		9441AEA89441C80400000092 /* Frameworks and Libraries for watchdog */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
-    				DC7F9CC4DC7FB7EC0000004E /* libmpr */,				
+    				9441AEA89441C8040000004E /* libmpr */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		DC7F9CC4DC7FB7EC00000093 /* Top Group */ = {
+		9441AEA89441C80400000093 /* Top Group */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC00000094 /* libesp */,
-				DC7F9CC4DC7FB7EC00000095 /* libhttp */,
-				DC7F9CC4DC7FB7EC00000096 /* libmpr */,
-				DC7F9CC4DC7FB7EC00000097 /* libpcre */,
-				DC7F9CC4DC7FB7EC00000098 /* libsql */,
-				DC7F9CC4DC7FB7EC00000099 /* openssl */,
-				DC7F9CC4DC7FB7EC0000009A /* espcmd */,
-				DC7F9CC4DC7FB7EC0000009B /* watchdog */,
-				DC7F9CC4DC7FB7EC0000009C /* Products */,
+				9441AEA89441C80400000094 /* libesp */,
+				9441AEA89441C80400000095 /* libhttp */,
+				9441AEA89441C80400000096 /* libmpr */,
+				9441AEA89441C80400000097 /* libpcre */,
+				9441AEA89441C80400000098 /* libsql */,
+				9441AEA89441C80400000099 /* openssl */,
+				9441AEA89441C8040000009A /* espcmd */,
+				9441AEA89441C8040000009B /* watchdog */,
+				9441AEA89441C8040000009C /* Products */,
 			);
                 sourceTree = "<group>";
             };
-		DC7F9CC4DC7FB7EC0000009A /* espcmd */ = {
+		9441AEA89441C8040000009A /* espcmd */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC0000001F /* esp.c */,
+				9441AEA89441C8040000001F /* esp.c */,
 			);
                 name = "espcmd";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC00000094 /* libesp */ = {
+		9441AEA89441C80400000094 /* libesp */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC0000007F /* edi.h */,
-				DC7F9CC4DC7FB7EC0000007D /* esp.h */,
-				DC7F9CC4DC7FB7EC00000082 /* mdb.h */,
-				DC7F9CC4DC7FB7EC00000021 /* edi.c */,
-				DC7F9CC4DC7FB7EC00000023 /* espAbbrev.c */,
-				DC7F9CC4DC7FB7EC00000025 /* espConfig.c */,
-				DC7F9CC4DC7FB7EC00000027 /* espFramework.c */,
-				DC7F9CC4DC7FB7EC00000029 /* espHtml.c */,
-				DC7F9CC4DC7FB7EC0000002B /* espRequest.c */,
-				DC7F9CC4DC7FB7EC0000002D /* espTemplate.c */,
-				DC7F9CC4DC7FB7EC0000002F /* mdb.c */,
-				DC7F9CC4DC7FB7EC00000031 /* sdb.c */,
+				9441AEA89441C8040000007F /* edi.h */,
+				9441AEA89441C8040000007D /* esp.h */,
+				9441AEA89441C80400000082 /* mdb.h */,
+				9441AEA89441C80400000021 /* edi.c */,
+				9441AEA89441C80400000023 /* espAbbrev.c */,
+				9441AEA89441C80400000025 /* espConfig.c */,
+				9441AEA89441C80400000027 /* espFramework.c */,
+				9441AEA89441C80400000029 /* espHtml.c */,
+				9441AEA89441C8040000002B /* espRequest.c */,
+				9441AEA89441C8040000002D /* espTemplate.c */,
+				9441AEA89441C8040000002F /* mdb.c */,
+				9441AEA89441C80400000031 /* sdb.c */,
 			);
                 name = "libesp";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC00000095 /* libhttp */ = {
+		9441AEA89441C80400000095 /* libhttp */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC00000083 /* http.h */,
-				DC7F9CC4DC7FB7EC00000033 /* httpLib.c */,
+				9441AEA89441C80400000083 /* http.h */,
+				9441AEA89441C80400000033 /* httpLib.c */,
 			);
                 name = "libhttp";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC00000096 /* libmpr */ = {
+		9441AEA89441C80400000096 /* libmpr */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC00000084 /* mpr.h */,
-				DC7F9CC4DC7FB7EC00000035 /* mprLib.c */,
+				9441AEA89441C80400000084 /* mpr.h */,
+				9441AEA89441C80400000035 /* mprLib.c */,
 			);
                 name = "libmpr";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC00000097 /* libpcre */ = {
+		9441AEA89441C80400000097 /* libpcre */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC00000086 /* pcre.h */,
-				DC7F9CC4DC7FB7EC00000037 /* pcre.c */,
+				9441AEA89441C80400000086 /* pcre.h */,
+				9441AEA89441C80400000037 /* pcre.c */,
 			);
                 name = "libpcre";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC00000098 /* libsql */ = {
+		9441AEA89441C80400000098 /* libsql */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC00000087 /* sqlite3.h */,
-				DC7F9CC4DC7FB7EC00000039 /* sqlite3.c */,
+				9441AEA89441C80400000087 /* sqlite3.h */,
+				9441AEA89441C80400000039 /* sqlite3.c */,
 			);
                 name = "libsql";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC00000099 /* openssl */ = {
+		9441AEA89441C80400000099 /* openssl */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC0000003B /* openssl.c */,
+				9441AEA89441C8040000003B /* openssl.c */,
 			);
                 name = "openssl";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC0000009B /* watchdog */ = {
+		9441AEA89441C8040000009B /* watchdog */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC0000003D /* watchdog.c */,
+				9441AEA89441C8040000003D /* watchdog.c */,
 			);
                 name = "watchdog";
                 path = ..;
                 sourceTree = SOURCE_ROOT;
             };
-		DC7F9CC4DC7FB7EC0000009C /* Products */ = {
+		9441AEA89441C8040000009C /* Products */ = {
                 isa = PBXGroup;
                 children = (
-				DC7F9CC4DC7FB7EC0000007E /* espcmd */,
-				DC7F9CC4DC7FB7EC0000003F /* libesp */,
-				DC7F9CC4DC7FB7EC00000043 /* libhttp */,
-				DC7F9CC4DC7FB7EC00000047 /* libmpr */,
-				DC7F9CC4DC7FB7EC00000045 /* libpcre */,
-				DC7F9CC4DC7FB7EC00000041 /* libsql */,
-				DC7F9CC4DC7FB7EC00000089 /* openssl */,
-				DC7F9CC4DC7FB7EC0000008A /* watchdog */,
+				9441AEA89441C8040000007E /* espcmd */,
+				9441AEA89441C8040000003F /* libesp */,
+				9441AEA89441C80400000043 /* libhttp */,
+				9441AEA89441C80400000047 /* libmpr */,
+				9441AEA89441C80400000045 /* libpcre */,
+				9441AEA89441C80400000041 /* libsql */,
+				9441AEA89441C80400000089 /* openssl */,
+				9441AEA89441C8040000008A /* watchdog */,
 			);
                 name = "Products";
                 path = ..;
@@ -602,163 +602,163 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		DC7F9CC4DC7FB7EC00000079 /* espcmd */ = {
+		9441AEA89441C80400000079 /* espcmd */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC0000009E /* Build configuration list for PBXNativeTarget "espcmd" */;
+    			buildConfigurationList = 9441AEA89441C8040000009E /* Build configuration list for PBXNativeTarget "espcmd" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC0000009D /* Sources */,
-    				DC7F9CC4DC7FB7EC0000008B /* Frameworks */,
+    				9441AEA89441C8040000009D /* Sources */,
+    				9441AEA89441C8040000008B /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC0000009F /* Prep */,
-				DC7F9CC4DC7FB7EC000000A0 /* libsql */,
-				DC7F9CC4DC7FB7EC000000A1 /* openssl */,
-				DC7F9CC4DC7FB7EC000000A2 /* libmpr */,
-				DC7F9CC4DC7FB7EC000000A3 /* libpcre */,
-				DC7F9CC4DC7FB7EC000000A4 /* libhttp */,
-				DC7F9CC4DC7FB7EC000000A5 /* libesp */,				
+    				9441AEA89441C8040000009F /* Prep */,
+				9441AEA89441C804000000A0 /* libsql */,
+				9441AEA89441C804000000A1 /* openssl */,
+				9441AEA89441C804000000A2 /* libmpr */,
+				9441AEA89441C804000000A3 /* libpcre */,
+				9441AEA89441C804000000A4 /* libhttp */,
+				9441AEA89441C804000000A5 /* libesp */,				
     			);
     			name = espcmd;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC0000007E /* espcmd */;
+    			productReference = 9441AEA89441C8040000007E /* espcmd */;
     			productType = "com.apple.product-type.tool";
     		};
-		DC7F9CC4DC7FB7EC0000005C /* libesp */ = {
+		9441AEA89441C8040000005C /* libesp */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000A7 /* Build configuration list for PBXNativeTarget "libesp" */;
+    			buildConfigurationList = 9441AEA89441C804000000A7 /* Build configuration list for PBXNativeTarget "libesp" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000A6 /* Sources */,
-    				DC7F9CC4DC7FB7EC0000008C /* Frameworks */,
+    				9441AEA89441C804000000A6 /* Sources */,
+    				9441AEA89441C8040000008C /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000A8 /* Prep */,
-				DC7F9CC4DC7FB7EC000000A9 /* libsql */,
-				DC7F9CC4DC7FB7EC000000AA /* openssl */,
-				DC7F9CC4DC7FB7EC000000AB /* libmpr */,
-				DC7F9CC4DC7FB7EC000000AC /* libpcre */,
-				DC7F9CC4DC7FB7EC000000AD /* libhttp */,				
+    				9441AEA89441C804000000A8 /* Prep */,
+				9441AEA89441C804000000A9 /* libsql */,
+				9441AEA89441C804000000AA /* openssl */,
+				9441AEA89441C804000000AB /* libmpr */,
+				9441AEA89441C804000000AC /* libpcre */,
+				9441AEA89441C804000000AD /* libhttp */,				
     			);
     			name = libesp;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC0000003F /* libesp */;
+    			productReference = 9441AEA89441C8040000003F /* libesp */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
-		DC7F9CC4DC7FB7EC0000005A /* libhttp */ = {
+		9441AEA89441C8040000005A /* libhttp */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000AF /* Build configuration list for PBXNativeTarget "libhttp" */;
+    			buildConfigurationList = 9441AEA89441C804000000AF /* Build configuration list for PBXNativeTarget "libhttp" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000AE /* Sources */,
-    				DC7F9CC4DC7FB7EC0000008D /* Frameworks */,
+    				9441AEA89441C804000000AE /* Sources */,
+    				9441AEA89441C8040000008D /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000B0 /* Prep */,
-				DC7F9CC4DC7FB7EC000000B1 /* openssl */,
-				DC7F9CC4DC7FB7EC000000B2 /* libmpr */,
-				DC7F9CC4DC7FB7EC000000B3 /* libpcre */,				
+    				9441AEA89441C804000000B0 /* Prep */,
+				9441AEA89441C804000000B1 /* openssl */,
+				9441AEA89441C804000000B2 /* libmpr */,
+				9441AEA89441C804000000B3 /* libpcre */,				
     			);
     			name = libhttp;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC00000043 /* libhttp */;
+    			productReference = 9441AEA89441C80400000043 /* libhttp */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
-		DC7F9CC4DC7FB7EC00000056 /* libmpr */ = {
+		9441AEA89441C80400000056 /* libmpr */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000B5 /* Build configuration list for PBXNativeTarget "libmpr" */;
+    			buildConfigurationList = 9441AEA89441C804000000B5 /* Build configuration list for PBXNativeTarget "libmpr" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000B4 /* Sources */,
-    				DC7F9CC4DC7FB7EC0000008E /* Frameworks */,
+    				9441AEA89441C804000000B4 /* Sources */,
+    				9441AEA89441C8040000008E /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000B6 /* Prep */,
-				DC7F9CC4DC7FB7EC000000B7 /* openssl */,				
+    				9441AEA89441C804000000B6 /* Prep */,
+				9441AEA89441C804000000B7 /* openssl */,				
     			);
     			name = libmpr;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC00000047 /* libmpr */;
+    			productReference = 9441AEA89441C80400000047 /* libmpr */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
-		DC7F9CC4DC7FB7EC00000058 /* libpcre */ = {
+		9441AEA89441C80400000058 /* libpcre */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000B9 /* Build configuration list for PBXNativeTarget "libpcre" */;
+    			buildConfigurationList = 9441AEA89441C804000000B9 /* Build configuration list for PBXNativeTarget "libpcre" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000B8 /* Sources */,
-    				DC7F9CC4DC7FB7EC0000008F /* Frameworks */,
+    				9441AEA89441C804000000B8 /* Sources */,
+    				9441AEA89441C8040000008F /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000BA /* Prep */,				
+    				9441AEA89441C804000000BA /* Prep */,				
     			);
     			name = libpcre;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC00000045 /* libpcre */;
+    			productReference = 9441AEA89441C80400000045 /* libpcre */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
-		DC7F9CC4DC7FB7EC00000052 /* libsql */ = {
+		9441AEA89441C80400000052 /* libsql */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000BC /* Build configuration list for PBXNativeTarget "libsql" */;
+    			buildConfigurationList = 9441AEA89441C804000000BC /* Build configuration list for PBXNativeTarget "libsql" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000BB /* Sources */,
-    				DC7F9CC4DC7FB7EC00000090 /* Frameworks */,
+    				9441AEA89441C804000000BB /* Sources */,
+    				9441AEA89441C80400000090 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000BD /* Prep */,				
+    				9441AEA89441C804000000BD /* Prep */,				
     			);
     			name = libsql;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC00000041 /* libsql */;
+    			productReference = 9441AEA89441C80400000041 /* libsql */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
-		DC7F9CC4DC7FB7EC00000054 /* openssl */ = {
+		9441AEA89441C80400000054 /* openssl */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000BF /* Build configuration list for PBXNativeTarget "openssl" */;
+    			buildConfigurationList = 9441AEA89441C804000000BF /* Build configuration list for PBXNativeTarget "openssl" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000BE /* Sources */,
-    				DC7F9CC4DC7FB7EC00000091 /* Frameworks */,
+    				9441AEA89441C804000000BE /* Sources */,
+    				9441AEA89441C80400000091 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000C0 /* Prep */,				
+    				9441AEA89441C804000000C0 /* Prep */,				
     			);
     			name = openssl;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC00000089 /* openssl */;
+    			productReference = 9441AEA89441C80400000089 /* openssl */;
     			productType = "com.apple.product-type.library.dynamic";
     		};
-		DC7F9CC4DC7FB7EC0000007C /* watchdog */ = {
+		9441AEA89441C8040000007C /* watchdog */ = {
     			isa = PBXNativeTarget;
-    			buildConfigurationList = DC7F9CC4DC7FB7EC000000C2 /* Build configuration list for PBXNativeTarget "watchdog" */;
+    			buildConfigurationList = 9441AEA89441C804000000C2 /* Build configuration list for PBXNativeTarget "watchdog" */;
     			buildPhases = (
-    				DC7F9CC4DC7FB7EC000000C1 /* Sources */,
-    				DC7F9CC4DC7FB7EC00000092 /* Frameworks */,
+    				9441AEA89441C804000000C1 /* Sources */,
+    				9441AEA89441C80400000092 /* Frameworks */,
     			);
     			buildRules = (
     			);
     			dependencies = (
-    				DC7F9CC4DC7FB7EC000000C3 /* Prep */,
-				DC7F9CC4DC7FB7EC000000C4 /* openssl */,
-				DC7F9CC4DC7FB7EC000000C5 /* libmpr */,				
+    				9441AEA89441C804000000C3 /* Prep */,
+				9441AEA89441C804000000C4 /* openssl */,
+				9441AEA89441C804000000C5 /* libmpr */,				
     			);
     			name = watchdog;
     			productName = esp;
-    			productReference = DC7F9CC4DC7FB7EC0000008A /* watchdog */;
+    			productReference = 9441AEA89441C8040000008A /* watchdog */;
     			productType = "com.apple.product-type.tool";
     		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		DC7F9CC4DC7FB7EC00000007 /* ShellScript for esp-compile.json */ = {
+		9441AEA89441C80400000007 /* ShellScript for esp-compile.json */ = {
     			isa = PBXShellScriptBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -777,7 +777,7 @@ cd ..
 	cp src/esp-compile.json build/macosx-x64-default/bin/esp-compile.json
 ";
     		};
-		DC7F9CC4DC7FB7EC0000000B /* ShellScript for install-certs */ = {
+		9441AEA89441C8040000000B /* ShellScript for install-certs */ = {
     			isa = PBXShellScriptBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -814,7 +814,7 @@ cd ..
 	cp src/certs/samples/test.key build/macosx-x64-default/bin/test.key
 ";
     		};
-		DC7F9CC4DC7FB7EC0000001D /* ShellScript for Prep */ = {
+		9441AEA89441C8040000001D /* ShellScript for Prep */ = {
     			isa = PBXShellScriptBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
@@ -884,310 +884,310 @@ fi";
 /* End PBXShellScriptBuildPhase section */
 
     /* Begin PBXProject section */
-    		DC7F9CC4DC7FB7EC00000001 /* Project object */ = {
+    		9441AEA89441C80400000001 /* Project object */ = {
     			isa = PBXProject;
     			attributes = {
     				LastUpgradeCheck = 0430;
     				ORGANIZATIONNAME = "embedthis";
     			};
-    			buildConfigurationList = DC7F9CC4DC7FB7EC00000002 /* Build configuration list for PBXProject "esp" */;
+    			buildConfigurationList = 9441AEA89441C80400000002 /* Build configuration list for PBXProject "esp" */;
     			compatibilityVersion = "Xcode 3.2";
     			developmentRegion = English;
     			hasScannedForEncodings = 0;
     			knownRegions = (
     				en,
     			);
-    			mainGroup = DC7F9CC4DC7FB7EC00000093;
-    			productRefGroup = DC7F9CC4DC7FB7EC0000009C /* Products */;
+    			mainGroup = 9441AEA89441C80400000093;
+    			productRefGroup = 9441AEA89441C8040000009C /* Products */;
     			projectDirPath = "";
     			projectRoot = "";
     			targets = (
-				DC7F9CC4DC7FB7EC0000000E /* All */,
-				DC7F9CC4DC7FB7EC0000001C /* Prep */,
-				DC7F9CC4DC7FB7EC0000005C /* libesp */,
-				DC7F9CC4DC7FB7EC0000005A /* libhttp */,
-				DC7F9CC4DC7FB7EC00000056 /* libmpr */,
-				DC7F9CC4DC7FB7EC00000058 /* libpcre */,
-				DC7F9CC4DC7FB7EC00000052 /* libsql */,
-				DC7F9CC4DC7FB7EC00000054 /* openssl */,
-				DC7F9CC4DC7FB7EC00000079 /* espcmd */,
-				DC7F9CC4DC7FB7EC0000007C /* watchdog */,
-				DC7F9CC4DC7FB7EC00000006 /* esp-compile.json */,
-				DC7F9CC4DC7FB7EC0000000A /* install-certs */,
+				9441AEA89441C8040000000E /* All */,
+				9441AEA89441C8040000001C /* Prep */,
+				9441AEA89441C8040000005C /* libesp */,
+				9441AEA89441C8040000005A /* libhttp */,
+				9441AEA89441C80400000056 /* libmpr */,
+				9441AEA89441C80400000058 /* libpcre */,
+				9441AEA89441C80400000052 /* libsql */,
+				9441AEA89441C80400000054 /* openssl */,
+				9441AEA89441C80400000079 /* espcmd */,
+				9441AEA89441C8040000007C /* watchdog */,
+				9441AEA89441C80400000006 /* esp-compile.json */,
+				9441AEA89441C8040000000A /* install-certs */,
 			);
     		};
     /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		DC7F9CC4DC7FB7EC0000009D /* espcmd Sources */ = {
+		9441AEA89441C8040000009D /* espcmd Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC0000001E /* esp.c in Sources */,
+    				9441AEA89441C8040000001E /* esp.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000A6 /* libesp Sources */ = {
+		9441AEA89441C804000000A6 /* libesp Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC00000020 /* edi.c in Sources */,
-				DC7F9CC4DC7FB7EC00000022 /* espAbbrev.c in Sources */,
-				DC7F9CC4DC7FB7EC00000024 /* espConfig.c in Sources */,
-				DC7F9CC4DC7FB7EC00000026 /* espFramework.c in Sources */,
-				DC7F9CC4DC7FB7EC00000028 /* espHtml.c in Sources */,
-				DC7F9CC4DC7FB7EC0000002A /* espRequest.c in Sources */,
-				DC7F9CC4DC7FB7EC0000002C /* espTemplate.c in Sources */,
-				DC7F9CC4DC7FB7EC0000002E /* mdb.c in Sources */,
-				DC7F9CC4DC7FB7EC00000030 /* sdb.c in Sources */,
+    				9441AEA89441C80400000020 /* edi.c in Sources */,
+				9441AEA89441C80400000022 /* espAbbrev.c in Sources */,
+				9441AEA89441C80400000024 /* espConfig.c in Sources */,
+				9441AEA89441C80400000026 /* espFramework.c in Sources */,
+				9441AEA89441C80400000028 /* espHtml.c in Sources */,
+				9441AEA89441C8040000002A /* espRequest.c in Sources */,
+				9441AEA89441C8040000002C /* espTemplate.c in Sources */,
+				9441AEA89441C8040000002E /* mdb.c in Sources */,
+				9441AEA89441C80400000030 /* sdb.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000AE /* libhttp Sources */ = {
+		9441AEA89441C804000000AE /* libhttp Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC00000032 /* httpLib.c in Sources */,
+    				9441AEA89441C80400000032 /* httpLib.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000B4 /* libmpr Sources */ = {
+		9441AEA89441C804000000B4 /* libmpr Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC00000034 /* mprLib.c in Sources */,
+    				9441AEA89441C80400000034 /* mprLib.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000B8 /* libpcre Sources */ = {
+		9441AEA89441C804000000B8 /* libpcre Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC00000036 /* pcre.c in Sources */,
+    				9441AEA89441C80400000036 /* pcre.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000BB /* libsql Sources */ = {
+		9441AEA89441C804000000BB /* libsql Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC00000038 /* sqlite3.c in Sources */,
+    				9441AEA89441C80400000038 /* sqlite3.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000BE /* openssl Sources */ = {
+		9441AEA89441C804000000BE /* openssl Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC0000003A /* openssl.c in Sources */,
+    				9441AEA89441C8040000003A /* openssl.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
-		DC7F9CC4DC7FB7EC000000C1 /* watchdog Sources */ = {
+		9441AEA89441C804000000C1 /* watchdog Sources */ = {
     			isa = PBXSourcesBuildPhase;
     			buildActionMask = 2147483647;
     			files = (
-    				DC7F9CC4DC7FB7EC0000003C /* watchdog.c in Sources */,
+    				9441AEA89441C8040000003C /* watchdog.c in Sources */,
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		DC7F9CC4DC7FB7EC00000008 /* PBXTargetDependency esp-compile.json depends on Prep */ = {
+		9441AEA89441C80400000008 /* PBXTargetDependency esp-compile.json depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000004F /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000004F /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC0000009F /* PBXTargetDependency espcmd depends on Prep */ = {
+		9441AEA89441C8040000009F /* PBXTargetDependency espcmd depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000050 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C80400000050 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A0 /* PBXTargetDependency espcmd depends on libsql */ = {
+		9441AEA89441C804000000A0 /* PBXTargetDependency espcmd depends on libsql */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000052 /* libsql */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000051 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000052 /* libsql */;
+    			targetProxy = 9441AEA89441C80400000051 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A1 /* PBXTargetDependency espcmd depends on openssl */ = {
+		9441AEA89441C804000000A1 /* PBXTargetDependency espcmd depends on openssl */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000054 /* openssl */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000053 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000054 /* openssl */;
+    			targetProxy = 9441AEA89441C80400000053 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A2 /* PBXTargetDependency espcmd depends on libmpr */ = {
+		9441AEA89441C804000000A2 /* PBXTargetDependency espcmd depends on libmpr */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000056 /* libmpr */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000055 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000056 /* libmpr */;
+    			targetProxy = 9441AEA89441C80400000055 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A3 /* PBXTargetDependency espcmd depends on libpcre */ = {
+		9441AEA89441C804000000A3 /* PBXTargetDependency espcmd depends on libpcre */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000058 /* libpcre */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000057 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000058 /* libpcre */;
+    			targetProxy = 9441AEA89441C80400000057 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A4 /* PBXTargetDependency espcmd depends on libhttp */ = {
+		9441AEA89441C804000000A4 /* PBXTargetDependency espcmd depends on libhttp */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000005A /* libhttp */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000059 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000005A /* libhttp */;
+    			targetProxy = 9441AEA89441C80400000059 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A5 /* PBXTargetDependency espcmd depends on libesp */ = {
+		9441AEA89441C804000000A5 /* PBXTargetDependency espcmd depends on libesp */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000005C /* libesp */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000005B /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000005C /* libesp */;
+    			targetProxy = 9441AEA89441C8040000005B /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC0000000C /* PBXTargetDependency install-certs depends on Prep */ = {
+		9441AEA89441C8040000000C /* PBXTargetDependency install-certs depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000005D /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000005D /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A8 /* PBXTargetDependency libesp depends on Prep */ = {
+		9441AEA89441C804000000A8 /* PBXTargetDependency libesp depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000005E /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000005E /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000A9 /* PBXTargetDependency libesp depends on libsql */ = {
+		9441AEA89441C804000000A9 /* PBXTargetDependency libesp depends on libsql */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000052 /* libsql */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000005F /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000052 /* libsql */;
+    			targetProxy = 9441AEA89441C8040000005F /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000AA /* PBXTargetDependency libesp depends on openssl */ = {
+		9441AEA89441C804000000AA /* PBXTargetDependency libesp depends on openssl */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000054 /* openssl */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000060 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000054 /* openssl */;
+    			targetProxy = 9441AEA89441C80400000060 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000AB /* PBXTargetDependency libesp depends on libmpr */ = {
+		9441AEA89441C804000000AB /* PBXTargetDependency libesp depends on libmpr */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000056 /* libmpr */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000061 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000056 /* libmpr */;
+    			targetProxy = 9441AEA89441C80400000061 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000AC /* PBXTargetDependency libesp depends on libpcre */ = {
+		9441AEA89441C804000000AC /* PBXTargetDependency libesp depends on libpcre */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000058 /* libpcre */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000062 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000058 /* libpcre */;
+    			targetProxy = 9441AEA89441C80400000062 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000AD /* PBXTargetDependency libesp depends on libhttp */ = {
+		9441AEA89441C804000000AD /* PBXTargetDependency libesp depends on libhttp */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000005A /* libhttp */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000063 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000005A /* libhttp */;
+    			targetProxy = 9441AEA89441C80400000063 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000B0 /* PBXTargetDependency libhttp depends on Prep */ = {
+		9441AEA89441C804000000B0 /* PBXTargetDependency libhttp depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000064 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C80400000064 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000B1 /* PBXTargetDependency libhttp depends on openssl */ = {
+		9441AEA89441C804000000B1 /* PBXTargetDependency libhttp depends on openssl */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000054 /* openssl */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000065 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000054 /* openssl */;
+    			targetProxy = 9441AEA89441C80400000065 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000B2 /* PBXTargetDependency libhttp depends on libmpr */ = {
+		9441AEA89441C804000000B2 /* PBXTargetDependency libhttp depends on libmpr */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000056 /* libmpr */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000066 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000056 /* libmpr */;
+    			targetProxy = 9441AEA89441C80400000066 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000B3 /* PBXTargetDependency libhttp depends on libpcre */ = {
+		9441AEA89441C804000000B3 /* PBXTargetDependency libhttp depends on libpcre */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000058 /* libpcre */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000067 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000058 /* libpcre */;
+    			targetProxy = 9441AEA89441C80400000067 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000B6 /* PBXTargetDependency libmpr depends on Prep */ = {
+		9441AEA89441C804000000B6 /* PBXTargetDependency libmpr depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000068 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C80400000068 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000B7 /* PBXTargetDependency libmpr depends on openssl */ = {
+		9441AEA89441C804000000B7 /* PBXTargetDependency libmpr depends on openssl */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000054 /* openssl */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000069 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000054 /* openssl */;
+    			targetProxy = 9441AEA89441C80400000069 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000BA /* PBXTargetDependency libpcre depends on Prep */ = {
+		9441AEA89441C804000000BA /* PBXTargetDependency libpcre depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000006A /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000006A /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000BD /* PBXTargetDependency libsql depends on Prep */ = {
+		9441AEA89441C804000000BD /* PBXTargetDependency libsql depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000006B /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000006B /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000C0 /* PBXTargetDependency openssl depends on Prep */ = {
+		9441AEA89441C804000000C0 /* PBXTargetDependency openssl depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000006C /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000006C /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000C3 /* PBXTargetDependency watchdog depends on Prep */ = {
+		9441AEA89441C804000000C3 /* PBXTargetDependency watchdog depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000006D /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C8040000006D /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000C4 /* PBXTargetDependency watchdog depends on openssl */ = {
+		9441AEA89441C804000000C4 /* PBXTargetDependency watchdog depends on openssl */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000054 /* openssl */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000006E /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000054 /* openssl */;
+    			targetProxy = 9441AEA89441C8040000006E /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC000000C5 /* PBXTargetDependency watchdog depends on libmpr */ = {
+		9441AEA89441C804000000C5 /* PBXTargetDependency watchdog depends on libmpr */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000056 /* libmpr */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000006F /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000056 /* libmpr */;
+    			targetProxy = 9441AEA89441C8040000006F /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC0000001A /* PBXTargetDependency All depends on Prep */ = {
+		9441AEA89441C8040000001A /* PBXTargetDependency All depends on Prep */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000001C /* Prep */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000070 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000001C /* Prep */;
+    			targetProxy = 9441AEA89441C80400000070 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC0000000F /* PBXTargetDependency All depends on esp-compile.json */ = {
+		9441AEA89441C8040000000F /* PBXTargetDependency All depends on esp-compile.json */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000006 /* esp-compile.json */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000071 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000006 /* esp-compile.json */;
+    			targetProxy = 9441AEA89441C80400000071 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000016 /* PBXTargetDependency All depends on libsql */ = {
+		9441AEA89441C80400000016 /* PBXTargetDependency All depends on libsql */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000052 /* libsql */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000072 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000052 /* libsql */;
+    			targetProxy = 9441AEA89441C80400000072 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000017 /* PBXTargetDependency All depends on openssl */ = {
+		9441AEA89441C80400000017 /* PBXTargetDependency All depends on openssl */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000054 /* openssl */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000073 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000054 /* openssl */;
+    			targetProxy = 9441AEA89441C80400000073 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000014 /* PBXTargetDependency All depends on libmpr */ = {
+		9441AEA89441C80400000014 /* PBXTargetDependency All depends on libmpr */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000056 /* libmpr */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000074 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000056 /* libmpr */;
+    			targetProxy = 9441AEA89441C80400000074 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000015 /* PBXTargetDependency All depends on libpcre */ = {
+		9441AEA89441C80400000015 /* PBXTargetDependency All depends on libpcre */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000058 /* libpcre */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000075 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000058 /* libpcre */;
+    			targetProxy = 9441AEA89441C80400000075 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000013 /* PBXTargetDependency All depends on libhttp */ = {
+		9441AEA89441C80400000013 /* PBXTargetDependency All depends on libhttp */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000005A /* libhttp */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000076 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000005A /* libhttp */;
+    			targetProxy = 9441AEA89441C80400000076 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000012 /* PBXTargetDependency All depends on libesp */ = {
+		9441AEA89441C80400000012 /* PBXTargetDependency All depends on libesp */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000005C /* libesp */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000077 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000005C /* libesp */;
+    			targetProxy = 9441AEA89441C80400000077 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000010 /* PBXTargetDependency All depends on espcmd */ = {
+		9441AEA89441C80400000010 /* PBXTargetDependency All depends on espcmd */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC00000079 /* espcmd */;
-    			targetProxy = DC7F9CC4DC7FB7EC00000078 /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C80400000079 /* espcmd */;
+    			targetProxy = 9441AEA89441C80400000078 /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000011 /* PBXTargetDependency All depends on install-certs */ = {
+		9441AEA89441C80400000011 /* PBXTargetDependency All depends on install-certs */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000000A /* install-certs */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000007A /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000000A /* install-certs */;
+    			targetProxy = 9441AEA89441C8040000007A /* PBXContainerItemProxy */;
     		};
-		DC7F9CC4DC7FB7EC00000018 /* PBXTargetDependency All depends on watchdog */ = {
+		9441AEA89441C80400000018 /* PBXTargetDependency All depends on watchdog */ = {
     			isa = PBXTargetDependency;
-    			target = DC7F9CC4DC7FB7EC0000007C /* watchdog */;
-    			targetProxy = DC7F9CC4DC7FB7EC0000007B /* PBXContainerItemProxy */;
+    			target = 9441AEA89441C8040000007C /* watchdog */;
+    			targetProxy = 9441AEA89441C8040000007B /* PBXContainerItemProxy */;
     		};
 /* End PBXTargetDependency section */
 
     /* Begin XCBuildConfiguration section */
-    		DC7F9CC4DC7FB7EC00000003 /* Debug */ = {
+    		9441AEA89441C80400000003 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     ME_COM_OPENSSL_PATH = "";
@@ -1257,7 +1257,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC00000004 /* Release */ = {
+    		9441AEA89441C80400000004 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     ME_COM_OPENSSL_PATH = "";
@@ -1325,7 +1325,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000C6 /* Debug */ = {
+		9441AEA89441C804000000C6 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = esp-compile;
@@ -1337,7 +1337,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000C7 /* Release */ = {
+    		9441AEA89441C804000000C7 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = esp-compile;
@@ -1346,7 +1346,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000C8 /* Debug */ = {
+		9441AEA89441C804000000C8 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = esp;
@@ -1365,7 +1365,7 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1374,7 +1374,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000C9 /* Release */ = {
+    		9441AEA89441C804000000C9 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = esp;
@@ -1390,7 +1390,7 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1399,7 +1399,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000CA /* Debug */ = {
+		9441AEA89441C804000000CA /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = bin;
@@ -1411,7 +1411,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000CB /* Release */ = {
+    		9441AEA89441C804000000CB /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = bin;
@@ -1420,7 +1420,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000CC /* Debug */ = {
+		9441AEA89441C804000000CC /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libesp;
@@ -1439,7 +1439,7 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1448,7 +1448,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000CD /* Release */ = {
+    		9441AEA89441C804000000CD /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libesp;
@@ -1464,7 +1464,7 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1473,7 +1473,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000CE /* Debug */ = {
+		9441AEA89441C804000000CE /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libhttp;
@@ -1492,7 +1492,7 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1501,7 +1501,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000CF /* Release */ = {
+    		9441AEA89441C804000000CF /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libhttp;
@@ -1517,7 +1517,7 @@ fi";
 				);
 				OTHER_LDFLAGS = (
 					"-lpam",
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1526,7 +1526,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000D0 /* Debug */ = {
+		9441AEA89441C804000000D0 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libmpr;
@@ -1544,7 +1544,7 @@ fi";
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1553,7 +1553,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000D1 /* Release */ = {
+    		9441AEA89441C804000000D1 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libmpr;
@@ -1568,7 +1568,7 @@ fi";
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1577,7 +1577,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000D2 /* Debug */ = {
+		9441AEA89441C804000000D2 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libpcre;
@@ -1590,7 +1590,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000D3 /* Release */ = {
+    		9441AEA89441C804000000D3 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libpcre;
@@ -1602,7 +1602,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000D4 /* Debug */ = {
+		9441AEA89441C804000000D4 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libsql;
@@ -1614,7 +1614,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000D5 /* Release */ = {
+    		9441AEA89441C804000000D5 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = libsql;
@@ -1623,10 +1623,10 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000D6 /* Debug */ = {
+		9441AEA89441C804000000D6 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libopenssl;
+    				PRODUCT_NAME = libmpr-openssl;
     				EXECUTABLE_EXTENSION = a;
 
     				HEADER_SEARCH_PATHS = (
@@ -1651,10 +1651,10 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000D7 /* Release */ = {
+    		9441AEA89441C804000000D7 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = libopenssl;
+    				PRODUCT_NAME = libmpr-openssl;
     				EXECUTABLE_EXTENSION = a;
 
     				HEADER_SEARCH_PATHS = (
@@ -1676,7 +1676,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000D8 /* Debug */ = {
+		9441AEA89441C804000000D8 /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = espman;
@@ -1694,7 +1694,7 @@ fi";
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1703,7 +1703,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000D9 /* Release */ = {
+    		9441AEA89441C804000000D9 /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = espman;
@@ -1718,7 +1718,7 @@ fi";
 					"$(inherited)"
 				);
 				OTHER_LDFLAGS = (
-					"-lopenssl",
+					"-lmpr-openssl",
 					"-lssl",
 					"-lcrypto",
 					"$(inherited)"
@@ -1727,7 +1727,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000DA /* Debug */ = {
+		9441AEA89441C804000000DA /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = All;
@@ -1739,7 +1739,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000DB /* Release */ = {
+    		9441AEA89441C804000000DB /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = All;
@@ -1748,7 +1748,7 @@ fi";
     			};
     			name = Release;
     		};
-		DC7F9CC4DC7FB7EC000000DC /* Debug */ = {
+		9441AEA89441C804000000DC /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = Prep;
@@ -1760,7 +1760,7 @@ fi";
     			};
     			name = Debug;
     		};
-    		DC7F9CC4DC7FB7EC000000DD /* Release */ = {
+    		9441AEA89441C804000000DD /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
     				PRODUCT_NAME = Prep;
@@ -1772,124 +1772,124 @@ fi";
 /* End XCBuildConfiguration section */
 
     /* Begin XCConfigurationList section */
-    		DC7F9CC4DC7FB7EC00000002 /* Build configuration list for PBXProject "esp" */ = {
+    		9441AEA89441C80400000002 /* Build configuration list for PBXProject "esp" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC00000003 /* Debug */,
-    				DC7F9CC4DC7FB7EC00000004 /* Release */,
+    				9441AEA89441C80400000003 /* Debug */,
+    				9441AEA89441C80400000004 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC00000005 /* Build configuration list for PBXNativeTarget "esp-compile.json" */ = {
+		9441AEA89441C80400000005 /* Build configuration list for PBXNativeTarget "esp-compile.json" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000C6 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000C7 /* Release */,
+    				9441AEA89441C804000000C6 /* Debug */,
+    				9441AEA89441C804000000C7 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC0000009E /* Build configuration list for PBXNativeTarget "espcmd" */ = {
+		9441AEA89441C8040000009E /* Build configuration list for PBXNativeTarget "espcmd" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000C8 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000C9 /* Release */,
+    				9441AEA89441C804000000C8 /* Debug */,
+    				9441AEA89441C804000000C9 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC00000009 /* Build configuration list for PBXNativeTarget "install-certs" */ = {
+		9441AEA89441C80400000009 /* Build configuration list for PBXNativeTarget "install-certs" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000CA /* Debug */,
-    				DC7F9CC4DC7FB7EC000000CB /* Release */,
+    				9441AEA89441C804000000CA /* Debug */,
+    				9441AEA89441C804000000CB /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000A7 /* Build configuration list for PBXNativeTarget "libesp" */ = {
+		9441AEA89441C804000000A7 /* Build configuration list for PBXNativeTarget "libesp" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000CC /* Debug */,
-    				DC7F9CC4DC7FB7EC000000CD /* Release */,
+    				9441AEA89441C804000000CC /* Debug */,
+    				9441AEA89441C804000000CD /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000AF /* Build configuration list for PBXNativeTarget "libhttp" */ = {
+		9441AEA89441C804000000AF /* Build configuration list for PBXNativeTarget "libhttp" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000CE /* Debug */,
-    				DC7F9CC4DC7FB7EC000000CF /* Release */,
+    				9441AEA89441C804000000CE /* Debug */,
+    				9441AEA89441C804000000CF /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000B5 /* Build configuration list for PBXNativeTarget "libmpr" */ = {
+		9441AEA89441C804000000B5 /* Build configuration list for PBXNativeTarget "libmpr" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000D0 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000D1 /* Release */,
+    				9441AEA89441C804000000D0 /* Debug */,
+    				9441AEA89441C804000000D1 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000B9 /* Build configuration list for PBXNativeTarget "libpcre" */ = {
+		9441AEA89441C804000000B9 /* Build configuration list for PBXNativeTarget "libpcre" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000D2 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000D3 /* Release */,
+    				9441AEA89441C804000000D2 /* Debug */,
+    				9441AEA89441C804000000D3 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000BC /* Build configuration list for PBXNativeTarget "libsql" */ = {
+		9441AEA89441C804000000BC /* Build configuration list for PBXNativeTarget "libsql" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000D4 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000D5 /* Release */,
+    				9441AEA89441C804000000D4 /* Debug */,
+    				9441AEA89441C804000000D5 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000BF /* Build configuration list for PBXNativeTarget "openssl" */ = {
+		9441AEA89441C804000000BF /* Build configuration list for PBXNativeTarget "openssl" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000D6 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000D7 /* Release */,
+    				9441AEA89441C804000000D6 /* Debug */,
+    				9441AEA89441C804000000D7 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC000000C2 /* Build configuration list for PBXNativeTarget "watchdog" */ = {
+		9441AEA89441C804000000C2 /* Build configuration list for PBXNativeTarget "watchdog" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000D8 /* Debug */,
-    				DC7F9CC4DC7FB7EC000000D9 /* Release */,
+    				9441AEA89441C804000000D8 /* Debug */,
+    				9441AEA89441C804000000D9 /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC0000000D /* Build configuration list for PBXNativeTarget "All" */ = {
+		9441AEA89441C8040000000D /* Build configuration list for PBXNativeTarget "All" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000DA /* Debug */,
-    				DC7F9CC4DC7FB7EC000000DB /* Release */,
+    				9441AEA89441C804000000DA /* Debug */,
+    				9441AEA89441C804000000DB /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
-		DC7F9CC4DC7FB7EC0000001B /* Build configuration list for PBXNativeTarget "Prep" */ = {
+		9441AEA89441C8040000001B /* Build configuration list for PBXNativeTarget "Prep" */ = {
     			isa = XCConfigurationList;
     			buildConfigurations = (
-    				DC7F9CC4DC7FB7EC000000DC /* Debug */,
-    				DC7F9CC4DC7FB7EC000000DD /* Release */,
+    				9441AEA89441C804000000DC /* Debug */,
+    				9441AEA89441C804000000DD /* Release */,
     			);
     			defaultConfigurationIsVisible = 0;
     			defaultConfigurationName = Release;
     		};
 /* End XCConfigurationList section */
 	};
-	rootObject = DC7F9CC4DC7FB7EC00000001 /* Project object */;
+	rootObject = 9441AEA89441C80400000001 /* Project object */;
 }

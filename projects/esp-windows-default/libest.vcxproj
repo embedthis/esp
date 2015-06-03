@@ -38,22 +38,22 @@
   </ItemGroup>
     
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
@@ -121,7 +121,7 @@
         <Command>cd ..\..\src\est
 copy /Y /B est.h $(IncDir)
 cd ..\..\projects\esp-windows-default</Command>
-        <Outputs>$(BinDir)\libest.dll</Outputs>
+        <Outputs>$(BinDir)\libest.lib</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>
 

@@ -8,6 +8,7 @@ Me.load({
     targets: {
         libest: {
             type: 'lib',
+            static: true,
             headers: [ '*.h' ],
             depends: [ 'osdep' ],
             sources: [ 'estLib.c' ],

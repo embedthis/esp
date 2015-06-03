@@ -30,11 +30,6 @@
 
         me ec-cert
 
-
-    To generate DH parameters
-
-        me dhparams
-
     For all cert targets:
 
         me generate-certs
@@ -74,7 +69,7 @@ Me.load({
         },
 
         'generate-certs': {
-            depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'ec-cert', 'dhparams' ],
+            depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'ec-cert' ],
         },
 
         'get-roots': {
@@ -143,8 +138,7 @@ Me.load({
             message: 'Generate: Local DH parameters for OpenSSL ... may take a few minutes',
             action: `
                 me.dir.bin.join('dh.c').write(Cmd.run('openssl dhparam -C ${settings.certs.bits} -out ${BIN}/dh.pem') + '\n')
-            `,
-            enable: '${settings.certs.gendh} == true'
+            `
         }
 
         /*

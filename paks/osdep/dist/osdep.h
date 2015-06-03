@@ -610,6 +610,14 @@
     typedef unsigned long ulong;
 #endif
 
+#ifndef HAS_CINT
+    #define HAS_CINT 1
+    /**
+        Constant int data type.
+     */
+    typedef const int cint;
+#endif
+
 #ifndef HAS_SSIZE
     #define HAS_SSIZE 1
     #if ME_UNIX_LIKE || VXWORKS || DOXYGEN

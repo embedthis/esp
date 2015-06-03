@@ -1,6 +1,8 @@
 /*
     est.c - Embedded Secure Transport
 
+    EST is based on the precursor to PolarSSL.
+
     Individual sockets are not thread-safe. Must only be used by a single thread.
 
     Copyright (c) All Rights Reserved. See details at the end of the file.
@@ -25,7 +27,6 @@ typedef struct EstConfig {
     x509_cert       cert;               /* Certificate (own) */
     x509_cert       ca;                 /* Certificate authority bundle to verify peer */
     int             *ciphers;           /* Set of acceptable ciphers */
-    char            *dhKey;             /* DH keys */
 } EstConfig;
 
 /*
@@ -44,19 +45,22 @@ static MprSocketProvider *estProvider;  /* EST socket provider */
 static EstConfig *defaultEstConfig;     /* Default configuration */
 
 /*
-    Regenerate using: dh_genprime
-    Generated on 1/1/2014
+    DH Parameters from RFC3526
  */
-static char *dhG = "4";
-static char *dhKey =
-    "E4004C1F94182000103D883A448B3F80"
-    "2CE4B44A83301270002C20D0321CFD00"
-    "11CCEF784C26A400F43DFB901BCA7538"
-    "F2C6B176001CF5A0FD16D2C48B1D0C1C"
-    "F6AC8E1DA6BCC3B4E1F96B0564965300"
-    "FFA1D0B601EB2800F489AA512C4B248C"
-    "01F76949A60BB7F00A40B1EAB64BDD48" 
-    "E8A700D60B7F1200FA8E77B0A979DABF";
+#define DH_KEY_P \
+    "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1" \
+    "29024E088A67CC74020BBEA63B139B22514A08798E3404DD" \
+    "EF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245" \
+    "E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED" \
+    "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3D" \
+    "C2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F" \
+    "83655D23DCA3AD961C62F356208552BB9ED529077096966D" \
+    "670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B" \
+    "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9" \
+    "DE2BCBF6955817183995497CEA956AE515D2261898FA0510" \
+    "15728E5A8AACAA68FFFFFFFFFFFFFFFF"
+
+#define DH_KEY_G "02"
 
 /*
     Thread-safe session list
@@ -101,7 +105,6 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     if ((defaultEstConfig = mprAllocObj(EstConfig, manageEstConfig)) == 0) {
         return MPR_ERR_MEMORY;
     }
-    defaultEstConfig->dhKey = dhKey;
     return 0;
 }
 
@@ -232,7 +235,6 @@ static int upgradeEst(MprSocket *sp, MprSsl *ssl, cchar *peerName)
             }
         }
         est->cfg = ssl->config = cfg;
-        cfg->dhKey = defaultEstConfig->dhKey;
         cfg->ciphers = ssl_create_ciphers(ssl->ciphers);
     }
     unlock(ssl);
@@ -256,7 +258,7 @@ static int upgradeEst(MprSocket *sp, MprSsl *ssl, cchar *peerName)
     if (ssl->keyFile && ssl->certFile) {
         ssl_set_own_cert(&est->ctx, &cfg->cert, &cfg->rsa);
     }
-    ssl_set_dh_param(&est->ctx, dhKey, dhG);
+    ssl_set_dh_param(&est->ctx, DH_KEY_P, DH_KEY_G);
     est->started = mprGetTicks();
 
     if (handshakeEst(sp) < 0) {
@@ -486,7 +488,7 @@ static char *getEstState(MprSocket *sp)
     }
     ctx = &est->ctx;
     buf = mprCreateBuf(0, 0);
-    mprPutToBuf(buf, "PROVIDER=est,CIPHER=%s,", ssl_get_cipher(ctx));
+    mprPutToBuf(buf, "PROVIDER=est,CIPHER=%s,SESSION=%s", ssl_get_cipher(ctx), ctx->session->id);
 
     mprPutToBuf(buf, "PEER=\"%s\",", est->ctx.peer_cn);
     if (ctx->peer_cert) {

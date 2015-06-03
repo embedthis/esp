@@ -7530,7 +7530,6 @@ PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider);
 #define MPR_SOCKET_SERVER           0x400   /**< Socket is on the server-side */
 #define MPR_SOCKET_BUFFERED_READ    0x800   /**< Socket has buffered read data (in SSL stack) */
 #define MPR_SOCKET_BUFFERED_WRITE   0x1000  /**< Socket has buffered write data (in SSL stack) */
-#define MPR_SOCKET_RESUMED          0x2000  /**< SSL session has been resumed */
 #define MPR_SOCKET_DISCONNECTED     0x4000  /**< The mprDisconnectSocket has been called */
 #define MPR_SOCKET_HANDSHAKING      0x8000  /**< Doing an SSL handshake */
 
@@ -7745,14 +7744,6 @@ PUBLIC int mprGetSocketInfo(cchar *ip, int port, int *family, int *protocol, str
     @stability Stable
  */
 PUBLIC int mprGetSocketPort(MprSocket *sp);
-
-/**
-    Test if an SSL socket session has been resumed
-    @return True if the session has been resumed
-    @stability Prototype
-    @ingroup MprSocket
- */
-PUBLIC bool mprGetSocketResumed(MprSocket *sp);
 
 /**
     Get the socket state
@@ -8081,7 +8072,6 @@ typedef struct MprSsl {
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
     void            *config;            /**< Extended provider SSL configuration */
-    cchar           *dhFile;            /**< DH parameter file */
     bool            verified;           /**< Peer has been verified */
     bool            configured;         /**< Set if this SSL configuration has been processed */
     bool            verifyPeer;         /**< Verify the peer verificate */
@@ -8128,34 +8118,6 @@ PUBLIC struct MprSsl *mprCreateSsl(int server);
  */
 PUBLIC struct MprSsl *mprCloneSsl(MprSsl *src);
 
-/**
-    Lookup an SSL cipher by its IANA code and return the string name
-    @param cipher Cipher IANA code
-    @return String cipher name. For example: given 0x35, return "TLS_RSA_WITH_AES_256_CBC_SHA".
-    @stability Evolving
-    @ingroup MprSsl
- */
-PUBLIC cchar *mprGetSslCipherName(int cipher);
-
-/**
-    Lookup an SSL cipher by its IANA name and return the cipher IANA code
-    @param cipher Cipher IANA name
-    @return String cipher code. For example: given "TLS_RSA_WITH_AES_256_CBC_SHA" return 0x35.
-    @stability Evolving
-    @ingroup MprSsl
- */
-PUBLIC int mprGetSslCipherCode(cchar *cipher);
-
-/**
-    Convert a list of ciphers into an integer array of cipher codes
-    @param ciphers IANA cipher name. Ciphers may be space, tab, comma or colon separated.
-    @param len Integer reference to hold the number of cipher codes in the return array
-    @return String integers representing the IANA cipher codes. Null terminated.
-    @stability Prototype
-    @ingroup MprSsl
- */
-PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len);
-
  /**
     Load the SSL module.
     @ingroup MprSsl
@@ -8163,16 +8125,12 @@ PUBLIC int *mprGetCipherSuite(cchar *ciphers, int *len);
  */
 PUBLIC int mprLoadSsl();
 
-PUBLIC int mprSslInit(void *unused, MprModule *module);
-
 /**
-    Set the DH params file to use for SSL
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param dhFile Path to the SSL DH Params file
+    Initialize the SSL provider
     @ingroup MprSsl
-    @stability Prototype
+    @stability Evolving
  */
-PUBLIC void mprSetSslDhFile(struct MprSsl *ssl, cchar *dhFile);
+PUBLIC int mprSslInit(void *unused, MprModule *module);
 
 /**
     Set the key file to use for SSL
@@ -8288,6 +8246,7 @@ PUBLIC void mprVerifySslDepth(struct MprSsl *ssl, int depth);
     PUBLIC int mprCreateOpenSslModule();
 #endif
 
+#if UNUSED
 /**
     @internal
  */
@@ -8297,6 +8256,7 @@ typedef struct MprCipher {
 } MprCipher;
 
 PUBLIC_DATA MprCipher *mprCiphers;
+#endif
 
 /******************************* Worker Threads *******************************/
 /**

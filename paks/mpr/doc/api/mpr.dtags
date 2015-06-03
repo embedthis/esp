@@ -1368,13 +1368,6 @@
     </member>
     <member kind="define">
       <type>#define</type>
-      <name>MPR_SOCKET_RESUMED</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a0179f6a6ef4d9a953b7abaaa4ae63906</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
       <name>MPR_SOCKET_SERVER</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a46e119bbf1fc869a6aeda59f807dd1c9</anchor>
@@ -3019,13 +3012,6 @@
       <arglist>(MprBuf *buf)</arglist>
     </member>
     <member kind="function">
-      <type>int *</type>
-      <name>mprGetCipherSuite</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga5717729f618db099ee57ff01fc55ad5d</anchor>
-      <arglist>(cchar *ciphers, int *len)</arglist>
-    </member>
-    <member kind="function">
       <type>MprBuf *</type>
       <name>mprGetCmdBuf</name>
       <anchorfile>group___mpr_cmd.html</anchorfile>
@@ -3614,32 +3600,11 @@
       <arglist>(MprSocket *sp)</arglist>
     </member>
     <member kind="function">
-      <type>bool</type>
-      <name>mprGetSocketResumed</name>
-      <anchorfile>group___mpr_socket.html</anchorfile>
-      <anchor>gafc2584d59a1e56fcf220aa0d4347a56c</anchor>
-      <arglist>(MprSocket *sp)</arglist>
-    </member>
-    <member kind="function">
       <type>char *</type>
       <name>mprGetSocketState</name>
       <anchorfile>group___mpr_socket.html</anchorfile>
       <anchor>ga84afd209ead21ddbd5690402caf982aa</anchor>
       <arglist>(MprSocket *sp)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>mprGetSslCipherCode</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga0751a98b49aa54ef0b416d892e072270</anchor>
-      <arglist>(cchar *cipher)</arglist>
-    </member>
-    <member kind="function">
-      <type>cchar *</type>
-      <name>mprGetSslCipherName</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga2726c76da3ced81e8ebb5a573573d1c9</anchor>
-      <arglist>(int cipher)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -5267,13 +5232,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>mprSetSslDhFile</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga495a7b1f6385bfbafec5c7b43b13cf7f</anchor>
-      <arglist>(struct MprSsl *ssl, cchar *dhFile)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>mprSetSslKeyFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gaa8293be1a1b769f03db306834ef5291f</anchor>
@@ -5418,6 +5376,13 @@
       <anchorfile>group___mpr_sync.html</anchorfile>
       <anchor>gaeb11c8a1f0c2c3f905967a932626121e</anchor>
       <arglist>(MprSpin *lock)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
+      <name>mprSslInit</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gad2a85131eb557b8beeedb22d851f6dc7</anchor>
+      <arglist>(void *unused, MprModule *module)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -9299,13 +9264,6 @@
       <arglist>(MprSocket *sp)</arglist>
     </member>
     <member kind="function">
-      <type>bool</type>
-      <name>mprGetSocketResumed</name>
-      <anchorfile>group___mpr_socket.html</anchorfile>
-      <anchor>gafc2584d59a1e56fcf220aa0d4347a56c</anchor>
-      <arglist>(MprSocket *sp)</arglist>
-    </member>
-    <member kind="function">
       <type>char *</type>
       <name>mprGetSocketState</name>
       <anchorfile>group___mpr_socket.html</anchorfile>
@@ -9507,27 +9465,6 @@
       <arglist>(int server)</arglist>
     </member>
     <member kind="function">
-      <type>int *</type>
-      <name>mprGetCipherSuite</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga5717729f618db099ee57ff01fc55ad5d</anchor>
-      <arglist>(cchar *ciphers, int *len)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>mprGetSslCipherCode</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga0751a98b49aa54ef0b416d892e072270</anchor>
-      <arglist>(cchar *cipher)</arglist>
-    </member>
-    <member kind="function">
-      <type>cchar *</type>
-      <name>mprGetSslCipherName</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga2726c76da3ced81e8ebb5a573573d1c9</anchor>
-      <arglist>(int cipher)</arglist>
-    </member>
-    <member kind="function">
       <type>int</type>
       <name>mprLoadSsl</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
@@ -9564,13 +9501,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>mprSetSslDhFile</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga495a7b1f6385bfbafec5c7b43b13cf7f</anchor>
-      <arglist>(struct MprSsl *ssl, cchar *dhFile)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>mprSetSslKeyFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gaa8293be1a1b769f03db306834ef5291f</anchor>
@@ -9596,6 +9526,13 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga7e5f242a317395b047618fc7dde6b4f1</anchor>
       <arglist>(struct MprSsl *ssl, cchar *revokeList)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
+      <name>mprSslInit</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gad2a85131eb557b8beeedb22d851f6dc7</anchor>
+      <arglist>(void *unused, MprModule *module)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

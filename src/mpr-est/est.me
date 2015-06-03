@@ -5,17 +5,15 @@
 Me.load({ 
     targets: {
         est: {
+            libname:      'libmpr-estssl',
             configurable: true,
-            conflicts:    [ 'openssl', 'matrixssl', 'nanossl' ]
-            depends:      [ 'libestssl' ],
+            conflicts:    [ 'openssl', 'matrixssl', 'mbedtls', 'nanossl' ]
             ifdef:        [ 'ssl' ],
-        },
-        libestssl: {
             type:         'lib',
             static:       true,
             sources:      [ '*.c' ],
             depends:      [ 'libest' ],
-            ifdef:        [ 'est' ],
+            location:     '${SRC}/mpr-est',
         }
     }
 })
