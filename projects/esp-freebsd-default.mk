@@ -80,7 +80,7 @@ ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)$(NAME)-$(VERSION)
 TARGETS               += $(BUILD)/bin/esp-compile.json
 TARGETS               += $(BUILD)/bin/esp
 ifeq ($(ME_COM_SSL),1)
-    TARGETS           += $(BUILD)/bin
+    TARGETS           += $(BUILD)/.install-certs-modified
 endif
 TARGETS               += $(BUILD)/bin/espman
 
@@ -134,7 +134,7 @@ clean:
 	rm -f "$(BUILD)/obj/watchdog.o"
 	rm -f "$(BUILD)/bin/esp-compile.json"
 	rm -f "$(BUILD)/bin/esp"
-	rm -f "$(BUILD)/bin"
+	rm -f "$(BUILD)/.install-certs-modified"
 	rm -f "$(BUILD)/bin/libesp.so"
 	rm -f "$(BUILD)/bin/libhttp.so"
 	rm -f "$(BUILD)/bin/libmpr.so"
@@ -766,7 +766,7 @@ DEPS_44 += src/certs/samples/self.key
 DEPS_44 += src/certs/samples/test.crt
 DEPS_44 += src/certs/samples/test.key
 
-$(BUILD)/bin: $(DEPS_44)
+$(BUILD)/.install-certs-modified: $(DEPS_44)
 	@echo '      [Copy] $(BUILD)/bin'
 	mkdir -p "$(BUILD)/bin"
 	cp src/certs/samples/ca.crt $(BUILD)/bin/ca.crt
@@ -779,6 +779,7 @@ $(BUILD)/bin: $(DEPS_44)
 	cp src/certs/samples/self.key $(BUILD)/bin/self.key
 	cp src/certs/samples/test.crt $(BUILD)/bin/test.crt
 	cp src/certs/samples/test.key $(BUILD)/bin/test.key
+	touch "$(BUILD)/.install-certs-modified"
 endif
 
 #

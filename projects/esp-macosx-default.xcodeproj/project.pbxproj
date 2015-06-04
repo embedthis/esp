@@ -1402,7 +1402,7 @@ fi";
 		43412FFA43414B00000000CA /* Debug */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = bin;
+    				PRODUCT_NAME = install-certs;
     
     				GCC_PREPROCESSOR_DEFINITIONS = (
 					"ME_DEBUG",
@@ -1414,7 +1414,7 @@ fi";
     		43412FFA43414B00000000CB /* Release */ = {
     			isa = XCBuildConfiguration;
     			buildSettings = {
-    				PRODUCT_NAME = bin;
+    				PRODUCT_NAME = install-certs;
     
     
     			};

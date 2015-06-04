@@ -63,7 +63,7 @@ Me.load({
     targets: {
         'install-certs': {
             type: 'file',
-            path: '${BIN}',
+            path: '${BIN}/',
             files: [ 'samples/**' ],
             ifdef: [ 'ssl' ],
         },

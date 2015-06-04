@@ -137,7 +137,7 @@ ME_SRC_PREFIX         = $(ME_VAPP_PREFIX)\src
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\esp-compile.json
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\esp.exe
 !IF "$(ME_COM_SSL)" == "1"
-TARGETS               = $(TARGETS) build\$(CONFIG)\bin
+TARGETS               = $(TARGETS) build\$(CONFIG)\.install-certs-modified
 !ENDIF
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\espman.exe
 
@@ -194,7 +194,7 @@ clean:
 	if exist "build\$(CONFIG)\bin\esp.lib" del /Q "build\$(CONFIG)\bin\esp.lib"
 	if exist "build\$(CONFIG)\bin\esp.pdb" del /Q "build\$(CONFIG)\bin\esp.pdb"
 	if exist "build\$(CONFIG)\bin\esp.exp" del /Q "build\$(CONFIG)\bin\esp.exp"
-	if exist "build\$(CONFIG)\bin" del /Q "build\$(CONFIG)\bin"
+	if exist "build\$(CONFIG)\.install-certs-modified" del /Q "build\$(CONFIG)\.install-certs-modified"
 	if exist "build\$(CONFIG)\bin\libesp.dll" del /Q "build\$(CONFIG)\bin\libesp.dll"
 	if exist "build\$(CONFIG)\bin\libesp.lib" del /Q "build\$(CONFIG)\bin\libesp.lib"
 	if exist "build\$(CONFIG)\bin\libesp.pdb" del /Q "build\$(CONFIG)\bin\libesp.pdb"
@@ -830,7 +830,7 @@ DEPS_42 = $(DEPS_42) src\certs\samples\self.key
 DEPS_42 = $(DEPS_42) src\certs\samples\test.crt
 DEPS_42 = $(DEPS_42) src\certs\samples\test.key
 
-build\$(CONFIG)\bin: $(DEPS_42)
+build\$(CONFIG)\.install-certs-modified: $(DEPS_42)
 	@echo ..... [Copy] build\$(CONFIG)\bin
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
 	copy /Y /B src\certs\samples\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
@@ -843,6 +843,7 @@ build\$(CONFIG)\bin: $(DEPS_42)
 	copy /Y /B src\certs\samples\self.key+modified build\$(CONFIG)\bin\self.key $(LOG)
 	copy /Y /B src\certs\samples\test.crt+modified build\$(CONFIG)\bin\test.crt $(LOG)
 	copy /Y /B src\certs\samples\test.key+modified build\$(CONFIG)\bin\test.key $(LOG)
+	copy /Y /B nul+modified build\$(CONFIG)\.install-certs-modified $(LOG)
 !ENDIF
 
 #
