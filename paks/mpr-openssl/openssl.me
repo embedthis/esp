@@ -16,7 +16,8 @@ Me.load({
                          */
                         path: me.dir.bin.join(target.libname).joinExt(me.ext.lib),
                         includes: [ me.dir.inc ],
-                        libraries: me.platform.os == 'windows' ? ([ 'libeay32', 'ssleay32' ]) : ([ 'ssl', 'crypto' ]),
+                        libraries: me.platform.os == 'windows' ? 
+                            ([ 'gdi32', 'libeay32', 'ssleay32' ]) : ([ 'ssl', 'crypto' ]),
                     }
                     if (me.options.gen == 'make') {
                         result.defines = ['ME_COM_OPENSSL_PATH=/usr/lib']
@@ -32,15 +33,16 @@ Me.load({
                 let lib, libraries, libpaths, imports, includes, path
                 let search = getComponentSearch(target, 'openssl')
                 if (me.platform.os == 'windows') {
-                    for (let [index, item] in search) {
-                        search[index] = Path(item).join('out32dll')
-                    }
-                    lib = probe('libeay32.dll', {fullpath: true, search: search, nopath: true}).absolute
-                    libraries = [ 'libeay32', 'ssleay32' ]
-                    libpaths =  [ lib.parent ]
-                    imports =   [ lib.parent.join('libeay32.dll'), lib.parent.join('libeay32.lib'),
-                                    lib.parent.join('ssleay32.dll'), lib.parent.join('ssleay32.lib') ]
+                    search = search.map(function(p:Path) p.join('out32')) + 
+                             search.map(function(p:Path) p.join('out32dll'))
+                    lib = probe('libeay32.lib', {fullpath: true, search: search, nopath: true}).absolute
                     path = lib.dirname.parent
+                    libpaths =  [ lib.parent ]
+                    libraries = [ 'gdi32', 'libeay32', 'ssleay32' ]
+                    imports =   [ lib.parent.join('libeay32.lib'), lib.parent.join('ssleay32.lib') ]
+                    if (lib.dirname == 'out32dll') {
+                        imports += [ lib.parent.join('libeay32.dll'), lib.parent.join('ssleay32.dll') ]
+                    }
                     includes = [ probe('openssl/ssl.h', {search: [path.join('inc32')]}).absolute ]
 
                 } else {
