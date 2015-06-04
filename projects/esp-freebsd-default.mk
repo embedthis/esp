@@ -491,6 +491,7 @@ $(BUILD)/bin/libsql.so: $(DEPS_36)
 endif
 
 ifeq ($(ME_COM_SSL),1)
+ifeq ($(ME_COM_OPENSSL),1)
 #
 #   openssl
 #
@@ -499,6 +500,7 @@ DEPS_37 += $(BUILD)/obj/openssl.o
 $(BUILD)/bin/libmpr-openssl.a: $(DEPS_37)
 	@echo '      [Link] $(BUILD)/bin/libmpr-openssl.a'
 	ar -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/openssl.o"
+endif
 endif
 
 #

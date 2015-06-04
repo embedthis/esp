@@ -18,9 +18,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmpr", "esp-windows-defau
 		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
-		{29027A8D-702B-4486-B64B-7DC207730AEF} = {29027A8D-702B-4486-B64B-7DC207730AEF}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
 		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
 	EndProjectSection
 EndProject
@@ -35,9 +32,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libhttp", "esp-windows-default\libhttp.vcxproj", "{3BC80A8C-23DB-4258-A7B2-A7F553B711DF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{29027A8D-702B-4486-B64B-7DC207730AEF} = {29027A8D-702B-4486-B64B-7DC207730AEF}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
@@ -55,9 +49,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libesp", "esp-windows-defau
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{4A55E78E-9B64-4BBC-B3CF-714B53143E2B} = {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{29027A8D-702B-4486-B64B-7DC207730AEF} = {29027A8D-702B-4486-B64B-7DC207730AEF}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
@@ -80,9 +71,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "espcmd", "esp-windows-defau
 		{4A55E78E-9B64-4BBC-B3CF-714B53143E2B} = {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
-		{29027A8D-702B-4486-B64B-7DC207730AEF} = {29027A8D-702B-4486-B64B-7DC207730AEF}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
 		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
@@ -98,14 +86,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "espcmd", "esp-windows-defau
 		{C5D477C1-38FC-45BF-AD7B-1E64247B1F0C} = {C5D477C1-38FC-45BF-AD7B-1E64247B1F0C}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "install-certs", "esp-windows-default\install-certs.vcxproj", "{075F71AC-2C88-49D8-8F5A-9700FE6D5683}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{075F71AC-2C88-49D8-8F5A-9700FE6D5683} = {075F71AC-2C88-49D8-8F5A-9700FE6D5683}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsql", "esp-windows-default\libsql.vcxproj", "{4A55E78E-9B64-4BBC-B3CF-714B53143E2B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
@@ -114,20 +94,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsql", "esp-windows-defau
 		{4A55E78E-9B64-4BBC-B3CF-714B53143E2B} = {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openssl", "esp-windows-default\openssl.vcxproj", "{29027A8D-702B-4486-B64B-7DC207730AEF}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{29027A8D-702B-4486-B64B-7DC207730AEF} = {29027A8D-702B-4486-B64B-7DC207730AEF}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "watchdog", "esp-windows-default\watchdog.vcxproj", "{66728017-8558-4763-9733-2CD938A83A75}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{29027A8D-702B-4486-B64B-7DC207730AEF} = {29027A8D-702B-4486-B64B-7DC207730AEF}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
@@ -201,14 +170,6 @@ EndProject
 {C5D477C1-38FC-45BF-AD7B-1E64247B1F0C}.Release|Win32.Build.0 = Release|Win32
 {C5D477C1-38FC-45BF-AD7B-1E64247B1F0C}.Release|x64.ActiveCfg = Release|x64
 {C5D477C1-38FC-45BF-AD7B-1E64247B1F0C}.Release|x64.Build.0 = Release|x64
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Debug|Win32.ActiveCfg = Debug|Win32
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Debug|Win32.Build.0 = Debug|Win32
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Debug|x64.ActiveCfg = Debug|x64
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Debug|x64.Build.0 = Debug|x64
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Release|Win32.ActiveCfg = Release|Win32
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Release|Win32.Build.0 = Release|Win32
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Release|x64.ActiveCfg = Release|x64
-{075F71AC-2C88-49D8-8F5A-9700FE6D5683}.Release|x64.Build.0 = Release|x64
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Debug|Win32.ActiveCfg = Debug|Win32
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Debug|Win32.Build.0 = Debug|Win32
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Debug|x64.ActiveCfg = Debug|x64
@@ -217,14 +178,6 @@ EndProject
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Release|Win32.Build.0 = Release|Win32
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Release|x64.ActiveCfg = Release|x64
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Release|x64.Build.0 = Release|x64
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Debug|Win32.ActiveCfg = Debug|Win32
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Debug|Win32.Build.0 = Debug|Win32
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Debug|x64.ActiveCfg = Debug|x64
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Debug|x64.Build.0 = Debug|x64
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Release|Win32.ActiveCfg = Release|Win32
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Release|Win32.Build.0 = Release|Win32
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Release|x64.ActiveCfg = Release|x64
-{29027A8D-702B-4486-B64B-7DC207730AEF}.Release|x64.Build.0 = Release|x64
 {66728017-8558-4763-9733-2CD938A83A75}.Debug|Win32.ActiveCfg = Debug|Win32
 {66728017-8558-4763-9733-2CD938A83A75}.Debug|Win32.Build.0 = Debug|Win32
 {66728017-8558-4763-9733-2CD938A83A75}.Debug|x64.ActiveCfg = Debug|x64

@@ -129,7 +129,7 @@
 
       <ItemDefinitionGroup>
       <Link>
-        <AdditionalDependencies>libhttp.lib;libsql.lib;libpcre.lib;libmpr.lib;mpr-openssl;gdi32.lib;libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libhttp.lib;libsql.lib;libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 
