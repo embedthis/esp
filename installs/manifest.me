@@ -94,12 +94,6 @@ Me.load({
                     enable:     '!me.settings.static',
 
                 }, { 
-                    from:       'libest${SHOBJ}',
-                    to:         '${abin}/',
-                    ifdef:      'est',
-                    enable:     "!me.settings.static",
-
-                }, { 
                     from: [
                                 /* Windows needs the libs to be able to compile esp programs */
                                 'libesp${SHLIB}',
