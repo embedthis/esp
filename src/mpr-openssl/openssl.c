@@ -353,6 +353,7 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
 {
     MprSsl          *ssl;
     OpenConfig      *cfg;
+    X509_STORE      *store;
     SSL_CTX         *context;
     cchar           *key;
     uchar           resume[16];
@@ -444,16 +445,12 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
                 SSL_CTX_set_client_CA_list(context, certNames);
             }
         }
-#if FUTURE || 1
-{
-        X509_STORE *store = SSL_CTX_get_cert_store(context);
+        store = SSL_CTX_get_cert_store(context);
         if (ssl->revokeList && !X509_STORE_load_locations(store, ssl->revokeList, 0)) {
-                mprLog("error openssl", 0, "Cannot load certificate revoke list: %s", ssl->revokeList);
-                SSL_CTX_free(context);
-                return 0;
+            mprLog("error openssl", 0, "Cannot load certificate revoke list: %s", ssl->revokeList);
+            SSL_CTX_free(context);
+            return 0;
         }
-}
-#endif
         if (sp->flags & MPR_SOCKET_SERVER) {
             SSL_CTX_set_verify_depth(context, ssl->verifyDepth);
         }
@@ -1209,16 +1206,17 @@ static cchar *mapCipherNames(cchar *ciphers)
     for (next = sclone(ciphers); (cipher = stok(next, ":, \t", &next)) != 0; ) {
         for (cp = cipherMap; cp->name; cp++) {
             if (smatch(cp->name, cipher)) {
-                mprPutToBuf(buf, "%s ", cp->ossName);
+                mprPutToBuf(buf, "%s:", cp->ossName);
                 break;
             }
         }
         if (cp->name == 0) {
-            mprPutToBuf(buf, "%s ", cipher);
+            mprPutToBuf(buf, "%s:", cipher);
         }
     }
     return mprBufToString(buf);
 }
+
 
 /*
     DH Parameters from RFC3526
