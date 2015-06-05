@@ -1285,11 +1285,13 @@ session: {
                     <tr>
                         <td>ciphers</td>
                         <td>List of acceptable ciphers to use. These names are dependant on the SSL provider selected
-                        (OpenSSL or EST). The format of this directive varies depending on the SSL protocol stack. 
-                        The EST stack use the standard <a href="http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-3">IANA Cipher Suite Registry</a>a names. The OpenSSL stack uses its own proprietary 
+                        The format of this directive varies depending on the SSL protocol stack. 
+                        The OpenSSL stack uses its own proprietary 
                         cipher naming. If using OpenSSL, please consult the 
                         <a href="http://www.openssl.org/docs/apps/ciphers.html">OpenSSL</a> documentation for how to format 
-                        the ciphers.</td>
+                        the ciphers.  Other stack use the standard 
+                        <a href="http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-3">IANA Cipher Suite Registry</a>a names. 
+                        </td>
                     </tr>
                     <tr>
                         <td>key</td>

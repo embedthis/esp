@@ -785,7 +785,6 @@ cd ..
     			inputPaths = (
     ../src/certs/samples/ca.crt,
 ../src/certs/samples/ca.key,
-../src/certs/samples/dh.pem,
 ../src/certs/samples/ec.crt,
 ../src/certs/samples/ec.key,
 ../src/certs/samples/roots.crt,
@@ -804,7 +803,6 @@ cd ..
 	mkdir -p \"build/macosx-x64-default/bin\"
 	cp src/certs/samples/ca.crt build/macosx-x64-default/bin/ca.crt
 	cp src/certs/samples/ca.key build/macosx-x64-default/bin/ca.key
-	cp src/certs/samples/dh.pem build/macosx-x64-default/bin/dh.pem
 	cp src/certs/samples/ec.crt build/macosx-x64-default/bin/ec.crt
 	cp src/certs/samples/ec.key build/macosx-x64-default/bin/ec.key
 	cp src/certs/samples/roots.crt build/macosx-x64-default/bin/roots.crt

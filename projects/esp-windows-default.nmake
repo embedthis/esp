@@ -821,7 +821,6 @@ build\$(CONFIG)\bin\http.exe: $(DEPS_41)
 #
 DEPS_42 = $(DEPS_42) src\certs\samples\ca.crt
 DEPS_42 = $(DEPS_42) src\certs\samples\ca.key
-DEPS_42 = $(DEPS_42) src\certs\samples\dh.pem
 DEPS_42 = $(DEPS_42) src\certs\samples\ec.crt
 DEPS_42 = $(DEPS_42) src\certs\samples\ec.key
 DEPS_42 = $(DEPS_42) src\certs\samples\roots.crt
@@ -835,7 +834,6 @@ build\$(CONFIG)\.install-certs-modified: $(DEPS_42)
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
 	copy /Y /B src\certs\samples\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
 	copy /Y /B src\certs\samples\ca.key+modified build\$(CONFIG)\bin\ca.key $(LOG)
-	copy /Y /B src\certs\samples\dh.pem+modified build\$(CONFIG)\bin\dh.pem $(LOG)
 	copy /Y /B src\certs\samples\ec.crt+modified build\$(CONFIG)\bin\ec.crt $(LOG)
 	copy /Y /B src\certs\samples\ec.key+modified build\$(CONFIG)\bin\ec.key $(LOG)
 	copy /Y /B src\certs\samples\roots.crt+modified build\$(CONFIG)\bin\roots.crt $(LOG)
