@@ -244,9 +244,6 @@
 #ifndef ME_COM_CC
     #define ME_COM_CC 1
 #endif
-#ifndef ME_COM_EST
-    #define ME_COM_EST 0
-#endif
 #ifndef ME_COM_HTTP
     #define ME_COM_HTTP 1
 #endif
@@ -255,9 +252,6 @@
 #endif
 #ifndef ME_COM_MATRIXSSL
     #define ME_COM_MATRIXSSL 0
-#endif
-#ifndef ME_COM_MBEDTLS
-    #define ME_COM_MBEDTLS 0
 #endif
 #ifndef ME_COM_MDB
     #define ME_COM_MDB 1

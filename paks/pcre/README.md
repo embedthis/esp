@@ -17,7 +17,7 @@ See LICENSE.md for details.
     ./configure
     me
 
-Alternatively to build without Ejscript:
+Alternatively to build MakeMe:
 
     make
 
