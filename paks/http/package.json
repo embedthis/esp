@@ -2,7 +2,7 @@
     "name": "http",
     "description": "Embedthis Http Library",
     "title": "Embedthis Http",
-    "version": "6.0.3",
+    "version": "6.0.4",
     "keywords": [
         "http",
         "webserver"
