@@ -35,7 +35,7 @@ Me.load({
                 if (me.platform.os == 'windows') {
                     search = search.map(function(p:Path) p.join('out32')) + 
                              search.map(function(p:Path) p.join('out32dll'))
-                    lib = probe('libeay32.lib', {fullpath: true, search: search, nopath: true}).absolute
+                    lib = probe('libeay32.lib', {fullpath: true, search: search, nopath: true})
                     path = lib.dirname.parent
                     libpaths =  [ lib.parent ]
                     libraries = [ 'gdi32', 'libeay32', 'ssleay32' ]
@@ -43,19 +43,18 @@ Me.load({
                     if (lib.dirname == 'out32dll') {
                         imports += [ lib.parent.join('libeay32.dll'), lib.parent.join('ssleay32.dll') ]
                     }
-                    includes = [ probe('openssl/ssl.h', {search: [path.join('inc32')]}).absolute ]
+                    includes = [ probe('openssl/ssl.h', {search: [path.join('inc32')]}) ]
 
                 } else {
                     let opt = {fullpath: true, search: search, nopath: true}
                     lib = probe('libcrypto.' + me.ext.lib, blend({nothrow: true}, opt)) ||
                           probe('libcrypto.' + me.ext.shobj, opt)
-                    lib = lib.absolute
                     path = lib.dirname
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
                     let ext = lib.extension
                     imports = lib.parent.files('libssl*.' + ext + '*') + lib.parent.files('libcrypto*.' + ext + '*')
-                    includes = [ probe('openssl/ssl.h', {search: [ path.join('include'), '/usr/include']}).absolute ]
+                    includes = [ probe('openssl/ssl.h', {search: [ path.join('include'), '/usr/include']}) ]
                 }
                 includes.push(me.dir.inc)
                 return {
