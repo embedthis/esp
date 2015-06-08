@@ -8057,6 +8057,25 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     #define ME_SSL_ROOTS_CERT "roots.crt"
 #endif
 
+#ifndef ME_MPR_SSL_CACHE
+    #define ME_MPR_SSL_CACHE 512
+#endif
+#ifndef ME_MPR_SSL_CURVE
+    #define ME_MPR_SSL_CURVE "prime256v1"
+#endif
+#ifndef ME_MPR_SSL_LOG_LEVEL
+    #define ME_MPR_SSL_LOG_LEVEL 3
+#endif
+#ifndef ME_MPR_SSL_RENEGOTIATE
+    #define ME_MPR_SSL_RENEGOTIATE 1
+#endif
+#ifndef ME_MPR_SSL_TICKET
+    #define ME_MPR_SSL_TICKET 1
+#endif
+#ifndef ME_MPR_SSL_TIMEOUT
+    #define ME_MPR_SSL_TIMEOUT 86400
+#endif
+
 /**
     SSL control structure
     @defgroup MprSsl MprSsl
@@ -8072,13 +8091,19 @@ typedef struct MprSsl {
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
     void            *config;            /**< Extended provider SSL configuration */
-    bool            verified;           /**< Peer has been verified */
+    cchar           *curve;             /**< Elliptic curve */
+    bool            changed;            /**< Set if there is a change in the SSL config. Reset by providers */
     bool            configured;         /**< Set if this SSL configuration has been processed */
+    bool            renegotiate;        /**< Renegotiate sessions */
+    bool            ticket;             /**< Enable session tickets */
     bool            verifyPeer;         /**< Verify the peer verificate */
     bool            verifyIssuer;       /**< Set if the certificate issuer should be also verified */
-    bool            changed;            /**< Set if there is a change in the SSL config. Reset by providers */
+    bool            verified;           /**< Peer has been verified */
+    int             logLevel;           /**< Level at which to start tracing SSL events */
+    int             cacheSize;          /**< Session cache size in entries */
     int             verifyDepth;        /**< Cert chain depth that should be verified */
     int             protocols;          /**< SSL protocols */
+    MprTicks        sessionTimeout;     /**< Session lifespan in msec */
     MprMutex        *mutex;             /**< Multithread sync */
 } MprSsl;
 
@@ -8180,6 +8205,51 @@ PUBLIC void mprSetSslCaPath(struct MprSsl *ssl, cchar *caPath);
 PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers);
 
 /**
+    Control the verification of SSL certificate issuers
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param on Set to true to enable SSL certificate issuer verification.
+    @ingroup MprSsl
+    @stability Evolving
+ */
+PUBLIC void mprVerifySslIssuer(struct MprSsl *ssl, bool on);
+
+/**
+    Require verification of peer certificates
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param on Set to true to enable peer SSL certificate verification.
+    @ingroup MprSsl
+    @stability Evolving
+ */
+PUBLIC void mprVerifySslPeer(struct MprSsl *ssl, bool on);
+
+/**
+    Set the SSL server-side session cache size
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param size Size of the cache in entries
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size);
+
+/**
+    Set the SSL elliptic curve to use
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param curve Curve name
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslCurve(MprSsl *ssl, cchar *curve);
+
+/**
+    Set the SSL log level at which to start tracing SSL events
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param level Log level (0-9)
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslLogLevel(struct MprSsl *ssl, int level);
+
+/**
     Set the SSL protocol to use
     @param ssl SSL instance returned from #mprCreateSsl
     @param protocols SSL protocols mask
@@ -8198,6 +8268,15 @@ PUBLIC void mprSetSslProtocols(struct MprSsl *ssl, int protocols);
 PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider);
 
 /**
+    Control SSL session renegotiation
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param enable Set to true to enable renegotiation (enabled by default)
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable);
+
+/**
     Define a list of certificates to revoke
     @param ssl SSL instance returned from #mprCreateSsl
     @param revokeList Path to the SSL certificate revocation list
@@ -8207,22 +8286,22 @@ PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider);
 PUBLIC void mprSetSslRevokeList(struct MprSsl *ssl, cchar *revokeList);
 
 /**
-    Require verification of peer certificates
+    Enable SSL session tickets
     @param ssl SSL instance returned from #mprCreateSsl
-    @param on Set to true to enable peer SSL certificate verification.
+    @param enable Set to true to enable
     @ingroup MprSsl
-    @stability Evolving
- */
-PUBLIC void mprVerifySslPeer(struct MprSsl *ssl, bool on);
+    @stability Prototype
+*/
+PUBLIC void mprSetSslTicket(MprSsl *ssl, bool enable);
 
 /**
-    Control the verification of SSL certificate issuers
+    Set the SSL server-side session timeout
     @param ssl SSL instance returned from #mprCreateSsl
-    @param on Set to true to enable SSL certificate issuer verification.
+    @param timeout Lifetime of session entries in msec
     @ingroup MprSsl
-    @stability Evolving
+    @stability Prototype
  */
-PUBLIC void mprVerifySslIssuer(struct MprSsl *ssl, bool on);
+PUBLIC void mprSetSslTimeout(MprSsl *ssl, MprTicks timeout);
 
 /**
     Control the depth of SSL SSL certificate verification

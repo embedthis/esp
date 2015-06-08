@@ -5204,6 +5204,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslCacheSize</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gab70a92f2a7173dee2e00045b4186cbbb</anchor>
+      <arglist>(MprSsl *ssl, int size)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslCaFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga472960cd4ec2360bf05ab678e7cba577</anchor>
@@ -5232,10 +5239,24 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslCurve</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga36311edaafa3d4a6d74a8caa5ec91e60</anchor>
+      <arglist>(MprSsl *ssl, cchar *curve)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslKeyFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gaa8293be1a1b769f03db306834ef5291f</anchor>
       <arglist>(struct MprSsl *ssl, cchar *keyFile)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslLogLevel</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gabcdba4618d5754a0ccfc76ef271776d8</anchor>
+      <arglist>(struct MprSsl *ssl, int level)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -5253,10 +5274,31 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslRenegotiate</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gadc15a963cd6567f7fa05da968bee39a6</anchor>
+      <arglist>(MprSsl *ssl, bool enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslRevokeList</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga7e5f242a317395b047618fc7dde6b4f1</anchor>
       <arglist>(struct MprSsl *ssl, cchar *revokeList)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslTicket</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga16313273a92421655778343d310475ee</anchor>
+      <arglist>(MprSsl *ssl, bool enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslTimeout</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga5c61abfb50e0384fdb01aafc82a1b7b4</anchor>
+      <arglist>(MprSsl *ssl, MprTicks timeout)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -9473,6 +9515,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslCacheSize</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gab70a92f2a7173dee2e00045b4186cbbb</anchor>
+      <arglist>(MprSsl *ssl, int size)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslCaFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga472960cd4ec2360bf05ab678e7cba577</anchor>
@@ -9501,10 +9550,24 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslCurve</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga36311edaafa3d4a6d74a8caa5ec91e60</anchor>
+      <arglist>(MprSsl *ssl, cchar *curve)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslKeyFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gaa8293be1a1b769f03db306834ef5291f</anchor>
       <arglist>(struct MprSsl *ssl, cchar *keyFile)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslLogLevel</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gabcdba4618d5754a0ccfc76ef271776d8</anchor>
+      <arglist>(struct MprSsl *ssl, int level)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -9522,10 +9585,31 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslRenegotiate</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gadc15a963cd6567f7fa05da968bee39a6</anchor>
+      <arglist>(MprSsl *ssl, bool enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslRevokeList</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga7e5f242a317395b047618fc7dde6b4f1</anchor>
       <arglist>(struct MprSsl *ssl, cchar *revokeList)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslTicket</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga16313273a92421655778343d310475ee</anchor>
+      <arglist>(MprSsl *ssl, bool enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslTimeout</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga5c61abfb50e0384fdb01aafc82a1b7b4</anchor>
+      <arglist>(MprSsl *ssl, MprTicks timeout)</arglist>
     </member>
     <member kind="function">
       <type>int</type>

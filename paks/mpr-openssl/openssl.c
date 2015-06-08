@@ -564,21 +564,10 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
 #endif
 
 #if defined(SSL_OP_NO_COMPRESSION)
-    /* 
-        Use of compression is not secure. Disabled by default.
+    /*
+        CRIME attack targets compression
      */
-    #if defined(ME_MPR_SSL_COMPRESSION)
-        if (ME_MPR_SSL_COMPRESSION) {
-            SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
-        } else {
-            SSL_CTX_set_options(context, SSL_OP_NO_COMPRESSION);
-        }
-    #else
-        /*
-            CRIME attack targets compression
-         */
-        SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
-    #endif
+    SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
 #endif
 
 #if defined(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION)

@@ -572,12 +572,18 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_socket_1ga51594bafaa2003511990ffd804189a31" class="nameRef">mprSetSocketNoDelay</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> on)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the socket delay mode.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577" class="nameRef">mprSetSslCaFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *caFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the client certificate file to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaadf254e5df954326a3f9bcd61e6a106b" class="nameRef">mprSetSslCaPath</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *caPath)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the path for the client certificate directory.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gab70a92f2a7173dee2e00045b4186cbbb" class="nameRef">mprSetSslCacheSize</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, int size)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL server-side session cache size.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga0eb821dce1b17ce08d83fa63b3ece658" class="nameRef">mprSetSslCertFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *certFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set certificate to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaf3d90b0a59c1e786421e8f2c2167fa20" class="nameRef">mprSetSslCiphers</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the ciphers to use.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga36311edaafa3d4a6d74a8caa5ec91e60" class="nameRef">mprSetSslCurve</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *curve)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL elliptic curve to use.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaa8293be1a1b769f03db306834ef5291f" class="nameRef">mprSetSslKeyFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *keyFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the key file to use for SSL.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gabcdba4618d5754a0ccfc76ef271776d8" class="nameRef">mprSetSslLogLevel</a>(struct MprSsl *ssl, int level)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL log level at which to start tracing SSL events.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga00cd731b20d96a0b0080637d59becd4a" class="nameRef">mprSetSslProtocols</a>(struct MprSsl *ssl, int protocols)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL protocol to use.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga98e6c82c9ff89135aea961c2ff3d4de4" class="nameRef">mprSetSslProvider</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *provider)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL provider to use.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gadc15a963cd6567f7fa05da968bee39a6" class="nameRef">mprSetSslRenegotiate</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Control SSL session renegotiation.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga7e5f242a317395b047618fc7dde6b4f1" class="nameRef">mprSetSslRevokeList</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *revokeList)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a list of certificates to revoke.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga16313273a92421655778343d310475ee" class="nameRef">mprSetSslTicket</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Enable SSL session tickets.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga5c61abfb50e0384fdb01aafc82a1b7b4" class="nameRef">mprSetSslTimeout</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> timeout)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL server-side session timeout.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_thread_1ga60bd7071428f6043d834c48ee8914560" class="nameRef">mprSetThreadPriority</a>(<a href="#group___mpr_thread" class="ref">MprThread</a> *thread, int priority)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the thread priroity.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_worker_1gad7721cca919f57f9b85434e6435ef092" class="nameRef">mprSetWorkerStackSize</a>(int size)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the default worker stack size.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___mpr_1ga0206927d986cd9ca7c42f8c530de6000" class="nameRef">mprShouldAbortRequests</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if requests should be aborted.</td></tr>
@@ -11724,6 +11730,9 @@ This is used to prevent further I/O wait events while still preserving the socke
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
+    <tr><td class="param">int</td><td><td>cacheSize</td><td>
+Session cache size in entries.
+</td>
     <tr><td class="param">cchar *</td><td><td>caFile</td><td>
 Certificate verification cert file or bundle.
 </td>
@@ -11746,8 +11755,14 @@ Extended provider SSL configuration.
     <tr><td class="param">bool</td><td><td>configured</td><td>
 Set if this SSL configuration has been processed.
 </td>
+    <tr><td class="param">cchar *</td><td><td>curve</td><td>
+Elliptic curve.
+</td>
     <tr><td class="param">cchar *</td><td><td>keyFile</td><td>
 Alternatively, locate the key in a file.
+</td>
+    <tr><td class="param">int</td><td><td>logLevel</td><td>
+Level at which to start tracing SSL events.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_mutex">MprMutex</a> *</td><td><td>mutex</td><td>
 Multithread sync.
@@ -11761,8 +11776,17 @@ Cached SSL provider to use.
     <tr><td class="param">cchar *</td><td><td>providerName</td><td>
 SSL provider to use - null if default.
 </td>
+    <tr><td class="param">bool</td><td><td>renegotiate</td><td>
+Renegotiate sessions.
+</td>
     <tr><td class="param">cchar *</td><td><td>revokeList</td><td>
 Certificate revocation list.
+</td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319">MprTicks</a></td><td><td>sessionTimeout</td><td>
+Session lifespan in msec.
+</td>
+    <tr><td class="param">bool</td><td><td>ticket</td><td>
+Enable session tickets.
 </td>
     <tr><td class="param">bool</td><td><td>verified</td><td>
 Peer has been verified.
@@ -11848,6 +11872,25 @@ Verify the peer verificate.
     </dd></dl>
   </div>
 </div>
+<a name="group___mpr_ssl_1gab70a92f2a7173dee2e00045b4186cbbb"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslCacheSize
+(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, int size)
+  </div>
+  <div class="apiDetail">
+<p>Set the SSL server-side session cache size.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">size</td><td>Size of the cache in entries.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
 <a name="group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577"></a>
 <div class="api">
   <div class="prototype">
@@ -11925,6 +11968,25 @@ Verify the peer verificate.
     </dd></dl>
   </div>
 </div>
+<a name="group___mpr_ssl_1ga36311edaafa3d4a6d74a8caa5ec91e60"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslCurve
+(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *curve)
+  </div>
+  <div class="apiDetail">
+<p>Set the SSL elliptic curve to use.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">curve</td><td>Curve name.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
 <a name="group___mpr_ssl_1gaa8293be1a1b769f03db306834ef5291f"></a>
 <div class="api">
   <div class="prototype">
@@ -11940,6 +12002,25 @@ Verify the peer verificate.
     <tr><td class="param">keyFile</td><td>Path to the SSL key file.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___mpr_ssl_1gabcdba4618d5754a0ccfc76ef271776d8"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslLogLevel
+(struct MprSsl *ssl, int level)
+  </div>
+  <div class="apiDetail">
+<p>Set the SSL log level at which to start tracing SSL events.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">level</td><td>Log level (0-9).</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -11982,6 +12063,25 @@ Verify the peer verificate.
     </dd></dl>
   </div>
 </div>
+<a name="group___mpr_ssl_1gadc15a963cd6567f7fa05da968bee39a6"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslRenegotiate
+(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)
+  </div>
+  <div class="apiDetail">
+<p>Control SSL session renegotiation.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">enable</td><td>Set to true to enable renegotiation (enabled by default).</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
 <a name="group___mpr_ssl_1ga7e5f242a317395b047618fc7dde6b4f1"></a>
 <div class="api">
   <div class="prototype">
@@ -11995,6 +12095,44 @@ Verify the peer verificate.
     <table class="parameters" title="Parameters">
     <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
     <tr><td class="param">revokeList</td><td>Path to the SSL certificate revocation list.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___mpr_ssl_1ga16313273a92421655778343d310475ee"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslTicket
+(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)
+  </div>
+  <div class="apiDetail">
+<p>Enable SSL session tickets.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">enable</td><td>Set to true to enable.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___mpr_ssl_1ga5c61abfb50e0384fdb01aafc82a1b7b4"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslTimeout
+(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> timeout)
+  </div>
+  <div class="apiDetail">
+<p>Set the SSL server-side session timeout.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">timeout</td><td>Lifetime of session entries in msec.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>

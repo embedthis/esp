@@ -5268,9 +5268,45 @@ static void parseSslProtocols(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseSslCache(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetSslCacheSize(route->ssl, (int) stoi(prop->value));
+}
+
+
+static void parseSslCurve(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetSslCurve(route->ssl, prop->value);
+}
+
+
+static void parseSslLogLevel(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetSslLogLevel(route->ssl, (int) stoi(prop->value));
+}
+
+
 static void parseSslProvider(HttpRoute *route, cchar *key, MprJson *prop)
 {
     mprSetSslProvider(route->ssl, prop->value);
+}
+
+
+static void parseSslRenegotiate(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetSslRenegotiate(route->ssl, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
+}
+
+
+static void parseSslTicket(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetSslTicket(route->ssl, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
+}
+
+
+static void parseSslTimeout(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetSslTimeout(route->ssl, httpGetTicks(prop->value));
 }
 
 
@@ -5591,11 +5627,17 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.ssl.authority", httpParseAll);
     httpAddConfig("http.ssl.authority.file", parseSslAuthorityFile);
     httpAddConfig("http.ssl.authority.directory", parseSslAuthorityDirectory);
+    httpAddConfig("http.ssl.cache", parseSslCache);
     httpAddConfig("http.ssl.certificate", parseSslCertificate);
     httpAddConfig("http.ssl.ciphers", parseSslCiphers);
+    httpAddConfig("http.ssl.curve", parseSslCurve);
+    httpAddConfig("http.ssl.logLevel", parseSslLogLevel);
     httpAddConfig("http.ssl.key", parseSslKey);
     httpAddConfig("http.ssl.provider", parseSslProvider);
     httpAddConfig("http.ssl.protocols", parseSslProtocols);
+    httpAddConfig("http.ssl.renegotiate", parseSslRenegotiate);
+    httpAddConfig("http.ssl.ticket", parseSslTicket);
+    httpAddConfig("http.ssl.timeout", parseSslTimeout);
     httpAddConfig("http.ssl.verify", httpParseAll);
     httpAddConfig("http.ssl.verify.client", parseSslVerifyClient);
     httpAddConfig("http.ssl.verify.issuer", parseSslVerifyIssuer);

@@ -23588,15 +23588,16 @@ PUBLIC void mprSetSocketPrebindCallback(MprSocketPrebind callback)
 static void manageSsl(MprSsl *ssl, int flags) 
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(ssl->providerName);
-        mprMark(ssl->provider);
-        mprMark(ssl->keyFile);
         mprMark(ssl->certFile);
         mprMark(ssl->caFile);
         mprMark(ssl->caPath);
         mprMark(ssl->ciphers);
         mprMark(ssl->config);
+        mprMark(ssl->curve);
+        mprMark(ssl->keyFile);
         mprMark(ssl->mutex);
+        mprMark(ssl->provider);
+        mprMark(ssl->providerName);
         mprMark(ssl->revokeList);
     }
 }
@@ -23636,6 +23637,16 @@ PUBLIC MprSsl *mprCreateSsl(int server)
             }
         }
     }
+    /*
+        Sensible defaults
+     */
+    ssl->cacheSize = ME_MPR_SSL_CACHE;
+    ssl->curve = sclone(ME_MPR_SSL_CURVE);
+    ssl->logLevel = ME_MPR_SSL_LOG_LEVEL;
+    ssl->renegotiate = ME_MPR_SSL_RENEGOTIATE;
+    ssl->ticket = ME_MPR_SSL_TICKET;
+    ssl->sessionTimeout = ME_MPR_SSL_TIMEOUT;
+
     ssl->mutex = mprCreateLock();
     return ssl;
 }
@@ -23748,26 +23759,10 @@ PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
 }
 
 
-PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers)
+PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size)
 {
     assert(ssl);
-    ssl->ciphers = sclone(ciphers);
-    ssl->changed = 1;
-}
-
-
-PUBLIC void mprSetSslKeyFile(MprSsl *ssl, cchar *keyFile)
-{
-    assert(ssl);
-    ssl->keyFile = (keyFile && *keyFile) ? sclone(keyFile) : 0;
-    ssl->changed = 1;
-}
-
-
-PUBLIC void mprSetSslCertFile(MprSsl *ssl, cchar *certFile)
-{
-    assert(ssl);
-    ssl->certFile = (certFile && *certFile) ? sclone(certFile) : 0;
+    ssl->cacheSize = size;
     ssl->changed = 1;
 }
 
@@ -23780,7 +23775,6 @@ PUBLIC void mprSetSslCaFile(MprSsl *ssl, cchar *caFile)
 }
 
 
-/* Only supported in OpenSSL */
 PUBLIC void mprSetSslCaPath(MprSsl *ssl, cchar *caPath)
 {
     assert(ssl);
@@ -23789,7 +23783,46 @@ PUBLIC void mprSetSslCaPath(MprSsl *ssl, cchar *caPath)
 }
 
 
-/* Only supported in OpenSSL */
+PUBLIC void mprSetSslCertFile(MprSsl *ssl, cchar *certFile)
+{
+    assert(ssl);
+    ssl->certFile = (certFile && *certFile) ? sclone(certFile) : 0;
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers)
+{
+    assert(ssl);
+    ssl->ciphers = sclone(ciphers);
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslCurve(MprSsl *ssl, cchar *curve)
+{
+    assert(ssl);
+    ssl->curve = (curve && *curve) ? sclone(curve) : 0;
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslLogLevel(MprSsl *ssl, int level)
+{
+    assert(ssl);
+    ssl->logLevel = level;
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslKeyFile(MprSsl *ssl, cchar *keyFile)
+{
+    assert(ssl);
+    ssl->keyFile = (keyFile && *keyFile) ? sclone(keyFile) : 0;
+    ssl->changed = 1;
+}
+
+
 PUBLIC void mprSetSslProtocols(MprSsl *ssl, int protocols)
 {
     assert(ssl);
@@ -23806,10 +23839,34 @@ PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider)
 }
 
 
+PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable)
+{
+    assert(ssl);
+    ssl->renegotiate = enable;
+    ssl->changed = 1;
+}
+
+
 PUBLIC void mprSetSslRevokeList(MprSsl *ssl, cchar *revokeList)
 {
     assert(ssl);
     ssl->revokeList = (revokeList && *revokeList) ? sclone(revokeList) : 0;
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslTicket(MprSsl *ssl, bool enable)
+{
+    assert(ssl);
+    ssl->ticket = enable;
+    ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslTimeout(MprSsl *ssl, MprTicks timeout)
+{
+    assert(ssl);
+    ssl->sessionTimeout = timeout;
     ssl->changed = 1;
 }
 
