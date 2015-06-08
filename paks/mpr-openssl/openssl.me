@@ -47,8 +47,9 @@ Me.load({
 
                 } else {
                     let opt = {fullpath: true, search: search, nopath: true}
-                    lib = probe('libcrypto.' + me.ext.lib, blend({nothrow: true}, opt)).absolute ||
-                          probe('libcrypto.' + me.ext.shobj, opt).absolute
+                    lib = probe('libcrypto.' + me.ext.lib, blend({nothrow: true}, opt)) ||
+                          probe('libcrypto.' + me.ext.shobj, opt)
+                    lib = lib.absolute
                     path = lib.dirname
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
