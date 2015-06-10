@@ -189,6 +189,9 @@ struct CRYPTO_dynlock_value {
 };
 typedef struct CRYPTO_dynlock_value DynLock;
 
+/*
+    Used for OpenSSL versions < 1.0.2
+ */
 #ifndef ME_MPR_SSL_CURVE
     #define ME_MPR_SSL_CURVE "prime256v1"
 #endif
@@ -446,8 +449,8 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
             }
         }
         store = SSL_CTX_get_cert_store(context);
-        if (ssl->revokeList && !X509_STORE_load_locations(store, ssl->revokeList, 0)) {
-            mprLog("error openssl", 0, "Cannot load certificate revoke list: %s", ssl->revokeList);
+        if (ssl->revoke && !X509_STORE_load_locations(store, ssl->revoke, 0)) {
+            mprLog("error openssl", 0, "Cannot load certificate revoke list: %s", ssl->revoke);
             SSL_CTX_free(context);
             return 0;
         }
@@ -488,6 +491,7 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
      */
 #if SSL_OP_SINGLE_ECDH_USE
     #ifdef SSL_CTX_set_ecdh_auto
+        /* This is supported in OpenSSL 1.0.2 */
         SSL_CTX_set_ecdh_auto(context, 1);
     #else
         {

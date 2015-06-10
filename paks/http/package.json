@@ -30,13 +30,13 @@
         }
     ],
     "dependencies": {
+        "certs": "^0.1",
         "mpr": "^6.0",
         "osdep": "^0.8",
         "pcre": "^1.0",
         "ssl": "^0.9"
     },
     "optionalDependencies": {
-        "certs": "^0.1",
         "mpr-openssl": "^0.1"
     },
     "files": [

@@ -23593,12 +23593,11 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->caPath);
         mprMark(ssl->ciphers);
         mprMark(ssl->config);
-        mprMark(ssl->curve);
         mprMark(ssl->keyFile);
         mprMark(ssl->mutex);
         mprMark(ssl->provider);
         mprMark(ssl->providerName);
-        mprMark(ssl->revokeList);
+        mprMark(ssl->revoke);
     }
 }
 
@@ -23641,7 +23640,6 @@ PUBLIC MprSsl *mprCreateSsl(int server)
         Sensible defaults
      */
     ssl->cacheSize = ME_MPR_SSL_CACHE;
-    ssl->curve = sclone(ME_MPR_SSL_CURVE);
     ssl->logLevel = ME_MPR_SSL_LOG_LEVEL;
     ssl->renegotiate = ME_MPR_SSL_RENEGOTIATE;
     ssl->ticket = ME_MPR_SSL_TICKET;
@@ -23799,14 +23797,6 @@ PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers)
 }
 
 
-PUBLIC void mprSetSslCurve(MprSsl *ssl, cchar *curve)
-{
-    assert(ssl);
-    ssl->curve = (curve && *curve) ? sclone(curve) : 0;
-    ssl->changed = 1;
-}
-
-
 PUBLIC void mprSetSslLogLevel(MprSsl *ssl, int level)
 {
     assert(ssl);
@@ -23847,10 +23837,10 @@ PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable)
 }
 
 
-PUBLIC void mprSetSslRevokeList(MprSsl *ssl, cchar *revokeList)
+PUBLIC void mprSetSslRevoke(MprSsl *ssl, cchar *revoke)
 {
     assert(ssl);
-    ssl->revokeList = (revokeList && *revokeList) ? sclone(revokeList) : 0;
+    ssl->revoke = (revoke && *revoke) ? sclone(revoke) : 0;
     ssl->changed = 1;
 }
 

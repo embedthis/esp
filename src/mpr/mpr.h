@@ -8060,9 +8060,6 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
 #ifndef ME_MPR_SSL_CACHE
     #define ME_MPR_SSL_CACHE 512
 #endif
-#ifndef ME_MPR_SSL_CURVE
-    #define ME_MPR_SSL_CURVE "prime256v1"
-#endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
     #define ME_MPR_SSL_LOG_LEVEL 3
 #endif
@@ -8086,12 +8083,11 @@ typedef struct MprSsl {
     struct MprSocketProvider *provider; /**< Cached SSL provider to use */
     cchar           *keyFile;           /**< Alternatively, locate the key in a file */
     cchar           *certFile;          /**< Certificate filename */
-    cchar           *revokeList;        /**< Certificate revocation list */
+    cchar           *revoke;            /**< Certificate revocation list */
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
     void            *config;            /**< Extended provider SSL configuration */
-    cchar           *curve;             /**< Elliptic curve */
     bool            changed;            /**< Set if there is a change in the SSL config. Reset by providers */
     bool            configured;         /**< Set if this SSL configuration has been processed */
     bool            renegotiate;        /**< Renegotiate sessions */
@@ -8232,15 +8228,6 @@ PUBLIC void mprVerifySslPeer(struct MprSsl *ssl, bool on);
 PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size);
 
 /**
-    Set the SSL elliptic curve to use
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param curve Curve name
-    @ingroup MprSsl
-    @stability Prototype
- */
-PUBLIC void mprSetSslCurve(MprSsl *ssl, cchar *curve);
-
-/**
     Set the SSL log level at which to start tracing SSL events
     @param ssl SSL instance returned from #mprCreateSsl
     @param level Log level (0-9)
@@ -8279,11 +8266,11 @@ PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable);
 /**
     Define a list of certificates to revoke
     @param ssl SSL instance returned from #mprCreateSsl
-    @param revokeList Path to the SSL certificate revocation list
+    @param revoke Path to the SSL certificate revocation list
     @ingroup MprSsl
     @stability Prototype
  */
-PUBLIC void mprSetSslRevokeList(struct MprSsl *ssl, cchar *revokeList);
+PUBLIC void mprSetSslRevoke(struct MprSsl *ssl, cchar *revoke);
 
 /**
     Enable SSL session tickets

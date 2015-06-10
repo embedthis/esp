@@ -158,18 +158,6 @@ Me.load({
                 print(ossl('x509 -in ${BIN}/test.crt -noout -text'))
                 print(ossl('x509 -in ${BIN}/self.crt -noout -text'))
             `
-        },
-
-        /*
-            Just for importing certs from a MakeMe build into an Xcode project
-         */
-        'import-certs': {
-            build: ' ',
-            'generate-xcode': `
-                cd ${TOP}/build/${platform.os}-${platform.arch}-debug/bin
-                cp *.crt *.key ../../${platform.name}/bin
-            `
-            enable: '${platform.profile} = "mine"'
-        },
+        }
     }
 })
