@@ -1241,7 +1241,7 @@ static cchar *getWinSDK(HttpRoute *route)
     if (!path) {
         path = "${WINSDK}";
     }
-    mprLog("info esp", 4, "Using Windows SDK at %s", path);
+    mprLog("info esp", 5, "Using Windows SDK at %s", path);
     eroute->winsdk = strim(path, "\\", MPR_TRIM_END);
     return eroute->winsdk;
 #else
