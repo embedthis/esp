@@ -12,9 +12,16 @@ Me.load({
                 let tags = me.dir.paks.join('*/doc/api/*.tags')
                 apidoc('api/edi.dox', ['${SRC}/edi.h', '${SRC}/mdb.h' ], 'EDI', tags)
                 apidoc('api/esp.dox', ['${SRC}/esp.h'], 'ESP', [tags, 'api/edi.tags'])
-                let files = Path().files(['api/esp.html', 'api/edi.html', me.dir.paks.join('*/doc/api/*.html')])
+                let files = Path().files(['api/esp.html', 'api/edi.html'])
                 for each (let src in files) {
                     apiLayout(src, Path('dist/ref').join(src))
+                }
+
+                let base = me.dir.paks.join('*/doc')
+                let files = Path().files(base.join('api/*.html'))
+                for each (src in files) {
+                    let dest = src.trimComponents(base.components.length)
+                    apiLayout(src, Path('dist/ref').join(dest))
                 }
             `,
         },
