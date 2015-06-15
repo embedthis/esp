@@ -25,6 +25,9 @@
             "url": "https://github.com/embedthis/sqlite/blob/master/LICENSE.md"
         }
     ],
+    "files": [
+        "dist/**"
+    ],
     "pak": {
         "origin": "embedthis/sqlite"
     }

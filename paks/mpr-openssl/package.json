@@ -2,7 +2,7 @@
     "name": "mpr-openssl",
     "title": "OpenSSL support",
     "description": "OpenSSL Support for the MPR",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "keywords": [
         "me",
         "ssl",

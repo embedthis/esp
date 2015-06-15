@@ -20,6 +20,9 @@
         "url": "http://github.com/embedthis/pcre/issues"
     },
     "licenses": "BSD",
+    "files": [
+        "dist/**"
+    ],
     "pak": {
         "version": ">=0.10.0",
         "origin": "embedthis/pcre"

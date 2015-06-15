@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configuration Header for macosx-x64-default
+    me.h -- MakeMe Configure Header for macosx-x64-default
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.

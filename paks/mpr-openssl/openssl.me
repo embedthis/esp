@@ -75,6 +75,15 @@ Me.load({
                 if (me.platform.os == 'macosx') {
                     me.target.compiler.push('-Wno-deprecated-declarations')
                 }
+                /*
+                    If OpenSSL is built with compression (bad idea), it will require zlib
+                 */
+                if (me.targets.zlib && me.targets.zlib.enable) {
+                    if (!me.targets.libmpr.depends.contains('libzlib')) {
+                        me.targets.libmpr.depends += [ 'libzlib' ]
+                        me.targets.libmpr.libraries += [ 'zlib' ]
+                    }
+                }
             `
         }
     }
