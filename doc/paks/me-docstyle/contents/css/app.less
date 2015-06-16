@@ -21,6 +21,16 @@ body {
     }
 }
 
+body.version {
+    background: none;
+    display: inline;
+    border: none;
+    margin: 0;
+    font-size: 0.75rem;
+    color: white;
+    opacity: 0.75;
+}
+
 .masthead {
     position: fixed;
     height: @masthead-height;
@@ -77,13 +87,14 @@ body {
             color: @white;
         }
     }
-    .version {
+    iframe.version {
+        border: none;
+        background: none;
+        height: 2rem;
+        width: 3rem;
         position: fixed;
-        top: 48px;
-        right: 1rem;
-        font-size: 0.75rem;
-        color: @white;
-        opacity: 0.75;
+        top: 46px;
+        right: 1px;
     }
 }
 

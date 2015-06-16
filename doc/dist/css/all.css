@@ -24,6 +24,15 @@ body {
 body.show-sidebar {
   margin-left: 240px;
 }
+body.version {
+  background: none;
+  display: inline;
+  border: none;
+  margin: 0;
+  font-size: 0.75rem;
+  color: white;
+  opacity: 0.75;
+}
 .masthead {
   position: fixed;
   height: 78px;
@@ -81,13 +90,14 @@ body.show-sidebar {
 .masthead .breadcrumb a:hover.active.section {
   color: #ffffff;
 }
-.masthead .version {
+.masthead iframe.version {
+  border: none;
+  background: none;
+  height: 2rem;
+  width: 3rem;
   position: fixed;
-  top: 48px;
-  right: 1rem;
-  font-size: 0.75rem;
-  color: #ffffff;
-  opacity: 0.75;
+  top: 46px;
+  right: 1px;
 }
 .sidebar {
   position: fixed;
