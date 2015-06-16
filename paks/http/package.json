@@ -37,7 +37,11 @@
         "ssl": "^0.9"
     },
     "optionalDependencies": {
-        "mpr-openssl": "^0.1"
+        "mpr-openssl": "^0.3"
+    },
+    "devDependencies": {
+        "makeme": ">=0.9.0",
+        "pak": ">=0.11.0"
     },
     "files": [
         "dist/",
@@ -45,7 +49,6 @@
     ],
     "pak": {
         "import": true,
-        "pak": ">=0.10.0",
         "origin": "embedthis/http"
     }
 }
