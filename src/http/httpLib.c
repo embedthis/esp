@@ -5284,10 +5284,12 @@ static void parseSslLogLevel(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+#if UNUSED
 static void parseSslProvider(HttpRoute *route, cchar *key, MprJson *prop)
 {
     mprSetSslProvider(route->ssl, prop->value);
 }
+#endif
 
 
 static void parseSslRenegotiate(HttpRoute *route, cchar *key, MprJson *prop)
@@ -5630,7 +5632,9 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.ssl.ciphers", parseSslCiphers);
     httpAddConfig("http.ssl.logLevel", parseSslLogLevel);
     httpAddConfig("http.ssl.key", parseSslKey);
+#if UNUSED
     httpAddConfig("http.ssl.provider", parseSslProvider);
+#endif
     httpAddConfig("http.ssl.protocols", parseSslProtocols);
     httpAddConfig("http.ssl.renegotiate", parseSslRenegotiate);
     httpAddConfig("http.ssl.ticket", parseSslTicket);
@@ -5665,7 +5669,9 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.ssl.certificate", parseSslCertificate);
     httpAddConfig("http.server.ssl.ciphers", parseSslCiphers);
     httpAddConfig("http.server.ssl.key", parseSslKey);
+#if UNUSED
     httpAddConfig("http.server.ssl.provider", parseSslProvider);
+#endif
     httpAddConfig("http.server.ssl.protocols", parseSslProtocols);
     httpAddConfig("http.server.ssl.verify", httpParseAll);
     httpAddConfig("http.server.ssl.verify.client", parseSslVerifyClient);

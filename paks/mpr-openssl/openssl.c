@@ -258,6 +258,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     if ((openProvider = mprAllocObj(MprSocketProvider, manageOpenProvider)) == NULL) {
         return MPR_ERR_MEMORY;
     }
+    openProvider->name = sclone("openssl");
     openProvider->upgradeSocket = upgradeOss;
     openProvider->closeSocket = closeOss;
     openProvider->disconnectSocket = disconnectOss;
@@ -265,7 +266,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     openProvider->socketState = getOssState;
     openProvider->readSocket = readOss;
     openProvider->writeSocket = writeOss;
-    mprAddSocketProvider("openssl", openProvider);
+    mprSetSslProvider(openProvider);
 
     /*
         Configure the SSL library. Use the crypto ID as a one-time test. This allows

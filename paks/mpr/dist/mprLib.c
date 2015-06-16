@@ -21983,7 +21983,9 @@ static void manageSocketService(MprSocketService *ss, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(ss->standardProvider);
+#if UNUSED
         mprMark(ss->providers);
+#endif
         mprMark(ss->sslProvider);
         mprMark(ss->secureSockets);
         mprMark(ss->mutex);
@@ -22017,23 +22019,27 @@ static MprSocketProvider *createStandardProvider(MprSocketService *ss)
 }
 
 
-PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider)
+PUBLIC void mprSetSslProvider(MprSocketProvider *provider)
 {
     MprSocketService    *ss;
 
     ss = MPR->socketService;
 
+#if UNUSED
     if (ss->providers == 0 && (ss->providers = mprCreateHash(0, 0)) == 0) {
         return;
     }
     ss->sslProvider = provider->name = sclone(name);
     mprAddKey(ss->providers, name, provider);
+    provider->name = sclone(name);
+#endif
+    ss->sslProvider =  provider;
 }
 
 
 PUBLIC bool mprHasSecureSockets()
 {
-    return (MPR->socketService->providers != 0);
+    return (MPR->socketService->sslProvider != 0);
 }
 
 
@@ -23595,8 +23601,10 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->config);
         mprMark(ssl->keyFile);
         mprMark(ssl->mutex);
+#if UNUSED
         mprMark(ssl->provider);
         mprMark(ssl->providerName);
+#endif
         mprMark(ssl->revoke);
     }
 }
@@ -23674,14 +23682,14 @@ PUBLIC int mprLoadSsl()
     MprModule           *mp;
 
     ss = MPR->socketService;
-    if (ss->providers) {
+    if (ss->sslProvider) {
         return 0;
     }
     if ((mp = mprCreateModule("ssl", "builtin", "mprSslInit", NULL)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
     mprSslInit(MPR, mp);
-    mprLog("info ssl", 5, "Loaded %s SSL provider", ss->sslProvider);
+    mprLog("info ssl", 5, "Loaded %s SSL provider", ss->sslProvider->name);
     return 0;
 #else
     mprLog("error mpr", 0, "SSL communications support not included in build");
@@ -23690,17 +23698,17 @@ PUBLIC int mprLoadSsl()
 }
 
 
-static int loadProviders()
+static int loadProvider()
 {
     MprSocketService    *ss;
 
     ss = MPR->socketService;
     mprGlobalLock();
-    if (!ss->providers && mprLoadSsl() < 0) {
+    if (!ss->sslProvider && mprLoadSsl() < 0) {
         mprGlobalUnlock();
         return MPR_ERR_CANT_READ;
     }
-    if (!ss->providers) {
+    if (!ss->sslProvider) {
         mprLog("error mpr", 0, "Cannot load SSL provider");
         mprGlobalUnlock();
         return MPR_ERR_CANT_INITIALIZE;
@@ -23716,7 +23724,6 @@ static int loadProviders()
 PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 {
     MprSocketService    *ss;
-    cchar               *providerName;
 
     ss  = sp->service;
     assert(sp);
@@ -23724,18 +23731,21 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
     if (!ssl) {
         return MPR_ERR_BAD_ARGS;
     }
-    if (!ssl->provider) {
-        if (loadProviders() < 0) {
+    if (!ss->sslProvider) {
+        if (loadProvider() < 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
+#if UNUSED
+    cchar               *providerName;
         providerName = (ssl->providerName) ? ssl->providerName : ss->sslProvider;
         if ((ssl->provider = mprLookupKey(ss->providers, providerName)) == 0) {
             sp->errorMsg = sfmt("Cannot use SSL, missing SSL provider %s", providerName);
             return MPR_ERR_CANT_INITIALIZE;
         }
         ssl->providerName = providerName;
+#endif
     }
-    sp->provider = ssl->provider;
+    sp->provider = ss->sslProvider;
 #if KEEP
     /* session resumption can cause problems with Nagle. However, appweb opens sockets with nodelay by default */
     sp->flags |= MPR_SOCKET_NODELAY;
@@ -23821,12 +23831,14 @@ PUBLIC void mprSetSslProtocols(MprSsl *ssl, int protocols)
 }
 
 
+#if UNUSED
 PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider)
 {
     assert(ssl);
     ssl->providerName = (provider && *provider) ? sclone(provider) : 0;
     ssl->changed = 1;
 }
+#endif
 
 
 PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable)

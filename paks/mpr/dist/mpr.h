@@ -7459,8 +7459,11 @@ typedef int (*MprSocketPrebind)(struct MprSocket *sock);
  */
 typedef struct MprSocketService {
     MprSocketProvider *standardProvider;        /**< Socket provider for non-SSL connections */
+    MprSocketProvider *sslProvider;             /**< Socket provider for SSL connections */
+#if UNUSED
     char            *sslProvider;               /**< Default secure provider for SSL connections */
     MprHash         *providers;                 /**< Secure socket providers */
+#endif
     MprSocketPrebind prebind;                   /**< Prebind callback */
     MprList         *secureSockets;             /**< List of secured (matrixssl) sockets */
     MprMutex        *mutex;                     /**< Multithread locking */
@@ -7493,15 +7496,6 @@ PUBLIC bool mprHasSecureSockets();
     @stability Stable
  */
 PUBLIC int mprSetMaxSocketAccept(int max);
-
-/**
-    Add a secure socket provider for SSL communications
-    @param name Name of the secure socket provider
-    @param provider Socket provider object
-    @ingroup MprSocket
-    @stability Stable
- */
-PUBLIC void mprAddSocketProvider(cchar *name, MprSocketProvider *provider);
 
 /*
     Socket close flags
@@ -8080,7 +8074,9 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
  */
 typedef struct MprSsl {
     cchar           *providerName;      /**< SSL provider to use - null if default */
+#if UNUSED
     struct MprSocketProvider *provider; /**< Cached SSL provider to use */
+#endif
     cchar           *keyFile;           /**< Alternatively, locate the key in a file */
     cchar           *certFile;          /**< Certificate filename */
     cchar           *revoke;            /**< Certificate revocation list */
@@ -8154,15 +8150,6 @@ PUBLIC int mprLoadSsl();
 PUBLIC int mprSslInit(void *unused, MprModule *module);
 
 /**
-    Set the key file to use for SSL
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param keyFile Path to the SSL key file
-    @ingroup MprSsl
-    @stability Stable
- */
-PUBLIC void mprSetSslKeyFile(struct MprSsl *ssl, cchar *keyFile);
-
-/**
     Set certificate to use for SSL
     @param ssl SSL instance returned from #mprCreateSsl
     @param certFile Path to the SSL certificate file
@@ -8201,24 +8188,6 @@ PUBLIC void mprSetSslCaPath(struct MprSsl *ssl, cchar *caPath);
 PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers);
 
 /**
-    Control the verification of SSL certificate issuers
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param on Set to true to enable SSL certificate issuer verification.
-    @ingroup MprSsl
-    @stability Evolving
- */
-PUBLIC void mprVerifySslIssuer(struct MprSsl *ssl, bool on);
-
-/**
-    Require verification of peer certificates
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param on Set to true to enable peer SSL certificate verification.
-    @ingroup MprSsl
-    @stability Evolving
- */
-PUBLIC void mprVerifySslPeer(struct MprSsl *ssl, bool on);
-
-/**
     Set the SSL server-side session cache size
     @param ssl SSL instance returned from #mprCreateSsl
     @param size Size of the cache in entries
@@ -8226,6 +8195,15 @@ PUBLIC void mprVerifySslPeer(struct MprSsl *ssl, bool on);
     @stability Prototype
  */
 PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size);
+
+/**
+    Set the key file to use for SSL
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param keyFile Path to the SSL key file
+    @ingroup MprSsl
+    @stability Stable
+ */
+PUBLIC void mprSetSslKeyFile(struct MprSsl *ssl, cchar *keyFile);
 
 /**
     Set the SSL log level at which to start tracing SSL events
@@ -8247,12 +8225,11 @@ PUBLIC void mprSetSslProtocols(struct MprSsl *ssl, int protocols);
 
 /**
     Set the SSL provider to use
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param provider SSL provider name (openssl | matrixssl | est | nanossl)
+    @param provider Socket provider object
     @ingroup MprSsl
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider);
+PUBLIC void mprSetSslProvider(MprSocketProvider *provider);
 
 /**
     Control SSL session renegotiation
@@ -8298,6 +8275,24 @@ PUBLIC void mprSetSslTimeout(MprSsl *ssl, MprTicks timeout);
     @stability Evolving
  */
 PUBLIC void mprVerifySslDepth(struct MprSsl *ssl, int depth);
+
+/**
+    Control the verification of SSL certificate issuers
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param on Set to true to enable SSL certificate issuer verification.
+    @ingroup MprSsl
+    @stability Evolving
+ */
+PUBLIC void mprVerifySslIssuer(struct MprSsl *ssl, bool on);
+
+/**
+    Require verification of peer certificates
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param on Set to true to enable peer SSL certificate verification.
+    @ingroup MprSsl
+    @stability Evolving
+ */
+PUBLIC void mprVerifySslPeer(struct MprSsl *ssl, bool on);
 
 #if ME_COM_EST
     PUBLIC int mprCreateEstModule();

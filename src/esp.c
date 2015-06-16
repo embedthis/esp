@@ -48,7 +48,9 @@ typedef struct App {
     MprList     *slink;                 /* List of items for static link */
 #endif
     MprHash     *targets;               /* Command line targets */
+#if UNUSED
     MprHash     *topDeps;               /* Top level dependencies */
+#endif
     EdiGrid     *migrations;            /* Migrations table */
 
     cchar       *command;               /* Compilation or link command */
@@ -221,7 +223,9 @@ static App *createApp(Mpr *mpr)
 #else
     mprLog("", 0, "No database provider defined");
 #endif
+#if UNUSED
     app->topDeps = mprCreateHash(0, 0);
+#endif
     app->cipher = sclone("blowfish");
     return app;
 }
@@ -274,7 +278,9 @@ static void manageApp(App *app, int flags)
         mprMark(app->table);
         mprMark(app->targets);
         mprMark(app->title);
+#if UNUSED
         mprMark(app->topDeps);
+#endif
         mprMark(app->traceSpec);
         mprMark(app->version);
     }

@@ -167,7 +167,7 @@
     </div>
     <div class="content">
 
-<h1>MPR - MPR Native API</h1>
+<h1>MPR Native API</h1>
 <a name="mpr.h"></a>
 <p>The Multithreaded Portable Runtime (MPR) is a portable runtime library for embedded applications.</p>
 <p><h1><bold>Description</bold>:</h1><p>The MPR provides management for logging, error handling, events, files, http, memory, ssl, sockets, strings, xml parsing, and date/time functions. It also provides a foundation of safe routines for secure programming, that help to prevent buffer overflows and other security threats. The MPR is a library and a C API that can be used in both C and C++ programs. <br/><br/>
@@ -282,7 +282,6 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_mem_1ga3b66bfcf86dc9f50510341e7b5490326" class="nameRef">mprAddRoot</a>(<a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a memory block as a root for garbage collection.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_signal" class="ref">MprSignal*</a></td><td><a href="#group___mpr_signal_1gabcf186c6becc236eb4f4c8416b709f5f" class="nameRef">mprAddSignalHandler</a>(int signo, void *handler, void *arg, <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a signal handler.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_wait_handler" class="ref">MprWaitHandler*</a></td><td><a href="#group___mpr_socket_1ga4bc5be8f167a30e77e8c3b38c8594049" class="nameRef">mprAddSocketHandler</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp, int mask, <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a wait handler to a socket.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_socket_1ga48875519d20f48a69a66b233d411f62f" class="nameRef">mprAddSocketProvider</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a> *provider)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a secure socket provider for SSL communications.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga86d99126f5c4cf54edda02c98a9142a3" class="nameRef">mprAddSslCiphers</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add the ciphers to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_signal_1ga107d9cacb23e9cddb7fcd1e6244638b7" class="nameRef">mprAddStandardSignals</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add standard trapping of system signals.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_1ga34490595fe86683f06e8d6e9abc72aa3" class="nameRef">mprAddTerminator</a>(<a href="#group___mpr_1gaf44802f2cd62d3139163df79721ee79b" class="ref">MprTerminator</a> terminator)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a service terminator.</td></tr>
@@ -747,7 +746,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaa8293be1a1b769f03db306834ef5291f" class="nameRef">mprSetSslKeyFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *keyFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the key file to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gabcdba4618d5754a0ccfc76ef271776d8" class="nameRef">mprSetSslLogLevel</a>(struct MprSsl *ssl, int level)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL log level at which to start tracing SSL events.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga00cd731b20d96a0b0080637d59becd4a" class="nameRef">mprSetSslProtocols</a>(struct MprSsl *ssl, int protocols)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL protocol to use.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga98e6c82c9ff89135aea961c2ff3d4de4" class="nameRef">mprSetSslProvider</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *provider)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL provider to use.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gabe689d34f52874f6b1ab0d384c95decb" class="nameRef">mprSetSslProvider</a>(<a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a> *provider)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL provider to use.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gadc15a963cd6567f7fa05da968bee39a6" class="nameRef">mprSetSslRenegotiate</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Control SSL session renegotiation.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga0fe151c86620dc1eec03e0f35082e075" class="nameRef">mprSetSslRevoke</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *revoke)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a list of certificates to revoke.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga16313273a92421655778343d310475ee" class="nameRef">mprSetSslTicket</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Enable SSL session tickets.</td></tr>
@@ -11140,25 +11139,6 @@ Extended SSL socket state.
     <a href="#group___mpr_socket" class="ref">MprSocket</a>, <a href="#group___mpr_socket_1ga64bb2cf789d6ba4e15b33ffe2aa6affe" class="ref">MprSocketPrebind</a>, <a href="#group___mpr_socket_1ga86674106f5fcb47ba730f66375407e0a" class="ref">MprSocketProc</a>, <a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a>, <a href="#struct_mpr_socket_service" class="ref">MprSocketService</a>, <a href="#group___mpr_ssl_1ga1542af34e1a866b23c7c19eb44fece34" class="ref">mprCloneSsl</a>, <a href="#group___mpr_socket_1ga5bd6e40cb8a29c92a8f5e1ce9529b726" class="ref">mprCloseSocket</a>, <a href="#group___mpr_socket_1ga7157efc602b90ef7786eb89d31ffa6f7" class="ref">mprConnectSocket</a>, <a href="#group___mpr_socket_1ga0ef02d313ec268eae6038a5af0ee5cc4" class="ref">mprCreateSocket</a>, <a href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802" class="ref">mprCreateSsl</a>, <a href="#group___mpr_socket_1ga5f9301dbcddf9d1a62b40c69bc67fe40" class="ref">mprDisconnectSocket</a>, <a href="#group___mpr_socket_1ga76ee7ac0bfb59b23680a835d7ac03854" class="ref">mprEnableSocketEvents</a>, <a href="#group___mpr_socket_1gacd099834cea11479ab5a5ef542bfcaac" class="ref">mprFlushSocket</a>, <a href="#group___mpr_socket_1ga8240b2dc5540ae928d19410447c2bab0" class="ref">mprGetSocketBlockingMode</a>, <a href="#group___mpr_socket_1ga64ccf4250b432690a73bb66f0a639f7a" class="ref">mprGetSocketError</a>, <a href="#group___mpr_socket_1ga73b28695884ae2db990efa68ae9213ca" class="ref">mprGetSocketHandle</a>, <a href="#group___mpr_socket_1ga0cb09a106e793b09eebbedceaab7f85c" class="ref">mprGetSocketInfo</a>, <a href="#group___mpr_socket_1gaa4d2f67f80f168a4be7e5f3b96541bab" class="ref">mprGetSocketPort</a>, <a href="#group___mpr_socket_1ga84afd209ead21ddbd5690402caf982aa" class="ref">mprGetSocketState</a>, <a href="#group___mpr_socket_1gaa913dba81d3bc0cd51facdca4c4b21e8" class="ref">mprHasSecureSockets</a>, <a href="#group___mpr_socket_1ga122966f272c5d7d00bab8f66d569d362" class="ref">mprIsSocketEof</a>, <a href="#group___mpr_socket_1gabeeb5c489632e55d36e2139f8ac0f423" class="ref">mprIsSocketSecure</a>, <a href="#group___mpr_socket_1ga03b1900a4646dcac3b07cb9269ec549a" class="ref">mprListenOnSocket</a>, <a href="#group___mpr_ssl_1ga4cf59cde7f99bce19be6056483180e51" class="ref">mprLoadSsl</a>, <a href="#group___mpr_socket_1gaac9abd36a2e632460428af4d512ab2d0" class="ref">mprReadSocket</a>, <a href="#group___mpr_socket_1gae2baa591f0466c9c64f0cf0147ada904" class="ref">mprSetSocketBlockingMode</a>, <a href="#group___mpr_socket_1ga27866b4c10d6e45ffd96604b221cf314" class="ref">mprSetSocketEof</a>, <a href="#group___mpr_socket_1ga51594bafaa2003511990ffd804189a31" class="ref">mprSetSocketNoDelay</a>, <a href="#group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577" class="ref">mprSetSslCaFile</a>, <a href="#group___mpr_ssl_1gaadf254e5df954326a3f9bcd61e6a106b" class="ref">mprSetSslCaPath</a>, <a href="#group___mpr_ssl_1ga0eb821dce1b17ce08d83fa63b3ece658" class="ref">mprSetSslCertFile</a>, <a href="#group___mpr_ssl_1gaf3d90b0a59c1e786421e8f2c2167fa20" class="ref">mprSetSslCiphers</a>, <a href="#group___mpr_ssl_1gaa8293be1a1b769f03db306834ef5291f" class="ref">mprSetSslKeyFile</a>, <a href="#group___mpr_socket_1ga1a937447e0d16a18c8c4fd61df568d59" class="ref">mprSocketHandshaking</a>, <a href="#group___mpr_socket_1ga3083d9605d116fa97f48d7941da8648e" class="ref">mprSocketHasBufferedRead</a>, <a href="#group___mpr_socket_1ga23bc7f651617f75a71ba39686db02f47" class="ref">mprSocketHasBufferedWrite</a>, <a href="#group___mpr_socket_1ga12b7f81e6e807d025f0de76f27d9f54e" class="ref">mprUpgradeSocket</a>, <a href="#group___mpr_socket_1ga125e30fab937791fc0c807461bf3c797" class="ref">mprWriteSocket</a>, <a href="#group___mpr_socket_1gaf9a6fe73adb4fb12fb998bf218b2ac61" class="ref">mprWriteSocketString</a>, <a href="#group___mpr_socket_1ga793fae1ef308f441f521dedadd9c5d4a" class="ref">mprWriteSocketVector</a></dd></dl>
   </div>
 </div>
-<a name="group___mpr_socket_1ga48875519d20f48a69a66b233d411f62f"></a>
-<div class="api">
-  <div class="prototype">
-    void
-    mprAddSocketProvider
-(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a> *provider)
-  </div>
-  <div class="apiDetail">
-<p>Add a secure socket provider for SSL communications.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">name</td><td>Name of the secure socket provider.</td>
-    <tr><td class="param">provider</td><td>Socket provider object.</td>
-    </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    <a href="#group___mpr_socket" class="ref">MprSocket</a>, <a href="#group___mpr_socket_1ga64bb2cf789d6ba4e15b33ffe2aa6affe" class="ref">MprSocketPrebind</a>, <a href="#group___mpr_socket_1ga86674106f5fcb47ba730f66375407e0a" class="ref">MprSocketProc</a>, <a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a>, <a href="#struct_mpr_socket_service" class="ref">MprSocketService</a>, <a href="#group___mpr_socket_1ga4bc5be8f167a30e77e8c3b38c8594049" class="ref">mprAddSocketHandler</a>, <a href="#group___mpr_ssl_1ga1542af34e1a866b23c7c19eb44fece34" class="ref">mprCloneSsl</a>, <a href="#group___mpr_socket_1ga5bd6e40cb8a29c92a8f5e1ce9529b726" class="ref">mprCloseSocket</a>, <a href="#group___mpr_socket_1ga7157efc602b90ef7786eb89d31ffa6f7" class="ref">mprConnectSocket</a>, <a href="#group___mpr_socket_1ga0ef02d313ec268eae6038a5af0ee5cc4" class="ref">mprCreateSocket</a>, <a href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802" class="ref">mprCreateSsl</a>, <a href="#group___mpr_socket_1ga5f9301dbcddf9d1a62b40c69bc67fe40" class="ref">mprDisconnectSocket</a>, <a href="#group___mpr_socket_1ga76ee7ac0bfb59b23680a835d7ac03854" class="ref">mprEnableSocketEvents</a>, <a href="#group___mpr_socket_1gacd099834cea11479ab5a5ef542bfcaac" class="ref">mprFlushSocket</a>, <a href="#group___mpr_socket_1ga8240b2dc5540ae928d19410447c2bab0" class="ref">mprGetSocketBlockingMode</a>, <a href="#group___mpr_socket_1ga64ccf4250b432690a73bb66f0a639f7a" class="ref">mprGetSocketError</a>, <a href="#group___mpr_socket_1ga73b28695884ae2db990efa68ae9213ca" class="ref">mprGetSocketHandle</a>, <a href="#group___mpr_socket_1ga0cb09a106e793b09eebbedceaab7f85c" class="ref">mprGetSocketInfo</a>, <a href="#group___mpr_socket_1gaa4d2f67f80f168a4be7e5f3b96541bab" class="ref">mprGetSocketPort</a>, <a href="#group___mpr_socket_1ga84afd209ead21ddbd5690402caf982aa" class="ref">mprGetSocketState</a>, <a href="#group___mpr_socket_1gaa913dba81d3bc0cd51facdca4c4b21e8" class="ref">mprHasSecureSockets</a>, <a href="#group___mpr_socket_1ga122966f272c5d7d00bab8f66d569d362" class="ref">mprIsSocketEof</a>, <a href="#group___mpr_socket_1gabeeb5c489632e55d36e2139f8ac0f423" class="ref">mprIsSocketSecure</a>, <a href="#group___mpr_socket_1ga03b1900a4646dcac3b07cb9269ec549a" class="ref">mprListenOnSocket</a>, <a href="#group___mpr_ssl_1ga4cf59cde7f99bce19be6056483180e51" class="ref">mprLoadSsl</a>, <a href="#group___mpr_socket_1gaac9abd36a2e632460428af4d512ab2d0" class="ref">mprReadSocket</a>, <a href="#group___mpr_socket_1gae2baa591f0466c9c64f0cf0147ada904" class="ref">mprSetSocketBlockingMode</a>, <a href="#group___mpr_socket_1ga27866b4c10d6e45ffd96604b221cf314" class="ref">mprSetSocketEof</a>, <a href="#group___mpr_socket_1ga51594bafaa2003511990ffd804189a31" class="ref">mprSetSocketNoDelay</a>, <a href="#group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577" class="ref">mprSetSslCaFile</a>, <a href="#group___mpr_ssl_1gaadf254e5df954326a3f9bcd61e6a106b" class="ref">mprSetSslCaPath</a>, <a href="#group___mpr_ssl_1ga0eb821dce1b17ce08d83fa63b3ece658" class="ref">mprSetSslCertFile</a>, <a href="#group___mpr_ssl_1gaf3d90b0a59c1e786421e8f2c2167fa20" class="ref">mprSetSslCiphers</a>, <a href="#group___mpr_ssl_1gaa8293be1a1b769f03db306834ef5291f" class="ref">mprSetSslKeyFile</a>, <a href="#group___mpr_socket_1ga1a937447e0d16a18c8c4fd61df568d59" class="ref">mprSocketHandshaking</a>, <a href="#group___mpr_socket_1ga3083d9605d116fa97f48d7941da8648e" class="ref">mprSocketHasBufferedRead</a>, <a href="#group___mpr_socket_1ga23bc7f651617f75a71ba39686db02f47" class="ref">mprSocketHasBufferedWrite</a>, <a href="#group___mpr_socket_1ga12b7f81e6e807d025f0de76f27d9f54e" class="ref">mprUpgradeSocket</a>, <a href="#group___mpr_socket_1ga125e30fab937791fc0c807461bf3c797" class="ref">mprWriteSocket</a>, <a href="#group___mpr_socket_1gaf9a6fe73adb4fb12fb998bf218b2ac61" class="ref">mprWriteSocketString</a>, <a href="#group___mpr_socket_1ga793fae1ef308f441f521dedadd9c5d4a" class="ref">mprWriteSocketVector</a></dd></dl>
-  </div>
-</div>
 <a name="group___mpr_socket_1ga21c342aa836fc6972ec45ff3ea1ae35d"></a>
 <div class="api">
   <div class="prototype">
@@ -11935,9 +11915,6 @@ Multithread sync.
     <tr><td class="param">int</td><td><td>protocols</td><td>
 SSL protocols.
 </td>
-    <tr><td class="param">struct <a class="ref" href="#struct_mpr_socket_provider">MprSocketProvider</a> *</td><td><td>provider</td><td>
-Cached SSL provider to use.
-</td>
     <tr><td class="param">cchar *</td><td><td>providerName</td><td>
 SSL provider to use - null if default.
 </td>
@@ -12190,21 +12167,20 @@ Verify the peer verificate.
     </dd></dl>
   </div>
 </div>
-<a name="group___mpr_ssl_1ga98e6c82c9ff89135aea961c2ff3d4de4"></a>
+<a name="group___mpr_ssl_1gabe689d34f52874f6b1ab0d384c95decb"></a>
 <div class="api">
   <div class="prototype">
     void
     mprSetSslProvider
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *provider)
+(<a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a> *provider)
   </div>
   <div class="apiDetail">
 <p>Set the SSL provider to use.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
-    <tr><td class="param">provider</td><td>SSL provider name (openssl | matrixssl | est | nanossl).</td>
+    <tr><td class="param">provider</td><td>Socket provider object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -16389,14 +16365,11 @@ Count of client socket connections.
     <tr><td class="param"><a class="ref" href="#group___mpr_socket_1ga64bb2cf789d6ba4e15b33ffe2aa6affe">MprSocketPrebind</a></td><td><td>prebind</td><td>
 Prebind callback.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash">MprHash</a> *</td><td><td>providers</td><td>
-Secure socket providers.
-</td>
     <tr><td class="param">MprList *</td><td><td>secureSockets</td><td>
 List of secured (matrixssl) sockets.
 </td>
-    <tr><td class="param">char *</td><td><td>sslProvider</td><td>
-Default secure provider for SSL connections.
+    <tr><td class="param"><a class="ref" href="#struct_mpr_socket_provider">MprSocketProvider</a> *</td><td><td>sslProvider</td><td>
+Socket provider for SSL connections.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_socket_provider">MprSocketProvider</a> *</td><td><td>standardProvider</td><td>
 Socket provider for non-SSL connections.
