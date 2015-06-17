@@ -5,7 +5,7 @@
     <@ partial('head') @>
     <link href="@~css/api.css" rel="stylesheet" type="text/css" />
 </head>
-<body>
+<body class="show-sidebar">
     <@ partial('sidebar') @>
     <div class="ui inverted masthead">
         <@ partial('nav') @>

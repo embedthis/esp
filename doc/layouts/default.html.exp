@@ -4,7 +4,7 @@
     <title><@= meta.title @></title>
     <@ partial('head') @>
 </head>
-<body>
+<body class="show-sidebar">
     <@ partial('sidebar') @>
     <div class="ui inverted masthead">
         <@ partial('nav') @>

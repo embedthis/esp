@@ -11,8 +11,8 @@ body {
     margin: 0;
     padding: 0;
     font-family: @font;
-    background-image: linear-gradient(@body-gradient);
-    background-attachment: fixed;
+    _background-image: linear-gradient(@body-gradient);
+    _background-attachment: fixed;
     min-width: @body-min-width;
     text-rendering: optimizeLegibility;
     transition: none !important;
@@ -106,7 +106,7 @@ body.version {
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    visibility: hidden;
+    visibility: visible;
     .ui.vertical.menu {
         background: @gray-dark;
         .logo {
@@ -131,6 +131,7 @@ body.version {
             }
         }
         a.item.active {
+            margin-right: 18px;
             border-right: 18px solid @body-highlight;
         }
     }
@@ -179,7 +180,7 @@ body.version {
     margin: 0;
     padding: 10px 0 20px 0;
     height: @terms-height;
-    color: @gray-lightest;
+    color: @gray-light;
     background: rgba(256, 256, 256, 0.75);
     font-size: 0.75rem;
     a:link, a:visited {
