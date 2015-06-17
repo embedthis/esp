@@ -429,6 +429,13 @@
     </member>
     <member kind="function">
       <type>cchar *</type>
+      <name>espGetRouteVar</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>ga6517bb2ea40e6c3725c3b689f66894c8</anchor>
+      <arglist>(HttpConn *conn, cchar *var)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
       <name>espGetSessionID</name>
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga63a13780299e2781dca728d4087165bb</anchor>

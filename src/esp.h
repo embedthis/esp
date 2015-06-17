@@ -980,6 +980,17 @@ PUBLIC HttpRoute *espGetRoute();
 PUBLIC Edi *espGetRouteDatabase(HttpRoute *route);
 
 /**
+    Get a route variable
+    @description Get the value of a request route variable. 
+    @param conn HttpConn connection object
+    @param var Name of the request parameter to retrieve
+    @return String containing the route variable value. Caller should not free.
+    @ingroup EspReq
+    @stability Prototype
+ */
+PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var);
+
+/**
     Get the session state ID.
     @description This will get the session and return the session ID. This will create a new session state storage area if
         create is true and one does not already exist. This can be used to test if the session state exists for this

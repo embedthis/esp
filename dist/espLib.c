@@ -3268,6 +3268,12 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route)
 }
 
 
+PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var)
+{
+    return httpGetRouteVar(conn->rx->route, var);
+}
+
+
 PUBLIC cchar *espGetSessionID(HttpConn *conn, int create)
 {
     HttpSession *session;

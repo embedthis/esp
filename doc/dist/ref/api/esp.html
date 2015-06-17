@@ -240,6 +240,7 @@
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___esp_req_1ga400095fc3f1743660baedac7c95ff53c" class="nameRef">espGetReferrer</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the referring URI.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_route" class="ref">HttpRoute*</a></td><td><a href="#group___esp_req_1ga769c951ecdea1f7ab0666eb54e5419df" class="nameRef">espGetRoute</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current route HttpRoute object.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi" class="ref">Edi*</a></td><td><a href="#group___esp_req_1ga72246c1dc89e871ec596ae0959077af2" class="nameRef">espGetRouteDatabase</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the default database defined on a route.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga6517bb2ea40e6c3725c3b689f66894c8" class="nameRef">espGetRouteVar</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a route variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga63a13780299e2781dca728d4087165bb" class="nameRef">espGetSessionID</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, int create)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the session state ID.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_req_1ga4323100f7ccf0a198b0ee2593749fe5e" class="nameRef">espGetStatus</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the response status.</td></tr>
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___esp_req_1gad4631deeb02544938b8590806ae8bb8e" class="nameRef">espGetStatusMessage</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the Http response status message.</td></tr>
@@ -3048,6 +3049,27 @@ Custom data for request (unmanaged).
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Database instance object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#struct_esp" class="ref">Esp</a></dd></dl>
+  </div>
+</div>
+<a name="group___esp_req_1ga6517bb2ea40e6c3725c3b689f66894c8"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
+    espGetRouteVar
+(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)
+  </div>
+  <div class="apiDetail">
+<p>Get a route variable.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Get the value of a request route variable.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">conn</td><td>HttpConn connection object.</td>
+    <tr><td class="param">var</td><td>Name of the request parameter to retrieve.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>String containing the route variable value. Caller should not free.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
