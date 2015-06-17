@@ -5351,7 +5351,7 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 
 PUBLIC void espSetDefaultDirs(HttpRoute *route)
 {
-    cchar   *controllers, *documents, *path;
+    cchar   *controllers, *documents, *path, *migrations;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
@@ -5387,6 +5387,16 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
     if (!mprPathExists(path, X_OK)) {
         controllers = ".";
     }
+
+#if DEPRECATED || 1
+    migrations = "db/migrations";
+    path = mprJoinPath(route->home, migrations);
+    if (!mprPathExists(path, X_OK)) {
+        migrations = "migrations";
+    }
+#else
+    migrations = "migrations";
+#endif
     httpSetDir(route, "CACHE", 0);
     httpSetDir(route, "CONTROLLERS", controllers);
     httpSetDir(route, "CONTENTS", 0);
@@ -5395,6 +5405,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
     httpSetDir(route, "HOME", route->home);
     httpSetDir(route, "LAYOUTS", 0);
     httpSetDir(route, "LIB", 0);
+    httpSetDir(route, "MIGRATIONS", migrations);
     httpSetDir(route, "PAKS", 0);
     httpSetDir(route, "PARTIALS", 0);
     httpSetDir(route, "SRC", 0);

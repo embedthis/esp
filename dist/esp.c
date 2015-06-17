@@ -27,6 +27,8 @@ typedef struct App {
     cchar       *home;                  /* Home directory */
     cchar       *paksCacheDir;          /* Paks cache directory */
     cchar       *paksDir;               /* Local paks directory */
+//  XX
+    cchar       *migDir;                /* Migrations directory */
     cchar       *listen;                /* Listen endpoint for "esp run" */
     cchar       *platform;              /* Target platform os-arch-profile (lower) */
 
@@ -121,6 +123,7 @@ static int       nextMigration;         /* Sequence number for next migration */
 #define ESP_MIGRATIONS  "_EspMigrations"
 
 #define ESP_PAKS_DIR    "paks"          /* Default paks dir */
+#define ESP_MIG_DIR     "migrations"    /* Default migrations dir */
 
 /***************************** Forward Declarations ***************************/
 
@@ -216,6 +219,8 @@ static App *createApp(Mpr *mpr)
     app->mpr = mpr;
     app->listen = sclone(ESP_LISTEN);
     app->paksDir = sclone(ESP_PAKS_DIR);
+//  XX
+    app->migDir = sclone(ESP_MIG_DIR);
 #if ME_COM_SQLITE
     app->database = sclone("sdb");
 #elif ME_COM_MDB
@@ -261,6 +266,7 @@ static void manageApp(App *app, int flags)
         mprMark(app->listen);
         mprMark(app->logSpec);
         mprMark(app->migrations);
+        mprMark(app->migDir);
         mprMark(app->mode);
         mprMark(app->module);
         mprMark(app->mpr);
@@ -638,6 +644,7 @@ static void initialize(int argc, char **argv)
         }
         app->paksDir = getConfigValue(app->package, "directories.paks", app->paksDir);
     }
+
     app->description = getConfigValue(app->package, "description", app->description);
     app->name = getConfigValue(app->package, "name", app->name);
     app->title = getConfigValue(app->package, "title", app->title);
@@ -718,6 +725,19 @@ static void initialize(int argc, char **argv)
     }
     esp = stage->stageData;
     esp->compileMode = app->compileMode;
+    
+    /*
+        Do this after espSetDefaultDirs
+     */
+    //  DEPRECATE
+    path = mprJoinPath(route->home, "db/migrations");
+    if (mprPathExists(path, R_OK)) {
+        app->migDir = path;
+        httpSetDir(route, "MIGRATIONS", path);
+    } else {
+        app->migDir = httpGetDir(route, "MIGRATIONS");
+        app->migDir = getConfigValue(app->package, "directories.migrations", app->migDir);
+    }    
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
 }
 
@@ -1020,7 +1040,8 @@ static void migrate(int argc, char **argv)
         mig = app->migrations->records[app->migrations->nrecords - 1];
         lastMigration = stoi(ediGetFieldValue(mig, "version"));
     }
-    app->files = mprGetPathFiles("db/migrations", MPR_PATH_NO_DIRS);
+//  XXX
+    app->files = mprGetPathFiles(app->migDir, MPR_PATH_NO_DIRS);
     mprSortList(app->files, (MprSortProc) (backward ? reverseSortFiles : sortFiles), 0);
 
     if (argc > 0) {
@@ -2055,7 +2076,7 @@ static void createMigration(cchar *name, cchar *table, cchar *comment, int field
     MprHash     *tokens;
     MprList     *files;
     MprDirEntry *dp;
-    cchar       *dir, *seq, *forward, *backward, *data, *path, *def, *field, *tail, *typeDefine;
+    cchar       *seq, *forward, *backward, *data, *path, *def, *field, *tail, *typeDefine;
     char        *typeString;
     int         i, type, next;
 
@@ -2084,9 +2105,10 @@ static void createMigration(cchar *name, cchar *table, cchar *comment, int field
     if ((data = getTemplate("migration", tokens)) == 0) {
         return;
     }
-    dir = mprJoinPath(httpGetDir(app->route, "DB"), "migrations");
-    makeEspDir(dir);
-    files = mprGetPathFiles("db/migrations", MPR_PATH_RELATIVE);
+//  XXX
+    makeEspDir(app->migDir);
+//  XXX
+    files = mprGetPathFiles(app->migDir, MPR_PATH_RELATIVE);
     tail = sfmt("%s.c", name);
     for (ITERATE_ITEMS(files, dp, next)) {
         if (sends(dp->name, tail)) {
@@ -2094,10 +2116,11 @@ static void createMigration(cchar *name, cchar *table, cchar *comment, int field
                 qtrace("Exists", "A migration with the same description already exists: %s", dp->name);
                 return;
             }
-            mprDeletePath(mprJoinPath("db/migrations/", dp->name));
+//  XXX
+            mprDeletePath(mprJoinPath(app->migDir, dp->name));
         }
     }
-    path = sfmt("%s/%s_%s.c", dir, seq, name);
+    path = sfmt("%s/%s_%s.c", app->migDir, seq, name);
     makeEspFile(path, data, 0);
 }
 
