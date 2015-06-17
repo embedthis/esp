@@ -91,7 +91,7 @@ ESP(1)                           User Commands                          ESP(1)
 
        Other directories will be created as needed:
              cache            - Cache directory for compiled content
-             db/migrations    - Databases migration modules
+             migrations       - Databases migration modules
              controllers      - Server side controllers
              src              - Server side main source code
 
@@ -118,7 +118,7 @@ ESP(1)                           User Commands                          ESP(1)
              <B>esp generate migration DESCRIPTION TABLE [field:type ...]</B>
 
        The  DESCRIPTION  is used to name the migration which is created in the
-       <B>db/migrations </B>directory. A migration is given a unique ordered sequence
+       <B>migrations </B>directory. A migration is given a  unique  ordered  sequence
        number  and the description is appended to this number. The description
        is mapped where spaces are changed to "_" characters.  When  migrations
        are run, they are run in sequence number order.
@@ -161,7 +161,7 @@ ESP(1)                           User Commands                          ESP(1)
        with  code to create a column for each specified field of the requested
        type. The valid database types are: blob, boolean, date,  float,  inte-
        ger,  string,  and  text. The migration will use the name "create_scaf-
-       fold_MODEL" and will be created under the <B>db/migrations </B>direcvtory.
+       fold_MODEL" and will be created under the <B>migrations </B>direcvtory.
 
        The scaffold will include an edit action and view  page  that  provides
        add and edit capability. The list action and view, provides the ability

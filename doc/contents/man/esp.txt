@@ -90,7 +90,7 @@ GENERATING APPLICATIONS
 
        Other directories will be created as needed:
              cache            - Cache directory for compiled content
-             db/migrations    - Databases migration modules
+             migrations       - Databases migration modules
              controllers      - Server side controllers
              src              - Server side main source code
 
@@ -119,7 +119,7 @@ GENERATING MIGRATIONS
              esp generate migration DESCRIPTION TABLE [field:type ...]
 
        The  DESCRIPTION  is used to name the migration which is created in the
-       db/migrations directory. A migration is given a unique ordered sequence
+       migrations directory. A migration is given a  unique  ordered  sequence
        number  and the description is appended to this number. The description
        is mapped where spaces are changed to "_" characters.  When  migrations
        are run, they are run in sequence number order.
@@ -165,7 +165,7 @@ GENERATING SCAFFOLDS
        with  code to create a column for each specified field of the requested
        type. The valid database types are: blob, boolean, date,  float,  inte-
        ger,  string,  and  text. The migration will use the name "create_scaf-
-       fold_MODEL" and will be created under the db/migrations direcvtory.
+       fold_MODEL" and will be created under the migrations direcvtory.
 
        The scaffold will include an edit action and view  page  that  provides
        add and edit capability. The list action and view, provides the ability

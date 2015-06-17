@@ -85,7 +85,7 @@ This will will create a set of directories that have the following meaning:
 Other directories will be created as needed:
 .RS 5
  cache            - Cache directory for compiled content
- db/migrations    - Databases migration modules
+ migrations       - Databases migration modules
  controllers      - Server side controllers
  src              - Server side main source code
 .RE
@@ -112,7 +112,7 @@ tables and data.
  \fBesp generate migration DESCRIPTION TABLE [field:type ...]\fR
 .RE
 
-The DESCRIPTION is used to name the migration which is created in the \fBdb/migrations\fR directory. A migration 
+The DESCRIPTION is used to name the migration which is created in the \fBmigrations\fR directory. A migration 
 is given a unique ordered sequence number and the description is appended to this number. The description is mapped
 where spaces are changed to "_" characters. When migrations are run, they are run in sequence number order.
 .PP
@@ -158,7 +158,7 @@ This will create a scaffold for the specified database table and will generate a
 If field:type values are supplied, a database migration will be created with code to create a column for each 
 specified field of the requested type. The valid database types are: blob, boolean, date, float, integer, string,
 and text. The migration will use the name "create_scaffold_MODEL" and will be created under 
-the \fBdb/migrations\fR direcvtory.
+the \fBmigrations\fR direcvtory.
 .PP
 The scaffold will include an edit action and view page that provides add and edit capability. The list action and view, 
 provides the ability to list the table rows and select an entry to edit.
