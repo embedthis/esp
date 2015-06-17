@@ -22838,7 +22838,7 @@ static void addParamsFromBuf(HttpConn *conn, cchar *buf, ssize len)
                 Append to existing keywords
              */
             prior = mprReadJsonObj(params, keyword);
-#if ME_EJS_PRODUCT
+#if ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT
             /*
                 Just for ejscript, we allow embedded ".[]" in the keys
              */
