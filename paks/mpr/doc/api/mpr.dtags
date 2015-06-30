@@ -6100,6 +6100,13 @@
     </member>
     <member kind="function">
       <type>char *</type>
+      <name>sptok</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>gaed9f759eed94ad23fade1be964b0557b</anchor>
+      <arglist>(char *str, cchar *pattern, char **last)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
       <name>srchr</name>
       <anchorfile>group___mpr_string.html</anchorfile>
       <anchor>gaaebeb2311c90e1689b4adb5b2c068f45</anchor>
@@ -6938,6 +6945,13 @@
       <anchorfile>group___mpr_string.html</anchorfile>
       <anchor>gab67674c48f5c02c68c4d094305118515</anchor>
       <arglist>(cchar *str, cchar *set)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
+      <name>sptok</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>gaed9f759eed94ad23fade1be964b0557b</anchor>
+      <arglist>(char *str, cchar *pattern, char **last)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>

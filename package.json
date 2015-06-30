@@ -2,7 +2,7 @@
     "name": "esp",
     "description": "Embedthis ESP, the amazingly fast C-Language web framework",
     "title": "Embedthis ESP",
-    "version": "6.0.0",
+    "version": "6.0.1",
     "keywords": [
         "esp",
         "package"
@@ -31,20 +31,20 @@
         }
     ],
     "dependencies": {
-        "http": "^6.1",
-        "mpr": "^6.1",
-        "osdep": "^0.8",
-        "pcre": "^1.0"
+        "http": "~6.1",
+        "mpr": "~6.1",
+        "osdep": "~0.8",
+        "pcre": "~1.0"
     },
     "optionalDependencies": {
-        "certs": "^0.1",
-        "mpr-mbedtls": "^0.3",
-        "mpr-matrixssl": "^0.3",
-        "mpr-nanossl": "^0.3",
-        "mpr-openssl": "^0.3",
-        "sqlite": "^1.0",
-        "ssl": "^0.9",
-        "watchdog": "^0.1"
+        "certs": "~0.1",
+        "mpr-mbedtls": "~0.3",
+        "mpr-matrixssl": "~0.3",
+        "mpr-nanossl": "~0.3",
+        "mpr-openssl": "~0.3",
+        "sqlite": "~1.0",
+        "ssl": "~0.9",
+        "watchdog": "~0.1"
     },
     "devDependencies": {
         "makeme": ">=0.9.0",

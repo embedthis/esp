@@ -2309,7 +2309,7 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
 
 /**
     Tokenize a string
-    @description Split a string into tokens.
+    @description Split a string into tokens using a character set as delimiters.
     @param str String to tokenize.
     @param delim Set of characters that are used as token separators.
     @param last Last token pointer.
@@ -2318,6 +2318,18 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
     @stability Stable
  */
 PUBLIC char *stok(char *str, cchar *delim, char **last);
+
+/**
+    Tokenize a string
+    @description Split a string into tokens using a string pattern as delimiters.
+    @param str String to tokenize.
+    @param pattern String pattern to use for token delimiters.
+    @param last Last token pointer.
+    @return Returns a pointer to the next token.
+    @ingroup MprString
+    @stability Prototype
+*/
+PUBLIC char *sptok(char *str, cchar *pattern, char **last);
 
 /**
    String to list. This parses the string into space separated arguments. Single and double quotes are supported.

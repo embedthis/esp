@@ -2970,7 +2970,9 @@ typedef struct HttpConn {
     bool            suppressTrace: 1;       /**< Do not trace this connection */
     bool            upgraded: 1;            /**< Request protocol upgraded */
     bool            worker: 1;              /**< Use worker */
+#if DEPRECATED || 1
     bool            io: 1;                  /**< In httpIOEvent */
+#endif
 
     HttpTrace       *trace;                 /**< Tracing configuration */
 

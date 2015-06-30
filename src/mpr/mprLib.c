@@ -10019,6 +10019,9 @@ static int dispatchEvents(MprDispatcher *dispatcher)
     MprOsThread         priorOwner;
     int                 count;
 
+    if (mprIsStopped()) {
+        return 0;
+    }
     assert(isRunning(dispatcher));
     es = dispatcher->service;
 
@@ -24614,7 +24617,7 @@ PUBLIC char *sreplace(cchar *str, cchar *pattern, cchar *replacement)
 
 
 /*
-    Split a string at a delimiter and return the parts.
+    Split a string at a substring and return the parts.
     This differs from stok in that it never returns null. Also, stok eats leading deliminators, whereas 
     ssplit will return an empty string if there are leading deliminators.
     Note: Modifies the original string and returns the string for chaining.
@@ -24823,6 +24826,37 @@ PUBLIC char *stok(char *str, cchar *delim, char **last)
         *last = end;
     }
     return start;
+}
+
+
+/*
+    Tokenize a string at a pattern and return the parts. The delimiter is a string not a set of characters.
+    If the pattern is not found, last is set to null.
+    Note: Modifies the original string and returns the string for chaining.
+ */
+PUBLIC char *sptok(char *str, cchar *pattern, char **last)
+{
+    char    *cp, *end;
+
+    if (last) {
+        *last = MPR->emptyString;
+    }
+    if (str == 0) {
+        return 0;
+    }
+    if (pattern == 0 || *pattern == '\0') {
+        return str;
+    }
+    if ((cp = strstr(str, pattern)) != 0) {
+        *cp = '\0';
+        end = &cp[slen(pattern)];
+    } else {
+        end = 0;
+    }
+    if (last) {
+        *last = end;
+    }
+    return str;
 }
 
 
@@ -25378,7 +25412,7 @@ PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
     SetThreadPriority(tp->threadHandle, osPri);
 #elif VXWORKS
     taskPrioritySet(tp->osThread, osPri);
-#elif ME_UNIX_LIKE && DISABLED
+#elif ME_UNIX_LIKE && DISABLED && DEPRECATED
     /*
         Not worth setting thread priorities on linux
      */
