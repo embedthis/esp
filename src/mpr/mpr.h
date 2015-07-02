@@ -2309,7 +2309,7 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
 
 /**
     Tokenize a string
-    @description Split a string into tokens.
+    @description Split a string into tokens using a character set as delimiters.
     @param str String to tokenize.
     @param delim Set of characters that are used as token separators.
     @param last Last token pointer.
@@ -2318,6 +2318,18 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
     @stability Stable
  */
 PUBLIC char *stok(char *str, cchar *delim, char **last);
+
+/**
+    Tokenize a string
+    @description Split a string into tokens using a string pattern as delimiters.
+    @param str String to tokenize.
+    @param pattern String pattern to use for token delimiters.
+    @param last Last token pointer.
+    @return Returns a pointer to the next token.
+    @ingroup MprString
+    @stability Prototype
+*/
+PUBLIC char *sptok(char *str, cchar *pattern, char **last);
 
 /**
    String to list. This parses the string into space separated arguments. Single and double quotes are supported.
@@ -6540,6 +6552,28 @@ PUBLIC MprHash *mprDeserialize(cchar *str);
     @stability Evolving
  */
 PUBLIC MprHash *mprDeserializeInto(cchar *str, MprHash *hash);
+
+/**
+    Format a JSON name into and output buffer. This handles quotes and backquotes.
+    @param buf MprBuf instance to store the output string
+    @param name Json name to format
+    @param flags Serialization flags. Supported flags include MPR_JSON_QUOTES to always wrap property names in quotes.
+    @return The supplied hash if successful. Otherwise null is returned.
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags);
+
+/**
+    Format a value as a simple JSON string. This handles quotes and backquotes.
+    @param buf MprBuf instance to store the output string
+    @param obj JSON object to format
+    @param flags Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.
+    @return The supplied hash if successful. Otherwise null is returned.
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC void mprFormatJsonValue(MprBuf *buf, MprJson *obj, int flags);
 
 /**
     Get a parsed JSON object for a key value

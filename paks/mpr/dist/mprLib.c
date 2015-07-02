@@ -10019,6 +10019,9 @@ static int dispatchEvents(MprDispatcher *dispatcher)
     MprOsThread         priorOwner;
     int                 count;
 
+    if (mprIsStopped()) {
+        return 0;
+    }
     assert(isRunning(dispatcher));
     es = dispatcher->service;
 
@@ -12644,7 +12647,6 @@ static void adoptChildren(MprJson *obj, MprJson *other);
 static void appendItem(MprJson *obj, MprJson *child);
 static void appendProperty(MprJson *obj, MprJson *child);
 static int checkBlockCallback(MprJsonParser *parser, cchar *name, bool leave);
-static void formatValue(MprBuf *buf, MprJson *obj, int flags);
 static int gettok(MprJsonParser *parser);
 static MprJson *jsonParse(MprJsonParser *parser, MprJson *obj);
 static void jsonErrorCallback(MprJsonParser *parser, cchar *msg);
@@ -13127,7 +13129,6 @@ static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
     int     quotes, pretty, index;
 
     pretty = flags & MPR_JSON_PRETTY;
-    quotes = flags & MPR_JSON_QUOTES;
 
     if (obj->type & MPR_JSON_ARRAY) {
         mprPutCharToBuf(buf, '[');
@@ -13149,11 +13150,10 @@ static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
         mprPutCharToBuf(buf, '{');
         indent++;
         if (pretty) mprPutCharToBuf(buf, '\n');
+        quotes = flags & MPR_JSON_QUOTES;
         for (ITERATE_JSON(obj, child, index)) {
             if (pretty) spaces(buf, indent);
-            if (quotes) mprPutCharToBuf(buf, '"');
-            mprPutStringToBuf(buf, child->name);
-            if (quotes) mprPutCharToBuf(buf, '"');
+            mprFormatJsonName(buf, child->name, flags);
             if (pretty) {
                 mprPutStringToBuf(buf, ": ");
             } else {
@@ -13169,14 +13169,14 @@ static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
         mprPutCharToBuf(buf, '}');
         
     } else {
-        formatValue(buf, obj, flags);
+        mprFormatJsonValue(buf, obj, flags);
     }
     return sclone(mprGetBufStart(buf));
 }
 
 
 /*
-    Serialize into JSON format.
+    Serialize into JSON format
  */
 PUBLIC char *mprJsonToString(MprJson *obj, int flags)
 {
@@ -13212,7 +13212,40 @@ static void setValue(MprJson *obj, cchar *value, int type)
 }
 
 
-static void formatValue(MprBuf *buf, MprJson *obj, int flags)
+PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags)
+{
+    cchar   *cp;
+    int     quotes;
+
+    quotes = flags & MPR_JSON_QUOTES;
+    for (cp = name; *cp; cp++) {
+        if (!isalnum((uchar) *cp) && *cp != '_') {
+            quotes++;
+            break;
+        }
+    }
+    if (quotes) {
+        mprPutCharToBuf(buf, '"');
+    }
+    for (cp = name; *cp; cp++) {
+        if (*cp == '\"' || *cp == '\\') {
+            mprPutCharToBuf(buf, '\\');
+            mprPutCharToBuf(buf, *cp);
+        } else if (*cp == '\r') {
+            mprPutStringToBuf(buf, "\\r");
+        } else if (*cp == '\n') {
+            mprPutStringToBuf(buf, "\\n");
+        } else {
+            mprPutCharToBuf(buf, *cp);
+        }
+    }
+    if (quotes) {
+        mprPutCharToBuf(buf, '"');
+    }
+}
+
+
+PUBLIC void mprFormatJsonValue(MprBuf *buf, MprJson *obj, int flags)
 {
     cchar   *cp;
 
@@ -13243,9 +13276,9 @@ static void formatValue(MprBuf *buf, MprJson *obj, int flags)
                 mprPutCharToBuf(buf, '\\');
                 mprPutCharToBuf(buf, *cp);
             } else if (*cp == '\r') {
-                mprPutStringToBuf(buf, "\\\\r");
+                mprPutStringToBuf(buf, "\\r");
             } else if (*cp == '\n') {
-                mprPutStringToBuf(buf, "\\\\n");
+                mprPutStringToBuf(buf, "\\n");
             } else {
                 mprPutCharToBuf(buf, *cp);
             }
@@ -24614,7 +24647,7 @@ PUBLIC char *sreplace(cchar *str, cchar *pattern, cchar *replacement)
 
 
 /*
-    Split a string at a delimiter and return the parts.
+    Split a string at a substring and return the parts.
     This differs from stok in that it never returns null. Also, stok eats leading deliminators, whereas 
     ssplit will return an empty string if there are leading deliminators.
     Note: Modifies the original string and returns the string for chaining.
@@ -24823,6 +24856,37 @@ PUBLIC char *stok(char *str, cchar *delim, char **last)
         *last = end;
     }
     return start;
+}
+
+
+/*
+    Tokenize a string at a pattern and return the parts. The delimiter is a string not a set of characters.
+    If the pattern is not found, last is set to null.
+    Note: Modifies the original string and returns the string for chaining.
+ */
+PUBLIC char *sptok(char *str, cchar *pattern, char **last)
+{
+    char    *cp, *end;
+
+    if (last) {
+        *last = MPR->emptyString;
+    }
+    if (str == 0) {
+        return 0;
+    }
+    if (pattern == 0 || *pattern == '\0') {
+        return str;
+    }
+    if ((cp = strstr(str, pattern)) != 0) {
+        *cp = '\0';
+        end = &cp[slen(pattern)];
+    } else {
+        end = 0;
+    }
+    if (last) {
+        *last = end;
+    }
+    return str;
 }
 
 
@@ -25378,7 +25442,7 @@ PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
     SetThreadPriority(tp->threadHandle, osPri);
 #elif VXWORKS
     taskPrioritySet(tp->osThread, osPri);
-#elif ME_UNIX_LIKE && DISABLED
+#elif ME_UNIX_LIKE && DISABLED && DEPRECATED
     /*
         Not worth setting thread priorities on linux
      */

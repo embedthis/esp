@@ -517,7 +517,7 @@ PUBLIC cchar *ediGridAsJson(EdiGrid *grid, int flags)
             rec = grid->records[r];
             for (f = 0; f < rec->nfields; f++) {
                 fp = &rec->fields[f];
-                mprPutToBuf(buf, "\"%s\"", fp->name);
+                mprFormatJsonName(buf, fp->name, MPR_JSON_QUOTES);
                 if (pretty) {
                     mprPutStringToBuf(buf, ": ");
                 } else {
@@ -898,7 +898,7 @@ PUBLIC cchar *ediFormatField(cchar *fmt, EdiField *fp)
 static void formatFieldForJson(MprBuf *buf, EdiField *fp)
 {
     MprTime     when;
-    cchar       *value;
+    cchar       *cp, *value;
 
     value = fp->value;
 
@@ -913,7 +913,20 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
 
     case EDI_TYPE_STRING:
     case EDI_TYPE_TEXT:
-        mprPutToBuf(buf, "\"%s\"", fp->value);
+        mprPutCharToBuf(buf, '"');
+        for (cp = fp->value; *cp; cp++) {
+            if (*cp == '\"' || *cp == '\\') {
+                mprPutCharToBuf(buf, '\\');
+                mprPutCharToBuf(buf, *cp);
+            } else if (*cp == '\r') {
+                mprPutStringToBuf(buf, "\\r");
+            } else if (*cp == '\n') {
+                mprPutStringToBuf(buf, "\\n");
+            } else {
+                mprPutCharToBuf(buf, *cp);
+            }
+        }
+        mprPutCharToBuf(buf, '"');
         return;
 
     case EDI_TYPE_BOOL:
