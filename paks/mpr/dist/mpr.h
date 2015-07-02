@@ -6554,6 +6554,28 @@ PUBLIC MprHash *mprDeserialize(cchar *str);
 PUBLIC MprHash *mprDeserializeInto(cchar *str, MprHash *hash);
 
 /**
+    Format a JSON name into and output buffer. This handles quotes and backquotes.
+    @param buf MprBuf instance to store the output string
+    @param name Json name to format
+    @param flags Serialization flags. Supported flags include MPR_JSON_QUOTES to always wrap property names in quotes.
+    @return The supplied hash if successful. Otherwise null is returned.
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags);
+
+/**
+    Format a value as a simple JSON string. This handles quotes and backquotes.
+    @param buf MprBuf instance to store the output string
+    @param obj JSON object to format
+    @param flags Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.
+    @return The supplied hash if successful. Otherwise null is returned.
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC void mprFormatJsonValue(MprBuf *buf, MprJson *obj, int flags);
+
+/**
     Get a parsed JSON object for a key value
     @param obj Parsed JSON object returned by mprJsonParser
     @param key Property name to search for. This may include ".". For example: "settings.mode".

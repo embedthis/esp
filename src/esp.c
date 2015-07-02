@@ -1776,6 +1776,7 @@ static void compile(int argc, char **argv)
     for (ITERATE_ITEMS(app->routes, route, next)) {
         if (app->combine) {
             compileCombined(route);
+            break;
         } else {
             compileItems(route);
         }
