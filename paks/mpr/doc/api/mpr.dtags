@@ -2830,6 +2830,20 @@
       <arglist>(MprSocket *sp)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>mprFormatJsonName</name>
+      <anchorfile>group___mpr_json.html</anchorfile>
+      <anchor>ga127b29058e44088f4ce2088d7b0279b8</anchor>
+      <arglist>(MprBuf *buf, cchar *name, int flags)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprFormatJsonValue</name>
+      <anchorfile>group___mpr_json.html</anchorfile>
+      <anchor>ga7a375921cd55820435034e25791fc8ec</anchor>
+      <arglist>(MprBuf *buf, MprJson *obj, int flags)</arglist>
+    </member>
+    <member kind="function">
       <type>char *</type>
       <name>mprFormatLocalTime</name>
       <anchorfile>group___mpr_time.html</anchorfile>
@@ -8872,6 +8886,20 @@
       <anchorfile>group___mpr_json.html</anchorfile>
       <anchor>ga35e93f15a3e2a2e5915048e6348b70a0</anchor>
       <arglist>(cchar *str, MprHash *hash)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprFormatJsonName</name>
+      <anchorfile>group___mpr_json.html</anchorfile>
+      <anchor>ga127b29058e44088f4ce2088d7b0279b8</anchor>
+      <arglist>(MprBuf *buf, cchar *name, int flags)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprFormatJsonValue</name>
+      <anchorfile>group___mpr_json.html</anchorfile>
+      <anchor>ga7a375921cd55820435034e25791fc8ec</anchor>
+      <arglist>(MprBuf *buf, MprJson *obj, int flags)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>

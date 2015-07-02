@@ -13126,7 +13126,7 @@ static int gettok(MprJsonParser *parser)
 static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
 {
     MprJson  *child;
-    int     quotes, pretty, index;
+    int     pretty, index;
 
     pretty = flags & MPR_JSON_PRETTY;
 
@@ -13150,7 +13150,6 @@ static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
         mprPutCharToBuf(buf, '{');
         indent++;
         if (pretty) mprPutCharToBuf(buf, '\n');
-        quotes = flags & MPR_JSON_QUOTES;
         for (ITERATE_JSON(obj, child, index)) {
             if (pretty) spaces(buf, indent);
             mprFormatJsonName(buf, child->name, flags);

@@ -398,6 +398,8 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_buf_1ga453b62a6659fc9fa4d041165dad7461e" class="nameRef">mprFlushBuf</a>(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush the buffer contents.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_file_1ga957f3c3051214ee8f105047fee84bc11" class="nameRef">mprFlushFile</a>(<a href="#group___mpr_file" class="ref">MprFile</a> *file)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush any buffered write data.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___mpr_socket_1gacd099834cea11479ab5a5ef542bfcaac" class="nameRef">mprFlushSocket</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush a socket.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_json_1ga127b29058e44088f4ce2088d7b0279b8" class="nameRef">mprFormatJsonName</a>(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Format a JSON name into and output buffer.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_json_1ga7a375921cd55820435034e25791fc8ec" class="nameRef">mprFormatJsonValue</a>(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf, <a href="#group___mpr_json" class="ref">MprJson</a> *obj, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Format a value as a simple JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___mpr_time_1gaaa51bed2a064d4440a0e327f9118a300" class="nameRef">mprFormatLocalTime</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, <a href="#group___mpr_time" class="ref">MprTime</a> time)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Convert a time value to local time and format as a string.</td></tr>
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___mpr_time_1ga668d4a60c1e767de5b364507b0884e57" class="nameRef">mprFormatTm</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, struct tm *timep)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Format a time value as a local time.</td></tr>
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___mpr_time_1ga7c0a389bb64973c848209ba1969f2daf" class="nameRef">mprFormatUniversalTime</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, <a href="#group___mpr_time" class="ref">MprTime</a> time)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Convert a time value to universal time and format as a string.</td></tr>
@@ -7159,6 +7161,50 @@ Property value - always strings.
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
+  </div>
+</div>
+<a name="group___mpr_json_1ga127b29058e44088f4ce2088d7b0279b8"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprFormatJsonName
+(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, int flags)
+  </div>
+  <div class="apiDetail">
+<p>Format a JSON name into and output buffer.</p>
+This handles quotes and backquotes
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">buf</td><td>MprBuf instance to store the output string.</td>
+    <tr><td class="param">name</td><td>Json name to format.</td>
+    <tr><td class="param">flags</td><td>Serialization flags. Supported flags include MPR_JSON_QUOTES to always wrap property names in quotes.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
+  </div>
+</div>
+<a name="group___mpr_json_1ga7a375921cd55820435034e25791fc8ec"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprFormatJsonValue
+(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf, <a href="#group___mpr_json" class="ref">MprJson</a> *obj, int flags)
+  </div>
+  <div class="apiDetail">
+<p>Format a value as a simple JSON string.</p>
+This handles quotes and backquotes
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">buf</td><td>MprBuf instance to store the output string.</td>
+    <tr><td class="param">obj</td><td>JSON object to format.</td>
+    <tr><td class="param">flags</td><td>Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
