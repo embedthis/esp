@@ -27,7 +27,6 @@ typedef struct App {
     cchar       *home;                  /* Home directory */
     cchar       *paksCacheDir;          /* Paks cache directory */
     cchar       *paksDir;               /* Local paks directory */
-//  XX
     cchar       *migDir;                /* Migrations directory */
     cchar       *listen;                /* Listen endpoint for "esp run" */
     cchar       *platform;              /* Target platform os-arch-profile (lower) */
@@ -219,7 +218,6 @@ static App *createApp(Mpr *mpr)
     app->mpr = mpr;
     app->listen = sclone(ESP_LISTEN);
     app->paksDir = sclone(ESP_PAKS_DIR);
-//  XX
     app->migDir = sclone(ESP_MIG_DIR);
 #if ME_COM_SQLITE
     app->database = sclone("sdb");
@@ -1040,7 +1038,6 @@ static void migrate(int argc, char **argv)
         mig = app->migrations->records[app->migrations->nrecords - 1];
         lastMigration = stoi(ediGetFieldValue(mig, "version"));
     }
-//  XXX
     app->files = mprGetPathFiles(app->migDir, MPR_PATH_NO_DIRS);
     mprSortList(app->files, (MprSortProc) (backward ? reverseSortFiles : sortFiles), 0);
 
@@ -2105,9 +2102,7 @@ static void createMigration(cchar *name, cchar *table, cchar *comment, int field
     if ((data = getTemplate("migration", tokens)) == 0) {
         return;
     }
-//  XXX
     makeEspDir(app->migDir);
-//  XXX
     files = mprGetPathFiles(app->migDir, MPR_PATH_RELATIVE);
     tail = sfmt("%s.c", name);
     for (ITERATE_ITEMS(files, dp, next)) {
@@ -2116,7 +2111,6 @@ static void createMigration(cchar *name, cchar *table, cchar *comment, int field
                 qtrace("Exists", "A migration with the same description already exists: %s", dp->name);
                 return;
             }
-//  XXX
             mprDeletePath(mprJoinPath(app->migDir, dp->name));
         }
     }

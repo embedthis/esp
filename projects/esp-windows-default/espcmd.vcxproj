@@ -119,7 +119,7 @@
 
     <ItemGroup>
       <ProjectReference Include="libesp.vcxproj">
-      <Project>db2a3063-d19f-4763-b4a5-39395d728db6</Project>
+      <Project>d29d8e9c-6826-4672-a522-e44e75b854fc</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
