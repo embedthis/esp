@@ -13126,7 +13126,7 @@ static int gettok(MprJsonParser *parser)
 static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
 {
     MprJson  *child;
-    int     quotes, pretty, index;
+    int     pretty, index;
 
     pretty = flags & MPR_JSON_PRETTY;
 
@@ -13150,7 +13150,6 @@ static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
         mprPutCharToBuf(buf, '{');
         indent++;
         if (pretty) mprPutCharToBuf(buf, '\n');
-        quotes = flags & MPR_JSON_QUOTES;
         for (ITERATE_JSON(obj, child, index)) {
             if (pretty) spaces(buf, indent);
             mprFormatJsonName(buf, child->name, flags);
@@ -22016,9 +22015,6 @@ static void manageSocketService(MprSocketService *ss, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(ss->standardProvider);
-#if UNUSED
-        mprMark(ss->providers);
-#endif
         mprMark(ss->sslProvider);
         mprMark(ss->secureSockets);
         mprMark(ss->mutex);
@@ -22057,15 +22053,6 @@ PUBLIC void mprSetSslProvider(MprSocketProvider *provider)
     MprSocketService    *ss;
 
     ss = MPR->socketService;
-
-#if UNUSED
-    if (ss->providers == 0 && (ss->providers = mprCreateHash(0, 0)) == 0) {
-        return;
-    }
-    ss->sslProvider = provider->name = sclone(name);
-    mprAddKey(ss->providers, name, provider);
-    provider->name = sclone(name);
-#endif
     ss->sslProvider =  provider;
 }
 
@@ -23634,10 +23621,6 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->config);
         mprMark(ssl->keyFile);
         mprMark(ssl->mutex);
-#if UNUSED
-        mprMark(ssl->provider);
-        mprMark(ssl->providerName);
-#endif
         mprMark(ssl->revoke);
     }
 }
@@ -23768,15 +23751,6 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
         if (loadProvider() < 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
-#if UNUSED
-    cchar               *providerName;
-        providerName = (ssl->providerName) ? ssl->providerName : ss->sslProvider;
-        if ((ssl->provider = mprLookupKey(ss->providers, providerName)) == 0) {
-            sp->errorMsg = sfmt("Cannot use SSL, missing SSL provider %s", providerName);
-            return MPR_ERR_CANT_INITIALIZE;
-        }
-        ssl->providerName = providerName;
-#endif
     }
     sp->provider = ss->sslProvider;
 #if KEEP
@@ -23862,16 +23836,6 @@ PUBLIC void mprSetSslProtocols(MprSsl *ssl, int protocols)
     ssl->protocols = protocols;
     ssl->changed = 1;
 }
-
-
-#if UNUSED
-PUBLIC void mprSetSslProvider(MprSsl *ssl, cchar *provider)
-{
-    assert(ssl);
-    ssl->providerName = (provider && *provider) ? sclone(provider) : 0;
-    ssl->changed = 1;
-}
-#endif
 
 
 PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable)
