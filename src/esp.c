@@ -612,6 +612,9 @@ static void initialize(int argc, char **argv)
     if (app->error) {
         return;
     }
+    if (argc > 0 && !smatch(argv[0], "serve") && !app->logSpec) {
+        app->logSpec = sfmt("stdout:1");
+    }
     initRuntime();
     if (app->error) {
         return;
@@ -629,7 +632,7 @@ static void initialize(int argc, char **argv)
         app->version = sclone("0.1.0");
     }
     route = app->route;
-    if (argc > 0 && !smatch(argv[1], "serve")) {
+    if (argc > 0 && !smatch(argv[0], "serve")) {
         route->flags |= HTTP_ROUTE_NO_LISTEN;
     }
     /*
