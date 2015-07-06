@@ -1182,6 +1182,10 @@ static int mdbSave(Edi *edi)
                     mprWriteFileFmt(out, "null, ");
                 } else if (col->type == EDI_TYPE_STRING || col->type == EDI_TYPE_TEXT) {
                     mprWriteFile(out, "'", 1);
+                    /*
+                        The MPR JSON parser is tolerant of embedded, unquoted control characters. So only need
+                        to worry about embedded single quotes and back quote.
+                     */
                     for (cp = value; *cp; cp++) {
                         if (*cp == '\'' || *cp == '\\') {
                             mprWriteFile(out, "\\", 1);

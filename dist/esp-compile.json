@@ -24,8 +24,7 @@
                         compile: '${CC} -shared ${DEBUG} -Wall -Wno-unused-result -DPIC -fPIC -I. -I${APPINC} -I${INC} -L${LIBPATH} -Wl,-rpath,$ORIGIN/ ${CFLAGS} ${LIBS} ${LDFLAGS} -o ${MOD}${SHOBJ} ${SRC}'
                     },
                     default: {
-                        compile: '${CC} -shared ${DEBUG} -Wall -Wno-unused-result -DPIC -fPIC -I. -I${APPINC} -I${INC} -L${LIBPATH} -Wl,--enable-new-dtags -Wl,-rpath,$ORIGIN/ ${CFLAGS} ${LIBS} ${LDFLAGS} \
-                            -o ${MOD}${SHOBJ} ${SRC}'
+                        compile: '${CC} -shared ${DEBUG} -Wall -Wno-unused-result -DPIC -fPIC -I. -I${APPINC} -I${INC} -L${LIBPATH} -Wl,--enable-new-dtags -Wl,-rpath,$ORIGIN/ ${CFLAGS} ${LIBS} ${LDFLAGS} -o ${MOD}${SHOBJ} ${SRC}'
                     }
                 },
                 static: {

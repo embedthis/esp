@@ -30,12 +30,13 @@ Me.load({
         },
 
         httpcmd: {
-            pname: 'http',
-            path: '${BIN}/http${EXE}',
-            type: 'exe',
-            sources:   [ 'http.c' ],
-            depends:   [ 'libhttp' ],
-            ifdef:     [ 'http' ],
+            pname:   'http',
+            path:    '${BIN}/http${EXE}',
+            type:    'exe',
+            sources: [ 'http.c' ],
+            depends: [ 'libhttp' ],
+            ifdef:   [ 'http' ],
+            enable:  'me.settings.http.cmd',
         }
 	}
 })

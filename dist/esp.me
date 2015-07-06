@@ -33,13 +33,13 @@ Me.load({
         },
 
         espcmd: {
-            pname: 'esp',
-            path: '${BIN}/esp${EXE}',
+            path: '${BIN}/${settings.name}-esp${EXE}',
             type: 'exe',
             depends: [ 'libesp' ],
             sources: [ 'esp.c' ]
             platforms: [ 'local' ],
             ifdef:   [ 'esp' ],
+            enable: 'me.settings.esp.cmd',
         },
 
         'esp-compile.json': {

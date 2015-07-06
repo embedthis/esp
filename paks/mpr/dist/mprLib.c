@@ -12970,7 +12970,7 @@ static int gettok(MprJsonParser *parser)
 {
     cchar   *cp, *value;
     ssize   len;
-    int     c;
+    int     c, d, i, val;
 
     assert(parser);
     assert(parser->input);
@@ -12995,6 +12995,7 @@ static int gettok(MprJsonParser *parser)
                 break;
             case ' ':
             case '\t':
+            case '\r':
                 break;
             case '\n':
                 parser->lineNumber++;
@@ -13038,16 +13039,56 @@ static int gettok(MprJsonParser *parser)
 
             case '"':
             case '\'':
+                /*
+                    Quoted strings: names or values
+                    This parser is tolerant of embedded, unquoted control characters
+                 */
                 if (parser->state == MPR_JSON_STATE_NAME || parser->state == MPR_JSON_STATE_VALUE) {
                     for (cp = parser->input; *cp; cp++) {
                         if (*cp == '\\' && cp[1]) {
                             cp++;
+                            if (*cp == '\\') {
+                                mprPutCharToBuf(parser->buf, '\\');
+                            } else if (*cp == '/') {
+                                mprPutCharToBuf(parser->buf, '/');
+                            } else if (*cp == '"') {
+                                mprPutCharToBuf(parser->buf, '"');
+                            } else if (*cp == 'b') {
+                                mprPutCharToBuf(parser->buf, '\b');
+                            } else if (*cp == 'f') {
+                                mprPutCharToBuf(parser->buf, '\f');
+                            } else if (*cp == 'n') {
+                                mprPutCharToBuf(parser->buf, '\n');
+                            } else if (*cp == 'r') {
+                                mprPutCharToBuf(parser->buf, '\r');
+                            } else if (*cp == 't') {
+                                mprPutCharToBuf(parser->buf, '\t');
+                            } else if (*cp == 'u') {
+                                for (i = val = 0, ++cp; i < 4 && *cp; i++) {
+                                    d = tolower((uchar) *cp);
+                                    if (isdigit((uchar) d)) {
+                                        val = (val * 16) + d - '0';
+                                    } else if (d >= 'a' && d <= 'f') {
+                                        val = (val * 16) + d - 'a' + 10;
+                                    } else {
+                                        mprSetJsonError(parser, "Unexpected hex characters");
+                                        break;
+                                    }
+                                    cp++;
+                                }
+                                mprPutCharToBuf(parser->buf, val);
+                                cp--;
+                            } else {
+                                mprSetJsonError(parser, "Unexpected input");
+                                break;
+                            }
                         } else if (*cp == c) {
                             parser->tokid = JTOK_STRING;
                             parser->input = cp + 1;
                             break;
+                        } else {
+                            mprPutCharToBuf(parser->buf, *cp);
                         }
-                        mprPutCharToBuf(parser->buf, *cp);
                     }
                     if (*cp != c) {
                         mprSetJsonError(parser, "Missing closing quote");
@@ -13064,21 +13105,16 @@ static int gettok(MprJsonParser *parser)
                         /* Allow unquoted names */
                         for (cp = parser->input; *cp; cp++) {
                             c = *cp;
-                            if (c == '\\' && cp[1]) {
-                                if (isxdigit((uchar) cp[1]) && isxdigit((uchar) cp[2]) && 
-                                    isxdigit((uchar) cp[3]) && isxdigit((uchar) cp[4])) {
-                                    c = (int) stoiradix(cp, 16, NULL);
-                                    cp += 3;
-                                } else {
-                                    c = *cp++;
-                                }
-                            } else if (isspace((uchar) c) || c == ':') {
+                            if (isspace((uchar) c) || c == ':') {
                                 break;
                             }
                             mprPutCharToBuf(parser->buf, c);
                         }
                         parser->tokid = JTOK_STRING;
                         parser->input = cp;
+
+                    } else {
+                        mprSetJsonError(parser, "Unexpected input");
                     }
 
                 } else if (parser->state == MPR_JSON_STATE_VALUE) {
@@ -13096,11 +13132,11 @@ static int gettok(MprJsonParser *parser)
                         parser->tokid = JTOK_NULL;
                     } else if (scaselessmatch(value, "true")) {
                         parser->tokid = JTOK_TRUE;
-                    } else if (scaselessmatch(value, "undefined")) {
+                    } else if (scaselessmatch(value, "undefined") && parser->tolerant) {
                         parser->tokid = JTOK_UNDEFINED;
                     } else if (sfnumber(value)) {
                         parser->tokid = JTOK_NUMBER;
-                    } else if (*value == '/' && value[slen(value) - 1] == '/') {
+                    } else if (*value == '/' && value[slen(value) - 1] == '/' && parser->tolerant) {
                         parser->tokid = JTOK_REGEXP;
                     } else {
                         parser->tokid = JTOK_STRING;
@@ -13168,7 +13204,7 @@ static char *objToString(MprBuf *buf, MprJson *obj, int indent, int flags)
         mprPutCharToBuf(buf, '}');
         
     } else {
-        mprFormatJsonValue(buf, obj, flags);
+        mprFormatJsonValue(buf, obj->type, obj->value, flags);
     }
     return sclone(mprGetBufStart(buf));
 }
@@ -13230,10 +13266,18 @@ PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags)
         if (*cp == '\"' || *cp == '\\') {
             mprPutCharToBuf(buf, '\\');
             mprPutCharToBuf(buf, *cp);
-        } else if (*cp == '\r') {
-            mprPutStringToBuf(buf, "\\r");
+        } else if (*cp == '\b') {
+            mprPutStringToBuf(buf, "\\b");
+        } else if (*cp == '\f') {
+            mprPutStringToBuf(buf, "\\f");
         } else if (*cp == '\n') {
             mprPutStringToBuf(buf, "\\n");
+        } else if (*cp == '\r') {
+            mprPutStringToBuf(buf, "\\r");
+        } else if (*cp == '\t') {
+            mprPutStringToBuf(buf, "\\t");
+        } else if (iscntrl((uchar) *cp)) {
+            mprPutToBuf(buf, "\\u%04x", *cp);
         } else {
             mprPutCharToBuf(buf, *cp);
         }
@@ -13244,45 +13288,59 @@ PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags)
 }
 
 
-PUBLIC void mprFormatJsonValue(MprBuf *buf, MprJson *obj, int flags)
+PUBLIC void mprFormatJsonString(MprBuf *buf, cchar *value)
 {
     cchar   *cp;
 
-    if (!(obj->type & MPR_JSON_STRING) && !(flags & MPR_JSON_STRINGS)) {
-        if (obj->value == 0) {
-            mprPutStringToBuf(buf, "null");
-        } else if (obj->type & MPR_JSON_REGEXP) {
-            mprPutToBuf(buf, "\"/%s/\"", obj->value);
+    mprPutCharToBuf(buf, '"');
+    for (cp = value; *cp; cp++) {
+        if (*cp == '\"' || *cp == '\\') {
+            mprPutCharToBuf(buf, '\\');
+            mprPutCharToBuf(buf, *cp);
+        } else if (*cp == '\b') {
+            mprPutStringToBuf(buf, "\\b");
+        } else if (*cp == '\f') {
+            mprPutStringToBuf(buf, "\\f");
+        } else if (*cp == '\n') {
+            mprPutStringToBuf(buf, "\\n");
+        } else if (*cp == '\r') {
+            mprPutStringToBuf(buf, "\\r");
+        } else if (*cp == '\t') {
+            mprPutStringToBuf(buf, "\\t");
+        } else if (iscntrl((uchar) *cp)) {
+            mprPutToBuf(buf, "\\u%04x", *cp);
         } else {
-            mprPutStringToBuf(buf, obj->value);
+            mprPutCharToBuf(buf, *cp);
+        }
+    }
+    mprPutCharToBuf(buf, '"');
+}
+
+
+PUBLIC void mprFormatJsonValue(MprBuf *buf, int type, cchar *value, int flags)
+{
+    if (!(type & MPR_JSON_STRING) && !(flags & MPR_JSON_STRINGS)) {
+        if (value == 0) {
+            mprPutStringToBuf(buf, "null");
+        } else if (type & MPR_JSON_REGEXP) {
+            mprPutToBuf(buf, "\"/%s/\"", value);
+        } else {
+            mprPutStringToBuf(buf, value);
         }
         return;
     }
-    switch (obj->type & MPR_JSON_DATA_TYPE) {
+    switch (type & MPR_JSON_DATA_TYPE) {
     case MPR_JSON_FALSE:
     case MPR_JSON_NUMBER:
     case MPR_JSON_TRUE:
     case MPR_JSON_NULL:
     case MPR_JSON_UNDEFINED:
-        mprPutStringToBuf(buf, obj->value);
+        mprPutStringToBuf(buf, value);
         break;
     case MPR_JSON_REGEXP:
     case MPR_JSON_STRING:
     default:
-        mprPutCharToBuf(buf, '"');
-        for (cp = obj->value; *cp; cp++) {
-            if (*cp == '\"' || *cp == '\\') {
-                mprPutCharToBuf(buf, '\\');
-                mprPutCharToBuf(buf, *cp);
-            } else if (*cp == '\r') {
-                mprPutStringToBuf(buf, "\\r");
-            } else if (*cp == '\n') {
-                mprPutStringToBuf(buf, "\\n");
-            } else {
-                mprPutCharToBuf(buf, *cp);
-            }
-        }
-        mprPutCharToBuf(buf, '"');
+        mprFormatJsonString(buf, value);
     }
 }
 

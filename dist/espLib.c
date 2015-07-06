@@ -686,7 +686,7 @@ PUBLIC cchar *ediRecAsJson(EdiRec *rec, int flags)
     if (rec) {
         for (f = 0; f < rec->nfields; f++) {
             fp = &rec->fields[f];
-            mprPutToBuf(buf, "\"%s\"", fp->name);
+            mprFormatJsonName(buf, fp->name, MPR_JSON_QUOTES);
             if (pretty) {
                 mprPutStringToBuf(buf, ": ");
             } else {
@@ -905,7 +905,7 @@ PUBLIC cchar *ediFormatField(cchar *fmt, EdiField *fp)
 static void formatFieldForJson(MprBuf *buf, EdiField *fp)
 {
     MprTime     when;
-    cchar       *cp, *value;
+    cchar       *value;
 
     value = fp->value;
 
@@ -920,20 +920,7 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
 
     case EDI_TYPE_STRING:
     case EDI_TYPE_TEXT:
-        mprPutCharToBuf(buf, '"');
-        for (cp = fp->value; *cp; cp++) {
-            if (*cp == '\"' || *cp == '\\') {
-                mprPutCharToBuf(buf, '\\');
-                mprPutCharToBuf(buf, *cp);
-            } else if (*cp == '\r') {
-                mprPutStringToBuf(buf, "\\r");
-            } else if (*cp == '\n') {
-                mprPutStringToBuf(buf, "\\n");
-            } else {
-                mprPutCharToBuf(buf, *cp);
-            }
-        }
-        mprPutCharToBuf(buf, '"');
+        mprFormatJsonValue(buf, MPR_JSON_STRING, fp->value, 0);
         return;
 
     case EDI_TYPE_BOOL:
@@ -8034,6 +8021,10 @@ static int mdbSave(Edi *edi)
                     mprWriteFileFmt(out, "null, ");
                 } else if (col->type == EDI_TYPE_STRING || col->type == EDI_TYPE_TEXT) {
                     mprWriteFile(out, "'", 1);
+                    /*
+                        The MPR JSON parser is tolerant of embedded, unquoted control characters. So only need
+                        to worry about embedded single quotes and back quote.
+                     */
                     for (cp = value; *cp; cp++) {
                         if (*cp == '\'' || *cp == '\\') {
                             mprWriteFile(out, "\\", 1);
