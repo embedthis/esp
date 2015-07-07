@@ -10030,7 +10030,7 @@ static void cmdRemedy(MprHash *args)
         data = stemplate(data, args);
     }
     command = strim(command, " \t", MPR_TRIM_BOTH);
-    if ((background = (sends(command, "&"))) != 0) {
+    if ((background = ((sends(command, "&"))) != 0)) {
         command = strim(command, "&", MPR_TRIM_END);
     }
     argc = mprMakeArgv(command, &argv, 0);

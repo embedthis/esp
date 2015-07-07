@@ -1917,11 +1917,11 @@ PUBLIC ssize scopy(char *dest, ssize destMax, cchar *src);
     Test if the string ends with a given pattern.
     @param str String to examine
     @param suffix Pattern to search for
-    @return Returns TRUE if the pattern was found. Otherwise returns zero.
+    @return Returns a pointer to the start of the pattern if found. Otherwise returns NULL.
     @ingroup MprString
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC bool sends(cchar *str, cchar *suffix);
+PUBLIC cchar *sends(cchar *str, cchar *suffix);
 
 /**
     Erase the contents of a string

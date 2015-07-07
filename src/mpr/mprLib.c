@@ -24216,13 +24216,16 @@ PUBLIC int scmp(cchar *s1, cchar *s2)
 }
 
 
-PUBLIC bool sends(cchar *str, cchar *suffix)
+PUBLIC cchar *sends(cchar *str, cchar *suffix)
 {
     if (str == 0 || suffix == 0) {
         return 0;
     }
+    if (slen(str) < slen(suffix)) {
+        return 0;
+    }
     if (strcmp(&str[slen(str) - slen(suffix)], suffix) == 0) {
-        return 1;
+        return &str[slen(str) - slen(suffix)];
     }
     return 0;
 }
