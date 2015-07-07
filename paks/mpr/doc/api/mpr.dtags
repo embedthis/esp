@@ -2838,10 +2838,17 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprFormatJsonString</name>
+      <anchorfile>group___mpr_json.html</anchorfile>
+      <anchor>ga840846c8502938332a1cb0ed6afcd0fa</anchor>
+      <arglist>(MprBuf *buf, cchar *value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprFormatJsonValue</name>
       <anchorfile>group___mpr_json.html</anchorfile>
-      <anchor>ga7a375921cd55820435034e25791fc8ec</anchor>
-      <arglist>(MprBuf *buf, MprJson *obj, int flags)</arglist>
+      <anchor>ga3518a6d456b78435f0e021bfdf81830a</anchor>
+      <arglist>(MprBuf *buf, int type, cchar *value, int flags)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
@@ -5987,10 +5994,10 @@
       <arglist>(char *dest, ssize destMax, cchar *src)</arglist>
     </member>
     <member kind="function">
-      <type>bool</type>
+      <type>cchar *</type>
       <name>sends</name>
       <anchorfile>group___mpr_string.html</anchorfile>
-      <anchor>ga2bec6f1bdddf77d00badb855098b9ec6</anchor>
+      <anchor>gae70cb3d1574afdf271bad19bb5d3127f</anchor>
       <arglist>(cchar *str, cchar *suffix)</arglist>
     </member>
     <member kind="function">
@@ -6835,10 +6842,10 @@
       <arglist>(char *dest, ssize destMax, cchar *src)</arglist>
     </member>
     <member kind="function">
-      <type>bool</type>
+      <type>cchar *</type>
       <name>sends</name>
       <anchorfile>group___mpr_string.html</anchorfile>
-      <anchor>ga2bec6f1bdddf77d00badb855098b9ec6</anchor>
+      <anchor>gae70cb3d1574afdf271bad19bb5d3127f</anchor>
       <arglist>(cchar *str, cchar *suffix)</arglist>
     </member>
     <member kind="function">
@@ -8896,10 +8903,17 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprFormatJsonString</name>
+      <anchorfile>group___mpr_json.html</anchorfile>
+      <anchor>ga840846c8502938332a1cb0ed6afcd0fa</anchor>
+      <arglist>(MprBuf *buf, cchar *value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprFormatJsonValue</name>
       <anchorfile>group___mpr_json.html</anchorfile>
-      <anchor>ga7a375921cd55820435034e25791fc8ec</anchor>
-      <arglist>(MprBuf *buf, MprJson *obj, int flags)</arglist>
+      <anchor>ga3518a6d456b78435f0e021bfdf81830a</anchor>
+      <arglist>(MprBuf *buf, int type, cchar *value, int flags)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>

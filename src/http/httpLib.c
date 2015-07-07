@@ -13308,7 +13308,7 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename)
             extensions = (MprList*) kp->data;
             acceptGzip = scontains(rx->acceptEncoding, "gzip") != 0;
             for (ITERATE_ITEMS(extensions, ext, next)) {
-                zipped = sends(ext, "gz");
+                zipped = sends(ext, "gz") != 0;
                 if (zipped && !acceptGzip) {
                     continue;
                 }
