@@ -45,11 +45,13 @@ Me.load({
                     from:       'esp${EXE}',
                     to:         '${abin}/',
                     symlink:    '${bin}/',
+                    permissions: 0755,
 
                 }, { 
                     from:       'espman${EXE}',
                     to:         '${abin}/',
                     symlink:    '${bin}/',
+                    permissions: 0755,
 
                 }, { 
                     from:       '${BIN}/roots.crt',
