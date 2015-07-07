@@ -1917,11 +1917,11 @@ PUBLIC ssize scopy(char *dest, ssize destMax, cchar *src);
     Test if the string ends with a given pattern.
     @param str String to examine
     @param suffix Pattern to search for
-    @return Returns TRUE if the pattern was found. Otherwise returns zero.
+    @return Returns a pointer to the start of the pattern if found. Otherwise returns NULL.
     @ingroup MprString
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC bool sends(cchar *str, cchar *suffix);
+PUBLIC cchar *sends(cchar *str, cchar *suffix);
 
 /**
     Erase the contents of a string
@@ -6565,15 +6565,27 @@ PUBLIC MprHash *mprDeserializeInto(cchar *str, MprHash *hash);
 PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags);
 
 /**
-    Format a value as a simple JSON string. This handles quotes and backquotes.
+    Format a string as a JSON string. This handles quotes and backquotes.
     @param buf MprBuf instance to store the output string
-    @param obj JSON object to format
+    @param value JSON string value to format
     @param flags Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.
     @return The supplied hash if successful. Otherwise null is returned.
     @ingroup MprJson
     @stability Prototype
  */
-PUBLIC void mprFormatJsonValue(MprBuf *buf, MprJson *obj, int flags);
+PUBLIC void mprFormatJsonString(MprBuf *buf, cchar *value);
+
+/**
+    Format a value as a simple JSON string. This converts any JSON value to a string representation.
+    @param buf MprBuf instance to store the output string
+    @param type JSON type to format
+    @param value JSON value to format
+    @param flags Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.
+    @return The supplied hash if successful. Otherwise null is returned.
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC void mprFormatJsonValue(MprBuf *buf, int type, cchar *value, int flags);
 
 /**
     Get a parsed JSON object for a key value

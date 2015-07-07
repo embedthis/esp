@@ -1082,7 +1082,7 @@ static cchar *getVxCPU(cchar *arch)
             cpu = "I80386";
         } else if (smatch(family, "i486")) {
             cpu = "I80486";
-        } else if (smatch(family, "x86") | sends(family, "86")) {
+        } else if (smatch(family, "x86") || sends(family, "86")) {
             cpu = "PENTIUM";
         } else if (scaselessmatch(family, "mips")) {
             cpu = "MIPS32";
