@@ -212,7 +212,6 @@ clean:
 	if exist "build\$(CONFIG)\bin\libsql.lib" del /Q "build\$(CONFIG)\bin\libsql.lib"
 	if exist "build\$(CONFIG)\bin\libsql.pdb" del /Q "build\$(CONFIG)\bin\libsql.pdb"
 	if exist "build\$(CONFIG)\bin\libsql.exp" del /Q "build\$(CONFIG)\bin\libsql.exp"
-	if exist "build\$(CONFIG)\bin\libmpr-openssl.lib" del /Q "build\$(CONFIG)\bin\libmpr-openssl.lib"
 	if exist "build\$(CONFIG)\bin\espman.exe" del /Q "build\$(CONFIG)\bin\espman.exe"
 	if exist "build\$(CONFIG)\bin\espman.lib" del /Q "build\$(CONFIG)\bin\espman.lib"
 	if exist "build\$(CONFIG)\bin\espman.pdb" del /Q "build\$(CONFIG)\bin\espman.pdb"
@@ -393,10 +392,6 @@ LIBPATHS_16 = $(LIBPATHS_16) -libpath:$(ME_COM_OPENSSL_PATH)
 LIBS_16 = $(LIBS_16) libssleay32.lib
 LIBPATHS_16 = $(LIBPATHS_16) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_16 = $(LIBS_16) libmpr-openssl.lib
-LIBPATHS_16 = $(LIBPATHS_16) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
 
 build\$(CONFIG)\bin\libmpr.dll: $(DEPS_16)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr.dll
@@ -497,10 +492,6 @@ LIBS_24 = $(LIBS_24) libssleay32.lib
 LIBPATHS_24 = $(LIBPATHS_24) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_24 = $(LIBS_24) libmpr.lib
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_24 = $(LIBS_24) libmpr-openssl.lib
-LIBPATHS_24 = $(LIBPATHS_24) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_24 = $(LIBS_24) libpcre.lib
 !ENDIF
@@ -670,10 +661,6 @@ LIBS_37 = $(LIBS_37) libssleay32.lib
 LIBPATHS_37 = $(LIBPATHS_37) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_37 = $(LIBS_37) libmpr.lib
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_37 = $(LIBS_37) libmpr-openssl.lib
-LIBPATHS_37 = $(LIBPATHS_37) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_37 = $(LIBS_37) libpcre.lib
 !ENDIF
@@ -734,10 +721,6 @@ LIBS_39 = $(LIBS_39) libssleay32.lib
 LIBPATHS_39 = $(LIBPATHS_39) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_39 = $(LIBS_39) libmpr.lib
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_39 = $(LIBS_39) libmpr-openssl.lib
-LIBPATHS_39 = $(LIBPATHS_39) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_39 = $(LIBS_39) libpcre.lib
 !ENDIF
@@ -794,10 +777,6 @@ LIBS_41 = $(LIBS_41) libssleay32.lib
 LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_41 = $(LIBS_41) libmpr.lib
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_41 = $(LIBS_41) libmpr-openssl.lib
-LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_41 = $(LIBS_41) libpcre.lib
 !ENDIF
@@ -885,10 +864,6 @@ LIBS_45 = $(LIBS_45) libssleay32.lib
 LIBPATHS_45 = $(LIBPATHS_45) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 LIBS_45 = $(LIBS_45) libmpr.lib
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_45 = $(LIBS_45) libmpr-openssl.lib
-LIBPATHS_45 = $(LIBPATHS_45) -libpath:$(ME_COM_OPENSSL_PATH)
-!ENDIF
 
 build\$(CONFIG)\bin\espman.exe: $(DEPS_45)
 	@echo ..... [Link] build\$(CONFIG)\bin\espman.exe

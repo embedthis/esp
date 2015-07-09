@@ -150,7 +150,6 @@ clean:
 	rm -f "$(BUILD)/bin/libmpr.out"
 	rm -f "$(BUILD)/bin/libpcre.out"
 	rm -f "$(BUILD)/bin/libsql.out"
-	rm -f "$(BUILD)/bin/libmpr-openssl.a"
 	rm -f "$(BUILD)/bin/espman.out"
 
 clobber: clean
@@ -539,10 +538,6 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_38 += -lcrypto
     LIBPATHS_38 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_38 += -lmpr-openssl
-    LIBPATHS_38 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 
 $(BUILD)/bin/libmpr.out: $(DEPS_38)
 	@echo '      [Link] $(BUILD)/bin/libmpr.out'
@@ -583,10 +578,6 @@ endif
 endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_40 += -lcrypto
-    LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_40 += -lmpr-openssl
     LIBPATHS_40 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
@@ -631,10 +622,6 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_41 += -lcrypto
     LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_41 += -lmpr-openssl
-    LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 
 $(BUILD)/bin/libesp.out: $(DEPS_41)
 	@echo '      [Link] $(BUILD)/bin/libesp.out'
@@ -663,10 +650,6 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBS_42 += -lcrypto
     LIBPATHS_42 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_42 += -lmpr-openssl
-    LIBPATHS_42 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 
 $(BUILD)/bin/esp.out: $(DEPS_42)
 	@echo '      [Link] $(BUILD)/bin/esp.out'
@@ -691,10 +674,6 @@ endif
 endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_43 += -lcrypto
-    LIBPATHS_43 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_43 += -lmpr-openssl
     LIBPATHS_43 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
@@ -750,10 +729,6 @@ endif
 endif
 ifeq ($(ME_COM_OPENSSL),1)
     LIBS_45 += -lcrypto
-    LIBPATHS_45 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_45 += -lmpr-openssl
     LIBPATHS_45 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
