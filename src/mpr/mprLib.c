@@ -13049,6 +13049,10 @@ static int gettok(MprJsonParser *parser)
                             cp++;
                             if (*cp == '\\') {
                                 mprPutCharToBuf(parser->buf, '\\');
+                            } else if (*cp == '\'') {
+                                mprPutCharToBuf(parser->buf, '\'');
+                            } else if (*cp == '"') {
+                                mprPutCharToBuf(parser->buf, '"');
                             } else if (*cp == '/') {
                                 mprPutCharToBuf(parser->buf, '/');
                             } else if (*cp == '"') {
