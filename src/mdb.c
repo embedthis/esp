@@ -1077,11 +1077,11 @@ static int mdbLoadFromString(Edi *edi, cchar *str)
 
     obj = mprParseJsonEx(str, &cb, mdb, 0, 0);
     mdb->edi.flags &= ~MDB_LOADING;
-    mdb->edi.flags &= ~EDI_SUPPRESS_SAVE;
     mdb->loadStack = 0;
     if (obj == 0) {
         return MPR_ERR_CANT_LOAD;
     }
+    mdb->edi.flags &= ~EDI_SUPPRESS_SAVE;
     return 0;
 }
 
