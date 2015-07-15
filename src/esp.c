@@ -539,7 +539,7 @@ static void parseCommand(int argc, char **argv)
         app->require = REQ_CONFIG;
 
     } else if (isdigit((uchar) *cmd)) {
-        app->require = REQ_NO_CONFIG;
+        app->require = REQ_NO_CONFIG | REQ_SERVE;
 
     } else if (cmd && *cmd) {
         fail("Unknown command \"%s\"", cmd);
@@ -612,7 +612,10 @@ static void initialize(int argc, char **argv)
     if (app->error) {
         return;
     }
-    if (argc > 0 && !smatch(argv[0], "serve") && !app->logSpec) {
+    /*
+        Trace to stdout if not serving or invoked a plain "esp" to serve
+     */
+    if (!app->logSpec && (argc == 0 || !(app->require & REQ_SERVE))) {
         app->logSpec = sfmt("stdout:1");
     }
     initRuntime();
@@ -632,7 +635,7 @@ static void initialize(int argc, char **argv)
         app->version = sclone("0.1.0");
     }
     route = app->route;
-    if (argc > 0 && !smatch(argv[0], "serve")) {
+    if (!(app->require & REQ_SERVE)) {
         route->flags |= HTTP_ROUTE_NO_LISTEN;
     }
     /*
@@ -1286,7 +1289,7 @@ static void serve(int argc, char **argv)
         }
         httpAddHostToEndpoints(app->host);
     }
-    httpSetInfoLevel(0);
+    httpSetInfoLevel(1);
     if (httpStartEndpoints() < 0) {
         mprLog("", 0, "Cannot start HTTP service, exiting.");
         return;
@@ -2551,7 +2554,11 @@ static void fail(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
+#if UNUSED
     mprLog("error esp", 0, "%s", msg);
+#else
+    mprEprintf("%s\n", msg);
+#endif
     va_end(args);
     app->error = 1;
 }
@@ -2564,7 +2571,11 @@ static void fatal(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
+#if UNUSED
     mprLog("error esp", 0, "%s", msg);
+#else
+    mprEprintf("%s\n", msg);
+#endif
     va_end(args);
     exit(2);
 }
