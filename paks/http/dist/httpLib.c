@@ -13456,7 +13456,7 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
 
 PUBLIC int httpAddRouteHandler(HttpRoute *route, cchar *name, cchar *extensions)
 {
-    HttpStage   *handler, *prior;
+    HttpStage   *handler;
     char        *extlist, *word, *tok;
 
     assert(route);
@@ -13490,6 +13490,7 @@ PUBLIC int httpAddRouteHandler(HttpRoute *route, cchar *name, cchar *extensions)
                 } else if (*word == '\"' && word[1] == '\"') {
                     word = "";
                 }
+#if UNUSED
                 prior = mprLookupKey(route->extensions, word);
                 if (prior && prior != handler && *word) {
                     mprLog("warn http route", 0, "Route \"%s\" has multiple handlers defined for extension \"%s\". "
@@ -13498,6 +13499,9 @@ PUBLIC int httpAddRouteHandler(HttpRoute *route, cchar *name, cchar *extensions)
                 } else {
                     mprAddKey(route->extensions, word, handler);
                 }
+#else
+                mprAddKey(route->extensions, word, handler);
+#endif
                 word = stok(NULL, " \t\r\n", &tok);
             }
         }

@@ -6258,6 +6258,10 @@ PUBLIC int mprWaitForCmd(MprCmd *cmd, MprTicks timeout)
             break;
         }
         delay = (cmd->eofCount >= cmd->requiredEof) ? 10 : remaining;
+        if (!MPR->eventing) {
+            mprServiceEvents(delay, MPR_SERVICE_NO_BLOCK);
+            delay = 0;
+        }
         mprWaitForEvent(cmd->dispatcher, delay, dispatcherMark);
         remaining = (expires - mprGetTicks());
         dispatcherMark = mprGetEventMark(cmd->dispatcher);
@@ -6343,7 +6347,6 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
                 cmd->eofCount, cmd->requiredEof);
         if (cmd->callback) {
             (cmd->callback)(cmd, -1, cmd->callbackData);
-            /* WARNING - this above call may invoke httpPump and complete the request. HttpConn.tx may be null */
         }
     }
 }
