@@ -6372,7 +6372,7 @@ static int getEspToken(EspParse *parse)
             if (next > start && (next[-1] == '\\' || next[-1] == '%')) {
                 break;
             }
-#if DEPRECATED || 1
+#if UNUSED
         case '@':
             if (c == '@') {
                 mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page: %s", parse->path);
@@ -6386,7 +6386,7 @@ static int getEspToken(EspParse *parse)
                         next -= 3;
                     } else {
                         tid = ESP_TOK_HOME;
-                        if (!addChar(parse, c)) {
+                        if (!addChar(parse, c) || !addChar(parse, t)) {
                             return ESP_TOK_ERR;
                         }
                         next--;
