@@ -242,7 +242,7 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga4a1259d2b9cb98ecba45266954ee31e4" class="nameRef">updateFields</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson</a> *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write field values to a database row.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gaac69d2eab0ce7dfea56ac4714d0e6e55" class="nameRef">updateRec</a>(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a record to the database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga443a4d955b4cd2ea70b904ff75d9f06f" class="nameRef">updateRecFromParams</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *table)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Update a record from the request parameters.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#esp_8h_1a78e593db4bd2c434476b90c5b99a17ca" class="nameRef">uri</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#esp_8h_1a78e593db4bd2c434476b90c5b99a17ca" class="nameRef">uri</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI link.</td></tr>
 </table>
 <a name="Typedefs"></a><h1>Typedefs</h1>
 <table class="apiIndex" title="typedefs">
@@ -4831,7 +4831,7 @@ Windows SDK.
 (<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target, ...)
   </div>
   <div class="apiDetail">
-<p>Create a URI.</p>
+<p>Create a URI link.</p>
 \par \b Description:
 Create a URI link based on a given target an expanding embedded tokens based on the current request and route state. The target URI parameter may contain partial or complete URI information. The missing parts are supplied using the current request and route tables. The resulting URI is a normalized, server-local URI (that begins with &quot;/&quot;). The URI will include a required application route prefix, but will not include scheme, host or port components
     <dl><dt>Parameters:</dt><dd>
