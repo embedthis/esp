@@ -2466,7 +2466,11 @@ PUBLIC void stylesheets(cchar *patterns)
         }
         for (ITERATE_ITEMS(files, path, next)) {
             path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
+#if UNUSED
             uri = httpUriToString(httpGetRelativeUri(rx->parsedUri, httpLinkUri(conn, path, 0), 0), 0);
+#else
+            uri = httpLink(conn, path);
+#endif
             kind = mprGetPathExt(path);
             if (smatch(kind, "css")) {
                 espRender(conn, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
@@ -2533,7 +2537,11 @@ PUBLIC void scripts(cchar *patterns)
             path = stemplateJson(path, route->config);
         }
         path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
+#if UNUSED
         uri = httpUriToString(httpGetRelativeUri(rx->parsedUri, httpLinkUri(conn, path, 0), 0), 0);
+#else
+        uri = httpLink(conn, path);
+#endif
         espRender(conn, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }
@@ -6166,7 +6174,11 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
 
         case ESP_TOK_HOME:
             /* %~ Home URL */
-            mprPutToBuf(body, "  espRenderString(conn, conn->rx->route->prefix);");
+//  MOB - warn if next character is not "/" || \0
+            if (parse.next[0] && parse.next[0] != '/' && parse.next[0] != '\'' && parse.next[0] != '"') {
+                mprLog("esp warn", 0, "Using %%~ without following / in %s\n", path);
+            }
+            mprPutToBuf(body, "  espRenderString(conn, httpGetRouteTop(conn));");
             break;
 
 #if DEPRECATED || 1

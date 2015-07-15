@@ -687,7 +687,10 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
 
         case ESP_TOK_HOME:
             /* %~ Home URL */
-            mprPutToBuf(body, "  espRenderString(conn, conn->rx->route->prefix);");
+            if (parse.next[0] && parse.next[0] != '/' && parse.next[0] != '\'' && parse.next[0] != '"') {
+                mprLog("esp warn", 0, "Using %%~ without following / in %s\n", path);
+            }
+            mprPutToBuf(body, "  espRenderString(conn, httpGetRouteTop(conn));");
             break;
 
 #if DEPRECATED || 1

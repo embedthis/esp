@@ -774,6 +774,19 @@ PUBLIC cchar *uri(cchar *target, ...)
     return httpLink(getConn(), uri);
 }
 
+
+PUBLIC cchar *auri(cchar *target, ...)
+{
+    va_list     args;
+    cchar       *uri;
+
+    va_start(args, target);
+    uri = sfmtv(target, args);
+    va_end(args);
+    return httpLinkAbs(getConn(), uri);
+}
+
+
 #if DEPRECATED || 1
 /*
     <% stylesheets(patterns); %>
@@ -841,7 +854,11 @@ PUBLIC void stylesheets(cchar *patterns)
         }
         for (ITERATE_ITEMS(files, path, next)) {
             path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
+#if UNUSED
             uri = httpUriToString(httpGetRelativeUri(rx->parsedUri, httpLinkUri(conn, path, 0), 0), 0);
+#else
+            uri = httpLink(conn, path);
+#endif
             kind = mprGetPathExt(path);
             if (smatch(kind, "css")) {
                 espRender(conn, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
@@ -908,7 +925,11 @@ PUBLIC void scripts(cchar *patterns)
             path = stemplateJson(path, route->config);
         }
         path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
+#if UNUSED
         uri = httpUriToString(httpGetRelativeUri(rx->parsedUri, httpLinkUri(conn, path, 0), 0), 0);
+#else
+        uri = httpLink(conn, path);
+#endif
         espRender(conn, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }
