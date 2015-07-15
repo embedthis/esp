@@ -11,7 +11,6 @@
                 $('.sidebar').css('visibility', 'hidden');
             }
         });
-        // $('.sidebar-launch').trigger('click');
         $('.sidebar a.item').click(function(e) {
             sessionStorage.setItem('scroll-top', $('.sidebar').scrollTop());
         });

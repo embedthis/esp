@@ -50,6 +50,7 @@ Expansive.load({
                             service.hash[file.name] = true
                         } else {
                             service.hash[file.name] = 'not required because "usemap" is false.'
+                            expansive.skip(file.name)
                         }
                     } else if (file.endsWith('min.js')) {
                         if (service.usemin ||
@@ -60,16 +61,19 @@ Expansive.load({
                             service.hash[file.name] = true
                         } else {
                             service.hash[file.name] = 'not required because "usemin" is false.'
+                            expansive.skip(file.name)
                         }
                     } else if (ext == 'js') {
                         let minified = file.replaceExt('min.js')
                         if (service.usemin && minified.exists) {
                             service.hash[file.name] = 'not required because ' + file.replaceExt('min.js') + ' exists.'
+                            expansive.skip(file.name)
                         } else {
                             if (service.usemap && minified.exists && 
                                 (file.replaceExt('min.map').exists || file.replaceExt('js.map').exists || 
                                  file.replaceExt('.min.js.map').exists)) {
                                 service.hash[file.name] = 'not required because ' + file.replaceExt('min.js') + ' exists.'
+                                expansive.skip(file.name)
                             } else if (minify.minify) {
                                 service.hash[file.name] = { minify: true }
                                 script = file
@@ -98,7 +102,7 @@ Expansive.load({
                     if (filter && !Path(script).glob(filter)) {
                         continue
                     }
-                    write('<script src="' + meta.top + script + '"></script>\n    ')
+                    write('<script src="' + meta.top + '/' + script + '"></script>\n    ')
                 }
                 if (expansive.collections['inline-scripts']) {
                     write('<script>')

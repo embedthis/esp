@@ -65,6 +65,7 @@ Expansive.load({
                             service.hash[file.name] = true
                         } else {
                             service.hash[file.name] = 'not required because "usemap" is false.'
+                            expansive.skip(file.name)
                         }
                     } else if (file.endsWith('min.css')) {
                         if (service.usemin ||
@@ -74,19 +75,22 @@ Expansive.load({
                             style = file
                         } else {
                             service.hash[file.name] = 'not required because "usemin" is false.'
+                            expansive.skip(file.name)
                         }
                     } else if (ext == 'css') {
                         let minified = file.replaceExt('min.css')
                         if (service.usemin && minified.exists) {
                             service.hash[file.name] = 'not required because ' + minified + ' exists.'
+                            expansive.skip(file.name)
                         } else {
                             let mapped = file.replaceExt('min.map')
                             if (service.usemap && minified.exists &&
                                 (file.replaceExt('min.map').exists || file.replaceExt('css.map').exists)) {
                                 service.hash[file.name] = 'not required because ' + minified + ' exists.'
+                                expansive.skip(file.name)
                             } else if (minify.minify) {
                                 service.hash[file.name] = { minify: true }
-                                style = file
+                                style = file.trimExt().joinExt('min.css', true)
                             } else {
                                 service.hash[file.name] = true
                                 style = file
@@ -112,7 +116,7 @@ Expansive.load({
                     if (filter && !Path(style).glob(filter)) {
                         continue
                     }
-                    write('<link href="' + meta.top + style + '" rel="stylesheet" type="text/css" />\n    ')
+                    write('<link href="' + meta.top + '/' + style + '" rel="stylesheet" type="text/css" />\n    ')
                 }
                 if (expansive.collections['inline-styles']) {
                     write('<style>')

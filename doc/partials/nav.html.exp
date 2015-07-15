@@ -9,7 +9,7 @@
         </div>
         <@ if (meta.crumbs ) { @>
         <div class="ui breadcrumb">
-            <a class="section" href="@~">Home</a>
+            <a class="section" href="@~/">Home</a>
             <@ for each (crumb in meta.crumbs ) { 
                 for (let [name, url] in crumb ) { @>
             <div class="divider">/</div>
@@ -23,4 +23,4 @@
             <@ } @>
         </div>
         <@ } @>
-        <iframe class="version desktop-only" src="@~version.html"></iframe>
+        <iframe class="version desktop-only" src="@~/version.html"></iframe>

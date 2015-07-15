@@ -30,11 +30,15 @@ Expansive.load({
                     collections.styles ||= []
                     collections.styles.push(stylesheet)
                 }
+                for each (file in expansive.directories.contents.files(['**.less', '!**.css.less'])) {
+                    expansive.skip(file)
+                }
             }
 
             function transform(contents, meta, service) {
                 if (!meta.source.glob('**.css.less')) {
                     vtrace('Info', 'Skip included css file', meta.source)
+                    expansive.skip(meta.source)
                     return null
                 }
                 let less = Cmd.locate('lessc')

@@ -1,7 +1,7 @@
 {
     "name": "exp-css",
     "description": "Css Plugin for Expansive",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "keywords": [
         "expansive-plugin",
         "css"
@@ -20,6 +20,9 @@
                 "script": "Cmd.locate('less') || run('npm install -g less')"
             }
         ]
+    },
+    "devDependencies": {
+        "expansive": ">=0.5.5"
     },
     "pak": {
         "version": ">=0.10",
