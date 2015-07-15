@@ -6568,7 +6568,6 @@ PUBLIC void mprFormatJsonName(MprBuf *buf, cchar *name, int flags);
     Format a string as a JSON string. This handles quotes and backquotes.
     @param buf MprBuf instance to store the output string
     @param value JSON string value to format
-    @param flags Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.
     @return The supplied hash if successful. Otherwise null is returned.
     @ingroup MprJson
     @stability Prototype

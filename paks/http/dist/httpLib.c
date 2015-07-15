@@ -20154,7 +20154,7 @@ PUBLIC void httpRedirect(HttpConn *conn, int status, cchar *targetUri)
 
     canonical = conn->host->canonical;
     if (canonical) {
-        base = httpCloneUri(conn->rx->parsedUri, 0);
+        base = httpCloneUri(rx->parsedUri, 0);
         if (canonical->host) {
             base->host = canonical->host;
         }
@@ -20162,7 +20162,7 @@ PUBLIC void httpRedirect(HttpConn *conn, int status, cchar *targetUri)
             base->port = canonical->port;
         }
     } else {
-        base = conn->rx->parsedUri;
+        base = rx->parsedUri;
     }
     /*
         Expand the target for embedded tokens. Resolve relative to the current request URI.

@@ -580,6 +580,13 @@
     </member>
     <member kind="function">
       <type>char *</type>
+      <name>httpLinkAbs</name>
+      <anchorfile>group___http_uri.html</anchorfile>
+      <anchor>ga5801c059907e1ef7ebc72829ae3fa2e5</anchor>
+      <arglist>(struct HttpConn *conn, cchar *target)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
       <name>httpLinkEx</name>
       <anchorfile>group___http_uri.html</anchorfile>
       <anchor>gaf3c816600e82083ebade8bfa43efd208</anchor>
@@ -617,8 +624,8 @@
       <type>HttpUri *</type>
       <name>httpResolveUri</name>
       <anchorfile>group___http_uri.html</anchorfile>
-      <anchor>ga53a807f2a2750df3f88d4f4b2ac89fa2</anchor>
-      <arglist>(HttpUri *base, int argc, HttpUri **others, bool local)</arglist>
+      <anchor>ga31a370056f259528426020b80ba61561</anchor>
+      <arglist>(struct HttpConn *conn, HttpUri *base, HttpUri *target)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
@@ -2225,6 +2232,13 @@
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gad85523fe7fe6d5cd445f8568ccb68f22</anchor>
       <arglist>(HttpRoute *route)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
+      <name>httpGetRouteTop</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>gab5a74dc838fac1f23855f7c7afc078bb</anchor>
+      <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
