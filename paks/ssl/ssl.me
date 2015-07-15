@@ -46,6 +46,17 @@ Me.load({
                 } else {
                     throw 'No enabled SSL providers.\n'
                 }
+                if (me.options.gen) {
+                    if (me.platform.os == 'windows' || me.platform.os == 'vxworks') {
+                        for each (p in target.discovers) {
+                            if (me.targets[p].enable) {
+                                me.targets[p].enable = false
+                                me.targets[p].diagnostic = 'Building by default without SSL'
+                                target.description = ' Secure Socket Layer (disabled by default)'
+                            }
+                        }
+                    }
+                }
             },
             without: function(target) {
                 for each (p in target.discovers) {

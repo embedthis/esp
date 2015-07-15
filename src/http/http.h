@@ -1505,6 +1505,7 @@ PUBLIC cchar *httpLookupMimeType(cchar *ext);
 /**
     Normalize a URI
     @description Validate and canonicalize a URI. This invokes httpNormalizeUriPath to normalize the URI path.
+        This removes redundant ./ and ../ segments. It does not make the URI absolute.
     @param uri URI object to normalize
     @return The supplied uri so it can be used in chaining. Returns null if the URI cannot be normalized.
     @ingroup HttpUri
@@ -1552,22 +1553,18 @@ PUBLIC HttpUri *httpMakeUriLocal(HttpUri *uri);
 /**
     Resolve URIs relative to a base
     @param base Base URI to begin with
-    @param argc Count of URIs in the others array
-    @param others Array of URIs that are sucessively resolved relative to the base
-    @param local If true, the base scheme, host and port are ignored
+    @param target URI to resolve relative to the base
     @ingroup HttpUri
-    @stability Stable
+    @stability Evolving
   */
-PUBLIC HttpUri *httpResolveUri(HttpUri *base, int argc, HttpUri **others, bool local);
+PUBLIC HttpUri *httpResolveUri(struct HttpConn *conn, HttpUri *base, HttpUri *target);
 
 /**
     Create a URI link
     @description Create a URI link based on a given target relative to the current request.
-        This API expands embedded tokens based on the current request and route state.
-        The target URI parameter may contain partial or complete URI information. The missing parts are
-        supplied using the current request and route tables. The resulting URI is a normalized, server-local URI (that
-        begins with "/"). The URI will include a required application route prefix, but will not include scheme, host or
-        port components.
+        This API expands embedded tokens based on the current request and route state. The target URI parameter 
+        may contain partial or complete URI information. The missing parts are supplied using the current request 
+        and route tables.
     @param [in] conn HttpConn connection object
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
@@ -1630,18 +1627,38 @@ PUBLIC HttpUri *httpResolveUri(HttpUri *base, int argc, HttpUri **others, bool l
 PUBLIC char *httpLink(struct HttpConn *conn, cchar *target);
 
 /**
+    Create an absolute link that includes scheme and host
+    @param conn HttpConn connection object
+    @param target 
+    @param target The URI target. See $httpLink for details of the target parameter.
+    @return A normalized Uri string.
+    @ingroup HttpUri
+    @stability Prototype
+ */
+PUBLIC char *httpLinkAbs(struct HttpConn *conn, cchar *target);
+
+/**
     Extended URI link creation.
     @description Extended httpLink with custom options. This routine extends the #httpLink API with an options hash
         of token values.
     @param [in] conn HttpConn connection object
     @param target The URI target. See #httpLink for details.
     @param options Hash of option values for embedded tokens. This hash is blended with the route variables.
-    @return A normalized, server-local Uri string.
+    @return A normalized Uri string.
     @ingroup HttpUri
     @stability Evolving
  */
 PUBLIC char *httpLinkEx(struct HttpConn *conn, cchar *target, MprHash *options);
 
+/*
+    Create a URI link and return a URI object.
+    @param [in] conn HttpConn connection object
+    @param target The URI target. See #httpLink for details.
+    @param options Hash of option values for embedded tokens. This hash is blended with the route variables.
+    @return A normalized Uri string.
+    @ingroup HttpUri
+    @stability Evolving
+ */
 PUBLIC HttpUri *httpLinkUri(struct HttpConn *conn, cchar *target, MprHash *options);
 
 /**
@@ -5145,11 +5162,20 @@ PUBLIC cchar *httpGetRouteHome(HttpRoute *route);
 /**
     Get the route method list
     @param route Route to examine
-    @return The the list of support methods. Return NULL if not method list is defined.
+    @return The list of support methods. Return NULL if not method list is defined.
     @ingroup HttpRoute
     @stability Evolving
  */
 PUBLIC cchar *httpGetRouteMethods(HttpRoute *route);
+
+/**
+    Get a URL path to the top of the route from the current request (rx->pathInfo)
+    @param conn Current connection object
+    @return A relative URL path to the top of the route.
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC cchar *httpGetRouteTop(HttpConn *conn);
 
 /**
     Get a path token variable

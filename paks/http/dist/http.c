@@ -50,9 +50,6 @@ typedef struct App {
     char     *password;          /* Password for authentication */
     int      printable;          /* Make binary output printable */
     char     *protocol;          /* HTTP/1.0, HTTP/1.1 */
-#if UNUSED
-    char     *provider;          /* SSL provider to use */
-#endif
     char     *ranges;            /* Request ranges */
     MprList  *requestFiles;      /* Request files */
     int      retries;            /* Times to retry a failed request */
@@ -416,17 +413,6 @@ static int parseArgs(int argc, char **argv)
                 app->protocol = supper(argv[++nextArg]);
             }
 
-#if UNUSED
-        } else if (smatch(argp, "--provider")) {
-            /* Undocumented SSL provider selection */
-            if (nextArg >= argc) {
-                return showUsage();
-            } else {
-                app->provider = sclone(argv[++nextArg]);
-            }
-            ssl = 1;
-#endif
-
         } else if (smatch(argp, "--put")) {
             app->method = "PUT";
 
@@ -582,11 +568,6 @@ static int parseArgs(int argc, char **argv)
     HttpUri *uri = httpCreateUri(app->target, 0);
     if (uri->secure || ssl) {
         app->ssl = mprCreateSsl(0);
-#if UNUSED
-        if (app->provider) {
-            mprSetSslProvider(app->ssl, app->provider);
-        }
-#endif
         if (app->cert) {
             if (!app->key) {
                 mprLog("error http", 0, "Must specify key file");
