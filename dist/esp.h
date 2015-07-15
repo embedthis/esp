@@ -4091,9 +4091,7 @@ PUBLIC bool updateRecFromParams(cchar *table);
     Create a URI link.
     @description Create a URI link based on a given target an expanding embedded tokens based on the current request and
         route state. The target URI parameter may contain partial or complete URI information. The missing parts
-    are supplied using the current request and route tables. The resulting URI is a normalized, server-local
-    URI (that begins with "/"). The URI will include a required application route prefix, but will not include scheme, 
-    host or port components.
+    are supplied using the current request and route tables. 
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
         If the target has an absolute URI path, that path is used directly after tokenization. If the target begins with
@@ -4154,6 +4152,9 @@ PUBLIC bool updateRecFromParams(cchar *table);
 </pre>
  */
 PUBLIC cchar *uri(cchar *target, ...);
+
+//  TEMP
+PUBLIC cchar *auri(cchar *target, ...);
 
 #ifdef __cplusplus
 } /* extern C */

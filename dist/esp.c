@@ -170,6 +170,7 @@ static void role(int argc, char **argv);
 static void serve(int argc, char **argv);
 static void saveConfig(MprJson *config, cchar *path, int flags);
 static bool selectResource(cchar *path, cchar *kind);
+static bool selectView(HttpRoute *route, cchar *path);
 static void setConfigValue(MprJson *config, cchar *key, cchar *value);
 static void setMode(cchar *mode);
 static int sortFiles(MprDirEntry **d1, MprDirEntry **d2);
@@ -612,7 +613,10 @@ static void initialize(int argc, char **argv)
     if (app->error) {
         return;
     }
-    if (!app->logSpec && !(app->require & REQ_SERVE)) {
+    /*
+        Trace to stdout if not serving or invoked a plain "esp" to serve
+     */
+    if (!app->logSpec && (argc == 0 || !(app->require & REQ_SERVE))) {
         app->logSpec = sfmt("stdout:1");
     }
     initRuntime();
@@ -730,8 +734,9 @@ static void initialize(int argc, char **argv)
     /*
         Do this after espSetDefaultDirs
      */
-    //  DEPRECATE
+#if DEPRECATE || 1
     path = mprJoinPath(route->home, "db/migrations");
+#endif
     if (mprPathExists(path, R_OK)) {
         app->migDir = path;
         httpSetDir(route, "MIGRATIONS", path);
@@ -1286,7 +1291,7 @@ static void serve(int argc, char **argv)
         }
         httpAddHostToEndpoints(app->host);
     }
-    httpSetInfoLevel(0);
+    httpSetInfoLevel(1);
     if (httpStartEndpoints() < 0) {
         mprLog("", 0, "Cannot start HTTP service, exiting.");
         return;
@@ -1847,6 +1852,42 @@ static bool selectResource(cchar *path, cchar *kind)
 }
 
 
+static bool selectView(HttpRoute *route, cchar *path)
+{
+    MprKey      *kp;
+    MprJson     *extensions, *ext;
+    int         index;
+
+    if ((extensions = mprGetJsonObj(route->config, "http.pipeline.handlers.espHandler")) != 0) {
+        for (ITERATE_JSON(extensions, ext, index)) {
+            if (smatch(mprGetPathExt(path), ext->value)) {
+                if (app->targets == 0 || mprGetHashLength(app->targets) == 0) {
+                    return 1;
+                }
+                for (ITERATE_KEYS(app->targets, kp)) {
+                    if (mprIsPathContained(kp->key, path)) {
+                        kp->type = ESP_FOUND_TARGET;
+                        return 1;
+                    }
+                }
+            }
+        }
+    } else {
+        if (smatch(mprGetPathExt(path), "esp")) {
+            if (app->targets == 0 || mprGetHashLength(app->targets) == 0) {
+                return 1;
+            }
+            for (ITERATE_KEYS(app->targets, kp)) {
+                if (mprIsPathContained(kp->key, path)) {
+                    kp->type = ESP_FOUND_TARGET;
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 /*
     Compile all the items relevant to a route
  */
@@ -1893,7 +1934,7 @@ static void compileItems(HttpRoute *route)
     app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
     for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
         path = dp->name;
-        if (selectResource(path, "esp")) {
+        if (selectView(route, path)) {
             compileFile(route, path, ESP_PAGE);
         }
         found++;
@@ -1922,9 +1963,10 @@ static void compileCombined(HttpRoute *route)
     MprDirEntry     *dp;
     MprKey          *kp;
     EspRoute        *eroute;
+    MprJson         *extensions, *ext;
     cchar           *item, *name;
     char            *path, *line;
-    int             next, kind;
+    int             next, kind, index;
 
     eroute = route->eroute;
     name = app->name ? app->name : mprGetPathBase(route->documents);
@@ -1950,7 +1992,14 @@ static void compileCombined(HttpRoute *route)
     app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
     for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
         path = dp->name;
-        if (smatch(mprGetPathExt(path), "esp")) {
+        if ((extensions = mprGetJsonObj(route->config, "http.pipeline.handlers.espHandler")) != 0) {
+            for (ITERATE_JSON(extensions, ext, index)) {
+                if (smatch(mprGetPathExt(path), ext->value)) {
+                    mprAddKey(app->build, path, "page");
+                    break;
+                }
+            }
+        } else if (smatch(mprGetPathExt(path), "esp")) {
             mprAddKey(app->build, path, "page");
         }
     }
@@ -1981,9 +2030,9 @@ static void compileCombined(HttpRoute *route)
         }
 #endif
         mprWriteFileFmt(app->combineFile,
-            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
+            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {
-            mprWriteFileFmt(app->combineFile, "    %s(route, module);\n", line);
+            mprWriteFileFmt(app->combineFile, "    %s(route);\n", line);
         }
         mprWriteFileFmt(app->combineFile, "    return 0;\n}\n");
         mprCloseFile(app->combineFile);
@@ -2551,7 +2600,11 @@ static void fail(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
+#if UNUSED
     mprLog("error esp", 0, "%s", msg);
+#else
+    mprEprintf("%s\n", msg);
+#endif
     va_end(args);
     app->error = 1;
 }
@@ -2564,7 +2617,11 @@ static void fatal(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
+#if UNUSED
     mprLog("error esp", 0, "%s", msg);
+#else
+    mprEprintf("%s\n", msg);
+#endif
     va_end(args);
     exit(2);
 }
