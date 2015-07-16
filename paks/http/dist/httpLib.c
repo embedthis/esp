@@ -22180,7 +22180,11 @@ PUBLIC HttpUri *httpResolveUri(HttpConn *conn, HttpUri *base, HttpUri *other)
         } else {
             host = conn ? conn->host : httpGetDefaultHost();
             endpoint = smatch(current->scheme, "https") ? host->secureEndpoint : host->defaultEndpoint;
-            current->port = endpoint->port;
+            if (endpoint) {
+                current->port = endpoint->port;
+            } else {
+                current->port = 0;
+            }
         }
     }
     if (other->host) {
