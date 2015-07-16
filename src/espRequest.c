@@ -434,10 +434,10 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
         }
     }
     eroute = conn->rx->route->eroute;
-    path = mprJoinPath(conn->rx->route->documents, target);
-    if (mprLookupKey(eroute->views, path)) {
-        return path;
+    if (mprLookupKey(eroute->views, target)) {
+        return target;
     }
+    path = mprJoinPath(conn->rx->route->documents, target);
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }

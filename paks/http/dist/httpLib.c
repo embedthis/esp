@@ -4273,7 +4273,7 @@ static void parseErrors(HttpRoute *route, cchar *key, MprJson *prop)
     int         ji;
 
     for (ITERATE_CONFIG(route, prop, child, ji)) {
-        httpAddRouteErrorDocument(route, (int) stoi(prop->name), prop->value);
+        httpAddRouteErrorDocument(route, (int) stoi(child->name), child->value);
     }
 }
 
@@ -8283,7 +8283,7 @@ static void errorRedirect(HttpConn *conn, cchar *uri)
             No response started and it is an internal redirect, so we can rerun the request.
             Set finalized to "cap" any output. processCompletion() in rx.c will rerun the request using the errorDocument.
          */
-        tx->errorDocument = uri;
+        tx->errorDocument = httpLink(conn, uri);
         tx->finalized = tx->finalizedOutput = tx->finalizedConnector = 1;
     }
 }
@@ -8876,8 +8876,7 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
     HttpTx      *tx;
     HttpRoute   *route;
     HttpUri     *req;
-    cchar       *index, *pathInfo; 
-    char        *path;
+    cchar       *index, *pathInfo, *path; 
     int         next;
 
     rx = conn->rx;
@@ -8908,6 +8907,12 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
             path = mprJoinPath(tx->filename, index);
             if (mprPathExists(path, R_OK)) {
                 break;
+            }
+            if (route->map && !(tx->flags & HTTP_TX_NO_MAP)) {
+                path = httpMapContent(conn, path);
+                if (mprPathExists(path, R_OK)) {
+                    break;
+                }
             }
             path = 0;
         }
