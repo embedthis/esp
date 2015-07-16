@@ -441,6 +441,12 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }
+    if (conn->rx->route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
+        path = httpMapContent(conn, path);
+        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
+            return target;
+        }
+    }
     return 0;
 }
 
