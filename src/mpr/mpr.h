@@ -3676,6 +3676,7 @@ PUBLIC int mprGetListLength(MprList *list);
         this routine, mprGetFirstItem must be called to initialize the traversal of the list.
     @param list List pointer returned from mprCreateList.
     @param lastIndex Pointer to an integer that will hold the last index retrieved.
+    @return Next item in list or null for an empty list or after the last item.
     @ingroup MprList
     @stability Stable.
  */
@@ -3688,6 +3689,7 @@ PUBLIC void *mprGetNextItem(MprList *list, int *lastIndex);
         this routine, mprGetFirstItem must be called to initialize the traversal of the list.
     @param list List pointer returned from mprCreateList.
     @param lastIndex Pointer to an integer that will hold the last index retrieved.
+    @return Next item in list
     @ingroup MprList
     @internal
     @stability Stable
