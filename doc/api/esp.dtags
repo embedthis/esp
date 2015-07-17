@@ -867,6 +867,13 @@
     <title>EspAbbrev</title>
     <filename>group___esp_abbrev.html</filename>
     <member kind="function">
+      <type>cchar *</type>
+      <name>absuri</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga3de25d5c0ff5232da8f3460794fcc37d</anchor>
+      <arglist>(cchar *target,...)</arglist>
+    </member>
+    <member kind="function">
       <type>void</type>
       <name>addHeader</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
@@ -1572,6 +1579,13 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga443a4d955b4cd2ea70b904ff75d9f06f</anchor>
       <arglist>(cchar *table)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
+      <name>uri</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga78e593db4bd2c434476b90c5b99a17ca</anchor>
+      <arglist>(cchar *target,...)</arglist>
     </member>
   </compound>
   <compound kind="struct">

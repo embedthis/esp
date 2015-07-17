@@ -2400,7 +2400,7 @@ PUBLIC cchar *uri(cchar *target, ...)
 }
 
 
-PUBLIC cchar *auri(cchar *target, ...)
+PUBLIC cchar *absuri(cchar *target, ...)
 {
     va_list     args;
     cchar       *uri;

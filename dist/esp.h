@@ -4083,10 +4083,6 @@ PUBLIC bool updateRec(EdiRec *rec);
 */
 PUBLIC bool updateRecFromParams(cchar *table);
 
-/*
-    NOTE: this has inconsistent naming with httpLink() vs uri()
-    But we tolerate this because link() is taken and httpUri() it confusing vs httpCreateUri
- */
 /**
     Create a URI link.
     @description Create a URI link based on a given target an expanding embedded tokens based on the current request and
@@ -4129,8 +4125,8 @@ PUBLIC bool updateRecFromParams(cchar *table);
             <li>route String Route name to use for the URI template</li>
         </ul>
     @param ... arguments to the formatted target string
-    @return A normalized, server-local Uri string.
-    @ingroup Esp
+    @return A normalized Uri string.
+    @ingroup EspAbbrev
     @stability Evolving
     @remarks Examples:<pre>
     uri("http://example.com/index.html");
@@ -4153,8 +4149,15 @@ PUBLIC bool updateRecFromParams(cchar *table);
  */
 PUBLIC cchar *uri(cchar *target, ...);
 
-//  TEMP
-PUBLIC cchar *auri(cchar *target, ...);
+/**
+    Create an absolute URI with a scheme and host
+    @param target The URI target. See httpLink for details
+    @param ... arguments to the formatted target string
+    @return A normalized, absolute Uri string containing scheme and host.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC cchar *absuri(cchar *target, ...);
 
 #ifdef __cplusplus
 } /* extern C */
