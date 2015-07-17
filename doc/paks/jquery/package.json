@@ -2,12 +2,12 @@
     "name": "jquery",
     "title": "jQuery",
     "description": "JavaScript library for DOM operations",
-    "version": "1.11.3",
+    "version": "2.1.4",
     "main": "dist/jquery.js",
     "homepage": "http://jquery.com",
     "author": {
         "name": "jQuery Foundation and other contributors",
-        "url": "https://github.com/jquery/jquery/blob/1.11.3/AUTHORS.txt"
+        "url": "https://github.com/jquery/jquery/blob/2.1.4/AUTHORS.txt"
     },
     "repository": {
         "type": "git",
@@ -25,7 +25,7 @@
     "licenses": [
         {
             "type": "MIT",
-            "url": "https://github.com/jquery/jquery/blob/1.11.3/MIT-LICENSE.txt"
+            "url": "https://github.com/jquery/jquery/blob/2.1.4/MIT-LICENSE.txt"
         }
     ],
     "devDependencies": {
@@ -41,6 +41,7 @@
         "grunt-jscs-checker": "0.4.1",
         "grunt-jsonlint": "1.0.4",
         "gzip-js": "0.3.2",
+        "jsdom": "1.5.0",
         "load-grunt-tasks": "0.3.0",
         "requirejs": "2.1.10",
         "testswarm": "1.1.0"

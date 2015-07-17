@@ -495,7 +495,7 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
             sessionStorage.setItem('scroll-top', $('.sidebar').scrollTop());
         });
         $(function() {
-            var url = '..start/app-tour.html';
+            var url = '../start/app-tour.html';
             var active = $('.sidebar a[href="' + url +'"]');
             active.addClass('active');
             $('.sidebar').scrollTop(sessionStorage.getItem('scroll-top'));
@@ -503,6 +503,19 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
     </script> 
 
         
+    <script>
+        (function() {
+            var r = new XMLHttpRequest();
+            r.onreadystatechange = function() {
+                if (r.readyState >= 3 && r.status == 200) {
+                    window.location.reload();
+                }
+            }
+            r.open("GET", "/reload-service", true);
+            r.send();
+        })();
+    </script>
+    
 
 </body>
 </html>
