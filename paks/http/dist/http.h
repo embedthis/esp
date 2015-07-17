@@ -1552,6 +1552,7 @@ PUBLIC HttpUri *httpMakeUriLocal(HttpUri *uri);
 
 /**
     Resolve URIs relative to a base
+    @param [in] conn HttpConn connection object
     @param base Base URI to begin with
     @param target URI to resolve relative to the base
     @ingroup HttpUri

@@ -78,9 +78,7 @@ ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)$(NAME)-$(VERSION)
 
 TARGETS               += $(BUILD)/bin/esp-compile.json
 TARGETS               += $(BUILD)/bin/esp
-ifeq ($(ME_COM_SSL),1)
-    TARGETS           += $(BUILD)/.install-certs-modified
-endif
+TARGETS               += $(BUILD)/.install-certs-modified
 TARGETS               += $(BUILD)/bin/espman
 
 unexport CDPATH
@@ -750,7 +748,6 @@ $(BUILD)/bin/http: $(DEPS_43)
 	$(CC) -o $(BUILD)/bin/http $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/http.o" $(LIBPATHS_43) $(LIBS_43) $(LIBS_43) $(LIBS) $(LIBS) 
 endif
 
-ifeq ($(ME_COM_SSL),1)
 #
 #   install-certs
 #
@@ -777,7 +774,6 @@ $(BUILD)/.install-certs-modified: $(DEPS_44)
 	cp src/certs/samples/test.crt $(BUILD)/bin/test.crt
 	cp src/certs/samples/test.key $(BUILD)/bin/test.key
 	touch "$(BUILD)/.install-certs-modified"
-endif
 
 #
 #   watchdog
