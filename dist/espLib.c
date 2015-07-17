@@ -4709,7 +4709,7 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     if (filename) {
         target = mprJoinPath(target, filename);
     }
-    if (ext) {
+    if (ext && *ext) {
         if (!smatch(mprGetPathExt(target), ext)) {
             target = sjoin(target, ".", ext, NULL);
         }
@@ -4748,28 +4748,14 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 
     assert(target);
 
-#if UNUSED
-    if ((dest = checkView(conn, target, 0, 0)) != 0) {
-        espRenderView(conn, dest, 0);
-        return;
-    }
-#endif
     for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
-        if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
-            espRenderView(conn, dest, 0);
-            return;
-        }
-    }
-#if UNUSED
-    if ((extensions = mprGetJsonObj(conn->rx->route->config, "http.pipeline.handlers.espHandler")) != 0) {
-        for (ITERATE_JSON(extensions, ext, index)) {
-            if ((dest = checkView(conn, target, 0, ext->value)) != 0) {
+        if (kp->key && *kp->key) {
+            if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
                 espRenderView(conn, dest, 0);
                 return;
             }
         }
-    } else {
-#endif
+    }
     if ((dest = checkView(conn, target, 0, "esp")) != 0) {
         espRenderView(conn, dest, 0);
         return;
@@ -4800,6 +4786,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         Last chance, forward to the file handler ... not an ESP request. 
         This enables static file requests within ESP routes.
      */
+    httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler");
     conn->rx->target = &conn->rx->pathInfo[1];
     httpMapFile(conn);
     if (conn->tx->fileInfo.isDir) {

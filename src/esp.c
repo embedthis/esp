@@ -418,7 +418,7 @@ static int parseArgs(int argc, char **argv)
             }
 
         } else if (smatch(argp, "show") || smatch(argp, "s")) {
-            app->show = 1;
+            app->show++;
 
         } else if (smatch(argp, "silent")) {
             app->silent = 1;
@@ -1272,7 +1272,7 @@ static void serve(int argc, char **argv)
         return;
     }
     if (app->show) {
-        httpLogRoutes(app->host, mprGetLogLevel() > 4);
+        httpLogRoutes(app->host, app->show > 1);
     }
     if (argc == 0) {
         if (http->endpoints->length == 0) {
