@@ -6153,6 +6153,10 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
         /* Connection has been destroyed */
         return;
     }
+    if (conn->state < HTTP_STATE_PARSED && mprShouldDenyNewRequests()) {
+        httpDestroyConn(conn);
+        return;
+    }
     assert(conn->tx);
     assert(conn->rx);
 
@@ -8272,9 +8276,6 @@ static void errorRedirect(HttpConn *conn, cchar *uri)
 {
     HttpTx      *tx;
 
-    /*
-        If the response has started or it is an external redirect ... do a redirect
-     */
     tx = conn->tx;
     if (sstarts(uri, "http") || tx->flags & HTTP_TX_HEADERS_CREATED) {
         httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, uri);
