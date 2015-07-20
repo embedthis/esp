@@ -4561,7 +4561,7 @@ static void startEsp(HttpQueue *q)
         if (!runAction(conn)) {
             pruneFlash(conn);
         } else {
-            if (req->autoFinalize) {
+            if (!conn->error && req->autoFinalize) {
                 if (!conn->tx->responded) {
                     /* WARNING: GC yield */
                     espRenderDocument(conn, rx->target);
