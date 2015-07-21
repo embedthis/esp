@@ -24149,7 +24149,7 @@ PUBLIC char *sncontains(cchar *str, cchar *pattern, ssize limit)
     if (pattern == 0 || *pattern == '\0') {
         return 0;
     }
-    for (cp = str; *cp && limit > 0; cp++, limit--) {
+    for (cp = str; limit > 0 && *cp; cp++, limit--) {
         s1 = cp;
         s2 = pattern;
         for (lim = limit; *s1 && *s2 && (*s1 == *s2) && lim > 0; lim--) {
