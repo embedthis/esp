@@ -99,7 +99,7 @@ static int       nextMigration;         /* Sequence number for next migration */
 #define REQ_TARGETS     0x2             /* Require targets list */
 #define REQ_ROUTES      0x4             /* Require esp routes */
 #define REQ_CONFIG      0x8             /* Require esp.json, otherwise load only if present */
-#define REQ_NO_CONFIG   0x10            /* Never load esp.json */
+#define REQ_LISTEN      0x10            /* Explicit listening address supplied */
 #define REQ_SERVE       0x20            /* Will be running as a server */
 #define REQ_NAME        0x40            /* Set "name" */
 
@@ -533,14 +533,14 @@ static void parseCommand(int argc, char **argv)
     } else if (smatch(cmd, "serve") || smatch(cmd, "run")) {
         app->require = REQ_SERVE;
         if (argc > 1) {
-            app->require = REQ_NO_CONFIG;
+            app->require = REQ_LISTEN;
         }
 
     } else if (smatch(cmd, "user")) {
         app->require = REQ_CONFIG;
 
     } else if (isdigit((uchar) *cmd)) {
-        app->require = REQ_NO_CONFIG | REQ_SERVE;
+        app->require = REQ_LISTEN | REQ_SERVE;
 
     } else if (cmd && *cmd) {
         fail("Unknown command \"%s\"", cmd);
@@ -639,6 +639,10 @@ static void initialize(int argc, char **argv)
     if (!(app->require & REQ_SERVE)) {
         route->flags |= HTTP_ROUTE_NO_LISTEN;
     }
+    if (app->require & REQ_LISTEN) {
+        route->flags |= HTTP_ROUTE_OWN_LISTEN;
+    }
+
     /*
         Read package.json first so esp.json can override
      */
@@ -1290,6 +1294,10 @@ static void serve(int argc, char **argv)
             return;
         }
         httpAddHostToEndpoints(app->host);
+    }
+    if (mprGetListLength(HTTP->endpoints) == 0) {
+        fail("No configured listening endpoints");
+        return;
     }
     httpSetInfoLevel(1);
     if (httpStartEndpoints() < 0) {

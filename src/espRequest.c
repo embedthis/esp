@@ -505,7 +505,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         Last chance, forward to the file handler ... not an ESP request. 
         This enables static file requests within ESP routes.
      */
-    httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler");
+    httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     conn->rx->target = &conn->rx->pathInfo[1];
     httpMapFile(conn);
     if (conn->tx->fileInfo.isDir) {

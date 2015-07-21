@@ -4963,7 +4963,7 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
     char            *ip;
     int             ji, port, secure;
 
-    if (route->flags & HTTP_ROUTE_HOSTED) {
+    if (route->flags & (HTTP_ROUTE_HOSTED | HTTP_ROUTE_OWN_LISTEN)) {
         return;
     }
     host = route->host;

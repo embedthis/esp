@@ -4449,6 +4449,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_HOSTED               0x10000     /**< Route being hosted (appweb) */
 #define HTTP_ROUTE_NO_LISTEN            0x20000     /**< Not listening on endpoints */
 #define HTTP_ROUTE_PERSIST_COOKIE       0x40000     /**< Persist session cookie to disk */
+#define HTTP_ROUTE_OWN_LISTEN           0x80000     /**< Override listening endpoints */
 
 #if DEPRECATED || 1
 #define HTTP_ROUTE_SET_DEFINED          0x10000     /**< Route set defined */
