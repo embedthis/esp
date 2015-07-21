@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "6.0.1"
+    #define ESP_VERSION "6.0.2"
 #endif
 
 /*
