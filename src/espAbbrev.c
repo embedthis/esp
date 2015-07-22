@@ -90,6 +90,7 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
     va_start(args, fmt);
     espSetFeedbackv(getConn(), kind, fmt, args);
     va_end(args);
+
     /*
         Return true if there is not an error feedback message
      */
@@ -103,14 +104,16 @@ PUBLIC void finalize()
 }
 
 
+#if DEPRECATED || 1
 PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
 
     va_start(args, fmt);
-    espSetFlashv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getConn(), kind, fmt, args);
     va_end(args);
 }
+#endif
 
 
 PUBLIC void flush()
@@ -205,12 +208,6 @@ PUBLIC EspRoute *getEspRoute()
 PUBLIC cchar *getFeedback(cchar *kind)
 {
     return espGetFeedback(getConn(), kind);
-}
-
-
-PUBLIC cchar *getFlash(cchar *kind)
-{
-    return espGetFlash(getConn(), kind);
 }
 
 
@@ -531,9 +528,9 @@ PUBLIC ssize renderFile(cchar *path)
 }
 
 
-PUBLIC void renderFlash(cchar *kind)
+PUBLIC void renderFeedback(cchar *kind)
 {
-    espRenderFlash(getConn(), kind);
+    espRenderFeedback(getConn(), kind);
 }
 
 
@@ -854,11 +851,7 @@ PUBLIC void stylesheets(cchar *patterns)
         }
         for (ITERATE_ITEMS(files, path, next)) {
             path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-#if UNUSED
-            uri = httpUriToString(httpGetRelativeUri(rx->parsedUri, httpLinkUri(conn, path, 0), 0), 0);
-#else
             uri = httpLink(conn, path);
-#endif
             kind = mprGetPathExt(path);
             if (smatch(kind, "css")) {
                 espRender(conn, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
@@ -912,9 +905,6 @@ PUBLIC void scripts(cchar *patterns)
         }
         return;
     }
-#if FUTURE
-    client => public
-#endif
     if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 || 
             mprGetListLength(files) == 0) {
         files = mprCreateList(0, 0);
@@ -925,11 +915,7 @@ PUBLIC void scripts(cchar *patterns)
             path = stemplateJson(path, route->config);
         }
         path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-#if UNUSED
-        uri = httpUriToString(httpGetRelativeUri(rx->parsedUri, httpLinkUri(conn, path, 0), 0), 0);
-#else
         uri = httpLink(conn, path);
-#endif
         espRender(conn, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }

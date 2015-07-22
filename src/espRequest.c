@@ -1,4 +1,4 @@
-/*
+    /*
     espRequest.c -- ESP Request handler
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
@@ -196,60 +196,61 @@ static bool espUnloadModule(cchar *module, MprTicks timeout)
 #endif
 
 
-PUBLIC void espClearFlash(HttpConn *conn)
+/*
+    Not used
+ */
+PUBLIC void espClearFeedback(HttpConn *conn)
 {
     EspReq      *req;
 
     req = conn->reqData;
-    req->flash = 0;
+    req->feedback = 0;
 }
 
 
-static void setupFlash(HttpConn *conn)
+static void setupFeedback(HttpConn *conn)
 {
     EspReq      *req;
 
     req = conn->reqData;
-    if (httpGetSession(conn, 0)) {
-        req->flash = httpGetSessionObj(conn, ESP_FLASH_VAR);
-        req->lastFlash = 0;
-        if (req->flash) {
-            httpRemoveSessionVar(conn, ESP_FLASH_VAR);
-            req->lastFlash = mprCloneHash(req->flash);
-        }
-    }
-}
-
-
-static void pruneFlash(HttpConn *conn)
-{
-    EspReq  *req;
-    MprKey  *kp, *lp;
-
-    req = conn->reqData;
-    if (req->flash && req->lastFlash) {
-        for (ITERATE_KEYS(req->flash, kp)) {
-            for (ITERATE_KEYS(req->lastFlash, lp)) {
-                if (smatch(kp->key, lp->key)) {
-                    mprRemoveKey(req->flash, kp->key);
-                }
+    req->lastFeedback = 0;
+    if (req->route->json) {
+        req->feedback = mprCreateHash(0, MPR_HASH_STABLE);
+    } else {
+        if (httpGetSession(conn, 0)) {
+            req->feedback = httpGetSessionObj(conn, ESP_FEEDBACK_VAR);
+            if (req->feedback) {
+                httpRemoveSessionVar(conn, ESP_FEEDBACK_VAR);
+                req->lastFeedback = mprCloneHash(req->feedback);
             }
         }
     }
 }
 
 
-static void finalizeFlash(HttpConn *conn)
+static void finalizeFeedback(HttpConn *conn)
 {
     EspReq  *req;
+    MprKey  *kp, *lp;
 
     req = conn->reqData;
-    if (req->flash && mprGetHashLength(req->flash) > 0) {
-        /*
-            If the session does not exist, this will create one. However, must not have
-            emitted the headers, otherwise cannot inform the client of the session cookie.
-        */
-        httpSetSessionObj(conn, ESP_FLASH_VAR, req->flash);
+    if (req->feedback) {
+        if (req->route->json) {
+            if (req->lastFeedback) {
+                for (ITERATE_KEYS(req->feedback, kp)) {
+                    if ((lp = mprLookupKeyEntry(req->lastFeedback, kp->key)) != 0 && kp->data == lp->data) {
+                        mprRemoveKey(req->feedback, kp->key);
+                    }
+                }
+            }
+            if (mprGetHashLength(req->feedback) > 0) {
+                /*
+                    If the session does not exist, this will create one. However, must not have
+                    emitted the headers, otherwise cannot inform the client of the session cookie.
+                */
+                httpSetSessionObj(conn, ESP_FEEDBACK_VAR, req->feedback);
+            }
+        }
     }
 }
 
@@ -277,9 +278,7 @@ static void startEsp(HttpQueue *q)
     if (req) {
         mprSetThreadData(req->esp->local, conn);
         /* WARNING: GC yield */
-        if (!runAction(conn)) {
-            pruneFlash(conn);
-        } else {
+        if (runAction(conn)) {
             if (!conn->error && req->autoFinalize) {
                 if (!conn->tx->responded) {
                     /* WARNING: GC yield */
@@ -289,9 +288,8 @@ static void startEsp(HttpQueue *q)
                     espFinalize(conn);
                 }
             }
-            pruneFlash(conn);
         }
-        finalizeFlash(conn);
+        finalizeFeedback(conn);
         mprSetThreadData(req->esp->local, NULL);
     }
 }
@@ -350,7 +348,7 @@ static int runAction(HttpConn *conn)
     if (route->flags & HTTP_ROUTE_XSRF && !(rx->flags & HTTP_GET)) {
         if (!httpCheckSecurityToken(conn)) {
             httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
-            if (smatch(route->responseFormat, "json")) {
+            if (route->json) {
                 httpTrace(conn, "esp.xsrf.error", "error", 0);
                 espRenderString(conn,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
@@ -363,7 +361,7 @@ static int runAction(HttpConn *conn)
     }
     if (action) {
         httpAuthenticate(conn);
-        setupFlash(conn);
+        setupFeedback(conn);
         if (eroute->commonController) {
             (eroute->commonController)(conn);
         }
@@ -904,12 +902,11 @@ static void manageReq(EspReq *req, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(req->commandLine);
-        mprMark(req->flash);
-        mprMark(req->lastFlash);
-        mprMark(req->feedback);
-        mprMark(req->route);
         mprMark(req->data);
         mprMark(req->edi);
+        mprMark(req->feedback);
+        mprMark(req->lastFeedback);
+        mprMark(req->route);
     }
 }
 

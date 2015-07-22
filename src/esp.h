@@ -62,7 +62,7 @@ typedef void (*EspProc)(HttpConn *conn);
 #endif
 #define ESP_EXPORT_STRING MPR_STRINGIFY(ESP_EXPORT)
 
-#define ESP_FLASH_VAR           "__flash__"
+#define ESP_FEEDBACK_VAR        "__feedback__"
 
 /*
     Default VxWorks environment
@@ -582,8 +582,7 @@ typedef struct EspReq {
     HttpRoute       *route;                 /**< Route reference */
     Esp             *esp;                   /**< Convenient esp reference */
     MprHash         *feedback;              /**< Feedback messages */
-    MprHash         *flash;                 /**< New flash messages */
-    MprHash         *lastFlash;             /**< Flash messages from the last request */
+    MprHash         *lastFeedback;          /**< Feedback messages from the last request */
     HttpNotifier    notifier;               /**< Connection Http state change notification callback */
     void            *data;                  /**< Custom data for request (managed) */
     void            *staticData;            /**< Custom data for request (unmanaged) */
@@ -828,19 +827,6 @@ PUBLIC EspRoute *espGetEspRoute(HttpConn *conn);
 PUBLIC cchar *espGetDocuments(HttpConn *conn);
 
 /**
-    Get a flash message.
-    @description This retrieves a flash message of a specified type.
-        Flash messages are messages kept in session storage messages that are passed to the next request (only).
-        The message is cleared after the controller action completes.
-    @param conn HttpConn connection object
-    @param type type of flash message to retrieve. This may be set to any word, but the following flash types
-        are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
-    @ingroup EspReq
-    @stability Evolving
- */
-PUBLIC cchar *espGetFlash(HttpConn *conn, cchar *type);
-
-/**
     Get a feedback message defined via #feedback
     @param conn HttpConn object
     @param type type of feedback message to retrieve. This may be set to any word, but the following feedback types
@@ -1035,7 +1021,8 @@ PUBLIC MprList *espGetUploads(HttpConn *conn);
 
 /**
     Get the request URI string.
-    @description This is a convenience API to return the request URI.
+    @description This is a convenience API to return the request URI. This is the request URI after removing
+        query parameters. It includes any application route prefix.
     @return The espGetConn()->rx->uri
     @ingroup EspReq
     @stability Evolving
@@ -1241,6 +1228,21 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
 PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
 
 /**
+    Render feedback messages.
+    @description Feedback messages for one-time messages that are sent to the client. For HTML clients, feedback 
+    messages use the session state store and persist for only one request. For smart/thick clients, feedback messages
+    are sent as JSON responses via the espSendFeedback API. See #espSetFeedback for how to define feedback messages.
+    @param conn Http connection object
+    @param types Types of feedback message to render. This may be set to a space separated list of feedback message types.
+        If the types list contains a feedback message type, it will be rendered.
+    @return Number of bytes written
+    @ingroup EspControl
+    @stability Deprecated
+    @internal
+ */
+PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *types);
+
+/**
     Render the contents of a file back to the client.
     @param conn HttpConn connection object
     @param path File path name
@@ -1249,20 +1251,6 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
     @stability Evolving
  */
 PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path);
-
-/**
-    Render flash messages.
-    @description Flash messages are one-time messages that are displayed to the client on the next request (only).
-    Flash messages use the session state store but persist for only one request.
-        See #espSetFlash for how to define flash messages.
-    @param conn Http connection object
-    @param types Types of feedback message to render. This may be set to a space separated list of flash message types.
-        If the types list contains a flash message type, it will be rendered.
-    @ingroup EspControl
-    @stability Deprecated
-    @internal
- */
-PUBLIC void espRenderFlash(HttpConn *conn, cchar *types);
 
 /**
     Read a table from the current database
@@ -1369,10 +1357,11 @@ PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags);
     The feedback messages are created via the espSetFeedback API. Field errors are created by ESP validations.
     @param conn HttpConn connection object
     @param success True if the operation was a success.
+    @return Number of bytes sent.
     @ingroup EspReq
     @stability Prototype
   */
-PUBLIC void espSendResult(HttpConn *conn, bool success);
+PUBLIC ssize espSendResult(HttpConn *conn, bool success);
 
 /**
     Enable auto-finalizing for this request
@@ -1450,7 +1439,6 @@ PUBLIC void espClearCurrentSession(HttpConn *conn);
 /**
     Set a feedback message
     @description Feedback messages are a convenient way to aggregate messages state information in the response.
-        The #espGetFeedback APIs can be used to extract feedback messages.
         Feedback messages are removed at the completion of the request.
     @param conn Http connection object
     @param type type of feedback message. This may be set to any word, but the following feedback types
@@ -1473,34 +1461,6 @@ PUBLIC void espSetFeedback(HttpConn *conn, cchar *type, cchar *fmt, ...);
     @internal
  */
 PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *type, cchar *fmt, va_list args);
-
-/**
-    Set a flash message
-    @description Flash messages persist for only one request and are a convenient way to pass state information or
-        feedback messages to the next request. Flash messages use the session state store, but persist only for one request.
-        The flash message is removed after running the next controller and before rendering any server-side view.
-        If you need to set a message to include in the request response, consider using #espSetFeedback.
-    @param conn Http connection object
-    @param type type of flash message. This may be set to any word, but the following flash types
-        are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
-    @param fmt Printf style formatted string to use as the message
-    @ingroup EspReq
-    @stability Evolving
- */
-PUBLIC void espSetFlash(HttpConn *conn, cchar *type, cchar *fmt, ...);
-
-/**
-    Send a flash message
-    @param conn Http connection object
-    @param type type of flash message. This may be set to any word, but the following flash types
-        are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
-    @param fmt Printf style formatted string to use as the message
-    @param args Varargs style list
-    @ingroup EspReq
-    @stability Internal
-    @internal
- */
-PUBLIC void espSetFlashv(HttpConn *conn, cchar *type, cchar *fmt, va_list args);
 
 /**
     Set the current database grid
@@ -1827,19 +1787,6 @@ PUBLIC void dontAutoFinalize();
 PUBLIC void finalize();
 
 /**
-    Set a flash notification message.
-    @description Flash messages persist for only one request and are a convenient way to pass state information or
-        feedback messages to the next request. Flash messages use the session state store, but persist only for one request.
-        This routine calls #espSetFlash.
-    @param type type of flash message. This may be set to any word, but the following flash types
-        are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
-    @param fmt Printf style message format
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC void flash(cchar *type, cchar *fmt, ...);
-
-/**
     Set a feedback message
     @description Feedback messages are a convenient way to aggregate messages state information in the response.
         The #getFeedback API can be used to retrieve feedback messages.
@@ -1849,7 +1796,7 @@ PUBLIC void flash(cchar *type, cchar *fmt, ...);
     @param fmt Printf style formatted string to use as the message
     @return True if the request has been successful so far, i.e. there is not an error feedback message defined.
         Return false if there is an error feedback defined.
-        This permits feedback to be chained as: renderResult(feedback("error", ...));
+        This permits feedback to be chained as: sendResult(feedback("error", ...));
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -1932,16 +1879,6 @@ PUBLIC void *getData();
     @stability Prototype
  */
 PUBLIC MprDispatcher *getDispatcher();
-
-/**
-    Get a flash message defined via #flash
-    @param type type of flash message to retrieve. This may be set to any word, but the following flash types
-        are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
-    @return Reference to private data
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC cchar *getFlash(cchar *type);
 
 /**
     Get a feedback message defined via #feedback
@@ -2485,15 +2422,16 @@ PUBLIC ssize renderConfig();
 PUBLIC void renderError(int status, cchar *fmt, ...);
 
 /**
-    Render flash messages.
-    @description Flash notices are one-time messages that are passed to the newt request (only).
-        See #espSetFlash and #flash for how to define flash messages.
-    @param types Types of flash message to retrieve. This may be set to any word, but the following flash types
+    Render feedback messages.
+    @description Feedback notices are one-time messages that are passed to the next request (only).
+        See #espSetFeedback and #feedback for how to define feedback messages.
+        This API will render feedback messages as HTML in place of the renderFeedback call in ESP page.
+    @param types Types of feedback message to retrieve. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void renderFlash(cchar *types);
+PUBLIC void renderFeedback(cchar *types);
 
 /**
     Render a file back to the client
@@ -2591,6 +2529,7 @@ PUBLIC void scripts(cchar *patterns);
 /**
     Send a Edatabase grid as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
+    This API is used to send database data to client user interfaces such as Angular or Aurelia clients.
     @param grid EDI grid
     @return Number of bytes sent
     @ingroup EspReq
@@ -2601,6 +2540,7 @@ PUBLIC ssize sendGrid(EdiGrid *grid);
 /**
     Send a database record as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
+    This API is used to send database data to client user interfaces such as Angular or Aurelia clients.
     @param rec EDI record
     @return Number of bytes sent
     @ingroup EspReq
@@ -2611,6 +2551,7 @@ PUBLIC ssize sendRec(EdiRec *rec);
 /**
     Send a JSON response result
     @description This sends a JSON response including the request success status, feedback message and field errors.
+    This API is used to send controller action responses to client user interfaces such as Angular or Aurelia clients.
     The field errors apply to the current EDI record.
     The format of the response is:
         "{ success: STATUS, feedback: {messages}, fieldErrors: {messages}}" wrapper.
@@ -2963,6 +2904,21 @@ PUBLIC cchar *uri(cchar *target, ...);
     @stability Evolving
  */
 PUBLIC cchar *absuri(cchar *target, ...);
+
+#if DEPRECATED || 1
+
+#define espGetFlash(conn, type) espGetFeedback(conn, type)
+#define espRenderFlash(conn, types) espRenderFeedback(conn, types)
+#define espSetFlashv(conn, type, fmt, args) espSetFeedbackv(conn, type, fmt, args)
+#define getFlash(type) getFeedback(type)
+#define renderFlash(types) renderFeedback(types)
+
+PUBLIC void espSetFlash(HttpConn *conn, cchar *type, cchar *fmt, ...);
+PUBLIC void flash(cchar *type, cchar *fmt, ...);
+
+#else
+#define
+#endif /* DEPRECATED */
 
 #ifdef __cplusplus
 } /* extern C */

@@ -884,12 +884,6 @@ static int getEspToken(EspParse *parse)
             if (next > start && (next[-1] == '\\' || next[-1] == '%')) {
                 break;
             }
-#if UNUSED
-        case '@':
-            if (c == '@') {
-                mprLog("esp warn", 0, "Using deprecated \"@\" control directive in esp page: %s", parse->path);
-            }
-#endif
             if ((next == start) || next[-1] != '\\') {
                 t = next[1];
                 if (t == '~') {

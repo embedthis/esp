@@ -45,13 +45,7 @@ typedef struct App {
     MprList     *files;                 /* List of files to process */
     MprHash     *build;                 /* Items to build */
     MprHash     *built;                 /* Items that have been built */
-#if DEPRECATED
-    MprList     *slink;                 /* List of items for static link */
-#endif
     MprHash     *targets;               /* Command line targets */
-#if UNUSED
-    MprHash     *topDeps;               /* Top level dependencies */
-#endif
     EdiGrid     *migrations;            /* Migrations table */
 
     cchar       *command;               /* Compilation or link command */
@@ -227,9 +221,6 @@ static App *createApp(Mpr *mpr)
 #else
     mprLog("", 0, "No database provider defined");
 #endif
-#if UNUSED
-    app->topDeps = mprCreateHash(0, 0);
-#endif
     app->cipher = sclone("blowfish");
     return app;
 }
@@ -283,9 +274,6 @@ static void manageApp(App *app, int flags)
         mprMark(app->table);
         mprMark(app->targets);
         mprMark(app->title);
-#if UNUSED
-        mprMark(app->topDeps);
-#endif
         mprMark(app->traceSpec);
         mprMark(app->version);
     }
@@ -2608,11 +2596,7 @@ static void fail(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-#if UNUSED
-    mprLog("error esp", 0, "%s", msg);
-#else
     mprEprintf("%s\n", msg);
-#endif
     va_end(args);
     app->error = 1;
 }
@@ -2625,11 +2609,7 @@ static void fatal(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-#if UNUSED
-    mprLog("error esp", 0, "%s", msg);
-#else
     mprEprintf("%s\n", msg);
-#endif
     va_end(args);
     exit(2);
 }
