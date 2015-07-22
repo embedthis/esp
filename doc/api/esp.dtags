@@ -337,13 +337,6 @@
       <arglist>(HttpConn *conn, cchar *type)</arglist>
     </member>
     <member kind="function">
-      <type>cchar *</type>
-      <name>espGetFlash</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga52bddd62e4cce84888abbeb44ba44c33</anchor>
-      <arglist>(HttpConn *conn, cchar *type)</arglist>
-    </member>
-    <member kind="function">
       <type>EdiGrid *</type>
       <name>espGetGrid</name>
       <anchorfile>group___esp_req.html</anchorfile>
@@ -666,10 +659,10 @@
       <arglist>(HttpConn *conn, EdiRec *rec, int flags)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>ssize</type>
       <name>espSendResult</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga97122549f9063d7c41f80bae689d42fe</anchor>
+      <anchor>gabc11971fcd5d12fe7a9907b2c564781b</anchor>
       <arglist>(HttpConn *conn, bool success)</arglist>
     </member>
     <member kind="function">
@@ -726,20 +719,6 @@
       <name>espSetFeedbackv</name>
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga7508b46ff71aa46719836d2720840047</anchor>
-      <arglist>(HttpConn *conn, cchar *type, cchar *fmt, va_list args)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>espSetFlash</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga767686a555d4a6aa466c869a16ed634c</anchor>
-      <arglist>(HttpConn *conn, cchar *type, cchar *fmt,...)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>espSetFlashv</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga09525c559cb0343bda3b3773161ee5f2</anchor>
       <arglist>(HttpConn *conn, cchar *type, cchar *fmt, va_list args)</arglist>
     </member>
     <member kind="function">
@@ -952,13 +931,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>flash</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gab8d4dc18829f1fd9453757508b0de666</anchor>
-      <arglist>(cchar *type, cchar *fmt,...)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>flush</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>gadac116554b543b7c4228c018a85882f5</anchor>
@@ -1068,13 +1040,6 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>gaca4c0e5a528f05f835631b4f60b2917c</anchor>
       <arglist>(cchar *field)</arglist>
-    </member>
-    <member kind="function">
-      <type>cchar *</type>
-      <name>getFlash</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga2fd8e3719f3e302cfbf7727443cadd1f</anchor>
-      <arglist>(cchar *type)</arglist>
     </member>
     <member kind="function">
       <type>EdiGrid *</type>
@@ -1357,18 +1322,18 @@
       <arglist>(int status, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>renderFeedback</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>gacf71df9dabcd97ec88211ef4561c5033</anchor>
+      <arglist>(cchar *types)</arglist>
+    </member>
+    <member kind="function">
       <type>ssize</type>
       <name>renderFile</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>gaa1e37f244a0e0796df494dfb756472a8</anchor>
       <arglist>(cchar *path)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>renderFlash</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gae7831ebce7adc03e3d93dd350d83882d</anchor>
-      <arglist>(cchar *types)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
