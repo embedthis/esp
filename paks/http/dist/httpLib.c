@@ -319,6 +319,7 @@ PUBLIC void httpDestroy()
     }
     httpStopConnections(0);
     httpStopEndpoints();
+    httpSetDefaultHost(0);
 
     if (http->timer) {
         mprRemoveEvent(http->timer);
@@ -3929,6 +3930,11 @@ static void parseAliases(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+/*
+    Attach this host to an endpoint
+
+    attach: 'ip:port'
+ */
 static void parseAttach(HttpRoute *route, cchar *key, MprJson *prop)
 {
     HttpEndpoint    *endpoint;
@@ -4060,7 +4066,7 @@ static void parseAuthRoles(HttpRoute *route, cchar *key, MprJson *prop)
     int         ji;
 
     for (ITERATE_CONFIG(route, prop, child, ji)) {
-        if (httpAddRole(route->auth, child->name, getList(child)) < 0) {
+        if (httpAddRole(route->auth, child->name, getList(child)) == 0) {
             httpParseError(route, "Cannot add role %s", child->name);
             break;
         }
@@ -4281,6 +4287,9 @@ static void parseErrors(HttpRoute *route, cchar *key, MprJson *prop)
 static void parseFormatsResponse(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->responseFormat = prop->value;
+    if (smatch(route->responseFormat, "json")) {
+        route->json = 1;
+    }
 }
 
 
@@ -4599,6 +4608,9 @@ static void parseMethods(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+/*
+    Note: this typically comes from package.json. See blendMode
+ */
 static void parseMode(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->mode = prop->value;
@@ -5060,6 +5072,14 @@ static void parseServerLog(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+/*
+    modules: [
+        {
+            name: 'espHandler',
+            path: '/path/to/module'
+        }
+    ]
+ */
 static void parseServerModules(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprModule   *module;
@@ -5102,13 +5122,16 @@ static void parseServerMonitors(HttpRoute *route, cchar *key, MprJson *prop)
     MprJson     *child;
     MprTicks    period;
     cchar       *counter, *expression, *limit, *relation, *defenses;
-    int         ji;
+    int         ji, enable;
 
     for (ITERATE_CONFIG(route, prop, child, ji)) {
         defenses = mprReadJson(child, "defenses");
         expression = mprReadJson(child, "expression");
         period = httpGetTicks(mprReadJson(child, "period"));
-
+        enable = smatch(mprReadJson(child, "enable"), "true");
+        if (!enable) {
+            continue;
+        }
         if (!httpTokenize(route, expression, "%S %S %S", &counter, &relation, &limit)) {
             httpParseError(route, "Cannot add monitor: %s", prop->name);
             break;
@@ -5544,11 +5567,11 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.users", parseAuthUsers);
     httpAddConfig("http.cache", parseCache);
     httpAddConfig("http.canonical", parseCanonicalName);
-    httpAddConfig("http.conditions", parseConditions);
     httpAddConfig("http.cgi", httpParseAll);
     httpAddConfig("http.cgi.escape", parseCgiEscape);
     httpAddConfig("http.cgi.prefix", parseCgiPrefix);
     httpAddConfig("http.compress", parseCompress);
+    httpAddConfig("http.conditions", parseConditions);
     httpAddConfig("http.database", parseDatabase);
     httpAddConfig("http.deleteUploads", parseDeleteUploads);
     httpAddConfig("http.directories", parseDirectories);
@@ -5623,8 +5646,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.ssl.cache", parseSslCache);
     httpAddConfig("http.ssl.certificate", parseSslCertificate);
     httpAddConfig("http.ssl.ciphers", parseSslCiphers);
-    httpAddConfig("http.ssl.logLevel", parseSslLogLevel);
     httpAddConfig("http.ssl.key", parseSslKey);
+    httpAddConfig("http.ssl.logLevel", parseSslLogLevel);
     httpAddConfig("http.ssl.protocols", parseSslProtocols);
     httpAddConfig("http.ssl.renegotiate", parseSslRenegotiate);
     httpAddConfig("http.ssl.ticket", parseSslTicket);
@@ -9206,7 +9229,7 @@ static void printRoute(HttpRoute *route, int idx, bool full, int methodsLen, int
             }
         }
     } else {
-        printf("%-*s %-*s %-*s\n", patternLen, pattern, methodsLen, methods ? methods : "*", targetLen, target);
+        printf("%-*s %-*s %-*s\n", patternLen, pattern, methodsLen, methods, targetLen, target);
     }
 }
 
@@ -9820,6 +9843,7 @@ PUBLIC int64 httpMonitorEvent(HttpConn *conn, int counterIndex, int64 adj)
                 mprSetManager(address, (MprManager) manageAddress);
             }
             if (!address) {
+                unlock(http->addresses);
                 return 0;
             }
             address->ncounters = ncounters;
@@ -12776,6 +12800,7 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     route->http = HTTP;
     route->indexes = parent->indexes;
     route->inputStages = parent->inputStages;
+    route->json = parent->json;
     route->keepSource = parent->keepSource;
     route->languages = parent->languages;
     route->lifespan = parent->lifespan;
@@ -21895,7 +21920,7 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
     } else {
         queryDelim = query = "";
     }
-    if (portDelim) {
+    if (*portDelim) {
         uri = sjoin(scheme, hostDelim, host, portDelim, portStr, pathDelim, path, referenceDelim, reference, 
             queryDelim, query, NULL);
     } else {

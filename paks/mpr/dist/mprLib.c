@@ -18231,10 +18231,12 @@ static MprList *getDirFiles(cchar *path)
         fileInfo.isDir = 0;
         rc = mprGetPathInfo(fileName, &fileInfo);
         if ((dp = mprAllocObj(MprDirEntry, manageDirEntry)) == 0) {
+            closedir(dir);
             return list;
         }
         dp->name = sclone(dirent->d_name);
         if (dp->name == 0) {
+            closedir(dir);
             return list;
         }
         if (rc == 0 || fileInfo.isLink) {
@@ -19561,10 +19563,12 @@ PUBLIC char *mprSearchPath(cchar *file, int flags, cchar *search, ...)
         while (dir && *dir) {
             path = mprJoinPath(dir, file);
             if ((result = checkPath(path, flags)) != 0) {
+                va_end(args);
                 return mprNormalizePath(result);
             }
             if ((flags & MPR_SEARCH_EXE) && *ME_EXE) {
                 if ((result = checkPath(mprJoinPathExt(path, ME_EXE), flags)) != 0) {
+                    va_end(args);
                     return mprNormalizePath(result);
                 }
             }
@@ -19786,6 +19790,7 @@ PUBLIC int mprGetRandomBytes(char *buf, ssize length, bool block)
         rc = read(fd, &buf[sofar], length);
         if (rc < 0) {
             assert(0);
+            close(fd);
             return MPR_ERR_CANT_READ;
         }
         length -= rc;
@@ -24109,9 +24114,7 @@ PUBLIC char *scamel(cchar *str)
  */
 PUBLIC int scaselesscmp(cchar *s1, cchar *s2)
 {
-    if (s1 == 0 || s2 == 0) {
-        return -1;
-    } else if (s1 == 0) {
+    if (s1 == 0) {
         return -1;
     } else if (s2 == 0) {
         return 1;
@@ -24329,6 +24332,7 @@ PUBLIC char *sjoinv(cchar *buf, va_list args)
         str = va_arg(ap, char*);
     }
     if ((dest = mprAlloc(required)) == 0) {
+        va_end(ap);
         return 0;
     }
     dp = dest;
@@ -24344,6 +24348,7 @@ PUBLIC char *sjoinv(cchar *buf, va_list args)
         str = va_arg(ap, char*);
     }
     *dp = '\0';
+    va_end(ap);
     return dest;
 }
 
@@ -24386,9 +24391,7 @@ PUBLIC int sncaselesscmp(cchar *s1, cchar *s2, ssize n)
 
     assert(0 <= n && n < MAXINT);
 
-    if (s1 == 0 || s2 == 0) {
-        return -1;
-    } else if (s1 == 0) {
+    if (s1 == 0) {
         return -1;
     } else if (s2 == 0) {
         return 1;
@@ -24637,6 +24640,7 @@ PUBLIC char *srejoinv(char *buf, va_list args)
         str = va_arg(ap, char*);
     }
     if ((dest = mprRealloc(buf, required)) == 0) {
+        va_end(ap);
         return 0;
     }
     dp = &dest[len];
@@ -24648,6 +24652,7 @@ PUBLIC char *srejoinv(char *buf, va_list args)
         str = va_arg(ap, char*);
     }
     *dp = '\0';
+    va_end(ap);
     return dest;
 }
 
