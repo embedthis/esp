@@ -7,6 +7,7 @@
 /********************************* Includes ***********************************/
 
 #include    "esp.h"
+#include    "mpr-version.h"
 
 #if ME_COM_ESP || ME_ESP_PRODUCT
 /********************************** Locals ************************************/
@@ -139,7 +140,7 @@ static void generateMigration(int argc, char **argv);
 static char *getPassword();
 static void generateScaffold(int argc, char **argv);
 static void generateTable(int argc, char **argv);
-static cchar *getConfigValue(MprJson *config, cchar *key, cchar *defaultValue);
+static cchar *getJson(MprJson *config, cchar *key, cchar *defaultValue);
 static MprList *getRoutes();
 static MprHash *getTargets(int argc, char **argv);
 static cchar *getTemplate(cchar *key, MprHash *tokens);
@@ -596,7 +597,7 @@ static void initialize(int argc, char **argv)
 {
     HttpStage   *stage;
     HttpRoute   *route;
-    cchar       *path;
+    cchar       *criteria, *path;
 
     if (app->error) {
         return;
@@ -639,13 +640,18 @@ static void initialize(int argc, char **argv)
         if ((app->package = readConfig(path)) == 0) {
             return;
         }
-        app->paksDir = getConfigValue(app->package, "directories.paks", app->paksDir);
+        if ((criteria = getJson(app->package, "devDependencies.esp", 0)) != 0) {
+            if (!mprIsVersionAcceptable(ME_VERSION, criteria)) {
+                fail("ESP %s is not acceptable for this application which requires ESP %s", ME_VERSION, criteria);
+            }
+        }
+        app->paksDir = getJson(app->package, "directories.paks", app->paksDir);
     }
 
-    app->description = getConfigValue(app->package, "description", app->description);
-    app->name = getConfigValue(app->package, "name", app->name);
-    app->title = getConfigValue(app->package, "title", app->title);
-    app->version = getConfigValue(app->package, "version", app->version);
+    app->description = getJson(app->package, "description", app->description);
+    app->name = getJson(app->package, "name", app->name);
+    app->title = getJson(app->package, "title", app->title);
+    app->version = getJson(app->package, "version", app->version);
 
     path = mprJoinPath(route->home, "esp.json");
     if (mprPathExists(path, R_OK)) {
@@ -656,10 +662,10 @@ static void initialize(int argc, char **argv)
     /*
         Read name, title, description and version from esp.json - permits execution without package.json
      */
-    app->description = getConfigValue(app->config, "description", app->description);
-    app->name = getConfigValue(app->config, "name", app->name);
-    app->title = getConfigValue(app->config, "title", app->title);
-    app->version = getConfigValue(app->config, "version", app->version);
+    app->description = getJson(app->config, "description", app->description);
+    app->name = getJson(app->config, "name", app->name);
+    app->title = getJson(app->config, "title", app->title);
+    app->version = getJson(app->config, "version", app->version);
 
     if (!app->config) {
         app->config = mprParseJson(sfmt("{ name: '%s', title: '%s', description: '%s', version: '%s', \
@@ -734,7 +740,7 @@ static void initialize(int argc, char **argv)
         httpSetDir(route, "MIGRATIONS", path);
     } else {
         app->migDir = httpGetDir(route, "MIGRATIONS");
-        app->migDir = getConfigValue(app->package, "directories.migrations", app->migDir);
+        app->migDir = getJson(app->package, "directories.migrations", app->migDir);
     }
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
 }
@@ -777,7 +783,7 @@ static void process(int argc, char **argv)
 
     } else if (smatch(cmd, "mode")) {
         if (argc < 2) {
-            printf("%s\n", getConfigValue(app->package, "pak.mode", "undefined"));
+            printf("%s\n", getJson(app->package, "pak.mode", "undefined"));
         } else {
             setMode(argv[1]);
         }
@@ -879,7 +885,7 @@ static void generate(int argc, char **argv)
 }
 
 
-static cchar *getConfigValue(MprJson *config, cchar *key, cchar *defaultValue)
+static cchar *getJson(MprJson *config, cchar *key, cchar *defaultValue)
 {
     cchar       *value;
 
@@ -908,7 +914,7 @@ static void editValue(int argc, char **argv)
             setConfigValue(app->config, key, value);
             saveConfig(app->config, "esp.json", MPR_JSON_QUOTES);
         } else {
-            value = getConfigValue(app->config, key, 0);
+            value = getJson(app->config, key, 0);
             if (value) {
                 printf("%s\n", value);
             } else {
@@ -2054,7 +2060,7 @@ static void compileCombined(HttpRoute *route)
 
 static void generateItem(cchar *item)
 {
-    if (getConfigValue(app->config, sfmt("esp.generate.%s", item), 0) == 0) {
+    if (getJson(app->config, sfmt("esp.generate.%s", item), 0) == 0) {
         fail("No suitable package installed to generate %s", item);
         return;
     }
@@ -2077,7 +2083,7 @@ static void generateController(int argc, char **argv)
         usageError();
         return;
     }
-    if (getConfigValue(app->config, "esp.generate.controller", 0) == 0) {
+    if (getJson(app->config, "esp.generate.controller", 0) == 0) {
         fail("No suitable package installed to generate controllers");
         return;
     }
@@ -2273,7 +2279,7 @@ static void generateScaffold(int argc, char **argv)
         usageError();
         return;
     }
-    if (getConfigValue(app->config, "esp.generate.controller", 0) == 0) {
+    if (getJson(app->config, "esp.generate.controller", 0) == 0) {
         fail("No suitable package installed to generate scaffolds");
         return;
     }
@@ -2452,7 +2458,7 @@ static cchar *getTemplate(cchar *key, MprHash *tokens)
 {
     cchar   *pattern;
 
-    if ((pattern = getConfigValue(app->config, sfmt("esp.generate.%s", key), 0)) != 0) {
+    if ((pattern = getJson(app->config, sfmt("esp.generate.%s", key), 0)) != 0) {
         if (mprPathExists(app->paksDir, X_OK)) {
             return readTemplate(mprJoinPath(app->paksDir, pattern), tokens, NULL);
         }
@@ -2503,7 +2509,7 @@ static void genKey(cchar *key, cchar *path, MprHash *tokens)
     if (app->error) {
         return;
     }
-    if ((pattern = getConfigValue(app->config, sfmt("esp.generate.%s", key), 0)) == 0) {
+    if ((pattern = getJson(app->config, sfmt("esp.generate.%s", key), 0)) == 0) {
         return;
     }
     if (!tokens) {

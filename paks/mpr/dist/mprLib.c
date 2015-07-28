@@ -1649,7 +1649,7 @@ PUBLIC int mprCreateEventOutside(MprDispatcher *dispatcher, cchar *name, void *p
         mprNap(0);
         mprAtomicBarrier();
     }
-    if ((op = mprAlloc(sizeof(OutsideEvent))) == 0) {
+    if ((op = mprAllocZeroed(sizeof(OutsideEvent))) == 0) {
         return MPR_ERR_MEMORY;
     }
     op->proc = proc;

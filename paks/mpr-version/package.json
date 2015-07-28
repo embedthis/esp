@@ -1,0 +1,47 @@
+{
+    "name": "mpr-version",
+    "title": "SemVer Management",
+    "description": "SemVer Version Management the MPR",
+    "version": "0.1.0",
+    "keywords": [
+        "me",
+        "ssl",
+        "version"
+    ],
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "https://embedthis.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/mpr-version.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/mpr-version/issues"
+    },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
+    "dependencies": {
+        "pcre": "~1.x"
+    },
+    "devDependencies": {
+        "mpr": "~6.x"
+    },
+    "pak": {
+        "export": [
+            "*.c",
+            "*.h",
+            "*.me"
+        ],
+        "origin": "embedthis/mpr-version"
+    }
+}

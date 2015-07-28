@@ -2638,18 +2638,14 @@ PUBLIC void httpAddCache(HttpRoute *route, cchar *methods, cchar *uris, cchar *e
     if (extensions) {
         cache->extensions = mprCreateHash(0, MPR_HASH_STABLE);
         for (item = stok(sclone(extensions), " \t,", &tok); item; item = stok(0, " \t,", &tok)) {
-            if (smatch(item, "*")) {
-                extensions = 0;
-            } else {
+            if (*item && !smatch(item, "*")) {
                 mprAddKey(cache->extensions, item, cache);
             }
         }
     } else if (types) {
         cache->types = mprCreateHash(0, MPR_HASH_STABLE);
         for (item = stok(sclone(types), " \t,", &tok); item; item = stok(0, " \t,", &tok)) {
-            if (smatch(item, "*")) {
-                extensions = 0;
-            } else {
+            if (*item && !smatch(item, "*")) {
                 mprAddKey(cache->types, item, cache);
             }
         }
