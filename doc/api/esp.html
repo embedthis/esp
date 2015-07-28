@@ -1517,7 +1517,7 @@ The output is Html escaped for security
     <dl><dt><b>Description</b>:</dt><dd>Feedback notices are one-time messages that are passed to the next request (only). See <a class="ref" href="#group___esp_req_1ga12f466c3ea4ae6e7eb2692c80e03a45b">espSetFeedback</a> and <a class="ref" href="#group___esp_abbrev_1gac782d72d3f7c11dce5c48befaff8ac0a">feedback</a> for how to define feedback messages. This API will render feedback messages as HTML in place of the renderFeedback call in ESP page.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param">types</td><td>Types of feedback message to retrieve. This may be set to any word, but the following feedback types are typically supported as per RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;.</td>
+    <tr><td class="param">types</td><td>Types of feedback message to retrieve. Set to &quot;*&quot; to retrieve all types of feedback. This may be set to any word, but the following feedback types are typically supported as per RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -4756,7 +4756,7 @@ Windows SDK.
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>Http connection object.</td>
-    <tr><td class="param">types</td><td>Types of feedback message to render. This may be set to a space separated list of feedback message types. If the types list contains a feedback message type, it will be rendered.</td>
+    <tr><td class="param">types</td><td>Types of feedback message to retrieve. Set to &quot;*&quot; to retrieve all types of feedback. This may be set to any word, but the following feedback types are typically supported as per RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Number of bytes written.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>

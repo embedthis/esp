@@ -112,7 +112,7 @@
 
       <ItemDefinitionGroup>
       <Link>
-        <AdditionalDependencies>libesp.lib;libsql.lib;libhttp.lib;libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libesp.lib;libsql.lib;libmpr-version.lib;libhttp.lib;libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
   </ItemDefinitionGroup>

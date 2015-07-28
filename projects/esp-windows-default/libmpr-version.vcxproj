@@ -13,7 +13,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{d29d8e9c-6826-4672-a522-e44e75b854fc}</ProjectGuid>
+        <ProjectGuid>{d3036cd1-0de4-4cd6-99b6-60c0dcb1ae69}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -38,22 +38,22 @@
   </ItemGroup>
     
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v120</PlatformToolset>
       </PropertyGroup>
@@ -87,72 +87,54 @@
         <_ProjectFileVersion>10</_ProjectFileVersion>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ObjDir)\libesp\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ObjDir)\libmpr-version\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ObjDir)\libesp\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ObjDir)\libmpr-version\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ObjDir)\libesp\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ObjDir)\libmpr-version\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\libesp\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\libmpr-version\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PreBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
   
       <ItemGroup>
-    <ClCompile Include="..\..\src\edi.c" />
-    <ClCompile Include="..\..\src\espAbbrev.c" />
-    <ClCompile Include="..\..\src\espConfig.c" />
-    <ClCompile Include="..\..\src\espFramework.c" />
-    <ClCompile Include="..\..\src\espHtml.c" />
-    <ClCompile Include="..\..\src\espRequest.c" />
-    <ClCompile Include="..\..\src\espTemplate.c" />
-    <ClCompile Include="..\..\src\mdb.c" />
-    <ClCompile Include="..\..\src\sdb.c" />
+    <ClCompile Include="..\..\src\mpr-version\mpr-version.c" />
   </ItemGroup>
 
       <ItemGroup>
-    <ClInclude Include="$(IncDir)\edi.h" />
-  </ItemGroup>
-
-      <ItemGroup>
-    <ClInclude Include="$(IncDir)\esp.h" />
-  </ItemGroup>
-
-      <ItemGroup>
-    <ClInclude Include="$(IncDir)\mdb.h" />
+    <ClInclude Include="$(IncDir)\mpr-version.h" />
   </ItemGroup>
 
       <ItemDefinitionGroup>
       <Link>
-        <AdditionalDependencies>libmpr-version.lib;libhttp.lib;libsql.lib;libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 
       <CustomBuildStep>
-        <Command>cd ..\..\src
-copy /Y /B edi.h $(IncDir)
-copy /Y /B esp.h $(IncDir)
-copy /Y /B mdb.h $(IncDir)
-cd ..\projects\esp-windows-default</Command>
-        <Outputs>$(BinDir)\libesp.dll</Outputs>
+        <Command>cd ..\..\src\mpr-version
+copy /Y /B mpr-version.h $(IncDir)
+cd ..\..\projects\esp-windows-default</Command>
+        <Outputs>$(BinDir)\libmpr-version.lib</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>
 
     <ItemGroup>
-      <ProjectReference Include="libhttp.vcxproj">
-      <Project>3bc80a8c-23db-4258-a7b2-a7f553b711df</Project>
+      <ProjectReference Include="libmpr.vcxproj">
+      <Project>40d07ab8-5586-4eb8-b0e5-29a5aa12297f</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="libmpr-version.vcxproj">
-      <Project>d3036cd1-0de4-4cd6-99b6-60c0dcb1ae69</Project>
+      <ProjectReference Include="libpcre.vcxproj">
+      <Project>9f59a794-2f2a-4991-b2bf-25d39031215e</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>

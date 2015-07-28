@@ -43,6 +43,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libhttp", "esp-windows-defa
 		{3BC80A8C-23DB-4258-A7B2-A7F553B711DF} = {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmpr-version", "esp-windows-default\libmpr-version.vcxproj", "{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{9F59A794-2F2A-4991-B2BF-25D39031215E} = {9F59A794-2F2A-4991-B2BF-25D39031215E}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69} = {D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libesp", "esp-windows-default\libesp.vcxproj", "{D29D8E9C-6826-4672-A522-E44E75B854FC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
@@ -58,6 +72,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libesp", "esp-windows-defau
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{3BC80A8C-23DB-4258-A7B2-A7F553B711DF} = {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69} = {D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{D29D8E9C-6826-4672-A522-E44E75B854FC} = {D29D8E9C-6826-4672-A522-E44E75B854FC}
@@ -78,6 +95,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "espcmd", "esp-windows-defau
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{3BC80A8C-23DB-4258-A7B2-A7F553B711DF} = {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69} = {D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}
 	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{D29D8E9C-6826-4672-A522-E44E75B854FC} = {D29D8E9C-6826-4672-A522-E44E75B854FC}
@@ -162,6 +182,14 @@ EndProject
 {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}.Release|Win32.Build.0 = Release|Win32
 {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}.Release|x64.ActiveCfg = Release|x64
 {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}.Release|x64.Build.0 = Release|x64
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Debug|Win32.ActiveCfg = Debug|Win32
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Debug|Win32.Build.0 = Debug|Win32
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Debug|x64.ActiveCfg = Debug|x64
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Debug|x64.Build.0 = Debug|x64
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Release|Win32.ActiveCfg = Release|Win32
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Release|Win32.Build.0 = Release|Win32
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Release|x64.ActiveCfg = Release|x64
+{D3036CD1-0DE4-4CD6-99B6-60C0DCB1AE69}.Release|x64.Build.0 = Release|x64
 {D29D8E9C-6826-4672-A522-E44E75B854FC}.Debug|Win32.ActiveCfg = Debug|Win32
 {D29D8E9C-6826-4672-A522-E44E75B854FC}.Debug|Win32.Build.0 = Debug|Win32
 {D29D8E9C-6826-4672-A522-E44E75B854FC}.Debug|x64.ActiveCfg = Debug|x64
