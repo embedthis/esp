@@ -1233,8 +1233,9 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
     messages use the session state store and persist for only one request. For smart/thick clients, feedback messages
     are sent as JSON responses via the espSendFeedback API. See #espSetFeedback for how to define feedback messages.
     @param conn Http connection object
-    @param types Types of feedback message to render. This may be set to a space separated list of feedback message types.
-        If the types list contains a feedback message type, it will be rendered.
+    @param types Types of feedback message to retrieve. Set to "*" to retrieve all types of feedback.
+        This may be set to any word, but the following feedback types are typically supported as per 
+        RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @return Number of bytes written
     @ingroup EspControl
     @stability Deprecated
@@ -2426,8 +2427,9 @@ PUBLIC void renderError(int status, cchar *fmt, ...);
     @description Feedback notices are one-time messages that are passed to the next request (only).
         See #espSetFeedback and #feedback for how to define feedback messages.
         This API will render feedback messages as HTML in place of the renderFeedback call in ESP page.
-    @param types Types of feedback message to retrieve. This may be set to any word, but the following feedback types
-        are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
+    @param types Types of feedback message to retrieve. Set to "*" to retrieve all types of feedback.
+        This may be set to any word, but the following feedback types are typically supported as per 
+        RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @ingroup EspAbbrev
     @stability Evolving
  */
