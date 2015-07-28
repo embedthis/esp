@@ -24,7 +24,7 @@ Me.load({
 
         libesp: {
             type: 'lib',
-            depends: [ 'libhttp', 'mdb' ],
+            depends: [ 'libhttp', 'libmpr-version', 'mdb' ],
             uses:    [ 'sqlite' ],
             sources: [ '*.c' ],
             exclude: /esp\.c/,

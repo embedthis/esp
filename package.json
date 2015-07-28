@@ -33,6 +33,7 @@
     "dependencies": {
         "http": "~6.1",
         "mpr": "~6.1",
+        "mpr-version": "~0.1",
         "osdep": "~0.8",
         "pcre": "~1.0"
     },
