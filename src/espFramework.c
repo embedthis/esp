@@ -303,7 +303,8 @@ PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *kind)
     }
     for (kp = 0; (kp = mprGetNextKey(req->feedback, kp)) != 0; ) {
         msg = kp->data;
-        if (smatch(kind, kp->key) || smatch(kind, "all")) {
+        //  DEPRECATE "all"
+        if (smatch(kind, kp->key) || smatch(kind, "all") || smatch(kind, "*")) {
             return msg;
         }
     }
@@ -669,8 +670,8 @@ PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *kinds)
     written = 0;
     for (kp = 0; (kp = mprGetNextKey(req->feedback, kp)) != 0; ) {
         msg = kp->data;
-        //  MOB - support "*" for kinds - "all" may be a substring (deprecate)
-        if (strstr(kinds, kp->key) || strstr(kinds, "all")) {
+        //  DEPRECATE "all"
+        if (strstr(kinds, kp->key) || strstr(kinds, "all") || strstr(kinds, "*")) {
             written += espRender(conn, "<span class='feedback-%s animate'>%s</span>", kp->key, msg);
         }
     }
