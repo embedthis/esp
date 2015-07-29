@@ -507,15 +507,6 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
-		43412FFA43414B00000000A1 /* Frameworks and Libraries for libmpr-version */ = {
-                isa = PBXFrameworksBuildPhase;
-                buildActionMask = 2147483647;
-                files = (
-    				43412FFA43414B0000000054 /* libpcre */,
-				43412FFA43414B0000000055 /* libmpr */,				
-                );
-                runOnlyForDeploymentPostprocessing = 0;
-            };
 		43412FFA43414B00000000A2 /* Frameworks and Libraries for libpcre */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
@@ -525,14 +516,6 @@
                 runOnlyForDeploymentPostprocessing = 0;
             };
 		43412FFA43414B00000000A3 /* Frameworks and Libraries for libsql */ = {
-                isa = PBXFrameworksBuildPhase;
-                buildActionMask = 2147483647;
-                files = (
-    				
-                );
-                runOnlyForDeploymentPostprocessing = 0;
-            };
-		43412FFA43414B00000000A4 /* Frameworks and Libraries for openssl */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
@@ -1345,14 +1328,30 @@ fi";
     ME_COM_OPENSSL_PATH = "";
 
                     /* Common Settings */
+                    COMBINE_HIDPI_IMAGES = YES;
     				ALWAYS_SEARCH_USER_PATHS = NO;
                     ONLY_ACTIVE_ARCH = YES;
                     CURRENT_PROJECT_VERSION = 6.0;
                     DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
                     DYLIB_CURRENT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+
     				GCC_C_LANGUAGE_STANDARD = gnu99;
     				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
     				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+
+GCC_NO_COMMON_BLOCKS = YES;
+GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+GCC_WARN_UNDECLARED_SELECTOR = YES;
+CLANG_WARN_BOOL_CONVERSION = YES;
+CLANG_WARN_CONSTANT_CONVERSION = YES;
+CLANG_WARN_EMPTY_BODY = YES;
+CLANG_WARN_ENUM_CONVERSION = YES;
+CLANG_WARN_INT_CONVERSION = YES;
+CLANG_WARN_UNREACHABLE_CODE = YES;
+CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ENABLE_STRICT_OBJC_MSGSEND = YES;
+ENABLE_TESTABILITY = YES;
+
                     LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
     				MACOSX_DEPLOYMENT_TARGET = 10.7;
     				SDKROOT = macosx;
@@ -1415,14 +1414,30 @@ fi";
     ME_COM_OPENSSL_PATH = "";
 
                     /* Common Settings */
+                    COMBINE_HIDPI_IMAGES = YES;
     				ALWAYS_SEARCH_USER_PATHS = NO;
                     ONLY_ACTIVE_ARCH = YES;
                     CURRENT_PROJECT_VERSION = 6.0;
                     DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
                     DYLIB_CURRENT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+
     				GCC_C_LANGUAGE_STANDARD = gnu99;
     				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
     				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+
+GCC_NO_COMMON_BLOCKS = YES;
+GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+GCC_WARN_UNDECLARED_SELECTOR = YES;
+CLANG_WARN_BOOL_CONVERSION = YES;
+CLANG_WARN_CONSTANT_CONVERSION = YES;
+CLANG_WARN_EMPTY_BODY = YES;
+CLANG_WARN_ENUM_CONVERSION = YES;
+CLANG_WARN_INT_CONVERSION = YES;
+CLANG_WARN_UNREACHABLE_CODE = YES;
+CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ENABLE_STRICT_OBJC_MSGSEND = YES;
+ENABLE_TESTABILITY = YES;
+
                     LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
     				MACOSX_DEPLOYMENT_TARGET = 10.7;
     				SDKROOT = macosx;
