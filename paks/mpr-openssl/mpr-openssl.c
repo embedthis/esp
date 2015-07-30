@@ -1,5 +1,5 @@
 /*
-    openssl.c - Support for secure sockets via OpenSSL
+    mpr-openssl.c - Support for secure sockets via OpenSSL
 
     This is the interface between the MPR Socket layer and the OpenSSL stack.
 

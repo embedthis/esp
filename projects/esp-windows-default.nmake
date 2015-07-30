@@ -177,9 +177,9 @@ clean:
 	if exist "build\$(CONFIG)\obj\http.obj" del /Q "build\$(CONFIG)\obj\http.obj"
 	if exist "build\$(CONFIG)\obj\httpLib.obj" del /Q "build\$(CONFIG)\obj\httpLib.obj"
 	if exist "build\$(CONFIG)\obj\mdb.obj" del /Q "build\$(CONFIG)\obj\mdb.obj"
+	if exist "build\$(CONFIG)\obj\mpr-openssl.obj" del /Q "build\$(CONFIG)\obj\mpr-openssl.obj"
 	if exist "build\$(CONFIG)\obj\mpr-version.obj" del /Q "build\$(CONFIG)\obj\mpr-version.obj"
 	if exist "build\$(CONFIG)\obj\mprLib.obj" del /Q "build\$(CONFIG)\obj\mprLib.obj"
-	if exist "build\$(CONFIG)\obj\openssl.obj" del /Q "build\$(CONFIG)\obj\openssl.obj"
 	if exist "build\$(CONFIG)\obj\pcre.obj" del /Q "build\$(CONFIG)\obj\pcre.obj"
 	if exist "build\$(CONFIG)\obj\sdb.obj" del /Q "build\$(CONFIG)\obj\sdb.obj"
 	if exist "build\$(CONFIG)\obj\sqlite.obj" del /Q "build\$(CONFIG)\obj\sqlite.obj"
@@ -326,26 +326,24 @@ build\$(CONFIG)\inc\mpr.h: $(DEPS_11)
 	copy /Y /B src\mpr\mpr.h+modified build\$(CONFIG)\inc\mpr.h $(LOG)
 
 #
-#   openssl.obj
+#   mpr-openssl.obj
 #
 DEPS_12 = $(DEPS_12) build\$(CONFIG)\inc\mpr.h
 
-build\$(CONFIG)\obj\openssl.obj: \
-    src\mpr-openssl\openssl.c $(DEPS_12)
-	@echo .. [Compile] build\$(CONFIG)\obj\openssl.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\openssl.obj -Fd$(BUILD)\obj\openssl.pdb $(CFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\include" src\mpr-openssl\openssl.c $(LOG)
+build\$(CONFIG)\obj\mpr-openssl.obj: \
+    src\mpr-openssl\mpr-openssl.c $(DEPS_12)
+	@echo .. [Compile] build\$(CONFIG)\obj\mpr-openssl.obj
+	"$(CC)" -c -Fo$(BUILD)\obj\mpr-openssl.obj -Fd$(BUILD)\obj\mpr-openssl.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\mpr-openssl\mpr-openssl.c $(LOG)
 
-!IF "$(ME_COM_SSL)" == "1"
 !IF "$(ME_COM_OPENSSL)" == "1"
 #
-#   openssl
+#   libmpr-openssl
 #
-DEPS_13 = $(DEPS_13) build\$(CONFIG)\obj\openssl.obj
+DEPS_13 = $(DEPS_13) build\$(CONFIG)\obj\mpr-openssl.obj
 
 build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_13)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-openssl.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\openssl.obj" $(LOG)
-!ENDIF
+	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
 !ENDIF
 
 #
@@ -368,17 +366,14 @@ build\$(CONFIG)\obj\mprLib.obj: \
 #   libmpr
 #
 DEPS_16 = $(DEPS_16) build\$(CONFIG)\inc\osdep.h
-!IF "$(ME_COM_SSL)" == "1"
 !IF "$(ME_COM_OPENSSL)" == "1"
 DEPS_16 = $(DEPS_16) build\$(CONFIG)\bin\libmpr-openssl.lib
-!ENDIF
 !ENDIF
 DEPS_16 = $(DEPS_16) build\$(CONFIG)\inc\mpr.h
 DEPS_16 = $(DEPS_16) build\$(CONFIG)\obj\mprLib.obj
 
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_16 = $(LIBS_16) libmpr-openssl.lib
-LIBPATHS_16 = $(LIBPATHS_16) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_16 = $(LIBS_16) libgdi32.lib
@@ -477,8 +472,8 @@ DEPS_24 = $(DEPS_24) build\$(CONFIG)\obj\httpLib.obj
 
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_24 = $(LIBS_24) libmpr-openssl.lib
-LIBPATHS_24 = $(LIBPATHS_24) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
+LIBS_24 = $(LIBS_24) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_24 = $(LIBS_24) libgdi32.lib
 LIBPATHS_24 = $(LIBPATHS_24) -libpath:$(ME_COM_OPENSSL_PATH)
@@ -491,7 +486,6 @@ LIBPATHS_24 = $(LIBPATHS_24) -libpath:$(ME_COM_OPENSSL_PATH)
 LIBS_24 = $(LIBS_24) libssleay32.lib
 LIBPATHS_24 = $(LIBPATHS_24) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-LIBS_24 = $(LIBS_24) libmpr.lib
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_24 = $(LIBS_24) libpcre.lib
 !ENDIF
@@ -689,8 +683,8 @@ LIBS_41 = $(LIBS_41) libsql.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libmpr-openssl.lib
-LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
+LIBS_41 = $(LIBS_41) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_41 = $(LIBS_41) libgdi32.lib
 LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
@@ -703,7 +697,6 @@ LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
 LIBS_41 = $(LIBS_41) libssleay32.lib
 LIBPATHS_41 = $(LIBPATHS_41) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-LIBS_41 = $(LIBS_41) libmpr.lib
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_41 = $(LIBS_41) libpcre.lib
 !ENDIF
@@ -752,8 +745,8 @@ LIBS_43 = $(LIBS_43) libsql.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libmpr-openssl.lib
-LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
+LIBS_43 = $(LIBS_43) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_43 = $(LIBS_43) libgdi32.lib
 LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
@@ -766,7 +759,6 @@ LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
 LIBS_43 = $(LIBS_43) libssleay32.lib
 LIBPATHS_43 = $(LIBPATHS_43) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-LIBS_43 = $(LIBS_43) libmpr.lib
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_43 = $(LIBS_43) libpcre.lib
 !ENDIF
@@ -810,8 +802,8 @@ DEPS_45 = $(DEPS_45) build\$(CONFIG)\obj\http.obj
 
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_45 = $(LIBS_45) libmpr-openssl.lib
-LIBPATHS_45 = $(LIBPATHS_45) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
+LIBS_45 = $(LIBS_45) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_45 = $(LIBS_45) libgdi32.lib
 LIBPATHS_45 = $(LIBPATHS_45) -libpath:$(ME_COM_OPENSSL_PATH)
@@ -824,7 +816,6 @@ LIBPATHS_45 = $(LIBPATHS_45) -libpath:$(ME_COM_OPENSSL_PATH)
 LIBS_45 = $(LIBS_45) libssleay32.lib
 LIBPATHS_45 = $(LIBPATHS_45) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-LIBS_45 = $(LIBS_45) libmpr.lib
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_45 = $(LIBS_45) libpcre.lib
 !ENDIF
@@ -895,8 +886,8 @@ DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\watchdog.obj
 
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_49 = $(LIBS_49) libmpr-openssl.lib
-LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
+LIBS_49 = $(LIBS_49) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_49 = $(LIBS_49) libgdi32.lib
 LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
@@ -909,7 +900,6 @@ LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
 LIBS_49 = $(LIBS_49) libssleay32.lib
 LIBPATHS_49 = $(LIBPATHS_49) -libpath:$(ME_COM_OPENSSL_PATH)
 !ENDIF
-LIBS_49 = $(LIBS_49) libmpr.lib
 
 build\$(CONFIG)\bin\espman.exe: $(DEPS_49)
 	@echo ..... [Link] build\$(CONFIG)\bin\espman.exe

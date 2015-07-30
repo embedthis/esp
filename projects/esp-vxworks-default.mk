@@ -133,9 +133,9 @@ clean:
 	rm -f "$(BUILD)/obj/http.o"
 	rm -f "$(BUILD)/obj/httpLib.o"
 	rm -f "$(BUILD)/obj/mdb.o"
+	rm -f "$(BUILD)/obj/mpr-openssl.o"
 	rm -f "$(BUILD)/obj/mpr-version.o"
 	rm -f "$(BUILD)/obj/mprLib.o"
-	rm -f "$(BUILD)/obj/openssl.o"
 	rm -f "$(BUILD)/obj/pcre.o"
 	rm -f "$(BUILD)/obj/sdb.o"
 	rm -f "$(BUILD)/obj/sqlite.o"
@@ -398,19 +398,29 @@ $(BUILD)/obj/mdb.o: \
 	$(CC) -c -o $(BUILD)/obj/mdb.o $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) "-I$(BUILD)/inc" "-I$(WIND_BASE)/target/h" "-I$(WIND_BASE)/target/h/wrn/coreip" "-I$(ME_COM_OPENSSL_PATH)/include" src/mdb.c
 
 #
+#   mpr-openssl.o
+#
+DEPS_26 += $(BUILD)/inc/mpr.h
+
+$(BUILD)/obj/mpr-openssl.o: \
+    src/mpr-openssl/mpr-openssl.c $(DEPS_26)
+	@echo '   [Compile] $(BUILD)/obj/mpr-openssl.o'
+	$(CC) -c -o $(BUILD)/obj/mpr-openssl.o $(CFLAGS) $(DFLAGS) "-I$(BUILD)/inc" "-I$(WIND_BASE)/target/h" "-I$(WIND_BASE)/target/h/wrn/coreip" src/mpr-openssl/mpr-openssl.c
+
+#
 #   mpr-version.h
 #
 
-src/mpr-version/mpr-version.h: $(DEPS_26)
+src/mpr-version/mpr-version.h: $(DEPS_27)
 
 #
 #   mpr-version.o
 #
-DEPS_27 += src/mpr-version/mpr-version.h
-DEPS_27 += $(BUILD)/inc/pcre.h
+DEPS_28 += src/mpr-version/mpr-version.h
+DEPS_28 += $(BUILD)/inc/pcre.h
 
 $(BUILD)/obj/mpr-version.o: \
-    src/mpr-version/mpr-version.c $(DEPS_27)
+    src/mpr-version/mpr-version.c $(DEPS_28)
 	@echo '   [Compile] $(BUILD)/obj/mpr-version.o'
 	$(CC) -c -o $(BUILD)/obj/mpr-version.o $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) "-I$(BUILD)/inc" "-I$(WIND_BASE)/target/h" "-I$(WIND_BASE)/target/h/wrn/coreip" "-I$(ME_COM_OPENSSL_PATH)/include" src/mpr-version/mpr-version.c
 
@@ -418,27 +428,17 @@ $(BUILD)/obj/mpr-version.o: \
 #   mpr.h
 #
 
-src/mpr/mpr.h: $(DEPS_28)
+src/mpr/mpr.h: $(DEPS_29)
 
 #
 #   mprLib.o
 #
-DEPS_29 += src/mpr/mpr.h
+DEPS_30 += src/mpr/mpr.h
 
 $(BUILD)/obj/mprLib.o: \
-    src/mpr/mprLib.c $(DEPS_29)
+    src/mpr/mprLib.c $(DEPS_30)
 	@echo '   [Compile] $(BUILD)/obj/mprLib.o'
 	$(CC) -c -o $(BUILD)/obj/mprLib.o $(CFLAGS) $(DFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) "-I$(BUILD)/inc" "-I$(WIND_BASE)/target/h" "-I$(WIND_BASE)/target/h/wrn/coreip" "-I$(ME_COM_OPENSSL_PATH)/include" src/mpr/mprLib.c
-
-#
-#   openssl.o
-#
-DEPS_30 += $(BUILD)/inc/mpr.h
-
-$(BUILD)/obj/openssl.o: \
-    src/mpr-openssl/openssl.c $(DEPS_30)
-	@echo '   [Compile] $(BUILD)/obj/openssl.o'
-	$(CC) -c -o $(BUILD)/obj/openssl.o $(CFLAGS) -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) "-I$(BUILD)/inc" "-I$(ME_COM_OPENSSL_PATH)/include" src/mpr-openssl/openssl.c
 
 #
 #   pcre.h
@@ -528,35 +528,27 @@ $(BUILD)/bin/libsql.out: $(DEPS_39)
 	$(CC) -r -o $(BUILD)/bin/libsql.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/sqlite3.o" $(LIBS) 
 endif
 
-ifeq ($(ME_COM_SSL),1)
 ifeq ($(ME_COM_OPENSSL),1)
 #
-#   openssl
+#   libmpr-openssl
 #
-DEPS_40 += $(BUILD)/obj/openssl.o
+DEPS_40 += $(BUILD)/obj/mpr-openssl.o
 
 $(BUILD)/bin/libmpr-openssl.a: $(DEPS_40)
 	@echo '      [Link] $(BUILD)/bin/libmpr-openssl.a'
-	ar -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/openssl.o"
-endif
+	ar -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
 endif
 
 #
 #   libmpr
 #
 DEPS_41 += $(BUILD)/inc/osdep.h
-ifeq ($(ME_COM_SSL),1)
 ifeq ($(ME_COM_OPENSSL),1)
     DEPS_41 += $(BUILD)/bin/libmpr-openssl.a
-endif
 endif
 DEPS_41 += $(BUILD)/inc/mpr.h
 DEPS_41 += $(BUILD)/obj/mprLib.o
 
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_41 += -lmpr-openssl
-    LIBPATHS_41 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
     LIBS_41 += -lssl
@@ -595,10 +587,6 @@ endif
 DEPS_43 += $(BUILD)/inc/http.h
 DEPS_43 += $(BUILD)/obj/httpLib.o
 
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_43 += -lmpr-openssl
-    LIBPATHS_43 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
     LIBS_43 += -lssl
@@ -653,10 +641,6 @@ DEPS_45 += $(BUILD)/obj/mdb.o
 DEPS_45 += $(BUILD)/obj/sdb.o
 
 ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_45 += -lmpr-openssl
-    LIBPATHS_45 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
     LIBS_45 += -lssl
     LIBPATHS_45 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -681,10 +665,6 @@ DEPS_46 += $(BUILD)/bin/libesp.out
 DEPS_46 += $(BUILD)/obj/esp.o
 
 ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_46 += -lmpr-openssl
-    LIBPATHS_46 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
     LIBS_46 += -lssl
     LIBPATHS_46 += -L"$(ME_COM_OPENSSL_PATH)"
@@ -706,10 +686,6 @@ ifeq ($(ME_COM_HTTP),1)
 DEPS_47 += $(BUILD)/bin/libhttp.out
 DEPS_47 += $(BUILD)/obj/http.o
 
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_47 += -lmpr-openssl
-    LIBPATHS_47 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
     LIBS_47 += -lssl
@@ -759,10 +735,6 @@ $(BUILD)/.install-certs-modified: $(DEPS_48)
 DEPS_49 += $(BUILD)/bin/libmpr.out
 DEPS_49 += $(BUILD)/obj/watchdog.o
 
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_49 += -lmpr-openssl
-    LIBPATHS_49 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
     LIBS_49 += -lssl

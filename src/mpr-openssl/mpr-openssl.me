@@ -1,12 +1,11 @@
 /*
-    openssl.me -- OpenSSL Component for the MPR
+    mpr-openssl.me -- OpenSSL Component for the MPR
  */
 
 Me.load({ 
     targets: {
         openssl: {
             description: 'OpenSSL Support',
-            libname: 'libmpr-openssl',
             config: function (target) {
                 if (me.options.gen) {
                     let result = {
@@ -14,7 +13,6 @@ Me.load({
                             Static configuration to work for standard installations under /usr/lib and /usr/include
                             and in a custom user directory.
                          */
-                        path: me.dir.bin.join(target.libname).joinExt(me.ext.lib),
                         includes: [ me.dir.inc ],
                         libraries: me.platform.os == 'windows' ? 
                             ([ 'gdi32', 'libeay32', 'ssleay32' ]) : ([ 'ssl', 'crypto' ]),
@@ -59,21 +57,35 @@ Me.load({
                 includes.push(me.dir.inc)
                 return {
                     location:   path,
-                    path:       me.dir.bin.join(target.libname).joinExt(me.ext.lib),
                     imports:    imports,
                     includes:   includes,
                     libpaths:   libpaths,
                     libraries,  libraries,
                 }
             },
+
             ifdef:     [ 'ssl' ],
-            conflicts: [ 'est', 'matrixssl', 'nanossl' ],
-            type: 'lib',
-            static: true,
-            sources: [ '*.c' ],
+            conflicts: [ 'mbedtls', 'matrixssl', 'nanossl' ],
+            depends:   [ 'libmpr-openssl' ],
+        },
+
+        'libmpr-openssl': {
+            description:  'MPR OpenSSL Interface',
+            type:         'lib',
+            static:       true,
+            path:         '${BIN}/libmpr-openssl${ARLIB}',
+            ifdef:        [ 'openssl' ],
+            sources:      [ '*.c' ],
             postresolve: `
+                let target = me.target
+                let openssl = me.targets.openssl
+
+                target.includes += openssl.includes
+                target.libpaths += openssl.libpaths
+                target.libraries += openssl.libraries
+
                 if (me.platform.os == 'macosx') {
-                    me.target.compiler.push('-Wno-deprecated-declarations')
+                    target.compiler.push('-Wno-deprecated-declarations')
                 }
                 /*
                     If OpenSSL is built with compression (bad idea), it will require zlib

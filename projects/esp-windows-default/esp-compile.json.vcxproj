@@ -91,6 +91,9 @@
         <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\esp-compile.json\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PreBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
+    <PropertyGroup>
+        <TargetName>esp-compile</TargetName>
+    </PropertyGroup>
 
       <ItemDefinitionGroup>
       <Link>
