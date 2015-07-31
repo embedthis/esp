@@ -88,7 +88,7 @@ static void semVerInit()
             semVer = srcompile(SEM_VER);
             semCriteria = srcompile(SEM_CRITERIA);
             semExpr = srcompile(SEM_EXPR);
-            mprAddTerminator(versionTerminate);
+            mprAddTerminator((MprTerminator) versionTerminate);
         }
         mprGlobalUnlock();
     }

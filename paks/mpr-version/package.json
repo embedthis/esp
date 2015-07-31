@@ -2,7 +2,7 @@
     "name": "mpr-version",
     "title": "SemVer Management",
     "description": "SemVer Version Management the MPR",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "keywords": [
         "me",
         "ssl",
