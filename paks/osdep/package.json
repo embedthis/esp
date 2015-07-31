@@ -32,8 +32,10 @@
         "dist/",
         "doc/api/"
     ],
+    "devDependencies": {
+        "pak": ">=0.11.3"
+    },
     "pak": {
-        "version": ">=0.10.0",
         "origin": "embedthis/osdep"
     }
 }
