@@ -1192,7 +1192,7 @@ static void markAndSweep()
     static int warnOnce = 0;
 
     if (!pauseThreads()) {
-        if (!pauseGC && warnOnce == 0 && !mprGetDebugMode()) {
+        if (!pauseGC && warnOnce == 0 && !mprGetDebugMode() && !mprIsStopping()) {
             warnOnce++;
             mprLog("error mpr memory", 6, "GC synchronization timed out, some threads did not yield.");
             mprLog("error mpr memory", 6, "This can be caused by a thread doing a long running operation and not first calling mprYield.");
