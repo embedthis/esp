@@ -95,37 +95,6 @@
         <TargetName></TargetName>
     </PropertyGroup>
 
-      <ItemDefinitionGroup>
-      <Link>
-        <AdditionalDependencies>;%(AdditionalDependencies)</AdditionalDependencies>
-        <AdditionalLibraryDirectories>$(OutDir);;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      </Link>
-
-      <CustomBuildStep>
-        <Command>cd ..\..\src\certs
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\ca.crt $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\ca.key $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\ec.crt $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\ec.key $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\roots.crt $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\self.crt $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\self.key $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\test.crt $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y samples\test.key $(BinDir)
-cd ..\..\projects\esp-windows-default</Command>
-        <Outputs>$(BinDir)</Outputs>
-      </CustomBuildStep>
-  </ItemDefinitionGroup>
-
   <Import Project="$(VCTargetsPath)Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -95,21 +95,6 @@
         <TargetName>esp-compile</TargetName>
     </PropertyGroup>
 
-      <ItemDefinitionGroup>
-      <Link>
-        <AdditionalDependencies>;%(AdditionalDependencies)</AdditionalDependencies>
-        <AdditionalLibraryDirectories>$(OutDir);;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      </Link>
-
-      <CustomBuildStep>
-        <Command>cd ..\..\src
-if exist $(BinDir)\esp-compile.json del /Q $(BinDir)\esp-compile.json
-copy /Y esp-compile.json $(BinDir)\esp-compile.json
-cd ..\projects\esp-windows-default</Command>
-        <Outputs>$(BinDir)\esp-compile.json</Outputs>
-      </CustomBuildStep>
-  </ItemDefinitionGroup>
-
   <Import Project="$(VCTargetsPath)Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
