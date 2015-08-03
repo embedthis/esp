@@ -111,6 +111,8 @@
   </ItemGroup>
 
       <ItemDefinitionGroup>
+        
+
       <Link>
         <AdditionalDependencies>libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

@@ -112,6 +112,8 @@
   </ItemGroup>
 
       <ItemDefinitionGroup>
+        
+
       <Link>
         <AdditionalDependencies>;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
