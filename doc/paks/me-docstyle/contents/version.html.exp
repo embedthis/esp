@@ -1,0 +1,15 @@
+{
+    title:  "Version",
+    layout: null,
+    crumbs: []
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><@= meta.title @></title>
+    <@ partial('head') @>
+</head>
+<body class="version">v<@= Path('../package.json').readJSON().version @></body>
+</html>
+
