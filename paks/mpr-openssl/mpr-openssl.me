@@ -45,8 +45,9 @@ Me.load({
 
                 } else {
                     let opt = {fullpath: true, search: search, nopath: true}
-                    lib = probe('libcrypto.' + me.ext.lib, blend({nothrow: true}, opt)) ||
-                          probe('libcrypto.' + me.ext.shobj, opt)
+                    /* Prefer shobj as libssl.a is not built with PIC */
+                    lib = probe('libcrypto.' + me.ext.shobj, blend({nothrow: true}, opt)) ||
+                          probe('libcrypto.' + me.ext.lib, opt)
                     path = lib.dirname
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
