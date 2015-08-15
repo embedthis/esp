@@ -45,14 +45,21 @@ Me.load({
 
                 } else {
                     let opt = {fullpath: true, search: search, nopath: true}
-                    /* Prefer shobj as libssl.a is not built with PIC */
-                    lib = probe('libcrypto.' + me.ext.shobj, blend({nothrow: true}, opt)) ||
-                          probe('libcrypto.' + me.ext.lib, opt)
+                    lib = probe('libcrypto.' + me.ext.lib, blend({nothrow: true}, opt)) ||
+                          probe('libcrypto.' + me.ext.shobj, opt)
+                    /*
+                        On linux, the standard OpenSSL builds libssl.a without PIC, so pick libssl.so
+                     */
+                    if (me.platform.os == 'linux' && lib.extension == 'a' &&
+                            (lib.startsWith('/usr/lib') || lib.startsWith('/lib'))) {
+                        lib = probe('libcrypto.' + me.ext.shobj, blend({nothrow: true}, opt)) ||
+                              probe('libcrypto.' + me.ext.lib, opt)
+                    }
                     path = lib.dirname
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
                     let ext = lib.extension
-                    imports = lib.parent.files('libssl*.' + ext + '*') + lib.parent.files('libcrypto*.' + ext + '*')
+                    imports = lib.parent.files('libssl.' + ext + '*') + lib.parent.files('libcrypto.' + ext + '*')
                     includes = [ probe('openssl/ssl.h', {search: [ path.join('include'), '/usr/include']}) ]
                 }
                 includes.push(me.dir.inc)
