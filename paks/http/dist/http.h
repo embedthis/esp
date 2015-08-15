@@ -5174,7 +5174,7 @@ PUBLIC cchar *httpGetRouteMethods(HttpRoute *route);
 /**
     Get a URL path to the top of the route from the current request (rx->pathInfo)
     @param conn Current connection object
-    @return A relative URL path to the top of the route.
+    @return A relative URL path to the top of the route. This URL does not contain a trailing "/"
     @ingroup HttpRoute
     @stability Prototype
  */

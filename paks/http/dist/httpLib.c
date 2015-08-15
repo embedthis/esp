@@ -8670,8 +8670,7 @@ static void readyFileHandler(HttpQueue *q)
 
 
 /*  
-    Populate a packet with file data. Return the number of bytes read or a negative error code. Will not return with
-    a short read.
+    Populate a packet with file data. Return the number of bytes read or a negative error code. 
  */
 static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize size)
 {
@@ -8685,7 +8684,9 @@ static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize si
     if (packet->content == 0 && (packet->content = mprCreateBuf(size, -1)) == 0) {
         return MPR_ERR_MEMORY;
     }
-    assert(size <= mprGetBufSpace(packet->content));    
+    if (mprGetBufSpace(packet->content) < size) {
+        size = mprGetBufSpace(packet->content);
+    }
     if (pos >= 0) {
         mprSeekFile(tx->file, SEEK_SET, pos);
     }
@@ -8736,7 +8737,7 @@ static int prepPacket(HttpQueue *q, HttpPacket *packet)
         }
         return 0;
     }
-    if ((nbytes = readFileData(q, packet, q->ioPos, size)) != size) {
+    if ((nbytes = readFileData(q, packet, q->ioPos, size)) < 0) {
         return MPR_ERR_CANT_READ;
     }
     q->ioPos += nbytes;
@@ -19043,6 +19044,7 @@ static void manageTrace(HttpTrace *trace, int flags)
         mprMark(trace->path);
         mprMark(trace->events);
         mprMark(trace->mutex);
+        mprMark(trace->parent);
     }
 }
 
