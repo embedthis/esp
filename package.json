@@ -2,7 +2,7 @@
     "name": "esp",
     "description": "Embedthis ESP, the amazingly fast C-Language web framework",
     "title": "Embedthis ESP",
-    "version": "6.0.2",
+    "version": "6.0.3",
     "keywords": [
         "esp",
         "package"
