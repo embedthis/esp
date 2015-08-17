@@ -14,13 +14,6 @@ Third Party Licenses
 
 The Software contains third party software under the agreements that follow.
 
-### EST License
-
-The optional EST SSL stack includes code from TropicSSL.
-
-TropicSSL - [BSD License](http://opensource.org/licenses/BSD-2-Clause
-
-
 ### Perl Regular Expressions License
 
 PCRE - [BSD License](http://opensource.org/licenses/BSD-2-Clause)
