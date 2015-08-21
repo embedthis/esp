@@ -572,7 +572,9 @@ apps: [
                     </tr>
                     <tr>
                         <td>attach</td>
-                        <td>List of listen endpoints on which to attach a virtual host.
+                        <td>
+                        <a name="attach"></a>
+                        List of listen endpoints on which to attach a virtual host.
                         For example:
 <code class="inverted">attach: [
     '*:80',
@@ -701,7 +703,7 @@ compress: [ 'html', 'js', 'css' ]
 
                         <p>Each virtual host may include other directives to customize the configuration and routes for that
                         specific host. Each host may nominate the specific listen endpoints for the host via the
-                        <a href="attach">attach</a> property. Without an attach property, the virtual host will attach
+                        <a href="#attach">attach</a> property. Without an attach property, the virtual host will attach
                         to all listening endpoints.</p>
 
                         <p>Example:</p>
