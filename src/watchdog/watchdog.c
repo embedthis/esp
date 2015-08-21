@@ -779,7 +779,7 @@ typedef struct App {
     cchar        *serviceHome;       /* Service home */
     cchar        *serviceName;       /* Service name */
     char         *serviceProgram;    /* Program to run */
-    int          servicePid;         /* Process ID for the service */
+    HANDLE       servicePid;         /* Process ID for the service */
     cchar        *serviceTitle;      /* Application title */
     HANDLE       serviceThreadEvent; /* Service event to block on */
     int          serviceStopped;     /* Service stopped */
@@ -1149,20 +1149,20 @@ static void run()
             if (! CreateProcess(0, cmd, 0, 0, FALSE, createFlags, 0, app->serviceHome, &startInfo, &procInfo)) {
                 mprLog("error watchdog", 0, "Cannot create process: %s, %d", cmd, mprGetOsError());
             } else {
-                app->servicePid = (int) procInfo.hProcess;
+                app->servicePid = procInfo.hProcess;
             }
             app->restartCount++;
         }
         WaitForSingleObject(app->heartBeatEvent, app->heartBeatPeriod);
 
         if (app->servicePid) {
-            if (GetExitCodeProcess((HANDLE) app->servicePid, (ulong*) &status)) {
+            if (GetExitCodeProcess(app->servicePid, (ulong*) &status)) {
                 if (status != STILL_ACTIVE) {
-                    CloseHandle((HANDLE) app->servicePid);
+                    CloseHandle(app->servicePid);
                     app->servicePid = 0;
                 }
             } else {
-                CloseHandle((HANDLE) app->servicePid);
+                CloseHandle(app->servicePid);
                 app->servicePid = 0;
             }
         }

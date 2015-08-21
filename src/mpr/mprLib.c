@@ -6869,11 +6869,11 @@ static int makeChannel(MprCmd *cmd, int index)
         mprLog("error mpr cmd", 0, "Cannot create stdio pipes %s. Err %d", pipeName, mprGetOsError());
         return MPR_ERR_CANT_CREATE;
     }
-    readFd = (int) (int64) _open_osfhandle((long) readHandle, 0);
+    readFd = _open_osfhandle((intptr_t) readHandle, 0);
 
     att = (index == MPR_CMD_STDIN) ? &serverAtt: &clientAtt;
     writeHandle = CreateFile(wide(pipeName), GENERIC_WRITE, 0, att, OPEN_EXISTING, openMode, 0);
-    writeFd = (int) _open_osfhandle((long) writeHandle, 0);
+    writeFd = _open_osfhandle((intptr_t) writeHandle, 0);
 
     if (readFd < 0 || writeFd < 0) {
         mprLog("error mpr cmd", 0, "Cannot create stdio pipes %s. Err %d", pipeName, mprGetOsError());
@@ -29812,9 +29812,9 @@ PUBLIC void mprStopOsService()
 }
 
 
-PUBLIC long mprGetInst()
+PUBLIC HINSTANCE mprGetInst()
 {
-    return (long) MPR->appInstance;
+    return MPR->appInstance;
 }
 
 

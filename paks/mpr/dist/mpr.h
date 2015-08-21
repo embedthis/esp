@@ -10446,9 +10446,9 @@ PUBLIC HWND mprGetHwnd();
     Get the windows application instance
     @return The application instance identifier
     @ingroup Mpr
-    @stability Stable.
+    @stability Evolving.
  */
-PUBLIC long mprGetInst();
+PUBLIC HINSTANCE mprGetInst();
 
 /**
     Set the MPR windows handle
