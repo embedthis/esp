@@ -1,7 +1,7 @@
 {
     "name": "exp-less",
     "description": "Lessc Plugin for Expansive",
-    "version": "0.2.1",
+    "version": "0.2.4",
     "keywords": [
         "expansive-plugin",
         "less"
@@ -11,13 +11,15 @@
         "type": "git",
         "url": "git://github.com/embedthis/exp-less.git"
     },
-    "scripts": {
-        "postcache": {
-            "script": "Cmd.locate('lessc') || run('npm install -g less')"
-        }
+    "devDependencies": {
+        "pak": ">=0.11.3"
     },
     "pak": {
-        "version": ">=0.10.0",
+        "scripts": {
+            "postcache": {
+                "script": "if (!Cmd.locate('lessc')) { if (!Cmd.locate('npm')) { throw 'Cannot locate the \"npm\" utility.' } else { run('npm install -g less')}}"
+            }
+        },
         "origin": "embedthis/exp-less"
     }
 }

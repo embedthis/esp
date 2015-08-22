@@ -1,7 +1,7 @@
 {
     "name": "exp-reload",
     "description": "Live browser reload plugin for Expansive",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "keywords": [
         "expansive-plugin",
         "reload"
@@ -11,6 +11,9 @@
         "type": "git",
         "url": "git://github.com/embedthis/exp-reload.git"
     },
+    "devDependencies": {
+        "pak": ">=0.11.3"
+    },
     "pak": {
         "export": {
             "from": [
@@ -18,7 +21,6 @@
             ],
             "to": "${TOP}"
         },
-        "version": ">=0.10",
         "origin": "embedthis/exp-reload"
     }
 }

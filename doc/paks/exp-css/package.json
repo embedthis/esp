@@ -1,7 +1,7 @@
 {
     "name": "exp-css",
-    "description": "Css Plugin for Expansive",
-    "version": "0.2.2",
+    "description": "CSS Plugin for Expansive",
+    "version": "0.2.4",
     "keywords": [
         "expansive-plugin",
         "css"
@@ -11,21 +11,21 @@
         "type": "git",
         "url": "git://github.com/embedthis/exp-css.git"
     },
-    "scripts": {
-        "postcache": [
-            {
-                "script": "Cmd.locate('autoprefixer') || run('npm install -g autoprefixer')"
-            },
-            {
-                "script": "Cmd.locate('less') || run('npm install -g less')"
-            }
-        ]
-    },
     "devDependencies": {
-        "expansive": ">=0.5.5"
+        "expansive": ">=0.5.5",
+        "pak": ">=0.11.3"
     },
     "pak": {
-        "version": ">=0.10",
+        "scripts": {
+            "postcache": [
+                {
+                    "script": "npm('install -g', 'autoprefixer')"
+                },
+                {
+                    "script": "npm('install -g', 'less')"
+                }
+            ]
+        },
         "origin": "embedthis/exp-css"
     }
 }

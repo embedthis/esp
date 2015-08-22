@@ -30,14 +30,16 @@ Expansive.load({
                     collections.styles ||= []
                     collections.styles.push(stylesheet)
                 }
-                for each (file in expansive.directories.contents.files(['**.less', '!**.css.less'])) {
-                    expansive.skip(file)
+                for each (let dir: Path in control.documents) {
+                    for each (file in dir.files(['**.less', '!**.css.less'])) {
+                        expansive.skip(file)
+                    }
                 }
             }
 
             function transform(contents, meta, service) {
                 if (!meta.source.glob('**.css.less')) {
-                    vtrace('Info', 'Skip included css file', meta.source)
+                    vtrace('Info', 'Skip included less file', meta.source)
                     expansive.skip(meta.source)
                     return null
                 }
@@ -75,6 +77,7 @@ Expansive.load({
         mappings: 'css',
         enable:   false,
         script: `
+/* UNUSED
             function transform(contents, meta, service) {
                 let lservice = expansive.services['compile-less-css']
                 for each (stylesheet in lservice.stylesheets) {
@@ -85,6 +88,18 @@ Expansive.load({
                     }
                 }
                 return contents
+            }
+*/
+            let lservice = expansive.services['compile-less-css']
+            let service = expansive.services['clean-css']
+            for each (let dir: Path in expansive.control.documents) {
+                for each (file in dir.files(service.files)) {
+                    for each (stylesheet in lservice.stylesheets) {
+                        if (file != stylesheet) {
+                            expansive.skip(file)
+                        }
+                    }
+                }
             }
         `
     }]

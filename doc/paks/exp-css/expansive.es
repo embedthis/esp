@@ -103,7 +103,7 @@ Expansive.load({
                 }
                 collections.styles = styles + (collections.styles || [])
                 if (expansive.options.debug) {
-                    print("EXP_CSS", "usemap", service.usemap, "usemin", service.usemin, "minify", service.minify)
+                    print("EXP_CSS", "usemap=", service.usemap, "usemin=", service.usemin, "minify=", service.minify)
                     dump("EXP-CSS HASH", service.hash)
                     dump("EXP-CSS COLLECTIONS", collections)
                 }

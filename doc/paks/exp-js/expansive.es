@@ -89,7 +89,7 @@ Expansive.load({
                 }
                 collections.scripts = scripts + (collections.scripts || [])
                 if (expansive.options.debug) {
-                    print("EXP_JS", "usemap", service.usemap, "usemin", service.usemin, "minify", service.minify)
+                    print("EXP_JS", "usemap=", service.usemap, "usemin=", service.usemin, "minify=", service.minify)
                     dump("EXP-JS HASH", service.hash)
                     dump("EXP-JS COLLECTIONS", collections)
                 }
