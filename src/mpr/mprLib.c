@@ -6798,10 +6798,10 @@ static int startProcess(MprCmd *cmd)
     }
     if (cmd->flags & MPR_CMD_OUT) {
         if (cmd->files[MPR_CMD_STDOUT].clientFd > 0) {
-            startInfo.hStdOutput = (HANDLE)_get_osfhandle(cmd->files[MPR_CMD_STDOUT].clientFd);
+            startInfo.hStdOutput = (HANDLE) _get_osfhandle(cmd->files[MPR_CMD_STDOUT].clientFd);
         }
     } else {
-        startInfo.hStdOutput = (HANDLE)_get_osfhandle((int) fileno(stdout));
+        startInfo.hStdOutput = (HANDLE) _get_osfhandle((int) fileno(stdout));
     }
     if (cmd->flags & MPR_CMD_ERR) {
         if (cmd->files[MPR_CMD_STDERR].clientFd > 0) {
