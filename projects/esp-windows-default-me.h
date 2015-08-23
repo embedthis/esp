@@ -265,6 +265,3 @@
 #ifndef ME_COM_VXWORKS
     #define ME_COM_VXWORKS 0
 #endif
-#ifndef ME_COM_WINSDK
-    #define ME_COM_WINSDK 1
-#endif

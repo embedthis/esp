@@ -284,8 +284,5 @@
     #define ME_COM_SSL 1
 #endif
 #ifndef ME_COM_VXWORKS
-    #define ME_COM_VXWORKS 1
-#endif
-#ifndef ME_COM_WINSDK
-    #define ME_COM_WINSDK 1
+    #define ME_COM_VXWORKS 0
 #endif
