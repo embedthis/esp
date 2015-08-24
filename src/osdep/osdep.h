@@ -1044,7 +1044,6 @@ typedef int64 Ticks;
 #endif
 
 #if VXWORKS
-    #define getpid mprGetPid
     #ifndef SHUT_RDWR
         #define SHUT_RDWR 2
     #endif

@@ -10511,6 +10511,9 @@ PUBLIC int mprWriteRegistry(cchar *key, cchar *name, cchar *value);
 #if VXWORKS
 PUBLIC int mprFindVxSym(SYMTAB_ID sid, char *name, char **pvalue);
 PUBLIC pid_t mprGetPid();
+#ifndef getpid
+    #define getpid mprGetPid
+#endif
 #endif
 
 /*
