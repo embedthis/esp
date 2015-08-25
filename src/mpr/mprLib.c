@@ -24084,7 +24084,7 @@ PUBLIC char *itosbuf(char *buf, ssize size, int64 value, int radix)
     }
     if (buf < cp) {
         /* Move the null too */
-        memmove(buf, cp, end - cp + 1);
+        memmove(buf, cp, end - cp);
     }
     return buf;
 }
