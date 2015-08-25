@@ -3430,7 +3430,10 @@ PUBLIC HttpConn *httpRequest(cchar *method, cchar *uri, cchar *data, char **err)
     if (data) {
         len = slen(data);
         if (httpWriteBlock(conn->writeq, data, len, HTTP_BLOCK) != len) {
+            mprRemoveRoot(conn);
+            httpDestroyConn(conn);
             *err = sclone("Cannot write request body data");
+            return 0;
         }
     }
     httpFinalizeOutput(conn);
@@ -6145,14 +6148,10 @@ static void readPeerData(HttpConn *conn)
                 conn->error = 1;
                 conn->rx->eof = 1;
             }
-            conn->errorMsg = conn->sock->errorMsg;
+            conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Connection reset");
             conn->keepAliveCount = 0;
             conn->lastRead = 0;
-            if (conn->errorMsg) {
-                httpTrace(conn, "connection.close", "context", "msg:'%s'", conn->errorMsg);
-            } else {
-                httpTrace(conn, "connection.close", "context", NULL);
-            }
+            httpTrace(conn, "connection.close", "context", "msg:'%s'", conn->errorMsg);
         }
     }
 }
@@ -14561,6 +14560,11 @@ PUBLIC void httpFinalizeRoute(HttpRoute *route)
     if (mprGetListLength(route->indexes) == 0) {
         mprAddItem(route->indexes,  sclone("index.html"));
     }
+#if UNUSED
+    if (!mprLookupKey(route->extensions, "")) {
+        httpAddRouteHandler(route, "fileHandler", "");
+    }
+#endif
     httpAddRoute(route->host, route);
 }
 
