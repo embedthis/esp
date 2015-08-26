@@ -13,7 +13,7 @@
       </ItemDefinitionGroup>
 
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{d29d8e9c-6826-4672-a522-e44e75b854fc}</ProjectGuid>
+        <ProjectGuid>{86d9d2b3-4e11-4593-a61b-1a19b4828799}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -154,7 +154,7 @@ cd ..\projects\esp-windows-default</Command>
 
     <ItemGroup>
       <ProjectReference Include="libmpr-version.vcxproj">
-      <Project>d3036cd1-0de4-4cd6-99b6-60c0dcb1ae69</Project>
+      <Project>5099d9da-d9c4-4f5b-a06f-25b8607b20d8</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       </ProjectReference>
     </ItemGroup>
