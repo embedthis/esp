@@ -1656,9 +1656,15 @@ PUBLIC bool httpGetCredentials(HttpConn *conn, cchar **username, cchar **passwor
     *username = *password = NULL;
 
     auth = conn->rx->route->auth;
+    if (!auth || !auth->type) {
+        return 0;
+    }
     if (auth->type) {
         if (conn->authType && !smatch(conn->authType, auth->type->name)) {
-            return 0;
+            if (!(smatch(auth->type->name, "form") && conn->rx->flags & HTTP_POST)) {
+                /* If a posted form authentication, ignore any basic|digest details in request */
+                return 0;
+            }
         }
         if (auth->type->parseAuth && (auth->type->parseAuth)(conn, username, password) < 0) {
             return 0;
