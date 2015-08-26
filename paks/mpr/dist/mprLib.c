@@ -1603,8 +1603,10 @@ static void relayInside(void *data, struct MprEvent *event)
     OutsideEvent    *op;
 
     op = data;
-    mprResumeGC();
 
+    if (event->flags & MPR_EVENT_BLOCK) {
+        mprResumeGC();
+    }
     /*
         GC is now enabled, but shutdown is paused because this thread means !idle
         However, normal graceful shutdown timeouts apply and this is now just an ordinary event.
