@@ -31,9 +31,10 @@ Me.load({
             },
         },
 
-        'esp-compile.json': {
+        extras: {
             type: 'file',
-            files: [ 'esp-compile.json' ],
+            files: [ 'esp-compile.json', 'vcvars.bat' ],
+            path: '${BIN}/',
         }
     }
 })

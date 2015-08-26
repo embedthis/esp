@@ -46,7 +46,7 @@
                 }
             },
             env: {
-                VisualStudio: {
+                OldVisualStudio: {
                     x64: {
                         lib: '${WINSDK}\\LIB\\${WINVER}\\um\\x64;${WINSDK}\\LIB\\x64;${VS}\\VC\\lib\\amd64',
                         path: '${VS}\\Common7\\IDE;${VS}\\VC\\bin\\amd64;${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin\\x64'
@@ -64,7 +64,7 @@
                         path: '${VS}\\Common7\\IDE;${VS}\\VC\\bin;${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin'
                     },
                     default: {
-                        include: '${VS}\\VC\\INCLUDE;${WINSDK}\\include;${WINSDK}\\include\\um;${WINSDK}\\include\\shared'
+                        include: '${VS}\\VC\\INCLUDE;${WINSDK}\\include\\10.0.10150.0\\ucrt;${WINSDK}\\include\\um;${WINSDK}\\include\\shared'
                     }
                 }
             }

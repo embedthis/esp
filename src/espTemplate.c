@@ -1240,6 +1240,7 @@ static cchar *getWinSDK(HttpRoute *route)
     }
     mprLog("info esp", 5, "Using Windows SDK at %s", path);
     eroute->winsdk = strim(path, "\\", MPR_TRIM_END);
+print("WINSDK %s", eroute->winsdk);
     return eroute->winsdk;
 #else
     return "";
@@ -1267,7 +1268,11 @@ static cchar *getVisualStudio()
 #if WINDOWS
     cchar   *path;
     int     v;
-    /* VS 2013 == 12.0 */
+
+    if ((path = getenv("VSINSTALLDIR")) != 0) {
+        return path;
+    }
+    /* VS 2015 == 14.0 */
     for (v = 16; v >= 8; v--) {
         if ((path = mprReadRegistry(ESP_VSKEY, sfmt("%d.0", v))) != 0) {
             path = strim(path, "\\", MPR_TRIM_END);

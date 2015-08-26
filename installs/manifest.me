@@ -79,7 +79,7 @@ Me.load({
                     },
 
                 }, {
-                    from:       'esp-compile.json',
+                    from:       [ 'esp-compile.json', 'vcvars.bat' ],
                     to:         '${abin}/',
                 }
             ],
@@ -224,8 +224,8 @@ Me.load({
                     to:         '${src}/dist/esp.c',
 
                 }, {
-                    from:       '${TOP}/src/esp-compile.json', 
-                    to:         '${src}/dist/esp-compile.json',
+                    from:       [ '${TOP}/src/esp-compile.json', '${TOP}/src/vcvars.bat' ], 
+                    to:         '${src}/dist',
 
                 }, {
                     home:       '${TOP}',

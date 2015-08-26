@@ -2581,6 +2581,7 @@ PUBLIC void scripts(cchar *patterns)
 
 #define ITERATE_CONFIG(route, obj, child, index) \
     index = 0, child = obj ? obj->children: 0; obj && index < obj->length && !route->error; child = child->next, index++
+static void defineEnv(HttpRoute *route, cchar *key, cchar *value);
 
 /************************************** Code **********************************/
 
@@ -2659,51 +2660,83 @@ static void parseCombine(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-#if KEEP
-/*
-    Define Visual Studio environment if not already present
- */
-static void defineVisualStudioEnv(HttpRoute *route)
+#if ME_WIN_LIKE
+
+static cchar *getVisualStudio()
 {
-    Http    *http;
-    int     is64BitSystem;
+    cchar   *path;
+    int     v;
 
-    http = MPR->httpService;
-    if (scontains(getenv("LIB"), "Visual Studio") &&
-        scontains(getenv("INCLUDE"), "Visual Studio") &&
-        scontains(getenv("PATH"), "Visual Studio")) {
-        return;
+    if ((path = getenv("VSINSTALLDIR")) != 0) {
+        return path;
     }
-    if (scontains(http->platform, "-x64-")) {
-        is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
-        defineEnv(route, "LIB", "${WINSDK}\\LIB\\${WINVER}\\um\\x64;${WINSDK}\\LIB\\x64;${VS}\\VC\\lib\\amd64");
-        if (is64BitSystem) {
-            defineEnv(route, "PATH",
-                "${VS}\\Common7\\IDE;${VS}\\VC\\bin\\amd64;${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;"
-                "${VS}\\VC\\VCPackages;${WINSDK}\\bin\\x64");
-
-        } else {
-            /* Cross building on x86 for 64-bit */
-            defineEnv(route, "PATH",
-                "${VS}\\Common7\\IDE;${VS}\\VC\\bin\\x86_amd64;"
-                "${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin\\x86");
+    /* VS 2015 == 14.0 */
+    for (v = 16; v >= 8; v--) {
+        if ((path = mprReadRegistry(ESP_VSKEY, sfmt("%d.0", v))) != 0) {
+            path = strim(path, "\\", MPR_TRIM_END);
+            break;
         }
+    }
+    if (!path) {
+        path = "${VS}";
+    }
+    return path;
+}
 
-    } else if (scontains(http->platform, "-arm-")) {
-        /* Cross building on x86 for arm. No winsdk 7 support for arm */
-        defineEnv(route, "LIB", "${WINSDK}\\LIB\\${WINVER}\\um\\arm;${VS}\\VC\\lib\\arm");
-        defineEnv(route, "PATH", "${VS}\\Common7\\IDE;${VS}\\VC\\bin\\x86_arm;${VS}\\Common7\\Tools;"
-            "${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin\\arm");
+
+PUBLIC int getVisualStudioEnv(HttpRoute *route)
+{
+    EspRoute    *eroute;
+    char        *error, *output, *next, *line, *key, *value;
+    cchar       *arch, *cpu, *command, *vs;
+
+    eroute = route->eroute;
+
+    /*
+        Get the real system architecture, not whether this app is 32 or 64 bit.
+        On native 64 bit systems, PA is amd64 for 64 bit apps and is PAW6432 is amd64 for 32 bit apps 
+     */
+    if (smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432")) {
+        cpu = "x64";
+    } else {
+        cpu = "x86";
+    }
+    httpParsePlatform(HTTP->platform, NULL, &arch, NULL);
+    if (smatch(arch, "x64")) {
+        arch = smatch(cpu, "x86") ? "x86_amd64" : "amd64";
+
+    } else if (smatch(arch, "x86")) {
+        arch = smatch(cpu, "x64") ? "amd64_x86" : "x86";
+
+    } else if (smatch(arch, "arm")) {
+        arch = smatch(cpu, "x86") ? "x86_arm" : "amd64_arm";
 
     } else {
-        /* Building for X86 */
-        defineEnv(route, "LIB", "${WINSDK}\\LIB\\${WINVER}\\um\\x86;${WINSDK}\\LIB\\x86;"
-            "${WINSDK}\\LIB;${VS}\\VC\\lib");
-        defineEnv(route, "PATH", "${VS}\\Common7\\IDE;${VS}\\VC\\bin;${VS}\\Common7\\Tools;"
-            "${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin");
+        mprLog("error esp", 0, "Unsupported architecture %s", arch);
+        return MPR_ERR_CANT_FIND;
     }
-    defineEnv(route, "INCLUDE", "${VS}\\VC\\INCLUDE;${WINSDK}\\include;${WINSDK}\\include\\um;"
-        "${WINSDK}\\include\\shared");
+
+    vs = getVisualStudio();
+    command = sfmt("\"%s\\vcvars.bat\" \"%s\" %s", mprGetAppDir(), mprJoinPath(vs, "VC/vcvarsall.bat"), arch);
+    if (mprRun(NULL, command, 0, &output, &error, -1) < 0) {
+        mprLog("error esp", 0, "Cannot run command: %s, error %s", command, error);
+        return MPR_ERR_CANT_READ;
+    }
+
+    next = output;
+    while ((line = stok(next, "\r\n", &next)) != 0) {
+        key = stok(line, "=", &value);
+        if (scaselessmatch(key, "LIB") ||
+            scaselessmatch(key, "INCLUDE") ||
+            scaselessmatch(key, "PATH") ||
+            scaselessmatch(key, "VSINSTALLDIR") ||
+            scaselessmatch(key, "WindowsSdkDir") ||
+            scaselessmatch(key, "WindowsSdkLibVersion")) {
+            mprLog("info esp", 5, "define env %s %s", key, value);
+            defineEnv(route, key, value);
+        }
+    }
+    return 0;
 }
 #endif
 
@@ -2720,9 +2753,12 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
         httpParsePlatform(HTTP->platform, NULL, &arch, NULL);
 #if ME_WIN_LIKE
         if (smatch(value, "VisualStudio")) {
-            if (scontains(getenv("LIB"), "Visual Studio") &&
-                scontains(getenv("INCLUDE"), "Visual Studio") &&
-                scontains(getenv("PATH"), "Visual Studio")) {
+            /*
+                Already set in users environment
+             */
+            if (scontains(getenv("LIB"), "Microsoft Visual Studio") &&
+                scontains(getenv("INCLUDE"), "Microsoft Visual Studio") &&
+                scontains(getenv("PATH"), "Microsoft Visual Studio")) {
                 return;
             }
         }
@@ -2731,16 +2767,17 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
             /* Cross 64 */
             arch = sjoin(arch, "-cross", NULL);
         }
+        /*
+            By default, we use vsinstallvars.bat. However user's can override by defining their own
+         */
+        getVisualStudioEnv(route);
 #endif
         if ((set = mprGetJsonObj(route->config, sfmt("esp.build.env.%s.default", value))) != 0) {
             for (ITERATE_CONFIG(route, set, child, ji)) {
                 defineEnv(route, child->name, child->value);
             }
         }
-        if ((set = mprGetJsonObj(route->config, sfmt("esp.build.env.%s.%s", value, arch))) == 0) {
-            httpParseError(route, "Cannnot find environment set %s.%s", value, arch);
-            return;
-        } else {
+        if ((set = mprGetJsonObj(route->config, sfmt("esp.build.env.%s.%s", value, arch))) != 0) {
             for (ITERATE_CONFIG(route, set, child, ji)) {
                 defineEnv(route, child->name, child->value);
             }
@@ -6758,6 +6795,7 @@ static cchar *getWinSDK(HttpRoute *route)
     }
     mprLog("info esp", 5, "Using Windows SDK at %s", path);
     eroute->winsdk = strim(path, "\\", MPR_TRIM_END);
+print("WINSDK %s", eroute->winsdk);
     return eroute->winsdk;
 #else
     return "";
@@ -6785,7 +6823,11 @@ static cchar *getVisualStudio()
 #if WINDOWS
     cchar   *path;
     int     v;
-    /* VS 2013 == 12.0 */
+
+    if ((path = getenv("VSINSTALLDIR")) != 0) {
+        return path;
+    }
+    /* VS 2015 == 14.0 */
     for (v = 16; v >= 8; v--) {
         if ((path = mprReadRegistry(ESP_VSKEY, sfmt("%d.0", v))) != 0) {
             path = strim(path, "\\", MPR_TRIM_END);
