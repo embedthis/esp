@@ -9161,7 +9161,7 @@ PUBLIC int mprReapCmd(MprCmd *cmd, MprTicks timeout);
     @param input Command input. Data to write to the command which will be received on the comamnds stdin.
     @param output Reference to a string to receive the stdout from the command.
     @param error Reference to a string to receive the stderr from the command.
-    @param timeout Time in milliseconds to wait for the command to complete and exit.
+    @param timeout Time in milliseconds to wait for the command to complete and exit. Set to -1 to wait forever.
     @return Command exit status, or negative MPR error code.
     @ingroup MprCmd
     @stability Evolving

@@ -1747,6 +1747,7 @@ PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
 PUBLIC bool espModuleIsStale(cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
 PUBLIC void espSetDefaultDirs(HttpRoute *route);
+PUBLIC cchar *espGetVisualStudio();
 
 /********************************** Requests **********************************/
 /**

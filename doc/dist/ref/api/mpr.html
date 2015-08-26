@@ -5066,7 +5066,7 @@ This waits for and collect the command exit status
     <tr><td class="param">input</td><td>Command input. Data to write to the command which will be received on the comamnds stdin.</td>
     <tr><td class="param">output</td><td>Reference to a string to receive the stdout from the command.</td>
     <tr><td class="param">error</td><td>Reference to a string to receive the stderr from the command.</td>
-    <tr><td class="param">timeout</td><td>Time in milliseconds to wait for the command to complete and exit.</td>
+    <tr><td class="param">timeout</td><td>Time in milliseconds to wait for the command to complete and exit. Set to -1 to wait forever.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Command exit status, or negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>

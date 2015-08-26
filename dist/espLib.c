@@ -2661,8 +2661,7 @@ static void parseCombine(HttpRoute *route, cchar *key, MprJson *prop)
 
 
 #if ME_WIN_LIKE
-
-static cchar *getVisualStudio()
+PUBLIC cchar *espGetVisualStudio()
 {
     cchar   *path;
     int     v;
@@ -2716,7 +2715,7 @@ PUBLIC int getVisualStudioEnv(HttpRoute *route)
         return MPR_ERR_CANT_FIND;
     }
 
-    vs = getVisualStudio();
+    vs = espGetVisualStudio();
     command = sfmt("\"%s\\vcvars.bat\" \"%s\" %s", mprGetAppDir(), mprJoinPath(vs, "VC/vcvarsall.bat"), arch);
     if (mprRun(NULL, command, 0, &output, &error, -1) < 0) {
         mprLog("error esp", 0, "Cannot run command: %s, error %s", command, error);
@@ -5606,11 +5605,13 @@ static cchar *getCompilerPath(cchar *os, cchar *arch);
 static cchar *getLibs(cchar *os);
 static cchar *getMappedArch(cchar *arch);
 static cchar *getObjExt(cchar *os);
-static cchar *getVisualStudio();
-static cchar *getWinSDK(HttpRoute *route);
-static cchar *getWinVer(HttpRoute *route);
 static cchar *getVxCPU(cchar *arch);
 static bool matchToken(cchar **str, cchar *token);
+
+#if ME_WIN_LIKE
+static cchar *getWinSDK(HttpRoute *route);
+static cchar *getWinVer(HttpRoute *route);
+#endif
 
 /************************************* Code ***********************************/
 /*
@@ -5715,17 +5716,17 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
                 }
                 mprPutStringToBuf(buf, tmp ? tmp : ".");
 
+#if ME_WIN_LIKE
             } else if (matchToken(&cp, "${VS}")) {
-                mprPutStringToBuf(buf, getVisualStudio());
+                mprPutStringToBuf(buf, espGetVisualStudio());
+            } else if (matchToken(&cp, "${WINSDK}")) {
+                mprPutStringToBuf(buf, getWinSDK(route));
+            } else if (matchToken(&cp, "${WINVER}")) {
+                mprPutStringToBuf(buf, getWinVer(route));
+#endif
 
             } else if (matchToken(&cp, "${VXCPU}")) {
                 mprPutStringToBuf(buf, getVxCPU(arch));
-
-            } else if (matchToken(&cp, "${WINSDK}")) {
-                mprPutStringToBuf(buf, getWinSDK(route));
-
-            } else if (matchToken(&cp, "${WINVER}")) {
-                mprPutStringToBuf(buf, getWinVer(route));
 
             /*
                 These vars can be also be configured from environment variables.
@@ -6732,9 +6733,9 @@ static int reverseSortVersions(char **s1, char **s2)
 #endif
 
 
+#if ME_WIN_LIKE
 static cchar *getWinSDK(HttpRoute *route)
 {
-#if WINDOWS
     EspRoute *eroute;
 
     /*
@@ -6795,11 +6796,7 @@ static cchar *getWinSDK(HttpRoute *route)
     }
     mprLog("info esp", 5, "Using Windows SDK at %s", path);
     eroute->winsdk = strim(path, "\\", MPR_TRIM_END);
-print("WINSDK %s", eroute->winsdk);
     return eroute->winsdk;
-#else
-    return "";
-#endif
 }
 
 
@@ -6816,32 +6813,7 @@ static cchar *getWinVer(HttpRoute *route)
     }
     return winver;
 }
-
-
-static cchar *getVisualStudio()
-{
-#if WINDOWS
-    cchar   *path;
-    int     v;
-
-    if ((path = getenv("VSINSTALLDIR")) != 0) {
-        return path;
-    }
-    /* VS 2015 == 14.0 */
-    for (v = 16; v >= 8; v--) {
-        if ((path = mprReadRegistry(ESP_VSKEY, sfmt("%d.0", v))) != 0) {
-            path = strim(path, "\\", MPR_TRIM_END);
-            break;
-        }
-    }
-    if (!path) {
-        path = "${VS}";
-    }
-    return path;
-#else
-    return "";
 #endif
-}
 
 
 static cchar *getArPath(cchar *os, cchar *arch)
@@ -6851,7 +6823,7 @@ static cchar *getArPath(cchar *os, cchar *arch)
         Get the real system architecture (32 or 64 bit)
      */
     Http *http = MPR->httpService;
-    cchar *path = getVisualStudio();
+    cchar *path = espGetVisualStudio();
     if (scontains(http->platform, "-x64-")) {
         int is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
         if (is64BitSystem) {
@@ -6877,7 +6849,7 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
         Get the real system architecture (32 or 64 bit)
      */
     Http *http = MPR->httpService;
-    cchar *path = getVisualStudio();
+    cchar *path = espGetVisualStudio();
     if (scontains(http->platform, "-x64-")) {
         int is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
         if (is64BitSystem) {

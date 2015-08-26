@@ -92,8 +92,7 @@ static void parseCombine(HttpRoute *route, cchar *key, MprJson *prop)
 
 
 #if ME_WIN_LIKE
-
-static cchar *getVisualStudio()
+PUBLIC cchar *espGetVisualStudio()
 {
     cchar   *path;
     int     v;
@@ -147,7 +146,7 @@ PUBLIC int getVisualStudioEnv(HttpRoute *route)
         return MPR_ERR_CANT_FIND;
     }
 
-    vs = getVisualStudio();
+    vs = espGetVisualStudio();
     command = sfmt("\"%s\\vcvars.bat\" \"%s\" %s", mprGetAppDir(), mprJoinPath(vs, "VC/vcvarsall.bat"), arch);
     if (mprRun(NULL, command, 0, &output, &error, -1) < 0) {
         mprLog("error esp", 0, "Cannot run command: %s, error %s", command, error);
