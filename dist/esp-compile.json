@@ -44,29 +44,6 @@
                         link: '"${WIND_GNU_PATH}/${WIND_HOST_TYPE}/bin/${WIND_ARNAME}" ${DEBUG} -cr ${MOD}${ARLIB} ${OBJ}'
                     }
                 }
-            },
-            env: {
-                OldVisualStudio: {
-                    x64: {
-                        lib: '${WINSDK}\\LIB\\${WINVER}\\um\\x64;${WINSDK}\\LIB\\x64;${VS}\\VC\\lib\\amd64',
-                        path: '${VS}\\Common7\\IDE;${VS}\\VC\\bin\\amd64;${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin\\x64'
-                    },
-                    'x64-cross': {
-                        lib: '${WINSDK}\\LIB\\${WINVER}\\um\\x64;${WINSDK}\\LIB\\x64;${VS}\\VC\\lib\\amd64',
-                        path: '${VS}\\Common7\\IDE;${VS}\\VC\\bin\\x86_amd64; ${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin\\x86'
-                    },
-                    arm: {
-                        lib: '${WINSDK}\\LIB\\${WINVER}\\um\\arm;${VS}\\VC\\lib\\arm',
-                        path: '${VS}\\Common7\\IDE;${VS}\\VC\\bin\\x86_arm;${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin\\arm'
-                    },
-                    x86: {
-                        lib: '${WINSDK}\\LIB\\${WINVER}\\um\\x86;${WINSDK}\\LIB\\x86;${WINSDK}\\LIB;${VS}\\VC\\lib',
-                        path: '${VS}\\Common7\\IDE;${VS}\\VC\\bin;${VS}\\Common7\\Tools;${VS}\\SDK\\v3.5\\bin;${VS}\\VC\\VCPackages;${WINSDK}\\bin'
-                    },
-                    default: {
-                        include: '${VS}\\VC\\INCLUDE;${WINSDK}\\include\\10.0.10150.0\\ucrt;${WINSDK}\\include\\um;${WINSDK}\\include\\shared'
-                    }
-                }
             }
         }
     }
