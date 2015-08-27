@@ -8944,10 +8944,11 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
         }
         if (path) {
             pathInfo = sjoin(rx->scriptName, rx->pathInfo, index, NULL);
+            tx->filename = 0;
+            tx->ext = 0;
+            tx->fileInfo.checked = 0;
+            tx->fileInfo.valid = 0;
             httpSetUri(conn, httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0));
-            tx->filename = path;
-            tx->ext = httpGetExt(conn);
-            mprGetPathInfo(tx->filename, &tx->fileInfo);
             return HTTP_ROUTE_REROUTE;
         }
     }
@@ -13571,10 +13572,7 @@ PUBLIC void httpAddRouteMapping(HttpRoute *route, cchar *extensions, cchar *mapp
         route->map = mprCreateHash(ME_MAX_ROUTE_MAP_HASH, MPR_HASH_STABLE);
     }
     for (ext = stok(sclone(extensions), ", \t", &etok); ext; ext = stok(NULL, ", \t", &etok)) {
-        if (*ext == '.') {
-            ext++;
-        }
-        if (*ext == '"') {
+        if (*ext == '.' || *ext == '"' || *ext == '*') {
             ext++;
         }
         len = slen(ext);
