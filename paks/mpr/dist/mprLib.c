@@ -14107,7 +14107,7 @@ PUBLIC cchar *mprGetJson(MprJson *obj, cchar *key)
     if ((result = mprQueryJson(obj, key, 0, 0)) != 0) {
         if (result->length == 1 && result->children->type & MPR_JSON_VALUE) {
             return result->children->value;
-        } else if (result->length > 1) {
+        } else if (result->length >= 1) {
             return mprJsonToString(result, 0);
         }
     }
@@ -15476,12 +15476,12 @@ static void swapElt(char *a, char *b, ssize width)
 }
 
 
-PUBLIC void mprSort(void *base, ssize nelt, ssize esize, MprSortProc cmp, void *ctx) 
+PUBLIC void *mprSort(void *base, ssize nelt, ssize esize, MprSortProc cmp, void *ctx) 
 {
     char    *array, *pivot, *left, *right;
 
     if (nelt < 2 || esize <= 0) {
-        return;
+        return base;
     }
     if (!cmp) {
         cmp = (MprSortProc) defaultSort;
@@ -15507,6 +15507,7 @@ PUBLIC void mprSort(void *base, ssize nelt, ssize esize, MprSortProc cmp, void *
     /* left and right are swapped */
     mprSort(array, (right - array) / esize + 1, esize, cmp, ctx);
     mprSort(left, nelt - ((left - array) / esize), esize, cmp, ctx);
+    return base;
 }
 
 

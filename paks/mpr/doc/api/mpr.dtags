@@ -5399,10 +5399,10 @@
       <arglist>(MprSocket *sp)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>void *</type>
       <name>mprSort</name>
       <anchorfile>group___mpr_list.html</anchorfile>
-      <anchor>ga555a5a3f40af20aeb5e4ba99212d4b4e</anchor>
+      <anchor>gad2fdd42002b42120dee0d9b1dd97487b</anchor>
       <arglist>(void *base, ssize num, ssize width, MprSortProc compare, void *ctx)</arglist>
     </member>
     <member kind="function">
@@ -7696,10 +7696,10 @@
       <arglist>(MprList *list, int initialSize, int maxSize)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>void *</type>
       <name>mprSort</name>
       <anchorfile>group___mpr_list.html</anchorfile>
-      <anchor>ga555a5a3f40af20aeb5e4ba99212d4b4e</anchor>
+      <anchor>gad2fdd42002b42120dee0d9b1dd97487b</anchor>
       <arglist>(void *base, ssize num, ssize width, MprSortProc compare, void *ctx)</arglist>
     </member>
     <member kind="function">

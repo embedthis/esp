@@ -8944,11 +8944,9 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
         }
         if (path) {
             pathInfo = sjoin(rx->scriptName, rx->pathInfo, index, NULL);
-            tx->filename = 0;
-            tx->ext = 0;
-            tx->fileInfo.checked = 0;
-            tx->fileInfo.valid = 0;
             httpSetUri(conn, httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0));
+            tx->filename = httpMapContent(conn, path);
+            mprGetPathInfo(tx->filename, &tx->fileInfo);
             return HTTP_ROUTE_REROUTE;
         }
     }
@@ -13307,7 +13305,7 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename)
     HttpTx      *tx;
     MprKey      *kp;
     MprList     *extensions;
-    MprPath     *info;
+    MprPath     info;
     bool        acceptGzip, zipped;
     cchar       *ext, *path;
     int         next;
@@ -13315,7 +13313,6 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename)
     tx = conn->tx;
     rx = conn->rx;
     route = rx->route;
-    info = &tx->fileInfo;
 
     if (route->map && !(tx->flags & HTTP_TX_NO_MAP)) {
         if ((kp = mprLookupKeyEntry(route->map, tx->ext)) == 0) {
@@ -13334,12 +13331,13 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename)
                 } else {
                     path = sjoin(filename, ext, NULL);
                 }
-                if (mprGetPathInfo(path, info) == 0) {
+                if (mprGetPathInfo(path, &info) == 0) {
                     httpTrace(conn, "request.map", "context", "originalFilename:'%s',filename:'%s'", filename, path);
                     filename = path;
                     if (zipped) {
                         httpSetHeader(conn, "Content-Encoding", "gzip");
                     }
+                    tx->fileInfo = info;
                     break;
                 }
             }

@@ -3866,10 +3866,11 @@ typedef int (*MprSortProc)(cvoid *p1, cvoid *p2, void *ctx);
     @param width Width of array elements
     @param compare Comparison function
     @param ctx Context argument to provide to comparison function
+    @return The base array for chaining
     @ingroup MprList
     @stability Stable
  */
-PUBLIC void mprSort(void *base, ssize num, ssize width, MprSortProc compare, void *ctx);
+PUBLIC void *mprSort(void *base, ssize num, ssize width, MprSortProc compare, void *ctx);
 
 /**
     Sort a list
