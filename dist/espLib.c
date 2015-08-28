@@ -1408,7 +1408,18 @@ static int sortRec(EdiRec **r1, EdiRec **r2, GridSort *gs)
 
     f1 = &(*r1)->fields[gs->sortColumn];
     f2 = &(*r2)->fields[gs->sortColumn];
-    return scmp(f1->value, f2->value) * gs->sortOrder;
+    if (f1->type == EDI_TYPE_INT) {
+        v1 = stoi(f1->value);
+        v2 = stoi(f2->value);
+        if (v1 < v2) {
+            return - gs->sortOrder;
+        } else if (v1 > v2) {
+            return gs->sortOrder;
+        }
+        return 0;
+    } else {
+        return scmp(f1->value, f2->value) * gs->sortOrder;
+    }
 }
 
 
@@ -2340,6 +2351,12 @@ PUBLIC void showRequest()
 }
 
 
+PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
+{
+    return ediSortGrid(grid, sortColumn, sortOrder);
+}
+
+
 PUBLIC void updateCache(cchar *uri, cchar *data, int lifesecs)
 {
     espUpdateCache(getConn(), uri, data, lifesecs);
@@ -3056,7 +3073,7 @@ PUBLIC void espDefineBase(HttpRoute *route, EspProc baseProc)
     int         next;
 
     for (ITERATE_ITEMS(route->host->routes, rp, next)) {
-        if ((eroute = route->eroute) != 0) {
+        if ((eroute = rp->eroute) != 0) {
             if (smatch(httpGetDir(rp, "CONTROLLERS"), httpGetDir(route, "CONTROLLERS"))) {
                 eroute->commonController = baseProc;
             }
@@ -4668,12 +4685,12 @@ static int runAction(HttpConn *conn)
             return 0;
         }
     }
+    httpAuthenticate(conn);
+    if (eroute->commonController) {
+        (eroute->commonController)(conn);
+    }
     if (action) {
-        httpAuthenticate(conn);
         setupFeedback(conn);
-        if (eroute->commonController) {
-            (eroute->commonController)(conn);
-        }
         if (!httpIsFinalized(conn)) {
             (action)(conn);
         }

@@ -359,12 +359,12 @@ static int runAction(HttpConn *conn)
             return 0;
         }
     }
+    httpAuthenticate(conn);
+    if (eroute->commonController) {
+        (eroute->commonController)(conn);
+    }
     if (action) {
-        httpAuthenticate(conn);
         setupFeedback(conn);
-        if (eroute->commonController) {
-            (eroute->commonController)(conn);
-        }
         if (!httpIsFinalized(conn)) {
             (action)(conn);
         }
