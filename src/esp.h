@@ -529,7 +529,7 @@ PUBLIC int espSetConfig(HttpRoute *route, cchar *key, cchar *value);
     @param conn HttpConn object
     @param data Data object to associate with the current request. This must be a managed reference.
     @return Reference to private data
-    @ingroup EspAbbrev
+    @ingroup Esp
     @stability prototype
  */
 PUBLIC void espSetData(HttpConn *conn, void *data);
@@ -2766,6 +2766,9 @@ PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data);
     @stability Evolving
  */
 PUBLIC void showRequest();
+
+//  FUTURE - document
+PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder);
 
 /**
     Update the cached content for a request

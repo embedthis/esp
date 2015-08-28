@@ -1397,10 +1397,22 @@ typedef struct GridSort {
 static int sortRec(EdiRec **r1, EdiRec **r2, GridSort *gs)
 {
     EdiField    *f1, *f2;
+    int64       v1, v2;
 
     f1 = &(*r1)->fields[gs->sortColumn];
     f2 = &(*r2)->fields[gs->sortColumn];
-    return scmp(f1->value, f2->value) * gs->sortOrder;
+    if (f1->type == EDI_TYPE_INT) {
+        v1 = stoi(f1->value);
+        v2 = stoi(f2->value);
+        if (v1 < v2) {
+            return - gs->sortOrder;
+        } else if (v1 > v2) {
+            return gs->sortOrder;
+        }
+        return 0;
+    } else {
+        return scmp(f1->value, f2->value) * gs->sortOrder;
+    }
 }
 
 
@@ -1422,6 +1434,7 @@ static int lookupGridField(EdiGrid *grid, cchar *name)
 }
 
 
+//  FUTURE - document
 PUBLIC EdiGrid *ediSortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
 {
     GridSort    gs;

@@ -1404,6 +1404,7 @@ typedef struct GridSort {
 static int sortRec(EdiRec **r1, EdiRec **r2, GridSort *gs)
 {
     EdiField    *f1, *f2;
+    int64       v1, v2;
 
     f1 = &(*r1)->fields[gs->sortColumn];
     f2 = &(*r2)->fields[gs->sortColumn];
@@ -1429,6 +1430,7 @@ static int lookupGridField(EdiGrid *grid, cchar *name)
 }
 
 
+//  FUTURE - document
 PUBLIC EdiGrid *ediSortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
 {
     GridSort    gs;

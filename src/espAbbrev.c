@@ -713,6 +713,12 @@ PUBLIC void showRequest()
 }
 
 
+PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
+{
+    return ediSortGrid(grid, sortColumn, sortOrder);
+}
+
+
 PUBLIC void updateCache(cchar *uri, cchar *data, int lifesecs)
 {
     espUpdateCache(getConn(), uri, data, lifesecs);
