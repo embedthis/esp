@@ -909,13 +909,6 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
-      <name>espSetData</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gac44e50b7d3c22c093e139a172c878608</anchor>
-      <arglist>(HttpConn *conn, void *data)</arglist>
-    </member>
-    <member kind="function">
       <type>bool</type>
       <name>feedback</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>

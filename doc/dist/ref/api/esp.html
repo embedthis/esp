@@ -293,7 +293,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga7bb7c062a2fb64c1756c93dc79481c2c" class="nameRef">espSetContentType</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *mimeType)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the transmission (response) content mime type.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga58039e1fafe24481848bf1b47a2d444f" class="nameRef">espSetCookie</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *domain, <a href="edi.html#mpr.html#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> lifespan, <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> isSecure)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a cookie in the transmission.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga3311af6602f80872182db7112b832f5e" class="nameRef">espSetCurrentSession</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set this authenticated session as the current session.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gac44e50b7d3c22c093e139a172c878608" class="nameRef">espSetData</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, void *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a private data reference for the current request.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#esp_8h_1ac44e50b7d3c22c093e139a172c878608" class="nameRef">espSetData</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, void *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a private data reference for the current request.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga12f466c3ea4ae6e7eb2692c80e03a45b" class="nameRef">espSetFeedback</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a feedback message.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga7508b46ff71aa46719836d2720840047" class="nameRef">espSetFeedbackv</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, va_list args)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a feedback message.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_req_1ga6e09b2658067694a86d1535bf56aebae" class="nameRef">espSetGrid</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the current database grid.</td></tr>
@@ -632,26 +632,6 @@
   <div class="apiDetail">
 <p>Don&apos;t auto-finalize this request.</p>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___esp_abbrev_1gac44e50b7d3c22c093e139a172c878608"></a>
-<div class="api">
-  <div class="prototype">
-    void
-    espSetData
-(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, void *data)
-  </div>
-  <div class="apiDetail">
-<p>Set a private data reference for the current request.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">conn</td><td>HttpConn object.</td>
-    <tr><td class="param">data</td><td>Data object to associate with the current request. This must be a managed reference.</td>
-    </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>Reference to private data.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -4927,6 +4907,24 @@ Windows SDK.
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Number of bytes written.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
+  </div>
+</div>
+<a name="esp_8h_1ac44e50b7d3c22c093e139a172c878608"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    espSetData
+(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, void *data)
+  </div>
+  <div class="apiDetail">
+<p>Set a private data reference for the current request.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">conn</td><td>HttpConn object.</td>
+    <tr><td class="param">data</td><td>Data object to associate with the current request. This must be a managed reference.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>Reference to private data.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
   </div>
 </div>
 <a name="esp_8h_1a2b6ab1f6cf9333533ece4ed0f871e0a6"></a>
