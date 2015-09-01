@@ -313,8 +313,6 @@ PUBLIC void *mprAllocMem(size_t usize, int flags)
     size_t      size;
     int         padWords;
 
-    assert(!heap->marking);
-
     padWords = padding[flags & MPR_ALLOC_PAD_MASK];
     size = usize + sizeof(MprMem) + (padWords * sizeof(void*));
     size = max(size, MPR_ALLOC_MIN_BLOCK);
@@ -463,7 +461,7 @@ static int initQueues()
 
 
 /*
-    Memory allocator. This routine races with the sweeper.
+    Lock free memory allocator. This routine races with the sweeper.
  */
 static MprMem *allocMem(size_t required)
 {
@@ -474,6 +472,7 @@ static MprMem *allocMem(size_t required)
     int             baseBindex, bindex, qindex, baseQindex, retryIndex;
 
     ATOMIC_INC(requests);
+    heap->activity = 1;
 
     if ((qindex = sizetoq(required)) >= 0) {
         /*
@@ -1195,42 +1194,49 @@ static void markAndSweep()
         if (!pauseGC && warnOnce == 0 && !mprGetDebugMode() && !mprIsStopping()) {
             warnOnce++;
             mprLog("error mpr memory", 6, "GC synchronization timed out, some threads did not yield.");
-            mprLog("error mpr memory", 6, "This can be caused by a thread doing a long running operation and not first calling mprYield.");
             mprLog("error mpr memory", 6, "If debugging, run the process with -D to enable debug mode.");
         }
         resumeThreads(YIELDED_THREADS | WAITING_THREADS);
         return;
     }
-    assert(!pauseGC);
+    /*
+        WARNING - An outside event could be running which calls mprCreateEventOutside that does memory allocation.
+        This will set heap->activity which will cause the sweep phase to be aborted
+     */
     INC(collections);
-    heap->priorWorkDone = heap->workDone;
-    heap->workDone = 0;
 #if ME_MPR_ALLOC_STATS
     heap->priorFree = heap->stats.bytesFree;
 #endif
     /*
-        Toggle the mark each collection
+        Mark all roots. If anyone allocates memory, it will set heap->activity and the sweep phase will be aborted.
+        Toggle the in-use heap->mark for each collection. If sweep is aborted, some free blocks may be left unmarked which
+        will be interpreted as a mark in the next GC. So it may take two mark phases to be collected (not a big deal).
      */
+    heap->activity = 0;
     heap->mark = !heap->mark;
-
-    /*
-        Mark all roots. All user threads are paused here
-     */
+    mprAtomicBarrier();
     markRoots();
 
     heap->sweeping = 1;
-    mprAtomicBarrier();
     heap->marking = 0;
-    assert(!pauseGC);
+    mprAtomicBarrier();
+
+    if (!heap->activity) {
+        heap->priorWorkDone = heap->workDone;
+        heap->workDone = 0;
+    }
 
 #if ME_MPR_ALLOC_PARALLEL
     /* This is the default to run the sweeper in parallel with user threads */
     resumeThreads(YIELDED_THREADS);
 #endif
     /*
-        Sweep unused memory with user threads resumed
+        Sweep unused memory with user threads resumed if there has not been any memory activity during the mark phase.
      */
-    sweep();
+    mprAtomicBarrier();
+    if (!heap->activity) {
+        sweep();
+    }
     heap->sweeping = 0;
 
 #if ME_MPR_ALLOC_PARALLEL
@@ -1598,21 +1604,20 @@ typedef struct OutSideEvent {
 } OutsideEvent;
 
 
+/*
+    Only used with MPR_EVENT_BLOCK
+ */
 static void relayInside(void *data, struct MprEvent *event)
 {
     OutsideEvent    *op;
 
     op = data;
 
-    if (event->flags & MPR_EVENT_BLOCK) {
-        mprResumeGC();
-    }
     /*
-        GC is now enabled, but shutdown is paused because this thread means !idle
+        Resume GC. We know that MPR shutdown is paused because this thread implies !IsIdle.
         However, normal graceful shutdown timeouts apply and this is now just an ordinary event.
-        So there are races with the graceful MPR->exitTimeout. It is the users responsibility to
-        synchronize shutodown and outside events.
      */
+    mprResumeGC();
     (op->proc)(op->data);
     if (op->cond) {
         mprSignalCond(op->cond);
@@ -1624,8 +1629,8 @@ static void relayInside(void *data, struct MprEvent *event)
     This routine creates an event and is safe to call from outside MPR in a foreign thread. Notes:
     1. Safe to use at any point before, before or during a GC or shutdown 
     2. If using MPR_EVENT_BLOCK, will not shutdown until the event callback completes. The API will return after the
-        users callback returns.
-    3. In the non-blocking case, the event may run before the function returns
+        users callback returns. The non-blocking alternative is much faster.
+    3. In the non-blocking case, the event may run before or after the function returns.
     4. The function always returns a valid status indicating whether the event could be scheduled.
 
     Issues for caller
@@ -1638,37 +1643,36 @@ PUBLIC int mprCreateEventOutside(MprDispatcher *dispatcher, cchar *name, void *p
     OutsideEvent    *op;
 
     /* 
-        Atomic pause GC and shutdown. Must do this to allocate memory from outside.
-        This call will return false if the MPR is shutting down. Once paused, shutdown will be paused.
+        Prevent GC sweeping while creating outside events. This does an atomic pause of future GC marking and 
+        application shutdown via mprDestroy. Must do this when creating an event object from an outside thread,
+        otherwise, the memory could be allocated and collected before being queued.
+
+        Note: this will not impact a running GC mark phase nor will it impact the a currently running sweeper sweeper. 
+        If GC marking is currently active allocating memory will set heap->active and this will then abort the GC 
+        pass before sweeping. A currently running sweeper is ok as it only accesses blocks not in use.
+
+        Note: the core memory allocator is thread-safe for outside threads to use.
      */
     if (!mprPauseGC()) {
+        /* Return false if the MPR is shutting down. Once paused, shutdown will be paused. */
         return MPR_ERR_BAD_STATE;
     }
-    /*
-        The MPR is prevented from stopping now and a new GC sweep wont start, but we need to wait for a running GC to finish.
-     */
-    while (heap->mustYield || heap->marking) {
-        mprNap(0);
-        mprAtomicBarrier();
-    }
-    if ((op = mprAllocZeroed(sizeof(OutsideEvent))) == 0) {
-        return MPR_ERR_MEMORY;
-    }
-    op->proc = proc;
-    op->data = data;
-
     if (flags & MPR_EVENT_BLOCK) {
+        if ((op = mprAllocZeroed(sizeof(OutsideEvent))) == 0) {
+            return MPR_ERR_MEMORY;
+        }
+        op->proc = proc;
+        op->data = data;
         op->cond = mprCreateCond();
         mprHold(op->cond);
-    }
-    mprCreateEvent(dispatcher, name, 0, relayInside, op, flags);
-
-    if (flags & MPR_EVENT_BLOCK) {
+        mprCreateEvent(dispatcher, name, 0, relayInside, op, flags);
         mprWaitForCond(op->cond, -1);
         mprRelease(op->cond);
+
     } else {
+        mprCreateEvent(dispatcher, name, 0, proc, data, flags);
         mprResumeGC();
-        /* Shutdown could happen before the event runs */ 
+        /* Shutdown could happen before the event actually runs */ 
     }
     return 0;
 }
@@ -9531,6 +9535,10 @@ static void manageEventService(MprEventService *es, int flags)
         mprMark(es->waitCond);
         mprMark(es->mutex);
 
+        /*
+            Special case: must lock because mprCreateEventOutside may queue events while marking
+         */
+        lock(es);
         for (dp = es->runQ->next; dp != es->runQ; dp = dp->next) {
             mprMark(dp);
         }
@@ -9546,6 +9554,7 @@ static void manageEventService(MprEventService *es, int flags)
         for (dp = es->pendingQ->next; dp != es->pendingQ; dp = dp->next) {
             mprMark(dp);
         }
+        unlock(es);
     }
 }
 

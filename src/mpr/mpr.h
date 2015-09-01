@@ -1160,7 +1160,7 @@ typedef struct MprHeap {
     MprCond          *gcCond;               /**< GC sleep cond var */
     MprRegion        *regions;              /**< List of memory regions */
     struct MprThread *sweeper;              /**< GC sweeper thread */
-    int              mark;                  /**< Mark version */
+    int              activity;              /**< Memory allocations performed */
     int              allocPolicy;           /**< Memory allocation depletion policy */
     int              regionSize;            /**< Memory allocation region size */
     int              compact;               /**< Next GC sweep should do a full compact */
@@ -1171,6 +1171,7 @@ typedef struct MprHeap {
     int              gcEnabled;             /**< GC is enabled */
     int              gcRequested;           /**< GC has been requested */
     int              hasError;              /**< Memory allocation error */
+    int              mark;                  /**< Mark version */
     int              marking;               /**< Actually marking objects now */
     int              mustYield;             /**< Threads must yield for GC which is due */
     int              nextSeqno;             /**< Next sequence number */
