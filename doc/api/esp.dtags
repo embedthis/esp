@@ -394,6 +394,13 @@
     </member>
     <member kind="function">
       <type>cchar *</type>
+      <name>espGetPath</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>gaf5c02acc34944a568e7959bbe321e85a</anchor>
+      <arglist>(HttpConn *conn)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
       <name>espGetQueryString</name>
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>gaf84aa1df39869744c4e0ac87e99f1a89</anchor>
@@ -1047,6 +1054,13 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga3a9e6969b5beb4c554ec9032b322c0fe</anchor>
       <arglist>(cchar *key)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
+      <name>getPath</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>gaaa8e74bb48500059683a45d7a4126d94</anchor>
+      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>

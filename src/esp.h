@@ -928,6 +928,16 @@ PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue);
 PUBLIC MprJson *espGetParams(HttpConn *conn);
 
 /**
+    Get the request URI path string.
+    @description This is a convenience API to return the request URI path. This is the request URI path after removing
+        query parameters. It does not include the application route prefix.
+    @return The espGetConn()->rx->pathInfo
+    @ingroup EspReq
+    @stability Prototype
+ */
+PUBLIC cchar *espGetPath(HttpConn *conn);
+
+/**
     Get the request query string.
     @description Get query string sent with the current request.
     @param conn HttpConn connection object
@@ -2028,6 +2038,16 @@ PUBLIC cchar *getSessionID();
     @stability Prototype
  */
 PUBLIC cchar *getFieldError(cchar *field);
+
+/**
+    Get the request URI path string
+    @description This is a convenience API to return the request URI path. This is the portion after the application/route
+        prefix.
+    @return The espGetConn()->rx->pathInfo
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *getPath();
 
 /**
     Get the current database record

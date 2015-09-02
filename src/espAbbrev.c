@@ -139,6 +139,19 @@ PUBLIC MprList *getColumns(EdiRec *rec)
 }
 
 
+PUBLIC cchar *getConfig(cchar *field)
+{
+    HttpRoute   *route;
+    cchar       *value;
+
+    route = getConn()->rx->route;
+    if ((value = mprGetJson(route->config, field)) == 0) {
+        return "";
+    }
+    return value;
+}
+
+
 PUBLIC HttpConn *getConn()
 {
     HttpConn    *conn;
@@ -292,16 +305,9 @@ PUBLIC cchar *getSessionVar(cchar *key)
 }
 
 
-PUBLIC cchar *getConfig(cchar *field)
+PUBLIC cchar *getPath()
 {
-    HttpRoute   *route;
-    cchar       *value;
-
-    route = getConn()->rx->route;
-    if ((value = mprGetJson(route->config, field)) == 0) {
-        return "";
-    }
-    return value;
+    return espGetPath(getConn());
 }
 
 

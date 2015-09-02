@@ -360,6 +360,12 @@ PUBLIC MprJson *espGetParams(HttpConn *conn)
 }
 
 
+PUBLIC cchar *espGetPath(HttpConn *conn)
+{
+    return conn->rx->pathInfo;
+}
+
+
 PUBLIC cchar *espGetQueryString(HttpConn *conn)
 {
     return httpGetQueryString(conn);

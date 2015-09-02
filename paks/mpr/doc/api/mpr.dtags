@@ -10921,6 +10921,13 @@
     <filename>struct_mpr_heap.html</filename>
     <member kind="variable">
       <type>int</type>
+      <name>activity</name>
+      <anchorfile>struct_mpr_heap.html</anchorfile>
+      <anchor>af15b7519bf450e8511521050ac6bfa86</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>int</type>
       <name>allocPolicy</name>
       <anchorfile>struct_mpr_heap.html</anchorfile>
       <anchor>a2249319c521bed27eb22936c8ceebfb7</anchor>
