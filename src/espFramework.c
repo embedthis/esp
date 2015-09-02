@@ -736,7 +736,12 @@ PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *var)
 
 PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name)
 {
-    httpSetCookie(conn, name, "", "/", NULL, -1, 0);
+    HttpRoute   *route;
+    cchar       *url;
+
+    route = conn->rx->route;
+    url = (route->prefix && *route->prefix) ? route->prefix : "/";
+    httpSetCookie(conn, name, "", url, NULL, -1, 0);
 }
 
 
