@@ -52,6 +52,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_ALLOC_HOLD</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a3a04c8a4de06cc2518684a7289a15cd9</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_ALLOC_MANAGER</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a0fdfeef976b9c763e5e311d126752e59</anchor>
@@ -640,13 +647,6 @@
     </member>
     <member kind="define">
       <type>#define</type>
-      <name>MPR_EVENT_BLOCK</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>aa2419591af1d64acae7fe0b3b0751ca0</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
       <name>MPR_EVENT_CONTINUOUS</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a207b6b4c4dd69cefc5d48e0898677ff1</anchor>
@@ -664,6 +664,13 @@
       <name>MPR_EVENT_EPOLL</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a35751841ed0361d40361c375bca122a4</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_EVENT_HOLD</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a34fa7676783bcd92c7e9a5ee88c9500d</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -2375,13 +2382,6 @@
       <arglist>(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)</arglist>
     </member>
     <member kind="function">
-      <type>int</type>
-      <name>mprCreateEventOutside</name>
-      <anchorfile>group___mpr_event.html</anchorfile>
-      <anchor>ga6a994158ec8edfe48a47a243ea09c4b8</anchor>
-      <arglist>(MprDispatcher *dispatcher, cchar *name, void *proc, void *data, int flags)</arglist>
-    </member>
-    <member kind="function">
       <type>MprFileSystem *</type>
       <name>mprCreateFileSystem</name>
       <anchorfile>group___mpr_file_system.html</anchorfile>
@@ -2884,13 +2884,6 @@
       <anchorfile>group___mpr_mem.html</anchorfile>
       <anchor>ga748a0f879d3b5ce8cb8eb23b01392552</anchor>
       <arglist>(int flags)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>mprGCPaused</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a90927eedeadff31acc043a6c7c55803a</anchor>
-      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
@@ -4321,13 +4314,6 @@
       <arglist>(cchar *path, int omode)</arglist>
     </member>
     <member kind="function">
-      <type>bool</type>
-      <name>mprPauseGC</name>
-      <anchorfile>group___mpr_mem.html</anchorfile>
-      <anchor>ga80f85b5ac77f1c4666038c05a259226c</anchor>
-      <arglist>()</arglist>
-    </member>
-    <member kind="function">
       <type>int</type>
       <name>mprPeekFileChar</name>
       <anchorfile>group___mpr_file.html</anchorfile>
@@ -4725,13 +4711,6 @@
       <anchorfile>group___mpr_event.html</anchorfile>
       <anchor>ga6fa51ab06c56baaad50f1b4df7efc1d4</anchor>
       <arglist>(MprEvent *event)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>mprResumeGC</name>
-      <anchorfile>group___mpr_mem.html</anchorfile>
-      <anchor>ga8382412c4f3cad42738785782c9e29a7</anchor>
-      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -6585,13 +6564,6 @@
       <arglist>(cvoid *ptr, size_t size)</arglist>
     </member>
     <member kind="function">
-      <type>bool</type>
-      <name>mprPauseGC</name>
-      <anchorfile>group___mpr_mem.html</anchorfile>
-      <anchor>ga80f85b5ac77f1c4666038c05a259226c</anchor>
-      <arglist>()</arglist>
-    </member>
-    <member kind="function">
       <type>void</type>
       <name>mprPrintMem</name>
       <anchorfile>group___mpr_mem.html</anchorfile>
@@ -6631,13 +6603,6 @@
       <name>mprResetMemError</name>
       <anchorfile>group___mpr_mem.html</anchorfile>
       <anchor>gaccaaba6bc0501553b0c44d8514795b7a</anchor>
-      <arglist>()</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>mprResumeGC</name>
-      <anchorfile>group___mpr_mem.html</anchorfile>
-      <anchor>ga8382412c4f3cad42738785782c9e29a7</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
@@ -8631,13 +8596,6 @@
       <anchorfile>group___mpr_event.html</anchorfile>
       <anchor>gac6fcf6faf6ba5c85d7954fa416b73e30</anchor>
       <arglist>(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>mprCreateEventOutside</name>
-      <anchorfile>group___mpr_event.html</anchorfile>
-      <anchor>ga6a994158ec8edfe48a47a243ea09c4b8</anchor>
-      <arglist>(MprDispatcher *dispatcher, cchar *name, void *proc, void *data, int flags)</arglist>
     </member>
     <member kind="function">
       <type>MprEvent *</type>
@@ -10919,13 +10877,6 @@
   <compound kind="struct">
     <name>MprHeap</name>
     <filename>struct_mpr_heap.html</filename>
-    <member kind="variable">
-      <type>int</type>
-      <name>activity</name>
-      <anchorfile>struct_mpr_heap.html</anchorfile>
-      <anchor>af15b7519bf450e8511521050ac6bfa86</anchor>
-      <arglist></arglist>
-    </member>
     <member kind="variable">
       <type>int</type>
       <name>allocPolicy</name>

@@ -3035,7 +3035,7 @@ PUBLIC void httpClosePipeline(HttpConn *conn);
     while the connection is borrowed, but the connection object will not be destroyed.
     \n\n
     While borrowed, you must not access the connection using foreign / non-MPR threads. If you need to do this,
-    use #mprCreateEventOutside to schedule an event to run on the connection's event dispatcher.
+    use #mprCreateEvent to schedule an event to run on the connection's event dispatcher.
     This is essential to serialize access to the connection object.
     Inside the event callback, you should first check the connection state via HttpConn.state to ensure the request
     is still active. If the request has completed, the state will be HTTP_STATE_COMPLETE.
@@ -3408,7 +3408,7 @@ PUBLIC void httpResetCredentials(HttpConn *conn);
         current state of the connection.
     \n\n
     While the connection is borrowed, you must not access the connection using foreign / non-MPR threads.
-    Use #mprCreateEventOutside to schedule an event to run on the connection's event dispatcher. This is
+    Use #mprCreateEvent to schedule an event to run on the connection's event dispatcher. This is
     essential to serialize access to the connection object.
     \n\n
     You should only call this routine (once) after calling #httpBorrowConn.

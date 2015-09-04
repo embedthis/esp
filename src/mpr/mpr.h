@@ -27,7 +27,7 @@
     does its work and then returns the thread to the thread pool. This all happens very quickly, so a small pool of
     threads are effectivelyshared over many requests. Thread are free to block if required, but typically non-blocking
     patterns are more economical. If you have non-MPR threads that need to call into the MPR, you must synchronize
-    such calls via #mprCreateEventOutside.
+    such calls via #mprCreateEvent.
  */
 
 #ifndef _h_MPR
@@ -442,7 +442,7 @@ PUBLIC int mprWaitForCond(MprCond *cond, MprTicks timeout);
         Should only be used for single waiters. Use mprSignalMultiCond for use with multiple waiters.
         \n\n
         This API (like nearly all MPR APIs) must only be used by MPR threads and not by non-MPR (foreign) threads.
-        If you need to synchronize active of MPR threads with non-MPR threads, use #mprCreateEventOutside which can be called from
+        If you need to synchronize active of MPR threads with non-MPR threads, use #mprCreateEvent which can be called from
         foreign threads.
     @param cond Condition variable object created via #mprCreateCond
     @ingroup MprSync
@@ -794,9 +794,6 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
 #endif
 #ifndef ME_MPR_ALLOC_LEVEL
     #define ME_MPR_ALLOC_LEVEL     7                    /* Emit mark/sweek elapsed time at this level */
-#endif
-#ifndef ME_MPR_ALLOC_PARALLEL
-    #define ME_MPR_ALLOC_PARALLEL  1                    /* Run sweeper in parallel with user threads */
 #endif
 #if ME_COMPILER_HAS_MMU
     #define ME_MPR_ALLOC_VIRTUAL   1                    /* Use virtual memory allocations */
@@ -1160,7 +1157,6 @@ typedef struct MprHeap {
     MprCond          *gcCond;               /**< GC sleep cond var */
     MprRegion        *regions;              /**< List of memory regions */
     struct MprThread *sweeper;              /**< GC sweeper thread */
-    int              activity;              /**< Memory allocations performed */
     int              allocPolicy;           /**< Memory allocation depletion policy */
     int              regionSize;            /**< Memory allocation region size */
     int              compact;               /**< Next GC sweep should do a full compact */
@@ -1203,6 +1199,7 @@ PUBLIC struct Mpr *mprCreateMemService(MprManager manager, int flags);
  */
 #define MPR_ALLOC_MANAGER           0x1         /**< Reserve room for a manager */
 #define MPR_ALLOC_ZERO              0x2         /**< Zero memory */
+#define MPR_ALLOC_HOLD              0x4         /**< Allocate and hold */
 #define MPR_ALLOC_PAD_MASK          0x1         /**< Flags that impact padding */
 
 /**
@@ -1213,7 +1210,8 @@ PUBLIC struct Mpr *mprCreateMemService(MprManager manager, int flags);
     dependant active blocks. Marked blocks will not be reclaimed by the garbage collector.
     @param size Size of the memory block to allocate.
     @param flags Allocation flags. Supported flags include: MPR_ALLOC_MANAGER to reserve room for a manager callback and
-        MPR_ALLOC_ZERO to zero allocated memory.
+        MPR_ALLOC_ZERO to zero allocated memory. Use MPR_ALLOC_HOLD to return memory immune from GC. Use #mprRelease to
+        release back to the system.
     @return Returns a pointer to the allocated block. If memory is not available the memory exhaustion handler
         specified via mprCreate will be called to allow global recovery.
     @remarks Do not mix calls to malloc and mprAlloc.
@@ -1621,13 +1619,6 @@ PUBLIC bool mprEnableGC(bool on);
 
 
 /**
-    Test if GC has been paused
-    @return True if GC has been paused via #mprPauseGC
-    @stability Evolving
- */
-PUBLIC bool mprGCPaused();
-
-/**
     Hold a memory block
     @description This call will protect a memory block from freeing by the garbage collector. Call mprRelease to
         allow the block to be collected.
@@ -1647,23 +1638,6 @@ PUBLIC void mprHold(cvoid *ptr);
     @stability Evolving
   */
 PUBLIC void mprHoldBlocks(cvoid *ptr, ...);
-
-/**
-    Pause the garbage collector.
-    @description This call pause garbage collection so that all thread variables will be safe from collection.
-        It is useful to prevent collection when calling a routine that is known to yield.
-        This routine increments a pause counter and mprResumeGC will decrement. Garbage collection can resume when the
-        counter is zero.
-        \n\n
-        It is essential that mprResumeGC is always invoked after mprPauseGC. Be very careful to ensure
-        that all error code paths call mprResumeGC as required.
-        \n\n
-        To be effective, this routine also pauses any MPR shutdown.
-    @return true if GC and MPR shutdown can be paused. Will return false if the MPR is stopping and GC cannot be paused.
-    @ingroup MprMem
-    @stability Evolving
-  */
-PUBLIC bool mprPauseGC();
 
 /**
     Release a memory block
@@ -1692,16 +1666,6 @@ PUBLIC void mprReleaseBlocks(cvoid *ptr, ...);
     @stability Stable.
   */
 PUBLIC void mprRemoveRoot(cvoid *ptr);
-
-/**
-    Resume the garbage collector.
-    @description This call pause garbage collection so that all thread variables will be safe from collection.
-        This routine increments a pause counter and mprReleaseGC will decrement. Garbage collection can resume when the
-        counter is zero. This also resumes any shutdown capability for the application.
-    @ingroup MprMem
-    @stability Evolving
-  */
-PUBLIC void mprResumeGC();
 
 #if DOXYGEN
     /**
@@ -5806,9 +5770,7 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 #define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent */
 #define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
 #define MPR_EVENT_RUNNING           0x10    /**< Event currently executing */
-#define MPR_EVENT_BLOCK             0x20    /**< Blocking flag for mprCreateEventOutside */
-
-#define MPR_EVENT_MAGIC             0x12348765
+#define MPR_EVENT_HOLD              0x20    /**< Hold the event object to prevent from GC */
 
 /**
     Event callback function
@@ -5827,7 +5789,7 @@ typedef void (*MprEventProc)(void *data, struct MprEvent *event);
     @see MprDispatcher MprEvent MprEventProc MprEventService mprCreateDispatcher mprCreateEvent mprCreateEventService
         mprCreateTimerEvent mprDestroyDispatcher mprEnableContinuousEvent mprEnableDispatcher mprGetDispatcher
         mprQueueEvent mprRemoveEvent mprRescheduleEvent mprRestartContinuousEvent mprServiceEvents
-        mprSignalDispatcher mprStopContinuousEvent mprWaitForEvent mprCreateEventOutside
+        mprSignalDispatcher mprStopContinuousEvent mprWaitForEvent
     @defgroup MprEvent MprEvent
     @stability Internal
  */
@@ -5862,7 +5824,7 @@ typedef struct MprEvent {
     @stability Internal
  */
 typedef struct MprDispatcher {
-    cchar           *name;              /**< Dispatcher name / purpose */
+    cchar           *name;              /**< Static debug dispatcher name / purpose */
     MprEvent        *eventQ;            /**< Event queue */
     MprEvent        *currentQ;          /**< Currently executing events */
     MprCond         *cond;              /**< Multi-thread sync */
@@ -6037,57 +5999,36 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
 /**
     Create a new event
     @description Create a new event for service
+        This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from 
+        a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread 
+        may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole 
+        access to application memory.
     @param dispatcher Dispatcher object created via mprCreateDispatcher
-    @param name Debug name of the event
+        Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock 
+        dispatcher. This should only be used for quick, non-block event callbacks. If using another dispatcher,
+        it is essential that the dispatcher not be destroyed while this event is queued or running. 
+    @param name Static string name of the event
     @param period Time in milliseconds used by continuous events between firing of the event.
     @param proc Function to invoke when the event is run
     @param data Data to associate with the event and stored in event->data. The data must be either an allocated memory
         object or MPR_EVENT_STATIC_DATA must be specified in flags.
-    @param flags Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an
-        event which will be automatically rescheduled accoring to the specified period.
-        Use MPR_EVENT_STATIC_DATA if the data argument does not point to an allocated memory object.
-    @return Returns the event object if successful.
-    @ingroup MprEvent
-    @stability Stable
- */
-PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
-
-/**
-    Create an event from outside the MPR
-    @description Create a new event when executing a non-MPR thread. This is the only safe way to invoke MPR services from
-        a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and an outside thread
-        may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access
-        to application memory.
-        \n\n
-        This routine will create and queue the event and then return, unless MPR_EVENT_BLOCK is specified. In that case,
-        this call will wait while the event callback proc runs to completion then this routine will return.
-        \n\n
-        If you want to access MPR objects in the event callback, you may need to take steps to ensure they still exist when
-        the event runs. This may mean calling #mprAddRoot before creating the event and calling #mprRemoveRoot inside the
-        event callback.
-        \n\n
-        While creating and queuing the event, this routine temporarily pauses the garbage collector. If the garbage collector
-        is running, this call waits for it to complete before creating the event. This may necessitate a small delay before
-        running the event.
-        \n\n
-        NOTE: the event callback proc may run to completion before this function returns.
-    @param dispatcher Dispatcher object created via mprCreateDispatcher
-        Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock dispatcher.
-        This should only be used for quick, non-block event callbacks.  If using another dispatcher, it is essential that
-        the dispatcher not be destroyed while this event is queued or running. Such dispatchers must be retained before calling
-        mprCallEventOutside via #mprAddRoot or #mprHold before using with this routine.
-    @param name Descriptive event name. Does not need to be unique. Can be null.
-    @param proc Callback function to invoke when the event is run
-    @param data Data to associate with the event and stored in event->data. The data must be non-MPR memory.
-    @param flags Set to MPR_EVENT_BLOCK to invoke the callback and wait for its completion before returning.
-        Include MPR_EVENT_QUICK to execute the event without creating using a worker. This should only be used for quick
-        non-blocking event callback.s
-    @return Returns zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_BAD_STATE if the MPR is stopping
-        and the event cannot be created.
+    @param flags Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event 
+        which will be automatically rescheduled accoring to the specified period. Use MPR_EVENT_STATIC_DATA if the 
+        data argument does not point to an allocated memory object. Include MPR_EVENT_QUICK to execute the event 
+        without creating using a worker thread. This should only be used for quick non-blocking event callbacks.
+        Set to MPR_EVENT_HOLD to call #mprHold on the event object before returning. The caller must then call #mprRelease
+        on the event object.
+    @return Returns the event object if successful. Warning: the event callback may run to completion and the event 
+        object may be itself collected before this function returns (unless MPR_EVENT_HOLD has been specified). In this 
+        case, the return value will be non-zero, but the memory it points to may be freed or re-assigned.
     @ingroup MprEvent
     @stability Evolving
  */
+PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
+
+#if DEPRECATED || 1
 PUBLIC int mprCreateEventOutside(MprDispatcher *dispatcher, cchar *name, void *proc, void *data, int flags);
+#endif
 
 /*
     Queue a new event for service.
