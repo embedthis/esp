@@ -22947,7 +22947,7 @@ PUBLIC MprOff mprSendFileToSocket(MprSocket *sock, MprFile *file, MprOff offset,
         }
 
         if (!done && toWriteFile > 0 && file->fd >= 0) {
-#if LINUX && !__UCLIBC__ && !ME_COMPILER_HAS_OFF64
+#if LINUX && !__UCLIBC__
             off_t off = (off_t) offset;
 #endif
             while (!done && toWriteFile > 0) {
@@ -22957,7 +22957,7 @@ PUBLIC MprOff mprSendFileToSocket(MprSocket *sock, MprFile *file, MprOff offset,
                 }
 #if LINUX && !__UCLIBC__
     #if ME_COMPILER_HAS_OFF64
-                rc = sendfile64(sock->fd, file->fd, &offset, nbytes);
+                rc = sendfile64(sock->fd, file->fd, &off, nbytes);
     #else
                 rc = sendfile(sock->fd, file->fd, &off, nbytes);
     #endif
