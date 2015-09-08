@@ -39,8 +39,8 @@
     },
     "optionalDependencies": {
         "certs": "~0.1",
-        "mpr-mbedtls": "~0.3",
         "mpr-matrixssl": "~0.3",
+        "mpr-mbedtls": "~0.4",
         "mpr-nanossl": "~0.3",
         "mpr-openssl": "~0.3",
         "sqlite": "~1.0",

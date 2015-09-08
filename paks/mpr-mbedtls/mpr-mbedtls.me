@@ -1,0 +1,43 @@
+/*
+    mpr-mbedtls.me -- MbedTLS Component for the MPR
+ */
+
+Me.load({
+    usage: {
+        'mbedtls.compact':      'Build a compact edition of MbedTLS',
+        'mbedtls.cache':        'Set the session cache size (items)',
+        'mbedtls.logLevel':     'Starting logging level for SSL messages',
+        'mbedtls.renegotiate':  'Enable/Disable SSL renegotiation (defaults to true)',
+        'mbedtls.ticket':       'Enable session resumption via ticketing - client side session caching',
+        'mbedtls.timeout':      'Session and ticketing duration in seconds',
+    },
+
+    targets: {
+        mbedtls: {
+            description:  'MbedTLS Support',
+            configurable: true,
+            ifdef:        [ 'ssl' ],
+            conflicts:    [ 'openssl', 'matrixssl', 'nanossl' ]
+            depends:      [ 'libmpr-mbedtls', 'libmbedtls' ],
+            location:     '${SRC}/mpr-mbedtls',
+        },
+
+        'libmpr-mbedtls': {
+            description:  'MPR MbedTLS Interface',
+            type:         'lib',
+            static:       true,
+            path:         '${BIN}/libmpr-mbedtls${ARLIB}',
+            ifdef:        [ 'mbedtls' ],
+            sources:      [ '*.c' ],
+            depends:      [ 'libmbedtls' ],
+            '-compiler':  [
+                '-Wall',
+                '-Wshorten-64-to-32',
+                '-W3',
+            ],
+            '+defines': [
+                '-D_FILE_OFFSET_BITS=64'
+            ]
+        }
+    }
+})

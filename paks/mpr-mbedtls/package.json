@@ -1,0 +1,46 @@
+{
+    "name": "mpr-mbedtls",
+    "title": "MbedTLS support",
+    "description": "MbedTLS Support for the MPR",
+    "version": "0.4.0",
+    "keywords": [
+        "me",
+        "ssl",
+        "mbedtls"
+    ],
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "https://embedthis.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/mpr-mbedtls.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/mpr-mbedtls/issues"
+    },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
+    "dependencies": {
+        "mbedtls": "~2"
+    },
+    "devDependencies": {
+        "makeme": ">=0.9.3"
+    },
+    "pak": {
+        "export": [
+            "*.c",
+            "*.me"
+        ],
+        "origin": "embedthis/mpr-mbedtls"
+    }
+}
