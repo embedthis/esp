@@ -350,7 +350,7 @@ static void manageOpenProvider(MprSocketProvider *provider, int flags)
 
 /*
     Create and initialize an SSL configuration for a route. This configuration is used by all requests for
-    a given route. An application can have different SSL configurations for different routes. There is also 
+    a given route. An application can have different SSL configurations for different routes. There is also
     a default SSL configuration that is used when a route does not define a configuration and one for clients.
  */
 static OpenConfig *createOpenSslConfig(MprSocket *sp)
@@ -372,7 +372,7 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
     cfg = ssl->config;
 
     if ((context = SSL_CTX_new(SSLv23_method())) == 0) {
-        mprLog("error openssl", 0, "Unable to create SSL context"); 
+        mprLog("error openssl", 0, "Unable to create SSL context");
         return 0;
     }
     SSL_CTX_set_app_data(context, (void*) ssl);
@@ -420,7 +420,7 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
     if (ssl->ciphers) {
         mprLog("info openssl", 5, "Using SSL ciphers: %s", ssl->ciphers);
         if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
-            sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp)); 
+            sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp));
             SSL_CTX_free(context);
             return 0;
         }
@@ -434,7 +434,7 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
         }
         if ((!SSL_CTX_load_verify_locations(context, (char*) ssl->caFile, (char*) ssl->caPath)) ||
                 (!SSL_CTX_set_default_verify_paths(context))) {
-            sp->errorMsg = sfmt("Unable to set certificate locations: %s: %s", ssl->caFile, ssl->caPath); 
+            sp->errorMsg = sfmt("Unable to set certificate locations: %s: %s", ssl->caFile, ssl->caPath);
             SSL_CTX_free(context);
             return 0;
         }
@@ -681,7 +681,7 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
 
     if (!ssl->config || ssl->changed) {
         /*
-            On-demand creation of the SSL configuration 
+            On-demand creation of the SSL configuration
          */
         if ((ssl->config = createOpenSslConfig(sp)) == 0) {
             return MPR_ERR_CANT_INITIALIZE;
@@ -862,7 +862,7 @@ static ssize flushOss(MprSocket *sp)
     return 0;
 }
 
- 
+
 static char *getOssSession(MprSocket *sp)
 {
     SSL_SESSION     *sess;
@@ -930,7 +930,7 @@ static char *getOssState(MprSocket *sp)
     osp = sp->sslSocket;
     buf = mprCreateBuf(0, 0);
 
-    mprPutToBuf(buf, "{\"provider\":\"openssl\",\"cipher\":\"%s\",\"session\":\"%s\",", 
+    mprPutToBuf(buf, "{\"provider\":\"openssl\",\"cipher\":\"%s\",\"session\":\"%s\",",
         SSL_get_cipher(osp->handle), sp->session);
     mprPutToBuf(buf, "\"peer\":\"%s\",", sp->peerName);
     mprPutToBuf(buf, "\"%s\":{", sp->acceptIp ? "client" : "server");
@@ -952,7 +952,7 @@ static char *getOssState(MprSocket *sp)
         X509_NAME_oneline(X509_get_issuer_name(cert), issuer, sizeof(issuer) -1);
         parseCertFields(buf, &issuer[1]);
         mprPutToBuf(buf, "},");
-        
+
         mprPutToBuf(buf, "\"subject\": {");
         X509_NAME_oneline(X509_get_subject_name(cert), subject, sizeof(subject) -1);
         parseCertFields(buf, &subject[1]);
@@ -1225,7 +1225,7 @@ static cchar *mapCipherNames(cchar *ciphers)
 
 static DH *getDhKey()
 {
-	static unsigned char dh2048_p[] = {
+    static unsigned char dh2048_p[] = {
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC9, 0x0F, 0xDA, 0xA2, 0x21, 0x68, 0xC2, 0x34,
         0xC4, 0xC6, 0x62, 0x8B, 0x80, 0xDC, 0x1C, 0xD1, 0x29, 0x02, 0x4E, 0x08, 0x8A, 0x67, 0xCC, 0x74,
         0x02, 0x0B, 0xBE, 0xA6, 0x3B, 0x13, 0x9B, 0x22, 0x51, 0x4A, 0x08, 0x79, 0x8E, 0x34, 0x04, 0xDD,
@@ -1243,21 +1243,21 @@ static DH *getDhKey()
         0x39, 0x95, 0x49, 0x7C, 0xEA, 0x95, 0x6A, 0xE5, 0x15, 0xD2, 0x26, 0x18, 0x98, 0xFA, 0x05, 0x10,
         0x15, 0x72, 0x8E, 0x5A, 0x8A, 0xAC, 0xAA, 0x68, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     };
-	static unsigned char dh2048_g[] = {
-		0x02,
+    static unsigned char dh2048_g[] = {
+        0x02,
     };
-	DH      *dh;
+    DH      *dh;
 
     if ((dh = DH_new()) == 0) {
         return 0;
     }
     dh->p = BN_bin2bn(dh2048_p, sizeof(dh2048_p), NULL);
     dh->g = BN_bin2bn(dh2048_g, sizeof(dh2048_g), NULL);
-    if ((dh->p == 0) || (dh->g == 0)) { 
-        DH_free(dh); 
+    if ((dh->p == 0) || (dh->g == 0)) {
+        DH_free(dh);
         return 0;
     }
-	return dh;
+    return dh;
 }
 
 
@@ -1283,7 +1283,7 @@ static DH *dhcallback(SSL *handle, int isExport, int keyLength)
     Copyright (c) Embedthis Software. All Rights Reserved.
 
     This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a 
+    You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
