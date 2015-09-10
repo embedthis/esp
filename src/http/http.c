@@ -269,7 +269,7 @@ static int parseArgs(int argc, char **argv)
                 }
             }
 
-        } else if (smatch(argp, "--ciphers")) {
+        } else if (smatch(argp, "--cipher") || smatch(argp, "--ciphers")) {
             if (nextArg >= argc) {
                 return showUsage();
             } else {

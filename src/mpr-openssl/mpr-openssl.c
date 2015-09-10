@@ -863,32 +863,6 @@ static ssize flushOss(MprSocket *sp)
 }
 
  
-/*
-    Parse the cert info and write properties to the buffer. Modifies the info argument.
- */
-static void parseCertFields(MprBuf *buf, char *prefix, char *prefix2, char *info)
-{
-    char    c, *cp, *term, *key, *value;
-
-    if (info) {
-        term = cp = info;
-        do {
-            c = *cp;
-            if (c == '/' || c == '\0') {
-                *cp = '\0';
-                key = ssplit(term, "=", &value);
-                if (smatch(key, "emailAddress")) {
-                    key = "EMAIL";
-                }
-                mprPutToBuf(buf, "%s%s%s=%s,", prefix, prefix2, key, value);
-                term = &cp[1];
-                *cp = c;
-            }
-        } while (*cp++ != '\0');
-    }
-}
-
-
 static char *getOssSession(MprSocket *sp)
 {
     SSL_SESSION     *sess;
@@ -914,47 +888,80 @@ static char *getOssSession(MprSocket *sp)
 
 
 /*
+    Parse the cert info and write properties to the buffer. Modifies the info argument.
+ */
+static void parseCertFields(MprBuf *buf, char *info)
+{
+    char    c, *cp, *term, *key, *value;
+
+    if (info) {
+        key = 0;
+        term = cp = info;
+        do {
+            c = *cp;
+            if (c == '/' || c == '\0') {
+                *cp = '\0';
+                key = ssplit(term, "=", &value);
+                if (smatch(key, "emailAddress")) {
+                    key = "email";
+                }
+                mprPutToBuf(buf, "\"%s\":\"%s\",", key, value);
+                term = &cp[1];
+                *cp = c;
+            }
+        } while (*cp++ != '\0');
+        if (key) {
+            mprAdjustBufEnd(buf, -1);
+        }
+    }
+}
+
+
+/*
     Get the SSL state of the socket in a buffer
  */
 static char *getOssState(MprSocket *sp)
 {
     OpenSocket      *osp;
     MprBuf          *buf;
-    X509_NAME       *xSubject;
     X509            *cert;
-    char            *prefix, subject[512], issuer[512], peer[512];
+    char            subject[512], issuer[512];
 
     osp = sp->sslSocket;
     buf = mprCreateBuf(0, 0);
 
-    mprPutToBuf(buf, "PROVIDER=openssl,CIPHER=%s,SESSION=%s,", SSL_get_cipher(osp->handle), sp->session);
+    mprPutToBuf(buf, "{\"provider\":\"openssl\",\"cipher\":\"%s\",\"session\":\"%s\",", 
+        SSL_get_cipher(osp->handle), sp->session);
+    mprPutToBuf(buf, "\"peer\":\"%s\",", sp->peerName);
+    mprPutToBuf(buf, "\"%s\":{", sp->acceptIp ? "client" : "server");
 
-    if ((cert = SSL_get_peer_certificate(osp->handle)) == 0) {
-        mprPutToBuf(buf, "%s=\"none\",", sp->acceptIp ? "CLIENT_CERT" : "SERVER_CERT");
-
-    } else {
-        xSubject = X509_get_subject_name(cert);
-        X509_NAME_get_text_by_NID(xSubject, NID_commonName, peer, sizeof(peer) - 1);
-        mprPutToBuf(buf, "PEER=\"%s\",", peer);
-
-        prefix = sp->acceptIp ? "CLIENT_" : "SERVER_";
-        X509_NAME_oneline(X509_get_subject_name(cert), subject, sizeof(subject) -1);
-        parseCertFields(buf, prefix, "S_", &subject[1]);
-
+    if ((cert = SSL_get_peer_certificate(osp->handle)) != 0) {
         X509_NAME_oneline(X509_get_issuer_name(cert), issuer, sizeof(issuer) -1);
-        parseCertFields(buf, prefix, "I_", &issuer[1]);
+        mprPutToBuf(buf, "\"issuer\": {");
+        parseCertFields(buf, &issuer[1]);
+        mprPutToBuf(buf, "},");
+
+        X509_NAME_oneline(X509_get_subject_name(cert), subject, sizeof(subject) -1);
+        mprPutToBuf(buf, "\"subject\": {");
+        parseCertFields(buf, &subject[1]);
+        mprPutToBuf(buf, "},");
         X509_free(cert);
     }
     if ((cert = SSL_get_certificate(osp->handle)) != 0) {
-        prefix =  sp->acceptIp ? "SERVER_" : "CLIENT_";
-        X509_NAME_oneline(X509_get_subject_name(cert), subject, sizeof(subject) -1);
-        parseCertFields(buf, prefix, "S_", &subject[1]);
-
+        mprPutToBuf(buf, "\"issuer\": {");
         X509_NAME_oneline(X509_get_issuer_name(cert), issuer, sizeof(issuer) -1);
-        parseCertFields(buf, prefix, "I_", &issuer[1]);
+        parseCertFields(buf, &issuer[1]);
+        mprPutToBuf(buf, "},");
+        
+        mprPutToBuf(buf, "\"subject\": {");
+        X509_NAME_oneline(X509_get_subject_name(cert), subject, sizeof(subject) -1);
+        parseCertFields(buf, &subject[1]);
+        mprPutToBuf(buf, "},");
         /* Don't call X509_free on own cert */
     }
-    return mprGetBufStart(buf);
+    mprAdjustBufEnd(buf, -1);
+    mprPutToBuf(buf, "}}");
+    return mprBufToString(buf);
 }
 
 

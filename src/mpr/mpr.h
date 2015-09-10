@@ -7728,9 +7728,9 @@ PUBLIC int mprGetSocketPort(MprSocket *sp);
 
 /**
     Get the socket state
-    @description Get the socket state as a parseable string description
+    @description Get the socket state as string description in JSON format.
     @param sp Socket object returned from #mprCreateSocket
-    @return The an allocated string
+    @return The an allocated string in JSON format. Returns NULL if the state is not available or supported.
     @ingroup MprSocket
     @stability Stable
  */
@@ -8042,7 +8042,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     #define ME_MPR_SSL_CACHE 512
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
-    #define ME_MPR_SSL_LOG_LEVEL 3
+    #define ME_MPR_SSL_LOG_LEVEL 5
 #endif
 #ifndef ME_MPR_SSL_RENEGOTIATE
     #define ME_MPR_SSL_RENEGOTIATE 1

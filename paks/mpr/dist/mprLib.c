@@ -3917,7 +3917,7 @@ PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
         return __atomic_compare_exchange(addr, &localExpected, (void**) &value, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 
     #elif ME_COMPILER_HAS_SYNC_CAS
-        return __sync_bool_compare_and_swap(addr, expected, value);
+        return __sync_bool_compare_and_swap(addr, expected, (void*) value);
 
     #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86)
         void *prev;

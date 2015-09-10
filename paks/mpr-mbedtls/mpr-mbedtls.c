@@ -21,13 +21,14 @@
     Per-route SSL configuration
  */
 typedef struct MbedConfig {
-    mbedtls_ctr_drbg_context    ctr;            /* Counter random generator state */
-    mbedtls_x509_crt            cert;           /* Certificate (own) */
     mbedtls_x509_crt            ca;             /* Certificate authority bundle to verify peer */
-    mbedtls_x509_crl            revoke;         /* Certificate revoke list */
     mbedtls_ssl_cache_context   cache;          /* Session cache context */
-    mbedtls_pk_context          pkey;           /* Private key */
     mbedtls_ssl_config          conf;           /* SSL configuration */
+    mbedtls_x509_crt            cert;           /* Certificate (own) */
+    mbedtls_ctr_drbg_context    ctr;            /* Counter random generator state */
+    mbedtls_ssl_ticket_context  tickets;        /* Session tickets */
+    mbedtls_pk_context          pkey;           /* Private key */
+    mbedtls_x509_crl            revoke;         /* Certificate revoke list */
     int                         *ciphers;       /* Set of acceptable ciphers - null terminated */
 } MbedConfig;
 
@@ -41,24 +42,24 @@ typedef struct MbedSocket {
 } MbedSocket;
 
 static mbedtls_entropy_context  mbedEntropy;    /* Entropy context */
-static int                      logLevelBoost = 4;
 
-static MprSocketProvider *mbedProvider; /* Mbedtls socket provider */
+static MprSocketProvider        *mbedProvider;  /* Mbedtls socket provider */
+
+static int                      mbedLogLevel;   /* MPR log level to start SSL tracing */
 
 /***************************** Forward Declarations ***************************/
 
 static void     closeMbed(MprSocket *sp, bool gracefully);
 static void     disconnectMbed(MprSocket *sp);
 static void     freeMbedLock(mbedtls_threading_mutex_t *tm);
-static int      *getCipherSuite(cchar *ciphers, int *len);
+static int      *getCipherSuite(MprSsl *ssl);
 static char     *getMbedState(MprSocket *sp);
-static int      getPeerCert(MprSocket *sp);
+static int      getPeerCertInfo(MprSocket *sp);
 static int      handshakeMbed(MprSocket *sp);
 static void     initMbedLock(mbedtls_threading_mutex_t *tm);
 static void     manageMbedConfig(MbedConfig *cfg, int flags);
 static void     manageMbedProvider(MprSocketProvider *provider, int flags);
 static void     manageMbedSocket(MbedSocket*ssp, int flags);
-static void     markSecured(MprSocket *sp);
 static int      mbedLock(mbedtls_threading_mutex_t *tm);
 static void     mbedTerminator(int state, int how, int status);
 static int      mbedUnlock(mbedtls_threading_mutex_t *tm);
@@ -89,17 +90,6 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
 
     mbedtls_threading_set_alt(initMbedLock, freeMbedLock, mbedLock, mbedUnlock);
     mbedtls_entropy_init(&mbedEntropy);
-
-    if (mprGetLogLevel() >= 5) {
-        char    cipher[80];
-        cint    *cp;
-        mprLog("info mbedtls", 5, "Supported Ciphers");
-        for (cp = mbedtls_ssl_list_ciphersuites(); *cp; cp++) {
-            scopy(cipher, sizeof(cipher), mbedtls_ssl_get_ciphersuite_name(*cp));
-            replace(cipher, '-', '_');
-            mprLog("info mbedtls", 5, "%s (0x%04X)", cipher, *cp);
-        }
-    }
     return 0;
 }
 
@@ -141,6 +131,8 @@ static void manageMbedConfig(MbedConfig *cfg, int flags)
         mbedtls_x509_crt_free(&cfg->ca);
         mbedtls_x509_crl_free(&cfg->revoke);
         mbedtls_ssl_cache_free(&cfg->cache);
+        mbedtls_ssl_config_free(&cfg->conf);
+        mbedtls_ssl_ticket_free(&cfg->tickets);
     }
 }
 
@@ -155,6 +147,7 @@ static void manageMbedSocket(MbedSocket *mb, int flags)
         mprMark(mb->sock);
 
     } else if (flags & MPR_MANAGE_FREE) {
+//  MOB - check
         mbedtls_ssl_free(&mb->ctx);
     }
 }
@@ -191,9 +184,19 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
     if ((cfg = mprAllocObj(MbedConfig, manageMbedConfig)) == 0) {
         return 0;
     }
+    conf = &cfg->conf;
+    mbedtls_ssl_config_init(conf);
+
+    mbedtls_ssl_conf_dbg(conf, traceMbed, NULL);
+    mbedLogLevel = ssl->logLevel;
+    if (MPR->logLevel >= mbedLogLevel) {
+        mbedtls_debug_set_threshold(MPR->logLevel - mbedLogLevel);
+    }
     mbedtls_pk_init(&cfg->pkey);
     mbedtls_ssl_cache_init(&cfg->cache);
     mbedtls_ctr_drbg_init(&cfg->ctr);
+    mbedtls_x509_crt_init(&cfg->cert);
+    mbedtls_ssl_ticket_init(&cfg->tickets);
 
     rc = 0;
     name = mprGetAppName();
@@ -237,18 +240,11 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
             return 0;
         }
     }
-    cfg->ciphers = getCipherSuite(ssl->ciphers, NULL);
-    logLevelBoost = ssl->logLevel;
 
-    conf = &cfg->conf;
-    mbedtls_ssl_config_init(conf);
-    mbedtls_x509_crt_init(&cfg->cert);
-    mbedtls_pk_init(&cfg->pkey);
-
+    cfg->ciphers = getCipherSuite(ssl);
     rc += mbedtls_ssl_config_defaults(conf, sp->flags & MPR_SOCKET_SERVER ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
         MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
     mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &cfg->ctr);
-    mbedtls_ssl_conf_dbg(conf, traceMbed, NULL);
 
     /*
         Configure larger DH parameters 
@@ -259,12 +255,13 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
         Configure ticket-based sessions
      */
     if (sp->flags & MPR_SOCKET_SERVER) {
-#if UNUSED && MOB
         if (ssl->ticket) {
-            rc += mbedtls_conf_set_session_tickets(conf, 1);
-            mbedtls_conf_set_session_ticket_lifetime(conf, (int) ssl->sessionTimeout / TPS);
+            rc += mbedtls_ssl_ticket_setup(&cfg->tickets, mbedtls_ctr_drbg_random, &cfg->ctr, 
+                MBEDTLS_CIPHER_AES_256_GCM, (int) ssl->sessionTimeout);
+            mbedtls_ssl_conf_session_tickets_cb(conf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, &cfg->tickets);
         }
-#endif
+    } else {
+        mbedtls_ssl_conf_session_tickets(conf, 1);
     }
 
     /*
@@ -344,18 +341,19 @@ static int upgradeMbed(MprSocket *sp, MprSsl *ssl, cchar *peerName)
     mb->sock = sp;
     ctx = &mb->ctx;
 
-    /*
-        Order matters in these various initialization calls.
-        Endpoint must be defined first and rng early.
-MOB - test return code on all relevant calls
-     */
     mbedtls_ssl_init(ctx);
     mbedtls_ssl_setup(ctx, &cfg->conf);
+#if MOB
+    //  What does this do
+    mbedtls_ssl_session_reset(ctx);
+#endif
     mbedtls_ssl_set_bio(ctx, &sp->fd, mbedtls_net_send, mbedtls_net_recv, 0);
-    mbedtls_ssl_set_hostname(ctx, peerName);
 
+    if (peerName && mbedtls_ssl_set_hostname(ctx, peerName) < 0) {
+        return MPR_ERR_BAD_ARGS;
+    }
     if (handshakeMbed(sp) < 0) {
-        return -1;
+        return MPR_ERR_CANT_INITIALIZE;
     }
     return 0;
 }
@@ -399,12 +397,22 @@ static int handshakeMbed(MprSocket *sp)
     if (rc < 0) {
         if (rc == MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED && !(sp->ssl->keyFile || sp->ssl->certFile)) {
             sp->errorMsg = sclone("Peer requires a certificate");
+#if UNUSED
+        } else if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+            sp->errorMsg = sclone("Connection closed gracefully");
+        } else if (rc == MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN) {
+            sp->errorMsg = sclone("No ciphers in common");
+        } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+            sp->errorMsg = sclone("Connection reset");
+#endif
         } else {
-            sp->errorMsg = sfmt("Cannot handshake: error -0x%x", -rc);
+            char ebuf[256];
+            mbedtls_strerror(-rc, ebuf, sizeof(ebuf));
+            sp->errorMsg = sfmt("%s: error -0x%x", ebuf, -rc);
         }
         sp->flags |= MPR_SOCKET_EOF;
         errno = EPROTO;
-        return -1;
+        return MPR_ERR_CANT_READ;
     } 
     if ((vrc = mbedtls_ssl_get_verify_result(&mb->ctx)) != 0) {
         if (vrc & MBEDTLS_X509_BADCERT_MISSING) {
@@ -450,33 +458,34 @@ static int handshakeMbed(MprSocket *sp)
         }
         sp->flags |= MPR_SOCKET_EOF;
         errno = EPROTO;
-        return -1;
+        return MPR_ERR_CANT_READ;
     }
-//  MOB - rename - misleading
-    if (getPeerCert(sp) < 0) {
+    if (getPeerCertInfo(sp) < 0) {
         return MPR_ERR_CANT_CONNECT;
     }
-    markSecured(sp);
+    sp->secured = 1;
     return 1;
 }
 
 
-static int getPeerCert(MprSocket *sp)
+static int getPeerCertInfo(MprSocket *sp)
 {
     MbedSocket              *mb;
+    MprBuf                  *buf;
+    mbedtls_ssl_context     *ctx;
     const mbedtls_x509_crt  *peer;
+    mbedtls_ssl_session     *session;
+    ssize                   len;
+    int                     i;
     char                    cbuf[5120], *cp, *end;
 
     mb = (MbedSocket*) sp->sslSocket;
+    ctx = &mb->ctx;
+
     /*
         Get peer details
      */
-    if ((peer = mbedtls_ssl_get_peer_cert(&mb->ctx)) != 0) {
-        if (mprGetLogLevel() >= 5) {
-            char buf[4096];
-            mbedtls_x509_crt_info(buf, sizeof(buf) - 1, "", peer);
-            mprLog("info mbedtls", 5, "Peer certificate\n%s", buf);
-        }
+    if ((peer = mbedtls_ssl_get_peer_cert(ctx)) != 0) {
         mbedtls_x509_dn_gets(cbuf, sizeof(cbuf), &peer->subject);
         sp->peerCert = sclone(cbuf);
         /*
@@ -486,10 +495,36 @@ static int getPeerCert(MprSocket *sp)
             cp += 3;
             if ((end = schr(cp, ',')) != 0) {
                 sp->peerName = snclone(cp, end - cp);
+            } else {
+                sp->peerName = sclone(cp);
             }
         }
         mbedtls_x509_dn_gets(cbuf, sizeof(cbuf), &peer->issuer);
         sp->peerCertIssuer = sclone(cbuf);
+
+        if (mprGetLogLevel() >= 5) {
+            char buf[4096];
+            mbedtls_x509_crt_info(buf, sizeof(buf) - 1, "", peer);
+            mprLog("info mbedtls", 5, "Peer certificate\n%s", buf);
+        }
+    }
+    sp->cipher = replace(sclone(mbedtls_ssl_get_ciphersuite(ctx)), '-', '_');
+
+    /*
+        Convert session into a string
+     */
+    session = ctx->session;
+    if (session->start && session->ciphersuite) {
+        len = session->id_len;
+        if (len > 0) {
+            buf = mprCreateBuf(len, 0);
+            for (i = 0; i < len; i++) {
+                mprPutToBuf(buf, "%02X", (uchar) session->id[i]);
+            }
+            sp->session = mprBufToString(buf);
+        } else {
+            sp->session = sclone("ticket");
+        }
     }
     return 0;
 }
@@ -509,7 +544,7 @@ static ssize readMbed(MprSocket *sp, void *buf, ssize len)
     assert(mb->cfg);
 
     if (sp->fd == INVALID_SOCKET) {
-        return -1;
+        return MPR_ERR_CANT_READ;
     }
     if (mb->ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
         if ((rc = handshakeMbed(sp)) <= 0) {
@@ -518,25 +553,25 @@ static ssize readMbed(MprSocket *sp, void *buf, ssize len)
     }
     while (1) {
         rc = mbedtls_ssl_read(&mb->ctx, buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", 5, "ssl_read %d", rc);
+        mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "readMbed %d", rc);
         if (rc < 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE)  {
                 rc = 0;
                 break;
 
             } else if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-                mprDebug("debug mpr ssl mbedtls", 5, "connection was closed gracefully\n");
+                mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "connection was closed gracefully");
                 sp->flags |= MPR_SOCKET_EOF;
-                return -1;
+                return MPR_ERR_CANT_READ;
 
             } else {
                 mprDebug("debug mpr ssl mbedtls", 4, "readMbed: error -0x%x", -rc);
                 sp->flags |= MPR_SOCKET_EOF;
-                return -1;
+                return MPR_ERR_CANT_READ;
             }
         } else if (rc == 0) {
             sp->flags |= MPR_SOCKET_EOF;
-            return -1;
+            return MPR_ERR_CANT_READ;
         }
         break;
     }
@@ -558,7 +593,7 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
     mb = (MbedSocket*) sp->sslSocket;
     if (len <= 0) {
         assert(0);
-        return -1;
+        return MPR_ERR_BAD_ARGS;
     }
     if (mb->ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
         if ((rc = handshakeMbed(sp)) <= 0) {
@@ -569,23 +604,22 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
     rc = 0;
     do {
         rc = mbedtls_ssl_write(&mb->ctx, (uchar*) buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", 6, "writeMbed written %d, requested len %zd", rc, len);
+        mprDebug("debug mpr ssl mbedtls", 6, "mbedtls write: wrote %d of %zd", rc, len);
         if (rc <= 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) {
                 break;
             }
             if (rc == MBEDTLS_ERR_NET_CONN_RESET) {                                                         
-                mprDebug("debug mpr ssl mbedtls", 5, "ssl_write peer closed");
-                return -1;
+                mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "ssl_write peer closed connection");
+                return MPR_ERR_CANT_WRITE;
             } else {
-                mprDebug("debug mpr ssl mbedtls", 5, "ssl_write failed rc -0x%x", -rc);
-                return -1;
+                mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "ssl_write failed rc -0x%x", -rc);
+                return MPR_ERR_CANT_WRITE;
             }
         } else {
             totalWritten += rc;
             buf = (void*) ((char*) buf + rc);
             len -= rc;
-            mprDebug("debug mpr ssl mbedtls", 6, "writeMbed: len %zd, written %d, total %zd", len, rc, totalWritten);
         }
     } while (len > 0);
 
@@ -593,59 +627,85 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
 
     if (totalWritten == 0 && (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE))  {
         mprSetError(EAGAIN);
-        return -1;
+        return MPR_ERR_CANT_WRITE;
     }
     return totalWritten;
 }
 
 
-/*
-    Set the socket into a secured state. Capture the session ID.
- */
-static void markSecured(MprSocket *sp)
+static void putCertToBuf(MprBuf *buf, cchar *key, const mbedtls_x509_name *dn)
 {
-    MbedSocket      *mb;
-    MprBuf          *buf;
-    ssize           len;
-    int             i;
+//  MOB - fix case of vars
+    int ret;
+    size_t i, n;
+    uchar c;
+    const mbedtls_x509_name *name;
+    const char *short_name = NULL;
+    char s[MBEDTLS_X509_MAX_DN_NAME_SIZE], *p;
 
-    mb = sp->sslSocket;
-    sp->secured = 1;
-    sp->cipher = replace(sclone(mbedtls_ssl_get_ciphersuite(&mb->ctx)), '-', '_');
+    memset(s, 0, sizeof(s));
 
-    /*
-        Convert session into a string
-     */
-    len = mb->ctx.session->id_len;
-    if (len > 0) {
-        buf = mprCreateBuf(len, 0);
-        for (i = 0; i < len; i++) {
-            mprPutToBuf(buf, "%02X", (uchar) mb->ctx.session->id[i]);
+    mprPutToBuf(buf, "\"%s\":{", key);
+    for (name = dn; name; name = name->next) {
+        if (!name->oid.p) {
+            name = name->next;
+            continue;
         }
-        sp->session = mprBufToString(buf);
-    } else if (mb->ctx.session->ticket) {
-        sp->session = sclone("ticket");
+        ret = mbedtls_oid_get_attr_short_name(&name->oid, &short_name);
+        if (!ret) {
+            continue;
+        }
+        if (smatch(short_name, "emailAddress")) {
+            short_name = "email";
+        }
+        mprPutToBuf(buf, "\"%s\":", short_name);
+
+        for(i = 0; i < name->val.len; i++) {
+            if (i >= sizeof(s) - 1) {
+                break;
+            }
+            c = name->val.p[i];
+            if (c < 32 || c == 127 || (c > 128 && c < 160)) {
+                 s[i] = '?';
+            } else { 
+                s[i] = c;
+            }
+        }
+        s[i] = '\0';
+        mprPutToBuf(buf, "\"%s\",", s);
     }
+    mprAdjustBufEnd(buf, -1);
+    mprPutToBuf(buf, "},");
 }
 
 
-static void removeSpaces(char *buf)
+static void formatCert(MprBuf *buf, mbedtls_x509_crt *crt)
 {
-    char    *ip, *op;
+    char        text[1024];
 
-    for (op = ip = buf; *ip; ip++) {
-        if (*ip == ' ') {
-            continue;
-        }
-        if (ip > buf && ip[-1] == ' ') {
-            *op++ = toupper((uchar) *ip);
-        } else if (*ip == '\n') {
-            *op++ = ',';
-        } else {
-            *op++ = *ip;
-        }
+    mprPutToBuf(buf, "\"version\":%d,", crt->version);
+
+    mbedtls_x509_serial_gets(text, sizeof(text), &crt->serial);
+    mprPutToBuf(buf, "\"serial\":\"%s\",", text);
+
+    putCertToBuf(buf, "issuer", &crt->issuer);
+    putCertToBuf(buf, "subject", &crt->subject);
+
+    mprPutToBuf(buf, "\"issued\":\"%04d-%02d-%02d %02d:%02d:%02d\",", crt->valid_from.year, crt->valid_from.mon,
+        crt->valid_from.day, crt->valid_from.hour, crt->valid_from.min, crt->valid_from.sec);
+
+    mprPutToBuf(buf, "\"expires\":\"%04d-%02d-%02d %02d:%02d:%02d\",", crt->valid_to.year, crt->valid_to.mon,
+        crt->valid_to.day, crt->valid_to.hour, crt->valid_to.min, crt->valid_to.sec);
+
+    mbedtls_x509_sig_alg_gets(text, sizeof(text), &crt->sig_oid, crt->sig_pk, crt->sig_md, crt->sig_opts);
+    mprPutToBuf(buf, "\"signed\":\"%s\",", text);
+
+    mprPutToBuf(buf, "\"keysize\": %d,", (int) mbedtls_pk_get_bitlen(&crt->pk));
+
+    if (crt->ext_types & MBEDTLS_X509_EXT_BASIC_CONSTRAINTS) {
+        mprPutToBuf(buf, "\"constraints\": \"CA=%s\",", crt->ca_istrue ? "true" : "false");
     }
-    *op++ = '\0';
+    mprAdjustBufEnd(buf, -1);
 }
 
 
@@ -666,57 +726,79 @@ static char *getMbedState(MprSocket *sp)
         return 0;
     }
     ctx = &mb->ctx;
-    session = ctx->session;
-    buf = mprCreateBuf(0, 0);
-    mprPutToBuf(buf, "PROVIDER=mbedtls,CIPHER=%s,SESSION=%s,", mbedtls_ssl_get_ciphersuite(ctx), sp->session);
-
-    mprPutToBuf(buf, "PEER=\"%s\",", sp->peerName);
-    if (session->peer_cert) {
-        peerPrefix = sp->acceptIp ? "CLIENT_" : "SERVER_";
-        mbedtls_x509_crt_info(cbuf, sizeof(cbuf), peerPrefix, session->peer_cert);
-        removeSpaces(cbuf);
-        mprPutStringToBuf(buf, cbuf);
-    } else {
-        mprPutToBuf(buf, "%s=\"none\",", sp->acceptIp ? "CLIENT_CERT" : "SERVER_CERT");
+    if ((session = ctx->session) == 0) {
+        return 0;
     }
     cfg = sp->ssl->config;
-    if (cfg->conf.key_cert && cfg->conf.key_cert->cert) {
-        ownPrefix =  sp->acceptIp ? "SERVER_" : "CLIENT_";
-        mbedtls_x509_crt_info(cbuf, sizeof(cbuf), ownPrefix, cfg->conf.key_cert->cert);
-        removeSpaces(cbuf);
-        mprPutStringToBuf(buf, cbuf);
+
+    buf = mprCreateBuf(0, 0);
+    mprPutToBuf(buf, "{");
+    mprPutToBuf(buf, "\"provider\":\"mbedtls\",\"cipher\":\"%s\",\"session\":\"%s\",", 
+        mbedtls_ssl_get_ciphersuite(ctx), sp->session);
+
+    mprPutToBuf(buf, "\"peer\":\"%s\",", sp->peerName ? sp->peerName : "");
+    if (session->peer_cert) {
+        mprPutToBuf(buf, "\"%s\":{", sp->acceptIp ? "client" : "server");
+        formatCert(buf, session->peer_cert);
+        mprPutToBuf(buf, "},");
     }
-    return mprGetBufStart(buf);
+    if (cfg->conf.key_cert && cfg->conf.key_cert->cert) {
+        mprPutToBuf(buf, "\"%s\":{", sp->acceptIp ? "server" : "client");
+        formatCert(buf, cfg->conf.key_cert->cert);
+        mprPutToBuf(buf, "},");
+    }
+    mprAdjustBufEnd(buf, -1);
+    mprPutToBuf(buf, "}");
+    return mprBufToString(buf);
 }
 
 
 /*
     Convert string of IANA ciphers into a list of cipher codes
  */
-static int *getCipherSuite(cchar *ciphers, int *len)
+static int *getCipherSuite(MprSsl *ssl)
 {
-    char    *cipher, *next;
+    cchar   *ciphers;
+    char    *cipher, *next, buf[128];
     cint    *cp;
-    int     nciphers, i, *result, code;
+    int     nciphers, i, *result, code, count;
 
-    if (!ciphers || *ciphers == 0) {
-        return 0;
-    }
-    for (nciphers = 0, cp = mbedtls_ssl_list_ciphersuites(); cp && *cp; cp++, nciphers++) { }
-    result = mprAlloc((nciphers + 1) * sizeof(int));
-
-    next = sclone(ciphers);
-    for (i = 0; (cipher = stok(next, ":, \t", &next)) != 0; ) {
-        replace(cipher, '_', '-');
-        if ((code = mbedtls_ssl_get_ciphersuite_id(cipher)) <= 0) {
-            mprLog("error mpr", 0, "Unsupported cipher \"%s\"", cipher);
-            continue;
+    result = 0;
+    if (mprGetLogLevel() >= 5) {
+        static int once = 0;
+        if (!once++) {
+            mprLog("info mbedtls", 5, "\nMbedTLS Ciphers:");
+            for (cp = mbedtls_ssl_list_ciphersuites(); *cp; cp++) {
+                scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(*cp));
+                replace(buf, '-', '_');
+                mprLog("info mbedtls", 5, "%s (0x%04X)", buf, *cp);
+            }
         }
-        result[i++] = code;
     }
-    result[i] = 0;
-    if (len) {
-        *len = i;
+    ciphers = ssl->ciphers;
+    if (ciphers && *ciphers) {
+        for (nciphers = 0, cp = mbedtls_ssl_list_ciphersuites(); cp && *cp; cp++, nciphers++) { }
+        result = mprAlloc((nciphers + 1) * sizeof(int));
+
+        next = sclone(ciphers);
+        for (i = 0; (cipher = stok(next, ":, \t", &next)) != 0; ) {
+            replace(cipher, '_', '-');
+            if ((code = mbedtls_ssl_get_ciphersuite_id(cipher)) <= 0) {
+                mprLog("error mpr", 0, "Unsupported cipher \"%s\"", cipher);
+                continue;
+            }
+            result[i++] = code;
+        }
+        result[i] = 0;
+        count = i;
+        mprLog("info mbedtls", 5, "\nSelected Ciphers:");
+        for (i = 0; i < count; i++) {
+            scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(result[i]));
+            replace(buf, '-', '_');
+            mprLog("info mbedtls", 5, "%s (0x%04X)", buf, result[i]);
+        }
+    } else {
+        result = 0;
     }
     return result;
 }
@@ -757,9 +839,9 @@ static int mbedUnlock(mbedtls_threading_mutex_t *tm)
  */
 static void traceMbed(void *context, int level, cchar *file, int line, cchar *str)
 {
-    level += logLevelBoost;
+    level += mbedLogLevel;
     if (level <= MPR->logLevel) {
-        mprLog("info mbedtls", level, "%s: %d: %s", MPR->name, level, str);
+        mprLog("info mbedtls", level, "%s", str);
     }
 }
 

@@ -5,6 +5,8 @@ MbedTLS SSL stack interface.
 
 ## Installation
 
+Install into a product that supports the MPR such as Appweb.
+
     pak install mpr-mbedtls
 
 ## Building

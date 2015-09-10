@@ -31,13 +31,15 @@
     ],
     "dependencies": {
         "certs": "~0.1",
+        "mbedtls": "~2.1",
         "mpr": "~6.1",
+        "mpr-mbedtls": "~0.4",
         "osdep": "~0.8",
         "pcre": "~1.0",
         "ssl": "~0.9"
     },
     "optionalDependencies": {
-        "mpr-openssl": "~0.3"
+        "mpr-openssl": "~0.4"
     },
     "devDependencies": {
         "makeme": ">=0.9.0",

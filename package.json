@@ -2,7 +2,7 @@
     "name": "esp",
     "description": "Embedthis ESP, the amazingly fast C-Language web framework",
     "title": "Embedthis ESP",
-    "version": "6.0.3",
+    "version": "6.1.0",
     "keywords": [
         "esp",
         "package"
@@ -42,7 +42,7 @@
         "mpr-matrixssl": "~0.3",
         "mpr-mbedtls": "~0.4",
         "mpr-nanossl": "~0.3",
-        "mpr-openssl": "~0.3",
+        "mpr-openssl": "~0.4",
         "sqlite": "~1.0",
         "ssl": "~0.9",
         "watchdog": "~0.2"
