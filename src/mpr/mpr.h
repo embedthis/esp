@@ -364,7 +364,7 @@ PUBLIC void assert(bool cond);
     #define assert(C)   if (C) ; else mprAssert(MPR_LOC, #C)
 #else
     #undef assert
-    #define assert(C)   if (1) ; else ((void*)0)
+    #define assert(C)   if (1) ; else {}
 #endif
 
 /*********************************** Thread Sync ******************************/
@@ -1012,7 +1012,7 @@ typedef struct MprFreeQueue {
 
 #if ME_MPR_ALLOC_DEBUG
     #define MPR_CHECK_BLOCK(bp)     mprCheckBlock(bp)
-    #define MPR_VERIFY_MEM()        if (MPR->heap->verify) { mprVerifyMem(); } else ((void*)0)
+    #define MPR_VERIFY_MEM()        if (MPR->heap->verify) { mprVerifyMem(); } else {}
 #else
     #define MPR_CHECK_BLOCK(bp)
     #define MPR_VERIFY_MEM()
@@ -4125,15 +4125,15 @@ PUBLIC void mprLogProc(cchar *tags, int level, cchar *fmt, ...) PRINTF_ATTRIBUTE
 PUBLIC int mprUsingDefaultLogHandler();
 
 #if ME_MPR_DEBUG_LOGGING
-    #define mprDebug(tags, l, ...) if ((l) <= MPR->logLevel) { mprLogProc(tags, l, __VA_ARGS__); } else ((void*)0)
+    #define mprDebug(tags, l, ...) if ((l) <= MPR->logLevel) { mprLogProc(tags, l, __VA_ARGS__); } else {}
 #else
-    #define mprDebug(tags, l, ...) if (1) ; else ((void*)0)
+    #define mprDebug(tags, l, ...) if (1) ; else {}
 #endif
 
 #if ME_MPR_LOGGING
-    #define mprLog(tags, l, ...) if ((l) <= MPR->logLevel) { mprLogProc(tags, l, __VA_ARGS__); } else ((void*)0)
+    #define mprLog(tags, l, ...) if ((l) <= MPR->logLevel) { mprLogProc(tags, l, __VA_ARGS__); } else {}
 #else
-    #define mprLog(tags, l, ...) if (1) ; else ((void*)0)
+    #define mprLog(tags, l, ...) if (1) ; else {}
 #endif
 
 #if DEPRECATED || 1
@@ -4141,9 +4141,9 @@ PUBLIC int mprUsingDefaultLogHandler();
     Should use mprDebug for debug messages and mprLog for production messages
  */
 #if ME_MPR_TRACING || ME_MPR_DEBUG_LOGGING
-    #define mprTrace(l, ...) if ((l) <= MPR->logLevel) { mprLogProc(l, __VA_ARGS__); } else ((void*)0)
+    #define mprTrace(l, ...) if ((l) <= MPR->logLevel) { mprLogProc(l, __VA_ARGS__); } else {}
 #else
-    #define mprTrace(l, ...) if (1) ; else ((void*)0)
+    #define mprTrace(l, ...) if (1) ; else {}
 #endif
 #endif
 

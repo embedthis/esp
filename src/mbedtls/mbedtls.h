@@ -3360,7 +3360,9 @@ extern mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex;
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if defined(MBEDTLS_FS_IO)
 #include <stdio.h>
@@ -4084,7 +4086,9 @@ int mbedtls_mpi_self_test( int verbose );
 
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_ERR_NET_SOCKET_FAILED                     -0x0042  /**< Failed to open a socket. */
 #define MBEDTLS_ERR_NET_CONNECT_FAILED                    -0x0044  /**< The connection to the given server / port failed. */
@@ -5220,7 +5224,9 @@ extern const mbedtls_md_info_t mbedtls_sha512_info;
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if !defined(MBEDTLS_MD5_ALT)
 // Regular implementation
@@ -5504,7 +5510,9 @@ void mbedtls_md2_process( mbedtls_md2_context *ctx );
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if !defined(MBEDTLS_MD4_ALT)
 // Regular implementation
@@ -11091,7 +11099,9 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if !defined(MBEDTLS_SHA1_ALT)
 // Regular implementation
@@ -11233,7 +11243,9 @@ int mbedtls_sha1_self_test( int verbose );
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if !defined(MBEDTLS_SHA256_ALT)
 // Regular implementation
@@ -11380,7 +11392,9 @@ int mbedtls_sha256_self_test( int verbose );
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if !defined(MBEDTLS_SHA512_ALT)
 // Regular implementation
@@ -11527,7 +11541,9 @@ void mbedtls_sha512_process( mbedtls_sha512_context *ctx, const unsigned char da
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1
@@ -13038,7 +13054,9 @@ int mbedtls_base64_self_test( int verbose );
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_CAMELLIA_ENCRYPT     1
 #define MBEDTLS_CAMELLIA_DECRYPT     0
@@ -13575,7 +13593,9 @@ int mbedtls_ctr_drbg_seed_entropy_len( mbedtls_ctr_drbg_context *,
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_DES_ENCRYPT     1
 #define MBEDTLS_DES_DECRYPT     0
@@ -14484,7 +14504,9 @@ int mbedtls_memory_buffer_alloc_self_test( int verbose );
 #define MBEDTLS_HAVE_X86
 #endif
 
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_PADLOCK_RNG 0x000C
 #define MBEDTLS_PADLOCK_ACE 0x00C0
@@ -14588,7 +14610,9 @@ int mbedtls_padlock_xcryptcbc( mbedtls_aes_context *ctx,
 // Regular implementation
 //
 
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -14732,7 +14756,9 @@ int mbedtls_timing_self_test( int verbose );
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_XTEA_ENCRYPT     1
 #define MBEDTLS_XTEA_DECRYPT     0
@@ -18165,7 +18191,9 @@ void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_BLOWFISH_ENCRYPT     1
 #define MBEDTLS_BLOWFISH_DECRYPT     0
@@ -18516,7 +18544,9 @@ int mbedtls_ccm_self_test( int verbose );
 
 
 
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_GCM_ENCRYPT     1
 #define MBEDTLS_GCM_DECRYPT     0
@@ -19734,7 +19764,9 @@ static inline size_t mbedtls_ssl_pkcs11_key_len( void *ctx )
 
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  -0x2f80  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS5_INVALID_FORMAT                  -0x2f00  /**< Unexpected ASN.1 data. */
@@ -20411,7 +20443,9 @@ int mbedtls_oid_get_pkcs12_pbe_alg( const mbedtls_asn1_buf *oid, mbedtls_md_type
 #endif
 
 #include <stddef.h>
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if !defined(MBEDTLS_RIPEMD160_ALT)
 // Regular implementation

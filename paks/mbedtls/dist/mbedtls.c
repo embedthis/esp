@@ -2991,7 +2991,9 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data( mbedtls_asn1_named_data 
 
 
 
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if defined(MBEDTLS_SELF_TEST)
 #include <string.h>
@@ -16001,6 +16003,9 @@ cleanup:
 #define inline __inline
 #endif
 
+/* Amalgamated Release Mappings */
+#undef ADD
+
 /*
  * Conversion macros for embedded constants:
  * build lists of mbedtls_mpi_uint's from lists of unsigned char's grouped by 8, 4 or 2
@@ -17286,6 +17291,9 @@ static int ecp_mod_p256k1( mbedtls_mpi *N )
     return( ecp_mod_koblitz( N, Rp, 256 / 8 / sizeof( mbedtls_mpi_uint ), 0, 0, 0 ) );
 }
 #endif /* MBEDTLS_ECP_DP_SECP256K1_ENABLED */
+
+/* Amalgamated Release Mappings */
+#undef ADD
 
 #endif /* MBEDTLS_ECP_C */
 
@@ -23444,7 +23452,9 @@ static int wsa_init_done = 0;
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#if !VXWORKS
 #include <sys/time.h>
+#endif
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -23466,7 +23476,9 @@ static int wsa_init_done = 0;
 
 #include <time.h>
 
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 /*
  * Prepare for using the sockets interface
@@ -23583,7 +23595,11 @@ int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char 
 
         n = 1;
         if( setsockopt( ctx->fd, SOL_SOCKET, SO_REUSEADDR,
+#if VXWORKS
+                        (char *) &n, sizeof( n ) ) != 0 )
+#else
                         (const char *) &n, sizeof( n ) ) != 0 )
+#endif
         {
             close( ctx->fd );
             ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
@@ -23738,8 +23754,13 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
                          (struct sockaddr *) &local_addr, &n ) != 0 ||
             ( bind_ctx->fd = (int) socket( local_addr.ss_family,
                                            SOCK_DGRAM, IPPROTO_UDP ) ) < 0 ||
+#if VXWORKS
+            setsockopt( bind_ctx->fd, SOL_SOCKET, SO_REUSEADDR,
+                        (char *) &one, sizeof( one ) ) != 0 )
+#else
             setsockopt( bind_ctx->fd, SOL_SOCKET, SO_REUSEADDR,
                         (const char *) &one, sizeof( one ) ) != 0 )
+#endif
         {
             return( MBEDTLS_ERR_NET_SOCKET_FAILED );
         }
@@ -23913,7 +23934,11 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
     if( fd < 0 )
         return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
 
+#if VXWORKS
+    ret = (int) write( fd, (char*) buf, len );
+#else
     ret = (int) write( fd, buf, len );
+#endif
 
     if( ret < 0 )
     {
@@ -34919,7 +34944,9 @@ int mbedtls_ssl_ciphersuite_uses_psk( const mbedtls_ssl_ciphersuite_t *info )
 #define mbedtls_free       free
 #endif
 
+#if !VXWORKS
 #include <stdint.h>
+#endif
 
 #if defined(MBEDTLS_HAVE_TIME)
 #include <time.h>
@@ -49871,7 +49898,9 @@ struct _hr_time
 
 #include <unistd.h>
 #include <sys/types.h>
+#if !VXWORKS
 #include <sys/time.h>
+#endif
 #include <signal.h>
 #include <time.h>
 
