@@ -124,7 +124,7 @@ struct HttpWebSocket;
     #define ME_MAX_HEADERS         8192                 /**< Maximum size of the headers (8K) */
 #endif
 #ifndef ME_MAX_KEEP_ALIVE
-    #define ME_MAX_KEEP_ALIVE      200                  /**< Maximum requests per connection */
+    #define ME_MAX_KEEP_ALIVE      400                  /**< Maximum requests per connection */
 #endif
 #ifndef ME_MAX_NUM_HEADERS
     #define ME_MAX_NUM_HEADERS     64                   /**< Maximum number of header lines */
