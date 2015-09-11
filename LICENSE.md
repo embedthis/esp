@@ -14,6 +14,11 @@ Third Party Licenses
 
 The Software contains third party software under the agreements that follow.
 
+### MbedTLS License
+
+MbedTLS - [Apache](http://www.apache.org/licenses/LICENSE-2.0)
+
+
 ### Perl Regular Expressions License
 
 PCRE - [BSD License](http://opensource.org/licenses/BSD-2-Clause)

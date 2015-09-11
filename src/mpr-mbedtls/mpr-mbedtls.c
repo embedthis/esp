@@ -63,8 +63,9 @@ static void     manageMbedSocket(MbedSocket*ssp, int flags);
 static int      mbedLock(mbedtls_threading_mutex_t *tm);
 static void     mbedTerminator(int state, int how, int status);
 static int      mbedUnlock(mbedtls_threading_mutex_t *tm);
+static void     merror(int rc, cchar *fmt, ...);
 static ssize    readMbed(MprSocket *sp, void *buf, ssize len);
-static char     *replace(char *cipher, char from, char to);
+static char     *replaceHyphen(char *cipher, char from, char to);
 static void     traceMbed(void *context, int level, cchar *file, int line, cchar *str);
 static int      upgradeMbed(MprSocket *sp, MprSsl *sslConfig, cchar *peerName);
 static ssize    writeMbed(MprSocket *sp, cvoid *buf, ssize len);
@@ -147,7 +148,6 @@ static void manageMbedSocket(MbedSocket *mb, int flags)
         mprMark(mb->sock);
 
     } else if (flags & MPR_MANAGE_FREE) {
-//  MOB - check
         mbedtls_ssl_free(&mb->ctx);
     }
 }
@@ -198,10 +198,11 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
     mbedtls_x509_crt_init(&cfg->cert);
     mbedtls_ssl_ticket_init(&cfg->tickets);
 
-    rc = 0;
     name = mprGetAppName();
-    rc += mbedtls_ctr_drbg_seed(&cfg->ctr, mbedtls_entropy_func, &mbedEntropy, (cuchar*) name, slen(name));
-
+    if ((rc = mbedtls_ctr_drbg_seed(&cfg->ctr, mbedtls_entropy_func, &mbedEntropy, (cuchar*) name, slen(name))) < 0) {
+        merror(rc, "Cannot seed rng");
+        return 0;
+    }
     if (ssl->certFile) {
         /*
             Load a PEM format certificate file
@@ -242,22 +243,32 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
     }
 
     cfg->ciphers = getCipherSuite(ssl);
-    rc += mbedtls_ssl_config_defaults(conf, sp->flags & MPR_SOCKET_SERVER ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
-        MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
+    if ((rc = mbedtls_ssl_config_defaults(conf, 
+            sp->flags & MPR_SOCKET_SERVER ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
+            MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) < 0) {
+        merror(rc, "Cannot set mbedtls defaults");
+        return 0;
+    }
     mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &cfg->ctr);
 
     /*
         Configure larger DH parameters 
      */
-    rc += mbedtls_ssl_conf_dh_param(conf, MBEDTLS_DHM_RFC5114_MODP_2048_P, MBEDTLS_DHM_RFC5114_MODP_2048_G);
+    if ((rc = mbedtls_ssl_conf_dh_param(conf, MBEDTLS_DHM_RFC5114_MODP_2048_P, MBEDTLS_DHM_RFC5114_MODP_2048_G)) < 0) {
+        merror(rc, "Cannot set DH params");
+        return 0;
+    }
 
     /*
         Configure ticket-based sessions
      */
     if (sp->flags & MPR_SOCKET_SERVER) {
         if (ssl->ticket) {
-            rc += mbedtls_ssl_ticket_setup(&cfg->tickets, mbedtls_ctr_drbg_random, &cfg->ctr, 
-                MBEDTLS_CIPHER_AES_256_GCM, (int) ssl->sessionTimeout);
+            if ((rc = mbedtls_ssl_ticket_setup(&cfg->tickets, mbedtls_ctr_drbg_random, &cfg->ctr, 
+                    MBEDTLS_CIPHER_AES_256_GCM, (int) ssl->sessionTimeout)) < 0) {
+                merror(rc, "Cannot setup ticketing sessions");
+                return 0;
+            }
             mbedtls_ssl_conf_session_tickets_cb(conf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, &cfg->tickets);
         }
     } else {
@@ -294,12 +305,10 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
         Configure server cert and key
      */
     if (ssl->keyFile && ssl->certFile) {
-        rc += mbedtls_ssl_conf_own_cert(conf, &cfg->cert, &cfg->pkey);
-    }
-    if (rc < 0) {
-        //  MOB - more detailed error messages
-        mprLog("error mbedtls ssl", 0, "Cannot initialize MbedTLS");
-        return 0;
+        if ((rc = mbedtls_ssl_conf_own_cert(conf, &cfg->cert, &cfg->pkey)) < 0) {
+            merror(rc, "Cannot define certificate and private key");
+            return 0;
+        }
     }
     return cfg;
 }
@@ -343,10 +352,6 @@ static int upgradeMbed(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 
     mbedtls_ssl_init(ctx);
     mbedtls_ssl_setup(ctx, &cfg->conf);
-#if MOB
-    //  What does this do
-    mbedtls_ssl_session_reset(ctx);
-#endif
     mbedtls_ssl_set_bio(ctx, &sp->fd, mbedtls_net_send, mbedtls_net_recv, 0);
 
     if (peerName && mbedtls_ssl_set_hostname(ctx, peerName) < 0) {
@@ -508,7 +513,7 @@ static int getPeerCertInfo(MprSocket *sp)
             mprLog("info mbedtls", 5, "Peer certificate\n%s", buf);
         }
     }
-    sp->cipher = replace(sclone(mbedtls_ssl_get_ciphersuite(ctx)), '-', '_');
+    sp->cipher = replaceHyphen(sclone(mbedtls_ssl_get_ciphersuite(ctx)), '-', '_');
 
     /*
         Convert session into a string
@@ -635,44 +640,37 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
 
 static void putCertToBuf(MprBuf *buf, cchar *key, const mbedtls_x509_name *dn)
 {
-//  MOB - fix case of vars
-    int ret;
-    size_t i, n;
-    uchar c;
-    const mbedtls_x509_name *name;
-    const char *short_name = NULL;
-    char s[MBEDTLS_X509_MAX_DN_NAME_SIZE], *p;
-
-    memset(s, 0, sizeof(s));
+    const mbedtls_x509_name *np;
+    cchar                   *name;
+    char                    value[MBEDTLS_X509_MAX_DN_NAME_SIZE];
+    ssize                   i;
+    uchar                   c;
+    int                     ret;
 
     mprPutToBuf(buf, "\"%s\":{", key);
-    for (name = dn; name; name = name->next) {
-        if (!name->oid.p) {
-            name = name->next;
+    for (np = dn; np; np = np->next) {
+        if (!np->oid.p) {
+            np = np->next;
             continue;
         }
-        ret = mbedtls_oid_get_attr_short_name(&name->oid, &short_name);
-        if (!ret) {
+        name = 0;
+        if ((ret = mbedtls_oid_get_attr_short_name(&np->oid, &name)) < 0) {
             continue;
         }
-        if (smatch(short_name, "emailAddress")) {
-            short_name = "email";
+        if (smatch(name, "emailAddress")) {
+            name = "email";
         }
-        mprPutToBuf(buf, "\"%s\":", short_name);
+        mprPutToBuf(buf, "\"%s\":", name);
 
-        for(i = 0; i < name->val.len; i++) {
-            if (i >= sizeof(s) - 1) {
+        for(i = 0; i < np->val.len; i++) {
+            if (i >= sizeof(value) - 1) {
                 break;
             }
-            c = name->val.p[i];
-            if (c < 32 || c == 127 || (c > 128 && c < 160)) {
-                 s[i] = '?';
-            } else { 
-                s[i] = c;
-            }
+            c = np->val.p[i];
+            value[i] = (c < 32 || c == 127 || (c > 128 && c < 160)) ? '?' : c;
         }
-        s[i] = '\0';
-        mprPutToBuf(buf, "\"%s\",", s);
+        value[i] = '\0';
+        mprPutToBuf(buf, "\"%s\",", value);
     }
     mprAdjustBufEnd(buf, -1);
     mprPutToBuf(buf, "},");
@@ -770,7 +768,7 @@ static int *getCipherSuite(MprSsl *ssl)
             mprLog("info mbedtls", 5, "\nMbedTLS Ciphers:");
             for (cp = mbedtls_ssl_list_ciphersuites(); *cp; cp++) {
                 scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(*cp));
-                replace(buf, '-', '_');
+                replaceHyphen(buf, '-', '_');
                 mprLog("info mbedtls", 5, "%s (0x%04X)", buf, *cp);
             }
         }
@@ -782,7 +780,7 @@ static int *getCipherSuite(MprSsl *ssl)
 
         next = sclone(ciphers);
         for (i = 0; (cipher = stok(next, ":, \t", &next)) != 0; ) {
-            replace(cipher, '_', '-');
+            replaceHyphen(cipher, '_', '-');
             if ((code = mbedtls_ssl_get_ciphersuite_id(cipher)) <= 0) {
                 mprLog("error mpr", 0, "Unsupported cipher \"%s\"", cipher);
                 continue;
@@ -794,7 +792,7 @@ static int *getCipherSuite(MprSsl *ssl)
         mprLog("info mbedtls", 5, "\nSelected Ciphers:");
         for (i = 0; i < count; i++) {
             scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(result[i]));
-            replace(buf, '-', '_');
+            replaceHyphen(buf, '-', '_');
             mprLog("info mbedtls", 5, "%s (0x%04X)", buf, result[i]);
         }
     } else {
@@ -846,7 +844,19 @@ static void traceMbed(void *context, int level, cchar *file, int line, cchar *st
 }
 
 
-static char *replace(char *cipher, char from, char to)
+static void merror(int rc, cchar *fmt, ...)
+{
+    va_list     ap;
+    char        ebuf[ME_MAX_BUFFER];
+
+    va_start(ap, fmt);
+    mbedtls_strerror(-rc, ebuf, sizeof(ebuf));
+    mprLog("error mbedtls ssl", 0, "mbedtls error: 0x%x %s %s", rc, sfmtv(fmt, ap), ebuf);
+    va_end(ap);
+}
+
+
+static char *replaceHyphen(char *cipher, char from, char to)
 {
     char    *cp;
 

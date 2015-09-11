@@ -15,6 +15,10 @@ Third Party Licenses
 
 The Software contains third party software under the agreements that follow.
 
+### MbedTLS License
+
+MbedTLS - [Apache](http://www.apache.org/licenses/LICENSE-2.0)
+
 ### RSA MD5 License
 
 License to copy and use this software is granted provided that it is identified 
