@@ -395,7 +395,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         if (runCommand(route, dispatcher, eroute->link, csource, module, errMsg) != 0) {
             return 0;
         }
-#if !(ME_DEBUG && MACOSX)
+#if !MACOSX
         /*
             MAC needs the object for debug information
          */
@@ -1119,9 +1119,9 @@ static cchar *getDebug(EspRoute *eroute)
             sends(http->platform, "-mine") || sends(http->platform, "-vsdebug");
     }
     if (scontains(http->platform, "windows-")) {
-        return (symbols) ? "-DME_DEBUG -Zi -Od" : "-Os";
+        return (symbols) ? "-Zi -Od" : "-Os";
     }
-    return (symbols) ? "-DME_DEBUG -g" : "-O2";
+    return (symbols) ? "-g" : "-O2";
 }
 
 
