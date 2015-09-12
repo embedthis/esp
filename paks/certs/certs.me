@@ -106,7 +106,7 @@ Me.load({
             action: `
                 ossl('genrsa -out ${BIN}/ca.key ${settings.certs.bits}')
                 ossl('req -config openssl.conf -new -x509 -days ${settings.certs.days} -key ${BIN}/ca.key -out ${BIN}/ca.crt -extensions caExtensions')
-                me.dir.bin.join('ca.srl').write('01\n')
+                me.dir.bin.join('ca.srl').write('9999991000\n')
                 me.dir.bin.join('ca.db').write('')
             `,
         },
