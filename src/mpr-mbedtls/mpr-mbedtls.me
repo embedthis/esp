@@ -5,11 +5,15 @@
 Me.load({
     usage: {
         'mbedtls.compact':      'Build a compact edition of MbedTLS',
-        'mbedtls.cache':        'Set the session cache size (items)',
-        'mbedtls.logLevel':     'Starting logging level for SSL messages',
-        'mbedtls.renegotiate':  'Enable/Disable SSL renegotiation (defaults to true)',
-        'mbedtls.ticket':       'Enable session resumption via ticketing - client side session caching',
-        'mbedtls.timeout':      'Session and ticketing duration in seconds',
+        'mbedtls.aesRomTables': 'Put AES tables in rom',
+        'mbedtls.arc4':         'Enable/Disable ARC4 ciphers',
+        'mbedtls.camellia':     'Enable/Disable Camellia ciphers',
+        'mbedtls.cbc':          'Enable/Disable CBC ciphers',
+        'mbedtls.ccm':          'Enable/Disable CCM ciphers',
+        'mbedtls.des':          'Enable/Disable DES ciphers',
+        'mbedtls.padlock':      'Enable/Disable Padlock support',
+        'mbedtls.psk':          'Enable/Disable Pre-Shared Keys',
+        'mbedtls.xtea':         'Enable/Disable XTEA',
     },
 
     targets: {
