@@ -558,7 +558,7 @@ static ssize readMbed(MprSocket *sp, void *buf, ssize len)
     }
     while (1) {
         rc = mbedtls_ssl_read(&mb->ctx, buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "readMbed %d", rc);
+        mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "readMbed read 0x%04x", rc);
         if (rc < 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE)  {
                 rc = 0;
@@ -609,7 +609,7 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
     rc = 0;
     do {
         rc = mbedtls_ssl_write(&mb->ctx, (uchar*) buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", 6, "mbedtls write: wrote %d of %zd", rc, len);
+        mprDebug("debug mpr ssl mbedtls", 6, "mbedtls write: wrote 0x%04x of %zd", rc, len);
         if (rc <= 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) {
                 break;
@@ -762,17 +762,6 @@ static int *getCipherSuite(MprSsl *ssl)
     int     nciphers, i, *result, code, count;
 
     result = 0;
-    if (mprGetLogLevel() >= 5) {
-        static int once = 0;
-        if (!once++) {
-            mprLog("info mbedtls", 5, "\nMbedTLS Ciphers:");
-            for (cp = mbedtls_ssl_list_ciphersuites(); *cp; cp++) {
-                scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(*cp));
-                replaceHyphen(buf, '-', '_');
-                mprLog("info mbedtls", 5, "%s (0x%04X)", buf, *cp);
-            }
-        }
-    }
     ciphers = ssl->ciphers;
     if (ciphers && *ciphers) {
         for (nciphers = 0, cp = mbedtls_ssl_list_ciphersuites(); cp && *cp; cp++, nciphers++) { }
@@ -782,21 +771,24 @@ static int *getCipherSuite(MprSsl *ssl)
         for (i = 0; (cipher = stok(next, ":, \t", &next)) != 0; ) {
             replaceHyphen(cipher, '_', '-');
             if ((code = mbedtls_ssl_get_ciphersuite_id(cipher)) <= 0) {
-                mprLog("error mpr", 0, "Unsupported cipher \"%s\"", cipher);
+                mprLog("error mpr", 0, "Unsupported cipher %s", cipher);
                 continue;
             }
             result[i++] = code;
         }
         result[i] = 0;
-        count = i;
-        mprLog("info mbedtls", 5, "\nSelected Ciphers:");
-        for (i = 0; i < count; i++) {
-            scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(result[i]));
-            replaceHyphen(buf, '-', '_');
-            mprLog("info mbedtls", 5, "%s (0x%04X)", buf, result[i]);
+    }
+    if (mprGetLogLevel() >= 5) {
+        static int once = 0;
+        if (!once++) {
+            cp = (ciphers && *ciphers) ? result : mbedtls_ssl_list_ciphersuites();
+            mprLog("info mbedtls", 5, "\nCiphers:");
+            for (; *cp; cp++) {
+                scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(*cp));
+                replaceHyphen(buf, '-', '_');
+                mprLog("info mbedtls", 5, "0x%04X %s", *cp, buf);
+            }
         }
-    } else {
-        result = 0;
     }
     return result;
 }
