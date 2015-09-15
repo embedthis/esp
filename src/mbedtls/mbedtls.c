@@ -40015,6 +40015,10 @@ read_record_header:
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no ciphersuites in common" ) );
         mbedtls_ssl_send_fatal_handshake_failure( ssl );
+        for( j = 0, p = buf + ciph_offset + 2; j < ciph_len; j += 2, p += 2 ) {
+            int code = (p[0] & 0xFF) << 8 | (p[1] & 0xFF);
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "Client cipher %s, 0x%04X", mbedtls_ssl_get_ciphersuite_name(code), code));
+        }
         return( MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN );
     }
 
