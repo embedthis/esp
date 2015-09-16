@@ -5822,7 +5822,7 @@ PUBLIC bool httpTokenizev(HttpRoute *route, cchar *str, cchar *fmt, va_list args
  */
 PUBLIC int httpStartRoute(HttpRoute *route);
 PUBLIC void httpStopRoute(HttpRoute *route);
-PUBLIC char *httpExpandUri(HttpConn *conn, cchar *str);
+PUBLIC char *httpExpandVars(HttpConn *conn, cchar *str);
 
 /*********************************** Session ***************************************/
 

@@ -8943,8 +8943,12 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
             path = 0;
         }
         if (path) {
-            pathInfo = sjoin(rx->scriptName, rx->pathInfo, index, NULL);
-            httpSetUri(conn, httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, req->query, 0));
+            pathInfo = sjoin(req->path, index, NULL);
+            if (httpSetUri(conn, httpFormatUri(req->scheme, req->host, req->port, pathInfo, req->reference, 
+                    req->query, 0)) < 0) {
+                mprLog("error http", 0, "Cannot handle directory \"%s\"", pathInfo);
+                return HTTP_ROUTE_REJECT;
+            }
             tx->filename = httpMapContent(conn, path);
             mprGetPathInfo(tx->filename, &tx->fileInfo);
             return HTTP_ROUTE_REROUTE;
@@ -15417,6 +15421,7 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
     HttpRx      *rx;
     HttpTx      *tx;
     HttpRoute   *route;
+    HttpUri     *uri;
     MprBuf      *buf;
     HttpLang    *lang;
     char        *tok, *cp, *key, *value, *field, *header, *defaultValue, *state, *v, *p;
@@ -15429,6 +15434,7 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
     tx = conn->tx;
     buf = mprCreateBuf(-1, -1);
     tok = 0;
+    uri = rx->parsedUri;
 
     for (cp = str; cp && *cp; ) {
         if ((tok = strstr(cp, "${")) == 0) {
@@ -15474,7 +15480,7 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
                 mprPutStringToBuf(buf, conn->errorMsg);
 
             } else if (smatch(value, "ext")) {
-                mprPutStringToBuf(buf, rx->parsedUri->ext);
+                mprPutStringToBuf(buf, uri->ext);
 
             } else if (smatch(value, "extraPath")) {
                 mprPutStringToBuf(buf, rx->extraPath);
@@ -15500,8 +15506,7 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
                 mprPutStringToBuf(buf, lang ? lang->path : defaultValue);
 
             } else if (smatch(value, "host")) {
-                /* Includes port if present */
-                mprPutStringToBuf(buf, rx->parsedUri->host);
+                mprPutStringToBuf(buf, httpFormatUri(0, uri->host, uri->port, 0, 0, 0, 0));
 
             } else if (smatch(value, "method")) {
                 mprPutStringToBuf(buf, rx->method);
@@ -15516,14 +15521,14 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
                 mprPutStringToBuf(buf, route->prefix);
 
             } else if (smatch(value, "query")) {
-                mprPutStringToBuf(buf, rx->parsedUri->query);
+                mprPutStringToBuf(buf, uri->query);
 
             } else if (smatch(value, "reference")) {
-                mprPutStringToBuf(buf, rx->parsedUri->reference);
+                mprPutStringToBuf(buf, uri->reference);
 
             } else if (smatch(value, "scheme")) {
-                if (rx->parsedUri->scheme) {
-                    mprPutStringToBuf(buf, rx->parsedUri->scheme);
+                if (uri->scheme) {
+                    mprPutStringToBuf(buf, uri->scheme);
                 }  else {
                     mprPutStringToBuf(buf, (conn->secure) ? "https" : "http");
                 }
@@ -15567,7 +15572,7 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
 }
 
 
-PUBLIC char *httpExpandUri(HttpConn *conn, cchar *str)
+PUBLIC char *httpExpandVars(HttpConn *conn, cchar *str)
 {
     return expandRequestTokens(conn, stemplate(str, conn->rx->route->vars));
 }
@@ -19832,6 +19837,9 @@ static void setHdr(HttpConn *conn, cchar *key, cchar *value)
     assert(key && *key);
     assert(value);
 
+    if (schr(value, '$')) {
+        value = httpExpandVars(conn, value);
+    }
     mprAddKey(conn->tx->headers, key, value);
 }
 
