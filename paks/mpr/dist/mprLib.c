@@ -474,6 +474,9 @@ static MprMem *allocMem(size_t required)
     size_t          *bitmap, localMap;
     int             baseBindex, bindex, qindex, baseQindex, retryIndex;
 
+    if (!heap) {
+        return 0;
+    }
     ATOMIC_INC(requests);
 
     if ((qindex = sizetoq(required)) >= 0) {
@@ -15361,7 +15364,7 @@ static void swapElt(char *a, char *b, ssize width)
 
 PUBLIC void *mprSort(void *base, ssize nelt, ssize esize, MprSortProc cmp, void *ctx) 
 {
-    char    *array, *pivot, *left, *right;
+    char    *array, *pivot, *left, *right, *end;
 
     if (nelt < 2 || esize <= 0) {
         return base;
@@ -15370,25 +15373,28 @@ PUBLIC void *mprSort(void *base, ssize nelt, ssize esize, MprSortProc cmp, void 
         cmp = (MprSortProc) defaultSort;
     }
     array = base;
+    end = array + (nelt * esize);
     left = array;
     right = array + ((nelt - 1) * esize);
-    pivot = array + ((nelt / 2) * esize);
+    pivot = array;
 
-    while (left <= right) {
-        while (cmp(left, pivot, ctx) < 0) {
+    while (left < right) {
+        while (left < end && cmp(left, pivot, ctx) <= 0) {
             left += esize;
         }
         while (cmp(right, pivot, ctx) > 0) {
             right -= esize;
         }
-        if (left <= right) {
+        if (left < right) {
             swapElt(left, right, esize);
+#if 0
             left += esize;
             right -= esize;
+#endif
         }
     }
-    /* left and right are swapped */
-    mprSort(array, (right - array) / esize + 1, esize, cmp, ctx);
+    swapElt(pivot, right, esize);
+    mprSort(array, (right - array) / esize, esize, cmp, ctx);
     mprSort(left, nelt - ((left - array) / esize), esize, cmp, ctx);
     return base;
 }
