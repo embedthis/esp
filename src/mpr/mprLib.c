@@ -15387,10 +15387,6 @@ PUBLIC void *mprSort(void *base, ssize nelt, ssize esize, MprSortProc cmp, void 
         }
         if (left < right) {
             swapElt(left, right, esize);
-#if 0
-            left += esize;
-            right -= esize;
-#endif
         }
     }
     swapElt(pivot, right, esize);
