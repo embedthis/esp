@@ -8060,7 +8060,6 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     @stability Internal
  */
 typedef struct MprSsl {
-    cchar           *providerName;      /**< SSL provider to use - null if default */
     cchar           *keyFile;           /**< Alternatively, locate the key in a file */
     cchar           *certFile;          /**< Certificate filename */
     cchar           *revoke;            /**< Certificate revocation list */

@@ -4921,6 +4921,7 @@ static void parseRoutes(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+#if UNUSED
 static void parseRoutesPrint(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpLogRoutes(route->host, 0);
@@ -4931,6 +4932,7 @@ static void parseRoutesReset(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpResetRoutes(route->host);
 }
+#endif
 
 
 static void parseScheme(HttpRoute *route, cchar *key, MprJson *prop)
@@ -5629,8 +5631,10 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.redirect", parseRedirect);
     httpAddConfig("http.renameUploads", parseRenameUploads);
     httpAddConfig("http.routes", parseRoutes);
+#if UNUSED
     httpAddConfig("http.routes.print", parseRoutesPrint);
     httpAddConfig("http.routes.reset", parseRoutesReset);
+#endif
     httpAddConfig("http.resources", parseResources);
     httpAddConfig("http.scheme", parseScheme);
     httpAddConfig("http.server", httpParseAll);
