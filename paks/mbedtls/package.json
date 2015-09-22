@@ -1,6 +1,6 @@
 {
     "name": "mbedtls",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "pak": {
         "import": true,
         "origin": "ARMmbed/mbedtls"
@@ -15,7 +15,7 @@
     "repository": {
         "type": "git",
         "url": "git://github.com/ARMmbed/mbedtls.git",
-        "patch": "https://github.com/embedthis/patch-mbedtls/archive/2.1.0.tar.gz"
+        "patch": "https://github.com/embedthis/patch-mbedtls/archive/2.1.1.tar.gz"
     },
     "files": [
         "dist/"
