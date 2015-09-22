@@ -734,11 +734,12 @@ static void initialize(int argc, char **argv)
      */
 #if DEPRECATE || 1
     path = mprJoinPath(route->home, "db/migrations");
-#endif
-    if (mprPathExists(path, R_OK)) {
+    if (mprPathExists(path, R_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
         app->migDir = path;
         httpSetDir(route, "MIGRATIONS", path);
-    } else {
+    } else 
+#endif
+    {
         app->migDir = httpGetDir(route, "MIGRATIONS");
         app->migDir = getJson(app->package, "directories.migrations", app->migDir);
     }

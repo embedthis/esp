@@ -3671,7 +3671,7 @@ PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name)
 
     route = conn->rx->route;
     url = (route->prefix && *route->prefix) ? route->prefix : "/";
-    httpSetCookie(conn, name, "", url, NULL, -1, 0);
+    httpSetCookie(conn, name, "", url, NULL, 0, 0);
 }
 
 

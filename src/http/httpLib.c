@@ -5412,9 +5412,7 @@ static void parseTimeoutsRequest(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseTimeoutsSession(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    if (! mprGetDebugMode()) {
-        route->limits->sessionTimeout = httpGetTicks(prop->value);
-    }
+    route->limits->sessionTimeout = httpGetTicks(prop->value);
 }
 
 
@@ -20237,30 +20235,36 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
 {
     HttpRx      *rx;
     char        *cp, *expiresAtt, *expires, *domainAtt, *domain, *secure, *httponly;
-    int         port;
 
     rx = conn->rx;
     if (path == 0) {
         path = "/";
     }
+    /*
+        Note: Cookies do not respect port numbers, so we ignore them here.
+        Note: Modern browsers will give subdomains the cookies defined for a top-level domain. 
+        Note: A leading dot in the top-level domain is not required anymore.
+        Note: Browsers may store top-level domain cookies with a leading dot in their cooke store (chrome).
+     */
     domain = 0;
     if (cookieDomain) {
+        /* 
+            Omit domain if set to empty string 
+        */
         if (*cookieDomain) {
             domain = (char*) cookieDomain;
-        } else {
-            /* Omit domain if set to empty string */
         }
     } else if (rx->hostHeader) {
-        if (mprParseSocketAddress(rx->hostHeader, &domain, &port, NULL, 0) < 0) {
+        if (mprParseSocketAddress(rx->hostHeader, &domain, NULL, NULL, 0) < 0) {
             mprLog("error http", 4, "Bad host header for cookie: %s", rx->hostHeader);
             return;
-        }
-        if (domain && port) {
-            domain = 0;
         }
     }
     domainAtt = domain ? "; domain=" : "";
     if (domain) {
+        /*
+            Domains must have at least one dot, so we prefix with a dot here if one is not present.
+         */
         if (!strchr(domain, '.')) {
             if (smatch(domain, "localhost")) {
                 domainAtt = domain = "";
@@ -20291,7 +20295,13 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
 
 PUBLIC void httpRemoveCookie(HttpConn *conn, cchar *name)
 {
-    mprAddKey(conn->tx->cookies, name, MPR->emptyString);
+    HttpRoute   *route;
+    cchar       *cookie, *url;
+
+    route = conn->rx->route;
+    url = (route->prefix && *route->prefix) ? route->prefix : "/";
+    cookie = route->cookie ? route->cookie : HTTP_SESSION_COOKIE;
+    httpSetCookie(conn, cookie, "", url, NULL, 1, 0);
 }
 
 

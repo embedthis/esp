@@ -5689,7 +5689,6 @@ PUBLIC void httpSetRouteStealth(HttpRoute *route, bool on);
         The "close" rule is used to do abortive closes for the request. This is useful for ward off known security attackers.
         For example: "close immediate". The "close" rule takes no addition parameters.
         \n\n
-        \n\n
         The "redirect" rule is used to redirect the request to a new resource. For example: "redirect 302 /tryAgain.html".
         The "redirect" takes the form: "redirect status URI". The status code is used as the HTTP response
         code. The URI can be a fully qualified URI beginning with "http" or it can be a relative URI.
@@ -6147,7 +6146,7 @@ typedef struct HttpRx {
     char            *acceptEncoding;        /**< Accept-Encoding header */
     char            *acceptLanguage;        /**< Accept-Language header */
     char            *authDetails;           /**< Header details: authorization|www-authenticate provided by peer */
-    char            *cookie;                /**< Cookie header */
+    char            *cookie;                /**< Cookie header - may contain many cookies */
     char            *connection;            /**< Connection header */
     char            *contentLength;         /**< Content length string value */
     char            *hostHeader;            /**< Client supplied host name header */
@@ -7069,9 +7068,13 @@ PUBLIC void httpSetContentType(HttpConn *conn, cchar *mimeType);
     @param path URI path to which the cookie applies
     @param domain Domain in which the cookie applies. Must have 2-3 dots. If null, a domain is created using the
         current request host header. If set to the empty string, the domain field is omitted.
-        If the domain is a numerical IP address or localhost, the domain will not be included as the browsers do not support this
-        pattern consistently.
-    @param lifespan Duration for the cookie to persist in msec
+        If the domain is a numerical IP address or localhost, the domain will not be included as the browsers do not 
+        support this pattern consistently.
+        Note that hostname port numbers are ignored by browsers and so web sites with the same domain name but different
+        port numbers may have conflicting cookies. This is according to the Cookie RFC standard.
+    @param lifespan Duration for the cookie to persist in msec. Set to zero to create a session cookie that is meant to
+        be automatically removed when the user exits their browser. However, beware, Chrome subverts this and will persist
+        session cookies if "Continue where you left off" is enabled in Chrome preferences.
     @param flags Cookie options mask. The following options are supported:
         @li HTTP_COOKIE_SECURE   - Set the 'Secure' attribute on the cookie.
         @li HTTP_COOKIE_HTTP     - Set the 'HttpOnly' attribute on the cookie.
@@ -7083,6 +7086,7 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
 
 /**
     Remove a cookie from the client (browser)
+    This will emit a Set-Cookie response header with the value set to "" and a one second lifespan.
     @param conn HttpConn connection object created via #httpCreateConn
     @param name Name of the cookie created with httpSetCookie
     @ingroup HttpTx

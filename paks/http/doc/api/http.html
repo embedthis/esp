@@ -353,7 +353,7 @@
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___http_rx_1gab7d21bd58ae2f0cb64ae8c9e7c01208b" class="nameRef">httpReadString</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read response data as a string.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_conn_1ga2f25ecba7e7d54268b2a34541c2f247d" class="nameRef">httpReadyHandler</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Run the handler ready callback.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_tx_1ga616290c9e8fe95419d3a31f6fbb870b5" class="nameRef">httpRedirect</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, int status, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *uri)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Redirect the client.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_tx_1gaf0c311cf514c34ed2a163c3320442c41" class="nameRef">httpRemoveCookie</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a cookie from the client (browser).</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_tx_1gaf0c311cf514c34ed2a163c3320442c41" class="nameRef">httpRemoveCookie</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a cookie from the client (browser) This will emit a Set-Cookie response header with the value set to &quot;&quot; and a one second lifespan.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___http_tx_1ga38e1fcae578fdda33c7cf2f697ef732a" class="nameRef">httpRemoveHeader</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a header from the transmission.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_1ga19ecb294244c6f53755fe124bc399cfc" class="nameRef">httpRemoveOption</a>(<a href="mpr.html#struct_mpr_hash" class="ref">MprHash</a> *options, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove an option.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_rx_1ga4b5d6b30818a07708ceec899032254b2" class="nameRef">httpRemoveParam</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a request param.</td></tr>
@@ -8977,7 +8977,7 @@ Also see <a class="ref" href="#group___http_route_1ga3cd081a8998ecaf0d278bcec0fd
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>Route to modify.</td>
     <tr><td class="param">name</td><td>Target rule to add. Supported update rules include: &quot;close&quot;, &quot;redirect&quot;, &quot;run&quot; and &quot;write&quot;. <br/><br/>
- The &quot;close&quot; rule is used to do abortive closes for the request. This is useful for ward off known security attackers. For example: &quot;close immediate&quot;. The &quot;close&quot; rule takes no addition parameters. <br/><br/><br/><br/>
+ The &quot;close&quot; rule is used to do abortive closes for the request. This is useful for ward off known security attackers. For example: &quot;close immediate&quot;. The &quot;close&quot; rule takes no addition parameters. <br/><br/>
  The &quot;redirect&quot; rule is used to redirect the request to a new resource. For example: &quot;redirect 302 /tryAgain.html&quot;. The &quot;redirect&quot; takes the form: &quot;redirect status URI&quot;. The status code is used as the HTTP response code. The URI can be a fully qualified URI beginning with &quot;http&quot; or it can be a relative URI. <br/><br/>
  The &quot;run&quot; target is used to run the configured handler to respond to the request. For example: &quot;file ${DOCUMENTS}/${request.uri}.gz&quot;. <br/><br/>
  The &quot;write&quot; rule is used to write literal data back to the client. For example: &quot;write 200 Hello World\r\n&quot;. The &quot;write&quot; rule takes the form: &quot;write [-r] status message&quot;. Write data is by default HTML encoded to help eliminate XSS security exposures. The &quot;-r&quot; option selects &quot;raw&quot; output and bypasses the HTML encoding of the write data string. <br/><br/>
@@ -9232,7 +9232,7 @@ Connection header.
 Content length string value.
 </td>
     <tr><td class="param">char *</td><td><td>cookie</td><td>
-Cookie header.
+Cookie header - may contain many cookies.
 </td>
     <tr><td class="param">bool</td><td><td>eof</td><td>
 All read data has been received (eof).
@@ -11997,7 +11997,7 @@ This is used by client requests. If authentication is required, a request must f
 (<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)
   </div>
   <div class="apiDetail">
-<p>Remove a cookie from the client (browser).</p>
+<p>Remove a cookie from the client (browser) This will emit a Set-Cookie response header with the value set to &quot;&quot; and a one second lifespan.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object created via <a class="ref" href="#group___http_conn_1ga25308956e8946f7f26ee9adc396534d3">httpCreateConn</a></td>
@@ -12107,8 +12107,8 @@ This will define a &quot;Content-Length: NNN&quot; request header and set Tx.len
     <tr><td class="param">name</td><td>Cookie name.</td>
     <tr><td class="param">value</td><td>Cookie value.</td>
     <tr><td class="param">path</td><td>URI path to which the cookie applies.</td>
-    <tr><td class="param">domain</td><td>Domain in which the cookie applies. Must have 2-3 dots. If null, a domain is created using the current request host header. If set to the empty string, the domain field is omitted. If the domain is a numerical IP address or localhost, the domain will not be included as the browsers do not support this pattern consistently.</td>
-    <tr><td class="param">lifespan</td><td>Duration for the cookie to persist in msec.</td>
+    <tr><td class="param">domain</td><td>Domain in which the cookie applies. Must have 2-3 dots. If null, a domain is created using the current request host header. If set to the empty string, the domain field is omitted. If the domain is a numerical IP address or localhost, the domain will not be included as the browsers do not support this pattern consistently. Note that hostname port numbers are ignored by browsers and so web sites with the same domain name but different port numbers may have conflicting cookies. This is according to the Cookie RFC standard.</td>
+    <tr><td class="param">lifespan</td><td>Duration for the cookie to persist in msec. Set to zero to create a session cookie that is meant to be automatically removed when the user exits their browser. However, beware, Chrome subverts this and will persist session cookies if &quot;Continue where you left off&quot; is enabled in Chrome preferences.</td>
     <tr><td class="param">flags</td><td>Cookie options mask. The following options are supported: <ul><li>HTTP_COOKIE_SECURE - Set the &apos;Secure&apos; attribute on the cookie. </li><li>HTTP_COOKIE_HTTP - Set the &apos;HttpOnly&apos; attribute on the cookie. See RFC 6265 for details about the &apos;Secure&apos; and &apos;HttpOnly&apos; cookie attributes.</li></ul></td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
