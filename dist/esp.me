@@ -43,9 +43,10 @@ Me.load({
             enable: 'me.settings.esp.cmd',
         },
 
-        'esp-compile.json': {
+        extras: {
             type: 'file',
-            files: [ 'esp-compile.json' ],
+            files: [ 'esp-compile.json', 'vcvars.bat' ],
+            path: '${BIN}/',
             ifdef: [ 'esp' ],
         }
     }
