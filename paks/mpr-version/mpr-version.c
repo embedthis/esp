@@ -534,7 +534,6 @@ static char *completeVersion(cchar *version, cchar *fill)
 }
 
 
-//  MOB - move to pcre library?
 static void *srcompile(cchar *pattern)
 {
     pcre    *pp;
@@ -550,8 +549,6 @@ static void *srcompile(cchar *pattern)
 }
 
 
-//  MOB - move to pcre library?
-
 static int srmatch(cchar *s, void *pattern, ...)
 {
     va_list     ap;
@@ -561,7 +558,7 @@ static int srmatch(cchar *s, void *pattern, ...)
 
     va_start(ap, pattern);
     count = pcre_exec(pattern, NULL, s, (int) slen(s), 0, 0, matches, sizeof(matches) / sizeof(int));
-    for (i = 0; i < count; i++) {
+    for (i = 0, str = 0; i < count; i++) {
         str = va_arg(ap, char**);
         if (str == NULL) {
             break;
