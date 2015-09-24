@@ -17,7 +17,7 @@ Documentation:
 * [ESP Controllers](https://embedthis.com/esp/doc/users/controllers.html)
 * [ESP APIs](https://embedthis.com/esp/doc/ref/api/esp.html)
 * [ESP Guide](https://embedthis.com/esp/doc/users/index.html)
-* [ESP Overview](https://embedthis.com/esp/doc/users/using.html)
+* [ESP Overview](https://embedthis.com/esp/doc/index.html)
 
 See Also:
 ---
