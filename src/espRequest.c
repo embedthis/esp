@@ -509,7 +509,9 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     if (conn->tx->fileInfo.isDir) {
         httpHandleDirectory(conn);
     }
-    httpSetFileHandler(conn, 0);
+    if (!conn->tx->finalized) {
+        httpSetFileHandler(conn, 0);
+    }
 }
 
 
