@@ -1,11 +1,11 @@
 /*
     http.c -- Http client program
 
-    The http program is a client to issue HTTP requests. It is also a test platform for loading and testing web servers. 
+    The http program is a client to issue HTTP requests. It is also a test platform for loading and testing web servers.
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
- 
+
 /******************************** Includes ***********************************/
 
 #include    "http.h"
@@ -338,7 +338,7 @@ static int parseArgs(int argc, char **argv)
                 app->host = argv[++nextArg];
                 if (*app->host == ':') {
                     app->host = &app->host[1];
-                } 
+                }
                 if (isPort(app->host)) {
                     app->host = sfmt("http://127.0.0.1:%s", app->host);
                 } else {
@@ -667,7 +667,7 @@ static void processing()
         }
         mprAddItem(app->threadData, data);
         fmt(name, sizeof(name), "http.%d", j);
-        tp = mprCreateThread(name, threadMain, NULL, 0); 
+        tp = mprCreateThread(name, threadMain, NULL, 0);
         tp->data = data;
         mprStartThread(tp);
     }
@@ -687,7 +687,7 @@ static void manageThreadData(ThreadData *data, int flags)
 
 /*
     Per-thread execution. Called for main thread and helper threads.
- */ 
+ */
 static void threadMain(void *data, MprThread *tp)
 {
     ThreadData  *td;
@@ -735,7 +735,7 @@ static void threadMain(void *data, MprThread *tp)
         if (app->files && !app->upload) {
             for (next = 0; (path = mprGetNextItem(app->files, &next)) != 0; ) {
                 /*
-                    If URL ends with "/", assume it is a directory on the target and append each file name 
+                    If URL ends with "/", assume it is a directory on the target and append each file name
                  */
                 if (app->target[strlen(app->target) - 1] == '/') {
                     url = mprJoinPath(app->target, mprGetPathBase(path));
@@ -869,7 +869,7 @@ static int issueRequest(HttpConn *conn, cchar *url, MprList *files)
                     break;
                 }
                 redirectCount++;
-                count--; 
+                count--;
             } else {
                 break;
             }
@@ -883,7 +883,7 @@ static int issueRequest(HttpConn *conn, cchar *url, MprList *files)
         }
         if ((rx = conn->rx) != 0) {
             if (rx->status == HTTP_CODE_REQUEST_TOO_LARGE || rx->status == HTTP_CODE_REQUEST_URL_TOO_LARGE ||
-                rx->status == HTTP_CODE_NOT_ACCEPTABLE || 
+                rx->status == HTTP_CODE_NOT_ACCEPTABLE ||
                 (rx->status == HTTP_CODE_UNAUTHORIZED && conn->username == 0)) {
                 /* No point retrying */
                 break;
@@ -894,7 +894,7 @@ static int issueRequest(HttpConn *conn, cchar *url, MprList *files)
     if (conn->error) {
         msg = (conn->errorMsg) ? conn->errorMsg : "";
         sep = (msg && *msg) ? "\n" : "";
-        mprLog("error http", 0, "Failed \"%s\" request for %s after %d attempt(s).%s%s", 
+        mprLog("error http", 0, "Failed \"%s\" request for %s after %d attempt(s).%s%s",
             app->method, url, count + 1, sep, msg);
         return MPR_ERR_CANT_CONNECT;
     }
@@ -1187,7 +1187,7 @@ static char *resolveUrl(HttpConn *conn, cchar *url)
         } else {
             return sfmt("http://127.0.0.1%s", url);
         }
-    } 
+    }
     if (sncaselesscmp(url, "http://", 7) != 0 && sncaselesscmp(url, "https://", 8) != 0) {
         if (*url == ':' && isPort(&url[1])) {
             return sfmt("http://127.0.0.1%s", url);
@@ -1333,7 +1333,7 @@ PUBLIC int _exit() {
     Copyright (c) Embedthis Software. All Rights Reserved.
 
     This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a 
+    You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.

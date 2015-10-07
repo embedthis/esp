@@ -877,7 +877,7 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
  */
 typedef struct MprMem {
     MprMemSize  size;                   /**< Size of the block in bytes. Not the amount requested by the user which
-                                             may be smaller. This is a 32-bit quantity on all systems unless 
+                                             may be smaller. This is a 32-bit quantity on all systems unless
                                              ME_MPR_ALLOC_BIG is defined and then it will be 64 bits. */
     uchar       qindex;                 /**< Freeq index. Always less than 512 queues. */
     uchar       eternal;                /**< Immune from GC. Implemented as a byte to be atomic */
@@ -922,7 +922,7 @@ typedef struct MprFreeQueue {
     struct MprFreeMem   *next;          /**< Next free block */
     MprSpin             lock;           /**< Queue lock-free lock */
     uint                count;          /**< Number of blocks on the queue */
-    MprMemSize          minSize;        /**< Minimum size of blocks in queue. This is the user block size sans 
+    MprMemSize          minSize;        /**< Minimum size of blocks in queue. This is the user block size sans
                                              MprMem header. */
 } MprFreeQueue;
 
@@ -1630,7 +1630,7 @@ PUBLIC void mprHold(cvoid *ptr);
 
 /**
     Hold memory blocks
-    @description This call will protect a set of memory blocks from freeing by the garbage collector. 
+    @description This call will protect a set of memory blocks from freeing by the garbage collector.
         Call mprReleaseBlocks to allow the blocks to be collected.
     @param ptr Any memory block
     @param ... Other memory blocks. Terminate the list with a NULL.
@@ -3996,17 +3996,17 @@ PUBLIC MprLogHandler mprGetLogHandler();
 #if DOXYGEN
 /**
     Write a message to the error log file.
-    @description Send a message to the MPR error logging subsystem. 
+    @description Send a message to the MPR error logging subsystem.
         The purpose of the error log is to record essential configuration and error conditions. Per-request trace
-        typically is sent to a separate trace log. 
+        typically is sent to a separate trace log.
         \n\n
-        By default, error log messages are sent to the standard error output. 
+        By default, error log messages are sent to the standard error output.
         Applications may redirect output by installing a log handler using #mprSetLogHandler.
         \n\n
-        Log messages should be a single text line to facilitate machine processing of log files. Descriptive tag words 
-        may be provided to indicate a severity level and to classifiy messages. 
-        By convention, tags may include one of the severity levels defined in RFC 5424: "debug", 
-        "info", "notice", "warn", "error", "critical". Messages using the "error", "critical" tags should use 
+        Log messages should be a single text line to facilitate machine processing of log files. Descriptive tag words
+        may be provided to indicate a severity level and to classifiy messages.
+        By convention, tags may include one of the severity levels defined in RFC 5424: "debug",
+        "info", "notice", "warn", "error", "critical". Messages using the "error", "critical" tags should use
         a level of zero.  Tags should be space separated.
         \n\n
         Logging typically is enabled in both debug and release builds and may be controlled via the build define
@@ -4017,13 +4017,13 @@ PUBLIC MprLogHandler mprGetLogHandler();
         If level zero is used, the message is also sent to any relevant operating system logging facility such as
         syslog or the Windows event database.
         \n\n
-        It is good practice to only include debug trace at levels above level 2 so that essential error messages are clearly 
+        It is good practice to only include debug trace at levels above level 2 so that essential error messages are clearly
         visible in the error log and are not swamped by debug messages.
     @param tags Descriptive space separated tag words to classify this message.
         The default log handler emits messages in three formats depending on whether MPR_LOG_DETAILED is provided to
-        #mprStartLogging and the value of the tags parameter. 
-        If MPR_LOG_DETAILED and tags are supplied, the format is: "MM/DD/YY HH:MM:SS LEVEL TAGS, Message". Otherwise a 
-        a simplified output format is used: "Name: severity: message", where severity is set to "error" for level 0 
+        #mprStartLogging and the value of the tags parameter.
+        If MPR_LOG_DETAILED and tags are supplied, the format is: "MM/DD/YY HH:MM:SS LEVEL TAGS, Message". Otherwise a
+        a simplified output format is used: "Name: severity: message", where severity is set to "error" for level 0
         messages. This is useful for utility programs.
         If tags are null, the message is output raw, without any any prefixes.
     @param level Logging level for this message. The level is 0-5 with five being the most verbose.
@@ -4089,7 +4089,7 @@ PUBLIC MprLogHandler mprSetLogHandler(MprLogHandler handler);
         <li>4 - Debug information</li>
         <li>5 - Most verbose levels of messages useful for debugging</li>
     </ul>
-    If logSpec is set to null, then logging is not started. 
+    If logSpec is set to null, then logging is not started.
     The filename may be set to "stdout", "stderr" or "none". The latter is the same as supplying null as the logSpec.
     @param flags Set to MPR_LOG_CONFIG to show the configuration in the log file. Set to MPR_LOG_CMDLINE if a command line
         override has been used to initiate logging. Set MPR_LOG_DETAILED to use the detailed message format.
@@ -4878,7 +4878,7 @@ typedef struct MprPath {
     int             perms;              /**< Permission mask */
     int             owner;              /**< Owner ID */
     int             group;              /**< Group ID */
-    
+
     bool            checked: 1;         /**< Path has been checked */
     bool            isDir: 1;           /**< Set if directory */
     bool            isLink: 1;          /**< Set if a symbolic link  */
@@ -5041,8 +5041,8 @@ PUBLIC char *mprGetPathExt(cchar *path);
     @description Get the list of files in a directory and return a list.
     @param dir Directory to list.
     @param flags The flags may be set to #MPR_PATH_DESCEND to traverse subdirectories. This effectively appends
-        '**' to the path. Set #MPR_PATH_NO_DIRS to exclude directories from the results. Set to MPR_PATH_HIDDEN 
-        to include hidden files that start with ".". Set to MPR_PATH_DEPTH_FIRST to do a depth-first traversal, 
+        '**' to the path. Set #MPR_PATH_NO_DIRS to exclude directories from the results. Set to MPR_PATH_HIDDEN
+        to include hidden files that start with ".". Set to MPR_PATH_DEPTH_FIRST to do a depth-first traversal,
         i.e. traverse subdirectories before considering adding the directory to the list.
     @returns A list (MprList) of MprDirEntry objects.
     @ingroup MprPath
@@ -5060,7 +5060,7 @@ PUBLIC MprList *mprGetPathFiles(cchar *dir, int flags);
     An exclusion pattern may be specified to apply to subsequent patterns by appending with "!".
     @param path Directory to list.
     @param patterns Wild card patterns to match.
-    @param flags Set to MPR_PATH_HIDDEN to include hidden files that start with ".". Set to MPR_PATH_DEPTH_FIRST to do a 
+    @param flags Set to MPR_PATH_HIDDEN to include hidden files that start with ".". Set to MPR_PATH_DEPTH_FIRST to do a
         depth-first traversal, i.e. traverse subdirectories before considering adding the directory to the list.
         Set MPR_PATH_RELATIVE to return files relative to the given path. Set MPR_PATH_NO_DIRS to omit directories.
     @returns A list (MprList) of filenames.
@@ -5953,7 +5953,7 @@ PUBLIC void mprSuspendThread(MprTicks timeout);
     This routine yields to the garbage collector by calling #mprYield. Callers must retain all required memory.
     \n\n
     Note that an event may occur before or while invoking this API. To address this window of time, you should
-    call #mprGetEventMark to get a Dispatcher event mark and then test your application state to determine if 
+    call #mprGetEventMark to get a Dispatcher event mark and then test your application state to determine if
     waiting is required. If so, then pass the mark to mprWaitForEvent so it can detect
     if any events have been processed since calling mprGetEventMark.
     @param dispatcher Event dispatcher to monitor
@@ -5999,27 +5999,27 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
 /**
     Create a new event
     @description Create a new event for service
-        This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from 
-        a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread 
-        may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole 
+        This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from
+        a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread
+        may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole
         access to application memory.
     @param dispatcher Dispatcher object created via mprCreateDispatcher
-        Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock 
+        Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock
         dispatcher. This should only be used for quick, non-block event callbacks. If using another dispatcher,
-        it is essential that the dispatcher not be destroyed while this event is queued or running. 
+        it is essential that the dispatcher not be destroyed while this event is queued or running.
     @param name Static string name of the event
     @param period Time in milliseconds used by continuous events between firing of the event.
     @param proc Function to invoke when the event is run
     @param data Data to associate with the event and stored in event->data. The data must be either an allocated memory
         object or MPR_EVENT_STATIC_DATA must be specified in flags.
-    @param flags Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event 
-        which will be automatically rescheduled accoring to the specified period. Use MPR_EVENT_STATIC_DATA if the 
-        data argument does not point to an allocated memory object. Include MPR_EVENT_QUICK to execute the event 
+    @param flags Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event
+        which will be automatically rescheduled accoring to the specified period. Use MPR_EVENT_STATIC_DATA if the
+        data argument does not point to an allocated memory object. Include MPR_EVENT_QUICK to execute the event
         without creating using a worker thread. This should only be used for quick non-blocking event callbacks.
         Set to MPR_EVENT_HOLD to call #mprHold on the event object before returning. The caller must then call #mprRelease
         on the event object.
-    @return Returns the event object if successful. Warning: the event callback may run to completion and the event 
-        object may be itself collected before this function returns (unless MPR_EVENT_HOLD has been specified). In this 
+    @return Returns the event object if successful. Warning: the event callback may run to completion and the event
+        object may be itself collected before this function returns (unless MPR_EVENT_HOLD has been specified). In this
         case, the return value will be non-zero, but the memory it points to may be freed or re-assigned.
     @ingroup MprEvent
     @stability Evolving
@@ -6431,14 +6431,14 @@ typedef struct MprJsonParser {
             conditionally overwrite are supported if the MPR_JSON_COMBINE flag is present.
     @param dest Parsed JSON object. This is the destination object. The "src" object will be blended into this object.
     @param src Source JSON object to blend into dest. Parsed JSON object returned by mprJsonParser.
-    @param flags The MPR_JSON_COMBINE flag enables property name prefixes: '+', '=', '-', '?' to append, overwrite, 
-        replace and and conditionally overwrite key values if not already present. When adding string properties, values 
+    @param flags The MPR_JSON_COMBINE flag enables property name prefixes: '+', '=', '-', '?' to append, overwrite,
+        replace and and conditionally overwrite key values if not already present. When adding string properties, values
         will be appended using a space separator. Extra spaces will not be removed on replacement.
             \n\n
         Without MPR_JSON_COMBINE or for properties without a prefix, the default is to blend objects by creating new
         properties if not already existing in the destination, and to treat overwrite arrays and strings.
-        Use the MPR_JSON_OVERWRITE flag to override the default appending of objects and rather overwrite existing 
-        properties. Use the MPR_JSON_APPEND flag to override the default of overwriting arrays and strings and rather 
+        Use the MPR_JSON_OVERWRITE flag to override the default appending of objects and rather overwrite existing
+        properties. Use the MPR_JSON_APPEND flag to override the default of overwriting arrays and strings and rather
         append to existing properties.
     @return Zero if successful.
     @ingroup MprJson
@@ -6698,9 +6698,9 @@ PUBLIC MprJson *mprParseJsonInto(cchar *str, MprJson *obj);
         </pre>
     @param value If a value is provided, the property described by the key is set to the value.
         If getting property values, or removing, set to NULL.
-    @param type Value data type used when setting a value. Set to MPR_JSON_FALSE, MPR_JSON_NULL, MPR_JSON_NUMBER, 
-        MPR_JSON_STRING, MPR_JSON_TRUE, MPR_JSON_UNDEFINED. Set to zero to sleuth the data type based on the supplied 
-        value. Note: if the type is zero, numeric values will be set to MPR_JSON_NUMBER and "true", "false", "null" 
+    @param type Value data type used when setting a value. Set to MPR_JSON_FALSE, MPR_JSON_NULL, MPR_JSON_NUMBER,
+        MPR_JSON_STRING, MPR_JSON_TRUE, MPR_JSON_UNDEFINED. Set to zero to sleuth the data type based on the supplied
+        value. Note: if the type is zero, numeric values will be set to MPR_JSON_NUMBER and "true", "false", "null"
         and "undefined" will have the corresponding data types.
     @return If getting properties, the selected properties are cloned and returned in a JSON array.
         Note: these are not references into the original properties. If the requested properties are not found
@@ -6836,7 +6836,7 @@ PUBLIC int mprSetJsonObj(MprJson *obj, cchar *key, MprJson *value);
     @description This call takes a multipart property name and will operate at any level of depth in the JSON object.
         This routine supports the mprQueryJson key syntax.
     @param obj Parsed JSON object returned by mprParseJson
-    @param key Property name to add/update. This may include "." and the full mprQueryJson syntax. 
+    @param key Property name to add/update. This may include "." and the full mprQueryJson syntax.
         For example: "settings.mode".  See #mprQueryJson for a full description of key formats.
     @param value Character string value.
     @param type Set to MPR_JSON_FALSE, MPR_JSON_NULL, MPR_JSON_NUMBER, MPR_JSON_STRING, MPR_JSON_TRUE, MPR_JSON_UNDEFINED.
@@ -6850,7 +6850,7 @@ PUBLIC int mprSetJson(MprJson *obj, cchar *key, cchar *value, int type);
     Write a property in a JSON object
     @description This is a low-level update of Json property using simple (non-query) keys.
     @param obj Parsed JSON object returned by mprParseJson
-    @param key Property name to add/update. 
+    @param key Property name to add/update.
     @param value Property value to set.
     @return Zero if updated successfully.
     @ingroup MprJson
@@ -7074,7 +7074,7 @@ PUBLIC int mprStartThread(MprThread *thread);
     When calling a blocking routine, you should call mprYield(MPR_YIELD_STICK) to put the thread into a yielded state.
     When the blocking call returns, you should call mprResetYield()
     \n\n
-    While yielded, all transient memory must have references from "managed" objects (see mprAlloc) to ensure required 
+    While yielded, all transient memory must have references from "managed" objects (see mprAlloc) to ensure required
     memory is retained. All other memory will be reclaimed.
     \n\n
     If a thread blocks and does not yield, it will prevent garbage collection and the applications memory size will grow
@@ -7530,7 +7530,7 @@ PUBLIC int mprSetMaxSocketAccept(int max);
         mprIsSocketSecure mprListenOnSocket mprLoadSsl mprParseIp mprReadSocket mprSendFileToSocket mprSetSecureProvider
         mprSetSocketBlockingMode mprSetSocketCallback mprSetSocketEof mprSetSocketNoDelay mprSetSslCaFile mprSetSslCaPath
         mprSetSslCertFile mprSetSslCiphers mprSetSslKeyFile mprSetSslDhFile mprSetSslSslProtocols mprSetSslVerifySslClients
-        mprWriteSocket mprWriteSocketString mprWriteSocketVector mprSocketHandshaking mprSocketHasBufferedRead 
+        mprWriteSocket mprWriteSocketString mprWriteSocketVector mprSocketHandshaking mprSocketHasBufferedRead
         mprSocketHasBufferedWrite mprUpgradeSocket
     @defgroup MprSocket MprSocket
     @stability Internal
@@ -7998,7 +7998,7 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, struct MprSsl *ssl, cchar *peerName);
     @param len Length of data to write. This may be less than the requested write length if the socket is in non-blocking
         mode. Will return a negative MPR error code on errors.
     @return A count of bytes actually written. Return a negative MPR error code on errors and if the socket cannot absorb any
-        more data. If the transport is saturated, will return a negative error and mprGetError() returns EAGAIN 
+        more data. If the transport is saturated, will return a negative error and mprGetError() returns EAGAIN
         or EWOULDBLOCK.
     @ingroup MprSocket
     @stability Stable
@@ -9796,7 +9796,7 @@ PUBLIC int mprDaemon();
     \n\n
     Applications that have a service events thread can call mprDestroy directly from their main program when ready to exit.
     Applications that call mprServiceEvents from their main program will typically have some other MPR thread call
-    #mprShutdown to initiate a shutdown sequence. This will stop accepting new requests or connections and when the 
+    #mprShutdown to initiate a shutdown sequence. This will stop accepting new requests or connections and when the
     application is idle, the #mprServiceEvents routine will return and then the main program can call then call mprDestroy.
     \n\n
     Once the shutdown conditions are satisfied, a thread executing #mprServiceEvents will return from that API and then

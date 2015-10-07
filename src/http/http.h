@@ -536,7 +536,7 @@ PUBLIC void httpPruneMonitors();
     @stability Prototype
     @ingroup HttpTrace
  */
-typedef void (*HttpTraceFormatter)(struct HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, 
+typedef void (*HttpTraceFormatter)(struct HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type,
     cchar *values, cchar *buf, ssize len);
 /**
     Trace logger callback
@@ -594,7 +594,7 @@ PUBLIC int httpBackupTraceLogFile(HttpTrace *trace);
     @ingroup HttpTrace
     @stability Prototype
  */
-PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values, 
+PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values,
     cchar *buf, ssize len);
 
 /**
@@ -609,7 +609,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
 
 /**
     Detailed log trace formatter
-    @param trace HttpTrace object 
+    @param trace HttpTrace object
     @param conn HttpConn connection object created via #httpCreateConn
     @param event Event to trace
     @param type Event type to trace
@@ -619,7 +619,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
     @ingroup HttpTrace
     @stability Prototype
  */
-PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values, 
+PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values,
     cchar *buf, ssize len);
 
 /**
@@ -635,7 +635,7 @@ PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cc
     @ingroup HttpTrace
     @stability Prototype
  */
-PUBLIC void httpFormatTrace(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values, 
+PUBLIC void httpFormatTrace(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values,
     cchar *buf, ssize len);
 
 /*
@@ -701,7 +701,7 @@ PUBLIC void httpSetTraceEventLevel(HttpTrace *trace, cchar *type, int level);
 
 /**
     Set the maximum content size to trace
-    @description Tracing will be suspended for files that are larger than this size. 
+    @description Tracing will be suspended for files that are larger than this size.
     @param trace Tracing object
     @param size Maximum content size to trace
     @ingroup HttpTrace
@@ -767,7 +767,7 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
 #if DOXYGEN
 /**
     Trace an event of interest
-    @description The Http trace log is for operational request and server messages and should be used in preference to 
+    @description The Http trace log is for operational request and server messages and should be used in preference to
     the MPR error log which should be used only for configuration and hard system-wide errors.
     @param conn HttpConn connection object created via #httpCreateConn
     @param event Event name to trace.
@@ -778,10 +778,10 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
     The context type is used for general information including http headers. The form type is used for POST form data.
     The body type is used for request body data.
     \n\n
-    Context type events may include a "msg" value field. By convention, these messages should be aggregated by trace 
+    Context type events may include a "msg" value field. By convention, these messages should be aggregated by trace
     formatters so that subsequent context events do not overwrite prior msg values.
     \n\n
-    Event types are orthogonal to event names. 
+    Event types are orthogonal to event names.
     @param values Printf style format string. String should be comma separated key=value pairs
     @return True if the event was traced
     @ingroup HttpTrace
@@ -796,7 +796,7 @@ PUBLIC bool httpTrace(struct HttpConn *conn, cchar *event, cchar *type, cchar *v
             if (__tlevel > 0 && __tlevel <= HTTP->traceLevel) { \
                 httpTraceProc(conn, event, type, __VA_ARGS__); \
             } \
-        } else 
+        } else
 #endif
 PUBLIC bool httpTraceProc(struct HttpConn *conn, cchar *event, cchar *type, cchar *values, ...) PRINTF_ATTRIBUTE(4,5);
 
@@ -815,7 +815,7 @@ PUBLIC bool httpTraceProc(struct HttpConn *conn, cchar *event, cchar *type, ccha
     @ingroup HttpTrace
     @stability Prototype
  */
-PUBLIC bool httpTraceContent(struct HttpConn *conn, cchar *event, cchar *type, cchar *buf, ssize len, 
+PUBLIC bool httpTraceContent(struct HttpConn *conn, cchar *event, cchar *type, cchar *buf, ssize len,
     cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
 
 /**
@@ -832,7 +832,7 @@ PUBLIC bool httpTraceContent(struct HttpConn *conn, cchar *event, cchar *type, c
     @ingroup HttpTrace
     @stability Prototype
  */
-PUBLIC bool httpTracePacket(struct HttpConn *conn, cchar *event, cchar *type, struct HttpPacket *packet, 
+PUBLIC bool httpTracePacket(struct HttpConn *conn, cchar *event, cchar *type, struct HttpPacket *packet,
     cchar *values, ...) PRINTF_ATTRIBUTE(5,6);
 
 /**
@@ -864,8 +864,8 @@ PUBLIC cchar *httpMakePrintable(HttpTrace *trace, struct HttpConn *conn, cchar *
 /************************************ Http **********************************/
 /**
     Http service object
-    @description Configuration is not thread safe and must occur at initialization time when the application is 
-    single threaded. If the configuration is modified when the application is multithreaded, all requests must be 
+    @description Configuration is not thread safe and must occur at initialization time when the application is
+    single threaded. If the configuration is modified when the application is multithreaded, all requests must be
     first be quiesced.
     @defgroup Http Http
     @see Http HttpConn HttpEndpoint gettGetDateString httpCreate httpGetContext httpGetDateString
@@ -1563,8 +1563,8 @@ PUBLIC HttpUri *httpResolveUri(struct HttpConn *conn, HttpUri *base, HttpUri *ta
 /**
     Create a URI link
     @description Create a URI link based on a given target relative to the current request.
-        This API expands embedded tokens based on the current request and route state. The target URI parameter 
-        may contain partial or complete URI information. The missing parts are supplied using the current request 
+        This API expands embedded tokens based on the current request and route state. The target URI parameter
+        may contain partial or complete URI information. The missing parts are supplied using the current request
         and route tables.
     @param [in] conn HttpConn connection object
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
@@ -1630,7 +1630,7 @@ PUBLIC char *httpLink(struct HttpConn *conn, cchar *target);
 /**
     Create an absolute link that includes scheme and host
     @param conn HttpConn connection object
-    @param target 
+    @param target
     @param target The URI target. See #httpLink for details of the target parameter.
     @return A normalized Uri string.
     @ingroup HttpUri
@@ -2913,7 +2913,7 @@ PUBLIC void httpSetIOCallback(struct HttpConn *conn, HttpIOCallback fn);
         httpGetConnHost httpGetError httpGetExt httpGetKeepAliveCount httpGetWriteQueueCount httpMatchHost httpMemoryError
         httpAfterEvent httpPrepClientConn httpResetCredentials httpRouteRequest httpRunHandlerReady httpService
         httpSetAsync httpSetChunkSize httpSetConnContext httpSetConnHost httpSetConnNotifier httpSetCredentials
-        httpSetFileHandler httpSetKeepAliveCount httpSetProtocol httpSetRetries httpSetSendConnector httpSetState 
+        httpSetFileHandler httpSetKeepAliveCount httpSetProtocol httpSetRetries httpSetSendConnector httpSetState
         httpSetTimeout httpSetTimestamp httpStartPipeline
     @stability Internal
  */
@@ -2980,6 +2980,7 @@ typedef struct HttpConn {
     bool            borrowed: 1;            /**< Connection has been borrowed */
     bool            destroyed: 1;           /**< Connection has been destroyed */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */
+    bool            errorDoc: 1;            /**< Processing an error document */
     bool            followRedirects: 1;     /**< Follow redirects for client requests */
     bool            http10: 1;              /**< Using legacy HTTP/1.0 */
     bool            mustClose: 1;           /**< Peer requested the connection be closed via "Connection: close" */
@@ -3490,7 +3491,7 @@ PUBLIC void httpSetConnContext(HttpConn *conn, void *context);
 
 /**
     Set the connection data field
-    @description The HttpConn.data field is a managed reference that applications can use to retain their 
+    @description The HttpConn.data field is a managed reference that applications can use to retain their
         own per connection state. It will be marked for GC retention by Http.
         See also HttpConn.reqData and HttpQueue.stageData;
     @param conn HttpConn object created via #httpCreateConn
@@ -3871,7 +3872,7 @@ PUBLIC HttpAuth *httpCreateAuth();
 
 /**
     Create an authorization protocol type. The pre-supplied types are 'basic', 'digest' and 'form'.
-    @description This creates an AuthType with the defined name and callbacks. The basic and digest types are 
+    @description This creates an AuthType with the defined name and callbacks. The basic and digest types are
         supported by most browsers. The form type is implemented via web form requests over HTTP.
     @param name Unique authorization type name
     @param askLogin Callback to generate a client login response
@@ -3962,7 +3963,7 @@ PUBLIC HttpRole *httpLookupRole(HttpAuth *auth, cchar *name);
 
 /**
     Lookup a user by username
-    @description This looks up a user in the internal user store. 
+    @description This looks up a user in the internal user store.
     This is only used i
     @param auth HttpAuth object. Stored in HttpConn.rx.route.auth
     @param name Username
@@ -4019,8 +4020,8 @@ PUBLIC char *httpRolesToAbilities(HttpAuth *auth, cchar *roles, cchar *separator
 /********************************* Login *************************************/
 /**
     Authenticate a user based on session data
-    @description This authenticates a user by testing the user supplied session cookie against login credentials 
-    stored in the server-side session store. The httpAuthenticate call is not automatically performed by the 
+    @description This authenticates a user by testing the user supplied session cookie against login credentials
+    stored in the server-side session store. The httpAuthenticate call is not automatically performed by the
     request pipeline. Web Frameworks should call this if required.
     @param conn HttpConn connection object created via #httpCreateConn object.
     @return True if the user is authenticated.
@@ -4104,8 +4105,8 @@ PUBLIC void httpSetAuthDeny(HttpAuth *auth, cchar *ip);
 
 /**
     Define login service URLs for use with "form" authentication.
-    @description This defines the login form URL and login/out service URLs. 
-        Set arguments to null if they are not required because the application is implementing its own redirection 
+    @description This defines the login form URL and login/out service URLs.
+        Set arguments to null if they are not required because the application is implementing its own redirection
         management during login. This API should not be used for web frameworks like ESP or PHP that define their own
         login/out services.
     @param route Route from which to inherit when creating a route for the login pages and services.
@@ -4266,7 +4267,7 @@ typedef struct HttpLang {
 
 /**
     Cache Control
-    @description Configuration is not thread safe and must occur at initialization time when the application is 
+    @description Configuration is not thread safe and must occur at initialization time when the application is
         single threaded.
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpCache HttpCache
@@ -4457,7 +4458,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 
 /**
     Route Control
-    @description Configuration is not thread safe and must occur at initialization time when the application is 
+    @description Configuration is not thread safe and must occur at initialization time when the application is
         single threaded.
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpRoute HttpRoute
@@ -4852,7 +4853,7 @@ PUBLIC int httpAddRouteLanguageSuffix(HttpRoute *route, cchar *language, cchar *
     @param route Route to modify
     @param extensions Comma separated list of extensions to map. For example: "css,html,js,less,txt,xml"
         Set to "*" or the empty string to match all extensions.
-    @param mappings List of new file extensions to consider. This may include a "${1}" token to replace the 
+    @param mappings List of new file extensions to consider. This may include a "${1}" token to replace the
         previous extension. The extensions are searched in order and the first matching extensions for which there is
         an existing file will be selected. For example: "${1}.gz, min.${1}.gz, min.${1}".
     @ingroup HttpRoute
@@ -5263,8 +5264,8 @@ PUBLIC cchar *httpLookupRouteErrorDocument(HttpRoute *route, int status);
 PUBLIC char *httpMakePath(HttpRoute *route, cchar *dir, cchar *path);
 
 /**
-    Map a content filename 
-    @description Test a filename for alternative extension mappings. This is used to server compressed or minified 
+    Map a content filename
+    @description Test a filename for alternative extension mappings. This is used to server compressed or minified
         content intead of "vanilla" files.
     @param conn HttpConn connection object
     @param filename Base filename.
@@ -5281,8 +5282,8 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename);
     \n\n
     If route maps have been defined, the filename may be mapped to a preferred compressed or minified filename to serve.
     \n\n
-    After computing the filename, this routine calls #httpSetFilename to set the HttpTx.filename, ext, etag and fileInfo 
-    fields. If a filename has already been defined by a prior call to httpMapFile or #httpSetFilename, this routine will 
+    After computing the filename, this routine calls #httpSetFilename to set the HttpTx.filename, ext, etag and fileInfo
+    fields. If a filename has already been defined by a prior call to httpMapFile or #httpSetFilename, this routine will
     do nothing.  To reset a prior filename, use #httpSetFilename with a null argument.
     @param conn HttpConn connection object
     @ingroup HttpRoute
@@ -6803,13 +6804,13 @@ PUBLIC void httpDestroyTx(HttpTx *tx);
     Indicate the request is finalized.
     @description Calling this routine indicates that the handler has fully finished processing the request including
         processing all input, generating a full response and any other required processing. This call will invoke
-        #httpFinalizeOutput and then set the request finalized flag. If the request is already finalized, this call 
+        #httpFinalizeOutput and then set the request finalized flag. If the request is already finalized, this call
         does nothing. A handler MUST call httpFinalize when it has completed processing a request.
-        As background: there are three finalize concepts: HttpTx.finalizedOutput means the handler has generated all 
-        the response output but it may not yet be fully transmited through the pipeline and to the network by the 
-        connector. HttpTx.finalizedConnector means the connector has sent all the output to the network.  HttpTx.finalized 
-        means the application has fully processed the request including reading all the input data it wishes to read 
-        and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized 
+        As background: there are three finalize concepts: HttpTx.finalizedOutput means the handler has generated all
+        the response output but it may not yet be fully transmited through the pipeline and to the network by the
+        connector. HttpTx.finalizedConnector means the connector has sent all the output to the network.  HttpTx.finalized
+        means the application has fully processed the request including reading all the input data it wishes to read
+        and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized
         and HttpTx.finalizedConnector true.
     @param conn HttpConn connection object
     @ingroup HttpTx
@@ -6835,9 +6836,9 @@ PUBLIC void httpFinalizeConnector(HttpConn *conn);
     finalized, this call does nothing.  Note that after finalization, incoming content may continue to be processed.
     i.e. httpFinalizeOutput can be called before all incoming data has been received.
     \n\n
-    The difference between #httpFinalize and #httpFinalizeOutput is that #httpFinalize implies that all request 
-    processing is also complete whereas #httpFinalizeOutput implies that the output is generated. Note that while the 
-    output may be fully generated, it may not be fully transmitted by the pipeline and connector. When the output is 
+    The difference between #httpFinalize and #httpFinalizeOutput is that #httpFinalize implies that all request
+    processing is also complete whereas #httpFinalizeOutput implies that the output is generated. Note that while the
+    output may be fully generated, it may not be fully transmitted by the pipeline and connector. When the output is
     fully transmitted, the connector will call
     #httpFinalizeConnector.
     @param conn HttpConn connection object
@@ -7068,7 +7069,7 @@ PUBLIC void httpSetContentType(HttpConn *conn, cchar *mimeType);
     @param path URI path to which the cookie applies
     @param domain Domain in which the cookie applies. Must have 2-3 dots. If null, a domain is created using the
         current request host header. If set to the empty string, the domain field is omitted.
-        If the domain is a numerical IP address or localhost, the domain will not be included as the browsers do not 
+        If the domain is a numerical IP address or localhost, the domain will not be included as the browsers do not
         support this pattern consistently.
         Note that hostname port numbers are ignored by browsers and so web sites with the same domain name but different
         port numbers may have conflicting cookies. This is according to the Cookie RFC standard.
@@ -7489,7 +7490,7 @@ PUBLIC void httpStopEndpoint(HttpEndpoint *endpoint);
     Host Object
     @description A Host object represents a logical host. Several logical hosts may share a single HttpEndpoint.
     @defgroup HttpHost HttpHost
-    @see HttpHost httpAddRoute httpCloneHost httpCreateHost httpResetRoutes httpSetHostHome 
+    @see HttpHost httpAddRoute httpCloneHost httpCreateHost httpResetRoutes httpSetHostHome
         httpSetHostName httpSetHostProtocol
     @stability Internal
 */
@@ -7654,7 +7655,7 @@ PUBLIC void httpSetHostDefaultRoute(HttpHost *host, HttpRoute *route);
 
 /**
     Set the host name
-    @description The host name is used when matching client requests to virtual hosts using the Http request Host header. 
+    @description The host name is used when matching client requests to virtual hosts using the Http request Host header.
         If the host name starts with "*", it will match names that contain the name.
         If the host name ends with "*", it will match names that start with the name.
         If the host name begins and ends with a "/", the name is assumed to be a regular expression. Regular expressions
@@ -7861,25 +7862,25 @@ PUBLIC ssize httpSend(HttpConn *conn, cchar *fmt, ...) PRINTF_ATTRIBUTE(2,3);
     Send a message of a given type to the WebSocket peer
     @description This is the lower-level message send routine. It permits control of message types and message framing.
     \n\n
-    This routine can operate in a blocking, non-blocking or buffered mode. Blocking mode is specified via the HTTP_BLOCK 
-    flag. When blocking, the call will wait until it has written all the data. The call will either accept and write all 
-    the data or it will fail, it will never return "short" with a partial write. If in blocking mode, the call may block 
+    This routine can operate in a blocking, non-blocking or buffered mode. Blocking mode is specified via the HTTP_BLOCK
+    flag. When blocking, the call will wait until it has written all the data. The call will either accept and write all
+    the data or it will fail, it will never return "short" with a partial write. If in blocking mode, the call may block
     for up to the inactivity timeout specified in the conn->limits->inactivityTimeout value.
     \n\n
     Non-blocking mode is specified via the HTTP_NON_BLOCK flag. In this mode, the call will consume that amount of data
-    that will fit within the outgoing WebSocket queues. Consequently, it may return "short" with a partial write. If this 
-    occurs the next call to httpSendBlock should set the message type to WS_MSG_CONT to indicate a continued message. 
+    that will fit within the outgoing WebSocket queues. Consequently, it may return "short" with a partial write. If this
+    occurs the next call to httpSendBlock should set the message type to WS_MSG_CONT to indicate a continued message.
     This is required by the WebSockets specification.
     \n\n
-    Buffered mode is the default and may be explicitly specified via the HTTP_BUFFER flag. In buffered mode, the entire 
+    Buffered mode is the default and may be explicitly specified via the HTTP_BUFFER flag. In buffered mode, the entire
     message will be accepted and will be buffered if required.
     \n\n
     This API may split the message into frames such that no frame is larger than the limit conn->limits->webSocketsFrameSize.
-    However, if the HTTP_MORE flag is specified to indicate there is more data to complete this entire message, the data 
-    provided to this call will not be split into frames and will not be aggregated with previous or subsequent messages. 
+    However, if the HTTP_MORE flag is specified to indicate there is more data to complete this entire message, the data
+    provided to this call will not be split into frames and will not be aggregated with previous or subsequent messages.
     i.e. frame boundaries will be presserved and sent as-is to the peer.
     \n\n
-    In blocking mode, this routine may invoke mprYield before blocking to consent for the garbage collector to run. Callers 
+    In blocking mode, this routine may invoke mprYield before blocking to consent for the garbage collector to run. Callers
     must ensure they have retained all required temporary memory before invoking this routine.
 
     @param conn HttpConn connection object created via #httpCreateConn
