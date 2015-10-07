@@ -64,4 +64,4 @@ The clean-css service may be used to remove unwanted CSS files from the **dist**
 
 ### Get Pak from
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/download.html)
+[https://embedthis.com/pak/](https://embedthis.com/pak/)

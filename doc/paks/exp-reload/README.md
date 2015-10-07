@@ -29,4 +29,4 @@ your layout. This will generate a reload script in 'debug' mode.
 
 ### Get Pak from
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/download.html)
+[https://embedthis.com/pak/](https://embedthis.com/pak/)

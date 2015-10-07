@@ -1,9 +1,9 @@
 {
     meta: {
-        url: 'https://embedthis.com/esp/doc/'
+        site: 'https://embedthis.com/esp/doc/'
     },
     control: {
-        listen: '127.0.0.1:5000'
+        listen: '127.0.0.1:4000'
     },
     release: {
         services: {
