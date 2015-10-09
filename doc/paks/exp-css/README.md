@@ -44,8 +44,10 @@ The render-css service smartly selects supplied stylesheets. By default, it sele
 
 The renderStyles API will generate the HTML for the page to include the specified stylesheets. The styles are taken from the current 'styles' collection for the page. Use 'addItems' and 'removeItems' to modify the styles collection.
 
+The renderStyles API may be invoked with an argument can specify a set of patterns to select a subset of stylesheets for which to create link elements. This can be used to select or reject specific stylesheets. A second argument can supply an array of additional stylesheets to render.
+
 ```
-    <@ renderStyles() @>
+    renderStyles(['!unwanted.css'], ['extra.css'])
 ```
 
 ## minify-css

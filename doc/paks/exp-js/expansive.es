@@ -19,6 +19,19 @@ Expansive.load({
 
         script: `
             let service = expansive.services['js']
+            //  DEPRECATE
+            for each (svc in [ 'render-js', 'minify-js' ]) {
+                let sp
+                if ((sp = expansive.services[svc]) != null) {
+                    for each (name in [ 'compress', 'dotmin', 'minify', 'mangle', 'usemap', 'usemin' ]) {
+                        if (sp[name]) {
+                            service[name] = sp[name] | service[name]
+                            trace('Warn', 'Legacy configuration for ' + svc + '.' + name + 
+                                          ' in expansive.json. Migrate to js.' + name + '.')
+                        }
+                    }
+                }
+            }
             if (service.minify) {
                 service.usemin ||= true
             }
@@ -55,7 +68,7 @@ Expansive.load({
                      */                           
                     if ((service.minify && service.force) ||
                         !(minified.exists && service.usemin && (!service.usemap ||
-                            (vfile.replaceExt('min.map').exists || vfile.replaceExt('js.map').exists)))) {
+                            (vfile.replaceExt('min.map').exists || vfile.replaceExt('min.js.map').exists)))) {
                         if (service.minify && service.dotmin) {
                             return path.trimExt().joinExt('min.js', true)
                         }
@@ -73,7 +86,6 @@ Expansive.load({
         script: `
             let directories = expansive.directories
             let service = expansive.services.js
-            let collections = expansive.control.collections
 
             let cmd = Cmd.locate('uglifyjs')
             if (!cmd) {
@@ -121,9 +133,11 @@ Expansive.load({
             let collections = expansive.control.collections
             if (!collections.scripts) {
                 /*
-                    Default to stylesheets from packages under contents/lib
+                    Default to only scripts from packages under contents/lib
+                    Other scripts in contents may be page-specific.
                  */
-                collections.scripts = [ expansive.getSourcePath(expansive.directories.lib).join('**.js*') ]
+                let lib = expansive.getSourcePath(expansive.directories.lib)
+                collections.scripts = [ lib.join('**.js*'), '!' + lib.join('**.map') ]
             }
             service.hash = {}
 
@@ -167,9 +181,10 @@ Expansive.load({
             }
 
             /*
-                Render Scripts is based on 'collections.scripts' which defaults to '**.js'
+                Render Scripts is based on 'collections.scripts' which defaults to 'lib/**.js' and is modified
+                via expansive.json and addItems.
              */
-            public function renderScripts() {
+            public function renderScripts(filter = null, extras = []) {
                 let collections = expansive.collections
                 if (!collections.scripts) {
                     return
@@ -188,6 +203,15 @@ Expansive.load({
                     service.hash[collections.scripts] = buildScriptList(files).unique()
                 }
                 for each (script in service.hash[collections.scripts]) {
+                    if (filter && !Path(script).glob(filter)) {
+                        continue
+                    }
+                    write('<script src="' + meta.top.join(script) + '"></script>\n    ')
+                }
+                if (extras && extras is String) {
+                    extras = [extras]
+                }
+                for each (script in extras) {
                     write('<script src="' + meta.top.join(script) + '"></script>\n    ')
                 }
             }

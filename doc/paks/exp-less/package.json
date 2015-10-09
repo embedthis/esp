@@ -1,7 +1,7 @@
 {
     "name": "exp-less",
     "description": "Lessc Plugin for Expansive",
-    "version": "0.2.4",
+    "version": "0.3.0",
     "keywords": [
         "expansive-plugin",
         "less"
@@ -12,6 +12,7 @@
         "url": "git://github.com/embedthis/exp-less.git"
     },
     "devDependencies": {
+        "expansive": ">=0.6.0",
         "pak": ">=0.11.3"
     },
     "pak": {

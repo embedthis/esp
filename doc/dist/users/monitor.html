@@ -1,188 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Monitoring and Defending</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="The amazing C web framework" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.css" rel="stylesheet" type="text/css" />
-    
-
-</head>
-<body class="show-sidebar">
-        <div class="sidebar">
-        <div class="ui large left vertical inverted labeled menu">
-            <div class="item">
-                <a href="../index.html" class="logo">ESP Docs</a>
-            </div>
-            <div class="item">
-                <a href="../index.html">
-                    <b>General</b>
-                </a>
-                <div class="menu">
-                    <a class="item" href="../index.html">ESP Overview</a>
-                    <a class="item" href="../users/features.html">ESP Features</a>
-                    <a class="item" href="https://embedthis.com/esp/download.html">Download</a>
-                    <a class="item" href="../licensing/index.html">Licensing</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../start/index.html">
-                    <b>Getting Started</b>
-                </a>
-                <div class="menu">
-                    <a class="item" href="../start/quick.html">Quick Start</a>
-                    <a class="item" href="../start/index.html">Installing ESP</a>
-                    <a class="item" href="../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
-                    <a class="item" href="../start/releaseNotes.html">Release Notes</a>
-                    <a class="item" href="../start/source.html">Building from Source</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../users/index.html"><b>User's Guide</b></a>
-                <div class="menu">
-                    <a class="item" href="../users/create.html">Creating ESP Applications</a>
-                    <a class="item" href="../users/packages.html">Extension Packages</a>
-                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
-                    <a class="item" href="../users/config.html">Configuring ESP</a>
-                    <a class="item" href="../users/components.html">Generating Components</a>
-                    <a class="item" href="../users/building.html">Building Applications</a>
-                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
-                    <a class="item" href="../users/pages.html">ESP Pages</a>
-                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
-                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../users/database.html">Databases</a>
-                    <a class="item" href="../users/migrations.html">Database Migrations</a>
-                    <a class="item" href="../users/sessions.html">Session Storage</a>
-                    <a class="item" href="../users/security.html">Security Considerations</a>
-                    <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
-                    <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
-                    <a class="item" href="../users/command.html">ESP Command</a>
-                    <a class="item" href="../users/man.html">Manual Pages</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../ref/index.html">Reference Guide</a>
-                <div class="menu">
-                    <a class="item" href="../ref/mvc.html">ESP MVC Framework</a>
-                    <a class="item" href="../ref/compatibility.html">Compatibility</a>
-                    <a class="item" href="../ref/native.html">API Library</a>
-                    <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
-                    <a class="item" href="../ref/multithread.html">Multithreaded Programming</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../users/samples.html">Samples</a>
-                <div class="menu">
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../users/project.html">Project Resources</a>
-                <div class="menu">
-                    <a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a>
-                    <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
-                    <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
-                    <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
-                    <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a>
-                    <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a>
-                    <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a>
-                </div>
-            </div>
-            <div class="item">
-                <b>Links</b>
-                <div class="menu">
-                    <a class="item" href="https://embedthis.com/">Embedthis Web Site</a>
-                    <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a>
-                    <a class="item" href="http://twitter.com/mobstream">Twitter</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="ui inverted masthead">
-         
-        <div class="ui fixed inverted menu">
-            <div class="ui sidebar-launch button">
-                <i class="icon list layout"></i>
-            </div>
-            <div class="right menu">
-                 
-                    <a class="item" href="https://embedthis.com/">Embedthis</a>
-                    <a class="item" href="https://embedthis.com/esp/">ESP Site</a>
-                    <span class="desktop-only">
-                        <a class="item" href="http://goo.gl/66rlSc">ESP News</a>
-                        <a class="item" href="https://github.com/embedthis/esp">Repository</a>
-                        <a class="item" href="https://embedthis.com/blog/">Blog</a>
-                        <a class="item" href="https://twitter.com/mobstream">Twitter</a>
-                    </span>
-
-            </div>
-        </div>
-        
-        <div class="ui breadcrumb">
-            <a class="section" href="../">Home</a>
-            
-            <div class="divider">/</div>
-            <a class="section" href="index.html">
-                User's Guide
-            </a>
-            
-            
-            <div class="divider">/</div>
-            <a class="active section" href="monitor.html">Monitoring and Defending</a>
-            
-        </div>
-        
-        <iframe class="version desktop-only" src="../version.html"></iframe>
-
-    </div>
-    <div class="content">
-
-            <h1>Monitoring and Defending</h1>
-            <p>ESP includes a monitoring and defensive response framework to mitigate denial-of-service (DOS) and
-            vulnerability survey threats. This framework monitors key server metrics and triggers defenses should any metric
-            be outside anticipated norms. Monitored metrics include the number of requests that result in an error, the number of SSL
-            errors, the total number of requests and more.</p>
-            <p>Defensive responses invoke remedies that can be implemented to ward off the threat. Remedies 
-            include delaying or banning the offending client, notifying network administration or running an external program
-            to implement a custom defense or recovery action.</p>
-            <h2>Embedded Systems</h2>
-            <p>Embedded devices typically have a well defined, understood and anticipated work load. Unlike their enterprise cousins, 
-            which have highly variable work loads, embedded systems usually serve a specific purpose with known
-            clients that follow a more predictable access pattern. This allows an embedded system to define a range
-            of operation that is considered "normal" and to trigger alerts and defenses if access is outside of this 
-            "normal" operation.</p>
-            <p>For example: an embedded system may expect to be accessed by at most 1 or 2 clients at a time. ESP can then be
-            configured to regard it as threat if the system is accessed by more than 2 clients.</p>
-
-            <a id="monitors"></a>
-            <h2>Monitors</h2>
-            <p>Monitors are defined in the ESP package.json configuration file via the 
-            <em>http.montiors</em> directive.
-            The monitor directive takes the form:</p>
-            <pre class="code">
+<!DOCTYPE html><html lang="en"><head><title>Monitoring and Defending</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="description" content="The amazing C web framework"><link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'><link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'><link href="../images/favicon.ico" rel="shortcut icon"><link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css"><link href="../css/all.css" rel="stylesheet" type="text/css"><link href="../css/api.css" rel="stylesheet" type="text/css"><body class="show-sidebar"><div class="sidebar"><div class="ui large left vertical inverted labeled menu"><div class="item"><a href="../index.html" class="logo">ESP Docs</a></div><div class="item"><a href="../index.html"><b>General</b></a><div class="menu"><a class="item" href="../index.html">ESP Overview</a> <a class="item" href="../users/features.html">ESP Features</a> <a class="item" href="https://embedthis.com/esp/download.html">Download</a> <a class="item" href="../licensing/index.html">Licensing</a></div></div><div class="item"><a href="../start/index.html"><b>Getting Started</b></a><div class="menu"><a class="item" href="../start/quick.html">Quick Start</a> <a class="item" href="../start/index.html">Installing ESP</a> <a class="item" href="../start/tour.html">ESP Tour</a> <a class="item" href="../start/app-tour.html">ESP Applications Tour</a> <a class="item" href="../start/releaseNotes.html">Release Notes</a> <a class="item" href="../start/source.html">Building from Source</a></div></div><div class="item"><a href="../users/index.html"><b>User's Guide</b></a><div class="menu"><a class="item" href="../users/create.html">Creating ESP Applications</a> <a class="item" href="../users/packages.html">Extension Packages</a> <a class="item" href="../users/skeletons.html">Application Skeletons</a> <a class="item" href="../users/config.html">Configuring ESP</a> <a class="item" href="../users/components.html">Generating Components</a> <a class="item" href="../users/building.html">Building Applications</a> <a class="item" href="../users/deploying.html">Deploying Applications</a> <a class="item" href="../users/pages.html">ESP Pages</a> <a class="item" href="../users/layouts.html">Expansive Layouts</a> <a class="item" href="../users/controllers.html">ESP Controllers</a> <a class="item" href="../users/database.html">Databases</a> <a class="item" href="../users/migrations.html">Database Migrations</a> <a class="item" href="../users/sessions.html">Session Storage</a> <a class="item" href="../users/security.html">Security Considerations</a> <a class="item" href="../users/monitor.html">Monitoring and Defending</a> <a class="item" href="../users/hosting.html">Hosting in Appweb</a> <a class="item" href="../users/command.html">ESP Command</a> <a class="item" href="../users/man.html">Manual Pages</a></div></div><div class="item"><a href="../ref/index.html">Reference Guide</a><div class="menu"><a class="item" href="../ref/mvc.html">ESP MVC Framework</a> <a class="item" href="../ref/compatibility.html">Compatibility</a> <a class="item" href="../ref/native.html">API Library</a> <a class="item" href="../ref/memory.html">ESP Memory Allocation</a> <a class="item" href="../ref/multithread.html">Multithreaded Programming</a></div></div><div class="item"><a href="../users/samples.html">Samples</a><div class="menu"><a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a></div></div><div class="item"><a href="../users/project.html">Project Resources</a><div class="menu"><a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a> <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a> <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a> <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a> <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a> <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a> <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a></div></div><div class="item"><b>Links</b><div class="menu"><a class="item" href="https://embedthis.com/">Embedthis Web Site</a> <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a> <a class="item" href="http://twitter.com/mobstream">Twitter</a></div></div></div></div><div class="ui inverted masthead"><div class="ui fixed inverted menu"><div class="ui sidebar-launch button"><i class="icon list layout"></i></div><div class="right menu"><a class="item" href="https://embedthis.com/">Embedthis</a> <a class="item" href="https://embedthis.com/esp/">ESP Site</a> <span class="desktop-only"><a class="item" href="http://goo.gl/66rlSc">ESP News</a> <a class="item" href="https://github.com/embedthis/esp">Repository</a> <a class="item" href="https://embedthis.com/blog/">Blog</a> <a class="item" href="https://twitter.com/mobstream">Twitter</a></span></div></div><div class="ui breadcrumb"><a class="section" href="../">Home</a><div class="divider">/</div><a class="section" href="index.html">User's Guide</a><div class="divider">/</div><a class="active section" href="monitor.html">Monitoring and Defending</a></div><iframe class="version desktop-only" src="../version.html"></iframe></div><div class="content"><h1>Monitoring and Defending</h1><p>ESP includes a monitoring and defensive response framework to mitigate denial-of-service (DOS) and vulnerability survey threats. This framework monitors key server metrics and triggers defenses should any metric be outside anticipated norms. Monitored metrics include the number of requests that result in an error, the number of SSL errors, the total number of requests and more.</p><p>Defensive responses invoke remedies that can be implemented to ward off the threat. Remedies include delaying or banning the offending client, notifying network administration or running an external program to implement a custom defense or recovery action.</p><h2>Embedded Systems</h2><p>Embedded devices typically have a well defined, understood and anticipated work load. Unlike their enterprise cousins, which have highly variable work loads, embedded systems usually serve a specific purpose with known clients that follow a more predictable access pattern. This allows an embedded system to define a range of operation that is considered "normal" and to trigger alerts and defenses if access is outside of this "normal" operation.</p><p>For example: an embedded system may expect to be accessed by at most 1 or 2 clients at a time. ESP can then be configured to regard it as threat if the system is accessed by more than 2 clients.</p><a id="monitors"></a><h2>Monitors</h2><p>Monitors are defined in the ESP package.json configuration file via the <em>http.montiors</em> directive. The monitor directive takes the form:</p><pre class="code">
 monitors: {
     "NAME": {
         "expression": "EXPRESSION",
@@ -190,11 +6,7 @@ monitors: {
         "defenses": [ "DEFENSE" ],
     },
 },
-</pre>
-            <p>A monitor defines an <em>expression</em> to be regularly tested. 
-            The <em>period</em> defines how often it will be tested. If the expression is true, 
-            the list of <em>defenses</em> will be invoked to address the threat. For example:</p>
-<pre class="code">
+</pre><p>A monitor defines an <em>expression</em> to be regularly tested. The <em>period</em> defines how often it will be tested. If the expression is true, the list of <em>defenses</em> will be invoked to address the threat. For example:</p><pre class="code">
 monitors: {
     missing: {
         "expression": "NotFoundErrors &gt; 50",
@@ -203,81 +15,7 @@ monitors: {
         "enable": true,
     },
 },
-</pre>
-            <p>This will test each minute if any client has more than 50 errors in the preceding period. 
-            If so, the "block" defense will be invoked.
-            <h3>Monitor Expressions</h3>
-            <p>Monitor expressions are simple comparisons between a server Counter and a limit wrapped in quotes. 
-            They take the form:</p>
-            <pre class="code">"Counter [&lt;|&gt;] Limit"</pre>
-            <p>Although a monitor can only access one counter, multiple monitors can be created. </p>
-
-            <a id="counters"></a>
-            <h2>Counters</h2>
-            <p>Counters are metrics defined and maintained by ESP for monitoring purposes.</p>
-            <p>ESP provides three classes of of counters:</p>
-            <ul>
-            <li>Server-Wide Counters</li>
-            <li>Per-Client Counters</li>
-            <li>Custom Counters</li>
-            </ul>
-            <p>Server-Wide counters pertain to the whole server and are not maintained per client. Per-Client counters
-            are maintained per client IP address (not per TCP/IP socket connection). Custom counters are defined by the
-            user developer using the httpAddCounter API.</p>
-            <h3>Server-Wide Counters</h3>
-            <p>The server-wide counters are accumulated for the entire ESP server and not per-client IP address.
-            The value examined by Monitors is the current value of the counter.</p>
-            <table title="monitors" class="ui table segment">
-                <thead>
-                    <tr><th>Name</th><th>Description</th><th>Notes</th></tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>ActiveClients</td>
-                    <td>Count of client IP addresses recently accessing the server.</td>
-                    <td>The ActiveClients counter is pruned of old clients whenever a monitor runs to examine its value or every 5 minutes
-                        whichever is more.</td>
-                </tr>
-                <tr>
-                    <td>Memory</td>
-                    <td>Amount of memory used by ESP.</td>
-                    <td>The Memory counter is not representative of an outside security threat, but is provided for 
-                        as it does impact the ability of the server to provide service.</td>
-                </tr>
-            </tbody>
-            </table>
-            <h3>Per-Client Counters</h3>
-            <p>All the per-client counters are accumulated for each client IP address. For all counters 
-            except ActiveConnections and ActiveRequests, the value examined by Monitors is the <i>change</i> in the 
-            value over the monitor period. ActiveConnections and ActiveRequests are instantaneous values.</p>
-            <table title="counters" class="ui table segment">
-                <thead>
-                    <tr><th>Name</th><th>Description</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>ActiveConnections </td><td>Count of active sockets.</td></tr>
-                    <tr><td>ActiveRequests </td><td> Count of active requests.</td></tr>
-                    <tr><td>BadRequestErrors </td><td> Count of requests that were badly formatted.</td></tr>
-                    <tr><td>Errors </td><td> Count of requests that resulted in an error of some kind.</td></tr>
-                    <tr><td>LimitErrors </td><td> Count of requests that violated the defined limits in 
-                        <em>esp.json</em>.</td></tr>
-                    <tr><td>NetworkIO </td><td> Total network I/O in bytes performed.</td></tr>
-                    <tr><td>NotFoundErrors </td><td> Count of requests that accessed a resource not found on the server.</td></tr>
-                    <tr><td>Requests </td><td> Count of requests.</td></tr>
-                    <tr><td>SSLErrors </td><td> Count of SSL Errors.</td></tr>
-            </tbody>
-            </table>
-            <p>Hackers often issue requests that result in errors as a means of profiling the vulnerabilities of a server. Too many
-            BadRequestErrors or NotFoundErrors may indicate hacking activity. Similarly, too many SSLErrors may be an indication that
-            someone is probing the SSL implementation.</p>
-            <p>The <i>Errors</i> counter is an aggregation of all request errors regardless of classification.</p>
-            <a id="defenses"></a>
-            <h2>Defenses</h2>
-            <p>Monitors specify one or more <i>Defenses</i> to be invoked when the monitor is triggered. 
-            Defenses invoke remedies to mitigate the threat.</p>
-            <p>Defenses are user-define rules file that specify a remedy to invoke. 
-            The Defenses directive takes the form:</p>
-<pre class="code">
+</pre><p>This will test each minute if any client has more than 50 errors in the preceding period. If so, the "block" defense will be invoked.<h3>Monitor Expressions</h3></p><p>Monitor expressions are simple comparisons between a server Counter and a limit wrapped in quotes. They take the form:</p><pre class="code">"Counter [&lt;|&gt;] Limit"</pre><p>Although a monitor can only access one counter, multiple monitors can be created.</p><a id="counters"></a><h2>Counters</h2><p>Counters are metrics defined and maintained by ESP for monitoring purposes.</p><p>ESP provides three classes of of counters:</p><ul><li>Server-Wide Counters</li><li>Per-Client Counters</li><li>Custom Counters</li></ul><p>Server-Wide counters pertain to the whole server and are not maintained per client. Per-Client counters are maintained per client IP address (not per TCP/IP socket connection). Custom counters are defined by the user developer using the httpAddCounter API.</p><h3>Server-Wide Counters</h3><p>The server-wide counters are accumulated for the entire ESP server and not per-client IP address. The value examined by Monitors is the current value of the counter.</p><table title="monitors" class="ui table segment"><thead><tr><th>Name<th>Description<th>Notes<tbody><tr><td>ActiveClients<td>Count of client IP addresses recently accessing the server.<td>The ActiveClients counter is pruned of old clients whenever a monitor runs to examine its value or every 5 minutes whichever is more.<tr><td>Memory<td>Amount of memory used by ESP.<td>The Memory counter is not representative of an outside security threat, but is provided for as it does impact the ability of the server to provide service.</table><h3>Per-Client Counters</h3><p>All the per-client counters are accumulated for each client IP address. For all counters except ActiveConnections and ActiveRequests, the value examined by Monitors is the <i>change</i> in the value over the monitor period. ActiveConnections and ActiveRequests are instantaneous values.</p><table title="counters" class="ui table segment"><thead><tr><th>Name<th>Description<tbody><tr><td>ActiveConnections<td>Count of active sockets.<tr><td>ActiveRequests<td>Count of active requests.<tr><td>BadRequestErrors<td>Count of requests that were badly formatted.<tr><td>Errors<td>Count of requests that resulted in an error of some kind.<tr><td>LimitErrors<td>Count of requests that violated the defined limits in <em>esp.json</em>.<tr><td>NetworkIO<td>Total network I/O in bytes performed.<tr><td>NotFoundErrors<td>Count of requests that accessed a resource not found on the server.<tr><td>Requests<td>Count of requests.<tr><td>SSLErrors<td>Count of SSL Errors.</table><p>Hackers often issue requests that result in errors as a means of profiling the vulnerabilities of a server. Too many BadRequestErrors or NotFoundErrors may indicate hacking activity. Similarly, too many SSLErrors may be an indication that someone is probing the SSL implementation.</p><p>The <i>Errors</i> counter is an aggregation of all request errors regardless of classification.</p><a id="defenses"></a><h2>Defenses</h2><p>Monitors specify one or more <i>Defenses</i> to be invoked when the monitor is triggered. Defenses invoke remedies to mitigate the threat.</p><p>Defenses are user-define rules file that specify a remedy to invoke. The Defenses directive takes the form:</p><pre class="code">
 defenses: {
     "NAME": {
         remedy: "REMEDY",
@@ -286,10 +24,7 @@ defenses: {
         period: "PERIOD",
     },
 },
-</pre>
-            <p>The defense <em>Name</em> is the name used by Monitors running the defense. Multiple Monitors may 
-            reference a single defense. Remedy arguments are provided as properties in the defense. For example:</p>
-<pre class="code">
+</pre><p>The defense <em>Name</em> is the name used by Monitors running the defense. Multiple Monitors may reference a single defense. Remedy arguments are provided as properties in the defense. For example:</p><pre class="code">
 defenses: {
     report: {
         remedy: "email",
@@ -298,40 +33,14 @@ defenses: {
         subject: "Network defense initiated",
     }
 }
-</pre>
-            <a id="remedies"></a>
-            <h2>Remedies</h2>
-            <p>ESP provides a suite of remedies for Defenses to invoke to mitigate security threats. The 
-            remedy names are used in Defense <em>remedy</em> property.</p>
-            <table title="remedies" class="ui table segment">
-                <thead>
-                    <tr><th>Name</th><th>Description</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>ban</td><td>Ban the client IP address.</td></tr>
-                    <tr><td>cmd</td><td>Run an external command.</td></tr>
-                    <tr><td>delay</td><td>Delay requests from a client IP address.</td></tr>
-                    <tr><td>email</td><td>Send an email message.</td></tr>
-                    <tr><td>http</td><td>Invoke a HTTP request.</td></tr>
-                    <tr><td>log</td><td>Write to the ESP error log.</td></tr>
-                    <tr><td>reboot</td><td>Reboot ESP</td></tr>
-                </tbody>
-            </table>
-            <h3>Ban Remedy</h3>
-            <p>The <i>ban</i> remedy prevents requests from the banned client IP address for a period of time.
-                The default action is to simply close the socket and ignore the request. This is most efficient
-                and gives the offending client the minimum of information. Alternatively, you can specify a
-                response STATUS and MESSAGE. For example, to ban without a response message:</p>
-<pre class="code">
+</pre><a id="remedies"></a><h2>Remedies</h2><p>ESP provides a suite of remedies for Defenses to invoke to mitigate security threats. The remedy names are used in Defense <em>remedy</em> property.</p><table title="remedies" class="ui table segment"><thead><tr><th>Name<th>Description<tbody><tr><td>ban<td>Ban the client IP address.<tr><td>cmd<td>Run an external command.<tr><td>delay<td>Delay requests from a client IP address.<tr><td>email<td>Send an email message.<tr><td>http<td>Invoke a HTTP request.<tr><td>log<td>Write to the ESP error log.<tr><td>reboot<td>Reboot ESP</table><h3>Ban Remedy</h3><p>The <i>ban</i> remedy prevents requests from the banned client IP address for a period of time. The default action is to simply close the socket and ignore the request. This is most efficient and gives the offending client the minimum of information. Alternatively, you can specify a response STATUS and MESSAGE. For example, to ban without a response message:</p><pre class="code">
 defenses: {
     mydefense: {
         remedy: "ban",
         period: "10mins",
     }
 }
-</pre>
-                <p>To ban with a response message:</p>
-                <pre class="code">
+</pre><p>To ban with a response message:</p><pre class="code">
 defenses: {
     mydefense: {
         remedy: "ban",
@@ -340,34 +49,21 @@ defenses: {
         period: "10mins",
     }
 }
-</pre>
-            <h3>Cmd Remedy</h3>
-            <p>The <i>Cmd</i> remedy invokes an external command. This is an open interface to permit you to run
-            a program of your choosing. The command line is specified by the <i>CMD</i> keyword. For example:</p>
-<pre class="code">
+</pre><h3>Cmd Remedy</h3><p>The <i>Cmd</i> remedy invokes an external command. This is an open interface to permit you to run a program of your choosing. The command line is specified by the <i>CMD</i> keyword. For example:</p><pre class="code">
 defenses: {
     mydefense: {
         remedy: "cmd",
         cmd: "path/to/my/program args ..."
     }
 }
-</pre>
-            <p>To send data to the standard input of the command, use the pipe symbol: <i>|</i>. This will
-            send a generic message to the sendmail program</p>
-            <pre class="code">
+</pre><p>To send data to the standard input of the command, use the pipe symbol: <i>|</i>. This will send a generic message to the sendmail program</p><pre class="code">
 defenses: {
     mydefense: {
         remedy: "cmd",
         cmd: "${MESSAGE} | sendmail user@example.com",
     }
 }
-</pre>
-            <p>The command is run by ESP in the background and will not block the server.</p>
-            <h3>Delay Remedy</h3>
-            <p>Sometimes a complete ban is too much, so the <i>Delay</i> remedy continues to serve the offending client,
-            but with a delay to reduce their impact on the server. This remedy can be effective to prevent brute-force 
-            attacks the enumerate URLs or potential vulnerabilities. For example:</p>
-<pre class="code">
+</pre><p>The command is run by ESP in the background and will not block the server.</p><h3>Delay Remedy</h3><p>Sometimes a complete ban is too much, so the <i>Delay</i> remedy continues to serve the offending client, but with a delay to reduce their impact on the server. This remedy can be effective to prevent brute-force attacks the enumerate URLs or potential vulnerabilities. For example:</p><pre class="code">
 defenses: {
     mydefense: {
         remedy: "delay",
@@ -375,16 +71,7 @@ defenses: {
         period: "10mins",
     }
 }
-</pre>
-            <p>This will introduce a one second delay for each request from the offending client IP address. The delay
-            units are by default milliseconds when used without a "sec|min|hr" suffix.</p>
-            <h3>Email Remedy</h3>
-            <p>The email remedy provides a interface to a local sendmail client program to send email notification.
-            Your system must have the sendmail client installed and configured to use the email remedy.</p>
-            <p>The destination is specified by the <i>TO</i> keyword. ESP will provide a default subject and from address.
-            These can be overridden via the <i>SUBJECT</i> and <i>FROM</i> keywords.</p> 
-            <p>For example:</p>
-<pre class="code">
+</pre><p>This will introduce a one second delay for each request from the offending client IP address. The delay units are by default milliseconds when used without a "sec|min|hr" suffix.</p><h3>Email Remedy</h3><p>The email remedy provides a interface to a local sendmail client program to send email notification. Your system must have the sendmail client installed and configured to use the email remedy.</p><p>The destination is specified by the <i>TO</i> keyword. ESP will provide a default subject and from address. These can be overridden via the <i>SUBJECT</i> and <i>FROM</i> keywords.</p><p>For example:</p><pre class="code">
 defenses: {
     mydefense: {
         remedy: "email",
@@ -393,14 +80,7 @@ defenses: {
         to: "info@example.com"
     }
 }
-</pre>
-            <h3>HTTP Remedy</h3>
-            <p>The <i>http</i> remedy allows you to issue a HTTP request as part of your defense. 
-            The default HTTP method is POST and this can be overridden via the <em>method</em> property. 
-            A default message is posted and this can be overridden by the <em>message</em> property.</p>
-            <p>The HTTP request will wait for a response for up to the configured request timeout.</p>
-            <p>Some examples:</p>
-<pre class="code">
+</pre><h3>HTTP Remedy</h3><p>The <i>http</i> remedy allows you to issue a HTTP request as part of your defense. The default HTTP method is POST and this can be overridden via the <em>method</em> property. A default message is posted and this can be overridden by the <em>message</em> property.</p><p>The HTTP request will wait for a response for up to the configured request timeout.</p><p>Some examples:</p><pre class="code">
 defenses: {
     report: {
         remedy: "http",
@@ -413,43 +93,14 @@ defenses: {
         uri: "http://example.com/report",
     }
 }
-</pre>
-            <h3>Log Remedy</h3>
-            <p>The log remedy simply writes a message to the error log file.</p>
-            <p>The message can be augmented or overridden via the <em>message</em> property.</p> 
-<pre class="code">
+</pre><h3>Log Remedy</h3><p>The log remedy simply writes a message to the error log file.</p><p>The message can be augmented or overridden via the <em>message</em> property.</p><pre class="code">
 defenses: {
     record: {
         remedy: "log",
         message: "Details: ${MESSAGE}",
     },
 }
-</pre>
-            <h3>Reboot Remedy</h3>
-            <p>The reboot remedy will immediately reboot ESP. This may be useful if the Memory utilization exceeds 
-            the defined limit. This should not be used in production as any memory growth should be 
-            diagnosed and eliminated. </p>
-            
-            <h3>Generate Notes</h3>
-            <p>All remedies have access the following KEYWORD tokens. These are also used in the message:</p>
-            <table title="keywords" class="ui table segment">
-                <thead>
-                    <tr><th>Name</th><th>Description</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>COUNTER</td><td>Name of the triggering counter</td></tr>
-                    <tr><td>DATE</td><td>Date when the monitor triggered</td></tr>
-                    <tr><td>IP</td><td>IP address of the offending client if relevant</td></tr>
-                    <tr><td>LIMIT</td><td>Limit configured by the Monitor</td></tr>
-                    <tr><td>MESSAGE</td><td>Generic or overridden message</td></tr>
-                    <tr><td>PERIOD</td><td>Sampling period defined by the Monitor</td></tr>
-                    <tr><td>SUBJECT</td><td>Descriptive title for the event</td></tr>
-                    <tr><td>VALUE</td><td>Counter value</td></tr>
-                </tbody>
-            </table>
-            <a id="examples"></a>
-            <h2>More Examples</h2>
-            <pre class="code">
+</pre><h3>Reboot Remedy</h3><p>The reboot remedy will immediately reboot ESP. This may be useful if the Memory utilization exceeds the defined limit. This should not be used in production as any memory growth should be diagnosed and eliminated.</p><h3>Generate Notes</h3><p>All remedies have access the following KEYWORD tokens. These are also used in the message:</p><table title="keywords" class="ui table segment"><thead><tr><th>Name<th>Description<tbody><tr><td>COUNTER<td>Name of the triggering counter<tr><td>DATE<td>Date when the monitor triggered<tr><td>IP<td>IP address of the offending client if relevant<tr><td>LIMIT<td>Limit configured by the Monitor<tr><td>MESSAGE<td>Generic or overridden message<tr><td>PERIOD<td>Sampling period defined by the Monitor<tr><td>SUBJECT<td>Descriptive title for the event<tr><td>VALUE<td>Counter value</table><a id="examples"></a><h2>More Examples</h2><pre class="code">
 defenses: {
     block: {
         remedy: "ban",
@@ -496,25 +147,4 @@ monitors: {
         "defenses": [ "block" ],
     }
 }
-</pre>
-            <a id="apis"></a>
-            <h2>APIs</h2>
-            <p>You can define Monitors and Defenses via the <em>esp.json</em> file, or via the ESP APIs:
-                <a href="../ref/api/http.html#group___http_monitor_1gab63bf01d19bbbeda83109cbb8a240b8d">httpAddDefense</a> and 
-                <a href="../ref/api/http.html#group___http_monitor_1ga931db10ade516aff29d2fd827b4450bb">httpAddMonitor</a>. Via the API, you can also define remedies
-                using <a href="../ref/api/http.html#group___http_monitor_1ga511486e477c76397a37a3f0eeda236d2">httpAddRemedy</a>.</p>
-
-    </div>
-    <div class="terms ui basic center aligned segment">
-        <p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p>
-    </div>
-
-    <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/exp-reload/reload.js"></script>
-    <script src="../lib/semantic-ui/semantic.js"></script>
-     
-
-        
-
-</body>
-</html>
+</pre><a id="apis"></a><h2>APIs</h2><p>You can define Monitors and Defenses via the <em>esp.json</em> file, or via the ESP APIs: <a href="../ref/api/http.html#group___http_monitor_1gab63bf01d19bbbeda83109cbb8a240b8d">httpAddDefense</a> and <a href="../ref/api/http.html#group___http_monitor_1ga931db10ade516aff29d2fd827b4450bb">httpAddMonitor</a>. Via the API, you can also define remedies using <a href="../ref/api/http.html#group___http_monitor_1ga511486e477c76397a37a3f0eeda236d2">httpAddRemedy</a>.</p></div><div class="terms ui basic center aligned segment"><p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p></div><script src="../lib/jquery/jquery.min.js"></script><script src="../lib/exp-reload/reload.js"></script><script src="../lib/semantic-ui/semantic.js"></script>

@@ -11,8 +11,6 @@ body {
     margin: 0;
     padding: 0;
     font-family: @font;
-    _background-image: linear-gradient(@body-gradient);
-    _background-attachment: fixed;
     min-width: @body-min-width;
     text-rendering: optimizeLegibility;
     transition: none !important;
@@ -44,12 +42,11 @@ body.version {
         border-bottom: none;
         margin: 0;
         .right {
-            display: block;
             padding-right: 10px;
             a.item {
                 color: @white;
                 opacity: @masthead-menu-opacity;
-                padding: 0.8em 0.4em;
+                padding: 0.6em 0.4em;
                 &:hover {
                     background: fade(@white, 20%);
                 }
@@ -63,11 +60,14 @@ body.version {
                     content: "";
                 }
             }
+            span.desktop-only {
+                display: flex;
+            }
         }
     }
     .breadcrumb {
         position: absolute;
-        top: 40px;
+        top: 46px;
         margin: 6px 0 0 35px;
         .section {
             padding-bottom: .5rem;
@@ -93,7 +93,7 @@ body.version {
         height: 2rem;
         width: 3rem;
         position: fixed;
-        top: 46px;
+        top: 50px;
         right: 1px;
     }
 }
@@ -166,7 +166,7 @@ body.version {
     }
 }
 
-.content {
+body > .content {
 	min-height: 95%;
     text-decoration: none;
     background: @white;
@@ -333,6 +333,23 @@ img.shadow {
 	box-shadow: 5px 5px 9px @gray-light;
 }
 
+div.questions, div.answers {
+    ul {
+        color: #31699C;
+        margin: 0;
+        li {
+            padding-bottom: 4px;
+        }
+    }
+    h2, h3 {
+        margin: 12px 0 8px 0;
+    }
+    .question {
+        font-weight: bold;
+        font-size: 1.1em;
+        margin: 16px 0 10px 0;
+    }
+}
 
 //  Desktop
 @media (min-width: @mobile-break) {

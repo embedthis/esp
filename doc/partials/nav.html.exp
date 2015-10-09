@@ -17,7 +17,7 @@
                 <@= name @>
             </a>
             <@ } } @>
-            <@ if (meta.url.path != 'index.html') { @>
+            <@ if (meta.url.path != 'index.html' && !meta.url.path.endsWith('/')) { @>
             <div class="divider">/</div>
             <a class="active section" href="<@= meta.path.basename @>"><@= meta.cookie || meta.title @></a>
             <@ } @>

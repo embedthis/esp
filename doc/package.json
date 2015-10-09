@@ -3,10 +3,7 @@
     "title": "Embedthis ESP Documentation",
     "description": "The amazing C web framework",
     "dependencies": {
-        "exp-css": "~0.2",
-        "exp-js": "~0.2",
-        "exp-less": "~0.2",
-        "me-docstyle": "~0.8"
+        "me-docstyle": "~0.9"
     },
     "devDependencies": {
         "expansive": ">=0.6.0"

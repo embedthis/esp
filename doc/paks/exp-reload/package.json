@@ -1,7 +1,7 @@
 {
     "name": "exp-reload",
     "description": "Live browser reload plugin for Expansive",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "keywords": [
         "expansive-plugin",
         "reload"
@@ -15,6 +15,7 @@
         "jquery": "~2"
     },
     "devDependencies": {
+        "expansive": ">=0.6.0",
         "pak": ">=0.11.3"
     },
     "pak": {

@@ -8,4 +8,5 @@
         rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     <link href="@~/images/favicon.ico" rel="shortcut icon" />
+    <@ renderCanonical() @>
     <@ renderStyles() @>

@@ -1,184 +1,310 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>OSDEP API</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="The amazing C web framework" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
-    <link href="../../images/favicon.ico" rel="shortcut icon" />
-    <link href="../../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/all.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/api.css" rel="stylesheet" type="text/css" />
-    
-
-    <link href="../../css/api.css" rel="stylesheet" type="text/css" />
-</head>
-<body class="show-sidebar">
-        <div class="sidebar">
-        <div class="ui large left vertical inverted labeled menu">
-            <div class="item">
-                <a href="../../index.html" class="logo">ESP Docs</a>
-            </div>
-            <div class="item">
-                <a href="../../index.html">
-                    <b>General</b>
-                </a>
-                <div class="menu">
-                    <a class="item" href="../../index.html">ESP Overview</a>
-                    <a class="item" href="../../users/features.html">ESP Features</a>
-                    <a class="item" href="https://embedthis.com/esp/download.html">Download</a>
-                    <a class="item" href="../../licensing/index.html">Licensing</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../../start/index.html">
-                    <b>Getting Started</b>
-                </a>
-                <div class="menu">
-                    <a class="item" href="../../start/quick.html">Quick Start</a>
-                    <a class="item" href="../../start/index.html">Installing ESP</a>
-                    <a class="item" href="../../start/tour.html">ESP Tour</a>
-                    <a class="item" href="../../start/app-tour.html">ESP Applications Tour</a>
-                    <a class="item" href="../../start/releaseNotes.html">Release Notes</a>
-                    <a class="item" href="../../start/source.html">Building from Source</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../../users/index.html"><b>User's Guide</b></a>
-                <div class="menu">
-                    <a class="item" href="../../users/create.html">Creating ESP Applications</a>
-                    <a class="item" href="../../users/packages.html">Extension Packages</a>
-                    <a class="item" href="../../users/skeletons.html">Application Skeletons</a>
-                    <a class="item" href="../../users/config.html">Configuring ESP</a>
-                    <a class="item" href="../../users/components.html">Generating Components</a>
-                    <a class="item" href="../../users/building.html">Building Applications</a>
-                    <a class="item" href="../../users/deploying.html">Deploying Applications</a>
-                    <a class="item" href="../../users/pages.html">ESP Pages</a>
-                    <a class="item" href="../../users/layouts.html">Expansive Layouts</a>
-                    <a class="item" href="../../users/controllers.html">ESP Controllers</a>
-                    <a class="item" href="../../users/database.html">Databases</a>
-                    <a class="item" href="../../users/migrations.html">Database Migrations</a>
-                    <a class="item" href="../../users/sessions.html">Session Storage</a>
-                    <a class="item" href="../../users/security.html">Security Considerations</a>
-                    <a class="item" href="../../users/monitor.html">Monitoring and Defending</a>
-                    <a class="item" href="../../users/hosting.html">Hosting in Appweb</a>
-                    <a class="item" href="../../users/command.html">ESP Command</a>
-                    <a class="item" href="../../users/man.html">Manual Pages</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../../ref/index.html">Reference Guide</a>
-                <div class="menu">
-                    <a class="item" href="../../ref/mvc.html">ESP MVC Framework</a>
-                    <a class="item" href="../../ref/compatibility.html">Compatibility</a>
-                    <a class="item" href="../../ref/native.html">API Library</a>
-                    <a class="item" href="../../ref/memory.html">ESP Memory Allocation</a>
-                    <a class="item" href="../../ref/multithread.html">Multithreaded Programming</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../../users/samples.html">Samples</a>
-                <div class="menu">
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a>
-                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a>
-                </div>
-            </div>
-            <div class="item">
-                <a href="../../users/project.html">Project Resources</a>
-                <div class="menu">
-                    <a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a>
-                    <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
-                    <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
-                    <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
-                    <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a>
-                    <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a>
-                    <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a>
-                </div>
-            </div>
-            <div class="item">
-                <b>Links</b>
-                <div class="menu">
-                    <a class="item" href="https://embedthis.com/">Embedthis Web Site</a>
-                    <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a>
-                    <a class="item" href="http://twitter.com/mobstream">Twitter</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="ui inverted masthead">
-         
-        <div class="ui fixed inverted menu">
-            <div class="ui sidebar-launch button">
-                <i class="icon list layout"></i>
-            </div>
-            <div class="right menu">
-                 
-                    <a class="item" href="https://embedthis.com/">Embedthis</a>
-                    <a class="item" href="https://embedthis.com/esp/">ESP Site</a>
-                    <span class="desktop-only">
-                        <a class="item" href="http://goo.gl/66rlSc">ESP News</a>
-                        <a class="item" href="https://github.com/embedthis/esp">Repository</a>
-                        <a class="item" href="https://embedthis.com/blog/">Blog</a>
-                        <a class="item" href="https://twitter.com/mobstream">Twitter</a>
-                    </span>
-
-            </div>
-        </div>
-        
-        <div class="ui breadcrumb">
-            <a class="section" href="../../">Home</a>
-            
-            <div class="divider">/</div>
-            <a class="section" href="../index.html">
-                Reference
-            </a>
-            
-            <div class="divider">/</div>
-            <a class="section" href="../native.html">
-                Native APIs
-            </a>
-            
-            
-            <div class="divider">/</div>
-            <a class="active section" href="osdep.html">OSDEP API</a>
-            
-        </div>
-        
-        <iframe class="version desktop-only" src="../../version.html"></iframe>
-
-    </div>
-    <div class="content">
-
-DOC_CONTENT
-
-    </div>
-    <div class="terms ui basic center aligned segment">
-        <p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p>
-    </div>
-
-    <script src="../../lib/jquery/jquery.min.js"></script>
-    <script src="../../lib/exp-reload/reload.js"></script>
-    <script src="../../lib/semantic-ui/semantic.js"></script>
-     
-
-        
-
-</body>
-</html>
+<!DOCTYPE html><html lang="en"><head><title>OSDEP API</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="description" content="The amazing C web framework"><link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'><link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'><link href="../../images/favicon.ico" rel="shortcut icon"><link href="../../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css"><link href="../../css/all.css" rel="stylesheet" type="text/css"><link href="../../css/api.css" rel="stylesheet" type="text/css"><link href="../../css/api.css" rel="stylesheet" type="text/css"><body class="show-sidebar"><div class="sidebar"><div class="ui large left vertical inverted labeled menu"><div class="item"><a href="../../index.html" class="logo">ESP Docs</a></div><div class="item"><a href="../../index.html"><b>General</b></a><div class="menu"><a class="item" href="../../index.html">ESP Overview</a> <a class="item" href="../../users/features.html">ESP Features</a> <a class="item" href="https://embedthis.com/esp/download.html">Download</a> <a class="item" href="../../licensing/index.html">Licensing</a></div></div><div class="item"><a href="../../start/index.html"><b>Getting Started</b></a><div class="menu"><a class="item" href="../../start/quick.html">Quick Start</a> <a class="item" href="../../start/index.html">Installing ESP</a> <a class="item" href="../../start/tour.html">ESP Tour</a> <a class="item" href="../../start/app-tour.html">ESP Applications Tour</a> <a class="item" href="../../start/releaseNotes.html">Release Notes</a> <a class="item" href="../../start/source.html">Building from Source</a></div></div><div class="item"><a href="../../users/index.html"><b>User's Guide</b></a><div class="menu"><a class="item" href="../../users/create.html">Creating ESP Applications</a> <a class="item" href="../../users/packages.html">Extension Packages</a> <a class="item" href="../../users/skeletons.html">Application Skeletons</a> <a class="item" href="../../users/config.html">Configuring ESP</a> <a class="item" href="../../users/components.html">Generating Components</a> <a class="item" href="../../users/building.html">Building Applications</a> <a class="item" href="../../users/deploying.html">Deploying Applications</a> <a class="item" href="../../users/pages.html">ESP Pages</a> <a class="item" href="../../users/layouts.html">Expansive Layouts</a> <a class="item" href="../../users/controllers.html">ESP Controllers</a> <a class="item" href="../../users/database.html">Databases</a> <a class="item" href="../../users/migrations.html">Database Migrations</a> <a class="item" href="../../users/sessions.html">Session Storage</a> <a class="item" href="../../users/security.html">Security Considerations</a> <a class="item" href="../../users/monitor.html">Monitoring and Defending</a> <a class="item" href="../../users/hosting.html">Hosting in Appweb</a> <a class="item" href="../../users/command.html">ESP Command</a> <a class="item" href="../../users/man.html">Manual Pages</a></div></div><div class="item"><a href="../../ref/index.html">Reference Guide</a><div class="menu"><a class="item" href="../../ref/mvc.html">ESP MVC Framework</a> <a class="item" href="../../ref/compatibility.html">Compatibility</a> <a class="item" href="../../ref/native.html">API Library</a> <a class="item" href="../../ref/memory.html">ESP Memory Allocation</a> <a class="item" href="../../ref/multithread.html">Multithreaded Programming</a></div></div><div class="item"><a href="../../users/samples.html">Samples</a><div class="menu"><a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a></div></div><div class="item"><a href="../../users/project.html">Project Resources</a><div class="menu"><a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a> <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a> <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a> <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a> <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a> <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a> <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a></div></div><div class="item"><b>Links</b><div class="menu"><a class="item" href="https://embedthis.com/">Embedthis Web Site</a> <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a> <a class="item" href="http://twitter.com/mobstream">Twitter</a></div></div></div></div><div class="ui inverted masthead"><div class="ui fixed inverted menu"><div class="ui sidebar-launch button"><i class="icon list layout"></i></div><div class="right menu"><a class="item" href="https://embedthis.com/">Embedthis</a> <a class="item" href="https://embedthis.com/esp/">ESP Site</a> <span class="desktop-only"><a class="item" href="http://goo.gl/66rlSc">ESP News</a> <a class="item" href="https://github.com/embedthis/esp">Repository</a> <a class="item" href="https://embedthis.com/blog/">Blog</a> <a class="item" href="https://twitter.com/mobstream">Twitter</a></span></div></div><div class="ui breadcrumb"><a class="section" href="../../">Home</a><div class="divider">/</div><a class="section" href="../index.html">Reference</a><div class="divider">/</div><a class="section" href="../native.html">Native APIs</a><div class="divider">/</div><a class="active section" href="osdep.html">OSDEP API</a></div><iframe class="version desktop-only" src="../../version.html"></iframe></div><div class="content"><h1>OSDEP Native API</h1>
+<a name="Extensions"></a><h1>Extensions</h1>
+  <table class="apiIndex" title="Extensions">
+</table>
+<a name="Functions"></a><h1>Functions</h1>
+  <table class="apiIndex" title="Functions">
+</table>
+<a name="Typedefs"></a><h1>Typedefs</h1>
+<table class="apiIndex" title="typedefs">
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a7bac74916a564105339bcd5a9323c366" class="nameRef">Offset</a></td><td class="apiBrief">Signed file offset data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1af9381320a2640ea84038579d8f143c01" class="nameRef">Socket</a></td><td class="apiBrief">Argument for sockets.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a7e81f05ea37d05efc10e7c45c1111d0d" class="nameRef">Socklen</a></td><td class="apiBrief">Size to hold the length of a socket address.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a06650984137cfde185bac06dd2a4f355" class="nameRef">Ticks</a></td><td class="apiBrief">Elapsed time data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="nameRef">bool</a></td><td class="apiBrief">Boolean data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="nameRef">cchar</a></td><td class="apiBrief">Constant char data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a1f6289ab1328cf3c7852d75c397838a2" class="nameRef">cint</a></td><td class="apiBrief">Constant int data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1ad5d9ae5e2ea7e75aa605e36485987fc2" class="nameRef">cuchar</a></td><td class="apiBrief">Unsigned char data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a585ef5c0f4567945e1f3e7f32670accb" class="nameRef">cushort</a></td><td class="apiBrief">Constant unsigned short data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="nameRef">cvoid</a></td><td class="apiBrief">Constant void data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a4355d16fcf9f644c9ac84293f0b1801f" class="nameRef">int16</a></td><td class="apiBrief">Integer 16 bits data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a56f1a81c92849566ae864511088eb7e8" class="nameRef">int32</a></td><td class="apiBrief">Integer 32 bits data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1ae47c588f3ab8c61121c1c7ab7edc47cd" class="nameRef">int8</a></td><td class="apiBrief">Integer 8 bits data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a0fd9ce9d735064461bebfe6037026093" class="nameRef">schar</a></td><td class="apiBrief">Signed char data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="nameRef">ssize</a></td><td class="apiBrief">Signed integer size field large enough to hold a pointer offset.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a65f85814a8290f9797005d3b28e7e5fc" class="nameRef">uchar</a></td><td class="apiBrief">Unsigned char data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a91ad9478d81a7aaf2593e8d9c3d06a14" class="nameRef">uint</a></td><td class="apiBrief">Unsigned integer (machine dependent bit size) data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a05f6b0ae8f6a6e135b0e290c25fe0e4e" class="nameRef">uint16</a></td><td class="apiBrief">Unsigned integer 16 bits data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a1134b580f8da4de94ca6b1de4d37975e" class="nameRef">uint32</a></td><td class="apiBrief">Unsigned integer 32 bits data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1adde6aaee8457bee49c2a92621fe22b79" class="nameRef">uint8</a></td><td class="apiBrief">Unsigned integer 8 bits data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1a718b4eb2652c286f4d42dc18a8e71a1a" class="nameRef">ulong</a></td><td class="apiBrief">Unsigned long (machine dependent bit size) data type.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#osdep_8h_1ab95f123a6c9bcfee6a343170ef8c5f69" class="nameRef">ushort</a></td><td class="apiBrief">Unsigned short data type.</td></tr>
+</table>
+<a name="Defines"></a><h1>Defines</h1>
+<table class="apiIndex" title="Defines">
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a736241a28d828a05b8d709862bf7990f" class="nameRef">ME_BIG_ENDIAN</a>&nbsp;&nbsp;&nbsp;2</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Big endian byte ordering.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a443dca52b386807bfe6c7162d4b2a023" class="nameRef">ME_CPU_ARM</a>&nbsp;&nbsp;&nbsp;1</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Arm.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1ac339037b29b2fd949d7e62419793d12b" class="nameRef">ME_CPU_ITANIUM</a>&nbsp;&nbsp;&nbsp;2</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Intel Itanium.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a1a583c909fba02ea516592a81773effd" class="nameRef">ME_CPU_MIPS</a>&nbsp;&nbsp;&nbsp;5</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Mips.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a0d138a774a2c7d7a518f103589872ba7" class="nameRef">ME_CPU_PPC</a>&nbsp;&nbsp;&nbsp;6</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Power PC.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a37fea4c5334adbdcc9756911d5dc3c69" class="nameRef">ME_CPU_SH</a>&nbsp;&nbsp;&nbsp;9</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>SuperH.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a0d7a6b6d52476cde608ffd4095e65d85" class="nameRef">ME_CPU_SPARC</a>&nbsp;&nbsp;&nbsp;7</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Sparc.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a48107de6359e4eb347016f48bb4a3c3b" class="nameRef">ME_CPU_TIDSP</a>&nbsp;&nbsp;&nbsp;8</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>TI DSP.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a5674b5b2a7b04cee2b46f74920d52d8f" class="nameRef">ME_CPU_X64</a>&nbsp;&nbsp;&nbsp;4</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>AMD64 or EMT64.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1aaacaa5832d9cfa8111ca25864d0c12ee" class="nameRef">ME_CPU_X86</a>&nbsp;&nbsp;&nbsp;3</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>X86.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a7f3e8d87a594a800e4ad8a6e6c131985" class="nameRef">ME_DEBUG</a>&nbsp;&nbsp;&nbsp;0</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td><a class="ref" href="#osdep_8h_source">osdep.h</a><ndash/> Embedthis O/S abstraction for products using MakeMe.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1aa748d8e11fc5b0402c59831885b65ad0" class="nameRef">ME_LITTLE_ENDIAN</a>&nbsp;&nbsp;&nbsp;1</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Little endian byte ordering.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a1acfc74ba25c25a18f5e3ec6d65975fd" class="nameRef">ME_MAX_ARGC</a>&nbsp;&nbsp;&nbsp;32</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Maximum number of command line args if using MAIN().</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1af1506a7b55be80f6a003874d76c8b689" class="nameRef">ME_MAX_BUFFER</a>&nbsp;&nbsp;&nbsp;4096</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Reasonable size for buffers.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a9d78235891c980fb95e8bdd6bbaae123" class="nameRef">ME_MAX_FNAME</a>&nbsp;&nbsp;&nbsp;256</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Reasonable filename size.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1ac26162cd12a36bec6a00e9c6942d3c57" class="nameRef">ME_MAX_PATH</a>&nbsp;&nbsp;&nbsp;1024</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Reasonable filename size.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a90bb49312ca043c1eaf731d4aca5cdaa" class="nameRef">ME_STACK_SIZE</a>&nbsp;&nbsp;&nbsp;(128 * 1024)</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Default thread stack size (0 means use system default).</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#osdep_8h_1a5a4b32e0a7ed302b1959f2d663eb9207" class="nameRef">TPS</a>&nbsp;&nbsp;&nbsp;1000</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Time/Ticks units per second (milliseconds).</td></tr>
+  </table>
+<h2>Functions</h2>
+<h2>Typedefs</h2>
+<a name="osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0"></a>
+<div class="api">
+  <div class="prototype">
+    typedef char bool.
+  </div>
+  <div class="apiDetail">
+<p>Boolean data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e"></a>
+<div class="api">
+  <div class="prototype">
+    typedef const char cchar.
+  </div>
+  <div class="apiDetail">
+<p>Constant char data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a1f6289ab1328cf3c7852d75c397838a2"></a>
+<div class="api">
+  <div class="prototype">
+    typedef const int cint.
+  </div>
+  <div class="apiDetail">
+<p>Constant int data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1ad5d9ae5e2ea7e75aa605e36485987fc2"></a>
+<div class="api">
+  <div class="prototype">
+    typedef const unsigned char cuchar.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned char data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a585ef5c0f4567945e1f3e7f32670accb"></a>
+<div class="api">
+  <div class="prototype">
+    typedef const unsigned short cushort.
+  </div>
+  <div class="apiDetail">
+<p>Constant unsigned short data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d"></a>
+<div class="api">
+  <div class="prototype">
+    typedef const void cvoid.
+  </div>
+  <div class="apiDetail">
+<p>Constant void data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a4355d16fcf9f644c9ac84293f0b1801f"></a>
+<div class="api">
+  <div class="prototype">
+    typedef short int16.
+  </div>
+  <div class="apiDetail">
+<p>Integer 16 bits data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a56f1a81c92849566ae864511088eb7e8"></a>
+<div class="api">
+  <div class="prototype">
+    typedef int int32.
+  </div>
+  <div class="apiDetail">
+<p>Integer 32 bits data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1ae47c588f3ab8c61121c1c7ab7edc47cd"></a>
+<div class="api">
+  <div class="prototype">
+    typedef char int8.
+  </div>
+  <div class="apiDetail">
+<p>Integer 8 bits data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a7bac74916a564105339bcd5a9323c366"></a>
+<div class="api">
+  <div class="prototype">
+    typedef int64 Offset.
+  </div>
+  <div class="apiDetail">
+<p>Signed file offset data type.</p>
+Supports large files greater than 4GB in size on all systems
+  </div>
+</div>
+<a name="osdep_8h_1a0fd9ce9d735064461bebfe6037026093"></a>
+<div class="api">
+  <div class="prototype">
+    typedef signed char schar.
+  </div>
+  <div class="apiDetail">
+<p>Signed char data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1af9381320a2640ea84038579d8f143c01"></a>
+<div class="api">
+  <div class="prototype">
+    typedef int Socket.
+  </div>
+  <div class="apiDetail">
+<p>Argument for sockets.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a7e81f05ea37d05efc10e7c45c1111d0d"></a>
+<div class="api">
+  <div class="prototype">
+    typedef int Socklen.
+  </div>
+  <div class="apiDetail">
+<p>Size to hold the length of a socket address.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1"></a>
+<div class="api">
+  <div class="prototype">
+    typedef ssize_t ssize.
+  </div>
+  <div class="apiDetail">
+<p>Signed integer size field large enough to hold a pointer offset.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a06650984137cfde185bac06dd2a4f355"></a>
+<div class="api">
+  <div class="prototype">
+    typedef int64 Ticks.
+  </div>
+  <div class="apiDetail">
+<p>Elapsed time data type.</p>
+Stores time in milliseconds from some arbitrary start epoch
+  </div>
+</div>
+<a name="osdep_8h_1a65f85814a8290f9797005d3b28e7e5fc"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned char uchar.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned char data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a91ad9478d81a7aaf2593e8d9c3d06a14"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned int uint.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned integer (machine dependent bit size) data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a05f6b0ae8f6a6e135b0e290c25fe0e4e"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned short uint16.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned integer 16 bits data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a1134b580f8da4de94ca6b1de4d37975e"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned int uint32.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned integer 32 bits data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1adde6aaee8457bee49c2a92621fe22b79"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned char uint8.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned integer 8 bits data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1a718b4eb2652c286f4d42dc18a8e71a1a"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned long ulong.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned long (machine dependent bit size) data type.</p>
+  </div>
+</div>
+<a name="osdep_8h_1ab95f123a6c9bcfee6a343170ef8c5f69"></a>
+<div class="api">
+  <div class="prototype">
+    typedef unsigned short ushort.
+  </div>
+  <div class="apiDetail">
+<p>Unsigned short data type.</p>
+  </div>
+</div>
+</div><div class="terms ui basic center aligned segment"><p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p></div><script src="../../lib/jquery/jquery.min.js"></script><script src="../../lib/exp-reload/reload.js"></script><script src="../../lib/semantic-ui/semantic.js"></script>
