@@ -48,6 +48,11 @@ mappings: {
 
 The render-js service smartly selects supplied Javascript files. By default, it selects minified scripts if a corresponding source map file with a 'min.map' extension is present. Otherwise, non-minified Javascript files with a plain 'js' extension will be selected.
 
+### Configuration
+
+* files &mdash; List of scripts to render. Defaults to [ 'lib/**.js*, '!lib/**.map' ]
+
+
 The render-js service also provides the `renderScript` API which generates &lt;script&gt; elements for selected script files. The order of generated script elements will match the required order as specified by Pak dependencies.
 
 The renderScripts API may be invoked with an argument can specify a set of patterns to select a subset of scripts for which to create script elements. This can be used to select or reject specific scripts. A second argument may specify an array of additional scripts to render.

@@ -24,14 +24,5 @@ Expansive.load({
                 return contents
             }
         `
-    }, {
-        name: 'canonicalize-html',
-        script: `
-            public function renderCanonical() {
-                if (meta.dest.basename.trimExt() == 'index') {
-                    write('<link href="' + meta.abs.dirname + '/" rel="canonical" />')
-                }
-            }
-        `
     } ]
 })

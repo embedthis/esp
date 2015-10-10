@@ -124,20 +124,22 @@ Expansive.load({
 
     }, {
         name:  'render-js',
+        /*
+            Default to only scripts from packages under contents/lib
+            Required scripts may vary on a page by page basis.
+         */
+        files: [ 'lib/**.js*', '!lib**.map' ]
         mappings: {
             'js',
             'min.js'
         },
         script: `
             let service = expansive.services['render-js']
-            let collections = expansive.control.collections
-            if (!collections.scripts) {
-                /*
-                    Default to only scripts from packages under contents/lib
-                    Other scripts in contents may be page-specific.
-                 */
-                let lib = expansive.getSourcePath(expansive.directories.lib)
-                collections.scripts = [ lib.join('**.js*'), '!' + lib.join('**.map') ]
+            if (service.files) {
+                if (!(service.files is Array)) {
+                    service.files = [ service.files ]
+                }
+                expansive.control.collections.scripts += service.files
             }
             service.hash = {}
 
@@ -206,13 +208,15 @@ Expansive.load({
                     if (filter && !Path(script).glob(filter)) {
                         continue
                     }
-                    write('<script src="' + meta.top.join(script) + '"></script>\n    ')
+                    let uri = meta.top.join(script).trimStart('./')
+                    write('<script src="' + uri + '"></script>\n    ')
                 }
                 if (extras && extras is String) {
                     extras = [extras]
                 }
                 for each (script in extras) {
-                    write('<script src="' + meta.top.join(script) + '"></script>\n    ')
+                    let uri = meta.top.join(script).trimStart('./')
+                    write('<script src="' + uri + '"></script>\n    ')
                 }
             }
         `

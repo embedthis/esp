@@ -127,18 +127,22 @@ Expansive.load({
    
     }, {
         name:     'render-css',
+        /*
+            Default to styles from packages under contents/lib
+            Required styles may vary on a page by page basis.
+         */
+        files:    [ '**.css*', '!**.map', '!*.less*' ]
         mappings: {
             'css',
             'min.css'
         },
         script: `
             let service = expansive.services['render-css']
-            let collections = expansive.control.collections
-            if (!collections.styles) {
-                /*
-                    Default to styles from packages under contents/lib
-                 */
-                collections.styles = [ '**.css*', '!**.map', '!*.less*' ]
+            if (service.files) {
+                if (!(service.files is Array)) {
+                    service.files = [ service.files ]
+                }
+                expansive.control.collections.styles += service.files
             }
             service.hash = {}
 
@@ -207,13 +211,15 @@ Expansive.load({
                     if (filter && !Path(script).glob(filter)) {
                         continue
                     }
-                    write('<link href="' + meta.top + '/' + style + '" rel="stylesheet" type="text/css" />\n    ')
+                    let uri = meta.top.join(style).trimStart('./')
+                    write('<link href="' + uri + '" rel="stylesheet" type="text/css" />\n    ')
                 }
                 if (extras && extras is String) {
                     extras = [extras]
                 }
                 for each (style in extras) {
-                    write('<link href="' + meta.top + '/' + style + '" rel="stylesheet" type="text/css" />\n    ')
+                    let uri = meta.top.join(style).trimStart('./')
+                    write('<link href="' + uri + '" rel="stylesheet" type="text/css" />\n    ')
                 }
                 if (expansive.collections['inline-styles']) {
                     write('<style>')

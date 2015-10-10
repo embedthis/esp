@@ -40,7 +40,12 @@ The **css** service provides configuration control for the other css services.
 The prefix-css service processes CSS files to automatically add browser specific prefixes to CSS rules. It requires the `autoprefixer` utility.
 
 ## render-css
+
 The render-css service smartly selects supplied stylesheets. By default, it selects minified stylesheets if a corresponding source map file with a 'css.map' extension is present. Otherwise, non-minified stylesheets files with a plain 'css' extension  will be selected.
+
+### Configuration
+
+* files &mdash; List of stylesheets to render. Defaults to [ '**.css*', '!**.map', '!*.less*' ]
 
 The renderStyles API will generate the HTML for the page to include the specified stylesheets. The styles are taken from the current 'styles' collection for the page. Use 'addItems' and 'removeItems' to modify the styles collection.
 
