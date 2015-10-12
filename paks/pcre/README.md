@@ -11,7 +11,7 @@ See LICENSE.md for details.
 
 ### Prerequisites:
 
-    MakeMe (https://embedthis.com/makeme/download.html) for MakeMe to configure and build.
+    MakeMe (https://embedthis.com/makeme/) for MakeMe to configure and build.
 
 ### To Build:
 

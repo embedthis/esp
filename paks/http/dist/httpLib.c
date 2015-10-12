@@ -22068,8 +22068,9 @@ PUBLIC HttpUri *httpNormalizeUri(HttpUri *uri)
 
 
 /*
-    Normalize a URI path to remove redundant "./" and cleanup "../" and make separator uniform. Does not make an abs path.
-    It does not map separators nor change case.
+    Normalize a URI path to remove redundant "./", "../" and make separators uniform. 
+    This will not permit leading '../' segments.
+    Does not make an abs path, map separators or change case.
  */
 PUBLIC char *httpNormalizeUriPath(cchar *pathArg)
 {

@@ -10,7 +10,7 @@ This software is dual-licensed under a GPLv2 license and commercial licenses are
 See LICENSE.md for details.
 
 ### Prerequisites: 
-    MakeMe (https://embedthis.com/makeme/download.html) for MakeMe to configure and build.
+    MakeMe (https://embedthis.com/makeme/) for MakeMe to configure and build.
 
 ### To Build:
 

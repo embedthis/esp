@@ -3337,6 +3337,9 @@ Endpoint object (if set - indicates server-side).
     <tr><td class="param">int</td><td><td>error</td><td>
 A connection and/or request error has occurred.
 </td>
+    <tr><td class="param">bool</td><td><td>errorDoc</td><td>
+Processing an error document.
+</td>
     <tr><td class="param">char *</td><td><td>errorMsg</td><td>
 Error message for the last request (if any).
 </td>
@@ -12697,7 +12700,7 @@ This call will return the mime type from a limited internal set of mime types fo
   </div>
   <div class="apiDetail">
 <p>Normalize a URI.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Validate and canonicalize a URI. This invokes httpNormalizeUriPath to normalize the URI path. This removes redundant ./ and ../ segments. It does not make the URI absolute.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Validate and canonicalize a URI. This invokes httpNormalizeUriPath to normalize the URI path. This removes redundant ./ and ../ segments including leading ../ segments. It does not make the URI absolute.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">uri</td><td>URI object to normalize.</td>
@@ -12717,7 +12720,7 @@ This call will return the mime type from a limited internal set of mime types fo
   </div>
   <div class="apiDetail">
 <p>Normalize a URI.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Validate and canonicalize a URI path. This removes redundant &quot;./&quot; sequences and simplifies &quot;../dir&quot; references.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Validate and canonicalize a URI path. This removes redundant &quot;./&quot; and &quot;../dir&quot; sequences including leading &quot;../&quot; segments.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">uri</td><td>Uri path string to normalize. This is the URI path portion without scheme, host and port components.</td>

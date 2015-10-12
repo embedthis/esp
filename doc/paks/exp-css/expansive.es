@@ -12,13 +12,15 @@ Expansive.load({
             'css.map'
         },
         dotmin:     true,
+        files:      [ '**.css*', '!**.map', '!*.less*' ],
         force:      false,
+        extract:    false,
         minify:     false,
         usemap:     true,
         usemin:     true,
 
         script: `
-            let service = expansive.services['css']
+            let service = expansive.services.css
             for each (svc in [ 'prefix-css', 'render-css', 'minify-css' ]) {
                 let sp
                 if ((sp = expansive.services[svc]) != null) {
@@ -36,6 +38,9 @@ Expansive.load({
             }
             if (service.usemap) {
                 service.usemin ||= true
+            }
+            if (!service.extract) {
+                expansive.services['extract-css'].enable = false
             }
 
             function resolve(path: Path, service): Path? {
@@ -63,7 +68,7 @@ Expansive.load({
                 } else {
                     let minified = vfile.replaceExt('min.css')
                     /*
-                        Minify if forced, or a suitable minfied version does not exist or !usemin
+                        Use this source file if forced+miify, or a suitable minfied version does not exist or !usemin
                      */                           
                     if ((service.minify && service.force) ||
                         !(minified.exists && service.usemin && (!service.usemap || vfile.replaceExt('css.map').exists))) {
@@ -127,24 +132,19 @@ Expansive.load({
    
     }, {
         name:     'render-css',
-        /*
-            Default to styles from packages under contents/lib
-            Required styles may vary on a page by page basis.
-         */
-        files:    [ '**.css*', '!**.map', '!*.less*' ]
         mappings: {
             'css',
             'min.css'
         },
         script: `
-            let service = expansive.services['render-css']
+            let service = expansive.services.css
             if (service.files) {
                 if (!(service.files is Array)) {
                     service.files = [ service.files ]
                 }
                 expansive.control.collections.styles += service.files
             }
-            service.hash = {}
+            expansive.services['render-css'].hash = {}
 
             function pre(meta, service) {
                 if (expansive.modified.everything) {
@@ -217,6 +217,12 @@ Expansive.load({
                 if (extras && extras is String) {
                     extras = [extras]
                 }
+                if (expansive.services['extract-css'].states) {
+                    let extracted = expansive.services['extract-css'].states[meta.destPath]
+                    if (extracted && extracted.link) {
+                        extras.push(expansive.services.css.resolve(extracted.link, expansive.services.css))
+                    }
+                }
                 for each (style in extras) {
                     let uri = meta.top.join(style).trimStart('./')
                     write('<link href="' + uri + '" rel="stylesheet" type="text/css" />\n    ')
@@ -227,6 +233,148 @@ Expansive.load({
                         write(style)
                     }
                     write('\n    </style>')
+                }
+            }
+        `
+    }, {
+        name:       'extract-css',
+        mappings:   'html',
+
+        script: `
+            let service = expansive.services['extract-css']
+            service.nextId = 0
+            service.states = {}
+
+            /*
+                Local function to handle inline style elements
+             */
+            function handleStyleElements(contents, meta, state): String {
+                let service = expansive.services['extract-css']
+                let re = /<style[^>]*>(.*)<\\/style>/smg
+                let start = 0, end = 0
+                let output = ''
+                let matches
+                while (matches = re.exec(contents, start)) {
+                    let elt = matches[0]
+                    end = re.lastIndex - elt.length
+                    output += contents.slice(start, end)
+                    state.elements ||= []
+                    state.elements.push(matches[1].trimEnd(';'))
+                    start = re.lastIndex
+                }
+                output += contents.slice(start)
+                return output
+            }
+
+            /*
+                Local function to handle style attributes 
+            */
+            function handleStyleAttributes(contents, meta, state): String {
+                let result = ''
+                let re = /<([\\w_\\-:.]+)([^>]*>)/g
+                let start = 0, end = 0
+                let matches
+
+                while (matches = re.exec(contents, start)) {
+                    let elt = matches[0]
+                    end = re.lastIndex - matches[0].length
+                    /* Emit prior contents */
+                    result += contents.slice(start, end)
+
+                    let attre = /(.*) +(style=)(["'])(.*?)(\\3)(.*)/m
+                    if ((cmatches = attre.exec(elt)) != null) {
+                        elt = cmatches[1] + cmatches[6]
+                        let id
+                        if ((ematches = elt.match(/id=['"]([^'"]+)['"]/)) != null) {
+                            id = '#' + ematches[1]
+                        } else {
+                            let service = expansive.services['extract-css']
+                            id = 'exp-' + ++service.nextId
+                        }
+                        state.attributes ||= {}
+                        state.attributes[id] = cmatches[4].trimEnd(';')
+                        if (!id.startsWith('#')) {
+                            let classre = /(.*) +(class=)(["'])([^'"]+)(\\3)(.*)/m
+                            if ((classes = classre.exec(elt)) != null) {
+                                elt = classes[1] + ' ' + classes[2] + '"' + classes[4] + ' ' + id + '"' + classes[6]
+                            } else {
+                                elt = cmatches[1] + ' class="' + id + '" ' + cmatches[6]
+                            }
+                        } else {
+                            elt = cmatches[1] + cmatches[6]
+                        }
+                    }
+                    result += elt
+                    start = re.lastIndex
+                }
+                return result + contents.slice(start)
+            }
+
+            function transform(contents, meta, service) {
+                if (!expansive.services.css.extract) {
+                    return contents
+                }
+                let state = {}
+                contents = handleStyleElements(contents, meta, state)
+                contents = handleStyleAttributes(contents, meta, state)
+                if (state.elements || state.attributes) {
+                    let ss = service.states[meta.destPath] ||= {}
+                    if (expansive.services.css.extract === true) {
+                        ss.link = meta.destPath.replaceExt('css')
+                    } else {
+                        ss.link = expansive.services.css.extract
+                    }
+                    if (state.elements) {
+                        ss.elements ||= []
+                        ss.elements += state.elements
+                        vtrace('Extract', 'Scripts from ' + meta.document)
+                    }
+                    if (state.attributes) {
+                        ss.attributes ||= {}
+                        blend(ss.attributes, state.attributes)
+                        vtrace('Extract', 'Onclick from ' + meta.document)
+                    }
+                }
+                return contents
+            }
+
+            /*
+                Post process and create external stylesheets for inline styles
+             */
+            function post(topMeta, service) {
+                let perdoc = (expansive.services.css.extract === true)
+                let styles = '/*\n    Inline styles\n */\n'
+
+                for (let [file, state] in service.states) {
+                    if (perdoc) {
+                        styles = '/*\n    Inline styles for ' + file + '\n */\n'
+                    }
+                    if (state.elements) {
+                        for (let [key,value] in state.elements) {
+                            value = value.trim().split('\n').transform(function (e) e.trim()).join('\n    ')
+                            //  Match {
+                            value = value.replace('    }', '}') 
+                            state.elements[key] = value
+                        }
+                        styles += state.elements.join('\n\n') + '\n\n'
+                    }
+                    for (let [id, code] in state.attributes) {
+                        styles += id + ' {\n    ' + code + '\n}\n\n'
+                    }
+                    if (perdoc) {
+                        let destPath = Path(file).replaceExt('css')
+                        let dest = directories.dist.join(destPath)
+                        let meta = blend(topMeta.clone(), { document: destPath, layout: null })
+                        styles = renderContents(styles, meta)
+                        writeDest(styles, meta)
+                    }
+                }
+                if (!perdoc) {
+                    let destPath = expansive.services.css.extract
+                    let dest = directories.dist.join(destPath)
+                    let meta = blend(topMeta.clone(), { document: destPath, layout: null })
+                    styles = renderContents(styles, meta)
+                    writeDest(styles, meta)
                 }
             }
         `

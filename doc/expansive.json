@@ -1,14 +1,36 @@
 {
-    meta: {
-        site: 'https://embedthis.com/esp/doc/'
+    "meta": {
+        "site": "https://embedthis.com/esp/doc/"
     },
-    control: {
-        listen: '127.0.0.1:4000'
+    "control": {
+        "listen": "127.0.0.1:4000"
     },
-    release: {
-        services: {
-            reload: {
-                enable: false
+    "release": {
+        "services": {
+            "reload": {
+                "enable": false
+            },
+            "compress": true,
+            "css": {
+                "minify": true,
+                "usemin": true,
+                "usemap": false
+            },
+            "js": {
+                "minify": true,
+                "usemin": true,
+                "usemap": false
+            }
+        }
+    },
+    "debug": {
+        "services": {
+            "compress": false,
+            "html": false,
+            "js": {
+                "minify": false,
+                "usemin": true,
+                "usemap": true
             }
         }
     }

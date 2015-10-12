@@ -1264,6 +1264,8 @@
  * If set, the X509 parser will not break-off when parsing an X509 certificate
  * and encountering an unknown critical extension.
  *
+ * \warning Depending on your PKI use, enabling this can be a security risk!
+ *
  * Uncomment to prevent an error.
  */
 //#define MBEDTLS_X509_ALLOW_UNSUPPORTED_CRITICAL_EXTENSION
@@ -4759,10 +4761,6 @@ void mbedtls_strerror( int errnum, char *buffer, size_t buflen );
 
 #include <stddef.h>
 
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && !defined(inline)
-#define inline __inline
-#endif
-
 #define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080  /**< The selected feature is not available. */
 #define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /**< Failed to allocate memory. */
@@ -7586,6 +7584,11 @@ void mbedtls_ecdsa_free( mbedtls_ecdsa_context *ctx );
 
 #endif
 
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
+#define inline __inline
+#endif
+
 #define MBEDTLS_ERR_PK_ALLOC_FAILED        -0x3F80  /**< Memory allocation failed. */
 #define MBEDTLS_ERR_PK_TYPE_MISMATCH       -0x3F00  /**< Type mismatch, eg attempt to encrypt with an ECDSA key */
 #define MBEDTLS_ERR_PK_BAD_INPUT_DATA      -0x3E80  /**< Bad input parameters to function. */
@@ -7600,7 +7603,6 @@ void mbedtls_ecdsa_free( mbedtls_ecdsa_context *ctx );
 #define MBEDTLS_ERR_PK_UNKNOWN_NAMED_CURVE -0x3A00  /**< Elliptic curve is unsupported (only NIST curves are supported). */
 #define MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE -0x3980  /**< Unavailable feature, e.g. RSA disabled for RSA key. */
 #define MBEDTLS_ERR_PK_SIG_LEN_MISMATCH    -0x3900  /**< The signature is valid but its length is less than expected. */
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -9789,7 +9791,8 @@ int mbedtls_x509write_csr_pem( mbedtls_x509write_csr *ctx, unsigned char *buf, s
 #define MBEDTLS_CIPHER_MODE_STREAM
 #endif
 
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && !defined(inline)
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
 
@@ -12117,6 +12120,9 @@ extern "C" {
  * \return         0 if successful, or MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL.
  *                 *olen is always updated to reflect the amount
  *                 of data that has (or would have) been written.
+ *                 If that length cannot be represented, then no data is
+ *                 written to the buffer and *olen is set to the maximum
+ *                 length representable as a size_t.
  *
  * \note           Call this function with dlen = 0 to obtain the
  *                 required buffer size in *olen
@@ -13399,7 +13405,7 @@ mbedtls_ctr_drbg_context;
 
 /**
  * \brief               CTR_DRBG context initialization
- *                      Makes the context ready for mbetls_ctr_drbg_seed() or
+ *                      Makes the context ready for mbedtls_ctr_drbg_seed() or
  *                      mbedtls_ctr_drbg_free().
  *
  * \param ctx           CTR_DRBG context to be initialized
@@ -14692,7 +14698,7 @@ void mbedtls_set_alarm( int seconds );
  *                 (See \c mbedtls_timing_get_delay().)
  *
  * \param data     Pointer to timing data
- *                 Must point to a valid \c mbetls_timing_delay_context struct.
+ *                 Must point to a valid \c mbedtls_timing_delay_context struct.
  * \param int_ms   First (intermediate) delay in milliseconds.
  * \param fin_ms   Second (final) delay in milliseconds.
  *                 Pass 0 to cancel the current delay.
@@ -14704,7 +14710,7 @@ void mbedtls_timing_set_delay( void *data, uint32_t int_ms, uint32_t fin_ms );
  *                 (Memory helper: number of delays passed.)
  *
  * \param data     Pointer to timing data
- *                 Must point to a valid \c mbetls_timing_delay_context struct.
+ *                 Must point to a valid \c mbedtls_timing_delay_context struct.
  *
  * \return         -1 if cancelled (fin_ms = 0)
  *                  0 if none of the delays are passed,
@@ -15032,6 +15038,8 @@ int mbedtls_xtea_self_test( int verbose );
 
 #define MBEDTLS_SSL_TRANSPORT_STREAM            0   /*!< TLS      */
 #define MBEDTLS_SSL_TRANSPORT_DATAGRAM          1   /*!< DTLS     */
+
+#define MBEDTLS_SSL_MAX_HOST_NAME_LEN           255 /*!< Maximum host name defined in RFC 1035 */
 
 /* RFC 6066 section 4, see also mfl_code_to_length in ssl_tls.c
  * NONE must be zero so that memset()ing structure to zero works */
@@ -15734,7 +15742,7 @@ int mbedtls_ssl_get_ciphersuite_id( const char *ciphersuite_name );
 
 /**
  * \brief          Initialize an SSL context
- *                 Just makes the context ready for mbetls_ssl_setup() or
+ *                 Just makes the context ready for mbedtls_ssl_setup() or
  *                 mbedtls_ssl_free()
  *
  * \param ssl      SSL context
@@ -17343,7 +17351,8 @@ mbedtls_ssl_cookie_check_t mbedtls_ssl_cookie_check;
 
 #endif
 
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && !defined(inline)
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
 
@@ -19274,7 +19283,7 @@ typedef struct
 
 /**
  * \brief               HMAC_DRBG context initialization
- *                      Makes the context ready for mbetls_hmac_drbg_seed(),
+ *                      Makes the context ready for mbedtls_hmac_drbg_seed(),
  *                      mbedtls_hmac_drbg_seed_buf() or
  *                      mbedtls_hmac_drbg_free().
  *
@@ -19643,7 +19652,8 @@ int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
 
 #include <pkcs11-helper-1.0/pkcs11h-certificate.h>
 
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && !defined(inline)
+#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+    !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
 
@@ -19660,7 +19670,7 @@ typedef struct {
 } mbedtls_pkcs11_context;
 
 /**
- * Initialize a mbetls_pkcs11_context.
+ * Initialize a mbedtls_pkcs11_context.
  * (Just making memory references valid.)
  */
 void mbedtls_pkcs11_init( mbedtls_pkcs11_context *ctx );
@@ -20647,16 +20657,16 @@ int mbedtls_ripemd160_self_test( int verbose );
  */
 #define MBEDTLS_VERSION_MAJOR  2
 #define MBEDTLS_VERSION_MINOR  1
-#define MBEDTLS_VERSION_PATCH  1
+#define MBEDTLS_VERSION_PATCH  2
 
 /**
  * The single version number has the following structure:
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define MBEDTLS_VERSION_NUMBER         0x02010100
-#define MBEDTLS_VERSION_STRING         "2.1.1"
-#define MBEDTLS_VERSION_STRING_FULL    "mbed TLS 2.1.1"
+#define MBEDTLS_VERSION_NUMBER         0x02010200
+#define MBEDTLS_VERSION_STRING         "2.1.2"
+#define MBEDTLS_VERSION_STRING_FULL    "mbed TLS 2.1.2"
 
 #if defined(MBEDTLS_VERSION_C)
 

@@ -37,11 +37,6 @@
         "jquery": "~2",
         "semantic-ui": "~2"
     },
-    "files": [
-        "contents",
-        "layouts",
-        "partials"
-    ],
     "pak": {
         "export": [
             {
@@ -52,6 +47,9 @@
                 ],
                 "to": "${TOP}/"
             }
+        ],
+        "manage": [
+            "expansive.json"
         ],
         "origin": "embedthis/me-docstyle"
     }

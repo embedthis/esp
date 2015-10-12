@@ -108,11 +108,20 @@
     #define INC(field)
 #endif
 
-#if LINUX || ME_BSD_LIKE
-    #define findFirstBit(word) ffsl((long) word)
-#endif
-#if MACOSX
-    #define findLastBit(x) flsl((long) x)
+#if ME_64
+    #if LINUX || ME_BSD_LIKE
+        #define findFirstBit(word) ffsl((long) word)
+    #endif
+    #if MACOSX
+        #define findLastBit(x) flsl((long) x)
+    #endif
+#else
+    #if LINUX || ME_BSD_LIKE
+        #define findFirstBit(word) ffs((int) word)
+    #endif
+    #if MACOSX
+        #define findLastBit(x) fls((int) x)
+    #endif
 #endif
 #ifndef findFirstBit
     static ME_INLINE int findFirstBit(size_t word);
@@ -2435,7 +2444,7 @@ PUBLIC int mprIsValid(cvoid *ptr)
  */
 static void dontBusyWait() 
 {
-#if ME_UNIX_LIKE
+#if ME_UNIX_LIKE || VXWORKS
     struct timespec nap;
     nap.tv_sec = 0;
     nap.tv_nsec = 1;
