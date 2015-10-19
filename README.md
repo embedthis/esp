@@ -22,7 +22,7 @@ See [LICENSE.md](LICENSE.md) for details.
 
 ### To read documentation:
 
-  See http://embedthis.com/esp/doc/index.html
+  See https://embedthis.com/esp/doc/
 
 ### Building
     You can build with make or with MakeMe. MakeMe is quicker and more flexible.
@@ -75,6 +75,6 @@ or
 
 Resources
 ---
-  - [ESP web site](http://embedthis.com/esp/)
-  - [ESP GitHub repository](http://github.com/embedthis/esp)
+  - [ESP web site](https://embedthis.com/esp/)
+  - [ESP GitHub repository](https://github.com/embedthis/esp)
   - [Embedthis web site](https://embedthis.com/)

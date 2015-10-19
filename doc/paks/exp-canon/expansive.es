@@ -1,16 +1,17 @@
 Expansive.load({
-    transforms: [ {
+
+    services: {
         name: 'canon',
-        script: `
-            public function renderCanonical() {
+        init: function() {
+            global.renderCanonical = function() {
                 if (meta.dest.basename.trimExt() == 'index') {
-                    let ref: String = meta.abs.dirname
+                    let ref: String = meta.absurl.dirname
                     if (!ref.endsWith('/')) {
                         ref += '/'
                     }
                     write('<link href="' + ref + '" rel="canonical" />')
                 }
             }
-        `
-    } ]
+        }
+    }
 })

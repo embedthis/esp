@@ -3,7 +3,7 @@
 
  */
 Expansive.load({
-    transforms: {
+    services: {
         name:   'reload',
     }
 })

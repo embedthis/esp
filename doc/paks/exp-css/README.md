@@ -34,6 +34,7 @@ The **css** service provides configuration control for the other css services.
     to a filename to contain all extracted styles.
 * force &mdash; Force minification even if a minified source file exists.
 * minify &mdash; Enable minifying of Javascript files. Default to false.
+* prefix &mdash; Autoprefix styles using vendor specific browser prefixes. Defaults to true.
 * usemap &mdash; Use minified stylesheet if corresponding source maps is present. Defaults to true.
 * usemin &mdash; Use minified stylesheet if present. Defaults to null. Set explicitly to false
     to disable the use of minified resources.

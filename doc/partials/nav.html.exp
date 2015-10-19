@@ -19,7 +19,7 @@
             <@ } } @>
             <@ if (meta.url.path != 'index.html' && !meta.url.path.endsWith('/')) { @>
             <div class="divider">/</div>
-            <a class="active section" href="<@= meta.path.basename @>"><@= meta.cookie || meta.title @></a>
+            <a class="active section" href="<@= meta.destPath.basename @>"><@= meta.cookie || meta.title @></a>
             <@ } @>
         </div>
         <@ } @>

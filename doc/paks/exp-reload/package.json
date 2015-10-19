@@ -15,14 +15,15 @@
         "jquery": "~2"
     },
     "devDependencies": {
-        "expansive": ">=0.6.0",
+        "expansive": ">=0.7.0",
         "pak": ">=0.11.3"
     },
     "pak": {
         "export": [
             {
                 "from": [
-                    "partials/**"
+                    "partials/**",
+                    "contents/**"
                 ],
                 "to": "${TOP}"
             },

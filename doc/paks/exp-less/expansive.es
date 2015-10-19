@@ -4,31 +4,18 @@
     Transform by less into css. Uses lessc|recess.
  */
 Expansive.load({
-    transforms: [{
+    services: {
         name:   'less',
-        mappings: {
-            less: [ 'css', 'less' ],
-        },
         files: [ '**.less', '!**.css.less' ],
         stylesheets: [ 'css/all.css' ],
         dependencies: null,
-        script: `
-            let service = expansive.services.less
-            //  DEPRECATE
-            for each (svc in [ 'compile-less-css' ]) {
-                let sp
-                if ((sp = expansive.services[svc]) != null) {
-                    for each (name in [ 'dependencies', 'files', 'mappings', 'stylesheets' ]) {
-                        if (sp[name]) {
-                            service[name] = sp[name] | service[name]
-                            trace('Warn', 'Legacy configuration for ' + svc + '.' + name +
-                                          ' in expansive.json. Migrate to less.' + name + '.')
-                        }
-                    }
-                }
-            }
-            if (service.enable) {
-                let control = expansive.control
+
+        transforms: {
+            mappings: {
+                less: [ 'css', 'less' ],
+            },
+            init: function(transform) { 
+                let service = transform.service
                 if (!(service.stylesheets is Array)) {
                     service.stylesheets = [service.stylesheets]
                 }
@@ -39,21 +26,21 @@ Expansive.load({
                             service.dependencies[stylesheet + '.less'] = '**.less'
                         }
                     }
-                    blend(control.dependencies, service.dependencies)
+                    blend(expansive.control.dependencies, service.dependencies)
                     let collections = expansive.control.collections
                     collections.styles ||= []
                     collections.styles.push(stylesheet)
                 }
-            }
+            },
 
-            function resolve(path: Path, service): Path? {
-                if (path.glob(service.files)) {
+            resolve: function(path: Path, transform): Path? {
+                if (path.glob(transform.service.files)) {
                     return null
                 }
                 return path
-            }
+            },
 
-            function transform(contents, meta, service) {
+            render: function(contents, meta) {
                 let less = Cmd.locate('lessc')
                 if (less) {
                     contents = Cmd.run(less + ' - ', {dir: meta.source.dirname}, contents)
@@ -76,6 +63,6 @@ Expansive.load({
                 }
                 return contents
             }
-        `
-    }]
+        }
+    }
 })

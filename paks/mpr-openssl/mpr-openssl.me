@@ -45,18 +45,28 @@ Me.load({
 
                 } else {
                     let opt = {fullpath: true, search: search, nopath: true}
-                    lib = probe('libcrypto.' + me.ext.shobj, blend({nothrow: true}, opt)) ||
-                          probe('libcrypto.' + me.ext.lib, opt)
-                    path = lib.dirname
+                    let inc, lib
+                    if ((lib = probe('libcrypto.' + me.ext.shobj, blend({nothrow: true}, opt))) != null) {
+                        let isearch = [ lib.dirname.join('include') ]
+                        if (!me.platform.cross) {
+                            isearch.push('/usr/include')
+                        }
+                        inc = probe('openssl/ssl.h', {search: isearch, nothrow: true})
+                    }
+                    if (!lib || !inc) {
+                        lib = probe('libcrypto.' + me.ext.lib, opt)
+                        let isearch = [ lib.dirname.join('include') ]
+                        if (!me.platform.cross) {
+                            isearch.push('/usr/include')
+                        }
+                        inc = probe('openssl/ssl.h', {search: isearch})
+                    }
+                    includes = [ inc ]
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
-                    let ext = lib.extension
-                    imports = lib.parent.files('libssl.' + ext + '*') + lib.parent.files('libcrypto.' + ext + '*')
-                    let isearch = [ path.join('include') ]
-                    if (!me.platform.cross) {
-                        isearch.push('/usr/include')
-                    }
-                    includes = [ probe('openssl/ssl.h', {search: isearch}) ]
+                    imports = lib.parent.files('libssl.' + lib.extension + '*') + 
+                              lib.parent.files('libcrypto.' + lib.extension + '*')
+                    path = lib.dirname
                 }
                 includes.push(me.dir.inc)
                 return {

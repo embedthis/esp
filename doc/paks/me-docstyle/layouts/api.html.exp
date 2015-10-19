@@ -3,7 +3,6 @@
 <head>
     <title><@= meta.title @></title>
     <@ partial('head') @>
-    <link href="@~/css/api.css" rel="stylesheet" type="text/css" />
 </head>
 <body class="show-sidebar">
     <@ partial('sidebar') @>

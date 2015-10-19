@@ -2469,7 +2469,7 @@ static void cacheAtClient(HttpConn *conn)
     tx = conn->tx;
     cache = conn->tx->cache;
 
-    if (!mprLookupKey(tx->headers, "Cache-Control")) {
+    if (tx->status == HTTP_CODE_OK && !mprLookupKey(tx->headers, "Cache-Control")) {
         if ((value = mprLookupKey(conn->tx->headers, "Cache-Control")) != 0) {
             if (strstr(value, "max-age") == 0) {
                 httpAppendHeader(conn, "Cache-Control", "public, max-age=%lld", cache->clientLifespan / TPS);
@@ -3348,6 +3348,9 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
     assert(q->count >= 0);
     if (nbytes < size) {
         buf[nbytes] = '\0';
+    }
+    if (nbytes == 0 && httpRequestExpired(conn, -1)) {
+        return MPR_ERR_TIMEOUT;
     }
     return nbytes;
 }
@@ -4921,20 +4924,6 @@ static void parseRoutes(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-#if UNUSED
-static void parseRoutesPrint(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    httpLogRoutes(route->host, 0);
-}
-
-
-static void parseRoutesReset(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    httpResetRoutes(route->host);
-}
-#endif
-
-
 static void parseScheme(HttpRoute *route, cchar *key, MprJson *prop)
 {
     if (sstarts(prop->value, "https")) {
@@ -5503,6 +5492,12 @@ PUBLIC uint64 httpGetNumber(cchar *value)
         number = stoi(value) * 60 * 60;
     } else if (sends(value, "day") || sends(value, "days")) {
         number = stoi(value) * 60 * 60 * 24;
+    } else if (sends(value, "week") || sends(value, "weeks")) {
+        number = stoi(value) * 60 * 60 * 24 * 7;
+    } else if (sends(value, "month") || sends(value, "months")) {
+        number = stoi(value) * 60 * 60 * 24 * 30;
+    } else if (sends(value, "year") || sends(value, "years")) {
+        number = stoi(value) * 60 * 60 * 24 * 365;
     } else if (sends(value, "kb") || sends(value, "k")) {
         number = stoi(value) * 1024;
     } else if (sends(value, "mb") || sends(value, "m")) {
@@ -5631,10 +5626,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.redirect", parseRedirect);
     httpAddConfig("http.renameUploads", parseRenameUploads);
     httpAddConfig("http.routes", parseRoutes);
-#if UNUSED
-    httpAddConfig("http.routes.print", parseRoutesPrint);
-    httpAddConfig("http.routes.reset", parseRoutesReset);
-#endif
     httpAddConfig("http.resources", parseResources);
     httpAddConfig("http.scheme", parseScheme);
     httpAddConfig("http.server", httpParseAll);
@@ -5917,9 +5908,12 @@ static void connTimeout(HttpConn *conn, MprEvent *mprEvent)
             msg = sfmt("%s exceeded parse headers timeout of %lld sec", prefix, limits->requestParseTimeout  / 1000);
             event = "timeout.parse";
 
+#if UNUSED
+        /* Too noisy */
         } else if (conn->timeout == HTTP_INACTIVITY_TIMEOUT) {
             msg = sfmt("%s exceeded inactivity timeout of %lld sec", prefix, limits->inactivityTimeout / 1000);
             event = "timeout.inactivity";
+#endif
 
         } else if (conn->timeout == HTTP_REQUEST_TIMEOUT) {
             msg = sfmt("%s exceeded timeout %lld sec", prefix, limits->requestTimeout / 1000);
@@ -6159,7 +6153,6 @@ static void readPeerData(HttpConn *conn)
             conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Connection reset");
             conn->keepAliveCount = 0;
             conn->lastRead = 0;
-            httpTrace(conn, "connection.close", "context", "msg:'%s'", conn->errorMsg);
         }
     }
 }
@@ -6228,6 +6221,10 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
         When a request completes, prepForNext will reset the state to HTTP_STATE_BEGIN
      */
     if (conn->state < HTTP_STATE_PARSED && conn->endpoint && (mprIsSocketEof(conn->sock) || (conn->keepAliveCount <= 0))) {
+        if (!conn->errorMsg) {
+            conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Server close");
+        }
+        httpTrace(conn, "connection.close", "context", "msg:'%s'", conn->errorMsg);
         httpDestroyConn(conn);
     } else if (!mprIsSocketEof(conn->sock) && conn->async && !conn->delay) {
         httpEnableConnEvents(conn);
@@ -6402,6 +6399,9 @@ PUBLIC void httpSetupWaitHandler(HttpConn *conn, int eventMask)
         } else {
             mprSetSocketDispatcher(sp, conn->dispatcher);
             mprEnableSocketEvents(sp, eventMask);
+        }
+        if (sp->flags & (MPR_SOCKET_BUFFERED_READ | MPR_SOCKET_BUFFERED_WRITE)) {
+            mprRecallWaitHandler(sp->handler);
         }
     } else if (sp->handler) {
         mprWaitOn(sp->handler, eventMask);
@@ -8387,7 +8387,7 @@ static void errorv(HttpConn *conn, int flags, cchar *fmt, va_list args)
             }
             httpMonitorEvent(conn, HTTP_COUNTER_ERRORS, 1);
         }
-        httpAddHeaderString(conn, "Cache-Control", "no-cache");
+        httpSetHeaderString(conn, "Cache-Control", "no-cache");
         if (httpServerConn(conn) && tx && rx) {
             if (tx->flags & HTTP_TX_HEADERS_CREATED) {
                 /*
@@ -17289,6 +17289,7 @@ static void createErrorRequest(HttpConn *conn)
     conn->input = packet;
     conn->state = HTTP_STATE_CONNECTED;
     conn->errorDoc = 1;
+    conn->keepAliveCount = 0;
 }
 
 

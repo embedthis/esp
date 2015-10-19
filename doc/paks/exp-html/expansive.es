@@ -1,18 +1,26 @@
 Expansive.load({
-    transforms: [ {
+
+    services: {
         name:       'html',
-        mappings:   'html',
         options:    '--remove-comments --collapse-whitespace --prevent-attributes-escaping --remove-empty-attributes --remove-optional-tags'
-        script: `
-            function transform(contents, meta, service) {
-                if (meta.isLayout && !meta.layout) {
-                    let htmlmin = Cmd.locate('html-minifier')
-                    if (!htmlmin) {
-                        trace('Warn', 'Cannot find html-minifier')
-                        return contents
-                    }
+
+        transforms: {
+            mappings:   'html',
+
+            init: function(transform) {
+                transform.htmlmin = Cmd.locate('html-minifier')
+                if (!transform.htmlmin) {
+                    trace('Warn', 'Cannot find html-minifier')
+                }
+            },
+
+            render: function(contents, meta, transform) {
+                /*
+                    Only minify the final aggregation of document, partials and layout
+                 */
+                if (meta.isLayout && !meta.layout && transform.htmlmin) {
                     try {
-                        contents = run(htmlmin + ' ' + service.options, contents)
+                        contents = run(transform.htmlmin + ' ' + transform.service.options, contents)
                     } catch (e) {
                         if (expansive.options.debug) {
                             print('Cannot minify', meta.source, '\n', e)
@@ -23,6 +31,6 @@ Expansive.load({
                 }
                 return contents
             }
-        `
-    } ]
+        }
+    }
 })

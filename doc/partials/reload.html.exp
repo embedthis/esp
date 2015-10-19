@@ -1,6 +1,6 @@
     <@ 
         let reload = expansive.services.reload
-        if (reload && reload.enable && expansive.package.pak.mode == 'debug') { 
-            addItems('scripts', 'lib/exp-reload/reload.js')
+        if (reload.enable) {
+            addItems('scripts', 'scripts/reload.js*')
         }
      @>

@@ -20,7 +20,8 @@
                 "minify": true,
                 "usemin": true,
                 "usemap": false
-            }
+            },
+            "gzip": true
         }
     },
     "debug": {
@@ -31,7 +32,8 @@
                 "minify": false,
                 "usemin": true,
                 "usemap": true
-            }
+            },
+            "gzip": false
         }
     }
 }
