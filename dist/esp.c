@@ -2186,14 +2186,14 @@ static void generateScaffoldController(int argc, char **argv)
 
 static void generateClientController(int argc, char **argv)
 {
-    genKey("clientController", sfmt("%s/%s/%sControl.js", httpGetDir(app->route, "SOURCE"),
+    genKey("clientController", sfmt("%s/%s/%sControl.js", httpGetDir(app->route, "CONTENTS"),
         app->controller, stitle(app->controller)), 0);
 }
 
 
 static void generateClientModel(int argc, char **argv)
 {
-    genKey("clientModel", sfmt("%s/%s/%s.js", httpGetDir(app->route, "SOURCE"), app->controller,
+    genKey("clientModel", sfmt("%s/%s/%s.js", httpGetDir(app->route, "CONTENTS"), app->controller,
         stitle(app->controller)), 0);
 }
 
@@ -2264,8 +2264,8 @@ static void generateTable(int argc, char **argv)
  */
 static void generateScaffoldViews(int argc, char **argv)
 {
-    genKey("clientList", "${SOURCE}/${CONTROLLER}/${FILENAME}", 0);
-    genKey("clientEdit", "${SOURCE}/${CONTROLLER}/${FILENAME}", 0);
+    genKey("clientList", "${CONTENTS}/${CONTROLLER}/${FILENAME}", 0);
+    genKey("clientEdit", "${CONTENTS}/${CONTROLLER}/${FILENAME}", 0);
 }
 
 
@@ -2490,8 +2490,8 @@ static MprHash *makeTokens(cchar *path, MprHash *other)
     list = smatch(app->controller, app->table) ? sfmt("%ss", app->controller) : app->table;
 
     tokens = mprDeserialize(sfmt(
-        "{ NAME: '%s', TITLE: '%s', HOME: '%s', DOCUMENTS: '%s', SOURCE: '%s', BINDIR: '%s', DATABASE: '%s', FILENAME: '%s',"
-        "LIST: '%s', LISTEN: '%s', CONTROLLER: '%s', UCONTROLLER: '%s', MODEL: '%s', UMODEL: '%s',"
+        "{ NAME: '%s', TITLE: '%s', HOME: '%s', DOCUMENTS: '%s', CONTENTS: '%s', BINDIR: '%s', DATABASE: '%s',"
+        "FILENAME: '%s', LIST: '%s', LISTEN: '%s', CONTROLLER: '%s', UCONTROLLER: '%s', MODEL: '%s', UMODEL: '%s',"
         "TABLE: '%s', ACTIONS: '', DEFINE_ACTIONS: '' }",
         app->name, app->title, route->home, route->documents, httpGetDir(route, "CONTENTS"), app->binDir, app->database,
         filename, list, app->listen, app->controller, stitle(app->controller), app->controller, stitle(app->controller),

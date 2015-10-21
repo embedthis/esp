@@ -4357,6 +4357,9 @@ static cchar *map(HttpConn *conn, MprHash *options)
  */
 static Esp *esp;
 
+/*
+    UNUSED. espRenderView flags are reserved
+ */
 #define ESP_DONT_RENDER 0x1
 
 /************************************ Forward *********************************/
@@ -4852,7 +4855,9 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     if (conn->tx->fileInfo.isDir) {
         httpHandleDirectory(conn);
     }
-    httpSetFileHandler(conn, 0);
+    if (!conn->tx->finalized) {
+        httpSetFileHandler(conn, 0);
+    }
 }
 
 
