@@ -20178,7 +20178,7 @@ PUBLIC void httpRedirect(HttpConn *conn, int status, cchar *targetUri)
 
     if (tx->finalized) {
         /* A response has already been formulated */
-        mprLog("error", 0, "Response already prepared, so redirect ignored: %s", targetUri);
+        mprLog("error", 0, "Response already finalized, so redirect ignored: %s", targetUri);
         return;
     }
     tx->status = status;
