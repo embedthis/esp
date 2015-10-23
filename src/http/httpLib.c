@@ -312,7 +312,7 @@ PUBLIC void httpStopConnections(void *data)
  */
 PUBLIC void httpDestroy()
 {
-    Http            *http;
+    Http        *http;
 
     if ((http = HTTP) == 0) {
         return;
@@ -329,6 +329,9 @@ PUBLIC void httpDestroy()
         mprRemoveEvent(http->timestamp);
         http->timestamp = 0;
     }
+    http->hosts = NULL;
+    http->clientRoute = NULL;
+    http->endpoints = NULL;
     MPR->httpService = NULL;
 }
 
@@ -13604,6 +13607,7 @@ PUBLIC void httpAddRouteParam(HttpRoute *route, cchar *field, cchar *value, int 
     if ((op->mdata = pcre_compile2(value, 0, 0, &errMsg, &column, NULL)) == 0) {
         mprLog("error http route", 0, "Cannot compile field pattern. Error %s at column %d", errMsg, column);
     } else {
+        op->flags |= HTTP_ROUTE_FREE;
         mprAddItem(route->params, op);
     }
 }
@@ -13629,6 +13633,7 @@ PUBLIC void httpAddRouteRequestHeaderCheck(HttpRoute *route, cchar *header, ccha
     if ((op->mdata = pcre_compile2(pattern, 0, 0, &errMsg, &column, NULL)) == 0) {
         mprLog("error http route", 0, "Cannot compile header pattern. Error %s at column %d", errMsg, column);
     } else {
+        op->flags |= HTTP_ROUTE_FREE;
         mprAddItem(route->requestHeaders, op);
     }
 }
@@ -16240,9 +16245,7 @@ PUBLIC void httpProtocol(HttpConn *conn)
             canProceed = 0;
             break;
         }
-        /*
-            This may block briefly if GC is due
-         */
+
         httpServiceQueues(conn, HTTP_BLOCK);
 
         /*
@@ -16912,7 +16915,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
             "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
     }
     if (conn->error) {
-        /* Cannot continue with keep-alive as the headers have not been correctly parsed */
+        /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
         conn->keepAliveCount = 0;
         conn->connError = 1;
     }

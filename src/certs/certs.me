@@ -71,13 +71,27 @@ Me.load({
             depends: [ 'ca-cert', 'self-signed-cert', 'test-cert', 'ec-cert' ],
         },
 
+        'generate-samples': {
+            depends: [ 'generate-certs', 'get-roots' ]
+            action: `
+                for each (f in Path('samples').files('**')) {
+                    trace('Generate', f)
+                    f.remove()
+                    Path(f.basename).rename(f)
+                }
+                rm(['*.old', '*.csr', 'ca.db', 'ca.db.attr', '*.pem'])
+            `
+        },
+
         'get-roots': {
             action: `
                 /* WARNING: the default download has V1 certs which MatrixSSL cannot handle */
                 let http = Http()
                 http.verify = false
                 http.get('https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt')
-                Path('${BIN}/roots.crt').write(http.response)
+                let dest = Path('${BIN}/roots.crt')
+                trace('Create', dest)
+                dest.write(http.response)
             `
         }
 

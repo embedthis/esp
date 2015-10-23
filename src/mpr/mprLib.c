@@ -975,10 +975,17 @@ static ME_INLINE void triggerGC(int always)
 PUBLIC int mprGC(int flags)
 {
     heap->freedBlocks = 0;
+    if (!(flags & MPR_GC_NO_BLOCK)) {
+        /*
+            Yield here, so the sweeper wont abort because this thread is not yielded
+         */
+        mprYield(MPR_YIELD_STICKY);
+    }
     if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || (heap->workDone > heap->workQuota)) {
         triggerGC(flags & (MPR_GC_FORCE | MPR_GC_COMPLETE));
     }
     if (!(flags & MPR_GC_NO_BLOCK)) {
+        mprResetYield();
         mprYield((flags & MPR_GC_COMPLETE) ? MPR_YIELD_COMPLETE : 0);
     }
     return MPR->heap->freedBlocks;
@@ -17214,7 +17221,9 @@ static void manageModule(MprModule *mp, int flags)
         mprMark(mp->name);
         mprMark(mp->path);
         mprMark(mp->entry);
+#if UNUSED
         mprMark(mp->moduleData);
+#endif
     }
 }
 

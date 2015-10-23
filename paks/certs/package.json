@@ -30,10 +30,18 @@
             "url": "https://embedthis.com/licensing/"
         }
     ],
+    "files": [
+        "*.md",
+        "*.me",
+        "*.ans",
+        "*.srl",
+        "*.conf",
+        "samples/**",
+        "!start.me"
+    ],
     "pak": {
         "export": [
             "certs.me",
-            "ossl",
             "*.ans",
             "*.conf",
             "samples/**"
