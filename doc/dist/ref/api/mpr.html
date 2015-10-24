@@ -1873,6 +1873,9 @@ O/S service object.
 Cached PATH env var. 
 Used by MprCmd.
 </td>
+    <tr><td class="param">char *</td><td><td>rootString</td><td>
+&quot;/&quot; string.
+</td>
     <tr><td class="param">char *</td><td><td>serverName</td><td>
 Server name portion (no domain).
 </td>
@@ -9459,7 +9462,7 @@ When the module was last used.
 When the module file was last modified.
 </td>
     <tr><td class="param">void *</td><td><td>moduleData</td><td>
-Module specific data - must be alloced data.
+Module specific data - not managed.
 </td>
     <tr><td class="param">char *</td><td><td>name</td><td>
 Unique module name.
