@@ -8,7 +8,7 @@ Me.load({
             configurable: true,
             description: 'Secure Socket Layer Interface',
             discovers: [ 'mbedtls', 'openssl', 'matrixssl', 'nanossl' ],
-            uses:      [ 'mbedtls', 'openssl', 'matrixssl', 'nanossl', 'est' ],
+            uses:      [ 'mbedtls', 'openssl', 'matrixssl', 'nanossl' ],
             config: function (target) {
                 let provider
                 for each (p in target.discovers) {

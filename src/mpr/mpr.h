@@ -9693,6 +9693,7 @@ typedef struct Mpr {
 
     char            *emptyString;           /**< "" string */
     char            *oneString;             /**< "1" string */
+    char            *rootString;            /**< "/" string */
 #if ME_WIN_LIKE
     HINSTANCE       appInstance;            /**< Application instance (windows) */
 #endif
