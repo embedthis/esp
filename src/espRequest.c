@@ -394,6 +394,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
         target = sclone(target);
         mprHold(target);
         if (espLoadModule(route, conn->dispatcher, "view", mprJoinPath(route->documents, target), &errMsg) < 0) {
+            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             mprRelease(target);
             return 0;
         }
