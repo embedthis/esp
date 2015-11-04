@@ -1203,11 +1203,25 @@
       <arglist>(cchar *content)</arglist>
     </member>
     <member kind="function">
+      <type>cchar *</type>
+      <name>md5</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga1d0fda1c77c88bd3b74df6572365b1f3</anchor>
+      <arglist>(cchar *str)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>modeIs</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga9514f98ecae65f2654ad8a42c9549b62</anchor>
       <arglist>(cchar *check)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
+      <name>nonce</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga22f8d5c52a1ee9eedf326acf2737a4fd</anchor>
+      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>

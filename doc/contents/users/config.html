@@ -762,10 +762,6 @@ routes [ {
                         these attributes externally.</td>
                     </tr>
                     <tr>
-                        <td>serverPrefix</td>
-                        <td>URI prefix to communicate with server-side controllers for the application.</td>
-                    </tr>
-                    <tr>
                         <td>showErrors</td>
                         <td>Controls if application errors should be displayed in the browser.
                             Set to true to display errors in the browser. Defaults to true if the source is compiled in
@@ -783,6 +779,15 @@ routes [ {
                         <td>stealth</td>
                         <td>Respond in stealth mode emitting as little context information as possible.</td>
                     </tr>
+                    <tr>
+                        <td>stream</td>
+                        <td>Define whether the request body data should be buffered or stream. This property should be an array of objects with "mime", "uri" and "stream" properties. For example: <code class="inverted">stream: [
+    { 
+        mime: 'application/custom-mime', 
+        stream: false, 
+        uri: '/some-uri' 
+    },
+],</code></td>
                     <tr>
                         <td>target</td>
                         <td>Routing destination for processing the request.</td>
