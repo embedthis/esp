@@ -1279,7 +1279,7 @@ static void serve(int argc, char **argv)
                 fail("Cannot create endpoint for 127.0.0.1:%d", 4000);
                 return;
             }
-            httpAddHostToEndpoints(app->host);
+            httpAddHostToEndpoint(endpoint, app->host);
         }
     } else for (i = 0; i < argc; i++) {
         address = argv[i++];
@@ -1288,7 +1288,7 @@ static void serve(int argc, char **argv)
             fail("Cannot create endpoint for %s:%d", ip, port);
             return;
         }
-        httpAddHostToEndpoints(app->host);
+        httpAddHostToEndpoint(endpoint, app->host);
     }
     if (mprGetListLength(HTTP->endpoints) == 0) {
         fail("No configured listening endpoints");

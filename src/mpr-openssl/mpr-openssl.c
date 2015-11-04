@@ -25,11 +25,16 @@
  /*
     Indent includes to bypass MakeMe dependencies
   */
+ #include    <openssl/opensslv.h>
  #include    <openssl/ssl.h>
  #include    <openssl/evp.h>
  #include    <openssl/rand.h>
  #include    <openssl/err.h>
  #include    <openssl/dh.h>
+
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+ #include    <openssl/x509v3.h>
+#endif
 
 /************************************* Defines ********************************/
 /*
@@ -711,6 +716,11 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
     } else {
         if (requiredPeerName) {
             osp->requiredPeerName = sclone(requiredPeerName);
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+            X509_VERIFY_PARAM *param = param = SSL_get0_param(osp->handle);
+            X509_VERIFY_PARAM_set_hostflags(param, 0);
+            X509_VERIFY_PARAM_set1_host(param, requiredPeerName, 0);
+#endif
         }
         /*
             Block while connecting
@@ -991,6 +1001,7 @@ static int checkPeerCertName(MprSocket *sp)
         sp->peerCertIssuer = sclone(issuer);
         X509_free(cert);
     }
+#if OPENSSL_VERSION_NUMBER < 0x10002000L
     if (ssl->verifyPeer && osp->requiredPeerName) {
         target = osp->requiredPeerName;
         certName = peerName;
@@ -1024,6 +1035,7 @@ static int checkPeerCertName(MprSocket *sp)
             return MPR_ERR_BAD_VALUE;
         }
     }
+#endif
     return 0;
 }
 
@@ -1101,7 +1113,13 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xContext)
         sp->errorMsg = sfmt("Certificate has expired");
         ok = 0;
         break;
-
+            
+#ifdef X509_V_ERR_HOSTNAME_MISMATCH
+    case X509_V_ERR_HOSTNAME_MISMATCH:
+        sp->errorMsg = sfmt("Certificate hostname mismatch. Expecting %s got %s", osp->requiredPeerName, peerName);
+        ok = 0;
+        break;
+#endif
     case X509_V_ERR_CERT_CHAIN_TOO_LONG:
     case X509_V_ERR_CERT_NOT_YET_VALID:
     case X509_V_ERR_CERT_REJECTED:
