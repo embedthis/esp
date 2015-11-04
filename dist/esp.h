@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "6.1.0"
+    #define ESP_VERSION "6.1.1"
 #endif
 
 /*
@@ -3438,6 +3438,23 @@ PUBLIC EdiRec *makeRec(cchar *content);
     @stability Evolving
  */
 PUBLIC cchar *makeUri(cchar *target);
+
+/**
+    Get an MD5 checksum
+    @param str String to hash
+    @returns An allocated MD5 checksum string.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *md5(cchar *str);
+
+/**
+    Generate a onetime random string
+    @returns An MD5 encoded random string
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *nonce();
 
 /**
     Test the the application mode

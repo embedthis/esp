@@ -2033,12 +2033,24 @@ PUBLIC cchar *makeUri(cchar *target)
 }
 
 
+PUBLIC cchar *md5(cchar *str)
+{
+    return mprGetMD5(str);
+}
+
+
 PUBLIC bool modeIs(cchar *kind)
 {
     HttpRoute   *route;
 
     route = getConn()->rx->route;
     return smatch(route->mode, kind);
+}
+
+
+PUBLIC cchar *nonce()
+{
+    return mprGetMD5(itos(mprRandom()));
 }
 
 

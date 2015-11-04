@@ -2245,6 +2245,23 @@ PUBLIC EdiRec *makeRec(cchar *content);
 PUBLIC cchar *makeUri(cchar *target);
 
 /**
+    Get an MD5 checksum
+    @param str String to hash
+    @returns An allocated MD5 checksum string.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *md5(cchar *str);
+
+/**
+    Generate a onetime random string
+    @returns An MD5 encoded random string
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *nonce();
+
+/**
     Test the the application mode
     @description This is typically set to "debug" or "release". The mode is defined by the "mode" property in the package.json.
     @param check Mode to compare with the current application mode.
