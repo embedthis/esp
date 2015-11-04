@@ -2539,6 +2539,7 @@ static bool fetchCachedResponse(HttpConn *conn)
         httpSetStatus(conn, status);
         httpSetHeaderString(conn, "Etag", mprGetMD5(key));
         httpSetHeaderString(conn, "Last-Modified", mprFormatUniversalTime(MPR_HTTP_DATE, modified));
+        httpRemoveHeader(conn, "Content-Encoding");
         return 1;
     }
     httpTrace(conn, "cache.none", "context", "msg:'No cached content',key:'%s'", key);
@@ -3065,7 +3066,7 @@ static void setDefaultHeaders(HttpConn *conn);
 
 /*********************************** Code *************************************/
 
-static HttpConn *openConnection(HttpConn *conn, struct MprSsl *ssl)
+static HttpConn *openConnection(HttpConn *conn, MprSsl *ssl)
 {
     Http        *http;
     HttpUri     *uri;
@@ -3125,12 +3126,7 @@ static HttpConn *openConnection(HttpConn *conn, struct MprSsl *ssl)
         Must be done even if using keep alive for repeat SSL requests
      */
     if (uri->secure) {
-        char *peerName;
-        if (ssl == 0) {
-            ssl = mprCreateSsl(0);
-        }
-        peerName = isdigit(uri->host[0]) ? 0 : uri->host;
-        if (mprUpgradeSocket(sp, ssl, peerName) < 0) {
+        if (mprUpgradeSocket(sp, ssl, uri->host) < 0) {
             conn->errorMsg = sp->errorMsg;
             httpTrace(conn, "connection.upgrade.error", "error", "msg:'Cannot perform SSL upgrade. %s'", conn->errorMsg);
             return 0;
@@ -3737,43 +3733,6 @@ static cchar *getList(MprJson *prop)
 }
 
 
-/*
-    Blend the pak.modes[pak.mode] up to the top level
- */
-static void blendMode(HttpRoute *route, MprJson *config)
-{
-    MprJson     *modeObj;
-    cchar       *mode;
-
-    /*
-        Use existing mode from route->config. Blending of config should already have taken place,
-        so pak.mode should be defined.
-     */
-    mode = mprGetJson(route->config, "pak.mode");
-    if (!mode) {
-        mode = mprGetJson(config, "pak.mode");
-    }
-    if (mode) {
-        if ((route->debug = smatch(mode, "debug")) != 0) {
-            httpSetRouteShowErrors(route, 1);
-            route->keepSource = 1;
-        }
-        /*
-            Http uses top level modes
-            Pak uses top level pak.modes
-         */
-        if ((modeObj = mprGetJsonObj(config, sfmt("modes.%s", mode))) == 0) {
-            modeObj = mprGetJsonObj(config, sfmt("pak.modes.%s", mode));
-        }
-        if (modeObj) {
-            mprBlendJson(route->config, modeObj, MPR_JSON_OVERWRITE);
-            httpParseAll(route, 0, modeObj);
-        }
-        route->mode = mode;
-    }
-}
-
-
 PUBLIC int parseInclude(HttpRoute *route, MprJson *config, MprJson *inc)
 {
     MprJson     *child, *obj;
@@ -3809,13 +3768,13 @@ PUBLIC void httpInitConfig(HttpRoute *route)
 
 PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
 {
-    MprJson     *config, *obj;
-    cchar       *data, *errorMsg;
+    MprJson     *config, *obj, *modeObj;
+    cchar       *data, *errorMsg, *mode;
 
     /*
         Order of processing matters. First load the file and then blend included files into the same json obj.
         Then blend the mode directives and then assign/blend into the route config.
-        Lastly, parse the json config dom.
+        Lastly, parse the json config object.
      */
     if ((data = mprReadPathContents(path, NULL)) == 0) {
         mprLog("error http config", 0, "Cannot read configuration from \"%s\"", path);
@@ -3841,13 +3800,37 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
     }
 }
 #endif
-    blendMode(route, config);
+
+    if (!route->mode) {
+        mode = mprGetJson(route->config, "pak.mode");
+        if (!mode) {
+            mode = mprGetJson(config, "pak.mode");
+        }
+        route->mode = mode;
+        if ((route->debug = smatch(route->mode, "debug")) != 0) {
+            route->flags |= HTTP_ROUTE_SHOW_ERRORS;
+            route->keepSource = 1;
+        }
+    }
     if (route->config) {
         mprBlendJson(route->config, config, MPR_JSON_COMBINE);
     } else {
         route->config = config;
     }
     route->error = 0;
+
+    if (route->mode) {
+        /*
+            Http uses top level modes, Pak uses top level pak.modes.
+         */
+        if ((modeObj = mprGetJsonObj(config, sfmt("modes.%s", route->mode))) == 0) {
+            modeObj = mprGetJsonObj(config, sfmt("pak.modes.%s", route->mode));
+        }
+        if (modeObj) {
+            mprBlendJson(route->config, modeObj, MPR_JSON_OVERWRITE);
+            httpParseAll(route, 0, modeObj);
+        }
+    }
 
     httpParseAll(route, 0, config);
     if (route->error) {
@@ -4102,9 +4085,9 @@ static void parseAuthSessionEnable(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseAuthSessionVisibility(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseAuthSessionVisible(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    httpSetRouteSessionVisibility(route, scaselessmatch(prop->value, "visible"));
+    httpSetRouteSessionVisibility(route, scaselessmatch(prop->value, "true"));
 }
 
 
@@ -4364,9 +4347,6 @@ static void parseHost(HttpRoute *route, cchar *key, MprJson *prop)
     httpSetHostDefaultRoute(host, newRoute);
     httpParseAll(newRoute, key, prop);
     httpFinalizeRoute(newRoute);
-    if (!(host->flags & HTTP_HOST_ATTACHED)) {
-        httpAddHostToEndpoints(host);
-    }
 }
 
 
@@ -4619,7 +4599,7 @@ static void parseMethods(HttpRoute *route, cchar *key, MprJson *prop)
 
 
 /*
-    Note: this typically comes from package.json. See blendMode
+    Note: this typically comes from package.json
  */
 static void parseMode(HttpRoute *route, cchar *key, MprJson *prop)
 {
@@ -4967,7 +4947,7 @@ static void parseServerDefenses(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    HttpEndpoint    *endpoint;
+    HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
     MprJson         *child;
     char            *ip;
@@ -4987,6 +4967,8 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
             return;
         }
         endpoint = httpCreateEndpoint(ip, port, NULL);
+        httpAddHostToEndpoint(endpoint, host);
+
         if (!host->defaultEndpoint) {
             httpSetHostDefaultEndpoint(host, endpoint);
         }
@@ -5008,8 +4990,9 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
             This is currently used by VxWorks and Windows versions prior to Vista (i.e. XP)
          */
         if (!schr(prop->value, ':') && mprHasIPv6() && !mprHasDualNetworkStack()) {
-            mprAddItem(route->http->endpoints, httpCreateEndpoint("::", port, NULL));
-            httpSecureEndpoint(endpoint, route->ssl);
+            dual = httpCreateEndpoint("::", port, NULL);
+            httpAddHostToEndpoint(dual, host);
+            httpSecureEndpoint(dual, route->ssl);
         }
     }
 }
@@ -5294,12 +5277,6 @@ static void parseSslProtocols(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseSslCache(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    mprSetSslCacheSize(route->ssl, (int) stoi(prop->value));
-}
-
-
 static void parseSslLogLevel(HttpRoute *route, cchar *key, MprJson *prop)
 {
     mprSetSslLogLevel(route->ssl, (int) stoi(prop->value));
@@ -5318,12 +5295,6 @@ static void parseSslTicket(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseSslTimeout(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    mprSetSslTimeout(route->ssl, httpGetTicks(prop->value));
-}
-
-
 static void parseSslVerifyClient(HttpRoute *route, cchar *key, MprJson *prop)
 {
     mprVerifySslPeer(route->ssl, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
@@ -5339,6 +5310,21 @@ static void parseSslVerifyIssuer(HttpRoute *route, cchar *key, MprJson *prop)
 static void parseStealth(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetRouteStealth(route, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
+}
+
+
+static void parseStream(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    MprJson     *child;
+    cchar       *mime, *stream, *uri;
+    int         ji;
+
+    for (ITERATE_CONFIG(route, prop, child, ji)) {
+        mime = mprGetJson(child, "mime");
+        stream = mprGetJson(child, "stream");
+        uri = mprGetJson(child, "uri");
+        httpSetStreaming(route->host, mime, uri, smatch(stream, "false") || smatch(stream, ""));
+    }
 }
 
 
@@ -5560,10 +5546,11 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.require.roles", parseAuthRequireRoles);
     httpAddConfig("http.auth.require.users", parseAuthRequireUsers);
     httpAddConfig("http.auth.roles", parseAuthRoles);
+    httpAddConfig("http.auth.session", httpParseAll);
     httpAddConfig("http.auth.session.cookie", parseAuthSessionCookie);
     httpAddConfig("http.auth.session.persist", parseAuthSessionCookiePersist);
     httpAddConfig("http.auth.session.enable", parseAuthSessionEnable);
-    httpAddConfig("http.auth.session.vibility", parseAuthSessionVisibility);
+    httpAddConfig("http.auth.session.visible", parseAuthSessionVisible);
     httpAddConfig("http.auth.store", parseAuthStore);
     httpAddConfig("http.auth.type", parseAuthType);
     httpAddConfig("http.auth.users", parseAuthUsers);
@@ -5643,7 +5630,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.ssl.authority", httpParseAll);
     httpAddConfig("http.ssl.authority.file", parseSslAuthorityFile);
     httpAddConfig("http.ssl.authority.directory", parseSslAuthorityDirectory);
-    httpAddConfig("http.ssl.cache", parseSslCache);
     httpAddConfig("http.ssl.certificate", parseSslCertificate);
     httpAddConfig("http.ssl.ciphers", parseSslCiphers);
     httpAddConfig("http.ssl.key", parseSslKey);
@@ -5651,11 +5637,11 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.ssl.protocols", parseSslProtocols);
     httpAddConfig("http.ssl.renegotiate", parseSslRenegotiate);
     httpAddConfig("http.ssl.ticket", parseSslTicket);
-    httpAddConfig("http.ssl.timeout", parseSslTimeout);
     httpAddConfig("http.ssl.verify", httpParseAll);
     httpAddConfig("http.ssl.verify.client", parseSslVerifyClient);
     httpAddConfig("http.ssl.verify.issuer", parseSslVerifyIssuer);
     httpAddConfig("http.stealth", parseStealth);
+    httpAddConfig("http.stream", parseStream);
     httpAddConfig("http.target", parseTarget);
     httpAddConfig("http.timeouts", parseTimeouts);
     httpAddConfig("http.timeouts.exit", parseTimeoutsExit);
@@ -6077,6 +6063,7 @@ PUBLIC HttpConn *httpAcceptConn(HttpEndpoint *endpoint, MprEvent *event)
         mprCloseSocket(sock, 0);
         return 0;
     }
+    sock->data = conn;
     conn->notifier = endpoint->notifier;
     conn->async = endpoint->async;
     conn->endpoint = endpoint;
@@ -7902,23 +7889,6 @@ PUBLIC HttpEndpoint *httpCreateConfiguredEndpoint(HttpHost *host, cchar *home, c
 }
 
 
-PUBLIC void httpAddHostToEndpoints(HttpHost *host)
-{
-    HttpEndpoint    *endpoint;
-    int             next;
-
-    if (host == 0) {
-        host = httpGetDefaultHost();
-    }
-    for (next = 0; (endpoint = mprGetNextItem(HTTP->endpoints, &next)) != 0; ) {
-        httpAddHostToEndpoint(endpoint, host);
-        if (!host->name) {
-            httpSetHostName(host, sfmt("%s:%d", endpoint->ip, endpoint->port));
-        }
-    }
-}
-
-
 static bool validateEndpoint(HttpEndpoint *endpoint)
 {
     HttpHost    *host;
@@ -7928,14 +7898,16 @@ static bool validateEndpoint(HttpEndpoint *endpoint)
     if ((host = mprGetFirstItem(endpoint->hosts)) == 0) {
         host = httpGetDefaultHost();
         httpAddHostToEndpoint(endpoint, host);
-        if (!host->name) {
-            httpSetHostName(host, sfmt("%s:%d", endpoint->ip, endpoint->port));
-        }
-        for (nextRoute = 0; (route = mprGetNextItem(host->routes, &nextRoute)) != 0; ) {
-            if (!route->handler && !mprLookupKey(route->extensions, "")) {
-                httpAddRouteHandler(route, "fileHandler", "");
-                httpAddRouteIndex(route, "index.html");
-            }
+    }
+#if UNUSED
+    if (!host->name) {
+        httpSetHostName(host, sfmt("%s:%d", endpoint->ip, endpoint->port));
+    }
+#endif
+    for (nextRoute = 0; (route = mprGetNextItem(host->routes, &nextRoute)) != 0; ) {
+        if (!route->handler && !mprLookupKey(route->extensions, "")) {
+            httpAddRouteHandler(route, "fileHandler", "");
+            httpAddRouteIndex(route, "index.html");
         }
     }
     return 1;
@@ -8038,30 +8010,33 @@ static void acceptConn(HttpEndpoint *endpoint)
 }
 
 
-PUBLIC void httpMatchHost(HttpConn *conn)
+PUBLIC HttpHost *httpMatchHost(HttpConn *conn, cchar *hostname)
 {
-    MprSocket       *listenSock;
+    assert(conn);
+
+    if (!conn->host && (conn->host = httpLookupHostOnEndpoint(conn->endpoint, hostname)) == 0) {
+        mprLog("error http", 0, "No host to serve request. Searching for %s", hostname);
+        return 0;
+    }
+    return conn->host;
+}
+
+
+PUBLIC MprSsl *httpMatchSsl(MprSocket *sp, cchar *hostname)
+{
     HttpEndpoint    *endpoint;
+    HttpConn        *conn;
     HttpHost        *host;
 
-    listenSock = conn->sock->listenSock;
+    assert(sp && sp->data);
+    conn = sp->data;
+    endpoint = conn->endpoint;
 
-    /*
-        The connection must match an endpoint and then the hostHeader must match a specific Host
-     */
-    if ((endpoint = httpLookupEndpoint(listenSock->ip, listenSock->port)) == 0) {
-        conn->host = mprGetFirstItem(endpoint->hosts);
-        httpError(conn, HTTP_CODE_NOT_FOUND, "No listening endpoint for request from %s:%d",
-            listenSock->ip, listenSock->port);
-        return;
-    }
-    host = httpLookupHostOnEndpoint(endpoint, conn->rx->hostHeader);
-    if (host == 0) {
-        conn->host = mprGetFirstItem(endpoint->hosts);
-        httpError(conn, HTTP_CODE_NOT_FOUND, "No host to serve request. Searching for %s", conn->rx->hostHeader);
-        return;
+    if ((host = httpMatchHost(conn, hostname)) == 0) {
+        return 0;
     }
     conn->host = host;
+    return host->defaultRoute->ssl;
 }
 
 
@@ -8137,6 +8112,7 @@ PUBLIC int httpSecureEndpoint(HttpEndpoint *endpoint, struct MprSsl *ssl)
 {
 #if ME_COM_SSL
     endpoint->ssl = ssl;
+    mprSetSslMatch(ssl, httpMatchSsl);
     return 0;
 #else
     mprLog("error http", 0, "Configuration lacks SSL support");
@@ -8186,25 +8162,21 @@ PUBLIC void httpAddHostToEndpoint(HttpEndpoint *endpoint, HttpHost *host)
 PUBLIC HttpHost *httpLookupHostOnEndpoint(HttpEndpoint *endpoint, cchar *name)
 {
     HttpHost    *host;
-    int         matches[ME_MAX_ROUTE_MATCHES * 2];
-    int         next;
+    int         matches[ME_MAX_ROUTE_MATCHES * 2], next;
 
-    if (mprGetListLength(endpoint->hosts) <= 1) {
-        return mprGetFirstItem(endpoint->hosts);
-    }
-    if (name == 0 || *name == '\0') {
-        return 0;
-    }
     for (next = 0; (host = mprGetNextItem(endpoint->hosts, &next)) != 0; ) {
-        if (smatch(host->name, name)) {
+        if (host->hostname == 0 || *host->hostname == 0 || name == 0 || *name == 0) {
+            return host;
+        }
+        if (smatch(name, host->hostname)) {
             return host;
         }
         if (host->flags & HTTP_HOST_WILD_STARTS) {
-            if (sstarts(name, host->name)) {
+            if (sstarts(name, host->hostname)) {
                 return host;
             }
         } else if (host->flags & HTTP_HOST_WILD_CONTAINS) {
-            if (scontains(name, host->name)) {
+            if (scontains(name, host->hostname)) {
                 return host;
             }
         } else if (host->flags & HTTP_HOST_WILD_REGEXP) {
@@ -8575,6 +8547,7 @@ static int openFileHandler(HttpQueue *q)
         }
         if (httpContentNotModified(conn)) {
             httpSetStatus(conn, HTTP_CODE_NOT_MODIFIED);
+            httpRemoveHeader(conn, "Content-Encoding");
             httpOmitBody(conn);
         }
         if (!tx->fileInfo.isReg && !tx->fileInfo.isLink) {
@@ -9064,6 +9037,7 @@ PUBLIC HttpHost *httpCreateHost()
     host->streams = mprCreateHash(HTTP_SMALL_HASH_SIZE, MPR_HASH_STABLE);
     httpSetStreaming(host, "application/x-www-form-urlencoded", NULL, 0);
     httpSetStreaming(host, "application/json", NULL, 0);
+    httpSetStreaming(host, "application/csp-report", NULL, 0);
     httpAddHost(host);
     return host;
 }
@@ -9083,8 +9057,6 @@ PUBLIC HttpHost *httpCloneHost(HttpHost *parent)
     host->parent = parent;
     host->flags = parent->flags & HTTP_HOST_NO_TRACE;
     host->streams = parent->streams;
-    host->secureEndpoint = parent->secureEndpoint;
-    host->defaultEndpoint = parent->defaultEndpoint;
     host->routes = mprCreateList(-1, MPR_LIST_STABLE);
     return host;
 }
@@ -9093,6 +9065,7 @@ PUBLIC HttpHost *httpCloneHost(HttpHost *parent)
 static void manageHost(HttpHost *host, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
+        mprMark(host->hostname);
         mprMark(host->name);
         mprMark(host->canonical);
         mprMark(host->parent);
@@ -9287,34 +9260,34 @@ PUBLIC int httpSetHostCanonicalName(HttpHost *host, cchar *name)
 PUBLIC int httpSetHostName(HttpHost *host, cchar *name)
 {
     cchar   *errMsg;
+    char    *cp;
     int     column;
 
     if (!name || *name == '\0') {
         mprLog("error http", 0, "Empty host name");
         return MPR_ERR_BAD_ARGS;
     }
+    host->name = sclone(name);
+    host->hostname = strim(name, "/*", MPR_TRIM_BOTH);
+    if ((cp = schr(host->hostname, ':')) != 0) {
+        host->hostname = ssplit((char*) host->hostname, ":", NULL);
+    }
     host->flags &= ~(HTTP_HOST_WILD_STARTS | HTTP_HOST_WILD_CONTAINS | HTTP_HOST_WILD_REGEXP);
     if (sends(name, "*")) {
         host->flags |= HTTP_HOST_WILD_STARTS;
-        host->name = strim(name, "*", MPR_TRIM_END);
 
     } else if (*name == '*') {
         host->flags |= HTTP_HOST_WILD_CONTAINS;
-        host->name = strim(name, "*", MPR_TRIM_START);
 
     } else if (*name == '/') {
         host->flags |= HTTP_HOST_WILD_REGEXP;
-        host->name = strim(name, "/", MPR_TRIM_BOTH);
         if (host->nameCompiled) {
             free(host->nameCompiled);
         }
-        if ((host->nameCompiled = pcre_compile2(host->name, 0, 0, &errMsg, &column, NULL)) == 0) {
+        if ((host->nameCompiled = pcre_compile2(host->hostname, 0, 0, &errMsg, &column, NULL)) == 0) {
             mprLog("error http route", 0, "Cannot compile condition match pattern. Error %s at column %d", errMsg, column);
             return MPR_ERR_BAD_SYNTAX;
         }
-
-    } else {
-        host->name = sclone(name);
     }
     return 0;
 }
@@ -16267,9 +16240,9 @@ static bool parseIncoming(HttpConn *conn)
     HttpAddress *address;
     HttpPacket  *packet;
     HttpLimits  *limits;
+    char        *start, *end, *hostname;
     ssize       len;
     int64       value;
-    char        *start, *end;
 
     if ((packet = conn->input) == 0) {
         return 0;
@@ -16333,7 +16306,15 @@ static bool parseIncoming(HttpConn *conn)
         return 0;
     }
     if (httpServerConn(conn)) {
-        httpMatchHost(conn);
+        hostname = rx->hostHeader;
+        if (schr(rx->hostHeader, ':')) {
+            mprParseSocketAddress(rx->hostHeader, &hostname, NULL, NULL, 0);
+        }
+        if (!httpMatchHost(conn, hostname)) {
+            conn->host = mprGetFirstItem(conn->endpoint->hosts);
+            httpError(conn, HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
+            return 0;
+        }
         parseUri(conn);
 
     } else if (rx->status != HTTP_CODE_CONTINUE) {
@@ -16653,6 +16634,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
             } else if (strcasecmp(key, "content-length") == 0) {
                 if (rx->length >= 0) {
                     httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Mulitple content length headers");
+//  MOB - return 0?
                     break;
                 }
                 rx->length = stoi(value);
@@ -16697,6 +16679,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 }
                 if (start < 0 || end < 0 || size < 0 || end < start) {
                     httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad content range");
+//  MOB - return 0?
                     break;
                 }
                 rx->inputRange = httpCreateRange(conn, start, end);
@@ -16728,6 +16711,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 if (!conn->http10) {
                     if (strcasecmp(value, "100-continue") != 0) {
                         httpBadRequestError(conn, HTTP_CODE_EXPECTATION_FAILED, "Expect header value is not supported");
+//  MOB - return 0?
                     } else {
                         rx->flags |= HTTP_EXPECT_CONTINUE;
                     }
@@ -16740,6 +16724,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 if ((int) strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:")
                         < (int) slen(value)) {
                     httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host header");
+//  MOB - return 0?
                 } else {
                     rx->hostHeader = sclone(value);
                 }
@@ -16844,6 +16829,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                  */
                 if (!parseRange(conn, value)) {
                     httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad range");
+//  MOB - return 0?
                 }
             } else if (strcasecmp(key, "referer") == 0) {
                 /* NOTE: yes the header is misspelt in the spec */
@@ -16912,6 +16898,7 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
     if (rx->form && rx->length >= conn->limits->rxFormSize && conn->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
+//  MOB - return 0?
     }
     if (conn->error) {
         /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
@@ -19974,6 +19961,16 @@ PUBLIC void httpAppendHeaderString(HttpConn *conn, cchar *key, cchar *value)
     } else {
         setHdr(conn, key, sclone(value));
     }
+}
+
+
+PUBLIC cchar *httpGetTxHeader(HttpConn *conn, cchar *key)
+{
+    if (conn->rx == 0) {
+        assert(conn->rx);
+        return 0;
+    }
+    return mprLookupKey(conn->tx->headers, key);
 }
 
 

@@ -15691,6 +15691,7 @@ struct mbedtls_ssl_context
     char own_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
     char peer_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
 #endif
+    void *appData;
 };
 
 #if defined(MBEDTLS_SSL_HW_RECORD_ACCEL)

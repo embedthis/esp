@@ -86,6 +86,7 @@ Me.load({
         'get-roots': {
             action: `
                 /* WARNING: the default download has V1 certs which MatrixSSL cannot handle */
+                /* Google root certs at: https://pki.google.com/roots.pem */
                 let http = Http()
                 http.verify = false
                 http.get('https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt')

@@ -33,7 +33,7 @@
         "certs": "~0.1",
         "mbedtls": "~2.1",
         "mpr": "~6.2",
-        "mpr-mbedtls": "~0.4",
+        "mpr-mbedtls": "~0.5",
         "osdep": "~0.8",
         "pcre": "~1.0",
         "ssl": "~0.9"

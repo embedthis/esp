@@ -22020,6 +22020,7 @@ static void manageSocketProvider(MprSocketProvider *provider, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(provider->name);
+        mprMark(provider->managed);
     }
 }
 
@@ -22031,7 +22032,7 @@ static MprSocketProvider *createStandardProvider(MprSocketService *ss)
     if ((provider = mprAllocObj(MprSocketProvider, manageSocketProvider)) == 0) {
         return 0;
     }
-    provider->name = sclone("standard");;
+    provider->name = sclone("standard");
     provider->closeSocket = closeSocket;
     provider->disconnectSocket = disconnectSocket;
     provider->flushSocket = flushSocket;
@@ -23614,6 +23615,7 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->ciphers);
         mprMark(ssl->config);
         mprMark(ssl->keyFile);
+        mprMark(ssl->hostname);
         mprMark(ssl->mutex);
         mprMark(ssl->revoke);
     }
@@ -23657,11 +23659,9 @@ PUBLIC MprSsl *mprCreateSsl(int server)
     /*
         Sensible defaults
      */
-    ssl->cacheSize = ME_MPR_SSL_CACHE;
+    ssl->ticket = ME_MPR_SSL_TICKET;
     ssl->logLevel = ME_MPR_SSL_LOG_LEVEL;
     ssl->renegotiate = ME_MPR_SSL_RENEGOTIATE;
-    ssl->ticket = ME_MPR_SSL_TICKET;
-    ssl->sessionTimeout = ME_MPR_SSL_TIMEOUT;
 
     ssl->mutex = mprCreateLock();
     return ssl;
@@ -23692,14 +23692,23 @@ PUBLIC int mprLoadSsl()
     MprModule           *mp;
 
     ss = MPR->socketService;
+    mprGlobalLock();
+    if (ss->loaded) {
+        mprGlobalUnlock();
+        return 0;
+    }
     if (ss->sslProvider) {
+        mprGlobalUnlock();
         return 0;
     }
     if ((mp = mprCreateModule("ssl", "builtin", "mprSslInit", NULL)) == 0) {
+        mprGlobalUnlock();
         return MPR_ERR_CANT_CREATE;
     }
     mprSslInit(MPR, mp);
     mprLog("info ssl", 5, "Loaded %s SSL provider", ss->sslProvider->name);
+    ss->loaded++;
+    mprGlobalUnlock();
     return 0;
 #else
     mprLog("error mpr", 0, "SSL communications support not included in build");
@@ -23708,29 +23717,6 @@ PUBLIC int mprLoadSsl()
 }
 
 
-static int loadProvider()
-{
-    MprSocketService    *ss;
-
-    ss = MPR->socketService;
-    mprGlobalLock();
-    if (!ss->sslProvider && mprLoadSsl() < 0) {
-        mprGlobalUnlock();
-        return MPR_ERR_CANT_READ;
-    }
-    if (!ss->sslProvider) {
-        mprLog("error mpr", 0, "Cannot load SSL provider");
-        mprGlobalUnlock();
-        return MPR_ERR_CANT_INITIALIZE;
-    }
-    mprGlobalUnlock();
-    return 0;
-}
-
-
-/*
-    Upgrade a socket to use SSL
- */
 PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 {
     MprSocketService    *ss;
@@ -23741,8 +23727,8 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
     if (!ssl) {
         return MPR_ERR_BAD_ARGS;
     }
-    if (!ss->sslProvider) {
-        if (loadProvider() < 0) {
+    if (!ss->loaded) {
+        if (mprLoadSsl() < 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -23756,6 +23742,12 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 }
 
 
+PUBLIC void mprSetSslMatch(MprSsl *ssl, MprMatchSsl match)
+{
+    ssl->matchSsl = match;
+}
+
+
 PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
 {
     assert(ssl);
@@ -23764,14 +23756,6 @@ PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
     } else {
         ssl->ciphers = sclone(ciphers);
     }
-    ssl->changed = 1;
-}
-
-
-PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size)
-{
-    assert(ssl);
-    ssl->cacheSize = size;
     ssl->changed = 1;
 }
 
@@ -23824,6 +23808,14 @@ PUBLIC void mprSetSslKeyFile(MprSsl *ssl, cchar *keyFile)
 }
 
 
+PUBLIC void mprSetSslHostname(MprSsl *ssl, cchar *hostname)
+{
+    assert(ssl);
+    ssl->hostname = (hostname && *hostname) ? sclone(hostname) : 0;
+    ssl->changed = 1;
+}
+
+
 PUBLIC void mprSetSslProtocols(MprSsl *ssl, int protocols)
 {
     assert(ssl);
@@ -23852,14 +23844,6 @@ PUBLIC void mprSetSslTicket(MprSsl *ssl, bool enable)
 {
     assert(ssl);
     ssl->ticket = enable;
-    ssl->changed = 1;
-}
-
-
-PUBLIC void mprSetSslTimeout(MprSsl *ssl, MprTicks timeout)
-{
-    assert(ssl);
-    ssl->sessionTimeout = timeout;
     ssl->changed = 1;
 }
 

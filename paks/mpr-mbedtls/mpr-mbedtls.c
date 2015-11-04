@@ -22,29 +22,30 @@
  */
 typedef struct MbedConfig {
     mbedtls_x509_crt            ca;             /* Certificate authority bundle to verify peer */
-    mbedtls_ssl_cache_context   cache;          /* Session cache context */
-    mbedtls_ssl_config          conf;           /* SSL configuration */
     mbedtls_x509_crt            cert;           /* Certificate (own) */
-    mbedtls_ctr_drbg_context    ctr;            /* Counter random generator state */
-    mbedtls_ssl_ticket_context  tickets;        /* Session tickets */
-    mbedtls_pk_context          pkey;           /* Private key */
+    mbedtls_pk_context          key;            /* Private key */
     mbedtls_x509_crl            revoke;         /* Certificate revoke list */
+    mbedtls_ssl_config          conf;           /* SSL configuration */
     int                         *ciphers;       /* Set of acceptable ciphers - null terminated */
 } MbedConfig;
 
-/*
-    Per socket state
- */
+
+typedef struct MbedGlobal {
+    mbedtls_ssl_cache_context   cache;          /* Session cache context */
+    mbedtls_ctr_drbg_context    ctr;            /* Counter random generator state */
+    mbedtls_ssl_ticket_context  tickets;        /* Session tickets */
+    mbedtls_entropy_context     mbedEntropy;    /* Entropy context */
+} MbedGlobal;
+
 typedef struct MbedSocket {
     MbedConfig                  *cfg;           /* Configuration */
     MprSocket                   *sock;          /* MPR socket object */
     mbedtls_ssl_context         ctx;            /* SSL state */
+    int                         configured;     /* Set if SNI configuration has completed */
 } MbedSocket;
 
-static mbedtls_entropy_context  mbedEntropy;    /* Entropy context */
-
+static MbedGlobal               *mbedGlobal;    /* Global */
 static MprSocketProvider        *mbedProvider;  /* Mbedtls socket provider */
-
 static int                      mbedLogLevel;   /* MPR log level to start SSL tracing */
 
 /***************************** Forward Declarations ***************************/
@@ -58,16 +59,17 @@ static int      getPeerCertInfo(MprSocket *sp);
 static int      handshakeMbed(MprSocket *sp);
 static void     initMbedLock(mbedtls_threading_mutex_t *tm);
 static void     manageMbedConfig(MbedConfig *cfg, int flags);
+static void     manageMbedGlobal(MbedGlobal *cfg, int flags);
 static void     manageMbedProvider(MprSocketProvider *provider, int flags);
 static void     manageMbedSocket(MbedSocket*ssp, int flags);
 static int      mbedLock(mbedtls_threading_mutex_t *tm);
-static void     mbedTerminator(int state, int how, int status);
 static int      mbedUnlock(mbedtls_threading_mutex_t *tm);
 static void     merror(int rc, cchar *fmt, ...);
 static ssize    readMbed(MprSocket *sp, void *buf, ssize len);
 static char     *replaceHyphen(char *cipher, char from, char to);
+PUBLIC int      sniCallback(void *unused, mbedtls_ssl_context *ctx, cuchar *hostname, size_t len);
 static void     traceMbed(void *context, int level, cchar *file, int line, cchar *str);
-static int      upgradeMbed(MprSocket *sp, MprSsl *sslConfig, cchar *peerName);
+static int      upgradeMbed(MprSocket *sp, MprSsl *ssl, cchar *peerName);
 static ssize    writeMbed(MprSocket *sp, cvoid *buf, ssize len);
 
 /************************************* Code ***********************************/
@@ -76,6 +78,10 @@ static ssize    writeMbed(MprSocket *sp, cvoid *buf, ssize len);
  */
 PUBLIC int mprSslInit(void *unused, MprModule *module)
 {
+    MbedGlobal          *global;
+    cchar               *appName;
+    int                 rc;
+
     if ((mbedProvider = mprAllocObj(MprSocketProvider, manageMbedProvider)) == NULL) {
         return MPR_ERR_MEMORY;
     }
@@ -87,25 +93,34 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     mbedProvider->writeSocket = writeMbed;
     mbedProvider->socketState = getMbedState;
     mprSetSslProvider(mbedProvider);
-    mprAddTerminator(mbedTerminator);
+
+    if ((global = mprAllocObj(MbedGlobal, manageMbedGlobal)) == 0) {
+        return MPR_ERR_MEMORY;
+    }
+    mbedProvider->managed = mbedGlobal = global;
 
     mbedtls_threading_set_alt(initMbedLock, freeMbedLock, mbedLock, mbedUnlock);
-    mbedtls_entropy_init(&mbedEntropy);
-    return 0;
-}
+    mbedtls_ssl_cache_init(&global->cache);
+    mbedtls_ctr_drbg_init(&global->ctr);
+    mbedtls_ssl_ticket_init(&global->tickets);
+    mbedtls_entropy_init(&global->mbedEntropy);
 
-
-void terminateMbed()
-{
-    mbedtls_entropy_free(&mbedEntropy);
-}
-
-
-static void mbedTerminator(int state, int how, int status)
-{
-    if (state >= MPR_STOPPED) {
-        terminateMbed();
+    appName = mprGetAppName();
+    if ((rc = mbedtls_ctr_drbg_seed(&global->ctr, mbedtls_entropy_func, &global->mbedEntropy, 
+            (cuchar*) appName, slen(appName))) < 0) {
+        merror(rc, "Cannot seed rng");
+        return MPR_ERR_CANT_INITIALIZE;
     }
+    if (ME_MPR_SSL_TICKET) {
+        if ((rc = mbedtls_ssl_ticket_setup(&global->tickets, mbedtls_ctr_drbg_random, &global->ctr, 
+                MBEDTLS_CIPHER_AES_256_GCM, ME_MPR_SSL_TIMEOUT)) < 0) {
+            merror(rc, "Cannot setup ticketing sessions");
+            return MPR_ERR_CANT_INITIALIZE;
+        }
+    }
+    mbedtls_ssl_cache_set_max_entries(&global->cache, ME_MPR_SSL_CACHE);
+    mbedtls_ssl_cache_set_timeout(&global->cache, ME_MPR_SSL_TIMEOUT);
+    return 0;
 }
 
 
@@ -113,9 +128,18 @@ static void manageMbedProvider(MprSocketProvider *provider, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(provider->name);
+        mprMark(provider->managed);
+    }
+}
 
-    } else if (flags & MPR_MANAGE_FREE) {
-        ;
+
+static void manageMbedGlobal(MbedGlobal *global, int flags)
+{
+    if (flags & MPR_MANAGE_FREE) {
+        mbedtls_ctr_drbg_free(&global->ctr);
+        mbedtls_ssl_cache_free(&global->cache);
+        mbedtls_ssl_ticket_free(&global->tickets);
+        mbedtls_entropy_free(&global->mbedEntropy);
     }
 }
 
@@ -126,14 +150,11 @@ static void manageMbedConfig(MbedConfig *cfg, int flags)
         mprMark(cfg->ciphers);
 
     } else if (flags & MPR_MANAGE_FREE) {
-        mbedtls_ctr_drbg_free(&cfg->ctr);
-        mbedtls_pk_free(&cfg->pkey);
+        mbedtls_pk_free(&cfg->key);
         mbedtls_x509_crt_free(&cfg->cert);
         mbedtls_x509_crt_free(&cfg->ca);
         mbedtls_x509_crl_free(&cfg->revoke);
-        mbedtls_ssl_cache_free(&cfg->cache);
         mbedtls_ssl_config_free(&cfg->conf);
-        mbedtls_ssl_ticket_free(&cfg->tickets);
     }
 }
 
@@ -165,51 +186,36 @@ static void closeMbed(MprSocket *sp, bool gracefully)
 }
 
 
-/*
-    Create and initialize an SSL configuration for a route. This configuration is used by all requests for
-    a given route. An application can have different SSL configurations for different routes. There is also
-    a default SSL configuration that is used when a route does not define a configuration and one for clients.
- */
-static MbedConfig *createMbedConfig(MprSocket *sp)
+static int configSsl(MprSsl *ssl, int flags, char **errorMsg)
 {
-    MprSsl              *ssl;
     MbedConfig          *cfg;
-    mbedtls_ssl_config  *conf;
-    cchar               *name;
-    int                 rc;
+    mbedtls_ssl_config  *mconf;
+    int                 next, rc;
 
-    ssl = sp->ssl;
-    assert(ssl);
-
-    if ((cfg = mprAllocObj(MbedConfig, manageMbedConfig)) == 0) {
+    if (ssl->config && !ssl->changed) {
         return 0;
     }
-    conf = &cfg->conf;
-    mbedtls_ssl_config_init(conf);
-
-    mbedtls_ssl_conf_dbg(conf, traceMbed, NULL);
+    if ((cfg = mprAllocObj(MbedConfig, manageMbedConfig)) == 0) {
+        return MPR_ERR_MEMORY;
+    }
+    ssl->config = cfg;
+    mconf = &cfg->conf;
+    mbedtls_ssl_config_init(mconf);
+    mbedtls_ssl_conf_dbg(mconf, traceMbed, NULL);
     mbedLogLevel = ssl->logLevel;
     if (MPR->logLevel >= mbedLogLevel) {
         mbedtls_debug_set_threshold(MPR->logLevel - mbedLogLevel);
     }
-    mbedtls_pk_init(&cfg->pkey);
-    mbedtls_ssl_cache_init(&cfg->cache);
-    mbedtls_ctr_drbg_init(&cfg->ctr);
+    mbedtls_pk_init(&cfg->key);
     mbedtls_x509_crt_init(&cfg->cert);
-    mbedtls_ssl_ticket_init(&cfg->tickets);
 
-    name = mprGetAppName();
-    if ((rc = mbedtls_ctr_drbg_seed(&cfg->ctr, mbedtls_entropy_func, &mbedEntropy, (cuchar*) name, slen(name))) < 0) {
-        merror(rc, "Cannot seed rng");
-        return 0;
-    }
     if (ssl->certFile) {
         /*
             Load a PEM format certificate file
          */
         if (mbedtls_x509_crt_parse_file(&cfg->cert, (char*) ssl->certFile) != 0) {
-            sp->errorMsg = sfmt("Unable to parse certificate %s", ssl->certFile); 
-            return 0;
+            *errorMsg = sfmt("Unable to parse certificate %s", ssl->certFile); 
+            return MPR_ERR_CANT_INITIALIZE;
         }
     }
     if (ssl->keyFile) {
@@ -217,19 +223,19 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
             Load a decrypted PEM format private key
             Last arg is password if you need to use an encrypted private key
          */
-        if (mbedtls_pk_parse_keyfile(&cfg->pkey, (char*) ssl->keyFile, 0) != 0) {
-            sp->errorMsg = sfmt("Unable to parse key file %s", ssl->keyFile); 
-            return 0;
+        if (mbedtls_pk_parse_keyfile(&cfg->key, (char*) ssl->keyFile, 0) != 0) {
+            *errorMsg = sfmt("Unable to parse key file %s", ssl->keyFile); 
+            return MPR_ERR_CANT_INITIALIZE;
         }
     }
     if (ssl->verifyPeer) {
         if (!ssl->caFile) {
-            sp->errorMsg = sclone("No defined certificate authority file");
-            return 0;
+            *errorMsg = sclone("No defined certificate authority file");
+            return MPR_ERR_CANT_INITIALIZE;
         }
         if (mbedtls_x509_crt_parse_file(&cfg->ca, (char*) ssl->caFile) != 0) {
-            sp->errorMsg = sfmt("Unable to open or parse certificate authority file %s", ssl->caFile); 
-            return 0;
+            *errorMsg = sfmt("Unable to open or parse certificate authority file %s", ssl->caFile); 
+            return MPR_ERR_CANT_INITIALIZE;
         }
     }
     if (ssl->revoke) {
@@ -237,121 +243,104 @@ static MbedConfig *createMbedConfig(MprSocket *sp)
             Load a PEM format certificate file
          */
         if (mbedtls_x509_crl_parse_file(&cfg->revoke, (char*) ssl->revoke) != 0) {
-            sp->errorMsg = sfmt("Unable to parse revoke list %s", ssl->revoke); 
-            return 0;
+            *errorMsg = sfmt("Unable to parse revoke list %s", ssl->revoke); 
+            return MPR_ERR_CANT_INITIALIZE;
         }
     }
-
-    cfg->ciphers = getCipherSuite(ssl);
-    if ((rc = mbedtls_ssl_config_defaults(conf, 
-            sp->flags & MPR_SOCKET_SERVER ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
+    if ((rc = mbedtls_ssl_config_defaults(mconf, flags & MPR_SOCKET_SERVER ? MBEDTLS_SSL_IS_SERVER : MBEDTLS_SSL_IS_CLIENT,
             MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) < 0) {
         merror(rc, "Cannot set mbedtls defaults");
-        return 0;
+        return MPR_ERR_CANT_INITIALIZE;
     }
-    mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &cfg->ctr);
+    mbedtls_ssl_conf_rng(mconf, mbedtls_ctr_drbg_random, &mbedGlobal->ctr);
 
     /*
         Configure larger DH parameters 
      */
-    if ((rc = mbedtls_ssl_conf_dh_param(conf, MBEDTLS_DHM_RFC5114_MODP_2048_P, MBEDTLS_DHM_RFC5114_MODP_2048_G)) < 0) {
+    if ((rc = mbedtls_ssl_conf_dh_param(mconf, MBEDTLS_DHM_RFC5114_MODP_2048_P, MBEDTLS_DHM_RFC5114_MODP_2048_G)) < 0) {
         merror(rc, "Cannot set DH params");
-        return 0;
+        return MPR_ERR_CANT_INITIALIZE;
     }
 
-    /*
-        Configure ticket-based sessions
-     */
-    if (sp->flags & MPR_SOCKET_SERVER) {
+    if (flags & MPR_SOCKET_SERVER) {
+#if ME_MPR_SSL_TICKET
+        /*
+            Configure ticket-based sessions
+         */
         if (ssl->ticket) {
-            if ((rc = mbedtls_ssl_ticket_setup(&cfg->tickets, mbedtls_ctr_drbg_random, &cfg->ctr, 
-                    MBEDTLS_CIPHER_AES_256_GCM, (int) ssl->sessionTimeout)) < 0) {
-                merror(rc, "Cannot setup ticketing sessions");
-                return 0;
-            }
-            mbedtls_ssl_conf_session_tickets_cb(conf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, &cfg->tickets);
+            mbedtls_ssl_conf_session_tickets_cb(mconf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, 
+                &mbedGlobal->tickets);
         }
+#endif
+#if ME_MPR_SSL_CACHE_SIZE > 0
+        /*
+            Configure server-side session cache
+         */
+        mbedtls_ssl_conf_session_cache(mconf, &mbedGlobal->cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
+#endif
     } else {
-        mbedtls_ssl_conf_session_tickets(conf, 1);
+        mbedtls_ssl_conf_session_tickets(mconf, 1);
     }
-
     /*
         Set auth mode if peer cert should be verified
      */
-    mbedtls_ssl_conf_authmode(conf, ssl->verifyPeer ? MBEDTLS_SSL_VERIFY_OPTIONAL : MBEDTLS_SSL_VERIFY_NONE);
+    mbedtls_ssl_conf_authmode(mconf, ssl->verifyPeer ? MBEDTLS_SSL_VERIFY_OPTIONAL : MBEDTLS_SSL_VERIFY_NONE);
 
     /*
-        Configure server-side session cache
-     */
-    if (ssl->cacheSize > 0) {
-        mbedtls_ssl_conf_session_cache(conf, &cfg->cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
-        mbedtls_ssl_cache_set_max_entries(&cfg->cache, ssl->cacheSize);
-        mbedtls_ssl_cache_set_timeout(&cfg->cache, (int) (ssl->sessionTimeout / TPS));
-    }
-
-    /*
-        Configure explicit cipher suite selection
-     */
-    if (cfg->ciphers) {
-        mbedtls_ssl_conf_ciphersuites(conf, cfg->ciphers);
-    }
-
-    /*
-        Configure CA certificate bundle and revocation list and optional expected peer name
-     */
-    mbedtls_ssl_conf_ca_chain(conf, ssl->caFile ? &cfg->ca : NULL, ssl->revoke ? &cfg->revoke : NULL);
-
-    /*
-        Configure server cert and key
+        Configure cert, key and CA.
      */
     if (ssl->keyFile && ssl->certFile) {
-        if ((rc = mbedtls_ssl_conf_own_cert(conf, &cfg->cert, &cfg->pkey)) < 0) {
+        if ((rc = mbedtls_ssl_conf_own_cert(mconf, &cfg->cert, &cfg->key)) < 0) {
             merror(rc, "Cannot define certificate and private key");
-            return 0;
+            return MPR_ERR_CANT_INITIALIZE;
         }
     }
-    return cfg;
+    mbedtls_ssl_conf_ca_chain(mconf, ssl->caFile ? &cfg->ca : NULL, ssl->revoke ? &cfg->revoke : NULL);
+
+    if ((cfg->ciphers = getCipherSuite(ssl)) != 0) {
+        mbedtls_ssl_conf_ciphersuites(mconf, cfg->ciphers);
+    }
+    if (ssl->matchSsl) {
+        mbedtls_ssl_conf_sni(mconf, sniCallback, 0);
+    }
+    ssl->changed = 0;
+    return 0;
 }
 
 
 /*
-    Upgrade a standard socket to use TLS
+    Upgrade a socket to SSL.
+    On-demand processing of the SSL configuration when the first client connects.
+    Need to setup all possible (vhost) SSL configuration, then SNI will select the right certificate.
  */
 static int upgradeMbed(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 {
     MbedSocket          *mb;
-    MbedConfig          *cfg;
     mbedtls_ssl_context *ctx;
+    int                 next;
 
     assert(sp);
 
-    if (ssl == 0) {
-        ssl = mprCreateSsl(sp->flags & MPR_SOCKET_SERVER);
+    lock(ssl);
+    if (configSsl(ssl, sp->flags, &sp->errorMsg) < 0) {
+        unlock(ssl);
+        return MPR_ERR_CANT_INITIALIZE;
     }
     sp->ssl = ssl;
+    assert(ssl->config);
+    unlock(ssl);
 
-    if (ssl->config && !ssl->changed) {
-        cfg = ssl->config;
-    } else {
-        /*
-            On-demand creation of the SSL configuration
-         */
-        if ((cfg = createMbedConfig(sp)) == 0) {
-            return MPR_ERR_CANT_INITIALIZE;
-        }
-        ssl->config = cfg;
-        ssl->changed = 0;
-    }
     if ((mb = (MbedSocket*) mprAllocObj(MbedSocket, manageMbedSocket)) == 0) {
         return MPR_ERR_MEMORY;
     }
     sp->sslSocket = mb;
-    mb->cfg = cfg;
     mb->sock = sp;
-    ctx = &mb->ctx;
+    mb->cfg = ssl->config;
 
+    ctx = &mb->ctx;
     mbedtls_ssl_init(ctx);
-    mbedtls_ssl_setup(ctx, &cfg->conf);
+    ctx->appData = sp;
+    mbedtls_ssl_setup(ctx, &mb->cfg->conf);
     mbedtls_ssl_set_bio(ctx, &sp->fd, mbedtls_net_send, mbedtls_net_recv, 0);
 
     if (peerName && mbedtls_ssl_set_hostname(ctx, peerName) < 0) {
@@ -402,14 +391,6 @@ static int handshakeMbed(MprSocket *sp)
     if (rc < 0) {
         if (rc == MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED && !(sp->ssl->keyFile || sp->ssl->certFile)) {
             sp->errorMsg = sclone("Peer requires a certificate");
-#if UNUSED
-        } else if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-            sp->errorMsg = sclone("Connection closed gracefully");
-        } else if (rc == MBEDTLS_ERR_SSL_NO_CIPHER_CHOSEN) {
-            sp->errorMsg = sclone("No ciphers in common");
-        } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
-            sp->errorMsg = sclone("Connection reset");
-#endif
         } else {
             char ebuf[256];
             mbedtls_strerror(-rc, ebuf, sizeof(ebuf));
@@ -453,7 +434,10 @@ static int handshakeMbed(MprSocket *sp)
             } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
                 sp->errorMsg = sclone("Peer disconnected");
             } else {
-                sp->errorMsg = sfmt("Cannot handshake: error -0x%x", -rc);
+                char ebuf[256];
+                mbedtls_x509_crt_verify_info(ebuf, sizeof(ebuf), "", vrc);
+                strim(ebuf, "\n", 0);
+                sp->errorMsg = sfmt("Cannot handshake: %s, error -0x%x", ebuf, -rc);
             }
         }
     }
@@ -635,6 +619,52 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
         return MPR_ERR_CANT_WRITE;
     }
     return totalWritten;
+}
+
+
+/*
+    Invoked by mbedtls in response to SNI extensions in the client hello
+ */
+PUBLIC int sniCallback(void *unused, mbedtls_ssl_context *ctx, cuchar *host, size_t len)
+{
+    MprSocket   *sp;
+    MprSsl      *ssl;
+    MbedSocket  *mb;
+    MbedConfig  *cfg;
+    cchar       *hostname;
+    int         verify;
+
+    sp = ctx->appData;
+    hostname = snclone((char*) host, len);
+
+    /*
+        Select the appropriate SSL for this hostname
+     */
+    if ((ssl = (sp->ssl->matchSsl)(sp, hostname)) == 0) {
+        mprLog("error mbedtls", 0, "No host to serve request. Searching for %s", hostname);
+        return MPR_ERR_CANT_FIND;
+    }
+    sp->ssl = ssl;
+    mb = sp->sslSocket;
+
+    //  should not need this flag
+    assert(!mb->configured);
+
+    if (!mb->configured) {
+        assert(ctx->handshake);
+        cfg = ssl->config;
+        mbedtls_ssl_set_hs_own_cert(ctx, &cfg->cert, &cfg->key);
+        if (ssl->caFile) {
+            verify = ssl->verifyPeer ? MBEDTLS_SSL_VERIFY_OPTIONAL : MBEDTLS_SSL_VERIFY_NONE;
+            mbedtls_ssl_set_hs_authmode(ctx, verify);
+            mbedtls_ssl_set_hs_ca_chain(ctx, &cfg->ca, &cfg->revoke);
+        }
+        if (cfg->ciphers) {
+            mbedtls_ssl_conf_ciphersuites(&cfg->conf, cfg->ciphers);
+        }
+        mb->configured = 1;
+    }
+    return 0;
 }
 
 

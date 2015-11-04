@@ -4161,7 +4161,7 @@ PUBLIC int mprUsingDefaultLogHandler();
 typedef struct MprKey {
     struct MprKey   *next;              /**< Next symbol in hash chain */
     char            *key;               /**< Hash key */
-    cvoid           *data;              /**< Pointer to symbol data */
+    cvoid           *data;              /**< Pointer to symbol data (managed) */
     int             type: 4;            /**< Data type */
     int             bucket: 28;         /**< Hash bucket index */
 } MprKey;
@@ -4476,7 +4476,7 @@ PUBLIC MprFileSystem *mprCreateFileSystem(cchar *path);
  */
 typedef struct  MprRomInode {
     char            *path;              /**< File path */
-    uchar           *data;              /**< Pointer to file data */
+    uchar           *data;              /**< Pointer to file data (unmanaged) */
     int             size;               /**< Size of file */
     int             num;                /**< Inode number */
 } MprRomInode;
@@ -5798,7 +5798,7 @@ typedef struct MprEvent {
     MprEventProc        proc;           /**< Callback procedure */
     MprTicks            timestamp;      /**< When was the event created */
     MprTicks            due;            /**< When is the event due */
-    void                *data;          /**< Event private data */
+    void                *data;          /**< Event private data (managed|unmanged depending on flags) */
     void                *sock;          /**< Optional socket data */
     int                 flags;          /**< Event flags */
     int                 mask;           /**< I/O mask of events */
@@ -6920,7 +6920,7 @@ typedef struct MprThread {
     MprThreadProc   entry;              /**< Users thread entry point */
     MprMutex        *mutex;             /**< Multi-thread locking */
     MprCond         *cond;              /**< Multi-thread synchronization */
-    void            *data;              /**< Data argument */
+    void            *data;              /**< Data argument (managed) */
     char            *name;              /**< Name of thead for trace */
     ulong           pid;                /**< Owning process id */
     int             isMain;             /**< Is the main thread */
@@ -7359,6 +7359,7 @@ typedef int (*MprSocketProc)(void *data, int mask);
 typedef struct MprSocketProvider {
     char    *name;                              /**< Socket provider name */
     void    *data;                              /**< Socket provider private data (unmanaged) */
+    void    *managed;                           /**< Socket provider private data managed */
 
     /**
         Close a socket
@@ -7418,7 +7419,7 @@ typedef struct MprSocketProvider {
     /**
         Upgrade a socket to use SSL/TLS
         @param sp Socket to upgrade
-        @param ssl SSL configuration to use. Set to NULL to use the default.
+        @param ssl SSL configurations to use. Set to NULL to use the default.
         @param peerName Required peer name in handshake with peer. Used by clients to verify the server hostname.
         @returns Zero if successful, otherwise a negative MPR error code.
         @stability Stable
@@ -7457,6 +7458,7 @@ typedef struct MprSocketService {
     int             maxAccept;                  /**< Maximum number of accepted client socket connections */
     int             numAccept;                  /**< Count of client socket connections */
     int             hasIPv6;                    /**< System has supoprt for IPv6 */
+    int             loaded;                     /**< Provider loaded */
 } MprSocketService;
 
 #if DOXYGEN
@@ -7548,7 +7550,7 @@ typedef struct MprSocket {
     MprSocketProvider *provider;        /**< Socket implementation provider */
     struct MprSocket *listenSock;       /**< Listening socket */
     void            *sslSocket;         /**< Extended SSL socket state */
-    struct MprSsl   *ssl;               /**< SSL configuration */
+    struct MprSsl   *ssl;               /**< Selected SSL configuration */
     cchar           *cipher;            /**< Selected SSL cipher */
     cchar           *session;           /**< SSL session ID (dependent on SSL provider) */
     cchar           *peerName;          /**< Peer common SSL name */
@@ -7556,6 +7558,7 @@ typedef struct MprSocket {
     cchar           *peerCertIssuer;    /**< Issuer of peer certificate */
     bool            secured;            /**< SSL Peer verified */
     MprMutex        *mutex;             /**< Multi-thread sync */
+    void            *data;              /**< Custom user data (unmanaged) */
 } MprSocket;
 
 
@@ -7981,7 +7984,7 @@ PUBLIC Socket mprStealSocketHandle(MprSocket *sp);
 /**
     Upgrade a socket to use SSL/TLS
     @param sp Socket to upgrade
-    @param ssl SSL configuration to use. Set to NULL to use the default.
+    @param ssl SSL configurations to use. Set to NULL to use the default.
     @param peerName Required peer name in handshake with peer. Used by clients to verify the server hostname.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup MprSocket
@@ -8055,6 +8058,13 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
 #endif
 
 /**
+    Callback function for SNI connections.
+    @ingroup MprSsl
+    @stability Prototype
+ */
+typedef struct MprSsl *(*MprMatchSsl)(MprSocket *sp, cchar *hostname);
+
+/**
     SSL control structure
     @defgroup MprSsl MprSsl
     @stability Internal
@@ -8066,19 +8076,19 @@ typedef struct MprSsl {
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
+    cchar           *hostname;          /**< Hostname when using SNI */
     void            *config;            /**< Extended provider SSL configuration */
     bool            changed;            /**< Set if there is a change in the SSL config. Reset by providers */
     bool            configured;         /**< Set if this SSL configuration has been processed */
-    bool            renegotiate;        /**< Renegotiate sessions */
     bool            ticket;             /**< Enable session tickets */
+    bool            renegotiate;        /**< Renegotiate sessions */
     bool            verifyPeer;         /**< Verify the peer verificate */
     bool            verifyIssuer;       /**< Set if the certificate issuer should be also verified */
     bool            verified;           /**< Peer has been verified */
     int             logLevel;           /**< Level at which to start tracing SSL events */
-    int             cacheSize;          /**< Session cache size in entries */
     int             verifyDepth;        /**< Cert chain depth that should be verified */
     int             protocols;          /**< SSL protocols */
-    MprTicks        sessionTimeout;     /**< Session lifespan in msec */
+    MprMatchSsl     matchSsl;           /**< Match the SSL configuration for SNI */
     MprMutex        *mutex;             /**< Multithread sync */
 } MprSsl;
 
@@ -8118,7 +8128,7 @@ PUBLIC struct MprSsl *mprCreateSsl(int server);
  */
 PUBLIC struct MprSsl *mprCloneSsl(MprSsl *src);
 
- /**
+/**
     Load the SSL module.
     @ingroup MprSsl
     @stability Stable
@@ -8131,6 +8141,15 @@ PUBLIC int mprLoadSsl();
     @stability Evolving
  */
 PUBLIC int mprSslInit(void *unused, MprModule *module);
+
+/**
+    Set a match callback to select the appropriate SSL configuration to use in response to a client SNI hello.
+    @param ssl SSL configuration instance
+    @param match MprMatchSsl callback.
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslMatch(struct MprSsl *ssl, MprMatchSsl match);
 
 /**
     Set certificate to use for SSL
@@ -8171,15 +8190,6 @@ PUBLIC void mprSetSslCaPath(struct MprSsl *ssl, cchar *caPath);
 PUBLIC void mprSetSslCiphers(MprSsl *ssl, cchar *ciphers);
 
 /**
-    Set the SSL server-side session cache size
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param size Size of the cache in entries
-    @ingroup MprSsl
-    @stability Prototype
- */
-PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size);
-
-/**
     Set the key file to use for SSL
     @param ssl SSL instance returned from #mprCreateSsl
     @param keyFile Path to the SSL key file
@@ -8187,6 +8197,15 @@ PUBLIC void mprSetSslCacheSize(MprSsl *ssl, int size);
     @stability Stable
  */
 PUBLIC void mprSetSslKeyFile(struct MprSsl *ssl, cchar *keyFile);
+
+/**
+    Set the desired hostname for this SSL configuration when using SNI
+    @param ssl SSL instance returned from #mprCreateSsl
+    @param hostname Name of the host when using SNI
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC void mprSetSslHostname(MprSsl *ssl, cchar *hostname);
 
 /**
     Set the SSL log level at which to start tracing SSL events
@@ -8219,7 +8238,7 @@ PUBLIC void mprSetSslProvider(MprSocketProvider *provider);
     @param ssl SSL instance returned from #mprCreateSsl
     @param enable Set to true to enable renegotiation (enabled by default)
     @ingroup MprSsl
-    @stability Prototype
+    @stability Internal
  */
 PUBLIC void mprSetSslRenegotiate(MprSsl *ssl, bool enable);
 
@@ -8240,15 +8259,6 @@ PUBLIC void mprSetSslRevoke(struct MprSsl *ssl, cchar *revoke);
     @stability Prototype
 */
 PUBLIC void mprSetSslTicket(MprSsl *ssl, bool enable);
-
-/**
-    Set the SSL server-side session timeout
-    @param ssl SSL instance returned from #mprCreateSsl
-    @param timeout Lifetime of session entries in msec
-    @ingroup MprSsl
-    @stability Prototype
- */
-PUBLIC void mprSetSslTimeout(MprSsl *ssl, MprTicks timeout);
 
 /**
     Control the depth of SSL SSL certificate verification
