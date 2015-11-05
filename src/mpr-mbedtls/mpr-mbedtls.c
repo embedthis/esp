@@ -186,7 +186,7 @@ static void closeMbed(MprSocket *sp, bool gracefully)
 }
 
 
-static int configSsl(MprSsl *ssl, int flags, char **errorMsg)
+static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
 {
     MbedConfig          *cfg;
     mbedtls_ssl_config  *mconf;
@@ -300,7 +300,7 @@ static int configSsl(MprSsl *ssl, int flags, char **errorMsg)
     if ((cfg->ciphers = getCipherSuite(ssl)) != 0) {
         mbedtls_ssl_conf_ciphersuites(mconf, cfg->ciphers);
     }
-    if (ssl->matchSsl) {
+    if (flags & MPR_SOCKET_SERVER && ssl->matchSsl) {
         mbedtls_ssl_conf_sni(mconf, sniCallback, 0);
     }
     ssl->changed = 0;
@@ -322,13 +322,14 @@ static int upgradeMbed(MprSocket *sp, MprSsl *ssl, cchar *peerName)
     assert(sp);
 
     lock(ssl);
-    if (configSsl(ssl, sp->flags, &sp->errorMsg) < 0) {
+    if (configMbed(ssl, sp->flags, &sp->errorMsg) < 0) {
         unlock(ssl);
         return MPR_ERR_CANT_INITIALIZE;
     }
+    unlock(ssl);
+
     sp->ssl = ssl;
     assert(ssl->config);
-    unlock(ssl);
 
     if ((mb = (MbedSocket*) mprAllocObj(MbedSocket, manageMbedSocket)) == 0) {
         return MPR_ERR_MEMORY;
@@ -638,12 +639,17 @@ PUBLIC int sniCallback(void *unused, mbedtls_ssl_context *ctx, cuchar *host, siz
     hostname = snclone((char*) host, len);
 
     /*
-        Select the appropriate SSL for this hostname
+        Select the appropriate configuration for this hostname
      */
     if ((ssl = (sp->ssl->matchSsl)(sp, hostname)) == 0) {
-        mprLog("error mbedtls", 0, "No host to serve request. Searching for %s", hostname);
         return MPR_ERR_CANT_FIND;
     }
+    lock(ssl);
+    if (configMbed(ssl, sp->flags, &sp->errorMsg) < 0) {
+        unlock(ssl);
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    unlock(ssl);
     sp->ssl = ssl;
     mb = sp->sslSocket;
 

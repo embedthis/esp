@@ -8015,7 +8015,9 @@ PUBLIC HttpHost *httpMatchHost(HttpConn *conn, cchar *hostname)
     assert(conn);
 
     if (!conn->host && (conn->host = httpLookupHostOnEndpoint(conn->endpoint, hostname)) == 0) {
+#if UNUSED
         mprLog("error http", 0, "No host to serve request. Searching for %s", hostname);
+#endif
         return 0;
     }
     return conn->host;

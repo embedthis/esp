@@ -163,8 +163,10 @@ static CipherMap cipherMap[] = {
     Configuration for a route/host
  */
 typedef struct OpenConfig {
-    SSL_CTX         *context;
+    SSL_CTX         *ctx;
     DH              *dhKey;
+    int             clearFlags;
+    int             setFlags;
 } OpenConfig;
 
 typedef struct OpenSocket {
@@ -220,7 +222,7 @@ typedef struct CRYPTO_dynlock_value DynLock;
 
 static void     closeOss(MprSocket *sp, bool gracefully);
 static int      checkPeerCertName(MprSocket *sp);
-static OpenConfig *createOpenSslConfig(MprSocket *sp);
+static int      configOss(MprSsl *ssl, int flags, char **errorMsg);
 static DH       *dhcallback(SSL *ssl, int isExport, int keyLength);
 static void     disconnectOss(MprSocket *sp);
 static ssize    flushOss(MprSocket *sp);
@@ -239,8 +241,9 @@ static void     sslDynLock(int mode, DynLock *dl, cchar *file, int line);
 static void     sslDestroyDynLock(DynLock *dl, cchar *file, int line);
 static void     sslStaticLock(int mode, int n, cchar *file, int line);
 static ulong    sslThreadId(void);
+static int      sniHostname(SSL *ssl, int *al, void *arg);
 static int      upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName);
-static int      verifyPeerCertificate(int ok, X509_STORE_CTX *ctx);
+static int      verifyPeerCertificate(int ok, X509_STORE_CTX *xctx);
 static ssize    writeOss(MprSocket *sp, cvoid *buf, ssize len);
 
 
@@ -315,9 +318,9 @@ static void manageOpenConfig(OpenConfig *cfg, int flags)
         /* Nothing to do  */
 
     } else if (flags & MPR_MANAGE_FREE) {
-        if (cfg->context != 0) {
-            SSL_CTX_free(cfg->context);
-            cfg->context = 0;
+        if (cfg->ctx != 0) {
+            SSL_CTX_free(cfg->ctx);
+            cfg->ctx = 0;
         }
         if (cfg == defaultOpenConfig) {
             if (cfg->dhKey) {
@@ -358,90 +361,90 @@ static void manageOpenProvider(MprSocketProvider *provider, int flags)
     a given route. An application can have different SSL configurations for different routes. There is also
     a default SSL configuration that is used when a route does not define a configuration and one for clients.
  */
-static OpenConfig *createOpenSslConfig(MprSocket *sp)
+static int configOss(MprSsl *ssl, int flags, char **errorMsg)
 {
-    MprSsl          *ssl;
     OpenConfig      *cfg;
     X509_STORE      *store;
-    SSL_CTX         *context;
+    SSL_CTX         *ctx;
     cchar           *key;
     uchar           resume[16];
     int             verifyMode;
 
-    ssl = sp->ssl;
     assert(ssl);
-
-    if ((ssl->config = mprAllocObj(OpenConfig, manageOpenConfig)) == 0) {
+    if (ssl->config && !ssl->changed) {
         return 0;
+    }
+    if ((ssl->config = mprAllocObj(OpenConfig, manageOpenConfig)) == 0) {
+        return MPR_ERR_MEMORY;
     }
     cfg = ssl->config;
 
-    if ((context = SSL_CTX_new(SSLv23_method())) == 0) {
+    if ((ctx = SSL_CTX_new(SSLv23_method())) == 0) {
         mprLog("error openssl", 0, "Unable to create SSL context");
-        return 0;
+        return MPR_ERR_CANT_INITIALIZE;
     }
-    SSL_CTX_set_app_data(context, (void*) ssl);
+    SSL_CTX_set_app_data(ctx, (void*) ssl);
 
     if (ssl->verifyPeer && !(ssl->caFile || ssl->caPath)) {
-        sp->errorMsg = sfmt("Cannot verify peer due to undefined CA certificates");
-        SSL_CTX_free(context);
-        return 0;
+        *errorMsg = sfmt("Cannot verify peer due to undefined CA certificates");
+        SSL_CTX_free(ctx);
+        return MPR_ERR_CANT_INITIALIZE;
     }
 
     /*
         Configure the certificates
      */
     if (ssl->certFile) {
-        if (SSL_CTX_use_certificate_chain_file(context, ssl->certFile) <= 0) {
-            if (SSL_CTX_use_certificate_file(context, ssl->certFile, SSL_FILETYPE_ASN1) <= 0) {
+        if (SSL_CTX_use_certificate_chain_file(ctx, ssl->certFile) <= 0) {
+            if (SSL_CTX_use_certificate_file(ctx, ssl->certFile, SSL_FILETYPE_ASN1) <= 0) {
                 mprLog("error openssl", 0, "Cannot open certificate file: %s", ssl->certFile);
-                SSL_CTX_free(context);
-                return 0;
+                SSL_CTX_free(ctx);
+                return MPR_ERR_CANT_INITIALIZE;
             }
         }
         key = (ssl->keyFile == 0) ? ssl->certFile : ssl->keyFile;
         if (key) {
-            if (SSL_CTX_use_PrivateKey_file(context, key, SSL_FILETYPE_PEM) <= 0) {
+            if (SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_PEM) <= 0) {
                 /* attempt ASN1 for self-signed format */
-                if (SSL_CTX_use_PrivateKey_file(context, key, SSL_FILETYPE_ASN1) <= 0) {
+                if (SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_ASN1) <= 0) {
                     mprLog("error openssl", 0, "Cannot open private key file: %s", key);
-                    SSL_CTX_free(context);
-                    return 0;
+                    SSL_CTX_free(ctx);
+                    return MPR_ERR_CANT_INITIALIZE;
                 }
             }
-            if (!SSL_CTX_check_private_key(context)) {
+            if (!SSL_CTX_check_private_key(ctx)) {
                 mprLog("error openssl", 0, "Check of private key file failed: %s", key);
-                SSL_CTX_free(context);
-                return 0;
+                SSL_CTX_free(ctx);
+                return MPR_ERR_CANT_INITIALIZE;
             }
         }
     }
     if (ssl->ciphers) {
         ssl->ciphers = mapCipherNames(ssl->ciphers);
     }
-    if (!ssl->ciphers && (sp->flags & MPR_SOCKET_SERVER)) {
+    if (!ssl->ciphers && (flags & MPR_SOCKET_SERVER)) {
         ssl->ciphers = sclone(OPENSSL_DEFAULT_CIPHERS);
     }
     if (ssl->ciphers) {
         mprLog("info openssl", 5, "Using SSL ciphers: %s", ssl->ciphers);
-        if (SSL_CTX_set_cipher_list(context, ssl->ciphers) != 1) {
-            sp->errorMsg = sfmt("Unable to set cipher list \"%s\". %s", ssl->ciphers, getOssError(sp));
-            SSL_CTX_free(context);
-            return 0;
+        if (SSL_CTX_set_cipher_list(ctx, ssl->ciphers) != 1) {
+            *errorMsg = sfmt("Unable to set cipher list \"%s\"", ssl->ciphers);
+            SSL_CTX_free(ctx);
+            return MPR_ERR_CANT_INITIALIZE;
         }
     }
     verifyMode = ssl->verifyPeer ? SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT : SSL_VERIFY_NONE;
     if (verifyMode != SSL_VERIFY_NONE) {
         if (!(ssl->caFile || ssl->caPath)) {
-            sp->errorMsg = sclone("No defined certificate authority file");
-            SSL_CTX_free(context);
-            return 0;
+            *errorMsg = sclone("No defined certificate authority file");
+            SSL_CTX_free(ctx);
+            return MPR_ERR_CANT_INITIALIZE;
         }
-        if ((!SSL_CTX_load_verify_locations(context, (char*) ssl->caFile, (char*) ssl->caPath)) ||
-                (!SSL_CTX_set_default_verify_paths(context))) {
-            sp->errorMsg = sfmt("Unable to set certificate locations: %s: %s", ssl->caFile, ssl->caPath);
-            SSL_CTX_free(context);
-            return 0;
+        if ((!SSL_CTX_load_verify_locations(ctx, (char*) ssl->caFile, (char*) ssl->caPath)) ||
+                (!SSL_CTX_set_default_verify_paths(ctx))) {
+            *errorMsg = sfmt("Unable to set certificate locations: %s: %s", ssl->caFile, ssl->caPath);
+            SSL_CTX_free(ctx);
+            return MPR_ERR_CANT_INITIALIZE;
         }
         if (ssl->caFile) {
             STACK_OF(X509_NAME) *certNames;
@@ -451,125 +454,70 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
                     Define the list of CA certificates to send to the client
                     before they send their client certificate for validation
                  */
-                SSL_CTX_set_client_CA_list(context, certNames);
+                SSL_CTX_set_client_CA_list(ctx, certNames);
             }
         }
-        store = SSL_CTX_get_cert_store(context);
+        store = SSL_CTX_get_cert_store(ctx);
         if (ssl->revoke && !X509_STORE_load_locations(store, ssl->revoke, 0)) {
             mprLog("error openssl", 0, "Cannot load certificate revoke list: %s", ssl->revoke);
-            SSL_CTX_free(context);
-            return 0;
+            SSL_CTX_free(ctx);
+            return MPR_ERR_CANT_INITIALIZE;
         }
-        if (sp->flags & MPR_SOCKET_SERVER) {
-            SSL_CTX_set_verify_depth(context, ssl->verifyDepth);
+        if (flags & MPR_SOCKET_SERVER) {
+            SSL_CTX_set_verify_depth(ctx, ssl->verifyDepth);
         }
     }
 
     /*
         Define callbacks
      */
-    SSL_CTX_set_verify(context, verifyMode, verifyPeerCertificate);
+    SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
+    if (flags & MPR_SOCKET_SERVER) {
+        SSL_CTX_set_tlsext_servername_callback(ctx, sniHostname);
+    }
 
     /*
         Configure DH parameters
      */
-    SSL_CTX_set_tmp_dh_callback(context, dhcallback);
+    SSL_CTX_set_tmp_dh_callback(ctx, dhcallback);
     cfg->dhKey = getDhKey();
 
     /*
         Define default OpenSSL options
-     */
-    SSL_CTX_set_options(context, SSL_OP_ALL);
-
-    /*
         Ensure we generate a new private key for each connection
-     */
-    SSL_CTX_set_options(context, SSL_OP_SINGLE_DH_USE);
-
-    /*
-        Define a session reuse context
-     */
-    RAND_bytes(resume, sizeof(resume));
-    SSL_CTX_set_session_id_context(context, resume, sizeof(resume));
-
-    /*
-        Elliptic Curve initialization
-     */
-#if SSL_OP_SINGLE_ECDH_USE
-    #ifdef SSL_CTX_set_ecdh_auto
-        /* This is supported in OpenSSL 1.0.2 */
-        SSL_CTX_set_ecdh_auto(context, 1);
-    #else
-        {
-            EC_KEY  *ecdh;
-            cchar   *name;
-            int      nid;
-
-            name = ME_MPR_SSL_CURVE;
-            if ((nid = OBJ_sn2nid(name)) == 0) {
-                sp->errorMsg = sfmt("Unknown curve name \"%s\"", name);
-                SSL_CTX_free(context);
-                return 0;
-            }
-            if ((ecdh = EC_KEY_new_by_curve_name(nid)) == 0) {
-                sp->errorMsg = sfmt("Unable to create curve \"%s\"", name);
-                SSL_CTX_free(context);
-                return 0;
-            }
-            SSL_CTX_set_options(context, SSL_OP_SINGLE_ECDH_USE);
-            SSL_CTX_set_tmp_ecdh(context, ecdh);
-            EC_KEY_free(ecdh);
-        }
-    #endif
-#endif
-
-    SSL_CTX_set_mode(context, SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_AUTO_RETRY | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
-#ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
-    SSL_CTX_set_options(context, SSL_OP_MSIE_SSLV2_RSA_PADDING);
-#endif
-#ifdef SSL_MODE_RELEASE_BUFFERS
-    SSL_CTX_set_mode(context, SSL_MODE_RELEASE_BUFFERS);
-#endif
-#ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
-    SSL_CTX_set_mode(context, SSL_OP_CIPHER_SERVER_PREFERENCE);
-#endif
-    /*
-        Select the required protocols
         Disable SSLv2 and SSLv3 by default -- they are insecure.
      */
-    SSL_CTX_set_options(context, SSL_OP_NO_SSLv2);
-    SSL_CTX_set_options(context, SSL_OP_NO_SSLv3);
+    cfg->setFlags = SSL_OP_ALL | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 #ifdef SSL_OP_NO_TLSv1
     if (!(ssl->protocols & MPR_PROTO_TLSV1)) {
-        SSL_CTX_set_options(context, SSL_OP_NO_TLSv1);
+        cfg->setFlags |= SSL_OP_NO_TLSv1;
     }
 #endif
 #ifdef SSL_OP_NO_TLSv1_1
     if (!(ssl->protocols & MPR_PROTO_TLSV1_1)) {
-        SSL_CTX_set_options(context, SSL_OP_NO_TLSv1_1);
+        cfg->setFlags |= SSL_OP_NO_TLSv1_1;
     }
 #endif
 #ifdef SSL_OP_NO_TLSv1_2
     if (!(ssl->protocols & MPR_PROTO_TLSV1_2)) {
-        SSL_CTX_set_options(context, SSL_OP_NO_TLSv1_2);
+        cfg->setFlags |= SSL_OP_NO_TLSv1_2;
     }
 #endif
-
-    /*
-        Options set via main.me mpr.ssl.*
-     */
+#ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
+    cfg->setFlags |= SSL_OP_MSIE_SSLV2_RSA_PADDING;
+#endif
 #if defined(SSL_OP_NO_TICKET)
     /*
         Ticket based session reuse is enabled by default
      */
     #if defined(ME_MPR_SSL_TICKET)
         if (ME_MPR_SSL_TICKET) {
-            SSL_CTX_clear_options(context, SSL_OP_NO_TICKET);
+            cfg->clearFlags |= SSL_OP_NO_TICKET;
         } else {
-            SSL_CTX_set_options(context, SSL_OP_NO_TICKET);
+            cfg->setFlags |= SSL_OP_NO_TICKET;
         }
     #else
-        SSL_CTX_clear_options(context, SSL_OP_NO_TICKET);
+        cfg->clearFlags |= SSL_OP_NO_TICKET;
     #endif
 #endif
 
@@ -577,21 +525,22 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
     /*
         CRIME attack targets compression
      */
-    SSL_CTX_clear_options(context, SSL_OP_NO_COMPRESSION);
+    cfg->clearFlags |= SSL_OP_NO_COMPRESSION;
 #endif
 
 #if defined(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION)
     /*
         Force a new session on renegotiation. Default to true.
+        This is required when using SNI and changing context during the SSL hello
      */
     #if defined(ME_MPR_SSL_RENEGOTIATE)
         if (ME_MPR_SSL_RENEGOTIATE) {
-            SSL_CTX_clear_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+            cfg->clearFlags |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
         } else {
-            SSL_CTX_set_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+            cfg->setFlags |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
         }
     #else
-        SSL_CTX_set_options(context, SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+        cfg->setFlags |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
     #endif
 #endif
 
@@ -603,26 +552,75 @@ static OpenConfig *createOpenSslConfig(MprSocket *sp)
     #if defined(ME_MPR_SSL_EMPTY_FRAGMENTS)
         if (ME_MPR_SSL_EMPTY_FRAGMENTS) {
             /* SSL_OP_ALL disables empty fragments. Only needed for ancient browsers like IE-6 on SSL-3.0/TLS-1.0 */
-            SSL_CTX_clear_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+            cfg->clearFlags |= SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
         } else {
-            SSL_CTX_set_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+            cfg->setFlags |= SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
         }
     #else
-        SSL_CTX_set_options(context, SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS);
+        cfg->setFlags |= SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
     #endif
+#endif
+
+    /*
+        Define a session reuse context
+     */
+    RAND_bytes(resume, sizeof(resume));
+    SSL_CTX_set_session_id_context(ctx, resume, sizeof(resume));
+
+    /*
+        Elliptic Curve initialization
+     */
+#if SSL_OP_SINGLE_ECDH_USE
+    #ifdef SSL_CTX_set_ecdh_auto
+        /* This is supported in OpenSSL 1.0.2 */
+        SSL_CTX_set_ecdh_auto(ctx, 1);
+    #else
+        {
+            EC_KEY  *ecdh;
+            cchar   *name;
+            int      nid;
+
+            name = ME_MPR_SSL_CURVE;
+            if ((nid = OBJ_sn2nid(name)) == 0) {
+                *errorMsg = sfmt("Unknown curve name \"%s\"", name);
+                SSL_CTX_free(ctx);
+                return MPR_ERR_CANT_INITIALIZE;
+            }
+            if ((ecdh = EC_KEY_new_by_curve_name(nid)) == 0) {
+                *errorMsg = sfmt("Unable to create curve \"%s\"", name);
+                SSL_CTX_free(ctx);
+                return MPR_ERR_CANT_INITIALIZE;
+            }
+            SSL_CTX_set_tmp_ecdh(ctx, ecdh);
+            EC_KEY_free(ecdh);
+        }
+    #endif
+#endif
+
+    SSL_CTX_set_mode(ctx, SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_AUTO_RETRY | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+#ifdef SSL_MODE_RELEASE_BUFFERS
+    SSL_CTX_set_mode(ctx, SSL_MODE_RELEASE_BUFFERS);
+#endif
+#ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
+    SSL_CTX_set_mode(ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
 #endif
 
 #if defined(ME_MPR_SSL_CACHE)
     /*
         Set the number of sessions supported. Default in OpenSSL is 20K.
      */
-    SSL_CTX_sess_set_cache_size(context, ME_MPR_SSL_CACHE);
+    SSL_CTX_sess_set_cache_size(ctx, ME_MPR_SSL_CACHE);
 #else
-    SSL_CTX_sess_set_cache_size(context, 1024);
+    SSL_CTX_sess_set_cache_size(ctx, 1024);
 #endif
 
-    cfg->context = context;
-    return cfg;
+    SSL_CTX_set_options(ctx, cfg->setFlags);
+    SSL_CTX_clear_options(ctx, cfg->clearFlags);
+
+    cfg->ctx = ctx;
+    ssl->changed = 0;
+    ssl->config = cfg;
+    return 0;
 }
 
 
@@ -684,21 +682,18 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
     sp->sslSocket = osp;
     sp->ssl = ssl;
 
-    if (!ssl->config || ssl->changed) {
-        /*
-            On-demand creation of the SSL configuration
-         */
-        if ((ssl->config = createOpenSslConfig(sp)) == 0) {
-            return MPR_ERR_CANT_INITIALIZE;
-        }
-        ssl->changed = 0;
+    lock(ssl);
+    if (configOss(ssl, sp->flags, &sp->errorMsg) < 0) {
+        unlock(ssl);
+        return MPR_ERR_CANT_INITIALIZE;
     }
+    unlock(ssl);
 
     /*
         Create and configure the SSL struct
      */
     cfg = osp->cfg = sp->ssl->config;
-    if ((osp->handle = (SSL*) SSL_new(cfg->context)) == 0) {
+    if ((osp->handle = (SSL*) SSL_new(cfg->ctx)) == 0) {
         return MPR_ERR_BAD_STATE;
     }
     SSL_set_app_data(osp->handle, (void*) osp);
@@ -984,7 +979,7 @@ static int checkPeerCertName(MprSocket *sp)
     OpenSocket  *osp;
     X509        *cert;
     X509_NAME   *xSubject;
-    char        subject[512], issuer[512], peerName[512], *target, *certName, *tp;
+    char        subject[512], issuer[512], peerName[512];
 
     ssl = sp->ssl;
     osp = (OpenSocket*) sp->sslSocket;
@@ -1003,6 +998,8 @@ static int checkPeerCertName(MprSocket *sp)
     }
 #if OPENSSL_VERSION_NUMBER < 0x10002000L
     if (ssl->verifyPeer && osp->requiredPeerName) {
+        char    *target, *certName, *tp;
+
         target = osp->requiredPeerName;
         certName = peerName;
 
@@ -1040,7 +1037,7 @@ static int checkPeerCertName(MprSocket *sp)
 }
 
 
-static int verifyPeerCertificate(int ok, X509_STORE_CTX *xContext)
+static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
 {
     X509            *cert;
     SSL             *handle;
@@ -1052,14 +1049,14 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xContext)
 
     subject[0] = issuer[0] = '\0';
 
-    handle = (SSL*) X509_STORE_CTX_get_app_data(xContext);
+    handle = (SSL*) X509_STORE_CTX_get_app_data(xctx);
     osp = (OpenSocket*) SSL_get_app_data(handle);
     sp = osp->sock;
     ssl = sp->ssl;
 
-    cert = X509_STORE_CTX_get_current_cert(xContext);
-    depth = X509_STORE_CTX_get_error_depth(xContext);
-    error = X509_STORE_CTX_get_error(xContext);
+    cert = X509_STORE_CTX_get_current_cert(xctx);
+    depth = X509_STORE_CTX_get_error_depth(xctx);
+    error = X509_STORE_CTX_get_error(xctx);
 
     ok = 1;
     if (X509_NAME_oneline(X509_get_subject_name(cert), subject, sizeof(subject) - 1) < 0) {
@@ -1133,6 +1130,54 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xContext)
         break;
     }
     return ok;
+}
+
+
+static int sniHostname(SSL *handle, int *ad, void *arg)
+{
+    MprSocket       *sp;
+    MprSsl          *ssl;
+    OpenSocket      *osp;
+    OpenConfig      *cfg;
+    SSL_CTX         *ctx;
+    cchar           *hostname;
+
+    if (!handle) {
+        return SSL_TLSEXT_ERR_NOACK;
+    }
+    osp = (OpenSocket*) SSL_get_app_data(handle);
+    sp = osp->sock;
+
+    hostname = SSL_get_servername(handle, TLSEXT_NAMETYPE_host_name);
+
+    /*
+        Select the appropriate SSL for this hostname
+     */
+    if ((ssl = (sp->ssl->matchSsl)(sp, hostname)) == 0) {
+        return SSL_TLSEXT_ERR_ALERT_FATAL;
+    }
+    lock(ssl);
+    if (configOss(ssl, sp->flags, &sp->errorMsg) < 0) {
+        unlock(ssl);
+        return SSL_TLSEXT_ERR_ALERT_FATAL;
+    }
+    unlock(ssl);
+
+    sp->ssl = ssl;
+    cfg = ssl->config;
+    ctx = cfg->ctx;
+    SSL_set_SSL_CTX(handle, ctx);
+
+#if UNUSED
+    int verifyMode = ssl->verifyPeer ? SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT : SSL_VERIFY_NONE;
+    SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
+    SSL_CTX_set_verify_depth(ctx, ssl->verifyDepth);
+    SSL_CTX_clear_options(ctx, cfg->clearFlags);
+    SSL_CTX_set_options(ctx, cfg->setFlags);
+    SSL_CTX_set_cipher_list(ctx, ssl->ciphers);
+#endif
+    
+    return SSL_TLSEXT_ERR_OK;
 }
 
 
