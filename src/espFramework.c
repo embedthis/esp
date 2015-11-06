@@ -174,9 +174,13 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
     assert(path && *path);
     assert(view);
 
-    if ((eroute = espRoute(route)) == 0) {
-        /* Should never happen */
-        return;
+    if (route->eroute) {
+        eroute = ((EspRoute*) route->eroute)->top;
+    } else {
+        if ((eroute = espRoute(route)) == 0) {
+            /* Should never happen */
+            return;
+        }
     }
     eroute = eroute->top;
     if (route) {

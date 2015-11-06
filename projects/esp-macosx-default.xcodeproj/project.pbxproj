@@ -586,12 +586,39 @@
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };
+		250B570C250B7184000000BC /* Frameworks and Libraries for libmbedtls */ = {
+                isa = PBXFrameworksBuildPhase;
+                buildActionMask = 2147483647;
+                files = (
+    				
+                );
+                runOnlyForDeploymentPostprocessing = 0;
+            };
 		250B570C250B7184000000BD /* Frameworks and Libraries for libmpr */ = {
                 isa = PBXFrameworksBuildPhase;
                 buildActionMask = 2147483647;
                 files = (
     				250B570C250B71840000005F /* libmpr-mbedtls */,
 				250B570C250B718400000060 /* libmbedtls */,				
+                );
+                runOnlyForDeploymentPostprocessing = 0;
+            };
+		250B570C250B7184000000BE /* Frameworks and Libraries for libmpr-mbedtls */ = {
+                isa = PBXFrameworksBuildPhase;
+                buildActionMask = 2147483647;
+                files = (
+    				250B570C250B718400000061 /* libmbedtls */,				
+                );
+                runOnlyForDeploymentPostprocessing = 0;
+            };
+		250B570C250B7184000000BF /* Frameworks and Libraries for libmpr-version */ = {
+                isa = PBXFrameworksBuildPhase;
+                buildActionMask = 2147483647;
+                files = (
+    				250B570C250B718400000062 /* libpcre */,
+				250B570C250B718400000063 /* libmpr */,
+				250B570C250B718400000064 /* libmpr-mbedtls */,
+				250B570C250B718400000065 /* libmbedtls */,				
                 );
                 runOnlyForDeploymentPostprocessing = 0;
             };

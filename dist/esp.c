@@ -52,7 +52,6 @@ typedef struct App {
     cchar       *command;               /* Compilation or link command */
     cchar       *cacheName;             /* Cached MD5 name */
     cchar       *csource;               /* Name of "C" source for page or controller */
-    cchar       *genlink;               /* DEPRECATED: Static link resolution file */
     cchar       *filterRoutePattern;    /* Poute pattern to use for filtering */
     cchar       *filterRoutePrefix;     /* Prefix of route to use for filtering */
     cchar       *logSpec;               /* Arg for --log */
@@ -251,7 +250,6 @@ static void manageApp(App *app, int flags)
         mprMark(app->files);
         mprMark(app->filterRoutePattern);
         mprMark(app->filterRoutePrefix);
-        mprMark(app->genlink);
         mprMark(app->home);
         mprMark(app->host);
         mprMark(app->listen);
@@ -312,6 +310,9 @@ static int parseArgs(int argc, char **argv)
                 app->cipher = sclone(argv[++argind]);
             }
 
+        } else if (smatch(argp, "combine")) {
+            app->combine = 1;
+
         } else if (smatch(argp, "database")) {
             if (argind >= argc) {
                 usageError();
@@ -328,15 +329,6 @@ static int parseArgs(int argc, char **argv)
 
         } else if (smatch(argp, "force") || smatch(argp, "f")) {
             app->force = 1;
-
-#if DEPRECATED || 1
-        } else if (smatch(argp, "genlink") || smatch(argp, "g")) {
-            if (argind >= argc) {
-                usageError();
-            } else {
-                app->genlink = sclone(argv[++argind]);
-            }
-#endif
 
         } else if (smatch(argp, "keep") || smatch(argp, "k")) {
             app->keep = 1;
@@ -1777,7 +1769,9 @@ static void compile(int argc, char **argv)
     if (app->error) {
         return;
     }
-    app->combine = app->eroute->combine;
+    if (!app->combine) {
+        app->combine = app->eroute->combine;
+    }
     vtrace("Info", "Compiling in %s mode", app->combine ? "combine" : "discrete");
 
     app->built = mprCreateHash(0, MPR_HASH_STABLE | MPR_HASH_STATIC_VALUES);
@@ -1965,7 +1959,7 @@ static void compileCombined(HttpRoute *route)
     MprKey          *kp;
     EspRoute        *eroute;
     MprJson         *extensions, *ext;
-    cchar           *item, *name;
+    cchar           *controllers, *item, *name;
     char            *path, *line;
     int             next, kind, index;
 
@@ -1983,11 +1977,14 @@ static void compileCombined(HttpRoute *route)
     if (mprPathExists(path, R_OK)) {
         mprAddKey(app->build, path, "src");
     }
-    app->files = mprGetPathFiles(httpGetDir(route, "CONTROLLERS"), MPR_PATH_DESCEND);
-    for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
-        path = dp->name;
-        if (smatch(mprGetPathExt(path), "c")) {
-            mprAddKey(app->build, path, "controller");
+    controllers = httpGetDir(route, "CONTROLLERS");
+    if (!mprSamePath(controllers, route->home)) {
+        app->files = mprGetPathFiles(httpGetDir(route, "CONTROLLERS"), MPR_PATH_DESCEND);
+        for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
+            path = dp->name;
+            if (smatch(mprGetPathExt(path), "c")) {
+                mprAddKey(app->build, path, "controller");
+            }
         }
     }
     app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
@@ -2533,14 +2530,9 @@ static void usageError()
     "  %s [options] [commands]\n\n"
     "  Options:\n"
     "    --cipher cipher            # Password cipher 'md5' or 'blowfish'\n"
+    "    --combine                  # Combine ESP assets into one cache file\n"
     "    --database name            # Database provider 'mdb|sdb'\n"
     "    --force                    # Force requested action\n"
-#if KEEP
-    /*
-        Static linking is not recommended due to the complexity of resolving initializers
-     */
-    "    --genlink filename         # Generate a static link module for combine compilations\n"
-#endif
     "    --home directory           # Change to directory first\n"
     "    --keep                     # Keep intermediate source\n"
     "    --listen [ip:]port         # Generate app to listen at address\n"
