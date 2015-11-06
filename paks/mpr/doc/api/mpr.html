@@ -69,7 +69,7 @@
 <td class="apiBrief">Socket Service.</td></tr>
 <tr class="apiDef">
 <td class="apiName"><a href="#group___mpr_ssl" class="nameRef">MprSsl</a></td>
-<td class="apiBrief">SSL control structure.</td></tr>
+<td class="apiBrief">Callback function for SNI connections.</td></tr>
 <tr class="apiDef">
 <td class="apiName"><a href="#group___mpr_string" class="nameRef">MprString</a></td>
 <td class="apiBrief">Safe String Module.</td></tr>
@@ -570,17 +570,17 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_socket_1ga51594bafaa2003511990ffd804189a31" class="nameRef">mprSetSocketNoDelay</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> on)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the socket delay mode.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577" class="nameRef">mprSetSslCaFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *caFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the client certificate file to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaadf254e5df954326a3f9bcd61e6a106b" class="nameRef">mprSetSslCaPath</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *caPath)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the path for the client certificate directory.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gab70a92f2a7173dee2e00045b4186cbbb" class="nameRef">mprSetSslCacheSize</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, int size)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL server-side session cache size.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga0eb821dce1b17ce08d83fa63b3ece658" class="nameRef">mprSetSslCertFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *certFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set certificate to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaf3d90b0a59c1e786421e8f2c2167fa20" class="nameRef">mprSetSslCiphers</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the ciphers to use.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gab6cfe15aa1aa544af99d7fd3279d83ee" class="nameRef">mprSetSslHostname</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *hostname)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the desired hostname for this SSL configuration when using SNI.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaa8293be1a1b769f03db306834ef5291f" class="nameRef">mprSetSslKeyFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *keyFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the key file to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gabcdba4618d5754a0ccfc76ef271776d8" class="nameRef">mprSetSslLogLevel</a>(struct MprSsl *ssl, int level)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL log level at which to start tracing SSL events.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga375d09974e061112fd50d1e705143887" class="nameRef">mprSetSslMatch</a>(struct MprSsl *ssl, MprMatchSsl match)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a match callback to select the appropriate SSL configuration to use in response to a client SNI hello.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga00cd731b20d96a0b0080637d59becd4a" class="nameRef">mprSetSslProtocols</a>(struct MprSsl *ssl, int protocols)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL protocol to use.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gabe689d34f52874f6b1ab0d384c95decb" class="nameRef">mprSetSslProvider</a>(<a href="#struct_mpr_socket_provider" class="ref">MprSocketProvider</a> *provider)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL provider to use.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gadc15a963cd6567f7fa05da968bee39a6" class="nameRef">mprSetSslRenegotiate</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Control SSL session renegotiation.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga0fe151c86620dc1eec03e0f35082e075" class="nameRef">mprSetSslRevoke</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *revoke)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a list of certificates to revoke.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga16313273a92421655778343d310475ee" class="nameRef">mprSetSslTicket</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Enable SSL session tickets.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga5c61abfb50e0384fdb01aafc82a1b7b4" class="nameRef">mprSetSslTimeout</a>(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> timeout)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the SSL server-side session timeout.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_thread_1ga60bd7071428f6043d834c48ee8914560" class="nameRef">mprSetThreadPriority</a>(<a href="#group___mpr_thread" class="ref">MprThread</a> *thread, int priority)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the thread priroity.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_worker_1gad7721cca919f57f9b85434e6435ef092" class="nameRef">mprSetWorkerStackSize</a>(int size)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the default worker stack size.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___mpr_1ga0206927d986cd9ca7c42f8c530de6000" class="nameRef">mprShouldAbortRequests</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if requests should be aborted.</td></tr>
@@ -754,6 +754,7 @@
 <tr class="apiDef"><td class="apiName"><a href="#struct_mpr_socket_service" class="nameRef">MprSocketService</a></td><td class="apiBrief">Mpr socket service class.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___mpr_list_1ga128df90ccf99b25bd404afc01ace1415" class="nameRef">MprSortProc</a></td><td class="apiBrief">Quicksort callback function.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_mpr_spin" class="nameRef">MprSpin</a></td><td class="apiBrief">Multithreading spin lock control structure.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#struct_mpr_ssl" class="nameRef">MprSsl</a></td><td class="apiBrief">SSL control structure.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___mpr_1gaf44802f2cd62d3139163df79721ee79b" class="nameRef">MprTerminator</a></td><td class="apiBrief">Service shutdown notifier.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_mpr_thread_local" class="nameRef">MprThreadLocal</a></td><td class="apiBrief">Thread local data storage.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d" class="nameRef">MprThreadProc</a></td><td class="apiBrief">Thread main procedure.</td></tr>
@@ -5441,7 +5442,7 @@ This removes the dispatcher from any dispatcher queues and allows it to be garba
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">void *</td><td><td>data</td><td>
-Event private data.
+Event private data (managed|unmanged depending on flags).
 </td>
     <tr><td class="param">struct MprDispatcher *</td><td><td>dispatcher</td><td>
 Event dispatcher service.
@@ -10887,6 +10888,9 @@ Server port doing the listening.
     <tr><td class="param">cchar *</td><td><td>cipher</td><td>
 Selected SSL cipher.
 </td>
+    <tr><td class="param">void *</td><td><td>data</td><td>
+Custom user data (unmanaged).
+</td>
     <tr><td class="param">char *</td><td><td>errorMsg</td><td>
 Connection related error messages.
 </td>
@@ -10932,8 +10936,8 @@ Socket service.
     <tr><td class="param">cchar *</td><td><td>session</td><td>
 SSL session ID (dependent on SSL provider).
 </td>
-    <tr><td class="param">struct MprSsl *</td><td><td>ssl</td><td>
-SSL configuration.
+    <tr><td class="param">struct <a class="ref" href="#struct_mpr_ssl">MprSsl</a> *</td><td><td>ssl</td><td>
+Selected SSL configuration.
 </td>
     <tr><td class="param">void *</td><td><td>sslSocket</td><td>
 Extended SSL socket state.
@@ -11641,7 +11645,7 @@ This is used to prevent further I/O wait events while still preserving the socke
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">sp</td><td>Socket to upgrade.</td>
-    <tr><td class="param">ssl</td><td>SSL configuration to use. Set to NULL to use the default.</td>
+    <tr><td class="param">ssl</td><td>SSL configurations to use. Set to NULL to use the default.</td>
     <tr><td class="param">peerName</td><td>Required peer name in handshake with peer. Used by clients to verify the server hostname.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
@@ -11716,17 +11720,14 @@ This is used to prevent further I/O wait events while still preserving the socke
   </div>
 </div>
 <h1>MprSsl</h1>
-<a name="group___mpr_ssl"></a>
+<a name="struct_mpr_ssl"></a>
 <div class="api">
   <div class="prototype">MprSsl</div>
   <div class="apiDetail">
-<p>SSL control structure.</p>
-    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
+<p>Callback function for SNI connections.</p>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param">int</td><td><td>cacheSize</td><td>
-Session cache size in entries.
-</td>
     <tr><td class="param">cchar *</td><td><td>caFile</td><td>
 Certificate verification cert file or bundle.
 </td>
@@ -11749,11 +11750,17 @@ Extended provider SSL configuration.
     <tr><td class="param">bool</td><td><td>configured</td><td>
 Set if this SSL configuration has been processed.
 </td>
+    <tr><td class="param">cchar *</td><td><td>hostname</td><td>
+Hostname when using SNI.
+</td>
     <tr><td class="param">cchar *</td><td><td>keyFile</td><td>
 Alternatively, locate the key in a file.
 </td>
     <tr><td class="param">int</td><td><td>logLevel</td><td>
 Level at which to start tracing SSL events.
+</td>
+    <tr><td class="param">MprMatchSsl</td><td><td>matchSsl</td><td>
+Match the SSL configuration for SNI.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_mutex">MprMutex</a> *</td><td><td>mutex</td><td>
 Multithread sync.
@@ -11766,9 +11773,6 @@ Renegotiate sessions.
 </td>
     <tr><td class="param">cchar *</td><td><td>revoke</td><td>
 Certificate revocation list.
-</td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319">MprTicks</a></td><td><td>sessionTimeout</td><td>
-Session lifespan in msec.
 </td>
     <tr><td class="param">bool</td><td><td>ticket</td><td>
 Enable session tickets.
@@ -11812,7 +11816,7 @@ Verify the peer verificate.
   <div class="prototype">
     struct MprSsl *
     MprSsl* mprCloneSsl
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *src)
+(<a href="#struct_mpr_ssl" class="ref">MprSsl</a> *src)
   </div>
   <div class="apiDetail">
 <p>Create the a new SSL control structure based on an existing structure.</p>
@@ -11853,25 +11857,6 @@ Verify the peer verificate.
   <div class="apiDetail">
 <p>Load the SSL module.</p>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___mpr_ssl_1gab70a92f2a7173dee2e00045b4186cbbb"></a>
-<div class="api">
-  <div class="prototype">
-    void
-    mprSetSslCacheSize
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, int size)
-  </div>
-  <div class="apiDetail">
-<p>Set the SSL server-side session cache size.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
-    <tr><td class="param">size</td><td>Size of the cache in entries.</td>
-    </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -11939,7 +11924,7 @@ Verify the peer verificate.
   <div class="prototype">
     void
     mprSetSslCiphers
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers)
+(<a href="#struct_mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ciphers)
   </div>
   <div class="apiDetail">
 <p>Set the ciphers to use.</p>
@@ -11949,6 +11934,25 @@ Verify the peer verificate.
     <tr><td class="param">ciphers</td><td>String of suitable ciphers.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___mpr_ssl_1gab6cfe15aa1aa544af99d7fd3279d83ee"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslHostname
+(<a href="#struct_mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *hostname)
+  </div>
+  <div class="apiDetail">
+<p>Set the desired hostname for this SSL configuration when using SNI.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
+    <tr><td class="param">hostname</td><td>Name of the host when using SNI.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -11985,6 +11989,25 @@ Verify the peer verificate.
     <table class="parameters" title="Parameters">
     <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
     <tr><td class="param">level</td><td>Log level (0-9).</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___mpr_ssl_1ga375d09974e061112fd50d1e705143887"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslMatch
+(struct MprSsl *ssl, MprMatchSsl match)
+  </div>
+  <div class="apiDetail">
+<p>Set a match callback to select the appropriate SSL configuration to use in response to a client SNI hello.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">ssl</td><td>SSL configuration instance.</td>
+    <tr><td class="param">match</td><td>MprMatchSsl callback.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -12033,7 +12056,7 @@ Verify the peer verificate.
   <div class="prototype">
     void
     mprSetSslRenegotiate
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)
+(<a href="#struct_mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)
   </div>
   <div class="apiDetail">
 <p>Control SSL session renegotiation.</p>
@@ -12042,7 +12065,7 @@ Verify the peer verificate.
     <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
     <tr><td class="param">enable</td><td>Set to true to enable renegotiation (enabled by default).</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -12071,7 +12094,7 @@ Verify the peer verificate.
   <div class="prototype">
     void
     mprSetSslTicket
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)
+(<a href="#struct_mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> enable)
   </div>
   <div class="apiDetail">
 <p>Enable SSL session tickets.</p>
@@ -12079,25 +12102,6 @@ Verify the peer verificate.
     <table class="parameters" title="Parameters">
     <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
     <tr><td class="param">enable</td><td>Set to true to enable.</td>
-    </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___mpr_ssl_1ga5c61abfb50e0384fdb01aafc82a1b7b4"></a>
-<div class="api">
-  <div class="prototype">
-    void
-    mprSetSslTimeout
-(<a href="#group___mpr_ssl" class="ref">MprSsl</a> *ssl, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> timeout)
-  </div>
-  <div class="apiDetail">
-<p>Set the SSL server-side session timeout.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
-    <tr><td class="param">timeout</td><td>Lifetime of session entries in msec.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -13756,7 +13760,7 @@ This sets the condition variable to the unsignalled condition
 Multi-thread synchronization.
 </td>
     <tr><td class="param">void *</td><td><td>data</td><td>
-Data argument.
+Data argument (managed).
 </td>
     <tr><td class="param"><a class="ref" href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d">MprThreadProc</a></td><td><td>entry</td><td>
 Users thread entry point.
@@ -16092,7 +16096,7 @@ Start of region data.
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">uchar *</td><td><td>data</td><td>
-Pointer to file data.
+Pointer to file data (unmanaged).
 </td>
     <tr><td class="param">int</td><td><td>num</td><td>
 Inode number.
@@ -16172,6 +16176,9 @@ This is used to prevent further I/O wait events while still preserving the socke
 Flush a socket. 
 <simplesect kind="par"><b>Description</b>:Flush any buffered data in a socket. Standard sockets do not use buffering and this call will do nothing. SSL sockets do buffer and calling mprFlushSocket will write pending written data. </simplesect><parameterlist kind="param"><parameteritem><parameternamelist><parametername>socket</parametername></parameternamelist><parameterdescription>Socket object returned from <a class="ref" href="#group___mpr_socket_1ga0ef02d313ec268eae6038a5af0ee5cc4">mprCreateSocket</a></parameterdescription></parameteritem></parameterlist><simplesect kind="return">A count of bytes actually written. Return a negative MPR error code on errors. </simplesect><simplesect kind="par"><b>API</b> Stability:Stable </simplesect>
 </td>
+    <tr><td class="param">void *</td><td><td>managed</td><td>
+Socket provider private data managed.
+</td>
     <tr><td class="param">char *</td><td><td>name</td><td>
 Socket provider name.
 </td>
@@ -16185,7 +16192,7 @@ Get the socket state.
 </td>
     <tr><td class="param">int(*</td><td><td>upgradeSocket)(struct MprSocket *socket, struct MprSsl *ssl, cchar *peerName)</td><td>
 Upgrade a socket to use SSL/TLS. 
-<parameterlist kind="param"><parameteritem><parameternamelist><parametername>sp</parametername></parameternamelist><parameterdescription>Socket to upgrade </parameterdescription></parameteritem><parameteritem><parameternamelist><parametername>ssl</parametername></parameternamelist><parameterdescription>SSL configuration to use. Set to NULL to use the default. </parameterdescription></parameteritem><parameteritem><parameternamelist><parametername>peerName</parametername></parameternamelist><parameterdescription>Required peer name in handshake with peer. Used by clients to verify the server hostname. </parameterdescription></parameteritem></parameterlist><simplesect kind="return">Zero if successful, otherwise a negative MPR error code. </simplesect><simplesect kind="par"><b>API</b> Stability:Stable </simplesect>
+<parameterlist kind="param"><parameteritem><parameternamelist><parametername>sp</parametername></parameternamelist><parameterdescription>Socket to upgrade </parameterdescription></parameteritem><parameteritem><parameternamelist><parametername>ssl</parametername></parameternamelist><parameterdescription>SSL configurations to use. Set to NULL to use the default. </parameterdescription></parameteritem><parameteritem><parameternamelist><parametername>peerName</parametername></parameternamelist><parameterdescription>Required peer name in handshake with peer. Used by clients to verify the server hostname. </parameterdescription></parameteritem></parameterlist><simplesect kind="return">Zero if successful, otherwise a negative MPR error code. </simplesect><simplesect kind="par"><b>API</b> Stability:Stable </simplesect>
 </td>
     <tr><td class="param">ssize(*</td><td><td>writeSocket)(struct MprSocket *socket, cvoid *buf, ssize size)</td><td>
 Write to a socket. 
@@ -16204,6 +16211,9 @@ Write to a socket.
     <table class="parameters" title="Parameters">
     <tr><td class="param">int</td><td><td>hasIPv6</td><td>
 System has supoprt for IPv6.
+</td>
+    <tr><td class="param">int</td><td><td>loaded</td><td>
+Provider loaded.
 </td>
     <tr><td class="param">int</td><td><td>maxAccept</td><td>
 Maximum number of accepted client socket connections.
@@ -16239,6 +16249,78 @@ Socket provider for non-SSL connections.
     <table class="parameters" title="Parameters">
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
+  </div>
+</div>
+<a name="struct_mpr_ssl"></a>
+<div class="api">
+  <div class="prototype">MprSsl</div>
+  <div class="apiDetail">
+<p>SSL control structure.</p>
+    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
+    <dl><dt>Fields:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">cchar *</td><td><td>caFile</td><td>
+Certificate verification cert file or bundle.
+</td>
+    <tr><td class="param">cchar *</td><td><td>caPath</td><td>
+Certificate verification cert directory (OpenSSL only).
+</td>
+    <tr><td class="param">cchar *</td><td><td>certFile</td><td>
+Certificate filename.
+</td>
+    <tr><td class="param">bool</td><td><td>changed</td><td>
+Set if there is a change in the SSL config. 
+Reset by providers.
+</td>
+    <tr><td class="param">cchar *</td><td><td>ciphers</td><td>
+Candidate ciphers to use.
+</td>
+    <tr><td class="param">void *</td><td><td>config</td><td>
+Extended provider SSL configuration.
+</td>
+    <tr><td class="param">bool</td><td><td>configured</td><td>
+Set if this SSL configuration has been processed.
+</td>
+    <tr><td class="param">cchar *</td><td><td>hostname</td><td>
+Hostname when using SNI.
+</td>
+    <tr><td class="param">cchar *</td><td><td>keyFile</td><td>
+Alternatively, locate the key in a file.
+</td>
+    <tr><td class="param">int</td><td><td>logLevel</td><td>
+Level at which to start tracing SSL events.
+</td>
+    <tr><td class="param">MprMatchSsl</td><td><td>matchSsl</td><td>
+Match the SSL configuration for SNI.
+</td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex">MprMutex</a> *</td><td><td>mutex</td><td>
+Multithread sync.
+</td>
+    <tr><td class="param">int</td><td><td>protocols</td><td>
+SSL protocols.
+</td>
+    <tr><td class="param">bool</td><td><td>renegotiate</td><td>
+Renegotiate sessions.
+</td>
+    <tr><td class="param">cchar *</td><td><td>revoke</td><td>
+Certificate revocation list.
+</td>
+    <tr><td class="param">bool</td><td><td>ticket</td><td>
+Enable session tickets.
+</td>
+    <tr><td class="param">bool</td><td><td>verified</td><td>
+Peer has been verified.
+</td>
+    <tr><td class="param">int</td><td><td>verifyDepth</td><td>
+Cert chain depth that should be verified.
+</td>
+    <tr><td class="param">bool</td><td><td>verifyIssuer</td><td>
+Set if the certificate issuer should be also verified.
+</td>
+    <tr><td class="param">bool</td><td><td>verifyPeer</td><td>
+Verify the peer verificate.
+</td>
+    </table></dd></dl>
   </div>
 </div>
 <a name="struct_mpr_thread_local"></a>

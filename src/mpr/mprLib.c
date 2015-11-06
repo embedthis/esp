@@ -2723,7 +2723,7 @@ static void shutdownMonitor(void *data, MprEvent *event)
         if (MPR->exitStrategy & MPR_EXIT_SAFE && mprCancelShutdown()) {
             mprLog("warn mpr", 2, "Shutdown cancelled due to continuing requests");
         } else {
-            mprLog("warn mpr", 2, "Timeout while waiting for requests to complete");
+            mprLog("warn mpr", 6, "Timeout while waiting for requests to complete");
             if (mprState <= MPR_STOPPING) {
                 mprState = MPR_STOPPED;
             }
@@ -2773,7 +2773,7 @@ PUBLIC void mprShutdown(int how, int exitStatus, MprTicks timeout)
         }
         /* No continue */
     }
-    mprLog("info mpr", 3, "Application exit, waiting for existing requests to complete.");
+    mprLog("info mpr", 5, "Application exit, waiting for existing requests to complete.");
 
     if (!mprIsIdle(0)) {
         mprCreateTimerEvent(NULL, "shutdownMonitor", 0, shutdownMonitor, 0, MPR_EVENT_QUICK);
@@ -2878,7 +2878,9 @@ PUBLIC bool mprDestroy()
     }
     mprState = MPR_DESTROYED;
 
-    mprLog("info mpr", 2, (MPR->exitStrategy & MPR_EXIT_RESTART) ? "Restarting" : "Exiting");
+    if (MPR->exitStrategy & MPR_EXIT_RESTART) {
+        mprLog("info mpr", 2, "Restarting");
+    }
     mprStopModuleService();
     mprStopSignalService();
     mprStopGCService();
@@ -19762,7 +19764,7 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
         mp->path = at;
         mprGetPathInfo(mp->path, &info);
         mp->modified = info.mtime;
-        mprLog("info mpr", 4, "Loading native module %s", mprGetPathBase(mp->path));
+        mprLog("info mpr", 5, "Loading native module %s", mprGetPathBase(mp->path));
         if ((handle = dlopen(mp->path, RTLD_LAZY | RTLD_GLOBAL)) == 0) {
             mprLog("error mpr", 0, "Cannot load module %s, reason: \"%s\"", mp->path, dlerror());
             return MPR_ERR_CANT_OPEN;

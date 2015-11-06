@@ -1901,8 +1901,6 @@ static void compileItems(HttpRoute *route)
     int         found, next;
 
     found = 0;
-    vtrace("Info", "Compile items for route \"%s\"", route->pattern);
-
     if ((dir = httpGetDir(route, "CONTROLLERS")) != 0 && !smatch(dir, ".")) {
         app->files = mprGetPathFiles(dir, MPR_PATH_DESCEND);
         for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {

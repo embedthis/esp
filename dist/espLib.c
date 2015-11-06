@@ -4379,6 +4379,8 @@ static Esp *esp;
 static int cloneDatabase(HttpConn *conn);
 static void closeEsp(HttpQueue *q);
 static EspRoute *createEspRoute(HttpRoute *route);
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
+static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
@@ -4691,6 +4693,7 @@ static int runAction(HttpConn *conn)
         controllers = mprJoinPath(route->home, controllers);
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
+        httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", controller);
         if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
             if (mprPathExists(controller, R_OK)) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
@@ -4722,10 +4725,13 @@ static int runAction(HttpConn *conn)
         (eroute->commonController)(conn);
     }
     if (action) {
+        httpTrace(conn, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
         setupFeedback(conn);
         if (!httpIsFinalized(conn)) {
             (action)(conn);
         }
+    } else {
+        httpTrace(conn, "esp.handler", "context", "msg: 'No controller action'");
     }
     return 1;
 }
@@ -4743,12 +4749,17 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
     eroute = route->eroute;
 
 #if !ME_STATIC
+    /*
+        Dynamically load the ESP module for the view
+     */
     if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, target))) {
-        cchar *errMsg;
-        /* WARNING: GC yield */
+        cchar *errMsg, *path;
+        /* WARNING: GC yield - need target below */
         target = sclone(target);
         mprHold(target);
-        if (espLoadModule(route, conn->dispatcher, "view", mprJoinPath(route->documents, target), &errMsg) < 0) {
+        path = mprJoinPath(route->documents, target);
+        httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
+        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg) < 0) {
             httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             mprRelease(target);
             return 0;
@@ -4774,13 +4785,19 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 
 
 /*
-    Check if the target/filename.ext is registered as a view or exists as a file
+    Check if the target/filename.ext is registered as an esp view or exists as a file
  */
-static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
+static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
 {
     MprPath     info;
+    HttpRx      *rx;
+    HttpRoute   *route;
     EspRoute    *eroute;
-    cchar       *path;
+    cchar       *module, *path;
+
+    rx = conn->rx;
+    route = rx->route;
+    eroute = route->eroute;
 
     if (filename) {
         target = mprJoinPath(target, filename);
@@ -4790,31 +4807,59 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
             target = sjoin(target, ".", ext, NULL);
         }
     }
-    eroute = conn->rx->route->eroute;
+    /*
+        See if module already loaded for this view
+     */
     if (mprLookupKey(eroute->views, target)) {
         return target;
     }
-    path = mprJoinPath(conn->rx->route->documents, target);
+
+#if !ME_STATIC
+    /*
+        If target exists as a compiled module
+     */
+    path = mprJoinPath(route->documents, target);
+    module = getModuleName(route, "view", path);
+    if (mprGetPathInfo(module, &info) == 0 && !info.isDir) {
+        return target;
+    }
+
+    /*
+        If target exists as a document
+     */
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }
-    if (conn->rx->route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
+
+    /*
+        If target exists as a mapped / compressed document
+     */
+    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
         path = httpMapContent(conn, path);
         if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
             return target;
         }
     }
+#if DEPRECATED || 1
+    /*
+        See if views are under client/app. Remove in version 6.
+     */
+    path = mprJoinPaths(route->documents, "app", target, NULL);
+    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
+        return mprJoinPath("app", target);
+    }
+#endif
+#endif
     return 0;
 }
 
 
 /*
     Render a document by mapping a URL target to a document. The target is interpreted relative to route->documents.
-    If target exists, then serve that.
-    If target + extension exists, serve that.
-    If target is a directory and an index.esp, return the index.esp without a redirect.
+    If target + defined extension exists, serve that.
+    If target is a directory with an index.esp, return the index.esp without a redirect.
     If target is a directory without a trailing "/" but with an index.esp, do an external redirect to "URI/".
-    If target does not end with ".esp", then do not serve that.
+    Otherwise relay to the fileHandler.
  */
 PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 {
@@ -4825,18 +4870,18 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     assert(target);
 
     for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
-        if (kp->key && *kp->key) {
-            if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
+        if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
+            if ((dest = checkTarget(conn, target, 0, kp->key)) != 0) {
+                httpTrace(conn, "esp.handler", "context", "msg: 'Render view %s'", dest);
                 espRenderView(conn, dest, 0);
                 return;
             }
         }
     }
-    if ((dest = checkView(conn, target, 0, "esp")) != 0) {
-        espRenderView(conn, dest, 0);
-        return;
-    }
-    if ((dest = checkView(conn, target, "index", "esp")) != 0) {
+    /*
+        Check for index
+     */
+    if ((dest = checkTarget(conn, target, "index", "esp")) != 0) {
         /*
             Must do external redirect first if URL does not end with "/"
          */
@@ -4846,21 +4891,13 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
+        httpTrace(conn, "esp.handler", "context", "msg: 'Render index %s'", dest);
         espRenderView(conn, dest, 0);
         return;
     }
-/* 
-    Remove in version 6 
-*/
-#if DEPRECATED || 1
-    if ((dest = checkView(conn, sjoin("app/", target, NULL), 0, "esp")) != 0) {
-        espRenderView(conn, dest, 0);
-        return;
-    }
-#endif
+
     /*
-        Last chance, forward to the file handler ... not an ESP request. 
-        This enables static file requests within ESP routes.
+        Last chance, forward to the file handler ... not an ESP request. This enables file requests within ESP routes.
      */
     httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     conn->rx->target = &conn->rx->pathInfo[1];
@@ -4966,6 +5003,38 @@ static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar 
 }
 
 
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
+{
+    EspRoute    *eroute;
+    cchar       *appName, *canonical;
+
+    eroute = route->eroute;
+#if VXWORKS
+    /*
+        Trim the drive for VxWorks where simulated host drives only exist on the target
+     */
+    target = mprTrimPathDrive(target);
+#endif
+    canonical = mprGetPortablePath(mprGetRelPath(target, route->home));
+
+    appName = eroute->appName;
+    return eroute->combine ? appName : mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
+}
+
+
+static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target)
+{
+    cchar   *cache, *cacheName;
+
+    cacheName = getCacheName(route, "view", target);
+    if ((cache = httpGetDir(route, "CACHE")) == 0) {
+        /* May not be set for non esp apps */
+        cache = "cache";
+    }
+    return mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
+}
+
+
 /*
     WARNING: GC yield
  */
@@ -4973,12 +5042,13 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 {
     EspRoute    *eroute;
     MprModule   *mp;
-    cchar       *appName, *cache, *cacheName, *canonical, *entry, *module;
+    cchar       *cache, *cacheName, *entry, *module;
     int         isView, recompile;
 
     eroute = route->eroute;
     *errMsg = "";
 
+#if UNUSED
 #if VXWORKS
     /*
         Trim the drive for VxWorks where simulated host drives only exist on the target
@@ -4993,6 +5063,12 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     } else {
         cacheName = mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
     }
+    if ((cache = httpGetDir(route, "CACHE")) == 0) {
+        cache = "cache";
+    }
+    module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
+#endif
+    cacheName = getCacheName(route, kind, source);
     if ((cache = httpGetDir(route, "CACHE")) == 0) {
         cache = "cache";
     }
@@ -5310,6 +5386,7 @@ static int defineApp(HttpRoute *route, cchar *path)
     }
     espSetDefaultDirs(route);
 
+    httpAddRouteHandler(route, "espHandler", "esp");
     httpAddRouteHandler(route, "espHandler", "");
     httpAddRouteIndex(route, "index.esp");
     httpAddRouteIndex(route, "index.html");
@@ -5482,6 +5559,7 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 PUBLIC void espSetDefaultDirs(HttpRoute *route)
 {
     cchar   *controllers, *documents, *path, *migrations;
+    char    *output;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
@@ -5497,7 +5575,15 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
                 if (!mprPathExists(documents, X_OK)) {
                     documents = mprJoinPath(route->home, "public");
                     if (!mprPathExists(documents, X_OK)) {
-                        documents = route->home;
+                        if (mprPathExists("install.conf", R_OK)) {
+                            if (mprRun(NULL, "appweb --show-documents", NULL, (char**) &output, NULL, 5000) == 0) {
+                                documents = strim(output, "\n", MPR_TRIM_END);
+                            } else {
+                                documents = route->home;
+                            }
+                        } else {
+                            documents = route->home;
+                        }
                     }
                 }
             }
@@ -6346,7 +6432,6 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     bodyCode = mprGetBufStart(body);
 
     if (state == &top) {
-        path = mprGetRelPath(path, route->documents);
         if (mprGetBufLength(state->start) > 0) {
             mprPutCharToBuf(state->start, '\n');
         }
@@ -6367,8 +6452,9 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "   espDefineView(route, \"%s\", %s);\n"\
             "   return 0;\n"\
             "}\n",
-            path, mprGetBufStart(state->global), cacheName, mprGetBufStart(state->start), bodyCode, mprGetBufStart(state->end),
-            ESP_EXPORT_STRING, cacheName, mprGetPortablePath(path), cacheName);
+            mprGetRelPath(path, route->home), mprGetBufStart(state->global), cacheName, 
+                mprGetBufStart(state->start), bodyCode, mprGetBufStart(state->end),
+            ESP_EXPORT_STRING, cacheName, mprGetPortablePath(mprGetRelPath(path, route->documents)), cacheName);
         mprDebug("esp", 5, "Create ESP script: \n%s\n", bodyCode);
     }
     return bodyCode;

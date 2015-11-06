@@ -1374,11 +1374,18 @@
       <arglist>(HttpConn *conn, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>struct HttpHost *</type>
       <name>httpMatchHost</name>
       <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>ga989b6ee0325e432a5aa86f288fce23d0</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga56a50e859f77f52856565f7901b6a107</anchor>
+      <arglist>(HttpConn *conn, cchar *hostname)</arglist>
+    </member>
+    <member kind="function">
+      <type>MprSsl *</type>
+      <name>httpMatchSsl</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>gaf9e8dbe3ddc229720f6bf179627cea8c</anchor>
+      <arglist>(MprSocket *sp, cchar *hostname)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -3101,6 +3108,13 @@
       <arglist>(HttpConn *conn, cchar *fmt, va_list args)</arglist>
     </member>
     <member kind="function">
+      <type>ssize cchar *</type>
+      <name>httpGetTxHeader</name>
+      <anchorfile>group___http_tx.html</anchorfile>
+      <anchor>ga8a102fb8d847da04c3d595b3284fbc11</anchor>
+      <arglist>(HttpConn *conn, cchar *key)</arglist>
+    </member>
+    <member kind="function">
       <type>int</type>
       <name>httpIsChunked</name>
       <anchorfile>group___http_tx.html</anchorfile>
@@ -3258,13 +3272,6 @@
       <anchorfile>group___http_endpoint.html</anchorfile>
       <anchor>ga4ef2065c27222065ba19f343cb9358d6</anchor>
       <arglist>(HttpEndpoint *endpoint, struct HttpHost *host)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>httpAddHostToEndpoints</name>
-      <anchorfile>group___http_endpoint.html</anchorfile>
-      <anchor>gaf6ef9ec1f92784e56f31b45366145e12</anchor>
-      <arglist>(struct HttpHost *host)</arglist>
     </member>
     <member kind="function">
       <type>HttpEndpoint *</type>

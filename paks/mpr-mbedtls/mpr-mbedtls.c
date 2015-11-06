@@ -543,7 +543,7 @@ static ssize readMbed(MprSocket *sp, void *buf, ssize len)
     }
     while (1) {
         rc = mbedtls_ssl_read(&mb->ctx, buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "readMbed read 0x%04x", rc);
+        mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "readMbed read returned %d (0x%04x)", rc, rc);
         if (rc < 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE)  {
                 rc = 0;
@@ -594,7 +594,7 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
     rc = 0;
     do {
         rc = mbedtls_ssl_write(&mb->ctx, (uchar*) buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", 6, "mbedtls write: wrote 0x%04x of %zd", rc, len);
+        mprDebug("debug mpr ssl mbedtls", 6, "mbedtls write: write returned %d (0x%04x), len %zd", rc, rc, len);
         if (rc <= 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) {
                 break;

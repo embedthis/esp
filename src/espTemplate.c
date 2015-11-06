@@ -738,7 +738,6 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     bodyCode = mprGetBufStart(body);
 
     if (state == &top) {
-        path = mprGetRelPath(path, route->documents);
         if (mprGetBufLength(state->start) > 0) {
             mprPutCharToBuf(state->start, '\n');
         }
@@ -759,8 +758,9 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "   espDefineView(route, \"%s\", %s);\n"\
             "   return 0;\n"\
             "}\n",
-            path, mprGetBufStart(state->global), cacheName, mprGetBufStart(state->start), bodyCode, mprGetBufStart(state->end),
-            ESP_EXPORT_STRING, cacheName, mprGetPortablePath(path), cacheName);
+            mprGetRelPath(path, route->home), mprGetBufStart(state->global), cacheName, 
+                mprGetBufStart(state->start), bodyCode, mprGetBufStart(state->end),
+            ESP_EXPORT_STRING, cacheName, mprGetPortablePath(mprGetRelPath(path, route->documents)), cacheName);
         mprDebug("esp", 5, "Create ESP script: \n%s\n", bodyCode);
     }
     return bodyCode;

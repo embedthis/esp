@@ -24,6 +24,7 @@
     <class kind="struct">MprSocketProvider</class>
     <class kind="struct">MprSocketService</class>
     <class kind="struct">MprSpin</class>
+    <class kind="struct">MprSsl</class>
     <class kind="struct">MprThreadLocal</class>
     <class kind="struct">MprThreadService</class>
     <class kind="struct">MprWaitService</class>
@@ -5197,13 +5198,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>mprSetSslCacheSize</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>gab70a92f2a7173dee2e00045b4186cbbb</anchor>
-      <arglist>(MprSsl *ssl, int size)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>mprSetSslCaFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga472960cd4ec2360bf05ab678e7cba577</anchor>
@@ -5232,6 +5226,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslHostname</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gab6cfe15aa1aa544af99d7fd3279d83ee</anchor>
+      <arglist>(MprSsl *ssl, cchar *hostname)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslKeyFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gaa8293be1a1b769f03db306834ef5291f</anchor>
@@ -5243,6 +5244,13 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gabcdba4618d5754a0ccfc76ef271776d8</anchor>
       <arglist>(struct MprSsl *ssl, int level)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslMatch</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga375d09974e061112fd50d1e705143887</anchor>
+      <arglist>(struct MprSsl *ssl, MprMatchSsl match)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -5278,13 +5286,6 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga16313273a92421655778343d310475ee</anchor>
       <arglist>(MprSsl *ssl, bool enable)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>mprSetSslTimeout</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga5c61abfb50e0384fdb01aafc82a1b7b4</anchor>
-      <arglist>(MprSsl *ssl, MprTicks timeout)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -9478,6 +9479,7 @@
     <name>MprSsl</name>
     <title>MprSsl</title>
     <filename>group___mpr_ssl.html</filename>
+    <class kind="struct">MprSsl</class>
     <member kind="function">
       <type>void</type>
       <name>mprAddSslCiphers</name>
@@ -9505,13 +9507,6 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga4cf59cde7f99bce19be6056483180e51</anchor>
       <arglist>()</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>mprSetSslCacheSize</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>gab70a92f2a7173dee2e00045b4186cbbb</anchor>
-      <arglist>(MprSsl *ssl, int size)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -9543,6 +9538,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>mprSetSslHostname</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>gab6cfe15aa1aa544af99d7fd3279d83ee</anchor>
+      <arglist>(MprSsl *ssl, cchar *hostname)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>mprSetSslKeyFile</name>
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gaa8293be1a1b769f03db306834ef5291f</anchor>
@@ -9554,6 +9556,13 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gabcdba4618d5754a0ccfc76ef271776d8</anchor>
       <arglist>(struct MprSsl *ssl, int level)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprSetSslMatch</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga375d09974e061112fd50d1e705143887</anchor>
+      <arglist>(struct MprSsl *ssl, MprMatchSsl match)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -9589,13 +9598,6 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>ga16313273a92421655778343d310475ee</anchor>
       <arglist>(MprSsl *ssl, bool enable)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>mprSetSslTimeout</name>
-      <anchorfile>group___mpr_ssl.html</anchorfile>
-      <anchor>ga5c61abfb50e0384fdb01aafc82a1b7b4</anchor>
-      <arglist>(MprSsl *ssl, MprTicks timeout)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -11182,6 +11184,150 @@
     </member>
   </compound>
   <compound kind="struct">
+    <name>MprSsl</name>
+    <filename>struct_mpr_ssl.html</filename>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>caFile</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a8a627ab6200638b2961fb1a514d679f2</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>caPath</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>aa910ddd09aaae43cebcff5ec88754ea7</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>certFile</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ae5223bf9fd3a18054a9d8179d996c08a</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>changed</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>accc7488a9180f1afd23565fd507213c7</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>ciphers</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>aaa692e8f3a803dc7ad12954cafbc6e45</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>void *</type>
+      <name>config</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a31b9c16fa3f68378e7aad80d2047ebb7</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>configured</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a30bbb6571b200fe0bdbfda507750ad1c</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>hostname</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a8a805f7c818a58bce252b5cfa8899938</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>keyFile</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ab67f32c48dc2e508cafd87001b9931c6</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>int</type>
+      <name>logLevel</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ab892859f3cba9cf711ac48963519523a</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>MprMatchSsl</type>
+      <name>matchSsl</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ac87e078fd4d2e4ba8296d85971d69ddd</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>MprMutex *</type>
+      <name>mutex</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a5e670536f4e32842273eeffdc684b008</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>int</type>
+      <name>protocols</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a32bd316bf81d678055021eaaaa2fa7ff</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>renegotiate</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>aa6e708e57ee4619ce7bad322ace7dc53</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>revoke</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a3f3820618e3b33208d1b41dc74628d9a</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>ticket</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>afa70a3f4780e3d61610067c64a4f0179</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>verified</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a1209b9a2d9cc1a0222d7f5af2f4ce693</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>int</type>
+      <name>verifyDepth</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>a9ce5e3d9e7cfe3ef2db515dfeca4afef</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>verifyIssuer</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ac67d88950b1068245c01ec6c9f3e0825</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>bool</type>
+      <name>verifyPeer</name>
+      <anchorfile>struct_mpr_ssl.html</anchorfile>
+      <anchor>ac9c36e5572080a0a0e22f9f5b4f7b005</anchor>
+      <arglist></arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
     <name>MprMemStats</name>
     <filename>struct_mpr_mem_stats.html</filename>
     <member kind="variable">
@@ -11482,6 +11628,13 @@
       <arglist>)(struct MprSocket *socket)</arglist>
     </member>
     <member kind="variable">
+      <type>void *</type>
+      <name>managed</name>
+      <anchorfile>struct_mpr_socket_provider.html</anchorfile>
+      <anchor>ae50df972cadd9f1cd23d085df1c9ec62</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
       <type>char *</type>
       <name>name</name>
       <anchorfile>struct_mpr_socket_provider.html</anchorfile>
@@ -11525,6 +11678,13 @@
       <name>hasIPv6</name>
       <anchorfile>struct_mpr_socket_service.html</anchorfile>
       <anchor>abd67eb480307a0fe00f527edb229775d</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>int</type>
+      <name>loaded</name>
+      <anchorfile>struct_mpr_socket_service.html</anchorfile>
+      <anchor>a246659d2df4c807018d9e31abfb11ba8</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">
