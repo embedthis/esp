@@ -330,7 +330,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_route_1gac84aebec89adc28156f0704a7600b846" class="nameRef">httpMapFile</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Map the request URI to a filename in physical storage for a handler.</td></tr>
 <tr class="apiDef"><td class="apiType">struct HttpHost*</td><td><a href="#group___http_conn_1ga56a50e859f77f52856565f7901b6a107" class="nameRef">httpMatchHost</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *hostname)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Match the HttpHost object that should serve this request.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___http_rx_1ga5bfd6791a6b71fbf6891dd565a41dd5d" class="nameRef">httpMatchParam</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *expected)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Match a form variable with an expected value.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="mpr.html#group___mpr_ssl" class="ref">MprSsl*</a></td><td><a href="#group___http_conn_1gaf9e8dbe3ddc229720f6bf179627cea8c" class="nameRef">httpMatchSsl</a>(<a href="mpr.html#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *hostname)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Match the HttpHost object that should serve this request.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="mpr.html#struct_mpr_ssl" class="ref">MprSsl*</a></td><td><a href="#group___http_conn_1gaf9e8dbe3ddc229720f6bf179627cea8c" class="nameRef">httpMatchSsl</a>(<a href="mpr.html#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *hostname)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Match the HttpHost object that should serve this request.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_conn_1ga375dce8ba63d90a2fb4e8eb573b52366" class="nameRef">httpMemoryError</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Signal a memory allocation error.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a168afaa12b2c08e4ae1d11ea4c296e64" class="ref">int64</a></td><td><a href="#group___http_monitor_1ga0bc7096f9bd5aaf3a207194adff4c2b6" class="nameRef">httpMonitorEvent</a>(struct HttpConn *conn, int counter, <a href="osdep.html#osdep_8h_1a168afaa12b2c08e4ae1d11ea4c296e64" class="ref">int64</a> adj)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Monitor an event and validate against defined limits and monitored resources.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___http_tx_1ga64b9dc878c9207fedc57c32791384144" class="nameRef">httpNeedRetry</a>(<a href="#group___http_conn" class="ref">HttpConn</a> *conn, char **url)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Determine if the transmission needs a transparent retry to implement authentication or redirection.</td></tr>
@@ -4055,7 +4055,7 @@ This will define a &quot;Content-Type: multipart/form-data...&quot; header and w
 <a name="group___http_conn_1gaf9e8dbe3ddc229720f6bf179627cea8c"></a>
 <div class="api">
   <div class="prototype">
-    <a href="mpr.html#group___mpr_ssl" class="ref">MprSsl</a> *
+    <a href="mpr.html#struct_mpr_ssl" class="ref">MprSsl</a> *
     httpMatchSsl
 (<a href="mpr.html#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *hostname)
   </div>
@@ -4879,7 +4879,7 @@ Listen port.
     <tr><td class="param">MprSocket *</td><td><td>sock</td><td>
 Listening socket.
 </td>
-    <tr><td class="param">MprSsl *</td><td><td>ssl</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_ssl" external="mpr.dtags">MprSsl</a> *</td><td><td>ssl</td><td>
 SSL configurations to use.
 </td>
     </table></dd></dl>
@@ -5063,7 +5063,7 @@ Accept a new client connection on a new socket. If multithreaded, this will come
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">endpoint</td><td>HttpEndpoint object created via <a class="ref" href="#group___http_endpoint_1gad5bb2a3a29df9b1191c484a56fcf642c">httpCreateEndpoint</a></td>
-    <tr><td class="param">ssl</td><td>MprSsl object.</td>
+    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="mpr.dtags">MprSsl</a> object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;Zero&quot; if successful, otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
@@ -5084,7 +5084,7 @@ Accept a new client connection on a new socket. If multithreaded, this will come
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">name</td><td>Endpoint name. The endpoint name is comprised of the IP and port. For example: &quot;127.0.0.1:7777&quot;.</td>
-    <tr><td class="param">ssl</td><td>MprSsl object.</td>
+    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="mpr.dtags">MprSsl</a> object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
@@ -7238,7 +7238,7 @@ Does not include prefix. Always set.
     <tr><td class="param">char *</td><td><td>sourceName</td><td>
 Source name for route target.
 </td>
-    <tr><td class="param">struct MprSsl *</td><td><td>ssl</td><td>
+    <tr><td class="param">struct <a class="ref" href="#struct_mpr_ssl" external="mpr.dtags">MprSsl</a> *</td><td><td>ssl</td><td>
 SSL configuration.
 </td>
     <tr><td class="param">char *</td><td><td>startSegment</td><td>

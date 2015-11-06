@@ -3808,7 +3808,10 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
         }
         route->mode = mode;
         if ((route->debug = smatch(route->mode, "debug")) != 0) {
+#if UNUSED
+            /* Some customers may ship with debug */
             route->flags |= HTTP_ROUTE_SHOW_ERRORS;
+#endif
             route->keepSource = 1;
         }
     }
@@ -6208,6 +6211,7 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
 
     /*
         When a request completes, prepForNext will reset the state to HTTP_STATE_BEGIN
+        Errors will set keepAliveCount to zero.
      */
     if (conn->state < HTTP_STATE_PARSED && conn->endpoint && (mprIsSocketEof(conn->sock) || (conn->keepAliveCount <= 0))) {
         if (!conn->errorMsg) {
@@ -8012,15 +8016,7 @@ static void acceptConn(HttpEndpoint *endpoint)
 
 PUBLIC HttpHost *httpMatchHost(HttpConn *conn, cchar *hostname)
 {
-    assert(conn);
-
-    if (!conn->host && (conn->host = httpLookupHostOnEndpoint(conn->endpoint, hostname)) == 0) {
-#if UNUSED
-        mprLog("error http", 0, "No host to serve request. Searching for %s", hostname);
-#endif
-        return 0;
-    }
-    return conn->host;
+    return httpLookupHostOnEndpoint(conn->endpoint, hostname);
 }
 
 
@@ -8035,7 +8031,6 @@ PUBLIC MprSsl *httpMatchSsl(MprSocket *sp, cchar *hostname)
     if ((host = httpMatchHost(conn, hostname)) == 0) {
         return 0;
     }
-    conn->host = host;
     return host->defaultRoute->ssl;
 }
 
@@ -8301,10 +8296,7 @@ static void makeAltBody(HttpConn *conn, int status)
     assert(rx && tx);
 
     statusMsg = httpLookupStatus(status);
-    msg = "";
-    if (rx && (!rx->route || rx->route->flags & HTTP_ROUTE_SHOW_ERRORS)) {
-        msg = conn->errorMsg;
-    }
+    msg = (rx && rx->route && rx->route->flags & HTTP_ROUTE_SHOW_ERRORS) ?  conn->errorMsg : "";
     if (rx && scmp(rx->accept, "text/plain") == 0) {
         tx->altBody = sfmt("Access Error: %d -- %s\r\n%s\r\n", status, statusMsg, msg);
     } else {
@@ -14223,6 +14215,12 @@ PUBLIC void httpSetRouteUploadDir(HttpRoute *route, cchar *dir)
 #endif
 
 
+PUBLIC void httpSetRouteUpdate(HttpRoute *route, bool on)
+{
+    route->update = on;
+}
+
+
 PUBLIC void httpSetRouteWorkers(HttpRoute *route, int workers)
 {
     assert(route);
@@ -16323,10 +16321,9 @@ static bool parseIncoming(HttpConn *conn)
         if (schr(rx->hostHeader, ':')) {
             mprParseSocketAddress(rx->hostHeader, &hostname, NULL, NULL, 0);
         }
-        if (!httpMatchHost(conn, hostname)) {
+        if ((conn->host = httpMatchHost(conn, hostname)) == 0) {
             conn->host = mprGetFirstItem(conn->endpoint->hosts);
             httpError(conn, HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
-            return 0;
         }
         parseUri(conn);
 
@@ -16647,7 +16644,6 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
             } else if (strcasecmp(key, "content-length") == 0) {
                 if (rx->length >= 0) {
                     httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Mulitple content length headers");
-//  MOB - return 0?
                     break;
                 }
                 rx->length = stoi(value);
@@ -16692,7 +16688,6 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 }
                 if (start < 0 || end < 0 || size < 0 || end < start) {
                     httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad content range");
-//  MOB - return 0?
                     break;
                 }
                 rx->inputRange = httpCreateRange(conn, start, end);
@@ -16724,7 +16719,6 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 if (!conn->http10) {
                     if (strcasecmp(value, "100-continue") != 0) {
                         httpBadRequestError(conn, HTTP_CODE_EXPECTATION_FAILED, "Expect header value is not supported");
-//  MOB - return 0?
                     } else {
                         rx->flags |= HTTP_EXPECT_CONTINUE;
                     }
@@ -16737,7 +16731,6 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                 if ((int) strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:")
                         < (int) slen(value)) {
                     httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host header");
-//  MOB - return 0?
                 } else {
                     rx->hostHeader = sclone(value);
                 }
@@ -16842,7 +16835,6 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
                  */
                 if (!parseRange(conn, value)) {
                     httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad range");
-//  MOB - return 0?
                 }
             } else if (strcasecmp(key, "referer") == 0) {
                 /* NOTE: yes the header is misspelt in the spec */
@@ -16911,7 +16903,6 @@ static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
     if (rx->form && rx->length >= conn->limits->rxFormSize && conn->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
             "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
-//  MOB - return 0?
     }
     if (conn->error) {
         /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */

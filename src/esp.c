@@ -717,7 +717,7 @@ static void initialize(int argc, char **argv)
         httpAddRouteIndex(route, "index.esp");
         httpAddRouteIndex(route, "index.html");
         httpSetRouteShowErrors(route, 1);
-        route->update = 1;
+        httpSetRouteUpdate(route, 1);
         espLoadCompilerRules(route);
     }
     httpFinalizeRoute(route);

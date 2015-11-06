@@ -5075,7 +5075,7 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
 
     lock(esp);
-    if (route->update) {
+    if (mprLookupModule(source) == 0 || route->update) {
         if (mprPathExists(source, R_OK)) {
             isView = smatch(kind, "view");
             if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
@@ -5406,7 +5406,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
     bool        modified;
 
     eroute = route->eroute;
-    if (!route->update) {
+    if (eroute->loaded && !route->update) {
         return 0;
     }
     package = mprJoinPath(mprGetPathDir(eroute->configFile), "package.json");

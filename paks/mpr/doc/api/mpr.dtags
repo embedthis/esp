@@ -9479,7 +9479,6 @@
     <name>MprSsl</name>
     <title>MprSsl</title>
     <filename>group___mpr_ssl.html</filename>
-    <class kind="struct">MprSsl</class>
     <member kind="function">
       <type>void</type>
       <name>mprAddSslCiphers</name>

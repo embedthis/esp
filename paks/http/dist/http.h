@@ -5738,6 +5738,15 @@ PUBLIC void httpSetRouteTemplate(HttpRoute *route, cchar *tplate);
  */
 PUBLIC void httpSetRouteVar(HttpRoute *route, cchar *token, cchar *value);
 
+/**
+    Define whether updating a cached request is required
+    @param route Route to modify
+    @param on Set to true to enable
+    @ingroup HttpRoute
+    @stability Evolving
+ */
+PUBLIC void httpSetRouteUpdate(HttpRoute *route, bool on);
+
 #if DEPRECATED || 1
 /**
     Set the default upload directory for file uploads

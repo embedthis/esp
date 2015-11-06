@@ -69,7 +69,7 @@
 <td class="apiBrief">Socket Service.</td></tr>
 <tr class="apiDef">
 <td class="apiName"><a href="#group___mpr_ssl" class="nameRef">MprSsl</a></td>
-<td class="apiBrief">Callback function for SNI connections.</td></tr>
+<td class="apiBrief">SSL control structure.</td></tr>
 <tr class="apiDef">
 <td class="apiName"><a href="#group___mpr_string" class="nameRef">MprString</a></td>
 <td class="apiBrief">Safe String Module.</td></tr>
@@ -754,7 +754,7 @@
 <tr class="apiDef"><td class="apiName"><a href="#struct_mpr_socket_service" class="nameRef">MprSocketService</a></td><td class="apiBrief">Mpr socket service class.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___mpr_list_1ga128df90ccf99b25bd404afc01ace1415" class="nameRef">MprSortProc</a></td><td class="apiBrief">Quicksort callback function.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_mpr_spin" class="nameRef">MprSpin</a></td><td class="apiBrief">Multithreading spin lock control structure.</td></tr>
-<tr class="apiDef"><td class="apiName"><a href="#struct_mpr_ssl" class="nameRef">MprSsl</a></td><td class="apiBrief">SSL control structure.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#struct_mpr_ssl" class="nameRef">MprSsl</a></td><td class="apiBrief">Callback function for SNI connections.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___mpr_1gaf44802f2cd62d3139163df79721ee79b" class="nameRef">MprTerminator</a></td><td class="apiBrief">Service shutdown notifier.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_mpr_thread_local" class="nameRef">MprThreadLocal</a></td><td class="apiBrief">Thread local data storage.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d" class="nameRef">MprThreadProc</a></td><td class="apiBrief">Thread main procedure.</td></tr>
@@ -11724,8 +11724,8 @@ This is used to prevent further I/O wait events while still preserving the socke
 <div class="api">
   <div class="prototype">MprSsl</div>
   <div class="apiDetail">
-<p>Callback function for SNI connections.</p>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+<p>SSL control structure.</p>
+    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">cchar *</td><td><td>caFile</td><td>
@@ -16255,8 +16255,8 @@ Socket provider for non-SSL connections.
 <div class="api">
   <div class="prototype">MprSsl</div>
   <div class="apiDetail">
-<p>SSL control structure.</p>
-    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
+<p>Callback function for SNI connections.</p>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">cchar *</td><td><td>caFile</td><td>
