@@ -71,12 +71,12 @@ help:
 	@echo 'Set to 0 to disable and 1 to enable:' >&2
 	@echo '' >&2
 	@echo '  ME_MPR_LOGGING     # Enable application logging' >&2
+	@echo '  ME_COM_MBEDTLS     # Enable the mbed TLS stack' >&2
 	@echo '  ME_MPR_TRACING     # Enable debug tracing' >&2
-	@echo '  ME_COM_EST         # Enable the EST SSL stack' >&2
 	@echo '' >&2
-	@echo 'For example, to disable EST:' >&2
+	@echo 'For example, to disable MBEDTLS:' >&2
 	@echo '' >&2
-	@echo '  ME_COM_EST=0 make' >&2
+	@echo '  ME_COM_MBEDTLS=0 make' >&2
 	@echo '' >&2
 	@echo 'Other make environment variables:' >&2
 	@echo '  ARCH               # CPU architecture (x86, x64, ppc, ...)' >&2
