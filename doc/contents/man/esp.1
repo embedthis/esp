@@ -4,6 +4,7 @@ esp \- ESP Application Generator for Server-Side Web Applications.
 .SH SYNOPSIS
 .B esp
     \fB--cipher cipher\fR
+    \fB--combine\fR
     \fB--database DB\fR
     \fB--force\fR
     \fB--home dir\fR
@@ -266,6 +267,9 @@ esp has the following command usage patterns:
 .TP 6
 \fB\--cipher cipher\fR
 Password cipher to use. Set to "md5" or "blowfish".
+.TP 6
+\fB\--combine\fR
+Combine compiled ESP assets into a single file. Used when building with --static.
 .TP 6
 \fB\--database Database provider\fR
 Use the specified database provider. Set to "mdb" or "sdb" for SQLite.

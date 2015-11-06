@@ -12,6 +12,7 @@ ESP(1)                           User Commands                          ESP(1)
 <B>SYNOPSIS</B>
        <B>esp</B>
            <B>--cipher cipher</B>
+           <B>--combine</B>
            <B>--database DB</B>
            <B>--force</B>
            <B>--home dir</B>
@@ -264,13 +265,17 @@ ESP(1)                           User Commands                          ESP(1)
        <B>--cipher cipher</B>
              Password cipher to use. Set to "md5" or "blowfish".
 
+       <B>--combine</B>
+             Combine  compiled ESP assets into a single file. Used when build-
+             ing with --static.
+
        <B>--database Database provider</B>
-             Use  the  specified  database provider. Set to "mdb" or "sdb" for
+             Use the specified database provider. Set to "mdb"  or  "sdb"  for
              SQLite.
 
        <B>--force</B>
-             Overwrite existing files. ESP normally will not overwrite  exist-
-             ing  files. This is to preserve user changes to previously gener-
+             Overwrite  existing files. ESP normally will not overwrite exist-
+             ing files. This is to preserve user changes to previously  gener-
              ated files.
 
        <B>--home dir</B>
@@ -281,17 +286,17 @@ ESP(1)                           User Commands                          ESP(1)
              rides the ejs.json "keep" setting.
 
        <B>--listen [ip:]port</B>
-             Define the listening endpoint address. This  will  be  used  when
-             generating  an  application.  The  value will be patched into the
+             Define  the  listening  endpoint  address. This will be used when
+             generating an application. The value will  be  patched  into  the
              generated esp.json configuration file.
 
        <B>--log logFile:level</B>
-             Specify a file to log  messages.   The  syntax  is:  <B>"--log  log-</B>
-             <B>Name[:logLevel]"</B>.   Level  3  will trace the request and response
+             Specify  a  file  to  log  messages.   The syntax is: <B>"--log log-</B>
+             <B>Name[:logLevel]"</B>.  Level 3 will trace the  request  and  response
              headers.
 
        <B>--name AppName</B>
-             Set the ESP application name. Defaults to the name of the  direc-
+             Set  the ESP application name. Defaults to the name of the direc-
              tory containing the application.
 
        <B>--noupdate</B>
@@ -306,17 +311,17 @@ ESP(1)                           User Commands                          ESP(1)
        <B>--platform [path/]os-arch-profile</B>
              Target platform configuration to build for and directory contain-
              ing esp objects and libraries for the target platform.  If a path
-             is  supplied,  the  specified platform directory is used.  Other-
-             wise, esp searches from the current directory upwards for a  par-
+             is supplied, the specified platform directory  is  used.   Other-
+             wise,  esp searches from the current directory upwards for a par-
              ent platform directory.
 
        <B>--rebuild</B>
-             Force  a  recompile  of all items when used with the compile com-
-             mand.  When used with migrate, this will  recreate  the  database
+             Force a recompile of all items when used with  the  compile  com-
+             mand.   When  used  with migrate, this will recreate the database
              and apply all migrations.
 
        <B>--route pattern</B>
-             This  selects  the route by pattern that will be used for the ESP
+             This selects the route by pattern that will be used for  the  ESP
              configuration.
 
        <B>--single</B>
@@ -327,22 +332,22 @@ ESP(1)                           User Commands                          ESP(1)
              Display the route table to the console.
 
        <B>--static</B>
-             Use  static  linking  when building ESP applications. This causes
+             Use static linking when building ESP  applications.  This  causes
              esp to create archive libraries instead of shared libraries.
 
        <B>--symbols</B>
              Compile for debug with symbols.
 
        <B>--table name</B>
-             Override the database table name when generating  tables,  migra-
+             Override  the  database table name when generating tables, migra-
              tions or scaffolds. This is useful to request a plural version of
              the model name. Alternatively, specify the model name when gener-
-             ating  the  scaffold,  table or migration with the desired plural
+             ating the scaffold, table or migration with  the  desired  plural
              suffix. For example: "-s" or "-ies".
 
        <B>--trace traceFile:level</B>
-             Specify a file for trace messages.  The syntax is: <B>"--trace  tra-</B>
-             <B>ceName[:traceLevel]"</B>.    Level  3  will  trace  the  request  and
+             Specify  a file for trace messages.  The syntax is: <B>"--trace tra-</B>
+             <B>ceName[:traceLevel]"</B>.   Level  3  will  trace  the  request   and
              response headers.
 
        <B>--verbose </B>or <B>-v</B>
@@ -355,7 +360,7 @@ ESP(1)                           User Commands                          ESP(1)
        Report bugs to dev@embedthis.com.
 
 <B>COPYRIGHT</B>
-       Copyright (C) Embedthis Software.  Embedthis  ESP  is  a  trademark  of
+       Copyright  (C)  Embedthis  Software.  Embedthis  ESP  is a trademark of
        Embedthis Software.
 
 esp                              November 2014                          ESP(1)

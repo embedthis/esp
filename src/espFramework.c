@@ -174,7 +174,11 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
     assert(path && *path);
     assert(view);
 
-    eroute = ((EspRoute*) route->eroute)->top;
+    if ((eroute = espRoute(route)) == 0) {
+        /* Should never happen */
+        return;
+    }
+    eroute = eroute->top;
     if (route) {
         path = mprGetPortablePath(path);
     }
@@ -922,7 +926,7 @@ PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *kind, cchar *fmt, va_list arg
     }
     msg = sfmtv(fmt, args);
 
-#if UNUSED && KEEP
+#if KEEP
     MprKey      *current, *last;
     if ((current = mprLookupKeyEntry(req->feedback, kind)) != 0) {
         if ((last = mprLookupKey(req->lastFeedback, current->key)) != 0 && current->data == last->data) {

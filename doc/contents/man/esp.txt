@@ -8,6 +8,7 @@ NAME
 SYNOPSIS
        esp
            --cipher cipher
+           --combine
            --database DB
            --force
            --home dir
@@ -279,13 +280,17 @@ OPTIONS
        --cipher cipher
              Password cipher to use. Set to "md5" or "blowfish".
 
+       --combine
+             Combine  compiled ESP assets into a single file. Used when build-
+             ing with --static.
+
        --database Database provider
-             Use  the  specified  database provider. Set to "mdb" or "sdb" for
+             Use the specified database provider. Set to "mdb"  or  "sdb"  for
              SQLite.
 
        --force
-             Overwrite existing files. ESP normally will not overwrite  exist-
-             ing  files. This is to preserve user changes to previously gener-
+             Overwrite  existing files. ESP normally will not overwrite exist-
+             ing files. This is to preserve user changes to previously  gener-
              ated files.
 
        --home dir
@@ -296,17 +301,17 @@ OPTIONS
              rides the ejs.json "keep" setting.
 
        --listen [ip:]port
-             Define the listening endpoint address. This  will  be  used  when
-             generating  an  application.  The  value will be patched into the
+             Define  the  listening  endpoint  address. This will be used when
+             generating an application. The value will  be  patched  into  the
              generated esp.json configuration file.
 
        --log logFile:level
-             Specify a file to log  messages.   The  syntax  is:  "--log  log-
-             Name[:logLevel]".   Level  3  will trace the request and response
+             Specify  a  file  to  log  messages.   The syntax is: "--log log-
+             Name[:logLevel]".  Level 3 will trace the  request  and  response
              headers.
 
        --name AppName
-             Set the ESP application name. Defaults to the name of the  direc-
+             Set  the ESP application name. Defaults to the name of the direc-
              tory containing the application.
 
        --noupdate
@@ -321,17 +326,17 @@ OPTIONS
        --platform [path/]os-arch-profile
              Target platform configuration to build for and directory contain-
              ing esp objects and libraries for the target platform.  If a path
-             is  supplied,  the  specified platform directory is used.  Other-
-             wise, esp searches from the current directory upwards for a  par-
+             is supplied, the specified platform directory  is  used.   Other-
+             wise,  esp searches from the current directory upwards for a par-
              ent platform directory.
 
        --rebuild
-             Force  a  recompile  of all items when used with the compile com-
-             mand.  When used with migrate, this will  recreate  the  database
+             Force a recompile of all items when used with  the  compile  com-
+             mand.   When  used  with migrate, this will recreate the database
              and apply all migrations.
 
        --route pattern
-             This  selects  the route by pattern that will be used for the ESP
+             This selects the route by pattern that will be used for  the  ESP
              configuration.
 
        --single
@@ -342,22 +347,22 @@ OPTIONS
              Display the route table to the console.
 
        --static
-             Use  static  linking  when building ESP applications. This causes
+             Use static linking when building ESP  applications.  This  causes
              esp to create archive libraries instead of shared libraries.
 
        --symbols
              Compile for debug with symbols.
 
        --table name
-             Override the database table name when generating  tables,  migra-
+             Override  the  database table name when generating tables, migra-
              tions or scaffolds. This is useful to request a plural version of
              the model name. Alternatively, specify the model name when gener-
-             ating  the  scaffold,  table or migration with the desired plural
+             ating the scaffold, table or migration with  the  desired  plural
              suffix. For example: "-s" or "-ies".
 
        --trace traceFile:level
-             Specify a file for trace messages.  The syntax is: "--trace  tra-
-             ceName[:traceLevel]".    Level  3  will  trace  the  request  and
+             Specify  a file for trace messages.  The syntax is: "--trace tra-
+             ceName[:traceLevel]".   Level  3  will  trace  the  request   and
              response headers.
 
        --verbose or -v
@@ -372,7 +377,7 @@ REPORTING BUGS
 
 
 COPYRIGHT
-       Copyright (C) Embedthis Software.  Embedthis  ESP  is  a  trademark  of
+       Copyright  (C)  Embedthis  Software.  Embedthis  ESP  is a trademark of
        Embedthis Software.
 
 

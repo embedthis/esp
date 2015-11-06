@@ -24,8 +24,6 @@ static Esp *esp;
 static int cloneDatabase(HttpConn *conn);
 static void closeEsp(HttpQueue *q);
 static EspRoute *createEspRoute(HttpRoute *route);
-static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
-static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
@@ -35,6 +33,8 @@ static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
 #if !ME_STATIC
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
+static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
 static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName);
 static bool layoutIsStale(EspRoute *eroute, cchar *source, cchar *module);
 #endif
@@ -434,11 +434,9 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
  */
 static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
 {
-    MprPath     info;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
-    cchar       *module, *path;
 
     rx = conn->rx;
     route = rx->route;
@@ -460,6 +458,9 @@ static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar 
     }
 
 #if !ME_STATIC
+{
+    MprPath info;
+    cchar   *module, *path;
     /*
         If target exists as a compiled module
      */
@@ -494,6 +495,7 @@ static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar 
         return mprJoinPath("app", target);
     }
 #endif
+}
 #endif
     return 0;
 }
@@ -693,26 +695,6 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     eroute = route->eroute;
     *errMsg = "";
 
-#if UNUSED
-#if VXWORKS
-    /*
-        Trim the drive for VxWorks where simulated host drives only exist on the target
-     */
-    source = mprTrimPathDrive(source);
-#endif
-    canonical = mprGetPortablePath(mprGetRelPath(source, route->home));
-
-    appName = eroute->appName;
-    if (eroute->combine) {
-        cacheName = appName;
-    } else {
-        cacheName = mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
-    }
-    if ((cache = httpGetDir(route, "CACHE")) == 0) {
-        cache = "cache";
-    }
-    module = mprJoinPathExt(mprJoinPaths(route->home, cache, cacheName, NULL), ME_SHOBJ);
-#endif
     cacheName = getCacheName(route, kind, source);
     if ((cache = httpGetDir(route, "CACHE")) == 0) {
         cache = "cache";
