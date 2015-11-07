@@ -236,6 +236,8 @@ static void     manageOpenSocket(OpenSocket *ssp, int flags);
 static cchar    *mapCipherNames(cchar *ciphers);
 static ssize    readOss(MprSocket *sp, void *buf, ssize len);
 static void     setSecured(MprSocket *sp);
+static int      setCertFile(SSL_CTX *ctx, cchar *certFile);
+static int      setKeyFile(SSL_CTX *ctx, cchar *keyFile);
 static DynLock  *sslCreateDynLock(cchar *file, int line);
 static void     sslDynLock(int mode, DynLock *dl, cchar *file, int line);
 static void     sslDestroyDynLock(DynLock *dl, cchar *file, int line);
@@ -395,22 +397,15 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         Configure the certificates
      */
     if (ssl->certFile) {
-        if (SSL_CTX_use_certificate_chain_file(ctx, ssl->certFile) <= 0) {
-            if (SSL_CTX_use_certificate_file(ctx, ssl->certFile, SSL_FILETYPE_ASN1) <= 0) {
-                mprLog("error openssl", 0, "Cannot open certificate file: %s", ssl->certFile);
-                SSL_CTX_free(ctx);
-                return MPR_ERR_CANT_INITIALIZE;
-            }
+        if (setCertFile(ctx, ssl->certFile) < 0) {
+            SSL_CTX_free(ctx);
+            return MPR_ERR_CANT_INITIALIZE;
         }
         key = (ssl->keyFile == 0) ? ssl->certFile : ssl->keyFile;
         if (key) {
-            if (SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_PEM) <= 0) {
-                /* attempt ASN1 for self-signed format */
-                if (SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_ASN1) <= 0) {
-                    mprLog("error openssl", 0, "Cannot open private key file: %s", key);
-                    SSL_CTX_free(ctx);
-                    return MPR_ERR_CANT_INITIALIZE;
-                }
+            if (setKeyFile(ctx, ssl->keyFile) < 0) {
+                SSL_CTX_free(ctx);
+                return MPR_ERR_CANT_INITIALIZE;
             }
             if (!SSL_CTX_check_private_key(ctx)) {
                 mprLog("error openssl", 0, "Check of private key file failed: %s", key);
@@ -1037,6 +1032,92 @@ static int checkPeerCertName(MprSocket *sp)
 }
 
 
+static int setCertFile(SSL_CTX *ctx, cchar *certFile)
+{
+    X509    *cert;
+    BIO     *bio;
+    char    *buf;
+    int     rc;
+
+    assert(ctx);
+    assert(certFile);
+
+    rc = -1;
+    bio = 0;
+    buf = 0;
+    cert = 0;
+
+    if (ctx == NULL) {
+        return rc;
+    }
+    if ((buf = mprReadPathContents(certFile, NULL)) == 0) {
+        mprLog("error openssl", 0, "Unable to read certificate %s", certFile);
+
+    } else if ((bio = BIO_new_mem_buf(buf, -1)) == 0) {
+        mprLog("error openssl", 0, "Unable to allocate memory for certificate %s", certFile);
+
+    } else if ((cert = PEM_read_bio_X509(bio, NULL, 0, NULL)) == 0) {
+        mprLog("error openssl", 0, "Unable to parse certificate %s", certFile);
+
+    } else if (SSL_CTX_use_certificate(ctx, cert) != 1) {
+        mprLog("error openssl", 0, "Unable to use certificate %s", certFile);
+        
+    } else {
+        rc = 0;
+    }
+    if (bio) {
+        BIO_free(bio);
+    }
+    if (cert) {
+        X509_free(cert);
+    }
+    return rc;
+}
+
+
+static int setKeyFile(SSL_CTX *ctx, cchar *keyFile)
+{
+    RSA     *key;
+    BIO     *bio;
+    char    *buf;
+    int     rc;
+
+    assert(ctx);
+    assert(keyFile);
+
+    key = 0;
+    bio = 0;
+    buf = 0;
+    rc = -1;
+
+    if (ctx == NULL) {
+        ;
+
+    } else if ((buf = mprReadPathContents(keyFile, NULL)) == 0) {
+        mprLog("error openssl", 0, "Unable to read certificate %s", keyFile);
+
+    } else if ((bio = BIO_new_mem_buf(buf, -1)) == 0) {
+        mprLog("error openssl", 0, "Unable to allocate memory for key %s", keyFile);
+
+    } else if ((key = PEM_read_bio_RSAPrivateKey(bio, NULL, 0, NULL)) == 0) {
+        mprLog("error openssl", 0, "Unable to parse key %s", keyFile);
+
+    } else if (SSL_CTX_use_RSAPrivateKey(ctx, key) != 1) {
+        mprLog("error openssl", 0, "Unable to use key %s", keyFile);
+
+    } else {
+        rc = 0;
+    }
+    if (bio) {
+        BIO_free(bio);
+    }
+    if (key) {
+        RSA_free(key);
+    }
+    return rc;
+}
+
+
 static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
 {
     X509            *cert;
@@ -1168,15 +1249,6 @@ static int sniHostname(SSL *handle, int *ad, void *arg)
     ctx = cfg->ctx;
     SSL_set_SSL_CTX(handle, ctx);
 
-#if UNUSED
-    int verifyMode = ssl->verifyPeer ? SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT : SSL_VERIFY_NONE;
-    SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
-    SSL_CTX_set_verify_depth(ctx, ssl->verifyDepth);
-    SSL_CTX_clear_options(ctx, cfg->clearFlags);
-    SSL_CTX_set_options(ctx, cfg->setFlags);
-    SSL_CTX_set_cipher_list(ctx, ssl->ciphers);
-#endif
-    
     return SSL_TLSEXT_ERR_OK;
 }
 

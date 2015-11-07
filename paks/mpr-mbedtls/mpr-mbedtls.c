@@ -428,8 +428,10 @@ static int handshakeMbed(MprSocket *sp)
         } else {
             if (mb->ctx.client_auth && !sp->ssl->certFile) {
                 sp->errorMsg = sclone("Server requires a client certificate");
+
             } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
                 sp->errorMsg = sclone("Peer disconnected");
+
             } else {
                 char ebuf[256];
                 mbedtls_x509_crt_verify_info(ebuf, sizeof(ebuf), "", vrc);
