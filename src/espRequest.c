@@ -331,7 +331,7 @@ static int runAction(HttpConn *conn)
 
 #if !ME_STATIC
     if (!eroute->combine && (route->update || !mprLookupKey(eroute->actions, rx->target))) {
-        cchar *errMsg, *controllers, *controller, *cparam;
+        cchar *errMsg, *controllers, *controller;
         if ((controllers = httpGetDir(route, "CONTROLLERS")) == 0) {
             controllers = ".";
         }

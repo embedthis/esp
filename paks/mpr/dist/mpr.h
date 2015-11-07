@@ -5913,10 +5913,11 @@ PUBLIC MprDispatcher *mprGetDispatcher();
     Application event code that is running off a dispatcher should never call mprServiceEvents recursively. Rather, the
     event code should call #mprWaitForEvent if it needs to wait while servicing events on its own dispatcher.
     @param delay Time in milliseconds to wait. Set to zero for no wait. Set to -1 to wait forever.
-    @param flags If set to MPR_SERVICE_NO_BLOCK, this call will service all due events without blocking. Otherwise set to zero.
+    @param flags If set to MPR_SERVICE_NO_BLOCK, this call will service all due events without blocking. Otherwise set 
+        to zero.
     @returns The number of events serviced. Returns MPR_ERR_BUSY is another thread is servicing events.
-        Returns when the MPR is stopping or if the timeout expires or if MPR_SERVICE_NO_BLOCK is specified and there are no more
-        events to service.
+        Returns when the MPR is stopping or if the timeout expires or if MPR_SERVICE_NO_BLOCK is specified and there are 
+        no more events to service.
     @ingroup MprDispatcher
     @stability Stable
  */

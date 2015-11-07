@@ -65,6 +65,9 @@ static void     manageMbedSocket(MbedSocket*ssp, int flags);
 static int      mbedLock(mbedtls_threading_mutex_t *tm);
 static int      mbedUnlock(mbedtls_threading_mutex_t *tm);
 static void     merror(int rc, cchar *fmt, ...);
+static int      parseCert(mbedtls_x509_crt *cert, cchar *file, char **errorMsg);
+static int      parseCrl(mbedtls_x509_crl *crl, cchar *path, char **errorMsg);
+static int      parseKey(mbedtls_pk_context *key, cchar *path, char **errorMsg);
 static ssize    readMbed(MprSocket *sp, void *buf, ssize len);
 static char     *replaceHyphen(char *cipher, char from, char to);
 PUBLIC int      sniCallback(void *unused, mbedtls_ssl_context *ctx, cuchar *hostname, size_t len);
@@ -210,11 +213,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
     mbedtls_x509_crt_init(&cfg->cert);
 
     if (ssl->certFile) {
-        /*
-            Load a PEM format certificate file
-         */
-        if (mbedtls_x509_crt_parse_file(&cfg->cert, (char*) ssl->certFile) != 0) {
-            *errorMsg = sfmt("Unable to parse certificate %s", ssl->certFile); 
+        if (parseCert(&cfg->cert, ssl->certFile, errorMsg) != 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -223,8 +222,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
             Load a decrypted PEM format private key
             Last arg is password if you need to use an encrypted private key
          */
-        if (mbedtls_pk_parse_keyfile(&cfg->key, (char*) ssl->keyFile, 0) != 0) {
-            *errorMsg = sfmt("Unable to parse key file %s", ssl->keyFile); 
+        if (parseKey(&cfg->key, ssl->keyFile, 0) != 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -233,8 +231,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
             *errorMsg = sclone("No defined certificate authority file");
             return MPR_ERR_CANT_INITIALIZE;
         }
-        if (mbedtls_x509_crt_parse_file(&cfg->ca, (char*) ssl->caFile) != 0) {
-            *errorMsg = sfmt("Unable to open or parse certificate authority file %s", ssl->caFile); 
+        if (parseCert(&cfg->ca, ssl->caFile, errorMsg) != 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -242,8 +239,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
         /*
             Load a PEM format certificate file
          */
-        if (mbedtls_x509_crl_parse_file(&cfg->revoke, (char*) ssl->revoke) != 0) {
-            *errorMsg = sfmt("Unable to parse revoke list %s", ssl->revoke); 
+        if (parseCrl(&cfg->revoke, ssl->revoke, errorMsg) != 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -827,6 +823,84 @@ static int *getCipherSuite(MprSsl *ssl)
         }
     }
     return result;
+}
+
+
+static int parseCert(mbedtls_x509_crt *cert, cchar *path, char **errorMsg)
+{
+    uchar   *buf;
+    ssize   len;
+
+    if ((buf = (uchar*) mprReadPathContents(path, &len)) == 0) {
+        if (errorMsg) {
+            *errorMsg = sfmt("Unable to read certificate %s", path); 
+        }
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    if (sstarts((char*) buf, "-----BEGIN ")) {
+        len++;
+    }
+    if (mbedtls_x509_crt_parse(cert, buf, len) != 0) {
+        memset(buf, 0, len);
+        if (errorMsg) {
+            *errorMsg = sfmt("Unable to parse certificate %s", path); 
+        }
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    memset(buf, 0, len);
+    return 0;
+}
+
+
+static int parseKey(mbedtls_pk_context *key, cchar *path, char **errorMsg)
+{
+    uchar   *buf;
+    ssize   len;
+
+    if ((buf = (uchar*) mprReadPathContents(path, &len)) == 0) {
+        if (errorMsg) {
+            *errorMsg = sfmt("Unable to read key %s", path); 
+        }
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    if (sstarts((char*) buf, "-----BEGIN ")) {
+        len++;
+    }
+    if (mbedtls_pk_parse_key(key, buf, len, NULL, 0) != 0) {
+        memset(buf, 0, len);
+        if (errorMsg) {
+            *errorMsg = sfmt("Unable to parse key %s", path); 
+        }
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    memset(buf, 0, len);
+    return 0;
+}
+
+
+static int parseCrl(mbedtls_x509_crl *crl, cchar *path, char **errorMsg)
+{
+    uchar   *buf;
+    ssize   len;
+
+    if ((buf = (uchar*) mprReadPathContents(path, &len)) == 0) {
+        if (errorMsg) {
+            *errorMsg = sfmt("Unable to read crl %s", path); 
+        }
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    if (sstarts((char*) buf, "-----BEGIN ")) {
+        len++;
+    }
+    if (mbedtls_x509_crl_parse(crl, buf, len) != 0) {
+        memset(buf, 0, len);
+        if (errorMsg) {
+            *errorMsg = sfmt("Unable to parse crl %s", path); 
+        }
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    memset(buf, 0, len);
+    return 0;
 }
 
 
