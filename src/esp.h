@@ -185,6 +185,7 @@ typedef struct EspRoute {
     cchar           *link;                  /**< Link template */
     cchar           *searchPath;            /**< Search path to use when locating compiler/linker */
     cchar           *winsdk;                /**< Windows SDK */
+    int             app;                    /**< Is an esp mvc application */
     int             combine;                /**< Combine C source into a single file */
     int             compileMode;            /**< Compile the application debug or release mode */
 #if DEPRECATED || 1
@@ -235,7 +236,8 @@ PUBLIC void espAddHomeRoute(HttpRoute *route);
 PUBLIC void espAddRouteSet(HttpRoute *route, cchar *set);
 
 /**
-    Load an ESP application
+    Initialize ESP
+    @description This initializes a route for ESP. This may be called multiple times for different routes.
     @param route Parent route from which to inherit configuration.
     @param prefix Optional URI prefix for all application URIs.
     @param path Pathname to the esp.json file.
@@ -243,7 +245,7 @@ PUBLIC void espAddRouteSet(HttpRoute *route, cchar *set);
     @ingroup EspRoute
     @stability Prototype
  */
-PUBLIC int espLoadApp(HttpRoute *route, cchar *prefix, cchar *path);
+PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path);
 
 /**
     Configure an ESP application
@@ -548,10 +550,10 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired);
 /*
     Internal
  */
+PUBLIC void espSetDefaultDirs(HttpRoute *route);
 PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
 PUBLIC bool espModuleIsStale(cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
-PUBLIC void espSetDefaultDirs(HttpRoute *route);
 PUBLIC cchar *espGetVisualStudio();
 
 /********************************** Requests **********************************/

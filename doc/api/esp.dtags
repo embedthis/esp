@@ -109,9 +109,9 @@
     </member>
     <member kind="function">
       <type>int</type>
-      <name>espLoadApp</name>
+      <name>espInit</name>
       <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>gad360dd0edd53dcd9e50c2825b468f699</anchor>
+      <anchor>gaca1c2bea3bde8c348d3d70c35ef21667</anchor>
       <arglist>(HttpRoute *route, cchar *prefix, cchar *path)</arglist>
     </member>
     <member kind="function">

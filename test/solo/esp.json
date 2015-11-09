@@ -4,6 +4,9 @@
 {
     name: 'esptest',
     description: 'ESP Unit Tests with Server',
+    esp: {
+        app: true
+    },
     http: {
         server: {
             listen: [
@@ -17,6 +20,9 @@
         "trace": {
             "location": "trace.log",
             "level": 4
+        },
+        pipeline: {
+            handlers: 'espHandler'
         },
         routes: [
             {

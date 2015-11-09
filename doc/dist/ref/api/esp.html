@@ -83,13 +83,13 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gacfd0fe0f0edb952cd670564ac47febc4" class="nameRef">espHasGrid</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current grid has been defined.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_route_1gab784ceb8c6581201c05c93729f733b6c" class="nameRef">espHasPak</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the ESP application includes the specified pak.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga0f7bf9745f2331aebb05069bba6ba356" class="nameRef">espHasRec</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current record has been defined and save to the database.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gaca1c2bea3bde8c348d3d70c35ef21667" class="nameRef">espInit</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *prefix, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Initialize ESP.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#esp_8h_1a56eafbf70fb0509e85aa5070becbaca6" class="nameRef">espInitHtmlOptions</a>(<a href="#struct_esp" class="ref">Esp</a> *esp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add HTLM internal options to the Esp.options hash.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#esp_8h_1ab4f5a8bba279335541372845ab87e094" class="nameRef">espInitParser</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Initialize the ESP configuration file parser.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gab41302669720bac29959211f2560797a" class="nameRef">espIsCurrentSession</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the connection is being made on behalf of the current, single authenticated user.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gac50e125f397c0dce5072fab8f551cd32" class="nameRef">espIsEof</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the receive input stream is at end-of-file.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga610467cde893472908e6c25bde472fc4" class="nameRef">espIsFinalized</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the request has been finalized.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gab216150d5432ef9465462e8e69f5f31f" class="nameRef">espIsSecure</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the connection is using SSL and is secure.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gad360dd0edd53dcd9e50c2825b468f699" class="nameRef">espLoadApp</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *prefix, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load an ESP application.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1ga619751fdfd2aa494d0074bd661e5e103" class="nameRef">espLoadCompilerRules</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load the compiler rules from esp-compile.json.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1ga8719b78bdfb4e3228c6e9be843f45140" class="nameRef">espLoadConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Configure an ESP application.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1ga24a90a6be3709ef846828deb50ceb0c8" class="nameRef">espLoadModule</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *kind, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *source, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> **errMsg)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load an ESP module.</td></tr>
@@ -4194,6 +4194,9 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>actions</td><td>
 Table of actions.
 </td>
+    <tr><td class="param">int</td><td><td>app</td><td>
+Is an esp mvc application.
+</td>
     <tr><td class="param">cchar *</td><td><td>appName</td><td>
 App module name when compiled in combine mode.
 </td>
@@ -4545,15 +4548,16 @@ Windows SDK.
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_route_1gad360dd0edd53dcd9e50c2825b468f699"></a>
+<a name="group___esp_route_1gaca1c2bea3bde8c348d3d70c35ef21667"></a>
 <div class="api">
   <div class="prototype">
     int
-    espLoadApp
+    espInit
 (<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *prefix, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)
   </div>
   <div class="apiDetail">
-<p>Load an ESP application.</p>
+<p>Initialize ESP.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This initializes a route for ESP. This may be called multiple times for different routes.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>

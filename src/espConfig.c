@@ -27,7 +27,7 @@ static void loadApp(HttpRoute *parent, MprJson *prop)
         prefix = mprGetJson(prop, "prefix"); 
         config = mprGetJson(prop, "config");
         route = httpCreateInheritedRoute(parent);
-        if (espLoadApp(route, prefix, config) < 0) {
+        if (espInit(route, prefix, config) < 0) {
             httpParseError(route, "Cannot define ESP application at: %s", config);
             return;
         }
@@ -38,7 +38,7 @@ static void loadApp(HttpRoute *parent, MprJson *prop)
         for (ITERATE_ITEMS(files, config, next)) {
             route = httpCreateInheritedRoute(parent);
             prefix = mprGetPathBase(mprGetPathDir(mprGetAbsPath(config)));
-            if (espLoadApp(route, prefix, config) < 0) {
+            if (espInit(route, prefix, config) < 0) {
                 httpParseError(route, "Cannot define ESP application at: %s", config);
                 return;
             }
@@ -46,6 +46,25 @@ static void loadApp(HttpRoute *parent, MprJson *prop)
         }
     }
 }       
+
+
+static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+
+    if (espGetConfig(route, "esp.app", 0)) {
+        espSetDefaultDirs(route);
+        eroute->app = 1;
+#if DEPRECATE || 1
+    } else if (espGetConfig(route, "esp.server.listen", 0) || espGetConfig(route, "esp.generate", 0)) {
+        /* Here for legacy apps without esp.app */
+        espSetDefaultDirs(route);
+#endif
+    }
+    httpParseAll(route, key, prop);
+}
 
 
 /*
@@ -300,7 +319,7 @@ PUBLIC int espInitParser()
     httpDefineRouteSet("esp-angular-mvc", legacyRouteSet);
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
-    httpAddConfig("esp", httpParseAll);
+    httpAddConfig("esp", parseEsp);
     httpAddConfig("esp.apps", parseApps);
     httpAddConfig("esp.build", parseBuild);
     httpAddConfig("esp.combine", parseCombine);

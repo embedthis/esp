@@ -296,9 +296,11 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
         compile = ESP_COMPILE_JSON;
     }
     rules = mprJoinPath(mprGetAppDir(), compile);
-    if (httpLoadConfig(route, rules) < 0) {
-        mprLog("error esp", 0, "Cannot parse %s", rules);
-        return MPR_ERR_CANT_OPEN;
+    if (mprPathExists(rules, R_OK)) {
+        if (httpLoadConfig(route, rules) < 0) {
+            mprLog("error esp", 0, "Cannot parse %s", rules);
+            return MPR_ERR_CANT_OPEN;
+        }
     }
     return 0;
 }

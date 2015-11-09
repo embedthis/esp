@@ -1180,7 +1180,7 @@ static void resumeThreads(int flags)
 
 
 /*
-    Garbage collector sweeper main thread
+    Garbage collector main thread
  */
 static void sweeperThread(void *unused, MprThread *tp)
 {
@@ -17564,9 +17564,9 @@ static ME_INLINE bool isAbsPath(MprFileSystem *fs, cchar *path)
  */
 static ME_INLINE bool isFullPath(MprFileSystem *fs, cchar *path)
 {
-    assert(fs);
-    assert(path);
-
+    if (!fs || !path) {
+        return 0;
+    }
 #if ME_WIN_LIKE || VXWORKS
 {
     char    *cp, *endDrive;
@@ -19376,6 +19376,9 @@ PUBLIC int mprSamePath(cchar *path1, cchar *path2)
 
     fs = mprLookupFileSystem(path1);
 
+    if (!path1 || !path2) {
+        return 0;
+    }
     /*
         Convert to absolute (normalized) paths to compare.
      */

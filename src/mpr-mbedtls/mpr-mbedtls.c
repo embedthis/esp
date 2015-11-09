@@ -109,13 +109,13 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     mbedtls_entropy_init(&global->mbedEntropy);
 
     appName = mprGetAppName();
-    if ((rc = mbedtls_ctr_drbg_seed(&global->ctr, mbedtls_entropy_func, &global->mbedEntropy, 
+    if ((rc = mbedtls_ctr_drbg_seed(&global->ctr, mbedtls_entropy_func, &global->mbedEntropy,
             (cuchar*) appName, slen(appName))) < 0) {
         merror(rc, "Cannot seed rng");
         return MPR_ERR_CANT_INITIALIZE;
     }
     if (ME_MPR_SSL_TICKET) {
-        if ((rc = mbedtls_ssl_ticket_setup(&global->tickets, mbedtls_ctr_drbg_random, &global->ctr, 
+        if ((rc = mbedtls_ssl_ticket_setup(&global->tickets, mbedtls_ctr_drbg_random, &global->ctr,
                 MBEDTLS_CIPHER_AES_256_GCM, ME_MPR_SSL_TIMEOUT)) < 0) {
             merror(rc, "Cannot setup ticketing sessions");
             return MPR_ERR_CANT_INITIALIZE;
@@ -251,7 +251,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
     mbedtls_ssl_conf_rng(mconf, mbedtls_ctr_drbg_random, &mbedGlobal->ctr);
 
     /*
-        Configure larger DH parameters 
+        Configure larger DH parameters
      */
     if ((rc = mbedtls_ssl_conf_dh_param(mconf, MBEDTLS_DHM_RFC5114_MODP_2048_P, MBEDTLS_DHM_RFC5114_MODP_2048_G)) < 0) {
         merror(rc, "Cannot set DH params");
@@ -264,7 +264,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
             Configure ticket-based sessions
          */
         if (ssl->ticket) {
-            mbedtls_ssl_conf_session_tickets_cb(mconf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse, 
+            mbedtls_ssl_conf_session_tickets_cb(mconf, mbedtls_ssl_ticket_write, mbedtls_ssl_ticket_parse,
                 &mbedGlobal->tickets);
         }
 #endif
@@ -396,7 +396,7 @@ static int handshakeMbed(MprSocket *sp)
         sp->flags |= MPR_SOCKET_EOF;
         errno = EPROTO;
         return MPR_ERR_CANT_READ;
-    } 
+    }
     if ((vrc = mbedtls_ssl_get_verify_result(&mb->ctx)) != 0) {
         if (vrc & MBEDTLS_X509_BADCERT_MISSING) {
             sp->errorMsg = sclone("Certificate missing");
@@ -420,7 +420,7 @@ static int handshakeMbed(MprSocket *sp)
             }
 
         } else if (vrc & MBEDTLS_X509_BADCERT_SKIP_VERIFY) {
-            /* 
+            /*
                 MBEDTLS_SSL_VERIFY_NONE requested, so ignore error
              */
             vrc = 0;
@@ -597,7 +597,7 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) {
                 break;
             }
-            if (rc == MBEDTLS_ERR_NET_CONN_RESET) {                                                         
+            if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
                 mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "ssl_write peer closed connection");
                 return MPR_ERR_CANT_WRITE;
             } else {
@@ -765,7 +765,7 @@ static char *getMbedState(MprSocket *sp)
 
     buf = mprCreateBuf(0, 0);
     mprPutToBuf(buf, "{");
-    mprPutToBuf(buf, "\"provider\":\"mbedtls\",\"cipher\":\"%s\",\"session\":\"%s\",", 
+    mprPutToBuf(buf, "\"provider\":\"mbedtls\",\"cipher\":\"%s\",\"session\":\"%s\",",
         mbedtls_ssl_get_ciphersuite(ctx), sp->session);
 
     mprPutToBuf(buf, "\"peer\":\"%s\",", sp->peerName ? sp->peerName : "");
@@ -835,7 +835,7 @@ static int parseCert(mbedtls_x509_crt *cert, cchar *path, char **errorMsg)
 
     if ((buf = (uchar*) mprReadPathContents(path, &len)) == 0) {
         if (errorMsg) {
-            *errorMsg = sfmt("Unable to read certificate %s", path); 
+            *errorMsg = sfmt("Unable to read certificate %s", path);
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -845,7 +845,7 @@ static int parseCert(mbedtls_x509_crt *cert, cchar *path, char **errorMsg)
     if (mbedtls_x509_crt_parse(cert, buf, len) != 0) {
         memset(buf, 0, len);
         if (errorMsg) {
-            *errorMsg = sfmt("Unable to parse certificate %s", path); 
+            *errorMsg = sfmt("Unable to parse certificate %s", path);
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -861,7 +861,7 @@ static int parseKey(mbedtls_pk_context *key, cchar *path, char **errorMsg)
 
     if ((buf = (uchar*) mprReadPathContents(path, &len)) == 0) {
         if (errorMsg) {
-            *errorMsg = sfmt("Unable to read key %s", path); 
+            *errorMsg = sfmt("Unable to read key %s", path);
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -871,7 +871,7 @@ static int parseKey(mbedtls_pk_context *key, cchar *path, char **errorMsg)
     if (mbedtls_pk_parse_key(key, buf, len, NULL, 0) != 0) {
         memset(buf, 0, len);
         if (errorMsg) {
-            *errorMsg = sfmt("Unable to parse key %s", path); 
+            *errorMsg = sfmt("Unable to parse key %s", path);
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -887,7 +887,7 @@ static int parseCrl(mbedtls_x509_crl *crl, cchar *path, char **errorMsg)
 
     if ((buf = (uchar*) mprReadPathContents(path, &len)) == 0) {
         if (errorMsg) {
-            *errorMsg = sfmt("Unable to read crl %s", path); 
+            *errorMsg = sfmt("Unable to read crl %s", path);
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -897,7 +897,7 @@ static int parseCrl(mbedtls_x509_crl *crl, cchar *path, char **errorMsg)
     if (mbedtls_x509_crl_parse(crl, buf, len) != 0) {
         memset(buf, 0, len);
         if (errorMsg) {
-            *errorMsg = sfmt("Unable to parse crl %s", path); 
+            *errorMsg = sfmt("Unable to parse crl %s", path);
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
@@ -980,7 +980,7 @@ static char *replaceHyphen(char *cipher, char from, char to)
     Copyright (c) Embedthis Software. All Rights Reserved.
 
     This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a 
+    You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.

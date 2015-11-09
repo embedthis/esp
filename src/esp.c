@@ -682,37 +682,12 @@ static void initialize(int argc, char **argv)
     if (app->require & REQ_TARGETS) {
         app->targets = getTargets(argc - 1, &argv[1]);
     }
-    if (!route->eroute) {
-        espCreateRoute(route);
-    }
-    app->eroute = route->eroute;
-
-    if (mprPathExists("esp.json", R_OK)) {
-        if (espLoadApp(route, 0, "esp.json")) {
-            fail("Cannot define and load ESP app");
-            return;
-        }
-#if DEPRECATED || 1
-    } else if (mprPathExists("package.json", R_OK)) {
-        if (espLoadApp(route, 0, "package.json")) {
-            fail("Cannot define and load ESP app");
-            return;
-        }
-#endif
-    } else {
-        /*
-            No esp.json - not an ESP app.
-         */
-        espSetDefaultDirs(route);
-        httpAddRouteHandler(route, "espHandler", "esp");
-        httpAddRouteHandler(route, "fileHandler", "");
-        httpAddRouteIndex(route, "index.esp");
-        httpAddRouteIndex(route, "index.html");
-        httpSetRouteShowErrors(route, 1);
-        httpSetRouteUpdate(route, 1);
-        espLoadCompilerRules(route);
+    if (espInit(route, 0, "esp.json")) {
+        fail("Cannot initialize for ESP");
+        return;
     }
     httpFinalizeRoute(route);
+    app->eroute = route->eroute;
     app->routes = getRoutes();
     if ((stage = httpLookupStage("espHandler")) == 0) {
         fail("Cannot find ESP handler");
@@ -721,9 +696,6 @@ static void initialize(int argc, char **argv)
     esp = stage->stageData;
     esp->compileMode = app->compileMode;
 
-    /*
-        Do this after espSetDefaultDirs
-     */
 #if DEPRECATE || 1
     path = mprJoinPath(route->home, "db/migrations");
     if (mprPathExists(path, R_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
@@ -926,7 +898,11 @@ static void init(int argc, char **argv)
     if (!mprPathExists("esp.json", R_OK)) {
         trace("Create", "esp.json");
         config = mprParseJson(sfmt("{" \
+            "esp: { app: true }," \
             "http: {" \
+                "pipeline: {" \
+                    "handlers: 'espHandler'" \
+                "}," \
                 "server: {" \
                     "listen: [" \
                         "'http://127.0.0.1:4000'" \

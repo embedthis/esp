@@ -3771,6 +3771,9 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
     MprJson     *config, *obj, *modeObj;
     cchar       *data, *errorMsg, *mode;
 
+    if (!path) {
+        return 0;
+    }
     /*
         Order of processing matters. First load the file and then blend included files into the same json obj.
         Then blend the mode directives and then assign/blend into the route config.
@@ -12679,7 +12682,6 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     route->home = route->documents = mprGetCurrentPath();
     route->flags = HTTP_ROUTE_STEALTH;
 #if ME_DEBUG
-    route->flags |= HTTP_ROUTE_SHOW_ERRORS;
     route->keepSource = 1;
 #endif
 
