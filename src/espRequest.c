@@ -1131,17 +1131,18 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         unlock(esp);
         return MPR_ERR_CANT_LOAD;
     }
+    if (!httpGetDir(route, "CACHE")) {
+        espSetDefaultDirs(route, 0);
+    }
 #if DEPRECATE || 1
     /* 
         Sleuth ESP applications that are missing pipeline configuration
      */
-    if (mprLookupKey(route->extensions, "") != HTTP->espHandler) {
-        if (espGetConfig(route, "esp.server.listen", 0) || espGetConfig(route, "esp.generate", 0)) {
-            httpAddRouteHandler(route, "espHandler", "");
-            httpAddRouteIndex(route, "index.esp");
-            httpAddRouteIndex(route, "index.html");
-            httpSetRouteXsrf(route, 1);
-        }
+    if (mprLookupKey(route->extensions, "") != HTTP->espHandler && eroute->app) {
+        httpAddRouteHandler(route, "espHandler", "");
+        httpAddRouteIndex(route, "index.esp");
+        httpAddRouteIndex(route, "index.html");
+        httpSetRouteXsrf(route, 1);
     }
 #endif
     unlock(esp);
@@ -1184,7 +1185,17 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 }
 
 
-PUBLIC void espSetDefaultDirs(HttpRoute *route)
+static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
+{
+    if (force) {
+        httpSetDir(route, key, value);
+    } else if (!httpGetDir(route, key)) {
+        httpSetDir(route, key, value);
+    }
+}
+
+
+PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
 {
     cchar   *controllers, *documents, *path, *migrations;
     char    *output;
@@ -1241,19 +1252,20 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route)
 #else
     migrations = "migrations";
 #endif
-    httpSetDir(route, "CACHE", 0);
-    httpSetDir(route, "CONTROLLERS", controllers);
-    httpSetDir(route, "CONTENTS", 0);
-    httpSetDir(route, "DB", 0);
-    httpSetDir(route, "DOCUMENTS", documents);
-    httpSetDir(route, "HOME", route->home);
-    httpSetDir(route, "LAYOUTS", 0);
-    httpSetDir(route, "LIB", 0);
-    httpSetDir(route, "MIGRATIONS", migrations);
-    httpSetDir(route, "PAKS", 0);
-    httpSetDir(route, "PARTIALS", 0);
-    httpSetDir(route, "SRC", 0);
-    httpSetDir(route, "UPLOAD", "/tmp");
+
+    setDir(route, "CACHE", 0, app);
+    setDir(route, "CONTROLLERS", controllers, app);
+    setDir(route, "CONTENTS", 0, app);
+    setDir(route, "DB", 0, app);
+    setDir(route, "DOCUMENTS", documents, app);
+    setDir(route, "HOME", route->home, app);
+    setDir(route, "LAYOUTS", 0, app);
+    setDir(route, "LIB", 0, app);
+    setDir(route, "MIGRATIONS", migrations, app);
+    setDir(route, "PAKS", 0, app);
+    setDir(route, "PARTIALS", 0, app);
+    setDir(route, "SRC", 0, app);
+    setDir(route, "UPLOAD", "/tmp", app);
 }
 
 

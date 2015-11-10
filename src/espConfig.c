@@ -55,14 +55,14 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
     eroute = route->eroute;
 
     if (espGetConfig(route, "esp.app", 0)) {
-        espSetDefaultDirs(route);
         eroute->app = 1;
 #if DEPRECATE || 1
     } else if (espGetConfig(route, "esp.server.listen", 0) || espGetConfig(route, "esp.generate", 0)) {
+        eroute->app = 1;
         /* Here for legacy apps without esp.app */
-        espSetDefaultDirs(route);
 #endif
     }
+    espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
 }
 

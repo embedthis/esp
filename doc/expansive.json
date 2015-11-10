@@ -5,6 +5,18 @@
     "control": {
         "listen": "127.0.0.1:4000"
     },
+    "debug": {
+        "services": {
+            "compress": false,
+            "html": false,
+            "js": {
+                "minify": false,
+                "usemin": true,
+                "usemap": true
+            },
+            "gzip": false
+        }
+    },
     "release": {
         "services": {
             "reload": {
@@ -21,19 +33,10 @@
                 "usemin": true,
                 "usemap": false
             },
-            "gzip": true
-        }
-    },
-    "debug": {
-        "services": {
-            "compress": false,
-            "html": false,
-            "js": {
-                "minify": false,
-                "usemin": true,
-                "usemap": true
-            },
-            "gzip": false
+            "gzip": true,
+            "html": {
+                "options": "--remove-comments --conservative-collapse --prevent-attributes-escaping --remove-empty-attributes --remove-optional-tags"
+            }
         }
     }
 }

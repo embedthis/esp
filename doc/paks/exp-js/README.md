@@ -5,7 +5,7 @@ Expansive plugin to manage Javascript files.
 
 ## Overview
 
-The exp-js plugin provides build tooling for script files. It provides the **render-js** service to manage the generation HTML for script files, the **minify-js** service to minify script files for release distributions, and the **extract-js** service to extract inline scripts.
+The exp-js plugin provides build tooling for script files. It provides the **js-render** service to manage the generation HTML for script files, the **js-minify** service to minify script files for release distributions, and the **js-extract** service to extract inline scripts.
 
 ## Installation
 
@@ -13,16 +13,16 @@ The exp-js plugin provides build tooling for script files. It provides the **ren
 
 ### Services
 
-Provides the following services:
+Provides the following transformations:
 
 * js
-* minify-js
-* render-js
-* extract-js
+* js-minify
+* js-render
+* js-extract
 
 ## js
 
-The **js** service provides configuration control for the other js services.
+The **js** transform provides configuration control for the other js services.
 
 ### Configuration
 
@@ -32,25 +32,18 @@ The **js** service provides configuration control for the other js services.
 * extract &mdash; Extract inline scripts into external script files. Defaults to to false. Set to true to enable or set
     to a filename to contain all extracted scripts.
 * files &mdash; List of scripts to render. Defaults to [ 'lib/\*\*.js*, '!lib/\*\*.map' ]
-* force &mdash; Always minify even if a minified version exists in contents. Defaults to false.
-* mappings &mdash; Set of extensions to transform. Defaults to:
-mappings: {
-    'js',
-    'min.js',
-    'min.map',
-    'min.js.map'
-}
-
-* mangle &mdash; Enable mangling of Javascript variable and function names. Default to true.
-* minify &mdash; Enable minifying of Javascript files. Will also generate map files if the render-js service defines 'usemap' to be true. Default to false.
+* mappings &mdash; Set of extensions to transform. Defaults to: mappings: [ 'js', 'min.js', 'min.map', 'min.js.map' ]
+* minify &mdash; Enable minifying Javascript files. Will also generate map files if the js-render transform defines 'usemap' to be true. Default to false.
+* options &mdash; Uglifyjs command options to use when minifying Javascript files. Defaults to:
+--compress dead_code=true,conditionals=true,booleans=true,unused=true,if_return=true,join_vars=true,drop_console=true --mangle
 * usemap &mdash; Use minified Javascript if corresponding source maps is present. Default to true.
 * usemin &mdash; Use minified Javascript if present. Default to true.
 
-## render-js
+## js-render
 
-The render-js service intelligently selects minified or non-minified Javascript files. By default, it selects minified scripts if a corresponding source map file with a 'min.map' extension is present. Otherwise, non-minified Javascript files with a plain .js extension will be selected.
+The js-render transform intelligently selects minified or non-minified Javascript files. By default, it selects minified scripts if a corresponding source map file with a 'min.map' extension is present. Otherwise, non-minified Javascript files with a plain .js extension will be selected.
 
-The render-js service also provides the `renderScript` API which generates &lt;script&gt; elements for selected script files. The order of generated script elements will match the required order as specified by Pak dependencies.
+The js-render transform also provides the `renderScript` API which generates &lt;script&gt; elements for selected script files. The order of generated script elements will match the required order as specified by Pak dependencies.
 
 The renderScripts API may be invoked with an argument can specify a set of patterns to select a subset of scripts for which to create script elements. This can be used to select or reject specific scripts. A second argument may specify an array of additional scripts to render.
 
@@ -58,14 +51,14 @@ The renderScripts API may be invoked with an argument can specify a set of patte
     renderScripts(['!unwanted.js'], ['extra.js'])
 ```
 
-## minify-js
+## js-minify
 
-The minify-js service optimizes script files by minifying to remove white-space, managle names and otherwise compress the scripts. By default, the script files use a '.js' extension, but will use a '.min.js' extension if the 'dotmin' option is enabled.
+The js-minify transform optimizes script files by minifying to remove white-space, managle names and otherwise compress the scripts. By default, the script files use a '.js' extension, but will use a '.min.js' extension if the 'dotmin' option is enabled.
 
 
-## extract-js
+## js-extract
 
-To support using Content Security Policy headers, the extract-js service extracts inline scripts into external Javascript files. It will extract incline \<script> tags and onclick attributes into a per-page external script file. If the **extract** attribute is set to a filename, then all the scripts will be placed in that file.
+To support using Content Security Policy headers, the js-extract transform extracts inline scripts into external Javascript files. It will extract incline \<script> tags and onclick attributes into a per-page external script file. If the **extract** attribute is set to a filename, then all the scripts will be placed in that file.
 
 ## Example
 

@@ -1,7 +1,7 @@
 /*
     expansive.es - Configuration for exp-css
 
-    Transform by prefixing and minifying. Uses autoprefixer and less|recess.
+    Transform by prefixing and minifying. Uses autoprefixer and less.
  */
 Expansive.load({
 
@@ -101,27 +101,12 @@ Expansive.load({
             name:       'minify',
             mappings:   'css',
             render:     function(contents, meta) {
-//  MOB
                 trace('Minify', meta.current)
                 let less = Cmd.locate('lessc')
                 if (less) {
                     contents = expansive.run(less + ' --compress - ', contents, meta)
                 } else {
-                    /*
-                        Can also use recess if lessc is not installed
-                     */
-                    let recess = Cmd.locate('recess')
-                    if (recess) {
-                        let results = expansive.runFile(recess + ' -compile -compress', contents, meta)
-                        if (results == '') {
-                            /* Failed, run again to get diagnostics - Ugh! */
-                            results = runFile(recess, contents, meta)
-                            throw 'Failed to parse less file with recess ' + meta.source + '\n' + results + '\n'
-                        }
-                        contents = results
-                    } else {
-                        trace('Warn', 'Cannot find lessc or recess')
-                    }
+                    trace('Warn', 'Cannot find lessc')
                 }
                 return contents
             }

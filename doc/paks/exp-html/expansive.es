@@ -21,6 +21,7 @@ Expansive.load({
                 if (meta.isLayout && !meta.layout && transform.htmlmin) {
                     try {
                         contents = run(transform.htmlmin + ' ' + transform.service.options, contents)
+                        contents += '\n'
                     } catch (e) {
                         if (expansive.options.debug) {
                             print('Cannot minify', meta.source, '\n', e)

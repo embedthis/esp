@@ -11,9 +11,8 @@ Expansive.load({
         dotmin:     true,
         extract:    false,
         files:      [ 'lib/**.js*', '!lib**.map' ],
-        force:      false,
-        mangle:     true,
         minify:     false,
+        options:    '--mangle --compress dead_code=true,conditionals=true,booleans=true,unused=true,if_return=true,join_vars=true,drop_console=true'
         usemap:     true,
         usemin:     true,
 
@@ -27,9 +26,6 @@ Expansive.load({
 
             init: function(transform) {
                 let service = transform.service
-                if (service.minify) {
-                    service.usemin ||= true
-                }
                 if (service.usemap) {
                     service.usemin ||= true
                 }
@@ -50,7 +46,7 @@ Expansive.load({
                 let vfile = directories.contents.join(path)
                 if (vfile.endsWith('.min.js')) {
                     let base = vfile.trimEnd('.min.js')
-                    if (service.usemin && !(service.minify && service.force && base.joinExt('js', true).exists)) {
+                    if (service.usemin && !(service.minify && base.joinExt('js', true).exists)) {
                         if (service.usemap) {
                             if (base.joinExt('min.map', true).exists || base.joinExt('min.js.map', true).exists) {
                                 return terminal(path)
@@ -62,7 +58,7 @@ Expansive.load({
                 } else if (vfile.endsWith('.min.map') || vfile.endsWith('.min.js.map')) {
                     if (service.usemin) {
                         let base = vfile.trimEnd('.min.map').trimEnd('.min.js.map')
-                        if (service.usemap && !(service.minify && service.force && base.joinExt('js', true).exists)) {
+                        if (service.usemap && !(service.minify && base.joinExt('js', true).exists)) {
                             if (base.joinExt('min.js', true).exists) {
                                 return terminal(path)
                             }
@@ -71,10 +67,9 @@ Expansive.load({
                 } else {
                     let minified = vfile.replaceExt('min.js')
                     /*
-                        Minify if forced, or a suitable minfied version does not exist or !usemin
+                        Minify if required, or a suitable minfied version does not exist or !usemin
                      */                           
-                    if ((service.minify && service.force) ||
-                        !(minified.exists && service.usemin && (!service.usemap ||
+                    if (service.minify || !(minified.exists && service.usemin && (!service.usemap ||
                             (vfile.replaceExt('min.map').exists || vfile.replaceExt('min.js.map').exists)))) {
                         if (service.minify && service.dotmin) {
                             return terminal(path.trimExt().joinExt('min.js', true))
@@ -98,11 +93,8 @@ Expansive.load({
                 } else if (!service.minify) {
                     transform.enable = false
                 } else {
-                    if (service.compress) {
-                        cmd += ' --compress'
-                    }
-                    if (service.mangle) {
-                        cmd += ' --mangle'
+                    if (service.options) {
+                        cmd += ' ' + service.options
                     }
                     transform.cmd = cmd
                 }
@@ -164,14 +156,14 @@ Expansive.load({
                             let map = base.joinExt('min.map', true).exists || base.joinExt('js.map', true).exists ||
                                 base.joinExt('.min.js.map', true).exists
                             if (vfile.endsWith('min.js')) {
-                                if (service.usemin && (!service.usemap || map)) {
+                                if ((service.minify || service.usemin) && (!service.usemap || map)) {
                                     scripts.push(script)
                                 }
                             } else {
                                 let minified = vfile.replaceExt('min.js').exists
                                 let map = vfile.replaceExt('min.map').exists || vfile.replaceExt('js.map').exists ||
                                     vfile.replaceExt('.min.js.map').exists
-                                if ((service.minify && service.force) || !minified || !(service.usemap && map)) {
+                                if (service.minify || !minified || !(service.usemap && map)) {
                                     if (service.minify && service.dotmin) {
                                         scripts.push(script.replaceExt('min.js'))
                                     } else {

@@ -1,7 +1,7 @@
 {
     "name": "exp-js",
     "description": "Js Plugin for Expansive",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "keywords": [
         "expansive-plugin",
         "js"

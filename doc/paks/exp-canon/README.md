@@ -3,7 +3,7 @@ exp-canon
 
 Expansive plugin to canonicalize index pages.
 
-Provides the 'canon' service which creates canonical links for index pages to assist search engines.
+Provides the 'canon' service which creates canonical links for index pages to assist search engines by defining the "canonical" preferred link for an index page.
 
     &lt;link href="//" rel="canonical"&gt;
 

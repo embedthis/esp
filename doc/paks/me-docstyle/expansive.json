@@ -21,6 +21,9 @@
                 "?usemap": false
             },
             "?gzip": true,
+            "?html": {
+                options: '--remove-comments --conservative-collapse --prevent-attributes-escaping --remove-empty-attributes --remove-optional-tags',
+            },
             "js": {
                 "?minify": true,
                 "?usemin": true,

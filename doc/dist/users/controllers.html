@@ -1,4 +1,178 @@
-<!DOCTYPE html><html lang="en"><head><title>ESP Controllers</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="description" content="The amazing C web framework"><link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'><link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'><link href="../images/favicon.ico" rel="shortcut icon"><link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css"><link href="../css/all.min.css" rel="stylesheet" type="text/css"><link href="../css/api.min.css" rel="stylesheet" type="text/css"><body class="show-sidebar"><div class="sidebar"><div class="ui large left vertical inverted labeled menu"><div class="item"><a href="../index.html" class="logo">ESP Docs</a></div><div class="item"><a href="../index.html"><b>General</b></a><div class="menu"><a class="item" href="../index.html">ESP Overview</a> <a class="item" href="../users/features.html">ESP Features</a> <a class="item" href="https://embedthis.com/esp/download.html">Download</a> <a class="item" href="../licensing/index.html">Licensing</a></div></div><div class="item"><a href="../start/index.html"><b>Getting Started</b></a><div class="menu"><a class="item" href="../start/quick.html">Quick Start</a> <a class="item" href="../start/index.html">Installing ESP</a> <a class="item" href="../start/tour.html">ESP Tour</a> <a class="item" href="../start/app-tour.html">ESP Applications Tour</a> <a class="item" href="../start/releaseNotes.html">Release Notes</a> <a class="item" href="../start/source.html">Building from Source</a></div></div><div class="item"><a href="../users/index.html"><b>User's Guide</b></a><div class="menu"><a class="item" href="../users/create.html">Creating ESP Applications</a> <a class="item" href="../users/packages.html">Extension Packages</a> <a class="item" href="../users/skeletons.html">Application Skeletons</a> <a class="item" href="../users/config.html">Configuring ESP</a> <a class="item" href="../users/components.html">Generating Components</a> <a class="item" href="../users/building.html">Building Applications</a> <a class="item" href="../users/deploying.html">Deploying Applications</a> <a class="item" href="../users/pages.html">ESP Pages</a> <a class="item" href="../users/layouts.html">Expansive Layouts</a> <a class="item" href="../users/controllers.html">ESP Controllers</a> <a class="item" href="../users/database.html">Databases</a> <a class="item" href="../users/migrations.html">Database Migrations</a> <a class="item" href="../users/sessions.html">Session Storage</a> <a class="item" href="../users/security.html">Security Considerations</a> <a class="item" href="../users/monitor.html">Monitoring and Defending</a> <a class="item" href="../users/hosting.html">Hosting in Appweb</a> <a class="item" href="../users/command.html">ESP Command</a> <a class="item" href="../users/man.html">Manual Pages</a></div></div><div class="item"><a href="../ref/index.html">Reference Guide</a><div class="menu"><a class="item" href="../ref/mvc.html">ESP MVC Framework</a> <a class="item" href="../ref/compatibility.html">Compatibility</a> <a class="item" href="../ref/native.html">API Library</a> <a class="item" href="../ref/memory.html">ESP Memory Allocation</a> <a class="item" href="../ref/multithread.html">Multithreaded Programming</a></div></div><div class="item"><a href="../users/samples.html">Samples</a><div class="menu"><a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a> <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a></div></div><div class="item"><a href="../users/project.html">Project Resources</a><div class="menu"><a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a> <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a> <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a> <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a> <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a> <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a> <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a></div></div><div class="item"><b>Links</b><div class="menu"><a class="item" href="https://embedthis.com/">Embedthis Web Site</a> <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a> <a class="item" href="http://twitter.com/mobstream">Twitter</a></div></div></div></div><div class="ui inverted masthead"><div class="ui fixed inverted menu"><div class="ui sidebar-launch button"><i class="icon list layout"></i></div><div class="right menu"><a class="item" href="https://embedthis.com/">Embedthis</a> <a class="item" href="https://embedthis.com/esp/">ESP Site</a> <span class="desktop-only"><a class="item" href="http://goo.gl/66rlSc">ESP News</a> <a class="item" href="https://github.com/embedthis/esp">Repository</a> <a class="item" href="https://embedthis.com/blog/">Blog</a> <a class="item" href="https://twitter.com/mobstream">Twitter</a></span></div></div><div class="ui breadcrumb"><a class="section" href="../">Home</a><div class="divider">/</div><a class="section" href="index.html">User's Guide</a><div class="divider">/</div><a class="active section" href="controllers.html">ESP Controllers</a></div><iframe class="version desktop-only" src="../version.html"></iframe></div><div class="content"><h1>Controllers and Actions</h1><p>ESP <em>controllers</em> are the conductors of the application and they orchestrate the application's logic and responses to client requests. Via <em>action</em> functions, they receive client requests and generate appropriate responses, mutating the applications data model as required.</p><p>An ESP controller is a "C" source file that contains action functions to receive to incoming client requests and manage the applications response. The controller may be part of an ESP MVC application or it may be a stand-alone controller.</p><a id="example"></a><h2>Example of a Controller</h2><p>So what does a controller look like? Here is a partial example called <em>controllers/greeting.c</em> that has one action to say "Hello World".</p><pre class="code">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ESP Controllers</title>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="The amazing C web framework">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
+    
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    
+
+
+<body class="show-sidebar">
+        <div class="sidebar">
+        <div class="ui large left vertical inverted labeled menu">
+            <div class="item">
+                <a href="../index.html" class="logo">ESP Docs</a>
+            </div>
+            <div class="item">
+                <a href="../index.html">
+                    <b>General</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../index.html">ESP Overview</a>
+                    <a class="item" href="../users/features.html">ESP Features</a>
+                    <a class="item" href="https://embedthis.com/esp/download.html">Download</a>
+                    <a class="item" href="../licensing/index.html">Licensing</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../start/index.html">
+                    <b>Getting Started</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../start/quick.html">Quick Start</a>
+                    <a class="item" href="../start/index.html">Installing ESP</a>
+                    <a class="item" href="../start/tour.html">ESP Tour</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
+                    <a class="item" href="../start/releaseNotes.html">Release Notes</a>
+                    <a class="item" href="../start/source.html">Building from Source</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/index.html"><b>User's Guide</b></a>
+                <div class="menu">
+                    <a class="item" href="../users/create.html">Creating ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Extension Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
+                    <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
+                    <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
+                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/migrations.html">Database Migrations</a>
+                    <a class="item" href="../users/sessions.html">Session Storage</a>
+                    <a class="item" href="../users/security.html">Security Considerations</a>
+                    <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/command.html">ESP Command</a>
+                    <a class="item" href="../users/man.html">Manual Pages</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../ref/index.html">Reference Guide</a>
+                <div class="menu">
+                    <a class="item" href="../ref/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/compatibility.html">Compatibility</a>
+                    <a class="item" href="../ref/native.html">API Library</a>
+                    <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
+                    <a class="item" href="../ref/multithread.html">Multithreaded Programming</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/samples.html">Samples</a>
+                <div class="menu">
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/project.html">Project Resources</a>
+                <div class="menu">
+                    <a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
+                    <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
+                    <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
+                    <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a>
+                    <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a>
+                    <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a>
+                </div>
+            </div>
+            <div class="item">
+                <b>Links</b>
+                <div class="menu">
+                    <a class="item" href="https://embedthis.com/">Embedthis Web Site</a>
+                    <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a>
+                    <a class="item" href="http://twitter.com/mobstream">Twitter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="ui inverted masthead">
+         
+        <div class="ui fixed inverted menu">
+            <div class="ui sidebar-launch button">
+                <i class="icon list layout"></i>
+            </div>
+            <div class="right menu">
+                 
+                    <a class="item" href="https://embedthis.com/">Embedthis</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Site</a>
+                    <span class="desktop-only">
+                        <a class="item" href="http://goo.gl/66rlSc">ESP News</a>
+                        <a class="item" href="https://github.com/embedthis/esp">Repository</a>
+                        <a class="item" href="https://embedthis.com/blog/">Blog</a>
+                        <a class="item" href="https://twitter.com/mobstream">Twitter</a>
+                    </span>
+
+            </div>
+        </div>
+        
+        <div class="ui breadcrumb">
+            <a class="section" href="../">Home</a>
+            
+            <div class="divider">/</div>
+            <a class="section" href="index.html">
+                User's Guide
+            </a>
+            
+            
+            <div class="divider">/</div>
+            <a class="active section" href="controllers.html">ESP Controllers</a>
+            
+        </div>
+        
+        <iframe class="version desktop-only" src="../version.html"></iframe>
+
+    </div>
+    <div class="content">
+
+        <h1>Controllers and Actions</h1>
+        <p>ESP <em>controllers</em> are the conductors of the application and they orchestrate the application's 
+        logic and responses to client requests. Via <em>action</em> functions, they receive client requests and 
+        generate appropriate responses, mutating the applications data model as required.</p>
+        <p>An ESP controller is a "C" source file that contains action functions to receive to incoming client 
+        requests and manage the applications response. The controller may be part of an ESP MVC application or it
+        may be a stand-alone controller.</p>
+
+        <a id="example"></a>
+        <h2>Example of a Controller</h2>
+        <p>So what does a controller look like? Here is a partial example called <em>controllers/greeting.c</em>
+        that has one action to say "Hello World".</p>
+        <pre class="code">
 #include "esp.h"
 
 static void hello() { 
@@ -10,9 +184,78 @@ ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
     espDefineAction(route, "greeting-hello", hello);
     return 0;
 }
-</pre><p>If the client browser issues a request for:</p><pre class="code">http://localhost/greeting/hello</pre><p>ESP will compile the greeting.c controller and then load the controller and run the <em>hello</em> function which will respond to the client with "Hello World\n".</p><a id="flow"></a><h2>Controller Processing</h2><p>ESP process requests in stages:</p><ol><li>Decode the URI and web request</li><li>Route an incoming request to the ESP request handler</li><li>If the request is for a controller, load the controller and run the requested action</li><li>Run the specified controller action determined by the request route pattern</li><li>If the request is for a web page or if the controller did not render a response look for a matching web page and run that to render a response</li></ol><a id="routing"></a><h2>Routing Requests</h2><p>At the heart of understanding how controllers are loaded and actions are run, is understanding request routing. When the HTTP server inside <em>esp</em>receives a client request, it examines each of the configured request routes. These may are configured via the <em>esp.json</em> file. Esp then searches the route table, until it finds a matching route for the request URI. The selected route will then break the URI into tokens and save the token values as request parameters.</p><p>For example: consider the URI format:</p><pre class="code">
+</pre>
+        <p>If the client browser issues a request for:</p>
+        <pre class="code">http://localhost/greeting/hello</pre>
+        <p>ESP will compile the greeting.c controller and then load the controller and
+        run the <em>hello</em> function which will respond to the client with "Hello World\n".</p>
+ 
+        <a id="flow"></a>
+        <h2>Controller Processing</h2>
+        <p>ESP process requests in stages:</p>
+        <ol>
+            <li>Decode the URI and web request</li>
+            <li>Route an incoming request to the ESP request handler</li>
+            <li>If the request is for a controller, load the controller and run the requested action</li>
+            <li>Run the specified controller action determined by the request route pattern</li>
+            <li>If the request is for a web page or if the controller did not render a response 
+                look for a matching web page and run that to render a response</li>
+        </ol>
+  
+        <a id="routing"></a>
+        <h2>Routing Requests</h2>
+        <p>At the heart of understanding how controllers are loaded and actions are run, is understanding request
+        routing. When the HTTP server inside <em>esp</em>receives a client request, it examines each of the 
+        configured request routes. These may are configured via the <em>esp.json</em> file. 
+        Esp then searches the route table, until it finds a matching route for the request URI. The 
+        selected route will then break the URI into tokens and save the token values as request parameters.</p>
+        <p>For example: consider the URI format:</p>
+        <pre class="code">
 http://example.com/APP/CONTROLLER/ACTION/ID
-</pre><p>In this example, <em>APP</em> is the (optional) name of the application, <em>CONTROLLER</em> is the controller name, <em>ACTION</em> is the name of the action method to run and <em>ID</em> is a selector for an element in the Model. When the request URI is tokenized, the ESP HTTP router will extract the controller name and then use this name to load the appropriate controller to service the request.</p><h3>Restful Routes</h3><p>ESP applications will typically use a collection of Restful routes. Restful routes are a simple, readable, and familiar pattern for many developers and users. They map common <a href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a> operations to specific URIs and controller actions.</p><p>ESP will create a initial set of Restful routes depending on the <em>esp.server.routes</em> configuration.</p><table class="ui table" title="routes"><thead><tr><th>Description<th>Method<th>Pattern<th>Action<tbody><tr><td>controller<td>GET<td>/controller$<td>${controller}<tr><td>delete<td>POST<td>/controller/{id=[0-9]+}/delete$<td>delete<tr><td>create<td>POST<td>/controller(/)*$<td>create<tr><td>edit<td>GET<td>/controller/{id=[0-9]+}/edit$<td>edit<tr><td>get<td>GET<td>/controller/{id=[0-9]+}$<td>get<tr><td>init<td>GET<td>/controller/init$<td>init<tr><td>list<td>GET<td>/controller/list$<td>list<tr><td>stream<td>GET<td>/controller/stream$<td>stream<tr><td>remove<td>DELETE<td>/controller/{id=[0-9]+}$<td>remove<tr><td>update<td>PUT<td>/controller/{id=[0-9]+}/{action}(/)*$<td>update<tr><td>action<td>GET,POST<td>/controller//{id=[0-9]+}{action}$<td>${controller}/${action}</table><p>The delete route is a POST method variant of remove. The stream route is for WebSockets streaming of updates.</p><a id="actions"></a><h2>Actions</h2><p>Actions are where the controller does its work. In ESP, actions are simple "C" functions and thus they need to be registered with ESP before use. This is done in the controller module initialization function. The initialization function is named: <em>esp_controller_NAME</em>, where NAME is the unique name of the controller. The first time the controller is invoked, the controller module will be loaded and the initialization function will be run. Typically, the initialization function will then call <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espDefineAction</a> to bind action functions to route actions.</p><pre class="code">
+</pre>
+        <p>In this example, <em>APP</em> is the (optional) name of the application, <em>CONTROLLER</em> is the controller
+        name, <em>ACTION</em> is the name of the action method to run and <em>ID</em> is a selector for an element
+        in the Model. When the request URI is tokenized, the ESP HTTP router will extract the controller name and then
+        use this name to load the appropriate controller to service the request.</p>
+
+        <h3>Restful Routes</h3>
+        <p>ESP applications will typically use a collection of Restful routes.
+        Restful routes are a simple, readable, and familiar pattern for many developers and users. 
+        They map common <a href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a> 
+        operations to specific URIs and controller actions.</p>
+        <p>ESP will create a initial set of Restful routes depending on the <em>esp.server.routes</em> configuration.</p>
+<table class="ui table" title="routes">
+    <thead>
+<tr><th>Description<th>Method<th>Pattern<th>Action
+    
+    <tbody>
+<tr><td>controller<td>GET<td>/controller$<td>${controller}
+<tr><td>delete<td>POST<td>/controller/{id=[0-9]+}/delete$<td>delete
+<tr><td>create<td>POST<td>/controller(/)*$<td>create
+<tr><td>edit<td>GET<td>/controller/{id=[0-9]+}/edit$<td>edit
+<tr><td>get<td>GET<td>/controller/{id=[0-9]+}$<td>get
+<tr><td>init<td>GET<td>/controller/init$<td>init
+<tr><td>list<td>GET<td>/controller/list$<td>list
+<tr><td>stream<td>GET<td>/controller/stream$<td>stream
+<tr><td>remove<td>DELETE<td>/controller/{id=[0-9]+}$<td>remove
+<tr><td>update<td>PUT<td>/controller/{id=[0-9]+}/{action}(/)*$<td>update
+<tr><td>action<td>GET,POST<td>/controller//{id=[0-9]+}{action}$<td>${controller}/${action}
+    
+</table>
+    <p>The delete route is a POST method variant of remove. The stream route is for WebSockets streaming of
+    updates. </p>
+
+            <a id="actions"></a>
+            <h2>Actions</h2>
+            <p>Actions are where the controller does its work. In ESP, actions are simple "C" functions and thus
+            they need to be registered with ESP before use. This is done in the controller module initialization function. 
+            The initialization function is named: <em>esp_controller_NAME</em>, where NAME is the unique 
+            name of the controller. The first time the controller is invoked, the controller
+            module will be loaded and the initialization function will be run. Typically, the initialization function 
+            will then call
+            <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espDefineAction</a> 
+            to bind action functions to route actions.</p>
+<pre class="code">
 #include "esp.h"
 /* Actions */
 static FUNCTION() {
@@ -26,7 +269,37 @@ ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
     espDefineAction(route, "NAME-ACTION", FUNCTION);
     return 0;
 }
-</pre><p>If you want to programmatically bind a C function to a URI without creating a loadable module and without defining explicitly creating a route you can call the <a href="../ref/api/esp.html#group___esp_route_1ga0d812aed0ff96f0ffa281860270e8910">espBindProc</a> API. This will create a new route by inheriting settings from an existing route and then define an action based on the supplied URI pattern. Because this creates a new route for each callback, it is best not to use if you have many callbacks.</p><pre class="code">espBindProc(route, "/do/something", callback);</pre><h3>Missing Actions</h3><p>When responding to a request, if the required controller and action is not found, ESP will look for a corresponding ESP page of the same name. If that is not defined, ESP will respond with an HTTP 404 error indicating that the required action and page could not be found.</p><a id="processing"></a><h3>Processing the Request</h3><p>The controller action can perform any processing it desires. There are no real restrictions except you don't want to block for too long without giving the client some feedback. Because ESP is multithreaded, you can block. In that case, the server will continue to run and serve other requests. However, note that threads are a limited resource. It may be better to use non-blocking techniques such as async processing.</p><h3>Async Processing</h3><p>An action may service a long-running request without blocking, by responding in pieces. An action function may return without completing the request. Normally, ESP will automatically finalize the request when the action returns. To prevent this, call <a href="../ref/api/esp.html#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2">dontAutoFinalize</a> to tell ESP not to finalize the request and to keep the connection and response open. At anytime and from any other code, you may then call <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">finalize</a> to complete the request. To force output to the client, without finalizing, use <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">flush</a>.</p><p>For example:</p><pre class="code">
+</pre>
+            <p>If you want to programmatically bind a C function to a URI without creating a loadable module and without
+            defining explicitly creating a route
+            you can call the <a href="../ref/api/esp.html#group___esp_route_1ga0d812aed0ff96f0ffa281860270e8910">espBindProc</a>
+            API. This will create a new route by inheriting settings from an existing route and then define an action
+            based on the supplied URI pattern. Because this creates a new route for each callback, it is best not to use
+            if you have many callbacks.</p>
+            <pre class="code">espBindProc(route, "/do/something", callback);</pre>
+            <h3>Missing Actions</h3>
+            <p>When responding to a request, if the required controller and action is not found, ESP will look for a
+            corresponding ESP page of the same name. If that is not defined, ESP will respond with an HTTP 404 
+            error indicating that the required action and page could not be found.</p>
+            
+            <a id="processing"></a>
+            <h3>Processing the Request</h3>
+            <p>The controller action can perform any processing it desires. There are no real restrictions except you don't
+            want to block for too long without giving the client some feedback. Because ESP is multithreaded, you can
+            block. In that case, the server will continue to run and serve other requests. However, note that threads
+            are a limited resource. It may be better to use non-blocking techniques such as async processing.</p>
+            <h3>Async Processing</h3>
+            <p>An action may service a long-running request without blocking, by responding in pieces. 
+            An action function may return without completing the request. Normally, ESP will automatically finalize
+            the request when the action returns. To prevent this, call 
+            <a href="../ref/api/esp.html#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2">
+            dontAutoFinalize</a> to tell ESP not to finalize the request and to keep the connection and
+                response open. At anytime and from any other code, you may then call 
+                <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">finalize</a>
+                to complete the request. To force output to the client, without finalizing, use 
+                <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">flush</a>.</p>
+            <p>For example:</p>
+<pre class="code">
 static void second(HttpConn *conn) {
     setConn(conn);
     render("World\n");
@@ -38,11 +311,256 @@ static void first() {
     flush();
     <b>setTimeout(second, 5000, getConn());</b>
 }
-</pre><p>This example will print "Hello ", then wait five seconds and then print "World". Note that the request is held open, but ESP is not blocked in any thread. The call to <em>setTimeout</em> will arrange to have the ESP event loop invoke <em>second</em> after five seconds have elapsed. This pattern is a highly efficient in its use of system resources and scales very well.</p><h3>Request Timeout Limits</h3><p>ESP has a request timeout and a request inactivity timeout. If a request duration exceeds the limit defined via the <em>timeouts.request</em> directive in <em>esp.json</em>, the request will be aborted. If the request does no I/O for more than the limit specified by the <em>timeouts.inactivity</em> it will be similarly aborted. These limits can be set per route in <em>esp.json</em>.</p><h2>Loading and Caching Controllers</h2><p>Before a controller can run, it must first be compiled and linked into a loadable library. On Windows, this will be a DLL, on Unix, it will be a shared library with a ".so" extension. On VxWorks it will be a loadable task module.</p><p>The compilation of controllers into libraries happens automatically if a compiler is installed on the system and if the <em>EspUpdate</em> directive is enabled. If so, when a request is received, ESP will compile and link the controller as a library and save the result into the ESP <em>cache</em> directory for future use. After servicing the first request for the controller, the controller code is retained in memory and the controller will not be reloaded unless the source code is modified. If ESP is rebooted, the cached library will be reloaded without recompiling. This provides two levels of caching: in-memory and on-disk as a shared library.</p><h3>Development and Production Modes</h3><p>When a request for a controller is received, ESP will test if the source code has been updated to determine if the controller must be recompiled. If the source has been changed, ESP will wait for all requests that are using the already loaded controller, to gracefully complete. When no requests are using the old controller version, ESP will unload the controller, and ESP will recompile the updated controller source and create a new shared library that will then be loaded and the request servicing resumed.</p><p>If ESP was configured and built in debug mode, the default value for <em>EspUpdate</em> will be <em>on</em>. If ESP was built in release mode, the default value is <em>off</em>. In release mode is it common practice to lock down the compiled controllers and not auto-recompile once deployed.</p><a id="context"></a><h2>Controller Context</h2><p>ESP establishes a request context for the controller before invoking the controller action. The top level of the context is represented by the <a href="../ref/api/http.html#group___http_conn">HttpConn</a> connection object. From this, all other request information can be reached, including the:</p><ul><li>HttpRx object &mdash; describes the client HTTP request.</li><li>HttpTx object &mdash; describes the client HTTP response.</li><li>HttpHost object &mdash; describes the web server hosting the application.</li><li>params &mdash; request query, form, and routing parameters.</li><li>session state object &mdash; session state information.</li></ul><h3>ESP Short-Form API</h3><p>ESP defines a terse, short-form, <a href="../ref/api/esp.html#group___esp_abbrev">API</a> that uses the current connection object to provide context for the API. When using this API, explicit access to the connection object should not typically be required. The ESP short-form API should cover 95% of requirements for action processing.</p><h3>Explicit Connection Access</h3><p>If explicit access to the connection object is required, action functions may define a connection argument as which is passed into all actions.</p><pre class="code">static void ACTION(HttpConn *conn) {
+</pre>
+            <p>This example will print "Hello ", then wait five seconds and then print "World". Note that the request
+            is held open, but ESP is not blocked in any thread. The call to <em>setTimeout</em> will arrange to have
+            the ESP event loop invoke <em>second</em> after five seconds have elapsed. This pattern is a 
+            highly efficient in its use of system resources and scales very well.</p>
+
+            <h3>Request Timeout Limits</h3>
+            <p>ESP has a request timeout and a request inactivity timeout. If a request duration exceeds the limit
+            defined via the <em>timeouts.request</em> directive in <em>esp.json</em>, the request will be aborted. 
+            If the request does no I/O for more than the limit specified by the <em>timeouts.inactivity</em>
+            it will be similarly aborted. These limits can be set per route in <em>esp.json</em>.</p>
+
+            <h2>Loading and Caching Controllers</h2>
+            <p>Before a controller can run, it must first be compiled and linked into a loadable library.
+            On Windows, this will be a DLL, on Unix, it will be a shared library with a ".so" extension. On VxWorks it
+            will be a loadable task module.</p>
+            <p>The compilation of controllers into libraries happens automatically if a compiler is installed on the
+            system and if the <em>EspUpdate</em> directive is enabled. If so, when a request is received, ESP will
+            compile and link the controller as a library and save the result into the ESP <em>cache</em> directory
+            for future use. After servicing the first request for the controller, the controller code is retained in
+            memory and the controller will not be reloaded unless the source code is modified. If ESP is rebooted,
+            the cached library will be reloaded without recompiling. This provides two levels of caching: in-memory and
+            on-disk as a shared library.</p>
+            <h3>Development and Production Modes</h3>
+            <p>When a request for a controller is received, ESP will test if the source code has been updated to
+            determine if the controller must be recompiled. If the source has been changed, ESP will wait for all
+            requests that are using the already loaded controller, to gracefully complete. When no requests are using
+            the old controller version, ESP will unload the controller, and ESP will recompile the updated controller
+            source and create a new shared library that will then be loaded and the request servicing resumed.</p>
+            <p>If ESP was configured and built in debug mode, the default value for <em>EspUpdate</em> will be
+            <em>on</em>. If ESP was built in release mode, the default value is <em>off</em>. In release mode is it
+            common practice to lock down the compiled controllers and not auto-recompile once deployed.</p>
+
+            <a id="context"></a>
+            <h2>Controller Context</h2>
+            <p>ESP establishes a request context for the controller before invoking the controller action. The top level 
+            of the context is represented by the <a href="../ref/api/http.html#group___http_conn">HttpConn</a> 
+            connection object. From this, all other request information can be reached, including the:</p>
+            <ul>
+                <li>HttpRx object &mdash; describes the client HTTP request.</li>
+                <li>HttpTx object &mdash; describes the client HTTP response.</li>
+                <li>HttpHost object &mdash; describes the web server hosting the application.</li>
+                <li>params &mdash; request query, form, and routing parameters.</li>
+                <li>session state object &mdash; session state information.</li>
+            </ul>
+            <h3>ESP Short-Form API</h3>
+            <p>ESP defines a terse, short-form, 
+            <a href="../ref/api/esp.html#group___esp_abbrev">API</a> that uses the current connection object to
+            provide context for the API. When using this API, explicit access to the connection object should not 
+            typically be required. The ESP short-form API should cover 95% of requirements for action processing.</p>
+            
+            <h3>Explicit Connection Access</h3>
+            <p>If explicit access to the connection object is required, action functions may
+            define a connection argument as 
+            which is passed into all actions.</p>
+<pre class="code">static void ACTION(HttpConn *conn) {
     /* Use the conn reference here */
-}</pre><p>Alternatively, the connection object can can be retrieved using the <a href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">getConn</a> API.</p><h3>Navigating the Connection Object</h3><p>The <a href="../ref/api/http.html#group___http_conn">HttpConn</a> object represents the current TCP/IP connection. By using HTTP KeepAlive, the connection may be utilized for multiple requests. The fields of the HttpConn object are public and can be accessed and navigated.</p><table class="table ui" title="properties"><thead><tr><th>HttpConn Property<th>Purpose<tbody><tr><td>rx<td>Reference to the HttpRx receive object<tr><td>tx<td>Reference to the HttpTx transmit object<tr><td>host<td>Reference to the HttpHost object<tr><td>http<td>Reference to the Http object<tr><td>endpoint<td>Reference to the HttpEndpoint transmit object<tr><td>limits<td>Reference to the HttpLimits object<tr><td>ip<td>Remote client IP address<tr><td>port<td>Remote client port</table><h3>Navigating the Receive Object</h3><p>The <a href="../ref/api/http.html#group___http_rx">HttpRx</a> object represents the receive side of the HTTP protocol. On the server, it holds state regarding the client HTTP request. The fields of the HttpRx object are public and can be accessed and navigated.</p><table class="table ui" title="fields"><thead><tr><th>HttpRx Property<th>Purpose<tbody><tr><td>method<td>HTTP request method<tr><td>uri<td>Current URI (may be rewritten)<tr><td>pathInfo<td>Path portion of the URI after the scriptName<tr><td>scriptName<td>ScriptName portion of the URI<tr><td>length<td>Content length<tr><td>route<td>Reference to current HttpRoute object<tr><td>params<td>Request params (query, form and route parameters)<tr><td>files<td>Uploaded files</table><h3>Navigating the Tx Object</h3><p>The <a href="../ref/api/http.html#group___http_tx">HttpTx</a> object represents the transmit side of the HTTP protocol. On the server, it holds state regarding the response to the client. The fields of the HttpTx object are public and can be accessed and navigated.</p><table class="table ui" title="state"><thead><tr><th>HttpTx Property<th>Purpose<tbody><tr><td>filename<td>Name of the real file being served<tr><td>ext<td>Filename extension<tr><td>handler<td>Request handler object<tr><td>length<td>Response content length<tr><td>status<td>Response HTTP status<tr><td>headers<td>Response HTTP headers</table><a id="models"></a><h3>Sample of ESP API</h3><p>Here are a few of the ESP APIs that may be used inside controller actions:</p><table class="table ui" title="viewClass"><thead><tr><th class="nowrap">Method / Property<th>Description<tbody><tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gadba1deb080e78b4517119a0294489b44">addHeader</a><td>Add a response HTTP header.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gab7b4049b554576b57f8cc49efc9e3a95">createSession</a><td>Enable session control.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1ga35677b9aa8d61543db5ea80377e823a6">destroySession</a><td>Destroy a session.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2">dontAutoFinalize</a><td>Don't automatically finalize output when the action returns. Useful for async actions.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1ga03544bf56dde3a257391d07e1d6f6a3a">error</a><td>Send an error flash message to the next web page.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1ga8e8c0dccb4ded8a2fecec11d389cf8c8">inform</a><td>Send an informational flash message to the next web page.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">param</a><td>Get a request parameter value.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1ga79cf206805a9595395af14e7c35f289d">redirect</a><td>Redirect the client to a new URI.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a><td>Render the text data back to the client.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gaa1e37f244a0e0796df494dfb756472a8">renderFile</a><td>Render a file's contents back to the client.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gafe8d897ff436eabc6fc275f76222a5c3">setContentType</a><td>Set the response content type.<tr><td><a href="../ref/api/esp.html#esp_8h_1a85b884db9ea1993efaa01dbe686f601c">setCookie</a><td>Define a cookie to include in the response.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1gadb4f7bc3020ab9c481f1ebcaf1ed3f2a">setSessionVar</a><td>Set a variable in session state storage.<tr><td><a href="../ref/api/esp.html#group___esp_abbrev_1ga56d17d8860dc351f63feaa55891cdf21">uri</a><td>Make a URI from parameters.</table><a id="parameters"></a><h2>Request Parameters</h2><p>ESP will collect request query, form data and route parameters into one <em>params</em> object which is accessible to actions via the <a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">param</a> API. Each query key/value pair and all request form elements posted by the client will become a properties of the <em>params</em> object. When routing the request, ESP will tokenize the URI and create parameters for each positional token in the URI. The Controller name and Action are defined as the parameters: <em>controller</em> and <em>token</em>.</p><a id="views"></a><h3>Rendering Views</h3><p>After processing the request, the controller is responsible for rendering a response back to the client. The controller can choose how to respond. It may explicitly create the response body by calling <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a> to generate HTML. Alternatively, the action may call <a href="../ref/api/esp.html#group___esp_abbrev_1gaf0db430f850378bd83c514a0dda77fb9">renderView</a> to response with a view web page. If the action method does not explicitly generate any response, ESP will invoke a view with the same name as the action method.</p><a id="generating"></a><h2>Generating Controllers and Actions</h2><p>If you are creating an MVC application, you may use the ESP application generator, called <em>esp</em> to generate controllers, actions and controller scaffolds. To generate a new controller, run:</p><pre class="code">
+}</pre> 
+            <p>Alternatively, the connection object can can be retrieved using the <a href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">
+                getConn</a> API.</p>
+            <h3>Navigating the Connection Object</h3>
+            <p>The <a href="../ref/api/http.html#group___http_conn">HttpConn</a> object represents the current
+            TCP/IP connection. By using HTTP KeepAlive, the connection may be utilized for multiple requests. The fields
+            of the HttpConn object are public and can be accessed and
+            navigated.</p> 
+            <table class="table ui" title="properties">
+                <thead>
+                    <tr><th>HttpConn Property<th>Purpose
+                
+                <tbody>
+                    <tr><td>rx<td>Reference to the HttpRx receive object
+                    <tr><td>tx<td>Reference to the HttpTx transmit object
+                    <tr><td>host<td>Reference to the HttpHost object
+                    <tr><td>http<td>Reference to the Http object
+                    <tr><td>endpoint<td>Reference to the HttpEndpoint transmit object
+                    <tr><td>limits<td>Reference to the HttpLimits object
+                    <tr><td>ip<td>Remote client IP address
+                    <tr><td>port<td>Remote client port
+                
+            </table>
+            <h3>Navigating the Receive Object</h3>
+            <p>The <a href="../ref/api/http.html#group___http_rx">HttpRx</a> object represents the receive side of the
+            HTTP protocol. On the server, it holds state regarding the client HTTP request. The fields of the HttpRx
+            object are public and can be accessed and navigated.</p> 
+            <table class="table ui" title="fields">
+                <thead>
+                    <tr><th>HttpRx Property<th>Purpose
+                
+                <tbody>
+                    <tr><td>method<td>HTTP request method
+                    <tr><td>uri<td>Current URI (may be rewritten)
+                    <tr><td>pathInfo<td>Path portion of the URI after the scriptName
+                    <tr><td>scriptName<td>ScriptName portion of the URI
+                    <tr><td>length<td>Content length
+                    <tr><td>route<td>Reference to current HttpRoute object
+                    <tr><td>params<td>Request params (query, form and route parameters)
+                    <tr><td>files<td>Uploaded files
+                
+            </table>
+            <h3>Navigating the Tx Object</h3>
+            <p>The <a href="../ref/api/http.html#group___http_tx">HttpTx</a> object represents the transmit side of the
+            HTTP protocol. On the server, it holds state regarding the response to the client. The fields of the HttpTx
+            object are public and can be accessed and navigated.</p> 
+            <table class="table ui" title="state">
+                <thead>
+                    <tr><th>HttpTx Property<th>Purpose
+                
+                <tbody>
+                    <tr><td>filename<td>Name of the real file being served
+                    <tr><td>ext<td>Filename extension
+                    <tr><td>handler<td>Request handler object
+                    <tr><td>length<td>Response content length
+                    <tr><td>status<td>Response HTTP status
+                    <tr><td>headers<td>Response HTTP headers
+                
+            </table>
+            
+            <a id="models"></a>
+            <h3>Sample of ESP API</h3>
+            <p>Here are a few of the ESP APIs that may be used inside controller actions:</p>
+            <table class="table ui" title="viewClass">
+                <thead>
+                    <tr>
+                        <th class="nowrap">Method / Property
+                        <th>Description
+                    
+                
+                <tbody>
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gadba1deb080e78b4517119a0294489b44">
+                                addHeader</a> <td>Add a response HTTP header.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gab7b4049b554576b57f8cc49efc9e3a95">
+                                createSession</a>
+                        
+                        <td>Enable session control.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga35677b9aa8d61543db5ea80377e823a6">
+                            destroySession</a>
+                        
+                        <td>Destroy a session.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2">
+                                dontAutoFinalize</a>
+                        
+                        <td>Don't automatically finalize output when the action returns. Useful for async actions.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga03544bf56dde3a257391d07e1d6f6a3a">
+                                error</a>
+                        
+                        <td>Send an error flash message to the next web page.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga8e8c0dccb4ded8a2fecec11d389cf8c8">
+                                inform</a>
+                        
+                        <td>Send an informational flash message to the next web page.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">
+                            param</a>
+                        
+                        <td>Get a request parameter value.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga79cf206805a9595395af14e7c35f289d">
+                                redirect</a>
+                        <td>Redirect the client to a new URI.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">
+                                render</a>
+                        <td>Render the text data back to the client.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gaa1e37f244a0e0796df494dfb756472a8">
+                                renderFile</a>
+                        <td>Render a file's contents back to the client.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gafe8d897ff436eabc6fc275f76222a5c3">
+                                setContentType</a>
+                        <td>Set the response content type.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#esp_8h_1a85b884db9ea1993efaa01dbe686f601c">
+                                setCookie</a>
+                        <td>Define a cookie to include in the response.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1gadb4f7bc3020ab9c481f1ebcaf1ed3f2a">
+                                setSessionVar</a>
+                        <td>Set a variable in session state storage.
+                    
+                    <tr>
+                        <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga56d17d8860dc351f63feaa55891cdf21">
+                                uri</a>
+                        <td>Make a URI from parameters.
+                    
+                
+            </table>
+            
+            <a id="parameters"></a>
+            <h2>Request Parameters</h2>
+            <p>ESP will collect request query, form data and route parameters into one
+            <em>params</em> object which is accessible to actions via the 
+            <a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">param</a> API. Each query key/value pair and all
+            request form elements posted by the client will become a properties of the <em>params</em> object.
+            When routing the request, ESP will tokenize the URI and create parameters for each positional token in
+            the URI. The Controller name and Action are defined as the parameters: <em>controller</em> and 
+            <em>token</em>.</p>
+            <a id="views"></a>
+            <h3>Rendering Views</h3>
+            <p>After processing the request, the controller is responsible for rendering a response back to the client. 
+            The controller can choose how to respond. It may explicitly create the response body by calling
+            <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a> to generate HTML.
+            Alternatively, the action may call 
+            <a href="../ref/api/esp.html#group___esp_abbrev_1gaf0db430f850378bd83c514a0dda77fb9">renderView</a> to 
+            response with a view web page.
+            
+            If the action method does not explicitly generate any response, ESP will invoke a view with the same name as
+            the action method.</p>
+
+            <a id="generating"></a>
+            <h2>Generating Controllers and Actions</h2>
+            <p>If you are creating an MVC application, you may use the ESP application generator, called <em>esp</em> to
+            generate controllers, actions and controller scaffolds. To generate a new controller, run:</p>
+            <pre class="code">
 esp generate controller name [actions...]
-</pre><p><em>name</em> is the controller name. <em>actions...</em> are the names of the action functions you want to generate. This command will create the controller source file under the <em>controllers</em> directory.</p><p>If no actions are requested when generating, <em>esp</em> will create a controller with an initialization function but without any actions. If actions are specified, <em>esp</em> will create an empty action method for each specified action. You can safely edit the controller source to meet your needs.</p><p>For example, if you use the command:</p><pre class="code">$ <b>esp generate controller admin edit login logout command</b></pre><p>The following controller code will be generated. There is one function generated for each action and a call to <em>espDefineAction</em> is added to register the controller. The <em>esp_controller_admin</em> initialization function is invoked once when the controller is first loaded.</p><pre class="code">#include "esp.h"
+</pre>
+            <p><em>name</em> is the controller name. <em>actions...</em> are the names of the action functions you 
+            want to generate. This command will create the controller source file under the <em>controllers</em> directory. 
+            </p><p>If no actions are requested when generating, <em>esp</em> will create a controller with 
+            an initialization function but without any actions. If actions are specified, <em>esp</em> 
+            will create an empty action method for each specified action. You can safely edit the
+            controller source to meet your needs.</p>
+
+            <p>For example, if you use the command:</p>
+
+            <pre class="code">$ <b>esp generate controller admin edit login logout command</b></pre>
+
+            <p>The following controller code will be generated. There is one function generated for each action 
+            and a call to <em>espDefineAction</em> is added to register the controller. The <em>esp_controller_admin</em>
+            initialization function is invoked once when the controller is first loaded.</p>
+
+            <pre class="code">#include "esp.h"
 
 static void edit() {}
 static void login() {}
@@ -57,4 +575,19 @@ ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route)
     espDefineAction(route, "admin/command", command);
     return 0;
 }
-</pre></div><div class="terms ui basic center aligned segment"><p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p></div><script src="../lib/jquery/jquery.min.js"></script><script src="../lib/semantic-ui/semantic.min.js"></script><script src="../scripts/sidebar.min.js"></script>
+</pre>
+
+    </div>
+    <div class="terms ui basic center aligned segment">
+        <p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p>
+    </div>
+
+    <script src="../lib/jquery/jquery.min.js"></script>
+    <script src="../lib/semantic-ui/semantic.min.js"></script>
+    <script src="../scripts/sidebar.min.js"></script>
+     
+
+        
+
+
+
