@@ -29,7 +29,7 @@ ifeq ($(ARCH),)
 endif
 
 ifeq ($(OS),windows)
-    MAKE	:= MAKEFLAGS= projects/windows.bat $(ARCH) nmake
+    MAKE	:= MAKEFLAGS= projects/windows.bat $(ARCH) nmake -nologo
     EXT 	:= nmake
 else
 	MAKE    := $(shell if which gmake >/dev/null 2>&1; then echo gmake ; else echo make ; fi) --no-print-directory
