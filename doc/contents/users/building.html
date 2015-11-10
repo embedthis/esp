@@ -162,7 +162,13 @@ $ <b>esp compile /directory/of/apps</b>
             <pre class="code">$ <b>esp --platform vxworks-arm-debug compile</b></pre>
 
             <p>This will compile the application for VxWorks on Arm. Of course, the resulting module cannot be 
-            run on the development system if cross-compiling.</p>
+            run on the development system if cross-compiling. You should issue the compile command from the esp 
+            application directory.</p>
+
+            <p>If using Appweb, you should issue the <em>appweb-esp</em> command from the 
+            Appweb home directory. It is essential that the relative path from the Appweb home directory to the
+            esp application or directory containing the esp pages be identical on the target system to that on 
+            the development system when the esp assets were compiled.</p>
             
             <p>The <em>--platform</em> option will search the current directory and parent directories for an ESP 
             platform directory of the same name. You can provide a full path name as an argument to the 

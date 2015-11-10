@@ -238,7 +238,13 @@
             literals and commas on trailing properties. Here is the initial generated contents of the 
             <em>esp.json</em></p>
             <code>{
+    esp: {
+        app: true
+    },
     http: {
+        pipeline: {
+            handlers: "espHandler"
+        },
         server: {
             listen: [
                 "http://127.0.0.1:4000"
@@ -500,6 +506,12 @@ mappings: {
                     <tr><th>Name<th>Description
                 
                 <tbody>
+                    <tr>
+                        <td>app
+                        <td><p>Define whether the directory contains an ESP application or stand-alone ESP pages.
+                        For example:<code class="inverted">app: true</code></p>
+                        
+                    
                     <tr>
                         <td>apps
                         <td><p>Define external ESP applications to load. ESP can host multiple applications by defining
