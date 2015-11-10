@@ -151,16 +151,13 @@ static int openEsp(HttpQueue *q)
     req->route = route;
     req->autoFinalize = 1;
 
-#if UNUSED || 1
     /*
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
-    assert(route->cookie);
     if (!route->cookie) {
         httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
-#endif
     return 0;
 }
 
@@ -484,13 +481,15 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 
 
 /*
-    Check if the target/filename.ext is registered as an esp view or exists as a file
+    Check if the target/filename.ext is registered as an esp view
  */
-static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
+static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
 {
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
+
+    assert(target);
 
     rx = conn->rx;
     route = rx->route;
@@ -499,6 +498,8 @@ static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar 
     if (filename) {
         target = mprJoinPath(target, filename);
     }
+    assert(target && *target);
+
     if (ext && *ext) {
         if (!smatch(mprGetPathExt(target), ext)) {
             target = sjoin(target, ".", ext, NULL);
@@ -515,24 +516,30 @@ static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar 
 {
     MprPath info;
     cchar   *module, *path;
-    /*
-        If target exists as a compiled module
-     */
+
     path = mprJoinPath(route->documents, target);
-    module = getModuleName(route, "view", path);
-    if (mprGetPathInfo(module, &info) == 0 && !info.isDir) {
-        return target;
+
+    if (!eroute->combine) {
+        /*
+            If target exists as a cached module that has not yet been loaded
+            Note: source may not be present.
+         */
+        module = getModuleName(route, "view", path);
+        if (mprGetPathInfo(module, &info) == 0 && !info.isDir) {
+            return target;
+        }
     }
 
     /*
-        If target exists as a document
+        If target exists as a view (extension appended above)
      */
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }
 
+#if UNUSED
     /*
-        If target exists as a mapped / compressed document
+        If target exists as a mapped / compressed view
      */
     if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
         path = httpMapContent(conn, path);
@@ -540,6 +547,8 @@ static cchar *checkTarget(HttpConn *conn, cchar *target, cchar *filename, cchar 
             return target;
         }
     }
+#endif
+
 #if DEPRECATED || 1
     /*
         See if views are under client/app. Remove in version 6.
@@ -568,21 +577,25 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     MprKey      *kp;
     cchar       *dest;
 
-    assert(target);
-
-    for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
-        if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
-            if ((dest = checkTarget(conn, target, 0, kp->key)) != 0) {
-                httpTrace(conn, "esp.handler", "context", "msg: 'Render view %s'", dest);
-                espRenderView(conn, dest, 0);
-                return;
+    if (!target) {
+        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find document");
+        return;
+    }
+    if (*target) {
+        for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
+            if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
+                if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
+                    httpTrace(conn, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    espRenderView(conn, dest, 0);
+                    return;
+                }
             }
         }
     }
     /*
         Check for index
      */
-    if ((dest = checkTarget(conn, target, "index", "esp")) != 0) {
+    if ((dest = checkView(conn, target, "index", "esp")) != 0) {
         /*
             Must do external redirect first if URL does not end with "/"
          */
@@ -597,9 +610,25 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         return;
     }
 
+#if UNUSED
     /*
         Last chance, forward to the file handler ... not an ESP request. This enables file requests within ESP routes.
      */
+    path = mprJoinPath(route->documents, target);
+    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
+        target = path;
+    }
+    /*
+        If target exists as a mapped / compressed document
+     */
+    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
+        path = httpMapContent(conn, path);
+        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
+            target = path;
+        }
+    }
+#endif
+
     httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     conn->rx->target = &conn->rx->pathInfo[1];
     httpMapFile(conn);
@@ -1088,9 +1117,11 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         }
         unlock(esp);
     }
+#if UNUSED
     if (!route->cookie) {
         httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
+#endif
     if (!httpGetDir(route, "CACHE")) {
         espSetDefaultDirs(route, 0);
     }
