@@ -609,15 +609,11 @@ DEPS_34 = $(DEPS_34) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\mpr-version.obj: \
     src\mpr-version\mpr-version.c $(DEPS_34)
 	@echo .. [Compile] build\$(CONFIG)\obj\mpr-version.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mpr-version.obj -Fd$(BUILD)\obj\mpr-version.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mpr-version\mpr-version.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mpr-version.obj -Fd$(BUILD)\obj\mpr-version.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\mpr-version\mpr-version.c $(LOG)
 
 #
 #   libmpr-version
 #
-DEPS_35 = $(DEPS_35) build\$(CONFIG)\bin\libmpr.dll
-!IF "$(ME_COM_PCRE)" == "1"
-DEPS_35 = $(DEPS_35) build\$(CONFIG)\bin\libpcre.dll
-!ENDIF
 DEPS_35 = $(DEPS_35) build\$(CONFIG)\inc\mpr-version.h
 DEPS_35 = $(DEPS_35) build\$(CONFIG)\obj\mpr-version.obj
 

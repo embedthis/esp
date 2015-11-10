@@ -116,7 +116,7 @@
         
 
       <Link>
-        <AdditionalDependencies>libpcre.lib;libmpr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalDependencies>;%(AdditionalDependencies)</AdditionalDependencies>
         <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       </Link>
 
@@ -127,20 +127,6 @@ cd ..\..\projects\esp-windows-default</Command>
         <Outputs>$(BinDir)\libmpr-version.lib</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="libmpr.vcxproj">
-      <Project>40d07ab8-5586-4eb8-b0e5-29a5aa12297f</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      </ProjectReference>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="libpcre.vcxproj">
-      <Project>9f59a794-2f2a-4991-b2bf-25d39031215e</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      </ProjectReference>
-    </ItemGroup>
 
   <Import Project="$(VCTargetsPath)Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
