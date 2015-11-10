@@ -324,6 +324,8 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     char        *layout, *script, *page, *err;
     ssize       len;
 
+    assert(route->compile);
+
     eroute = route->eroute;
     layout = 0;
     *errMsg = 0;

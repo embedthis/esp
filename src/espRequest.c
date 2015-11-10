@@ -122,6 +122,8 @@ static int openEsp(HttpQueue *q)
         httpMemoryError(conn);
         return MPR_ERR_MEMORY;
     }
+    conn->reqData = req;
+
     /*
         If unloading a module, this lock will cause a wait here while ESP applications are reloaded.
      */
@@ -139,6 +141,7 @@ static int openEsp(HttpQueue *q)
         }
     }
     if (!eroute) {
+        /* WARNING: may yield */
         if (espInit(route, 0, "esp.json") < 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
@@ -146,7 +149,6 @@ static int openEsp(HttpQueue *q)
     } else {
         route->eroute = eroute;
     }
-    conn->reqData = req;
     req->esp = esp;
     req->route = route;
     req->autoFinalize = 1;
@@ -786,7 +788,7 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 
     lock(esp);
     if (mprLookupModule(source) == 0 || route->update) {
-        if (mprPathExists(source, R_OK)) {
+        if (route->compile && mprPathExists(source, R_OK)) {
             isView = smatch(kind, "view");
             if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
                 if (recompile) {
@@ -1204,13 +1206,13 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
     }
     httpAddRouteHandler(route, "espHandler", "esp");
 
-    if (espLoadCompilerRules(route) < 0) {
-        unlock(esp);
-        return MPR_ERR_CANT_OPEN;
-    }
     if (espLoadConfig(route) < 0) {
         unlock(esp);
         return MPR_ERR_CANT_LOAD;
+    }
+    if (route->compile && espLoadCompilerRules(route) < 0) {
+        unlock(esp);
+        return MPR_ERR_CANT_OPEN;
     }
     if (route->database && !eroute->edi && espOpenDatabase(route, route->database) < 0) {
         unlock(esp);
@@ -1379,11 +1381,13 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
     EspRoute    *eroute;
     MprPath     info;
 
-    eroute = route->eroute;
-    mprGetPathInfo(path, &info);
-    if (info.mtime > eroute->loaded) {
-        *modified = 1;
-        eroute->loaded = info.mtime;
+    if (path) {
+        eroute = route->eroute;
+        mprGetPathInfo(path, &info);
+        if (info.mtime > eroute->loaded) {
+            *modified = 1;
+            eroute->loaded = info.mtime;
+        }
     }
 }
 

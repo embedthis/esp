@@ -54,7 +54,7 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
 
     eroute = route->eroute;
 
-    if (espGetConfig(route, "esp.app", 0)) {
+    if (smatch(espGetConfig(route, "esp.app", 0), "true")) {
         eroute->app = 1;
 #if DEPRECATE || 1
     } else if (espGetConfig(route, "esp.server.listen", 0) || espGetConfig(route, "esp.generate", 0)) {
@@ -148,6 +148,9 @@ PUBLIC cchar *espGetVisualStudio()
 }
 
 
+/*
+    WARNING: yields
+ */
 PUBLIC int getVisualStudioEnv(HttpRoute *route)
 {
     EspRoute    *eroute;
@@ -233,6 +236,7 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
         }
         /*
             By default, we use vsinstallvars.bat. However user's can override by defining their own
+            WARNING: yields
          */
         getVisualStudioEnv(route);
 #endif
@@ -289,6 +293,7 @@ static void parseBuild(HttpRoute *route, cchar *key, MprJson *prop)
                 eroute->env = mprCreateHash(-1, MPR_HASH_STABLE);
             }
             for (ITERATE_CONFIG(route, env, child, ji)) {
+                /* WARNING: yields */
                 defineEnv(route, child->name, child->value);
             }
         }

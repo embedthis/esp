@@ -18631,6 +18631,13 @@ PUBLIC int mprGetPathInfo(cchar *path, MprPath *info)
 {
     MprFileSystem  *fs;
 
+    if (!info) {
+        return MPR_ERR_BAD_ARGS;
+    }
+    if (!path) {
+        info->valid = 0;
+        return MPR_ERR_BAD_ARGS;
+    }
     fs = mprLookupFileSystem(path);
     return fs->getPathInfo(fs, path, info);
 }

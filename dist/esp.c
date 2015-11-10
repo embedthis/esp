@@ -623,6 +623,8 @@ static void initialize(int argc, char **argv)
     if (app->require & REQ_LISTEN) {
         route->flags |= HTTP_ROUTE_OWN_LISTEN;
     }
+    route->compile = 1;
+    route->update = 1;
 
     /*
         Read package.json first so esp.json can override
@@ -1544,7 +1546,7 @@ static int runEspCommand(HttpRoute *route, cchar *command, cchar *csource, cchar
     if (app->show) {
         trace("Run", app->command);
     }
-    //  WARNING: GC will run here
+    /*  WARNING: GC will run here */
     if (mprRunCmd(cmd, app->command, env, NULL, &out, &err, -1, 0) != 0) {
         if (err == 0 || *err == '\0') {
             /* Windows puts errors to stdout Ugh! */
