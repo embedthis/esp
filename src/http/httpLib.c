@@ -20430,8 +20430,10 @@ static void setHeaders(HttpConn *conn, HttpPacket *packet)
         if (--conn->keepAliveCount > 0) {
             assert(conn->keepAliveCount >= 1);
             httpAddHeaderString(conn, "Connection", "Keep-Alive");
-            httpAddHeader(conn, "Keep-Alive", "timeout=%lld, max=%d", conn->limits->inactivityTimeout / 1000,
-                conn->keepAliveCount);
+            if (!(route->flags & HTTP_ROUTE_STEALTH)) {
+                httpAddHeader(conn, "Keep-Alive", "timeout=%lld, max=%d", conn->limits->inactivityTimeout / 1000,
+                    conn->keepAliveCount);
+            }
         } else {
             /* Tell the peer to close the connection */
             httpAddHeaderString(conn, "Connection", "close");
@@ -20507,7 +20509,7 @@ PUBLIC bool httpSetFilename(HttpConn *conn, cchar *filename, int flags)
     }
     mprGetPathInfo(filename, info);
     if (info->valid) {
-        tx->etag = sfmt("\"%llx\"", (int64) info->inode + (int64) info->size + (int64) info->mtime);
+        tx->etag = sfmt("\"%llx-%llx-%llx\"", (int64) info->inode, (int64) info->size, (int64) info->mtime);
     }
     tx->filename = sclone(filename);
 
