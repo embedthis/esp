@@ -64,12 +64,21 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
     }
     if (eroute->app) {
         /*
-            Set some defaults
+            Set some defaults before parsing "esp". This permits user overrides.
          */
         httpSetRouteXsrf(route, 1);
+        httpAddRouteHandler(route, "espHandler", "");
     }
     espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
+    if (eroute->app) {
+        if (!mprLookupStringItem(route->indexes, "index.esp")) {
+            httpAddRouteIndex(route, "index.esp");
+        }
+        if (!mprLookupStringItem(route->indexes, "index.html")) {
+            httpAddRouteIndex(route, "index.html");
+        }
+    }
 }
 
 

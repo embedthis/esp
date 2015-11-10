@@ -1117,11 +1117,6 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         }
         unlock(esp);
     }
-#if UNUSED
-    if (!route->cookie) {
-        httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
-    }
-#endif
     if (!httpGetDir(route, "CACHE")) {
         espSetDefaultDirs(route, 0);
     }
@@ -1182,6 +1177,7 @@ static bool preload(HttpRoute *route)
 PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
 {
     EspRoute    *eroute;
+    cchar       *hostname;
 
     if (!route) {
         return MPR_ERR_BAD_ARGS;
@@ -1198,6 +1194,8 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         prefix = stemplate(prefix, route->vars);
         httpSetRoutePrefix(route, prefix);
         httpSetRoutePattern(route, sfmt("^%s", prefix), 0);
+        hostname = route->host->name ? route->host->name : "default";
+        mprLog("info esp", 3, "Load ESP app: %s%s from %s", hostname, prefix, path);
     }
     eroute->top = eroute;
     if (path && mprPathExists(path, R_OK)) {
@@ -1205,7 +1203,6 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         eroute->configFile = sclone(path);
     }
     httpAddRouteHandler(route, "espHandler", "esp");
-    mprLog("info esp", 3, "ESP app: %s", path);
 
     if (espLoadCompilerRules(route) < 0) {
         unlock(esp);
@@ -1223,23 +1220,6 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
     if (!preload(route)) {
         unlock(esp);
         return MPR_ERR_CANT_LOAD;
-    }
-    if (eroute->app) {
-        httpSetRouteXsrf(route, 1);
-#if DEPRECATE || 1
-        /* 
-            Sleuth ESP applications that are missing pipeline configuration
-         */
-        if (mprLookupKey(route->extensions, "") != HTTP->espHandler) {
-            httpAddRouteHandler(route, "espHandler", "");
-        }
-#endif
-        if (!mprLookupStringItem(route->indexes, "index.esp")) {
-            httpAddRouteIndex(route, "index.esp");
-        }
-        if (!mprLookupStringItem(route->indexes, "index.html")) {
-            httpAddRouteIndex(route, "index.html");
-        }
     }
     unlock(esp);
     return 0;
