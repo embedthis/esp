@@ -54,6 +54,7 @@ PUBLIC int espOpen(MprModule *module)
     handler->open = openEsp;
     handler->close = closeEsp;
     handler->start = startEsp;
+
     /* 
         Using the standard 'incoming' callback that simply transfers input to the queue head 
         Applications should read by defining a notifier for READABLE events and then calling httpGetPacket
@@ -150,13 +151,16 @@ static int openEsp(HttpQueue *q)
     req->route = route;
     req->autoFinalize = 1;
 
+#if UNUSED || 1
     /*
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
+    assert(route->cookie);
     if (!route->cookie) {
         httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
+#endif
     return 0;
 }
 
@@ -305,6 +309,65 @@ static void startEsp(HttpQueue *q)
 }
 
 
+static bool loadController(HttpConn *conn)
+{
+#if !ME_STATIC
+    HttpRx      *rx;
+    HttpRoute   *route;
+    EspRoute    *eroute;
+    cchar       *errMsg, *controllers, *controller;
+
+    rx = conn->rx;
+    route = rx->route;
+    eroute = route->eroute;
+    if (!eroute->combine && (route->update || !mprLookupKey(eroute->actions, rx->target))) {
+        if ((controllers = httpGetDir(route, "CONTROLLERS")) == 0) {
+            controllers = ".";
+        }
+        controllers = mprJoinPath(route->home, controllers);
+        controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
+        controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
+
+        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
+            if (mprPathExists(controller, R_OK)) {
+                httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+                return 0;
+            }
+        } else {
+            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", controller);
+        }
+    }
+#endif /* !ME_STATIC */
+    return 1;
+}
+
+
+static bool setToken(HttpConn *conn)
+{
+    HttpRx      *rx;
+    HttpRoute   *route;
+
+    rx = conn->rx;
+    route = rx->route;
+
+    if (route->flags & HTTP_ROUTE_XSRF && !(rx->flags & HTTP_GET)) {
+        if (!httpCheckSecurityToken(conn)) {
+            httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
+            if (route->json) {
+                httpTrace(conn, "esp.xsrf.error", "error", 0);
+                espRenderString(conn,
+                    "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
+                espFinalize(conn);
+            } else {
+                httpError(conn, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
+            }
+            return 0;
+        }
+    }
+    return 1;
+}
+
+
 /*
     Run an action (may yield)
  */
@@ -333,48 +396,18 @@ static int runAction(HttpConn *conn)
         }
         return 1;
     }
-
-#if !ME_STATIC
-    if (!eroute->combine && (route->update || !mprLookupKey(eroute->actions, rx->target))) {
-        cchar *errMsg, *controllers, *controller;
-        if ((controllers = httpGetDir(route, "CONTROLLERS")) == 0) {
-            controllers = ".";
-        }
-        controllers = mprJoinPath(route->home, controllers);
-        controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
-        controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
-        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
-            if (mprPathExists(controller, R_OK)) {
-                httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-                return 0;
-            }
-        } else {
-            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", controller);
-        }
+    if (!loadController(conn)) {
+        return 0;
     }
-#endif /* !ME_STATIC */
-
-    assert(eroute->top);
-    action = mprLookupKey(eroute->top->actions, rx->target);
-
-    if (route->flags & HTTP_ROUTE_XSRF && !(rx->flags & HTTP_GET)) {
-        if (!httpCheckSecurityToken(conn)) {
-            httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
-            if (route->json) {
-                httpTrace(conn, "esp.xsrf.error", "error", 0);
-                espRenderString(conn,
-                    "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
-                espFinalize(conn);
-            } else {
-                httpError(conn, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
-            }
-            return 0;
-        }
+    if (!setToken(conn)) {
+        return 0;
     }
     httpAuthenticate(conn);
     if (eroute->commonController) {
         (eroute->commonController)(conn);
     }
+    assert(eroute->top);
+    action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
         httpTrace(conn, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
         setupFeedback(conn);
@@ -385,6 +418,37 @@ static int runAction(HttpConn *conn)
     return 1;
 }
 
+
+static cchar *loadView(HttpConn *conn, cchar *target)
+{
+#if !ME_STATIC
+    HttpRx      *rx;
+    HttpRoute   *route;
+    EspRoute    *eroute;
+    cchar       *errMsg, *path;
+
+    rx = conn->rx;
+    route = rx->route;
+    eroute = route->eroute;
+    assert(eroute);
+
+    if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, target))) {
+        /* WARNING: GC yield - need target below */
+        target = sclone(target);
+        mprHold(target);
+        path = mprJoinPath(route->documents, target);
+        httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
+
+        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg) < 0) {
+            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+            mprRelease(target);
+            return 0;
+        }
+        mprRelease(target);
+    }
+#endif
+    return target;
+}
 
 PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 {
@@ -397,26 +461,12 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
     route = rx->route;
     eroute = route->eroute;
 
-#if !ME_STATIC
-    /*
-        Dynamically load the ESP module for the view
-     */
-    if (!eroute->combine && (route->update || !mprLookupKey(eroute->top->views, target))) {
-        cchar *errMsg, *path;
-        /* WARNING: GC yield - need target below */
-        target = sclone(target);
-        mprHold(target);
-        path = mprJoinPath(route->documents, target);
-        httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
-        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg) < 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-            mprRelease(target);
-            return 0;
-        }
-        mprRelease(target);
+    if ((target = loadView(conn, target)) == 0) {
+        return 0;
     }
-#endif
     if ((viewProc = mprLookupKey(eroute->views, target)) == 0) {
+        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
+            getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
         return 0;
     }
     if (!(flags & ESP_DONT_RENDER)) {
@@ -997,6 +1047,7 @@ static void manageEsp(Esp *esp, int flags)
 
 /*********************************** Directives *******************************/
 /*
+    Load the ESP configuration file esp.json (eroute->configFile) and an optional package.json file
     WARNING: may yield
  */
 PUBLIC int espLoadConfig(HttpRoute *route)
@@ -1040,33 +1091,37 @@ PUBLIC int espLoadConfig(HttpRoute *route)
     if (!route->cookie) {
         httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
     }
-    if (route->database && !eroute->edi) {
-        if (espOpenDatabase(route, route->database) < 0) {
-            mprLog("error esp", 0, "Cannot open database %s", route->database);
-            return MPR_ERR_CANT_LOAD;
-        }
+    if (!httpGetDir(route, "CACHE")) {
+        espSetDefaultDirs(route, 0);
     }
-#if !ME_STATIC
-    if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
-        MprJson     *preload, *item;
-        cchar       *errMsg, *source;
-        char        *kind;
-        int         i;
+    return 0;
+}
 
-        /*
-            WARNING: may yield when compiling modules
-         */
+
+/*
+    Preload application module
+    WARNING: may yield when compiling modules
+ */
+static bool preload(HttpRoute *route)
+{
+#if !ME_STATIC
+    EspRoute    *eroute;
+    MprJson     *preload, *item;
+    cchar       *errMsg, *source;
+    char        *kind;
+    int         i;
+
+    eroute = route->eroute;
+    if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
         } else {
             source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
         }
-        lock(esp);
         if (espLoadModule(route, NULL, "app", source, &errMsg) < 0) {
             if (eroute->combine) {
                 mprLog("error esp", 0, "%s", errMsg);
-                unlock(esp);
-                return MPR_ERR_CANT_LOAD;
+                return 0;
             }
         }
         if (!eroute->combine && (preload = mprGetJsonObj(route->config, "esp.preload")) != 0) {
@@ -1078,15 +1133,13 @@ PUBLIC int espLoadConfig(HttpRoute *route)
                 source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
                 if (espLoadModule(route, NULL, kind, source, &errMsg) < 0) {
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);
-                    unlock(esp);
-                    return MPR_ERR_CANT_LOAD;
+                    return 0;
                 }
             }
         }
-        unlock(esp);
     }
 #endif
-    return 0;
+    return 1;
 }
 
 
@@ -1131,20 +1184,32 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         unlock(esp);
         return MPR_ERR_CANT_LOAD;
     }
-    if (!httpGetDir(route, "CACHE")) {
-        espSetDefaultDirs(route, 0);
+    if (route->database && !eroute->edi && espOpenDatabase(route, route->database) < 0) {
+        unlock(esp);
+        mprLog("error esp", 0, "Cannot open database %s", route->database);
+        return MPR_ERR_CANT_LOAD;
     }
-#if DEPRECATE || 1
-    /* 
-        Sleuth ESP applications that are missing pipeline configuration
-     */
-    if (mprLookupKey(route->extensions, "") != HTTP->espHandler && eroute->app) {
-        httpAddRouteHandler(route, "espHandler", "");
-        httpAddRouteIndex(route, "index.esp");
-        httpAddRouteIndex(route, "index.html");
+    if (!preload(route)) {
+        unlock(esp);
+        return MPR_ERR_CANT_LOAD;
+    }
+    if (eroute->app) {
         httpSetRouteXsrf(route, 1);
-    }
+#if DEPRECATE || 1
+        /* 
+            Sleuth ESP applications that are missing pipeline configuration
+         */
+        if (mprLookupKey(route->extensions, "") != HTTP->espHandler) {
+            httpAddRouteHandler(route, "espHandler", "");
+        }
 #endif
+        if (!mprLookupStringItem(route->indexes, "index.esp")) {
+            httpAddRouteIndex(route, "index.esp");
+        }
+        if (!mprLookupStringItem(route->indexes, "index.html")) {
+            httpAddRouteIndex(route, "index.html");
+        }
+    }
     unlock(esp);
     return 0;
 }

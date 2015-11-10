@@ -62,6 +62,12 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
         /* Here for legacy apps without esp.app */
 #endif
     }
+    if (eroute->app) {
+        /*
+            Set some defaults
+         */
+        httpSetRouteXsrf(route, 1);
+    }
     espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
 }

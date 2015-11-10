@@ -9,4 +9,4 @@ SemVer version management
 
 ## Get Pak
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/download.html)
+[https://embedthis.com/pak/](https://embedthis.com/pak/)
