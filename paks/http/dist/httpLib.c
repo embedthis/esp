@@ -7901,6 +7901,15 @@ static bool validateEndpoint(HttpEndpoint *endpoint)
     if ((host = mprGetFirstItem(endpoint->hosts)) == 0) {
         host = httpGetDefaultHost();
         httpAddHostToEndpoint(endpoint, host);
+
+    } else {
+        /*
+            Move default host to the end of the list so virtual hosts will match first
+         */
+        if (!host->name && mprGetListLength(endpoint->hosts) > 1) {
+            mprRemoveItem(endpoint->hosts, host);
+            mprAddItem(endpoint->hosts, host);
+        }
     }
     for (nextRoute = 0; (route = mprGetNextItem(host->routes, &nextRoute)) != 0; ) {
         if (!route->handler && !mprLookupKey(route->extensions, "")) {

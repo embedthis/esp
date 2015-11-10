@@ -264,7 +264,7 @@ PUBLIC int espLoadConfig(HttpRoute *route);
     @returns The EspRoute object.
     @ingroup EspRoute
     @stability Prototype
-    @param route 
+    @param route
  */
 PUBLIC EspRoute *espRoute(HttpRoute *route);
 
@@ -980,7 +980,7 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route);
 
 /**
     Get a route variable
-    @description Get the value of a request route variable. 
+    @description Get the value of a request route variable.
     @param conn HttpConn connection object
     @param var Name of the request parameter to retrieve
     @return String containing the route variable value. Caller should not free.
@@ -1220,7 +1220,7 @@ PUBLIC ssize espRenderCached(HttpConn *conn);
 
 /**
     Render an ESP document
-    @description If the document is an ESP page, it will be rendered as a view via #espRenderDocument. 
+    @description If the document is an ESP page, it will be rendered as a view via #espRenderDocument.
         Otherwise, it will be rendered using the fileHandler as a static document.
     @param conn Http connection object
     @param path Relative pathname from route->documents to the document to render.
@@ -1242,12 +1242,12 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
 
 /**
     Render feedback messages.
-    @description Feedback messages for one-time messages that are sent to the client. For HTML clients, feedback 
+    @description Feedback messages for one-time messages that are sent to the client. For HTML clients, feedback
     messages use the session state store and persist for only one request. For smart/thick clients, feedback messages
     are sent as JSON responses via the espSendFeedback API. See #espSetFeedback for how to define feedback messages.
     @param conn Http connection object
     @param types Types of feedback message to retrieve. Set to "*" to retrieve all types of feedback.
-        This may be set to any word, but the following feedback types are typically supported as per 
+        This may be set to any word, but the following feedback types are typically supported as per
         RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @return Number of bytes written
     @ingroup EspControl
@@ -1421,7 +1421,7 @@ PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, 
+PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
     bool isSecure);
 
 /**
@@ -2468,7 +2468,7 @@ PUBLIC void renderError(int status, cchar *fmt, ...);
         See #espSetFeedback and #feedback for how to define feedback messages.
         This API will render feedback messages as HTML in place of the renderFeedback call in ESP page.
     @param types Types of feedback message to retrieve. Set to "*" to retrieve all types of feedback.
-        This may be set to any word, but the following feedback types are typically supported as per 
+        This may be set to any word, but the following feedback types are typically supported as per
         RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @ingroup EspAbbrev
     @stability Evolving
@@ -2878,7 +2878,7 @@ PUBLIC bool updateRecFromParams(cchar *table);
     Create a URI link.
     @description Create a URI link based on a given target an expanding embedded tokens based on the current request and
         route state. The target URI parameter may contain partial or complete URI information. The missing parts
-    are supplied using the current request and route tables. 
+    are supplied using the current request and route tables.
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
         If the target has an absolute URI path, that path is used directly after tokenization. If the target begins with
