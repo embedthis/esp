@@ -2660,10 +2660,10 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
 
     eroute = route->eroute;
 
-    if (smatch(espGetConfig(route, "esp.app", 0), "true")) {
+    if (smatch(mprGetJson(prop, "app"), "true")) {
         eroute->app = 1;
 #if DEPRECATE || 1
-    } else if (espGetConfig(route, "esp.server.listen", 0) || espGetConfig(route, "esp.generate", 0)) {
+    } else if (mprGetJson(prop, "server.listen") || mprGetJson(prop, "generate")) {
         eroute->app = 1;
         /* Here for legacy apps without esp.app */
 #endif
