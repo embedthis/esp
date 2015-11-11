@@ -2360,6 +2360,13 @@
       <arglist>(HttpRoute *route, bool on)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>httpSetRouteCompile</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>gaf76ea2ab777680e4635711b8116f07dc</anchor>
+      <arglist>(HttpRoute *route, bool on)</arglist>
+    </member>
+    <member kind="function">
       <type>int</type>
       <name>httpSetRouteConnector</name>
       <anchorfile>group___http_route.html</anchorfile>

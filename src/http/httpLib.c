@@ -16259,7 +16259,9 @@ static bool parseIncoming(HttpConn *conn)
     }
     start = mprGetBufStart(packet->content);
     while (*start == '\r' || *start == '\n') {
-        mprGetCharFromBuf(packet->content);
+        if (mprGetCharFromBuf(packet->content) < 0) {
+            break;
+        }
         start = mprGetBufStart(packet->content);
     }
     /*
