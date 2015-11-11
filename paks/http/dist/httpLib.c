@@ -3831,7 +3831,6 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
             httpParseAll(route, 0, modeObj);
         }
     }
-
     httpParseAll(route, 0, config);
     if (route->error) {
         route->config = 0;
