@@ -1183,6 +1183,7 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
 {
     EspRoute    *eroute;
     cchar       *hostname;
+    bool        yielding;
 
     if (!route) {
         return MPR_ERR_BAD_ARGS;
@@ -1209,23 +1210,33 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
     }
     httpAddRouteHandler(route, "espHandler", "esp");
 
+    /*
+        Loading config may run commands. To make it easier for parsing code, we disable GC by not consenting to
+        yield for this section. This should only happen on application load.
+     */
+    yielding = mprSetThreadYield(NULL, 0);
     if (espLoadConfig(route) < 0) {
+        mprSetThreadYield(NULL, yielding);
         unlock(esp);
         return MPR_ERR_CANT_LOAD;
     }
     if (eroute->compile && espLoadCompilerRules(route) < 0) {
+        mprSetThreadYield(NULL, yielding);
         unlock(esp);
         return MPR_ERR_CANT_OPEN;
     }
     if (route->database && !eroute->edi && espOpenDatabase(route, route->database) < 0) {
-        unlock(esp);
         mprLog("error esp", 0, "Cannot open database %s", route->database);
+        mprSetThreadYield(NULL, yielding);
+        unlock(esp);
         return MPR_ERR_CANT_LOAD;
     }
     if (!preload(route)) {
+        mprSetThreadYield(NULL, yielding);
         unlock(esp);
         return MPR_ERR_CANT_LOAD;
     }
+    mprSetThreadYield(NULL, yielding);
     unlock(esp);
     return 0;
 }

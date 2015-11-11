@@ -1017,6 +1017,9 @@ PUBLIC void mprYield(int flags)
     assert(!tp->yielded);
     assert(!tp->stickyYield);
 
+    if (tp->noyield) {
+        return;
+    }
     if (flags & MPR_YIELD_STICKY) {
         tp->stickyYield = 1;
         tp->yielded = 1;
@@ -1076,7 +1079,7 @@ PUBLIC void mprResetYield()
         mprLog("error mpr memory", 0, "Yield called from an unknown thread");
         return;
     }
-    assert(tp->stickyYield);
+    assert(tp->stickyYield || tp->noyield);
     if (tp->stickyYield) {
         /*
             Marking could have started again while sticky yielded. So must yield here regardless.
@@ -1210,14 +1213,15 @@ static void sweeperThread(void *unused, MprThread *tp)
  */
 static void markAndSweep()
 {
-    static int warnOnce = 0;
-
     if (!pauseThreads()) {
+#if KEEP
+        static int warnOnce = 0;
         if (warnOnce == 0 && !mprGetDebugMode() && !mprIsStopping()) {
             warnOnce = 1;
             mprLog("error mpr memory", 6, "GC synchronization timed out, some threads did not yield.");
             mprLog("error mpr memory", 6, "If debugging, run the process with -D to enable debug mode.");
         }
+#endif
         resumeThreads(YIELDED_THREADS | WAITING_THREADS);
         return;
     }
@@ -26120,6 +26124,18 @@ PUBLIC ssize mprGetBusyWorkerCount()
     return count;
 }
 
+
+PUBLIC bool mprSetThreadYield(MprThread *tp, bool on)
+{
+    bool    prior;
+
+    if (!tp) {
+        tp = mprGetCurrentThread();
+    }
+    prior = !tp->noyield;
+    tp->noyield = !on;
+    return prior;
+}
 
 /*
     @copy   default

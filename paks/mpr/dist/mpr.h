@@ -6933,6 +6933,7 @@ typedef struct MprThread {
 #endif
     int             stickyYield;        /**< Yielded does not auto-clear after GC */
     int             yielded;            /**< Thread has yielded to GC */
+    int             noyield;            /**< Do not yield (temporary) */
     int             waitForSweeper;     /**< Yield untill the GC sweeper is complete */
     int             waiting;            /**< Waiting in mprYield */
 } MprThread;
@@ -7044,6 +7045,16 @@ PUBLIC void mprSetCurrentThreadPriority(int priority);
     @stability Deprecated
  */
 PUBLIC void mprSetThreadPriority(MprThread *thread, int priority);
+
+/**
+    Set whether a thread can yield for GC
+    @description 
+    @param tp Thread object returned by #mprCreateThread. Set to NULL for the current thread.
+    @param on Set to true to enable yielding
+    @ingroup MprThread
+    @stability Prototype
+*/
+PUBLIC bool mprSetThreadYield(MprThread *tp, bool on);
 
 /**
     Start a thread
