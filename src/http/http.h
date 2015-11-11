@@ -4522,10 +4522,7 @@ typedef struct HttpRoute {
     cchar           *responseFormat;        /**< Client response format */
     cchar           *clientConfig;          /**< Configuration to send to the client */
 
-    bool            compile: 1;             /**< Compile source if required */
     bool            error: 1;               /**< Parse or runtime error */
-    bool            keepSource: 1;          /**< Preserve generated source */
-    bool            update: 1;              /**< Auto-update modified ESP source */
     bool            debug: 1;               /**< Application running in debug mode */
     bool            ignoreEncodingErrors: 1;/**< Ignore UTF8 encoding errors */
     bool            json: 1;                /**< Response format is json */

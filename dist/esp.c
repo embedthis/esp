@@ -623,8 +623,6 @@ static void initialize(int argc, char **argv)
     if (app->require & REQ_LISTEN) {
         route->flags |= HTTP_ROUTE_OWN_LISTEN;
     }
-    route->compile = 1;
-    route->update = 1;
 
     /*
         Read package.json first so esp.json can override
@@ -1429,7 +1427,7 @@ static MprList *getRoutes()
         Filter ESP routes. Go in reverse order to locate outermost routes first.
      */
     for (prev = -1; (route = mprGetPrevItem(app->host->routes, &prev)) != 0; ) {
-        if ((eroute = route->eroute) == 0 || !eroute->compile) {
+        if ((eroute = route->eroute) == 0 || !eroute->compileCmd) {
             /* No ESP configuration for compiling */
             mprLog("", 6, "Skip route name %s - no esp configuration", route->pattern);
             continue;
@@ -1467,7 +1465,7 @@ static MprList *getRoutes()
         }
         parent = route->parent;
         if (parent && parent->eroute &&
-            ((EspRoute*) parent->eroute)->compile && smatch(route->documents, parent->documents) && parent->startWith) {
+            ((EspRoute*) parent->eroute)->compileCmd && smatch(route->documents, parent->documents) && parent->startWith) {
             /*
                 Use the parent instead if it has the same directory and is not the default route
                 This is for MVC apps with a prefix of "/" and a directory the same as the default route.
@@ -1709,16 +1707,16 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
             WARNING: GC yield here
          */
         trace("Compile", "%s", mprGetRelPath(app->csource, 0));
-        if (!eroute->compile) {
+        if (!eroute->compileCmd) {
             fail("Missing EspCompile directive for %s", app->csource);
             return;
         }
-        if (runEspCommand(route, eroute->compile, app->csource, app->module) < 0) {
+        if (runEspCommand(route, eroute->compileCmd, app->csource, app->module) < 0) {
             return;
         }
-        if (eroute->link) {
+        if (eroute->linkCmd) {
             vtrace("Link", "%s", mprGetRelPath(mprTrimPathExt(app->module), NULL));
-            if (runEspCommand(route, eroute->link, app->csource, app->module) < 0) {
+            if (runEspCommand(route, eroute->linkCmd, app->csource, app->module) < 0) {
                 return;
             }
 #if !(ME_DEBUG && MACOSX)
@@ -1728,7 +1726,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
             mprDeletePath(mprJoinPathExt(mprTrimPathExt(app->module), ME_OBJ));
 #endif
         }
-        if (!route->keepSource && !app->keep && (kind & (ESP_VIEW | ESP_PAGE))) {
+        if (!eroute->keep && !app->keep && (kind & (ESP_VIEW | ESP_PAGE))) {
             mprDeletePath(app->csource);
         }
     }
@@ -2015,12 +2013,12 @@ static void compileCombined(HttpRoute *route)
 
         app->module = mprNormalizePath(sfmt("%s/%s%s", httpGetDir(route, "CACHE"), name, ME_SHOBJ));
         trace("Compile", "%s", name);
-        if (runEspCommand(route, eroute->compile, app->combinePath, app->module) < 0) {
+        if (runEspCommand(route, eroute->compileCmd, app->combinePath, app->module) < 0) {
             return;
         }
-        if (eroute->link) {
+        if (eroute->linkCmd) {
             trace("Link", "%s", mprGetRelPath(mprTrimPathExt(app->module), NULL));
-            if (runEspCommand(route, eroute->link, app->combinePath, app->module) < 0) {
+            if (runEspCommand(route, eroute->linkCmd, app->combinePath, app->module) < 0) {
                 return;
             }
         }

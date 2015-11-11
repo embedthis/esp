@@ -100,8 +100,8 @@ typedef struct EspState {
     MprBuf  *end;                           /**< Accumulated compiled esp end of function code */
 } EspState;
 
-#define ESP_COMPILE_SYMBOLS     1           /**< Override to compile in debug mode. Defaults to same as Appweb */
-#define ESP_COMPILE_OPTIMIZED   2           /**< Override to compile in release mode */
+#define ESP_COMPILE_SYMBOLS     0           /**< Override to compile in debug mode. Defaults to same as Appweb */
+#define ESP_COMPILE_OPTIMIZED   1           /**< Override to compile in release mode */
 
 /**
     Top level ESP structure. This is a singleton.
@@ -113,9 +113,11 @@ typedef struct Esp {
     MprThreadLocal  *local;                 /**< Thread local data */
     MprMutex        *mutex;                 /**< Multithread lock */
     EdiService      *ediService;            /**< Database service */
+    cchar           *hostedDocuments;       /**< Documents directory if hosted */
     int             compileMode;            /**< Force a debug compile */
     int             inUse;                  /**< Active ESP request counter */
     int             reloading;              /**< Reloading ESP and modules */
+    MprHash         *vstudioEnv;            /**< Visual Studio environment */
 } Esp;
 
 /**
@@ -181,18 +183,24 @@ typedef struct EspRoute {
     cchar           *currentSession;        /**< Current login session when enforcing a single login */
     cchar           *configFile;            /**< Path to config file */
 
-    cchar           *compile;               /**< Compile template */
-    cchar           *link;                  /**< Link template */
+    cchar           *compileCmd;            /**< Compile command template */
+    cchar           *linkCmd;               /**< Link command template */
     cchar           *searchPath;            /**< Search path to use when locating compiler/linker */
     cchar           *winsdk;                /**< Windows SDK */
-    int             app;                    /**< Is an esp mvc application */
-    int             combine;                /**< Combine C source into a single file */
-    int             compileMode;            /**< Compile the application debug or release mode */
+
+    uint            app: 1;                 /**< Is an esp mvc application */
+    uint            combine: 1;             /**< Combine C source into a single file */
+    uint            compileMode: 1;         /**< Compile the application debug or release mode */
+    uint            compile: 1;             /**< Enable recompiling the application or esp page */
+    uint            update: 1;              /**< Enable dynamically updating the application */
+    uint            keep: 1;                /**< Keep intermediate source code after compiling */
+
+    Edi             *edi;                   /**< Default database for this route */
+
 #if DEPRECATED || 1
     cchar           *combineScript;         /**< Combine mode script filename */
     cchar           *combineSheet;          /**< Combine mode stylesheet filename */
 #endif
-    Edi             *edi;                   /**< Default database for this route */
 } EspRoute;
 
 #if DEPRECATED || 1

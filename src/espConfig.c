@@ -68,6 +68,7 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
          */
         httpSetRouteXsrf(route, 1);
         httpAddRouteHandler(route, "espHandler", "");
+        eroute->keep = smatch(route->mode, "release") == 0;
     }
     espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
@@ -125,6 +126,15 @@ static void parseCombine(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseCompile(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+    eroute->compile = (prop->type & MPR_JSON_TRUE) ? 1 : 0;
+}
+
+
 #if ME_WIN_LIKE
 PUBLIC cchar *espGetVisualStudio()
 {
@@ -151,13 +161,10 @@ PUBLIC cchar *espGetVisualStudio()
 /*
     WARNING: yields
  */
-PUBLIC int getVisualStudioEnv(HttpRoute *route)
+PUBLIC int getVisualStudioEnv(Esp *esp)
 {
-    EspRoute    *eroute;
     char        *error, *output, *next, *line, *key, *value;
     cchar       *arch, *cpu, *command, *vs;
-
-    eroute = route->eroute;
 
     /*
         Get the real system architecture, not whether this app is 32 or 64 bit.
@@ -182,13 +189,13 @@ PUBLIC int getVisualStudioEnv(HttpRoute *route)
         mprLog("error esp", 0, "Unsupported architecture %s", arch);
         return MPR_ERR_CANT_FIND;
     }
-
     vs = espGetVisualStudio();
     command = sfmt("\"%s\\vcvars.bat\" \"%s\" %s", mprGetAppDir(), mprJoinPath(vs, "VC/vcvarsall.bat"), arch);
     if (mprRun(NULL, command, 0, &output, &error, -1) < 0) {
         mprLog("error esp", 0, "Cannot run command: %s, error %s", command, error);
         return MPR_ERR_CANT_READ;
     }
+    esp->vstudioEnv = mprCreateHash(0, 0);
 
     next = output;
     while ((line = stok(next, "\r\n", &next)) != 0) {
@@ -199,8 +206,7 @@ PUBLIC int getVisualStudioEnv(HttpRoute *route)
             scaselessmatch(key, "VSINSTALLDIR") ||
             scaselessmatch(key, "WindowsSdkDir") ||
             scaselessmatch(key, "WindowsSdkLibVersion")) {
-            mprLog("info esp", 5, "define env %s %s", key, value);
-            defineEnv(route, key, value);
+            mprAddKey(esp->vstudioEnv, key, value);
         }
     }
     return 0;
@@ -220,6 +226,9 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
         httpParsePlatform(HTTP->platform, NULL, &arch, NULL);
 #if ME_WIN_LIKE
         if (smatch(value, "VisualStudio")) {
+            Esp     *esp;
+            MprKey  *kp;
+
             /*
                 Already set in users environment
              */
@@ -228,17 +237,24 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
                 scontains(getenv("PATH"), "Microsoft Visual Studio")) {
                 return;
             }
+            /*
+                By default, we use vsinstallvars.bat. However users can override by defining their own.
+                WARNING: yields
+             */
+            esp = MPR->espService;
+            if (!esp->vstudioEnv && getVisualStudioEnv(esp) < 0) {
+                return;
+            }
+            for (ITERATE_KEYS(esp->vstudioEnv, kp)) {
+                mprLog("info esp", 0, "define env %s %s", kp->key, kp->data);
+                defineEnv(route, kp->key, kp->data);
+            }
         }
         if (scontains(HTTP->platform, "-x64-") &&
             !(smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432"))) {
             /* Cross 64 */
             arch = sjoin(arch, "-cross", NULL);
         }
-        /*
-            By default, we use vsinstallvars.bat. However user's can override by defining their own
-            WARNING: yields
-         */
-        getVisualStudioEnv(route);
 #endif
         if ((set = mprGetJsonObj(route->config, sfmt("esp.build.env.%s.default", value))) != 0) {
             for (ITERATE_CONFIG(route, set, child, ji)) {
@@ -283,10 +299,10 @@ static void parseBuild(HttpRoute *route, cchar *key, MprJson *prop)
     }
     if (rules) {
         if ((rule = mprGetJson(route->config, sfmt("%s.%s", stem, "compile"))) != 0) {
-            eroute->compile = rule;
+            eroute->compileCmd = rule;
         }
         if ((rule = mprGetJson(route->config, sfmt("%s.%s", stem, "link"))) != 0) {
-            eroute->link = rule;
+            eroute->linkCmd = rule;
         }
         if ((env = mprGetJsonObj(route->config, sfmt("%s.%s", stem, "env"))) != 0) {
             if (eroute->env == 0) {
@@ -303,6 +319,15 @@ static void parseBuild(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseKeep(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+    eroute->keep = (prop->type & MPR_JSON_TRUE) ? 1 : 0;
+}
+
+
 static void parseOptimize(HttpRoute *route, cchar *key, MprJson *prop)
 {
     EspRoute    *eroute;
@@ -310,6 +335,16 @@ static void parseOptimize(HttpRoute *route, cchar *key, MprJson *prop)
     eroute = route->eroute;
     eroute->compileMode = smatch(prop->value, "true") ? ESP_COMPILE_OPTIMIZED : ESP_COMPILE_SYMBOLS;
 }
+
+
+static void parseUpdate(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+    eroute->update = (prop->type & MPR_JSON_TRUE) ? 1 : 0;
+}
+
 
 static void serverRouteSet(HttpRoute *route, cchar *set)
 {
@@ -343,7 +378,10 @@ PUBLIC int espInitParser()
     httpAddConfig("esp.apps", parseApps);
     httpAddConfig("esp.build", parseBuild);
     httpAddConfig("esp.combine", parseCombine);
+    httpAddConfig("esp.compile", parseCompile);
+    httpAddConfig("esp.keep", parseKeep);
     httpAddConfig("esp.optimize", parseOptimize);
+    httpAddConfig("esp.update", parseUpdate);
     return 0;
 } 
 

@@ -290,17 +290,20 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
 
 PUBLIC int espLoadCompilerRules(HttpRoute *route)
 {
-    cchar   *compile, *rules;
+    EspRoute    *eroute;
+    cchar       *compile, *rules;
 
-    if ((compile = mprGetJson(route->config, "esp.compile")) == 0) {
+    eroute = route->eroute;
+    if (eroute->compileCmd) {
+        return 0;
+    }
+    if ((compile = mprGetJson(route->config, "esp.rules")) == 0) {
         compile = ESP_COMPILE_JSON;
     }
     rules = mprJoinPath(mprGetAppDir(), compile);
-    if (mprPathExists(rules, R_OK)) {
-        if (httpLoadConfig(route, rules) < 0) {
-            mprLog("error esp", 0, "Cannot parse %s", rules);
-            return MPR_ERR_CANT_OPEN;
-        }
+    if (mprPathExists(rules, R_OK) && httpLoadConfig(route, rules) < 0) {
+        mprLog("error esp", 0, "Cannot parse %s", rules);
+        return MPR_ERR_CANT_OPEN;
     }
     return 0;
 }
@@ -324,9 +327,9 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     char        *layout, *script, *page, *err;
     ssize       len;
 
-    assert(route->compile);
-
     eroute = route->eroute;
+    assert(eroute->compile);
+
     layout = 0;
     *errMsg = 0;
 
@@ -384,19 +387,19 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     }
 #endif
 
-    if (!eroute->compile && espLoadCompilerRules(route) < 0) {
+    if (!eroute->compileCmd && espLoadCompilerRules(route) < 0) {
         return 0;
     }
 
     /* 
         Run compiler: WARNING: GC yield here 
      */
-    if (runCommand(route, dispatcher, eroute->compile, csource, module, errMsg) != 0) {
+    if (runCommand(route, dispatcher, eroute->compileCmd, csource, module, errMsg) != 0) {
         return 0;
     }
-    if (eroute->link) {
+    if (eroute->linkCmd) {
         /* WARNING: GC yield here */
-        if (runCommand(route, dispatcher, eroute->link, csource, module, errMsg) != 0) {
+        if (runCommand(route, dispatcher, eroute->linkCmd, csource, module, errMsg) != 0) {
             return 0;
         }
 #if !MACOSX
@@ -418,7 +421,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         }
     }
 #endif
-    if (!route->keepSource && isView) {
+    if (!eroute->keep && isView) {
         mprDeletePath(csource);
     }
     return 1;
