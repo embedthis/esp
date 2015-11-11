@@ -259,11 +259,11 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Compile rules filename.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#esp_8h_1aa68f305d1ecb9ade4367dd644343c3e3" class="nameRef">ESP_COMPILE_OPTIMIZED</a>&nbsp;&nbsp;&nbsp;2</td>
+<td>#define</td><td><a href="#esp_8h_1aa68f305d1ecb9ade4367dd644343c3e3" class="nameRef">ESP_COMPILE_OPTIMIZED</a>&nbsp;&nbsp;&nbsp;1</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Override to compile in release mode.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#esp_8h_1a9e73077dd63f91100f534eccf609087b" class="nameRef">ESP_COMPILE_SYMBOLS</a>&nbsp;&nbsp;&nbsp;1</td>
+<td>#define</td><td><a href="#esp_8h_1a9e73077dd63f91100f534eccf609087b" class="nameRef">ESP_COMPILE_SYMBOLS</a>&nbsp;&nbsp;&nbsp;0</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Override to compile in debug mode.</td></tr>
 <tr class="apiDef">
@@ -4194,13 +4194,13 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>actions</td><td>
 Table of actions.
 </td>
-    <tr><td class="param">int</td><td><td>app</td><td>
+    <tr><td class="param">uint</td><td><td>app</td><td>
 Is an esp mvc application.
 </td>
     <tr><td class="param">cchar *</td><td><td>appName</td><td>
 App module name when compiled in combine mode.
 </td>
-    <tr><td class="param">int</td><td><td>combine</td><td>
+    <tr><td class="param">uint</td><td><td>combine</td><td>
 Combine C source into a single file.
 </td>
     <tr><td class="param">cchar *</td><td><td>combineScript</td><td>
@@ -4212,10 +4212,13 @@ Combine mode stylesheet filename.
     <tr><td class="param">EspProc</td><td><td>commonController</td><td>
 Common code for all controllers.
 </td>
-    <tr><td class="param">cchar *</td><td><td>compile</td><td>
-Compile template.
+    <tr><td class="param">uint</td><td><td>compile</td><td>
+Enable recompiling the application or esp page.
 </td>
-    <tr><td class="param">int</td><td><td>compileMode</td><td>
+    <tr><td class="param">cchar *</td><td><td>compileCmd</td><td>
+Compile command template.
+</td>
+    <tr><td class="param">uint</td><td><td>compileMode</td><td>
 Compile the application debug or release mode.
 </td>
     <tr><td class="param">cchar *</td><td><td>configFile</td><td>
@@ -4230,8 +4233,11 @@ Default database for this route.
     <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>env</td><td>
 Environment variables for route.
 </td>
-    <tr><td class="param">cchar *</td><td><td>link</td><td>
-Link template.
+    <tr><td class="param">uint</td><td><td>keep</td><td>
+Keep intermediate source code after compiling.
+</td>
+    <tr><td class="param">cchar *</td><td><td>linkCmd</td><td>
+Link command template.
 </td>
     <tr><td class="param">MprTime</td><td><td>loaded</td><td>
 When configuration was last loaded.
@@ -4244,6 +4250,9 @@ Search path to use when locating compiler/linker.
 </td>
     <tr><td class="param">struct EspRoute *</td><td><td>top</td><td>
 Top-level route for this application.
+</td>
+    <tr><td class="param">uint</td><td><td>update</td><td>
+Enable dynamically updating the application.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>views</td><td>
 Table of views.
@@ -4931,6 +4940,9 @@ Database prune timer.
     <tr><td class="param">EdiService *</td><td><td>ediService</td><td>
 Database service.
 </td>
+    <tr><td class="param">cchar *</td><td><td>hostedDocuments</td><td>
+Documents directory if hosted.
+</td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>internalOptions</td><td>
 Table of internal HTML control options.
 </td>
@@ -4945,6 +4957,9 @@ Multithread lock.
 </td>
     <tr><td class="param">int</td><td><td>reloading</td><td>
 Reloading ESP and modules.
+</td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>vstudioEnv</td><td>
+Visual Studio environment.
 </td>
     </table></dd></dl>
   </div>

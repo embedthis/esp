@@ -1606,6 +1606,13 @@
       <arglist></arglist>
     </member>
     <member kind="variable">
+      <type>cchar *</type>
+      <name>hostedDocuments</name>
+      <anchorfile>struct_esp.html</anchorfile>
+      <anchor>a5893b6f21d1348da1037a97b927d4ac7</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
       <type>MprHash *</type>
       <name>internalOptions</name>
       <anchorfile>struct_esp.html</anchorfile>
@@ -1638,6 +1645,13 @@
       <name>reloading</name>
       <anchorfile>struct_esp.html</anchorfile>
       <anchor>a233d2ab68047501248e6e9dae7363dee</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>MprHash *</type>
+      <name>vstudioEnv</name>
+      <anchorfile>struct_esp.html</anchorfile>
+      <anchor>a6c02052e76626940b99de65feb7ca926</anchor>
       <arglist></arglist>
     </member>
   </compound>

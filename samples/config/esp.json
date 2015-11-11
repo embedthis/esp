@@ -30,6 +30,11 @@
         combine: true,
 
         /*
+            Enable compiling controllers, views and application source
+         */
+        compile: true,
+
+        /*
             Templates used for "esp generate"
          */
         generate: {
@@ -43,6 +48,11 @@
             "migration": "esp-mvc/migration.c",
             "module": "esp-mvc/src/app.c",
         },
+
+        /*
+            Keep intermediate source in the cache directory for debugging
+         */
+        keep: true,
 
         /*
             Selection of properties to send to the client
@@ -62,5 +72,15 @@
             symbolic debugging support.
          */
         optimize: false,
+        
+        /*
+            Name of the file containing the esp compilation rule templates
+         */
+        rules: 'esp-compile.json',
+
+        /*
+            Enable updating via reloading controllers, modules and views
+         */
+        update: true,
     }
 }

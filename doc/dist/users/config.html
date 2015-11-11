@@ -545,15 +545,13 @@ apps: [
                         <td>Collection of compilation and link command lines for various platforms.
                     
                     <tr>
-                        <td>compile
-                        <td>Path to the JSON file containing the compilation rules. Defaults to 
-                            <em>esp-compile.json</em> in the ESP installation directory. If you want to modify 
-                            this file, take a copy and then set the <em>compile</em> property to point to it.
-                    
-                    <tr>
                         <td>combine
                         <td>Define whether to combine the entire ESP application into a single output source 
                             file and library. This is typically enabled for release mode. Defaults to false.
+                    
+                    <tr>
+                        <td>compile
+                        <td>Enable compiling controllers, modules and views at runtime. Defaults to true.
                     
                     <tr>
                         <td>optimize
@@ -566,9 +564,25 @@ apps: [
                         <td>Collection of properties guiding the <em>esp generate</em> commands.
                     
                     <tr>
+                        <td>keep
+                        <td>Preserve intermediate source code in the cache directory for debugging. Defaults to false
+                            unless the package.json pak.mode is set to "debug".
+                    
+                    <tr>
                         <td>preload
                         <td>List of source files to preload when starting the application.
                         For example: <code class="inverted">preload: [ 'auth.c' ]</code>
+                    
+                    <tr>
+                        <td>rules
+                        <td>Path to the JSON file containing the compilation rules. Defaults to 
+                            <em>esp-compile.json</em> in the ESP installation directory. If you want to modify 
+                            this file, take a copy and then set the <em>compile</em> property to point to it.
+                    
+                    <tr>
+                        <td>update
+                        <td>Determine if updating of responding applications and pages is enabled. 
+                            Some web frameworks will automatically rebuild or reload applications if the source is modified.
                     
                 
             </table>
@@ -702,10 +716,6 @@ hosts: [ {
     'index.html'
 ],</code>
                         
-                    
-                    <tr>
-                        <td>keep
-                        <td>Set to true to keep intermediate source files. Useful for debugging.
                     
                     <tr>
                         <td>languages
@@ -956,11 +966,6 @@ routes [ {
                             <li>maxContent &mdash; Maximum size of request body content to trace. Defaults to 40K.</li>
                         </ul>
                         
-                    
-                    <tr>
-                        <td>update
-                        <td>Determine if updating of responding applications and pages is enabled. 
-                            Some web frameworks will automatically rebuild or reload applications if the source is modified.
                     
                     <tr>
                         <td>xsrf
