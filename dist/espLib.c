@@ -2769,8 +2769,9 @@ PUBLIC cchar *espGetVisualStudio()
  */
 PUBLIC int getVisualStudioEnv(Esp *esp)
 {
-    char        *error, *output, *next, *line, *key, *value;
-    cchar       *arch, *cpu, *command, *vs;
+    char    *error, *output, *next, *line, *key, *value;
+    cchar   *arch, *cpu, *command, *vs;
+    bool    yielding;
 
     /*
         Get the real system architecture, not whether this app is 32 or 64 bit.
@@ -2797,10 +2798,13 @@ PUBLIC int getVisualStudioEnv(Esp *esp)
     }
     vs = espGetVisualStudio();
     command = sfmt("\"%s\\vcvars.bat\" \"%s\" %s", mprGetAppDir(), mprJoinPath(vs, "VC/vcvarsall.bat"), arch);
+    yielding = mprSetThreadYield(NULL, 0);
     if (mprRun(NULL, command, 0, &output, &error, -1) < 0) {
         mprLog("error esp", 0, "Cannot run command: %s, error %s", command, error);
+        mprSetThreadYield(NULL, yielding);
         return MPR_ERR_CANT_READ;
     }
+    mprSetThreadYield(NULL, yielding);
     esp->vstudioEnv = mprCreateHash(0, 0);
 
     next = output;
@@ -5731,6 +5735,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
 {
     cchar   *controllers, *documents, *path, *migrations;
     char    *output;
+    bool    yielding;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
@@ -5751,11 +5756,13 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
                                 This returns the documents directory of the default route of the default host 
                                 When Appweb switches to appweb.json, then just it should be loaded with package.json
                              */
+                            yielding = mprSetThreadYield(NULL, 0);
                             if (mprRun(NULL, "appweb --show-documents", NULL, (char**) &output, NULL, 5000) == 0) {
                                 documents = esp->hostedDocuments = strim(output, "\n", MPR_TRIM_END);
                             } else {
                                 documents = route->home;
                             }
+                            mprSetThreadYield(NULL, yielding);
                         } else {
                             documents = route->home;
                         }
