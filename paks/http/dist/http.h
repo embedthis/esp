@@ -400,14 +400,14 @@ typedef struct HttpAddress {
     Defense remedy callback
     @param args Hash of configuration args for the callback
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
   */
 typedef void (*HttpRemedyProc)(MprHash *args);
 
 /**
     Monitor defense configuration
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 typedef struct HttpDefense {
     cchar           *name;                      /**< Defense name */
@@ -428,7 +428,7 @@ typedef struct HttpDefense {
     @param adj Value to adjust the counter by. May be positive or negative.
     @return Monitor value after applying the adjustment.
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int64 httpMonitorEvent(struct HttpConn *conn, int counter, int64 adj);
 
@@ -443,7 +443,7 @@ PUBLIC int64 httpMonitorEvent(struct HttpConn *conn, int counter, int64 adj);
     @param defenses List of defenses to invoke if the counter exceeds the limit value over the designated period.
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpAddMonitor(cchar *counter, cchar *expr, uint64 limit, MprTicks period, cchar *defenses);
 
@@ -455,7 +455,7 @@ PUBLIC int httpAddMonitor(cchar *counter, cchar *expr, uint64 limit, MprTicks pe
     @param args Arguments to pass to the remedy. These may include ${tokens}.
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpAddDefense(cchar *name, cchar *remedy, cchar *args);
 
@@ -467,7 +467,7 @@ PUBLIC int httpAddDefense(cchar *name, cchar *remedy, cchar *args);
     @param jargs Arguments to pass to the remedy as a JSON object. These may include ${tokens}.
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpAddDefenseFromJson(cchar *name, cchar *remedy, MprJson *jargs);
 
@@ -476,7 +476,7 @@ PUBLIC int httpAddDefenseFromJson(cchar *name, cchar *remedy, MprJson *jargs);
     @param name Name of the counter
     @return The counter index in HttpAddress.counters[] to use
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpAddCounter(cchar *name);
 
@@ -486,7 +486,7 @@ PUBLIC int httpAddCounter(cchar *name);
     @param remedy Remedy callback function
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpAddRemedy(cchar *name, HttpRemedyProc remedy);
 
@@ -498,14 +498,14 @@ PUBLIC int httpAddRemedy(cchar *name, HttpRemedyProc remedy);
     @param msg If non-null, then return a HTTP response with this message. If both status and msg are zero and null respectively,
         then do not send a response to the client, rather immediately close the connection.
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpBanClient(cchar *ip, MprTicks period, int status, cchar *msg);
 
 /**
     Print the monitor counters to the error log
     @ingroup HttpMonitor
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC void httpDumpCounters();
 
@@ -533,7 +533,7 @@ PUBLIC void httpPruneMonitors();
     @param values Formatted comma separated key=value pairs
     @param buf Data buffer
     @param len Length of data in buf. May be zero.
-    @stability Prototype
+    @stability Evolving
     @ingroup HttpTrace
  */
 typedef void (*HttpTraceFormatter)(struct HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type,
@@ -543,14 +543,14 @@ typedef void (*HttpTraceFormatter)(struct HttpTrace *trace, struct HttpConn *con
     @param trace Trace object
     @param buf Data buffer to write.
     @param len Length of data in buf.
-    @stability Prototype
+    @stability Evolving
     @ingroup HttpTrace
  */
 typedef void (*HttpTraceLogger)(struct HttpTrace *trace, cchar *buf, ssize len);
 
 /**
     Trace management structure
-    @stability Prototype
+    @stability Evolving
     @defgroup HttpTrace HttpTrace
   */
 typedef struct HttpTrace {
@@ -592,7 +592,7 @@ PUBLIC int httpBackupTraceLogFile(HttpTrace *trace);
     @param buf Trace data buffer to write (unused)
     @param len Length of data buffer (unused)
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values,
     cchar *buf, ssize len);
@@ -602,7 +602,7 @@ PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cc
     @description If parent is defined, inherit default settings from the parent
     @param parent Parent trace object from which to inherit settings
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
     @internal
  */
 PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
@@ -617,7 +617,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
     @param buf Trace data buffer to write
     @param len Length of data buffer
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values,
     cchar *buf, ssize len);
@@ -633,7 +633,7 @@ PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, struct HttpConn *conn, cc
     @param buf Trace data buffer to write
     @param len Length of data buffer
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpFormatTrace(HttpTrace *trace, struct HttpConn *conn, cchar *event, cchar *type, cchar *values,
     cchar *buf, ssize len);
@@ -642,7 +642,7 @@ PUBLIC void httpFormatTrace(HttpTrace *trace, struct HttpConn *conn, cchar *even
     Trace LogFile logger
     @description Open the trace log file defined in the HttpTrace object
     @param trace Trace object
-    @stability Prototype
+    @stability Evolving
     @internal
  */
 PUBLIC int httpOpenTraceLogFile(HttpTrace *trace);
@@ -654,7 +654,7 @@ PUBLIC int httpOpenTraceLogFile(HttpTrace *trace);
     @param callback Formatter callback
     @return Prior trace formatter
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC HttpTraceFormatter httpSetTraceFormatter(HttpTrace *trace, HttpTraceFormatter callback);
 
@@ -664,7 +664,7 @@ PUBLIC HttpTraceFormatter httpSetTraceFormatter(HttpTrace *trace, HttpTraceForma
     @param trace Trace object
     @param format The format string defaults to: "%h %l %u %t \"%r\" %>s %b %n".
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 
 PUBLIC void httpSetTraceFormat(HttpTrace *trace, cchar *format);
@@ -676,7 +676,7 @@ PUBLIC void httpSetTraceFormat(HttpTrace *trace, cchar *format);
         If the event level is greater than the defined tracing verbosity level, the event is ignored.
     @param level New tracing level. Must be 0-5 inclusive.
     @ingroup HttpTrace
-    @stability Prototype.
+    @stability Evolving.
  */
 PUBLIC void httpSetTraceLevel(int level);
 
@@ -684,7 +684,7 @@ PUBLIC void httpSetTraceLevel(int level);
     Get the current tracing level
     @return The tracing level 0-5
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpGetTraceLevel();
 
@@ -694,7 +694,7 @@ PUBLIC int httpGetTraceLevel();
     @param type Event type to modify
     @param level Desired trace level (0-5)
     @ingroup HttpTrace
-    @stability Prototype.
+    @stability Evolving.
     @internal
  */
 PUBLIC void httpSetTraceEventLevel(HttpTrace *trace, cchar *type, int level);
@@ -705,7 +705,7 @@ PUBLIC void httpSetTraceEventLevel(HttpTrace *trace, cchar *type, int level);
     @param trace Tracing object
     @param size Maximum content size to trace
     @ingroup HttpTrace
-    @stability Prototype.
+    @stability Evolving.
  */
 PUBLIC void httpSetTraceContentSize(HttpTrace *trace, ssize size);
 
@@ -715,7 +715,7 @@ PUBLIC void httpSetTraceContentSize(HttpTrace *trace, ssize size);
     @param trace Trace object to configure
     @param callback Trace logger callback
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetTraceLogger(HttpTrace *trace, HttpTraceLogger callback);
 
@@ -738,7 +738,7 @@ PUBLIC int httpSetTraceLogFile(HttpTrace *trace, cchar *path, ssize size, int ba
     @param trace Tracing object
     @param name Formatter name. Set to "common" for the Common Log format or "detail" for the Appweb detailed trace format.
     @ingroup HttpTrace
-    @stability Prototype.
+    @stability Evolving.
     @internal
  */
 PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name);
@@ -760,7 +760,7 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name);
     If the traceSpec is null, not tracing is enabled.
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
 */
 PUBLIC int httpStartTracing(cchar *traceSpec);
 
@@ -785,7 +785,7 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
     @param values Printf style format string. String should be comma separated key=value pairs
     @return True if the event was traced
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC bool httpTrace(struct HttpConn *conn, cchar *event, cchar *type, cchar *values, ...);
 #else
@@ -813,7 +813,7 @@ PUBLIC bool httpTraceProc(struct HttpConn *conn, cchar *event, cchar *type, ccha
     @param values Formatted comma separated key=value pairs
     @return True if the event was traced
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC bool httpTraceContent(struct HttpConn *conn, cchar *event, cchar *type, cchar *buf, ssize len,
     cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
@@ -830,7 +830,7 @@ PUBLIC bool httpTraceContent(struct HttpConn *conn, cchar *event, cchar *type, c
     @param values Formatted comma separated key=value pairs
     @return True if the event was traced
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC bool httpTracePacket(struct HttpConn *conn, cchar *event, cchar *type, struct HttpPacket *packet,
     cchar *values, ...) PRINTF_ATTRIBUTE(5,6);
@@ -841,7 +841,7 @@ PUBLIC bool httpTracePacket(struct HttpConn *conn, cchar *event, cchar *type, st
     @param buf Trace message to write
     @param len Length of trace message
     @ingroup HttpTrace
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpWriteTrace(HttpTrace *trace, cchar *buf, ssize len);
 
@@ -997,7 +997,7 @@ typedef struct Http {
     Callback procedure for HttpConfigure
     @param arg User definable data. May be managed or unmanaged.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 typedef void (*HttpConfigureProc)(void *arg);
 
@@ -1006,7 +1006,7 @@ typedef void (*HttpConfigureProc)(void *arg);
     @description Apply configuration changes and actually change the group id
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpApplyChangedGroup();
 
@@ -1014,7 +1014,7 @@ PUBLIC int httpApplyChangedGroup();
     Apply the changed user ID
     @description Apply configuration changes and actually change the user id
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpApplyChangedUser();
 
@@ -1023,7 +1023,7 @@ PUBLIC int httpApplyChangedUser();
     @description Apply configuration changes and actually change the user and group id
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpApplyUserGroup();
 
@@ -1043,7 +1043,7 @@ PUBLIC int httpApplyUserGroup();
     @param timeout Timeout in milliseconds to wait. Set to -1 to use the default server inactivity timeout. Set to zero
         to wait forever.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC bool httpConfigure(HttpConfigureProc proc, void *arg, MprTicks timeout);
 
@@ -1070,7 +1070,7 @@ PUBLIC void httpDestroy();
     Get the http context object
     @return The http context object defined via httpSetContext
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void *httpGetContext();
 
@@ -1096,7 +1096,7 @@ PUBLIC void httpGetUserGroup();
     Initialize the Http configuration parser
     @return Zero if successful, otherwise a negative Mpr error code. See the Appweb log for diagnostics.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpInitParser();
 
@@ -1115,7 +1115,7 @@ PUBLIC cchar *httpLookupStatus(int status);
     @param name The name of the host to find
     @return The corresponding host object
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC struct HttpHost *httpLookupHost(cchar *name);
 
@@ -1125,7 +1125,7 @@ PUBLIC struct HttpHost *httpLookupHost(cchar *name);
     @param port Listening port number
     @return HttpEndpoint object
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC struct HttpEndpoint *httpLookupEndpoint(cchar *ip, int port);
 
@@ -1137,7 +1137,7 @@ PUBLIC struct HttpEndpoint *httpLookupEndpoint(cchar *ip, int port);
     @param profile Parsed profile portion
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpParsePlatform(cchar *platform, cchar **os, cchar **arch, cchar **profile);
 
@@ -1154,7 +1154,7 @@ PUBLIC void httpSetContext(void *context);
     @description Define a default host to use for client connections if the URI does not specify a host
     @param host Host or IP address
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetDefaultClientHost(cchar *host);
 
@@ -1163,7 +1163,7 @@ PUBLIC void httpSetDefaultClientHost(cchar *host);
     @description Define a default port to use for client connections if the URI does not define a port
     @param port Integer port number
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetDefaultClientPort(int port);
 
@@ -1173,7 +1173,7 @@ PUBLIC void httpSetDefaultClientPort(int port);
     @param group Group name. Must be defined in the system group database.
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpSetGroupAccount(cchar *group);
 
@@ -1184,7 +1184,7 @@ PUBLIC int httpSetGroupAccount(cchar *group);
     @param platform Platform string of the form: OS-ARCH-PROFILE.
     @return Zero if the platform string parses, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpSetPlatform(cchar *platform);
 
@@ -1194,7 +1194,7 @@ PUBLIC int httpSetPlatform(cchar *platform);
     @param platform Path to the platform directory.
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpSetPlatformDir(cchar *platform);
 
@@ -1204,7 +1204,7 @@ PUBLIC int httpSetPlatformDir(cchar *platform);
     @param host Proxy host name or IP address
     @param port Proxy host port number.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetProxy(cchar *host, int port);
 
@@ -1212,7 +1212,7 @@ PUBLIC void httpSetProxy(cchar *host, int port);
     Set the software description
     @param description String describing the Http software. By default, this is set to HTTP_NAME.
     @ingroup Http
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetSoftware(cchar *description);
 
@@ -1222,7 +1222,7 @@ PUBLIC void httpSetSoftware(cchar *description);
     @param user User name. Must be defined in the system password database.
     @return Zero if successful, otherwise a negative Mpr error code.
     @ingroup Http
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpSetUserAccount(cchar *user);
 
@@ -1556,7 +1556,7 @@ PUBLIC HttpUri *httpMakeUriLocal(HttpUri *uri);
     @param base Base URI to begin with
     @param target URI to resolve relative to the base
     @ingroup HttpUri
-    @stability Evolving
+    @stability Stable
   */
 PUBLIC HttpUri *httpResolveUri(struct HttpConn *conn, HttpUri *base, HttpUri *target);
 
@@ -2663,7 +2663,7 @@ typedef struct HttpStage {
     @param stage Stage object to clone
     @return A new stage object
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC HttpStage *httpCloneStage(HttpStage *stage);
 
@@ -2675,7 +2675,7 @@ PUBLIC HttpStage *httpCloneStage(HttpStage *stage);
     @param module Optional module object for loadable stages
     @return A new stage object
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module);
 
@@ -2687,7 +2687,7 @@ PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module);
     @param module Optional module object for loadable stages
     @return A new stage object
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpStage *httpCreateFilter(cchar *name, MprModule *module);
 
@@ -2700,7 +2700,7 @@ PUBLIC HttpStage *httpCreateFilter(cchar *name, MprModule *module);
     @param module Optional module object for loadable stages
     @return A new stage object
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpStage *httpCreateHandler(cchar *name, MprModule *module);
 
@@ -2721,7 +2721,7 @@ PUBLIC HttpStage *httpCreateStage(cchar *name, int flags, MprModule *module);
     @param name Name of stage to locate
     @return Stage or NULL if not found
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC struct HttpStage *httpLookupStage(cchar *name);
 
@@ -2731,7 +2731,7 @@ PUBLIC struct HttpStage *httpLookupStage(cchar *name);
     @param q Current queue
     @param packet Packet containg data
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet);
 
@@ -2762,7 +2762,7 @@ PUBLIC cvoid *httpGetStageData(struct HttpConn *conn, cchar *key);
     @description Convenience routine to respond to an OPTIONS request.
     @param conn HttpConn object created via #httpCreateConn
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpHandleOptions(struct HttpConn *conn);
 
@@ -2772,7 +2772,7 @@ PUBLIC void httpHandleOptions(struct HttpConn *conn);
     @param name Name of the stage concerned
     @return Reference to the stage data block.
     @ingroup HttpStage
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void *httpLookupStageData(cchar *name);
 
@@ -2871,7 +2871,7 @@ PUBLIC void httpSetHeadersCallback(struct HttpConn *conn, HttpHeadersCallback fn
     @param conn HttpConn object created via #httpCreateConn
     @param event Event object describing the I/O event
     @ingroup HttpConn
-    @stability Evolving
+    @stability Stable
   */
 typedef void (*HttpIOCallback)(struct HttpConn *conn, MprEvent *event);
 
@@ -2882,7 +2882,7 @@ typedef void (*HttpIOCallback)(struct HttpConn *conn, MprEvent *event);
     @param conn HttpConn object created via #httpCreateConn
     @param fn Callback function to invoke
     @ingroup HttpConn
-    @stability Evolving
+    @stability Stable
   */
 PUBLIC void httpSetIOCallback(struct HttpConn *conn, HttpIOCallback fn);
 
@@ -3184,7 +3184,7 @@ PUBLIC void httpBadRequestError(HttpConn *conn, int status, cchar *fmt, ...) PRI
     @param conn HttpConn object created via #httpCreateConn
     @param eventMask Mask of MPR_READABLE or MPR_WRITABLE events of interest
     @ingroup HttpConn
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpIO(struct HttpConn *conn, int eventMask);
 
@@ -3194,7 +3194,7 @@ PUBLIC void httpIO(struct HttpConn *conn, int eventMask);
     @param conn HttpConn object created via #httpCreateConn
     @param event Event structure
     @ingroup HttpConn
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpIOEvent(struct HttpConn *conn, MprEvent *event);
 
@@ -3230,7 +3230,7 @@ PUBLIC void *httpGetConnContext(HttpConn *conn);
     @param conn HttpConn object created via #httpCreateConn
     @return Mask of MPR_READABLE and MPR_WRITABLE events.
     @ingroup HttpConn
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpGetConnEventMask(HttpConn *conn);
 
@@ -3402,7 +3402,7 @@ PUBLIC bool httpShouldRenderDirListing(HttpConn *conn);
         If timeout is < 0, use default connection inactivity and duration timeouts. If timeout is > 0, then use this
         timeout as an additional timeout.
     @ingroup HttpConn
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpRequestExpired(HttpConn *conn, MprTicks timeout);
 
@@ -3576,7 +3576,7 @@ PUBLIC void httpSetCredentials(HttpConn *conn, cchar *user, cchar *password, cch
     @param conn HttpConn connection object created via #httpCreateConn
     @param path Optional filename to serve. If null, use HttpTx.filename.
     @ingroup HttpConn
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetFileHandler(HttpConn *conn, cchar *path);
 
@@ -3771,7 +3771,7 @@ typedef struct HttpAuthStore {
     @param verifyUser Callback to verify the username and password contained in the HttpConn object passed to the callback.
     @return Auth store if successful, otherwise zero.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpAuthStore *httpCreateAuthStore(cchar *name, HttpVerifyUser verifyUser);
 
@@ -3783,7 +3783,7 @@ PUBLIC HttpAuthStore *httpCreateAuthStore(cchar *name, HttpVerifyUser verifyUser
     @param store AuthStore object created via #httpCreateAuthStore.
     @param noSession Set to true to suppress creation of sessions or cookies.
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetAuthStoreSessions(HttpAuthStore *store, bool noSession);
 
@@ -3878,7 +3878,7 @@ typedef struct HttpAuth {
     Create an authentication object
     @return An empty authentiction object
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
     @internal
  */
 PUBLIC HttpAuth *httpCreateAuth();
@@ -3893,7 +3893,7 @@ PUBLIC HttpAuth *httpCreateAuth();
     @param setAuth Callback to set the HTTP response authentication headers
     @return Zero if successful, otherwise a negative MPR error code
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth parse, HttpSetAuth setAuth);
 
@@ -3905,7 +3905,7 @@ PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth 
     @param auth Auth object created via #httpCreateAuth.
     @param noSession Set to true to suppress creation of sessions or cookies.
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetAuthSession(HttpAuth *auth, bool noSession);
 
@@ -3947,7 +3947,7 @@ typedef struct  HttpRole {
     @param abilities Space separated list of abilities.
     @return Allocated role object.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRole *httpAddRole(HttpAuth *auth, cchar *role, cchar *abilities);
 
@@ -3960,7 +3960,7 @@ PUBLIC HttpRole *httpAddRole(HttpAuth *auth, cchar *role, cchar *abilities);
     @param abilities Space separated list of abilities.
     @return The User object allocated or NULL for an error.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpUser *httpAddUser(HttpAuth *auth, cchar *user, cchar *password, cchar *abilities);
 
@@ -3970,7 +3970,7 @@ PUBLIC HttpUser *httpAddUser(HttpAuth *auth, cchar *user, cchar *password, cchar
     @param name Role name
     @return Role object
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC HttpRole *httpLookupRole(HttpAuth *auth, cchar *name);
 
@@ -3982,7 +3982,7 @@ PUBLIC HttpRole *httpLookupRole(HttpAuth *auth, cchar *name);
     @param name Username
     @return User object
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC HttpUser *httpLookupUser(HttpAuth *auth, cchar *name);
 
@@ -3992,7 +3992,7 @@ PUBLIC HttpUser *httpLookupUser(HttpAuth *auth, cchar *name);
     @param role Role name to remove
     @return Zero if successful, otherwise a negative MPR error code
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
     @internal
  */
 PUBLIC int httpRemoveRole(HttpAuth *auth, cchar *role);
@@ -4003,7 +4003,7 @@ PUBLIC int httpRemoveRole(HttpAuth *auth, cchar *role);
     @param user User name to remove
     @return Zero if successful, otherwise a negative MPR error code
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
     @internal
  */
 PUBLIC int httpRemoveUser(HttpAuth *auth, cchar *user);
@@ -4012,7 +4012,7 @@ PUBLIC int httpRemoveUser(HttpAuth *auth, cchar *user);
     Compute all the user abilities for a route using the given auth
     @param auth Auth object allocated by #httpCreateAuth
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpComputeAllUserAbilities(HttpAuth *auth);
 
@@ -4021,7 +4021,7 @@ PUBLIC void httpComputeAllUserAbilities(HttpAuth *auth);
     @param auth Auth object allocated by #httpCreateAuth
     @param user User object
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpComputeUserAbilities(HttpAuth *auth, HttpUser *user);
 
@@ -4048,7 +4048,7 @@ PUBLIC bool httpAuthenticate(HttpConn *conn);
         for the current request route.
     @return True if the user has all the required abilities
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpCanUser(HttpConn *conn, cchar *abilities);
 
@@ -4057,7 +4057,7 @@ PUBLIC bool httpCanUser(HttpConn *conn, cchar *abilities);
     @param conn HttpConn connection object
     @return True if the username and password have been authenticated.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpIsAuthenticated(HttpConn *conn);
 
@@ -4071,7 +4071,7 @@ PUBLIC bool httpIsAuthenticated(HttpConn *conn);
     @param password Password for the user
     @return True if the username and password have been authenticated.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpLogin(HttpConn *conn, cchar *username, cchar *password);
 
@@ -4083,7 +4083,7 @@ PUBLIC bool httpLogin(HttpConn *conn, cchar *username, cchar *password);
     Logout the user.
     @param conn HttpConn connection object
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpLogout(HttpConn *conn);
 
@@ -4094,7 +4094,7 @@ PUBLIC void httpLogout(HttpConn *conn);
     @param auth Authorization object allocated by #httpCreateAuth.
     @param ip Client IP address to allow.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthAllow(HttpAuth *auth, cchar *ip);
 
@@ -4103,7 +4103,7 @@ PUBLIC void httpSetAuthAllow(HttpAuth *auth, cchar *ip);
     @description This configures the basic or digest authentication for the authorization object
     @param auth Authorization object allocated by #httpCreateAuth.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthAnyValidUser(HttpAuth *auth);
 
@@ -4112,7 +4112,7 @@ PUBLIC void httpSetAuthAnyValidUser(HttpAuth *auth);
     @param auth Authorization object allocated by #httpCreateAuth.
     @param ip Client IP address to deny. This must be an IP address string.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthDeny(HttpAuth *auth, cchar *ip);
 
@@ -4143,7 +4143,7 @@ PUBLIC void httpSetAuthFormDetails(struct HttpRoute *route, cchar *loginPage, cc
     @param auth Authorization object allocated by #httpCreateAuth.
     @param uri URI for the login page. Can use "https:///page" to specify the SSL protocol with the current domain.
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetAuthLogin(HttpAuth *auth, cchar *uri);
 
@@ -4153,7 +4153,7 @@ PUBLIC void httpSetAuthLogin(HttpAuth *auth, cchar *uri);
     @param order Set to HTTP_ALLOW_DENY to run allow checks before deny checks. Set to HTTP_DENY_ALLOW to run deny
         checks before allow.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthOrder(HttpAuth *auth, int order);
 
@@ -4162,7 +4162,7 @@ PUBLIC void httpSetAuthOrder(HttpAuth *auth, int order);
     @param auth Auth object allocated by #httpCreateAuth.
     @param users Space separated list of acceptable users.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthPermittedUsers(HttpAuth *auth, cchar *users);
 
@@ -4172,7 +4172,7 @@ PUBLIC void httpSetAuthPermittedUsers(HttpAuth *auth, cchar *users);
     @param auth Auth object allocated by #httpCreateAuth.
     @param qop Quality of service description.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthQop(HttpAuth *auth, cchar *qop);
 
@@ -4183,7 +4183,7 @@ PUBLIC void httpSetAuthQop(HttpAuth *auth, cchar *qop);
     @param auth Auth object allocated by #httpCreateAuth.
     @param realm Authentication realm
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthRealm(HttpAuth *auth, cchar *realm);
 
@@ -4192,7 +4192,7 @@ PUBLIC void httpSetAuthRealm(HttpAuth *auth, cchar *realm);
     @param auth Auth object allocated by #httpCreateAuth.
     @param abilities Space separated list of the required abilities. May supply roles in the abilities string.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthRequiredAbilities(HttpAuth *auth, cchar *abilities);
 
@@ -4201,7 +4201,7 @@ PUBLIC void httpSetAuthRequiredAbilities(HttpAuth *auth, cchar *abilities);
     @param auth Auth object allocated by #httpCreateAuth.
     @param store Password store to use. Select from: "app", "config" or "system"
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetAuthStore(HttpAuth *auth, cchar *store);
 
@@ -4212,7 +4212,7 @@ PUBLIC int httpSetAuthStore(HttpAuth *auth, cchar *store);
         authentication.
     @param details Extra protocol details.
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetAuthType(HttpAuth *auth, cchar *proto, cchar *details);
 
@@ -4222,7 +4222,7 @@ PUBLIC int httpSetAuthType(HttpAuth *auth, cchar *proto, cchar *details);
     @param auth Auth object allocated by #httpCreateAuth.
     @param username Username to automatically login with
     @ingroup HttpAuth
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetAuthUsername(HttpAuth *auth, cchar *username);
 
@@ -4231,7 +4231,7 @@ PUBLIC void httpSetAuthUsername(HttpAuth *auth, cchar *username);
     @param auth Auth object allocated by #httpCreateAuth.
     @param verifyUser Verification callback
     @ingroup HttpAuth
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC void httpSetAuthVerify(HttpAuth *auth, HttpVerifyUser verifyUser);
 
@@ -4399,7 +4399,7 @@ PUBLIC ssize httpWriteCached(HttpConn *conn);
     @description The Action Handler provides a simple mechanism to bind 'C' callback functions with URIs.
     @param conn HttpConn connection object created via #httpCreateConn
     @defgroup HttpConn HttpConn
-    @stability Evolving
+    @stability Stable
  */
 typedef void (*HttpAction)(HttpConn *conn);
 
@@ -4410,7 +4410,7 @@ typedef void (*HttpAction)(HttpConn *conn);
         configured for the request route.
     @param fun Callback function procedure
     @ingroup HttpAction
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpDefineAction(cchar *uri, HttpAction fun);
 
@@ -4614,7 +4614,7 @@ typedef struct HttpRouteOp {
     @param key Configuration file property key
     @param child Key value as a JSON object
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
   */
 typedef void (*HttpParseCallback)(struct HttpRoute *route, cchar *key, MprJson *child);
 
@@ -4624,7 +4624,7 @@ typedef void (*HttpParseCallback)(struct HttpRoute *route, cchar *key, MprJson *
     @param route Current route
     @fmt Printf style format string
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpParseError(HttpRoute *route, cchar *fmt, ...);
 
@@ -4633,7 +4633,7 @@ PUBLIC void httpParseError(HttpRoute *route, cchar *fmt, ...);
     @param route Current route
     @fmt Printf style format string
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpParseWarn(HttpRoute *route, cchar *fmt, ...);
 
@@ -4648,7 +4648,7 @@ typedef int (HttpRouteProc)(HttpConn *conn, HttpRoute *route, HttpRouteOp *item)
     @param route Parent route for new routes
     @param name Name of route set to add
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
   */
 typedef void (*HttpRouteSetProc)(HttpRoute *route, cchar *name);
 
@@ -4659,7 +4659,7 @@ typedef void (*HttpRouteSetProc)(HttpRoute *route, cchar *name);
     @return Returns prior callback function. This should be invoked from the new callback to implemented multiple
         callbacks per key.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC HttpParseCallback httpAddConfig(cchar *key, HttpParseCallback callback);
 
@@ -4668,7 +4668,7 @@ PUBLIC HttpParseCallback httpAddConfig(cchar *key, HttpParseCallback callback);
     @param name Name of the route set
     @param fn Callback function
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC HttpRouteSetProc httpDefineRouteSet(cchar *name, HttpRouteSetProc fn);
 
@@ -4682,7 +4682,7 @@ PUBLIC HttpRouteSetProc httpDefineRouteSet(cchar *name, HttpRouteSetProc fn);
     @param route Parent route from which to inherit configuration.
     @param set Route set name to select.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpAddRouteSet(HttpRoute *route, cchar *set);
 
@@ -4797,7 +4797,7 @@ PUBLIC void httpAddRouteErrorDocument(HttpRoute *route, int status, cchar *uri);
     @param direction Set to HTTP_STAGE_TX for transmit direction and HTTP_STAGE_RX for receive data flow.
     @return "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, int direction);
 
@@ -4811,7 +4811,7 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
         if present or from the corresponding filename.
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpAddRouteHandler(HttpRoute *route, cchar *name, cchar *extensions);
 
@@ -4824,7 +4824,7 @@ PUBLIC int httpAddRouteHandler(HttpRoute *route, cchar *name, cchar *extensions)
         directory to create an absolute path.
     @return A reference to the route data. Otherwise return null if the route data for the given key was not found.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpAddRouteIndex(HttpRoute *route, cchar *path);
 
@@ -4837,7 +4837,7 @@ PUBLIC void httpAddRouteIndex(HttpRoute *route, cchar *path);
     @param path File system directory to contain content for matching requests.
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpAddRouteLanguageDir(HttpRoute *route, cchar *language, cchar *path);
 
@@ -4853,7 +4853,7 @@ PUBLIC int httpAddRouteLanguageDir(HttpRoute *route, cchar *language, cchar *pat
         append after the extension. For example: HTTP_LANG_AFTER would produce "index.html.fr".
     @return "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpAddRouteLanguageSuffix(HttpRoute *route, cchar *language, cchar *suffix, int flags);
 
@@ -4868,7 +4868,7 @@ PUBLIC int httpAddRouteLanguageSuffix(HttpRoute *route, cchar *language, cchar *
         previous extension. The extensions are searched in order and the first matching extensions for which there is
         an existing file will be selected. For example: "${1}.gz, min.${1}.gz, min.${1}".
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpAddRouteMapping(HttpRoute *route, cchar *extensions, cchar *mappings);
 
@@ -4879,7 +4879,7 @@ PUBLIC void httpAddRouteMapping(HttpRoute *route, cchar *extensions, cchar *mapp
     @param methods Set to a comma or space separated list of methods. Can also set to "All" or "*" for all possible
         methods. Typical methods include: "DELETE, GET, OPTIONS, POST, PUT, TRACE". Must be upper case.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpAddRouteMethods(HttpRoute *route, cchar *methods);
 
@@ -4891,7 +4891,7 @@ PUBLIC void httpAddRouteMethods(HttpRoute *route, cchar *methods);
     @param value Header value that will match
     @param flags Set to HTTP_ROUTE_NOT to negate the query test
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpAddRouteParam(HttpRoute *route, cchar *field, cchar *value, int flags);
 
@@ -4903,7 +4903,7 @@ PUBLIC void httpAddRouteParam(HttpRoute *route, cchar *field, cchar *value, int 
     @param value Header value that will match
     @param flags Set to HTTP_ROUTE_NOT to negate the header test
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpAddRouteRequestHeaderCheck(HttpRoute *route, cchar *header, cchar *value, int flags);
 
@@ -4925,7 +4925,7 @@ PUBLIC void httpAddRouteRequestHeaderCheck(HttpRoute *route, cchar *header, ccha
     @param header Header field to interrogate
     @param value Header value that will match
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpAddRouteResponseHeader(HttpRoute *route, int cmd, cchar *header, cchar *value);
 
@@ -4946,7 +4946,7 @@ PUBLIC void httpAddRouteResponseHeader(HttpRoute *route, int cmd, cchar *header,
     @param flags Reserved.
     @return "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpAddRouteUpdate(HttpRoute *route, cchar *name, cchar *details, int flags);
 
@@ -4956,7 +4956,7 @@ PUBLIC int httpAddRouteUpdate(HttpRoute *route, cchar *name, cchar *details, int
     @param action Name of the action to invoke on the route
     @return The new route object.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *route, cchar *action);
 
@@ -4967,7 +4967,7 @@ PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *route, cchar *action);
     @param route Route to modify
     @param direction Set to HTTP_STAGE_TX for transmit direction and HTTP_STAGE_RX for receive data flow.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpClearRouteStages(HttpRoute *route, int direction);
 
@@ -4981,7 +4981,7 @@ PUBLIC void httpClearRouteStages(HttpRoute *route, int direction);
     @param status Http redirect status for matching requests. Set to zero if not using redirects
     @return Allocated HttpRoute object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpCreateAliasRoute(HttpRoute *parent, cchar *pattern, cchar *path, int status);
 
@@ -4992,7 +4992,7 @@ PUBLIC HttpRoute *httpCreateAliasRoute(HttpRoute *parent, cchar *pattern, cchar 
     @param serverSide Set to "true" if this is a server side route. Set to "false" for client side.
     @return Allocated HttpRoute object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpCreateConfiguredRoute(struct HttpHost *host, int serverSide);
 
@@ -5002,7 +5002,7 @@ PUBLIC HttpRoute *httpCreateConfiguredRoute(struct HttpHost *host, int serverSid
     @param host HttpHost object owning the route
     @return Allocated HttpRoute object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpCreateDefaultRoute(struct HttpHost *host);
 
@@ -5012,7 +5012,7 @@ PUBLIC HttpRoute *httpCreateDefaultRoute(struct HttpHost *host);
     @param route Parent route from which to inherit
     @return Allocated HttpRoute object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *route);
 
@@ -5025,7 +5025,7 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *route);
     @param action Action to invoke
     @return Newly created route
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpCreateActionRoute(HttpRoute *parent, cchar *pattern, HttpAction action);
 
@@ -5036,7 +5036,7 @@ PUBLIC HttpRoute *httpCreateActionRoute(HttpRoute *parent, cchar *pattern, HttpA
     @param host HttpHost object owning the route
     @return Allocated HttpRoute object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpCreateRoute(struct HttpHost *host);
 
@@ -5052,7 +5052,7 @@ PUBLIC HttpRoute *httpCreateRoute(struct HttpHost *host);
     @param source Source file pattern containing the resource to activate or serve.
     @return Created route.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *httpDefineRoute(HttpRoute *parent, cchar *methods, cchar *pattern, cchar *target, cchar *source);
 
@@ -5088,7 +5088,7 @@ PUBLIC void httpDefineRouteCondition(cchar *name, HttpRouteProc *proc);
     @param name Target name
     @param proc Target function to process the target during route matching.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpDefineRouteTarget(cchar *name, HttpRouteProc *proc);
 
@@ -5098,7 +5098,7 @@ PUBLIC void httpDefineRouteTarget(cchar *name, HttpRouteProc *proc);
     @param name Update name
     @param proc Update function to process the update during route matching.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpDefineRouteUpdate(cchar *name, HttpRouteProc *proc);
 
@@ -5107,7 +5107,7 @@ PUBLIC void httpDefineRouteUpdate(cchar *name, HttpRouteProc *proc);
     @param route Route to modify
     @param str String to expand
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpExpandRouteVars(HttpRoute *route, cchar *str);
 
@@ -5116,7 +5116,7 @@ PUBLIC cchar *httpExpandRouteVars(HttpRoute *route, cchar *str);
     @description A route must be finalized to add it to its owning hosts list of routes.
     @param route Route to modify
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpFinalizeRoute(HttpRoute *route);
 
@@ -5127,7 +5127,7 @@ PUBLIC void httpFinalizeRoute(HttpRoute *route);
     @param name Lower case name of the directory. This should not include the '_DIR' suffix.
     @return Directory path
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *httpGetDir(HttpRoute *route, cchar *name);
 
@@ -5136,7 +5136,7 @@ PUBLIC cchar *httpGetDir(HttpRoute *route, cchar *name);
     @param tok Token to parse
     @return True if tok is set to "yes", "on", "true" or "1"
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpGetBoolToken(cchar *tok);
 
@@ -5149,7 +5149,7 @@ PUBLIC bool httpGetBoolToken(cchar *tok);
     @return A reference to the route data. Otherwise return null if the route data for the given key was not found.
     @see httpGetRouteData
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void *httpGetRouteData(HttpRoute *route, cchar *key);
 
@@ -5160,7 +5160,7 @@ PUBLIC void *httpGetRouteData(HttpRoute *route, cchar *key);
     @param route Route to modify
     @return The route documents directory pathname.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpGetRouteDocuments(HttpRoute *route);
 
@@ -5170,7 +5170,7 @@ PUBLIC cchar *httpGetRouteDocuments(HttpRoute *route);
     @param route Route to modify
     @return The route home directory pathname.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpGetRouteHome(HttpRoute *route);
 
@@ -5179,7 +5179,7 @@ PUBLIC cchar *httpGetRouteHome(HttpRoute *route);
     @param route Route to examine
     @return The list of support methods. Return NULL if not method list is defined.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpGetRouteMethods(HttpRoute *route);
 
@@ -5188,7 +5188,7 @@ PUBLIC cchar *httpGetRouteMethods(HttpRoute *route);
     @param conn Current connection object
     @return A relative URL path to the top of the route. This URL does not contain a trailing "/"
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *httpGetRouteTop(HttpConn *conn);
 
@@ -5197,7 +5197,7 @@ PUBLIC cchar *httpGetRouteTop(HttpConn *conn);
     @param route Route to get
     @param key Token key value
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpGetRouteVar(HttpRoute *route, cchar *key);
 
@@ -5207,7 +5207,7 @@ PUBLIC cchar *httpGetRouteVar(HttpRoute *route, cchar *key);
     @param route Route to modify
     @param limits Limits to use if graduating.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits);
 
@@ -5217,14 +5217,14 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits);
     parent routes that are used just for inheritance for child routes.
     @param route Route to hide
     @param on Set to true to hide the route
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpHideRoute(HttpRoute *route, bool on);
 
 /**
     Initialize and prepare to load configuration files.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpInitConfig(HttpRoute *route);
 
@@ -5236,7 +5236,7 @@ PUBLIC void httpInitConfig(HttpRoute *route);
         to the routes home directory.
     @return 'Zero' if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path);
 
@@ -5247,7 +5247,7 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path);
     @param status HTTP status code integer
     @return URI associated with the error document for the requested status.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpLookupRouteErrorDocument(HttpRoute *route, int status);
 
@@ -5270,7 +5270,7 @@ PUBLIC cchar *httpLookupRouteErrorDocument(HttpRoute *route, int status);
     @param path Path name to examine
     @return A resolved absolute path name.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC char *httpMakePath(HttpRoute *route, cchar *dir, cchar *path);
 
@@ -5298,7 +5298,7 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename);
     do nothing.  To reset a prior filename, use #httpSetFilename with a null argument.
     @param conn HttpConn connection object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpMapFile(HttpConn *conn);
 
@@ -5308,7 +5308,7 @@ PUBLIC void httpMapFile(HttpConn *conn);
     @param key Json property key
     @param prop Json property value
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpParseAll(HttpRoute *route, cchar *key, MprJson *prop);
 
@@ -5318,12 +5318,14 @@ PUBLIC void httpParseAll(HttpRoute *route, cchar *key, MprJson *prop);
     @param route Route to modify
     @param methods Set to a comma or space separated list of methods.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpRemoveRouteMethods(HttpRoute *route, cchar *methods);
 
 /**
     Reset all defined indexes
+    @ingroup HttpRoute
+    @stability Stable
  */
 PUBLIC void httpResetRouteIndexes(HttpRoute *route);
 
@@ -5333,7 +5335,7 @@ PUBLIC void httpResetRouteIndexes(HttpRoute *route);
         error documents, expiry cache values, extensions, handlers, input and output stage configuration.
     @param route Route to modify
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpResetRoutePipeline(HttpRoute *route);
 
@@ -5344,7 +5346,7 @@ PUBLIC void httpResetRoutePipeline(HttpRoute *route);
     @param name Name of the directory to define
     @param value Directory path value.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetDir(HttpRoute *route, cchar *name, cchar *value);
 
@@ -5354,7 +5356,7 @@ PUBLIC void httpSetDir(HttpRoute *route, cchar *name, cchar *value);
     @param route Route to modify
     @param auth Authentication object
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteAuth(HttpRoute *route, HttpAuth *auth);
 
@@ -5364,7 +5366,7 @@ PUBLIC void httpSetRouteAuth(HttpRoute *route, HttpAuth *auth);
     @param route Route to modify
     @param on Set to true to enable auto-delete. Auto-delete is enabled by default.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
 
@@ -5383,7 +5385,7 @@ PUBLIC void httpSetRouteCompile(HttpRoute *route, bool on);
     @param name Connector name to use for this route
     @return "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetRouteConnector(HttpRoute *route, cchar *name);
 
@@ -5395,7 +5397,7 @@ PUBLIC int httpSetRouteConnector(HttpRoute *route, cchar *name);
     @param key Unique string to identify the data
     @param data Data object. This must be allocated via mprAlloc.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteData(HttpRoute *route, cchar *key, void *data);
 
@@ -5406,7 +5408,7 @@ PUBLIC void httpSetRouteData(HttpRoute *route, cchar *key, void *data);
     @param route Route to modify
     @param language Language symbolic name. For example: "en" for english.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteDefaultLanguage(HttpRoute *route, cchar *language);
 
@@ -5417,7 +5419,7 @@ PUBLIC void httpSetRouteDefaultLanguage(HttpRoute *route, cchar *language);
     @param route Route to modify
     @param path Directory path name for the route content
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteDocuments(HttpRoute *route, cchar *path);
 
@@ -5429,7 +5431,7 @@ PUBLIC void httpSetRouteDocuments(HttpRoute *route, cchar *path);
     @param route Route to modify
     @param prefix Prefix to use in front of environment variables for URI and form parameters.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteEnvPrefix(HttpRoute *route, cchar *prefix);
 
@@ -5441,7 +5443,7 @@ PUBLIC void httpSetRouteEnvPrefix(HttpRoute *route, cchar *prefix);
     @param route Route to modify
     @param on Set to true to enable escaping shell special characters.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteEnvEscape(HttpRoute *route, bool on);
 
@@ -5451,7 +5453,7 @@ PUBLIC void httpSetRouteEnvEscape(HttpRoute *route, bool on);
     @param route Route to modify
     @param flags Flags mask
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
     @internal
  */
 PUBLIC void httpSetRouteFlags(HttpRoute *route, int flags);
@@ -5464,7 +5466,7 @@ PUBLIC void httpSetRouteFlags(HttpRoute *route, int flags);
     @param name Handler name to define
     @return "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetRouteHandler(HttpRoute *route, cchar *name);
 
@@ -5474,7 +5476,7 @@ PUBLIC int httpSetRouteHandler(HttpRoute *route, cchar *name);
     @param route Route to modify
     @param home Directory path name for configuration files
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteHome(HttpRoute *route, cchar *home);
 
@@ -5494,7 +5496,7 @@ PUBLIC void httpSetRouteHost(HttpRoute *route, struct HttpHost *host);
     @param route Route to modify
     @param on Set to true to ignore encoding errors
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteIgnoreEncodingErrors(HttpRoute *route, bool on);
 
@@ -5505,7 +5507,7 @@ PUBLIC void httpSetRouteIgnoreEncodingErrors(HttpRoute *route, bool on);
     @param methods Set to a comma or space separated list of methods. Can also set to "All" or "*" for all possible
         methods.  Typical methods include: "DELETE, GET, OPTIONS, POST, PUT, TRACE".
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteMethods(HttpRoute *route, cchar *methods);
 
@@ -5514,7 +5516,7 @@ PUBLIC void httpSetRouteMethods(HttpRoute *route, cchar *methods);
     @param route Route to modify
     @param cookie Session cookie name
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteCookie(HttpRoute *route, cchar *cookie);
 
@@ -5525,7 +5527,7 @@ PUBLIC void httpSetRouteCookie(HttpRoute *route, cchar *cookie);
     @param route Route to modify
     @param enable Set to true to enable
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable);
 
@@ -5542,7 +5544,7 @@ PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable);
     @param pattern Route regular expression pattern
     @param flags Set to HTTP_ROUTE_NOT to negate the pattern match result
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRoutePattern(HttpRoute *route, cchar *pattern, int flags);
 
@@ -5553,7 +5555,7 @@ PUBLIC void httpSetRoutePattern(HttpRoute *route, cchar *pattern, int flags);
     @param route Route to modify
     @param prefix URI prefix to define for the route.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRoutePrefix(HttpRoute *route, cchar *prefix);
 
@@ -5563,7 +5565,7 @@ PUBLIC void httpSetRoutePrefix(HttpRoute *route, cchar *prefix);
     @param route Route to modify
     @param on Set to true perserve frame boundaries
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on);
 
@@ -5572,7 +5574,7 @@ PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on);
     @param route Route to modify
     @param enable Set to true to enable renaming to the client specified filename. Renaming is disabled by default.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
 
@@ -5584,7 +5586,7 @@ PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
     @param script Literal script to execute.
     @param scriptPath Pathname to the script file to execute
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
     @internal
  */
 PUBLIC void httpSetRouteScript(HttpRoute *route, cchar *script, cchar *scriptPath);
@@ -5609,7 +5611,7 @@ PUBLIC void httpSetRouteServerPrefix(HttpRoute *route, cchar *prefix);
     @param route Route to modify
     @param visible Set to true to create session cookies that are visible to Javascript.
     @ingroup HttpRoute
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC void httpSetRouteSessionVisibility(HttpRoute *route, bool visible);
 
@@ -5618,7 +5620,7 @@ PUBLIC void httpSetRouteSessionVisibility(HttpRoute *route, bool visible);
     @param route Route to modify
     @param on Set to true to show errors to the client.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteShowErrors(HttpRoute *route, bool on);
 
@@ -5628,7 +5630,7 @@ PUBLIC void httpSetRouteShowErrors(HttpRoute *route, bool on);
     @param route Route to modify
     @param source Source path or description
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteSource(HttpRoute *route, cchar *source);
 
@@ -5638,7 +5640,7 @@ PUBLIC void httpSetRouteSource(HttpRoute *route, cchar *source);
     @param route Route to modify
     @param on Set to True to enable stealth mode
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteStealth(HttpRoute *route, bool on);
 
@@ -5717,7 +5719,7 @@ PUBLIC void httpSetRouteStealth(HttpRoute *route, bool on);
     @param details Update rule parameters.
     @return "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetRouteTarget(HttpRoute *route, cchar *name, cchar *details);
 
@@ -5728,10 +5730,9 @@ PUBLIC int httpSetRouteTarget(HttpRoute *route, cchar *name, cchar *details);
     @param tplate URI template to use. Templates may contain embedded tokens "{token}" where the token names correspond
         to the token names in the route pattern.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteTemplate(HttpRoute *route, cchar *tplate);
-
 
 /**
     Define a route variable
@@ -5741,7 +5742,7 @@ PUBLIC void httpSetRouteTemplate(HttpRoute *route, cchar *tplate);
     @param token Name of the token to define
     @param value Value of the token
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteVar(HttpRoute *route, cchar *token, cchar *value);
 
@@ -5770,7 +5771,7 @@ PUBLIC void httpSetRouteUploadDir(HttpRoute *route, cchar *dir);
     @param route Route to modify
     @param workers Maximum number of workers for this route
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
     @internal
  */
 PUBLIC void httpSetRouteWorkers(HttpRoute *route, int workers);
@@ -5782,7 +5783,7 @@ PUBLIC void httpSetRouteWorkers(HttpRoute *route, int workers);
     @param route Route to modify
     @param enable Set to true to emit and XSRF header token
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpSetRouteXsrf(HttpRoute *route, bool enable);
 
@@ -5794,7 +5795,7 @@ PUBLIC void httpSetRouteXsrf(HttpRoute *route, bool enable);
     @param tplate Template string to process
     @param options Hash of option values for embedded tokens.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC char *httpTemplate(HttpConn *conn, cchar *tplate, MprHash *options);
 
@@ -5817,7 +5818,7 @@ PUBLIC char *httpTemplate(HttpConn *conn, cchar *tplate, MprHash *options);
     @param fmt Format string specifier
     @return True if the string can be successfully parsed.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpTokenize(HttpRoute *route, cchar *str, cchar *fmt, ...);
 
@@ -5831,7 +5832,7 @@ PUBLIC bool httpTokenize(HttpRoute *route, cchar *str, cchar *fmt, ...);
     @param args Varargs argument list
     @return True if the string can be successfully parsed.
     @ingroup HttpRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpTokenizev(HttpRoute *route, cchar *str, cchar *fmt, va_list args);
 
@@ -5904,7 +5905,7 @@ PUBLIC void httpDestroySession(HttpConn *conn);
     @param create Set to "true" to create a session state object if one does not already exist for this client
     @return A session state object
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpSession *httpGetSession(HttpConn *conn, int create);
 
@@ -5914,7 +5915,7 @@ PUBLIC HttpSession *httpGetSession(HttpConn *conn, int create);
     @param conn Http connection object
     @return The session ID string
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpGetSessionID(HttpConn *conn);
 
@@ -5924,7 +5925,7 @@ PUBLIC cchar *httpGetSessionID(HttpConn *conn);
     @param conn Http connection object
     @param key Session state key
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprHash *httpGetSessionObj(HttpConn *conn, cchar *key);
 
@@ -5935,7 +5936,7 @@ PUBLIC MprHash *httpGetSessionObj(HttpConn *conn, cchar *key);
     @param defaultValue If the variable does not exist, return the defaultValue.
     @return The variable value or defaultValue if it does not exist.
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *httpGetSessionVar(HttpConn *conn, cchar *name, cchar *defaultValue);
 
@@ -5944,7 +5945,7 @@ PUBLIC cchar *httpGetSessionVar(HttpConn *conn, cchar *name, cchar *defaultValue
     @param id Session ID to lookup.
     @return True if the ID is associated with a session
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpLookupSessionID(cchar *id);
 
@@ -5954,7 +5955,7 @@ PUBLIC bool httpLookupSessionID(cchar *id);
     @param name Variable name to remove
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpRemoveSessionVar(HttpConn *conn, cchar *name);
 
@@ -5965,7 +5966,7 @@ PUBLIC int httpRemoveSessionVar(HttpConn *conn, cchar *name);
     @param conn Http connection object
     @param link Managed memory reference. May be NULL.
     @ingroup MprCache
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpSetCacheLink(HttpConn *conn, void *link);
 
@@ -5978,7 +5979,7 @@ PUBLIC int httpSetCacheLink(HttpConn *conn, void *link);
         \n\n
         (*MprCacheProc)(MprCache *cache, cchar *key, cchar *data, int event);
     @ingroup HttpSession
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC void httpSetSessionNotify(MprCacheProc notifyProc);
 
@@ -5989,7 +5990,7 @@ PUBLIC void httpSetSessionNotify(MprCacheProc notifyProc);
     @param key Session state key
     @param value Object to serialize. This must be an MprHash object.
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetSessionObj(HttpConn *conn, cchar *key, MprHash *value);
 
@@ -6001,7 +6002,7 @@ PUBLIC int httpSetSessionObj(HttpConn *conn, cchar *key, MprHash *value);
     @param value String variable value to use. This must point to a valid null terminated string.
     @return A session state object
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetSessionVar(HttpConn *conn, cchar *name, cchar *value);
 
@@ -6009,7 +6010,7 @@ PUBLIC int httpSetSessionVar(HttpConn *conn, cchar *name, cchar *value);
     Write the session state to persistent data storage
     @description This is called internally by the ESP handler at the completion of any processing.
     @param conn Http connection object
-    @stability Prototype
+    @stability Evolving
     @ingroup HttpSession
     @internal
  */
@@ -6021,7 +6022,7 @@ PUBLIC int httpWriteSession(HttpConn *conn);
     @param conn Http connection object
     @return True if the security token matches the session held token.
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpCheckSecurityToken(HttpConn *conn);
 
@@ -6034,7 +6035,7 @@ PUBLIC bool httpCheckSecurityToken(HttpConn *conn);
     @param recreate Set to true to recreate the security token.
     @return The security token string
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC cchar *httpGetSecurityToken(HttpConn *conn, bool recreate);
 
@@ -6047,7 +6048,7 @@ PUBLIC cchar *httpGetSecurityToken(HttpConn *conn, bool recreate);
     @param conn Http connection object
     @param recreate Set to true to recreate the security token.
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC int httpAddSecurityToken(HttpConn *conn, bool recreate);
 
@@ -6055,7 +6056,7 @@ PUBLIC int httpAddSecurityToken(HttpConn *conn, bool recreate);
 /**
     Upload File
     @description Each uploaded file has an HttpUploadedFile entry. This is managed by the upload handler.
-    @stability Evolving
+    @stability Stable
     @defgroup HttpUploadFile HttpUploadFile
     @see httpAddUploadFile httpRemoveAllUploadedFiles httpRemoveUploadFile
     @stability Internal
@@ -6536,7 +6537,7 @@ PUBLIC char *httpReadString(HttpConn *conn);
     @param conn HttpConn connection object
     @param var Name of the request param to retrieve
     @ingroup HttpRx
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void httpRemoveParam(HttpConn *conn, cchar *var);
 
@@ -6546,7 +6547,7 @@ PUBLIC void httpRemoveParam(HttpConn *conn, cchar *var);
         the HttpConn state to HTTP_STATE_FINALIZED if the request and connector have been finalized.
     @param conn HttpConn connection object
     @ingroup HttpRx
-    @stability Evolving
+    @stability Stable
   */
 PUBLIC void httpSetEof(HttpConn *conn);
 
@@ -6590,7 +6591,7 @@ PUBLIC void httpSetMethod(HttpConn *conn, cchar *method);
     @description This callback is invoked when the request is completed.
     @param callback The callback is invoked with the signature: void callback(HttpConn *conn).
     @ingroup HttpRx
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void httpSetRequestCallback(HttpRequestCallback callback);
 
@@ -7059,7 +7060,7 @@ PUBLIC int httpRemoveHeader(HttpConn *conn, cchar *key);
     @param err Output parameter to receive any error messages.
     @return HttpConn object. Use #httpGetStatus to read status and #httpReadString to read the response data.
     @ingroup HttpTx
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpConn *httpRequest(cchar *method, cchar *uri, cchar *data, char **err);
 
@@ -7110,9 +7111,10 @@ PUBLIC void httpSetContentType(HttpConn *conn, cchar *mimeType);
         @li HTTP_COOKIE_HTTP     - Set the 'HttpOnly' attribute on the cookie.
         See RFC 6265 for details about the 'Secure' and 'HttpOnly' cookie attributes.
     @ingroup HttpTx
-    @stability Evolving
+    @stability Stable
  */
-PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, int flags);
+PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, 
+    int flags);
 
 /**
     Remove a cookie from the client (browser)
@@ -7153,7 +7155,7 @@ PUBLIC void httpSetEntityLength(HttpConn *conn, MprOff len);
         filename resides inside the route documents directory.
     @return True if the filename exists and is readable.
     @ingroup HttpTx
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool httpSetFilename(HttpConn *conn, cchar *filename, int flags);
 
@@ -7475,7 +7477,7 @@ PUBLIC int httpStartEndpoint(HttpEndpoint *endpoint);
     @description Opens all endpoints and starts listening for connections.
     @returns "Zero" if successful, otherwise a negative MPR error code.
     @ingroup HttpEndpoint
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int httpStartEndpoints();
 
@@ -7569,7 +7571,7 @@ PUBLIC HttpHost *httpCreateHost();
     A default route is created for the host
     @return The new HttpHost object.
     @ingroup HttpHost
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC HttpHost *httpCreateDefaultHost();
 
@@ -7686,7 +7688,7 @@ PUBLIC void httpSetHostDefaultRoute(HttpHost *host, HttpRoute *route);
     @return Zero if successful. May return a negative MPR error code if the name is a regular expression and cannot
         be compiled.
     @ingroup HttpHost
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int httpSetHostName(HttpHost *host, cchar *name);
 
@@ -8018,7 +8020,7 @@ typedef struct HttpDir {
 /**
     Get the HttpDir object for a route
     @ingroup HttpDir
-    @stability Prototype
+    @stability Evolving
     @internal
  */
 PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);

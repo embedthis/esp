@@ -2333,6 +2333,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpResetRouteIndexes</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga944f746bfa1c5ec4a78e518d87a6ea8f</anchor>
+      <arglist>(HttpRoute *route)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpResetRoutePipeline</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>ga204e52b8069446315dc98f9e99dc1ad0</anchor>
