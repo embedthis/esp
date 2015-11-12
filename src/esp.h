@@ -135,7 +135,7 @@ typedef int (*EspModuleEntry)(struct HttpRoute *route, MprModule *module);
     @param module Module object if loaded as an MPR module.
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup Esp
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int espOpen(MprModule *module);
 
@@ -225,7 +225,7 @@ PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version);
     </table>
     @param route Parent route from which to inherit configuration.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC void espAddHomeRoute(HttpRoute *route);
 
@@ -239,7 +239,7 @@ PUBLIC void espAddHomeRoute(HttpRoute *route);
     @param route Parent route from which to inherit configuration.
     @param set Route set to select. Use "angular-mvc", or "html-mvc".
     @ingroup EspRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAddRouteSet(HttpRoute *route, cchar *set);
 
@@ -387,7 +387,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
     @param actionProc EspProc callback procedure to invoke when the action is requested.
     @ingroup EspRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, void *actionProc);
 
@@ -398,7 +398,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, void *actionProc
     @param pattern URI pattern to use to find the releavant route.
     @param actionProc EspProc callback procedure to invoke when the action is requested.
     @ingroup EspRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int espBindProc(HttpRoute *route, cchar *pattern, void *actionProc);
 
@@ -407,7 +407,7 @@ PUBLIC int espBindProc(HttpRoute *route, cchar *pattern, void *actionProc);
     @param route HttpRoute to associate with
     @return EspRoute object
     @internal
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC EspRoute *espCreateRoute(HttpRoute *route);
 
@@ -471,7 +471,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
     @param defaultValue Default value to use if the configuration is not defined. May be null
     @returns the Configuration string value
     @ingroup EspRoute
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue);
 
@@ -517,7 +517,7 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     @param route HttpRoute defining the ESP application
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int espSaveConfig(HttpRoute *route);
 #endif
@@ -530,7 +530,7 @@ PUBLIC int espSaveConfig(HttpRoute *route);
     @param value Value to set the property to.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int espSetConfig(HttpRoute *route, cchar *key, cchar *value);
 
@@ -551,7 +551,7 @@ PUBLIC void espSetData(HttpConn *conn, void *data);
     @param desired Desired value to compare with.
     @returns True if the configuration property has the desired value.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired);
 
@@ -577,7 +577,7 @@ typedef void (*EspViewProc)(HttpConn *conn);
     ESP Action
     @description Actions are run after a request URI is routed to a controller.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 typedef EspProc EspAction;
 
@@ -614,7 +614,7 @@ typedef struct EspReq {
     @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already
         exists.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
 
@@ -627,7 +627,7 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
     @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already
         exists.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAddHeaderString(HttpConn *conn, cchar *key, cchar *value);
 
@@ -637,7 +637,7 @@ PUBLIC void espAddHeaderString(HttpConn *conn, cchar *key, cchar *value);
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value);
 
@@ -649,7 +649,7 @@ PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value);
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
 
@@ -660,7 +660,7 @@ PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
     @param key Http response header key
     @param value Value to set for the header
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAppendHeaderString(HttpConn *conn, cchar *key, cchar *value);
 
@@ -671,7 +671,7 @@ PUBLIC void espAppendHeaderString(HttpConn *conn, cchar *key, cchar *value);
     to signify the end of write data.  If the request is already finalized, this call does nothing.
     @param conn HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espAutoFinalize(HttpConn *conn);
 
@@ -684,7 +684,7 @@ PUBLIC void espAutoFinalize(HttpConn *conn);
     @param conn HttpConn connection object
     @return Session ID string
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espCreateSession(HttpConn *conn);
 
@@ -694,7 +694,7 @@ PUBLIC cchar *espCreateSession(HttpConn *conn);
         emit an expired cookie to the client to force it to erase the session cookie.
     @param conn HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espDestroySession(HttpConn *conn);
 
@@ -709,7 +709,7 @@ PUBLIC void espDestroySession(HttpConn *conn);
     @param message Message body
     @param files MprList of files to send with the message.
     @return Zero if the email is successfully sent.
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
     cchar *message, MprList *files);
@@ -728,7 +728,7 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
         and HttpTx.finalizedConnector true.
     @param conn HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espFinalize(HttpConn *conn);
 
@@ -737,7 +737,7 @@ PUBLIC void espFinalize(HttpConn *conn);
     @description This writes any buffered data.
     @param conn HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espFlush(HttpConn *conn);
 
@@ -745,7 +745,7 @@ PUBLIC void espFlush(HttpConn *conn);
     Get the current route HttpAuth object.
     @return The HttpAuth object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpAuth *espGetAuth();
 
@@ -753,7 +753,7 @@ PUBLIC HttpAuth *espGetAuth();
     Get the current request connection.
     @return The HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpConn *espGetConn();
 
@@ -764,7 +764,7 @@ PUBLIC HttpConn *espGetConn();
     @param conn HttpConn connection object
     @return A count of the response content data in bytes.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprOff espGetContentLength(HttpConn *conn);
 
@@ -774,7 +774,7 @@ PUBLIC MprOff espGetContentLength(HttpConn *conn);
     @param conn HttpConn connection object
     @return Mime type of any receive content. Set to NULL if not posted data.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetContentType(HttpConn *conn);
 
@@ -786,7 +786,7 @@ PUBLIC cchar *espGetContentType(HttpConn *conn);
     @return Return the cookie value
         Return null if the cookie is not defined.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetCookie(HttpConn *conn, cchar *name);
 
@@ -797,7 +797,7 @@ PUBLIC cchar *espGetCookie(HttpConn *conn, cchar *name);
     @param conn HttpConn connection object
     @return Return a string containing the cookies sent in the Http header of the last request
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetCookies(HttpConn *conn);
 
@@ -816,7 +816,7 @@ PUBLIC void *espGetData(HttpConn *conn);
     The database will be opened when the web server initializes and will be shared between all requests using the route.
     @return Edi EDI database handle
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC Edi *espGetDatabase(HttpConn *conn);
 
@@ -833,7 +833,7 @@ PUBLIC EspRoute *espGetEspRoute(HttpConn *conn);
     @param conn HttpConn connection object
     @return A directory path name
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetDocuments(HttpConn *conn);
 
@@ -865,7 +865,7 @@ PUBLIC EdiGrid *espGetGrid(HttpConn *conn);
     @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection"
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetHeader(HttpConn *conn, cchar *key);
 
@@ -875,7 +875,7 @@ PUBLIC cchar *espGetHeader(HttpConn *conn, cchar *key);
     @param conn HttpConn connection object
     @return Hash table. See MprHash for how to access the hash table.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprHash *espGetHeaderHash(HttpConn *conn);
 
@@ -886,7 +886,7 @@ PUBLIC MprHash *espGetHeaderHash(HttpConn *conn);
     @param conn HttpConn connection object
     @return String containing all the headers. The caller must free this returned string.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC char *espGetHeaders(HttpConn *conn);
 
@@ -908,7 +908,7 @@ PUBLIC int espGetIntParam(HttpConn *conn, cchar *var, int defaultValue);
     @description This is a convenience API to return the Http method
     @return The HttpConn.rx.method property
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetMethod(HttpConn *conn);
 
@@ -921,7 +921,7 @@ PUBLIC cchar *espGetMethod(HttpConn *conn);
     @param defaultValue Default value to return if the variable is not defined. Can be null.
     @return String containing the request parameter's value. Caller should not free.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue);
 
@@ -933,7 +933,7 @@ PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue);
     @param conn HttpConn connection object
     @return MprJson instance containing the request parameters
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprJson *espGetParams(HttpConn *conn);
 
@@ -943,7 +943,7 @@ PUBLIC MprJson *espGetParams(HttpConn *conn);
         query parameters. It does not include the application route prefix.
     @return The espGetConn()->rx->pathInfo
     @ingroup EspReq
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *espGetPath(HttpConn *conn);
 
@@ -953,7 +953,7 @@ PUBLIC cchar *espGetPath(HttpConn *conn);
     @param conn HttpConn connection object
     @return String containing the request query string. Caller should not free.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetQueryString(HttpConn *conn);
 
@@ -965,7 +965,7 @@ PUBLIC cchar *espGetQueryString(HttpConn *conn);
     @param conn HttpConn connection object
     @return String URI back to the referring URI. If no referrer is defined, refers to the home URI.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC char *espGetReferrer(HttpConn *conn);
 
@@ -973,7 +973,7 @@ PUBLIC char *espGetReferrer(HttpConn *conn);
     Get the current route HttpRoute object.
     @return The HttpRoute object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC HttpRoute *espGetRoute();
 
@@ -982,7 +982,7 @@ PUBLIC HttpRoute *espGetRoute();
     @param route HttpRoute object
     @return Database instance object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC Edi *espGetRouteDatabase(HttpRoute *route);
 
@@ -993,7 +993,7 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route);
     @param var Name of the request parameter to retrieve
     @return String containing the route variable value. Caller should not free.
     @ingroup EspReq
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var);
 
@@ -1015,7 +1015,7 @@ PUBLIC cchar *espGetSessionID(HttpConn *conn, int create);
     @param conn HttpConn connection object
     @return An integer Http response code. Typically 200 is success.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int espGetStatus(HttpConn *conn);
 
@@ -1025,7 +1025,7 @@ PUBLIC int espGetStatus(HttpConn *conn);
     @param conn HttpConn connection object
     @returns A Http status message.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC char *espGetStatusMessage(HttpConn *conn);
 
@@ -1036,7 +1036,7 @@ PUBLIC char *espGetStatusMessage(HttpConn *conn);
     @param conn HttpConn connection object
     @return A list of HttpUploadFile objects.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprList *espGetUploads(HttpConn *conn);
 
@@ -1046,7 +1046,7 @@ PUBLIC MprList *espGetUploads(HttpConn *conn);
         query parameters. It includes any application route prefix.
     @return The espGetConn()->rx->uri
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC cchar *espGetUri(HttpConn *conn);
 
@@ -1084,7 +1084,7 @@ PUBLIC bool espIsCurrentSession(HttpConn *conn);
     @param conn HttpConn connection object
     @return "True" if there is no more receive data to read
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool espIsEof(HttpConn *conn);
 
@@ -1093,7 +1093,7 @@ PUBLIC bool espIsEof(HttpConn *conn);
     @param conn HttpConn connection object
     @return "True" if the connection is using SSL.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool espIsSecure(HttpConn *conn);
 
@@ -1103,7 +1103,7 @@ PUBLIC bool espIsSecure(HttpConn *conn);
     @param conn HttpConn connection object
     @return "True" if the request has been finalized.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool espIsFinalized(HttpConn *conn);
 
@@ -1115,7 +1115,7 @@ PUBLIC bool espIsFinalized(HttpConn *conn);
     @param value Expected value to match
     @return "True" if the value matches
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool espMatchParam(HttpConn *conn, cchar *var, cchar *value);
 
@@ -1128,7 +1128,7 @@ PUBLIC bool espMatchParam(HttpConn *conn, cchar *var, cchar *value);
     @param size Size of the buffer
     @return A count of bytes read into the buffer
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espReceive(HttpConn *conn, char *buf, ssize size);
 
@@ -1139,7 +1139,7 @@ PUBLIC ssize espReceive(HttpConn *conn, char *buf, ssize size);
     @param status Http status code to send with the response
     @param target New target uri for the client
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espRedirect(HttpConn *conn, int status, cchar *target);
 
@@ -1148,7 +1148,7 @@ PUBLIC void espRedirect(HttpConn *conn, int status, cchar *target);
     @description Redirect the client to the referring URI.
     @param conn HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espRedirectBack(HttpConn *conn);
 
@@ -1157,7 +1157,7 @@ PUBLIC void espRedirectBack(HttpConn *conn);
     @param conn HttpConn connection object
     @param name Cookie name
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name);
 
@@ -1168,7 +1168,7 @@ PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name);
     @param key Http response header key
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int espRemoveHeader(HttpConn *conn, cchar *key);
 
@@ -1177,7 +1177,7 @@ PUBLIC int espRemoveHeader(HttpConn *conn, cchar *key);
     @param conn HttpConn connection object
     @param name Variable name to set
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *name);
 
@@ -1190,7 +1190,7 @@ PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *name);
     @param ... Arguments for fmt
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...);
 
@@ -1211,7 +1211,7 @@ PUBLIC ssize espRenderConfig(HttpConn *conn);
     @param size Size of the data in buf
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size);
 
@@ -1222,7 +1222,7 @@ PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size);
     @param conn HttpConn connection object
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderCached(HttpConn *conn);
 
@@ -1233,7 +1233,7 @@ PUBLIC ssize espRenderCached(HttpConn *conn);
     @param conn Http connection object
     @param path Relative pathname from route->documents to the document to render.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
 
@@ -1244,7 +1244,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
     @param fmt Printf style message format
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
 
@@ -1270,7 +1270,7 @@ PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *types);
     @param path File path name
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path);
 
@@ -1280,7 +1280,7 @@ PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path);
     @param tableName Database table name
     @return An EDI grid containing data for the table.
     @ingroup EspReq
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC EdiGrid *espReadTable(HttpConn *conn, cchar *tableName);
 
@@ -1293,7 +1293,7 @@ PUBLIC EdiGrid *espReadTable(HttpConn *conn, cchar *tableName);
     @param ... Arguments for fmt
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
 */
 PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...);
 
@@ -1306,7 +1306,7 @@ PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...);
     @param s String containing the data to write
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderSafeString(HttpConn *conn, cchar *s);
 
@@ -1318,7 +1318,7 @@ PUBLIC ssize espRenderSafeString(HttpConn *conn, cchar *s);
     @param s String containing the data to write
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderString(HttpConn *conn, cchar *s);
 
@@ -1330,7 +1330,7 @@ PUBLIC ssize espRenderString(HttpConn *conn, cchar *s);
     @param name Form variable name
     @return A count of the bytes actually written
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
 
@@ -1354,7 +1354,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *view, int flags);
     @param flags Reserved. Set to zero.
     @return Number of bytes rendered
     @ingroup EspReq
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags);
 
@@ -1366,7 +1366,7 @@ PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags);
     @param flags Reserved. Set to zero.
     @return Number of bytes rendered
     @ingroup EspReq
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags);
 
@@ -1381,7 +1381,7 @@ PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags);
     @param success True if the operation was a success.
     @return Number of bytes sent.
     @ingroup EspReq
-    @stability Prototype
+    @stability Evolving
   */
 PUBLIC ssize espSendResult(HttpConn *conn, bool success);
 
@@ -1391,7 +1391,7 @@ PUBLIC ssize espSendResult(HttpConn *conn, bool success);
     @param on Set to "true" to enable auto-finalizing.
     @return "True" if auto-finalizing was enabled prior to this call
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool espSetAutoFinalizing(HttpConn *conn, bool on);
 
@@ -1399,7 +1399,7 @@ PUBLIC bool espSetAutoFinalizing(HttpConn *conn, bool on);
     Set the current request connection.
     @param conn The HttpConn connection object to define
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetConn(HttpConn *conn);
 
@@ -1409,7 +1409,7 @@ PUBLIC void espSetConn(HttpConn *conn);
     @param conn HttpConn connection object
     @param length Numeric value for the content length header.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
 
@@ -1427,7 +1427,7 @@ PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
         zero for a "session" cookie that lives only for the user's session.
     @param isSecure Set to "true" if the cookie only applies for SSL based connections
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
     bool isSecure);
@@ -1438,7 +1438,7 @@ PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path,
     @param conn HttpConn connection object
     @param mimeType Mime type string
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType);
 
@@ -1446,14 +1446,14 @@ PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType);
     Set this authenticated session as the current session.
     @description Set esp.login.single to true to enable current session tracking.
     @return true if the
-    @stability Prototype
+    @stability Evolving
     @ingroup EspReq
  */
 PUBLIC void espSetCurrentSession(HttpConn *conn);
 
 /**
     Clear the current authenticated session
-    @stability Prototype
+    @stability Evolving
     @ingroup EspReq
  */
 PUBLIC void espClearCurrentSession(HttpConn *conn);
@@ -1467,7 +1467,7 @@ PUBLIC void espClearCurrentSession(HttpConn *conn);
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @param fmt Printf style formatted string to use as the message
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetFeedback(HttpConn *conn, cchar *type, cchar *fmt, ...);
 
@@ -1488,7 +1488,7 @@ PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *type, cchar *fmt, va_list arg
     Set the current database grid
     @return The grid instance. This permits chaining.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC EdiGrid *espSetGrid(HttpConn *conn, EdiGrid *grid);
 
@@ -1500,7 +1500,7 @@ PUBLIC EdiGrid *espSetGrid(HttpConn *conn, EdiGrid *grid);
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
 
@@ -1511,7 +1511,7 @@ PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
     @param key Http response header key
     @param value String value for the key
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetHeaderString(HttpConn *conn, cchar *key, cchar *value);
 
@@ -1523,7 +1523,7 @@ PUBLIC void espSetHeaderString(HttpConn *conn, cchar *key, cchar *value);
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value);
 
@@ -1549,7 +1549,7 @@ PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value);
     @param conn HttpConn connection object created via #httpCreateConn
     @param notifier Notifier function.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetNotifier(HttpConn *conn, HttpNotifier notifier);
 
@@ -1561,7 +1561,7 @@ PUBLIC void espSetNotifier(HttpConn *conn, HttpNotifier notifier);
     @param rec Record object to define as the current record.
     @return The grid instance. This permits chaining.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC EdiRec *espSetRec(HttpConn *conn, EdiRec *rec);
 
@@ -1574,7 +1574,7 @@ PUBLIC EdiRec *espSetRec(HttpConn *conn, EdiRec *rec);
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetParam(HttpConn *conn, cchar *var, cchar *value);
 
@@ -1584,7 +1584,7 @@ PUBLIC void espSetParam(HttpConn *conn, cchar *var, cchar *value);
     @param conn HttpConn connection object
     @param status Http status code.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espSetStatus(HttpConn *conn, int status);
 
@@ -1596,7 +1596,7 @@ PUBLIC void espSetStatus(HttpConn *conn, int status);
     @param value Variable value to use
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup HttpSession
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC int espSetSessionVar(HttpConn *conn, cchar *name, cchar *value);
 
@@ -1605,7 +1605,7 @@ PUBLIC int espSetSessionVar(HttpConn *conn, cchar *name, cchar *value);
     @description This e request details back to the client. This is useful as a debugging tool.
     @param conn HttpConn connection object
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espShowRequest(HttpConn *conn);
 
@@ -1617,7 +1617,7 @@ PUBLIC void espShowRequest(HttpConn *conn);
     @param data Data to cache
     @param lifesecs Time in seconds to cache the data
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs);
 
@@ -1631,7 +1631,7 @@ PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs
     @param rec Record to write to the database.
     @return "true" if the record can be successfully written.
     @ingroup EspReq
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
 
@@ -1708,7 +1708,7 @@ PUBLIC cchar *espUri(HttpConn *conn, cchar *target);
         These APIs are designed to be terse and highly readable. Consequently, they are not prefixed with "esp".
     @see espAlert
     @defgroup EspAbbrev EspAbbrev
-    @stability Evolving
+    @stability Stable
   */
 typedef struct EspAbbrev { int dummy; } EspAbbrev;
 
@@ -1898,7 +1898,7 @@ PUBLIC void *getData();
     Get the connection dispatcher object
     @return MprDispatcher connection dispatcher instance object.
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC MprDispatcher *getDispatcher();
 
@@ -2000,7 +2000,7 @@ PUBLIC cchar *getReferrer();
     Get the ESP request object
     @return EspReq connection instance object.
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC EspReq *getReq();
 
@@ -2055,7 +2055,7 @@ PUBLIC cchar *getFieldError(cchar *field);
         prefix.
     @return The espGetConn()->rx->pathInfo
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *getPath();
 
