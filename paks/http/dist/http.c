@@ -888,6 +888,9 @@ static int issueRequest(HttpConn *conn, cchar *url, MprList *files)
                 /* No point retrying */
                 break;
             }
+            if (conn->sock->flags & MPR_SOCKET_CERT_ERROR) {
+                break;
+            }
         }
         mprDebug("http", 4, "retry %d of %d for: %s %s", count, conn->retries, app->method, url);
     }

@@ -7527,6 +7527,7 @@ PUBLIC int mprSetMaxSocketAccept(int max);
 #define MPR_SOCKET_BUFFERED_WRITE   0x1000  /**< Socket has buffered write data (in SSL stack) */
 #define MPR_SOCKET_DISCONNECTED     0x4000  /**< The mprDisconnectSocket has been called */
 #define MPR_SOCKET_HANDSHAKING      0x8000  /**< Doing an SSL handshake */
+#define MPR_SOCKET_CERT_ERROR       0x10000 /**< Error when validating peer certificate */
 
 /**
     Socket Service

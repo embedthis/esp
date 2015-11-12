@@ -261,6 +261,11 @@ struct HttpWebSocket;
 #define HTTP_CODE_INSUFFICIENT_STORAGE      507     /**< The server has insufficient storage to complete the request */
 
 /*
+    Custom error codes
+ */
+#define HTTP_CODE_CERT_ERROR                495     /**< The peer provided certificate is unacceptable */
+
+/*
     Proprietary HTTP status codes
  */
 #define HTTP_CODE_START_LOCAL_ERRORS        550
