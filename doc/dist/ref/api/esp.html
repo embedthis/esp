@@ -467,7 +467,7 @@
     <dl><dt><b>Description</b>:</dt><dd>This is a short-form API that uses the current HttpConn connection object. These APIs are designed to be terse and highly readable. Consequently, they are not prefixed with &quot;esp&quot;.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     </table></dd></dl>
@@ -848,7 +848,7 @@
   <div class="apiDetail">
 <p>Get the connection dispatcher object.</p>
     <dl><dt>Returns:</dt><dd>MprDispatcher connection dispatcher instance object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -983,7 +983,7 @@
 <p>Get the request URI path string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI path. This is the portion after the application/route prefix.</dd></dl>
     <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga41a42035766ff5d2fd0fd74588e167ea">espGetConn()</a>-&gt;rx-&gt;pathInfo.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -1045,7 +1045,7 @@
   <div class="apiDetail">
 <p>Get the ESP request object.</p>
     <dl><dt>Returns:</dt><dd>EspReq connection instance object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -2455,7 +2455,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">...</td><td>Arguments for fmt.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already exists.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2477,7 +2477,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">value</td><td>Value to set for the header.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already exists.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2497,7 +2497,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">var</td><td>Name of the request parameter to set.</td>
     <tr><td class="param">value</td><td>Value to set.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2519,7 +2519,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">fmt</td><td>Printf style formatted string to use as the header key value.</td>
     <tr><td class="param">...</td><td>Arguments for fmt.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2540,7 +2540,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">key</td><td>Http response header key.</td>
     <tr><td class="param">value</td><td>Value to set for the header.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2559,7 +2559,7 @@ Custom data for request (unmanaged).
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2573,7 +2573,7 @@ Custom data for request (unmanaged).
   </div>
   <div class="apiDetail">
 <p>Clear the current authenticated session.</p>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2593,7 +2593,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Session ID string.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2612,7 +2612,7 @@ Custom data for request (unmanaged).
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2631,7 +2631,7 @@ Custom data for request (unmanaged).
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2650,7 +2650,7 @@ Custom data for request (unmanaged).
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2665,7 +2665,7 @@ Custom data for request (unmanaged).
   <div class="apiDetail">
 <p>Get the current route HttpAuth object.</p>
     <dl><dt>Returns:</dt><dd>The HttpAuth object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2680,7 +2680,7 @@ Custom data for request (unmanaged).
   <div class="apiDetail">
 <p>Get the current request connection.</p>
     <dl><dt>Returns:</dt><dd>The HttpConn connection object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2700,7 +2700,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the response content data in bytes.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2720,7 +2720,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Mime type of any receive content. Set to NULL if not posted data.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2741,7 +2741,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">name</td><td>Cookie name to retrieve.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The cookie value Return null if the cookie is not defined.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2761,7 +2761,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Return a string containing the cookies sent in the Http header of the last request.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2796,7 +2796,7 @@ Custom data for request (unmanaged).
 <p>Get the current database instance.</p>
     <dl><dt><b>Description</b>:</dt><dd>A route may have a default database configured via the EspDb Appweb.conf configuration directive. The database will be opened when the web server initializes and will be shared between all requests using the route.</dd></dl>
     <dl><dt>Returns:</dt><dd>Edi EDI database handle.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2815,7 +2815,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A directory path name.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2887,7 +2887,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">key</td><td>Name of the header to retrieve. This should be a lower case header name. For example: &quot;Connection&quot;.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Value associated with the header key or null if the key did not exist in the response.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2907,7 +2907,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Hash table. See <a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> for how to access the hash table.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2927,7 +2927,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>String containing all the headers. The caller must free this returned string.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2965,7 +2965,7 @@ Custom data for request (unmanaged).
 <p>Get the HTTP method.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the Http method.</dd></dl>
     <dl><dt>Returns:</dt><dd>The HttpConn.rx.method property.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -2987,7 +2987,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">defaultValue</td><td>Default value to return if the variable is not defined. Can be null.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>String containing the request parameter&apos;s value. Caller should not free.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3007,7 +3007,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>MprJson instance containing the request parameters.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3023,7 +3023,7 @@ Custom data for request (unmanaged).
 <p>Get the request URI path string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI path. This is the request URI path after removing query parameters. It does not include the application route prefix.</dd></dl>
     <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga41a42035766ff5d2fd0fd74588e167ea">espGetConn()</a>-&gt;rx-&gt;pathInfo.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3043,7 +3043,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>String containing the request query string. Caller should not free.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3063,7 +3063,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>String URI back to the referring URI. If no referrer is defined, refers to the home URI.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3078,7 +3078,7 @@ Custom data for request (unmanaged).
   <div class="apiDetail">
 <p>Get the current route HttpRoute object.</p>
     <dl><dt>Returns:</dt><dd>The HttpRoute object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3097,7 +3097,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">route</td><td>HttpRoute object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Database instance object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3118,7 +3118,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">var</td><td>Name of the request parameter to retrieve.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>String containing the route variable value. Caller should not free.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3158,7 +3158,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>An integer Http response code. Typically 200 is success.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3178,7 +3178,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A Http status message.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3198,7 +3198,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A list of HttpUploadFile objects.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3214,7 +3214,7 @@ Custom data for request (unmanaged).
 <p>Get the request URI string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI. This is the request URI after removing query parameters. It includes any application route prefix.</dd></dl>
     <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga41a42035766ff5d2fd0fd74588e167ea">espGetConn()</a>-&gt;rx-&gt;uri.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3280,7 +3280,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;True&quot; if there is no more receive data to read.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3300,7 +3300,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;True&quot; if the request has been finalized.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3319,7 +3319,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;True&quot; if the connection is using SSL.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3341,7 +3341,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">value</td><td>Expected value to match.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;True&quot; if the value matches.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3361,7 +3361,7 @@ Custom data for request (unmanaged).
     <tr><td class="param">tableName</td><td>Database table name.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>An EDI grid containing data for the table.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3384,7 +3384,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">size</td><td>Size of the buffer.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of bytes read into the buffer.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3405,7 +3405,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">status</td><td>Http status code to send with the response.</td>
     <tr><td class="param">target</td><td>New target uri for the client.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3424,7 +3424,7 @@ Use httpReadBlock for more options to read data
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3443,7 +3443,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     <tr><td class="param">name</td><td>Cookie name.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3464,7 +3464,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">key</td><td>Http response header key.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3483,7 +3483,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     <tr><td class="param">name</td><td>Variable name to set.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3505,7 +3505,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">...</td><td>Arguments for fmt.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3527,7 +3527,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">size</td><td>Size of the data in buf.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3547,7 +3547,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3586,7 +3586,7 @@ Use httpReadBlock for more options to read data
     <tr><td class="param">conn</td><td>Http connection object.</td>
     <tr><td class="param">path</td><td>Relative pathname from route-&gt;documents to the document to render.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3608,7 +3608,7 @@ The output is Html escaped for security
     <tr><td class="param">fmt</td><td>Printf style message format.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3628,7 +3628,7 @@ The output is Html escaped for security
     <tr><td class="param">path</td><td>File path name.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3650,7 +3650,7 @@ The output is Html escaped for security
     <tr><td class="param">...</td><td>Arguments for fmt.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3671,7 +3671,7 @@ The output is Html escaped for security
     <tr><td class="param">s</td><td>String containing the data to write.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3692,7 +3692,7 @@ The output is Html escaped for security
     <tr><td class="param">s</td><td>String containing the data to write.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3714,7 +3714,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">name</td><td>Form variable name.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3757,7 +3757,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">flags</td><td>Reserved. Set to zero.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Number of bytes rendered.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3779,7 +3779,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">flags</td><td>Reserved. Set to zero.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Number of bytes rendered.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3800,7 +3800,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">success</td><td>True if the operation was a success.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Number of bytes sent.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3820,7 +3820,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">on</td><td>Set to &quot;true&quot; to enable auto-finalizing.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;True&quot; if auto-finalizing was enabled prior to this call.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3838,7 +3838,7 @@ If a request parameter is not found by the given name, consult the session store
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>The HttpConn connection object to define.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3858,7 +3858,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     <tr><td class="param">length</td><td>Numeric value for the content length header.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3878,7 +3878,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     <tr><td class="param">mimeType</td><td>Mime type string.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3903,7 +3903,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">lifespan</td><td>Duration for the cookie to persist in msec. Set to a negative number to delete a cookie. Set to zero for a &quot;session&quot; cookie that lives only for the user&apos;s session.</td>
     <tr><td class="param">isSecure</td><td>Set to &quot;true&quot; if the cookie only applies for SSL based connections.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3919,7 +3919,7 @@ If a request parameter is not found by the given name, consult the session store
 <p>Set this authenticated session as the current session.</p>
     <dl><dt><b>Description</b>:</dt><dd>Set esp.login.single to true to enable current session tracking.</dd></dl>
     <dl><dt>Returns:</dt><dd>True if the.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3940,7 +3940,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">type</td><td>type of feedback message. This may be set to any word, but the following feedback types are typically supported as per RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;.</td>
     <tr><td class="param">fmt</td><td>Printf style formatted string to use as the message.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3976,7 +3976,7 @@ If a request parameter is not found by the given name, consult the session store
   <div class="apiDetail">
 <p>Set the current database grid.</p>
     <dl><dt>Returns:</dt><dd>The grid instance. This permits chaining.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3998,7 +3998,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">fmt</td><td>Printf style formatted string to use as the header key value.</td>
     <tr><td class="param">...</td><td>Arguments for fmt.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4019,7 +4019,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">key</td><td>Http response header key.</td>
     <tr><td class="param">value</td><td>String value for the key.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4040,7 +4040,7 @@ If a request parameter is not found by the given name, consult the session store
     <tr><td class="param">var</td><td>Name of the request parameter to set.</td>
     <tr><td class="param">value</td><td>Value to set.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4061,7 +4061,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param">conn</td><td>HttpConn connection object created via <a class="ref" href="#group___http_conn_1ga25308956e8946f7f26ee9adc396534d3" external="http.dtags">httpCreateConn</a></td>
     <tr><td class="param">notifier</td><td>Notifier function.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4082,7 +4082,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param">var</td><td>Name of the request parameter to set.</td>
     <tr><td class="param">value</td><td>Value to set.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4103,7 +4103,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param">rec</td><td>Record object to define as the current record.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The grid instance. This permits chaining.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4123,7 +4123,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     <tr><td class="param">status</td><td>Http status code.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4142,7 +4142,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>HttpConn connection object.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4164,7 +4164,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param">data</td><td>Data to cache.</td>
     <tr><td class="param">lifesecs</td><td>Time in seconds to cache the data.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4185,7 +4185,7 @@ Before the notifier is invoked, espSetConn is called to set the connection objec
     <tr><td class="param">rec</td><td>Record to write to the database.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;true&quot; if the record can be successfully written.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4444,7 +4444,7 @@ Windows SDK.
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4485,7 +4485,7 @@ Windows SDK.
     <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>
     <tr><td class="param">set</td><td>Route set to select. Use &quot;angular-mvc&quot;, or &quot;html-mvc&quot;.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4506,7 +4506,7 @@ Windows SDK.
     <tr><td class="param">pattern</td><td>URI pattern to use to find the releavant route.</td>
     <tr><td class="param">actionProc</td><td>EspProc callback procedure to invoke when the action is requested.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4613,7 +4613,7 @@ Windows SDK.
     <tr><td class="param">targetKey</td><td>Target key used to select the action in a HttpRoute target. This is typically a URI prefix.</td>
     <tr><td class="param">actionProc</td><td>EspProc callback procedure to invoke when the action is requested.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4698,7 +4698,7 @@ Windows SDK.
     <tr><td class="param">defaultValue</td><td>Default value to use if the configuration is not defined. May be null.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The Configuration string value.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4845,7 +4845,7 @@ Windows SDK.
     <tr><td class="param">route</td><td>HttpRoute defining the ESP application.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4867,7 +4867,7 @@ Windows SDK.
     <tr><td class="param">value</td><td>Value to set the property to.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4888,7 +4888,7 @@ Windows SDK.
     <tr><td class="param">desired</td><td>Desired value to compare with.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>True if the configuration property has the desired value.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4931,7 +4931,7 @@ Windows SDK.
     <tr><td class="param">files</td><td>MprList of files to send with the message.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if the email is successfully sent.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
   </div>
 </div>
 <a name="esp_8h_1a56eafbf70fb0509e85aa5070becbaca6"></a>
@@ -4970,7 +4970,7 @@ Windows SDK.
     <tr><td class="param">module</td><td>Module object if loaded as an MPR module.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
   </div>
 </div>
 <a name="esp_8h_1a866f3f7347e4ae34becaa6923ff0c586"></a>
@@ -5049,7 +5049,7 @@ Windows SDK.
   <div class="apiDetail">
 <p>ESP Action.</p>
     <dl><dt><b>Description</b>:</dt><dd>Actions are run after a request URI is routed to a controller.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>

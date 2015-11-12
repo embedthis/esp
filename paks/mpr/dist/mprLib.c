@@ -1109,7 +1109,7 @@ static int pauseThreads()
     MprThreadService    *ts;
     MprThread           *tp;
     MprTicks            start;
-    int                 i, allYielded, timeout;
+    int                 i, allYielded, timeout, noyield;
 
     /*
         Short timeout wait for all threads to yield. Typically set to 1/10 sec
@@ -1125,10 +1125,14 @@ static int pauseThreads()
     do {
         lock(ts->threads);
         allYielded = 1;
+        noyield = 0;
         for (i = 0; i < ts->threads->length; i++) {
             tp = (MprThread*) mprGetItem(ts->threads, i);
             if (!tp->yielded) {
                 allYielded = 0;
+                if (tp->noyield) {
+                    noyield = 1;
+                }
                 break;
             }
         }
@@ -1138,7 +1142,7 @@ static int pauseThreads()
             break;
         }
         unlock(ts->threads);
-        if (mprGetState() >= MPR_DESTROYING) {
+        if (noyield || mprGetState() >= MPR_DESTROYING) {
             /* Do not wait for paused threads if shutting down */
             break;
         }
