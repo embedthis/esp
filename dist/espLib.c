@@ -2678,6 +2678,14 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
     }
     espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
+
+    /*
+        Fix ups
+     */
+    if (route->flags & HTTP_ROUTE_UTILITY) {
+        eroute->compile = 1;
+        eroute->update = 1;
+    }
     if (eroute->app) {
         if (!mprLookupStringItem(route->indexes, "index.esp")) {
             httpAddRouteIndex(route, "index.esp");
@@ -4468,6 +4476,8 @@ static Esp *esp;
 static int cloneDatabase(HttpConn *conn);
 static void closeEsp(HttpQueue *q);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, 
+    bool *loaded);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
 static int openEsp(HttpQueue *q);
@@ -4758,6 +4768,7 @@ static bool loadController(HttpConn *conn)
     HttpRoute   *route;
     EspRoute    *eroute;
     cchar       *errMsg, *controllers, *controller;
+    bool        loaded;
 
     rx = conn->rx;
     route = rx->route;
@@ -4770,12 +4781,12 @@ static bool loadController(HttpConn *conn)
         controller = schr(route->sourceName, '$') ? stemplateJson(route->sourceName, rx->params) : route->sourceName;
         controller = controllers ? mprJoinPath(controllers, controller) : mprJoinPath(route->home, controller);
 
-        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg) < 0) {
+        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
                 httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
             }
-        } else {
+        } else if (loaded) {
             httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
@@ -4867,6 +4878,7 @@ static cchar *loadView(HttpConn *conn, cchar *target)
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
+    bool        loaded;
     cchar       *errMsg, *path;
 
     rx = conn->rx;
@@ -4879,12 +4891,13 @@ static cchar *loadView(HttpConn *conn, cchar *target)
         target = sclone(target);
         mprHold(target);
         path = mprJoinPath(route->documents, target);
-        httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
-
-        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg) < 0) {
+        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg, &loaded) < 0) {
             httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             mprRelease(target);
             return 0;
+        }
+        if (loaded) {
+            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
         }
         mprRelease(target);
     }
@@ -5213,7 +5226,8 @@ static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target)
 /*
     WARNING: GC yield
  */
-PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg)
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, 
+    bool *loaded)
 {
     EspRoute    *eroute;
     MprModule   *mp;
@@ -5223,6 +5237,9 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     eroute = route->eroute;
     *errMsg = "";
 
+    if (loaded) {
+        *loaded = 0;
+    }
     cacheName = getCacheName(route, kind, source);
     if ((cache = httpGetDir(route, "CACHE")) == 0) {
         cache = "cache";
@@ -5231,9 +5248,10 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
 
     lock(esp);
     if (mprLookupModule(source) == 0 || eroute->update) {
+        espModuleIsStale(route, source, module, &recompile);
         if (eroute->compile && mprPathExists(source, R_OK)) {
             isView = smatch(kind, "view");
-            if (espModuleIsStale(source, module, &recompile) || (isView && layoutIsStale(eroute, source, module))) {
+            if (recompile || (isView && layoutIsStale(eroute, source, module))) {
                 if (recompile) {
                     mprHoldBlocks(source, module, cacheName, NULL);
                     if (!espCompile(route, dispatcher, source, module, cacheName, isView, (char**) errMsg)) {
@@ -5263,6 +5281,9 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             unlock(esp);
             return MPR_ERR_CANT_READ;
         }
+        if (loaded) {
+            *loaded = 1;
+        }
     }
     unlock(esp);
     return 0;
@@ -5275,12 +5296,15 @@ PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     Set recompile to true if the source is absent or more recent.
     Will return false if the source does not exist (important for testing layouts).
  */
-PUBLIC bool espModuleIsStale(cchar *source, cchar *module, int *recompile)
+PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile)
 {
+    EspRoute    *eroute;
     MprModule   *mp;
     MprPath     sinfo, minfo;
 
     *recompile = 0;
+    eroute = route->eroute;
+
     mprGetPathInfo(module, &minfo);
     if (!minfo.valid) {
         if ((mp = mprLookupModule(source)) != 0) {
@@ -5290,22 +5314,26 @@ PUBLIC bool espModuleIsStale(cchar *source, cchar *module, int *recompile)
                 return 0;
             }
         }
-        *recompile = 1;
-        mprLog("info esp", 4, "Source %s is newer than module %s, recompiling ...", source, module);
+        if (eroute->compile) {
+            *recompile = 1;
+            mprLog("info esp", 4, "Source %s is newer than module %s, recompiling ...", source, module);
+        }
         return 1;
     }
-    mprGetPathInfo(source, &sinfo);
-    if (sinfo.valid && sinfo.mtime > minfo.mtime) {
-        if ((mp = mprLookupModule(source)) != 0) {
-            if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
-                    source);
-                return 0;
+    if (eroute->compile) {
+        mprGetPathInfo(source, &sinfo);
+        if (sinfo.valid && sinfo.mtime > minfo.mtime) {
+            if ((mp = mprLookupModule(source)) != 0) {
+                if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
+                    mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                        source);
+                    return 0;
+                }
             }
+            *recompile = 1;
+            mprLog("info esp", 4, "Source %s is newer than module %s, recompiling ...", source, module);
+            return 1;
         }
-        *recompile = 1;
-        mprLog("info esp", 4, "Source %s is newer than module %s, recompiling ...", source, module);
-        return 1;
     }
     if ((mp = mprLookupModule(source)) != 0) {
         if (minfo.mtime > mp->modified) {
@@ -5348,7 +5376,7 @@ static bool layoutIsStale(EspRoute *eroute, cchar *source, cchar *module)
             layout = (layoutsDir) ? mprJoinPath(layoutsDir, "default.esp") : 0;
         }
         if (layout) {
-            stale = espModuleIsStale(layout, module, &recompile);
+            stale = espModuleIsStale(eroute->route, layout, module, &recompile);
             if (stale) {
                 mprLog("info esp", 4, "esp layout %s is newer than module %s", layout, module);
             }
@@ -5358,7 +5386,7 @@ static bool layoutIsStale(EspRoute *eroute, cchar *source, cchar *module)
 }
 #else
 
-PUBLIC bool espModuleIsStale(cchar *source, cchar *module, int *recompile)
+PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile)
 {
     return 0;
 }
@@ -5593,7 +5621,7 @@ static bool preload(HttpRoute *route)
         } else {
             source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
         }
-        if (espLoadModule(route, NULL, "app", source, &errMsg) < 0) {
+        if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
             if (eroute->combine) {
                 mprLog("error esp", 0, "%s", errMsg);
                 return 0;
@@ -5606,7 +5634,7 @@ static bool preload(HttpRoute *route)
                     kind = "controller";
                 }
                 source = mprJoinPaths(route->home, httpGetDir(route, "CONTROLLERS"), source, NULL);
-                if (espLoadModule(route, NULL, kind, source, &errMsg) < 0) {
+                if (espLoadModule(route, NULL, kind, source, &errMsg, NULL) < 0) {
                     mprLog("error esp", 0, "Cannot preload esp module %s. %s", source, errMsg);
                     return 0;
                 }

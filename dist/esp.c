@@ -542,7 +542,9 @@ static void initRuntime()
     }
     http = MPR->httpService;
     app->route = httpGetDefaultRoute(0);
-
+    if (! (app->require & REQ_SERVE)) {
+        app->route->flags |= HTTP_ROUTE_UTILITY;
+    }
     mprStartLogging(app->logSpec, MPR_LOG_CMDLINE);
     if (app->traceSpec) {
         httpStartTracing(app->traceSpec);
@@ -1427,11 +1429,18 @@ static MprList *getRoutes()
         Filter ESP routes. Go in reverse order to locate outermost routes first.
      */
     for (prev = -1; (route = mprGetPrevItem(app->host->routes, &prev)) != 0; ) {
-        if ((eroute = route->eroute) == 0 || !eroute->compileCmd) {
+        if ((eroute = route->eroute) == 0) {
+            mprLog("", 6, "Skip route name %s - no esp configuration", route->pattern);
+            continue;
+        }
+#if UNUSED
+        app->require = REQ_SERVE;
+        if (!eroute->compileCmd) {
             /* No ESP configuration for compiling */
             mprLog("", 6, "Skip route name %s - no esp configuration", route->pattern);
             continue;
         }
+#endif
         if (filterRoutePattern) {
             mprLog("", 6, "Check route name %s, prefix %s with %s", route->pattern, route->startWith, filterRoutePattern);
             if (!smatch(filterRoutePattern, route->pattern)) {
@@ -1619,7 +1628,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
     } else if (app->rebuild) {
         why(source, "due to requested rebuild");
 
-    } else if (!espModuleIsStale(source, app->module, &recompile)) {
+    } else if (!espModuleIsStale(route, source, app->module, &recompile)) {
         if (kind & (ESP_PAGE | ESP_VIEW)) {
             if ((data = mprReadPathContents(source, &len)) == 0) {
                 fail("Cannot read %s", source);
@@ -1634,7 +1643,7 @@ static void compileFile(HttpRoute *route, cchar *source, int kind)
             } else {
                 layout = defaultLayout;
             }
-            if (!layout || !espModuleIsStale(layout, app->module, &recompile)) {
+            if (!layout || !espModuleIsStale(route, layout, app->module, &recompile)) {
                 why(source, "is up to date");
                 return;
             }

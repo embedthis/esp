@@ -72,6 +72,14 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
     }
     espSetDefaultDirs(route, eroute->app);
     httpParseAll(route, key, prop);
+
+    /*
+        Fix ups
+     */
+    if (route->flags & HTTP_ROUTE_UTILITY) {
+        eroute->compile = 1;
+        eroute->update = 1;
+    }
     if (eroute->app) {
         if (!mprLookupStringItem(route->indexes, "index.esp")) {
             httpAddRouteIndex(route, "index.esp");

@@ -1000,11 +1000,13 @@ static int checkPeerCertName(MprSocket *sp)
 
         if (target == 0 || *target == '\0' || strchr(target, '.') == 0) {
             sp->errorMsg = sfmt("Bad peer name");
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
             return MPR_ERR_BAD_VALUE;
         }
         if (!smatch(certName, "localhost")) {
             if (strchr(certName, '.') == 0) {
                 sp->errorMsg = sfmt("Peer certificate must have a domain: \"%s\"", certName);
+                sp->flags |= MPR_SOCKET_CERT_ERROR;
                 return MPR_ERR_BAD_VALUE;
             }
             if (*certName == '*' && certName[1] == '.') {
@@ -1013,6 +1015,7 @@ static int checkPeerCertName(MprSocket *sp)
                 if (strchr(certName, '.') == 0) {
                     /* Peer must be of the form *.domain.tld. i.e. *.com is not valid */
                     sp->errorMsg = sfmt("Peer CN is not valid %s", peerName);
+                    sp->flags |= MPR_SOCKET_CERT_ERROR;
                     return MPR_ERR_BAD_VALUE;
                 }
                 if ((tp = strchr(target, '.')) != 0 && strchr(&tp[1], '.')) {
@@ -1024,6 +1027,7 @@ static int checkPeerCertName(MprSocket *sp)
         if (!smatch(target, certName)) {
             sp->errorMsg = sfmt("Certificate common name mismatch CN \"%s\" vs required \"%s\"", peerName,
                 osp->requiredPeerName);
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
             return MPR_ERR_BAD_VALUE;
         }
     }
@@ -1209,6 +1213,9 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
         sp->errorMsg = sfmt("Certificate verification error %d", error);
         ok = 0;
         break;
+    }
+    if (!ok) {
+        sp->flags |= MPR_SOCKET_CERT_ERROR;
     }
     return ok;
 }

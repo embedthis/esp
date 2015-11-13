@@ -497,6 +497,7 @@ PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
  */
 PUBLIC int espLoadCompilerRules(HttpRoute *route);
 
+#if UNUSED
 /**
     Load an ESP module
     @param route Parent route from which to inherit configuration.
@@ -506,9 +507,10 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route);
     @param errMsg Output string reference to receive any error messages.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Evolving
+    @stability Internal
  */
 PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg);
+#endif
 
 #if DEPRECATED || 1
 /**
@@ -560,7 +562,7 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired);
  */
 PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
 PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
-PUBLIC bool espModuleIsStale(cchar *source, cchar *module, int *recompile);
+PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
 PUBLIC cchar *espGetVisualStudio();
 

@@ -1306,6 +1306,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_SOCKET_CERT_ERROR</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a1aad0e4c1e753954ccca3039d13b7b5a</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_SOCKET_CLOSED</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a9899fbaf22958ef4d2fbb5bce6cbb898</anchor>
