@@ -864,7 +864,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         }
         if (eroute->compile) {
             *recompile = 1;
-            mprLog("info esp", 4, "Source %s is newer than module %s, recompiling ...", source, module);
+            /* Module not loaded */
         }
         return 1;
     }
