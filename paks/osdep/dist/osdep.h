@@ -332,12 +332,10 @@
     Includes in alphabetic order
  */
     #include    <ctype.h>
-#if !ME_ROM
 #if ME_WIN_LIKE
     #include    <direct.h>
 #else
     #include    <dirent.h>
-#endif
 #endif
 #if ME_UNIX_LIKE
     #include    <dlfcn.h>
@@ -834,7 +832,7 @@ typedef int64 Ticks;
     /*
         Use PUBLIC on function declarations and definitions (*.c and *.h). 
      */
-    #define PUBLIC       __declspec(dllexport)
+    #define PUBLIC      __declspec(dllexport)
     #define PUBLIC_DATA __declspec(dllexport)
     #define PRIVATE     static
 #else

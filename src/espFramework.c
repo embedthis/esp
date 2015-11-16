@@ -632,7 +632,7 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
                 "<body>\r\n<h1>%s</h1>\r\n" \
                 "    <pre>%s</pre>\r\n" \
                 "    <p>To prevent errors being displayed in the browser, " \
-                "       set <b>ShowErrors off</b> in the appweb.conf file.</p>\r\n" \
+                "       set <b>http.showErrors off</b> in the JSON configuration file.</p>\r\n" \
                 "</body>\r\n</html>\r\n", title, title, msg);
             httpSetContentType(conn, "text/html");
             written += espRenderString(conn, text);
@@ -1237,6 +1237,7 @@ PUBLIC bool espIsCurrentSession(HttpConn *conn)
     }
     return 1;
 }
+
 
 /*
     @copy   default

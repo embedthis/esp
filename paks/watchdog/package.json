@@ -37,10 +37,8 @@
         "pak": ">=0.11.0"
     },
     "files": [
-        "dist/**"
-    ],
-    "ignore": [
-        "*.tmp"
+        "dist/**",
+        "doc/"
     ],
     "pak": {
         "import": true,

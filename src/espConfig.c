@@ -218,7 +218,7 @@ PUBLIC int getVisualStudioEnv(Esp *esp)
             scaselessmatch(key, "VSINSTALLDIR") ||
             scaselessmatch(key, "WindowsSdkDir") ||
             scaselessmatch(key, "WindowsSdkLibVersion")) {
-            mprAddKey(esp->vstudioEnv, key, value);
+            mprAddKey(esp->vstudioEnv, key, sclone(value));
         }
     }
     return 0;
@@ -258,7 +258,7 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
                 return;
             }
             for (ITERATE_KEYS(esp->vstudioEnv, kp)) {
-                mprLog("info esp", 0, "define env %s %s", kp->key, kp->data);
+                mprLog("info esp", 6, "define env %s %s", kp->key, kp->data);
                 defineEnv(route, kp->key, kp->data);
             }
         }

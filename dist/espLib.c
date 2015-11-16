@@ -2824,7 +2824,7 @@ PUBLIC int getVisualStudioEnv(Esp *esp)
             scaselessmatch(key, "VSINSTALLDIR") ||
             scaselessmatch(key, "WindowsSdkDir") ||
             scaselessmatch(key, "WindowsSdkLibVersion")) {
-            mprAddKey(esp->vstudioEnv, key, value);
+            mprAddKey(esp->vstudioEnv, key, sclone(value));
         }
     }
     return 0;
@@ -2864,7 +2864,7 @@ static void defineEnv(HttpRoute *route, cchar *key, cchar *value)
                 return;
             }
             for (ITERATE_KEYS(esp->vstudioEnv, kp)) {
-                mprLog("info esp", 0, "define env %s %s", kp->key, kp->data);
+                mprLog("info esp", 6, "define env %s %s", kp->key, kp->data);
                 defineEnv(route, kp->key, kp->data);
             }
         }
@@ -3657,7 +3657,7 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
                 "<body>\r\n<h1>%s</h1>\r\n" \
                 "    <pre>%s</pre>\r\n" \
                 "    <p>To prevent errors being displayed in the browser, " \
-                "       set <b>ShowErrors off</b> in the appweb.conf file.</p>\r\n" \
+                "       set <b>http.showErrors off</b> in the JSON configuration file.</p>\r\n" \
                 "</body>\r\n</html>\r\n", title, title, msg);
             httpSetContentType(conn, "text/html");
             written += espRenderString(conn, text);
@@ -4263,6 +4263,7 @@ PUBLIC bool espIsCurrentSession(HttpConn *conn)
     return 1;
 }
 
+
 /*
     @copy   default
 
@@ -4475,9 +4476,8 @@ static Esp *esp;
 
 static int cloneDatabase(HttpConn *conn);
 static void closeEsp(HttpQueue *q);
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, 
-    bool *loaded);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
 static int openEsp(HttpQueue *q);
@@ -4486,7 +4486,8 @@ static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
 #if !ME_STATIC
-static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, 
+    bool *loaded);
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
 static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName);
 static bool layoutIsStale(EspRoute *eroute, cchar *source, cchar *module);
@@ -4919,7 +4920,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
     if ((target = loadView(conn, target)) == 0) {
         return 0;
     }
-    if ((viewProc = mprLookupKey(eroute->views, target)) == 0) {
+    if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
         httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
             getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
         return 0;
@@ -4966,7 +4967,7 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     /*
         See if module already loaded for this view
      */
-    if (mprLookupKey(eroute->views, target)) {
+    if (mprLookupKey(eroute->top->views, target)) {
         return target;
     }
 
@@ -5160,6 +5161,25 @@ static int cloneDatabase(HttpConn *conn)
 }
 
 
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
+{
+    EspRoute    *eroute;
+    cchar       *appName, *canonical;
+
+    eroute = route->eroute;
+#if VXWORKS
+    /*
+        Trim the drive for VxWorks where simulated host drives only exist on the target
+     */
+    target = mprTrimPathDrive(target);
+#endif
+    canonical = mprGetPortablePath(mprGetRelPath(target, route->home));
+
+    appName = eroute->appName;
+    return eroute->combine ? appName : mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
+}
+
+
 #if !ME_STATIC
 static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName)
 {
@@ -5188,25 +5208,6 @@ static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar 
         }
     }
     return entry;
-}
-
-
-static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
-{
-    EspRoute    *eroute;
-    cchar       *appName, *canonical;
-
-    eroute = route->eroute;
-#if VXWORKS
-    /*
-        Trim the drive for VxWorks where simulated host drives only exist on the target
-     */
-    target = mprTrimPathDrive(target);
-#endif
-    canonical = mprGetPortablePath(mprGetRelPath(target, route->home));
-
-    appName = eroute->appName;
-    return eroute->combine ? appName : mprGetMD5WithPrefix(sfmt("%s:%s", appName, canonical), -1, sjoin(kind, "_", NULL));
 }
 
 
@@ -5762,8 +5763,6 @@ static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
 PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
 {
     cchar   *controllers, *documents, *path, *migrations;
-    char    *output;
-    bool    yielding;
 
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
@@ -5779,19 +5778,23 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
                 if (!mprPathExists(documents, X_OK)) {
                     documents = mprJoinPath(route->home, "public");
                     if (!mprPathExists(documents, X_OK)) {
+#if ME_APPWEB_PRODUCT
                         if (!esp->hostedDocuments && mprPathExists("install.conf", R_OK)) {
                             /* 
                                 This returns the documents directory of the default route of the default host 
                                 When Appweb switches to appweb.json, then just it should be loaded with package.json
                              */
-                            yielding = mprSetThreadYield(NULL, 0);
+                            char *output;
+                            bool yielding = mprSetThreadYield(NULL, 0);
                             if (mprRun(NULL, "appweb --show-documents", NULL, (char**) &output, NULL, 5000) == 0) {
                                 documents = esp->hostedDocuments = strim(output, "\n", MPR_TRIM_END);
                             } else {
                                 documents = route->home;
                             }
                             mprSetThreadYield(NULL, yielding);
-                        } else {
+                        } else 
+#endif
+                        {
                             documents = route->home;
                         }
                     }
@@ -5881,7 +5884,6 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
         }
     }
 }
-
 
 /*
     @copy   default

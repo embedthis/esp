@@ -625,7 +625,6 @@ static void initialize(int argc, char **argv)
     if (app->require & REQ_LISTEN) {
         route->flags |= HTTP_ROUTE_OWN_LISTEN;
     }
-
     /*
         Read package.json first so esp.json can override
      */
@@ -1754,6 +1753,9 @@ static void compile(int argc, char **argv)
     if (app->error) {
         return;
     }
+#if !ME_MPR_DISK
+    fatal("Cannot compile, esp built with mpr.disk == false");
+#endif
     if (!app->combine) {
         app->combine = app->eroute->combine;
     }

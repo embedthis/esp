@@ -216,13 +216,17 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
         if (parseCert(&cfg->cert, ssl->certFile, errorMsg) != 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
+        if (!ssl->keyFile) {
+            /* Can include the private key with the cert file */
+            ssl->keyFile = ssl->certFile;
+        }
     }
     if (ssl->keyFile) {
         /*
             Load a decrypted PEM format private key
             Last arg is password if you need to use an encrypted private key
          */
-        if (parseKey(&cfg->key, ssl->keyFile, 0) != 0) {
+        if (parseKey(&cfg->key, ssl->keyFile, errorMsg) != 0) {
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -867,7 +871,7 @@ static int parseKey(mbedtls_pk_context *key, cchar *path, char **errorMsg)
         }
         return MPR_ERR_CANT_INITIALIZE;
     }
-    if (sstarts((char*) buf, "-----BEGIN ")) {
+    if (scontains((char*) buf, "-----BEGIN ")) {
         len++;
     }
     if (mbedtls_pk_parse_key(key, buf, len, NULL, 0) != 0) {

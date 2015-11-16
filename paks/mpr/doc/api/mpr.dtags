@@ -2376,6 +2376,13 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
+      <type>MprDiskFileSystem *</type>
+      <name>mprCreateDiskFileSystem</name>
+      <anchorfile>group___mpr_file_system.html</anchorfile>
+      <anchor>ga5d33c9eaec3fef58119ed5f63d550cf2</anchor>
+      <arglist>(cchar *path)</arglist>
+    </member>
+    <member kind="function">
       <type>MprDispatcher *</type>
       <name>mprCreateDispatcher</name>
       <anchorfile>group___mpr_dispatcher.html</anchorfile>
@@ -2388,13 +2395,6 @@
       <anchorfile>group___mpr_event.html</anchorfile>
       <anchor>gac6fcf6faf6ba5c85d7954fa416b73e30</anchor>
       <arglist>(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)</arglist>
-    </member>
-    <member kind="function">
-      <type>MprFileSystem *</type>
-      <name>mprCreateFileSystem</name>
-      <anchorfile>group___mpr_file_system.html</anchorfile>
-      <anchor>gadde06254bb6b9cdaa7669d797ccd59ee</anchor>
-      <arglist>(cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>MprHash *</type>
@@ -2505,8 +2505,8 @@
       <type>MprRomFileSystem *</type>
       <name>mprCreateRomFileSystem</name>
       <anchorfile>group___mpr_file_system.html</anchorfile>
-      <anchor>ga7c499dabec9038118eb7f09ddf5ddd7e</anchor>
-      <arglist>(cchar *path)</arglist>
+      <anchor>gac4d574bd66524a7bbd61bd6f97b6e6dd</anchor>
+      <arglist>(cchar *path, MprRomInode *inodes)</arglist>
     </member>
     <member kind="function">
       <type>MprSocket *</type>
@@ -2908,10 +2908,10 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>mprGetAppDir</name>
       <anchorfile>group___mpr.html</anchorfile>
-      <anchor>ga3dfd4398a5607868c1110b47eebaea61</anchor>
+      <anchor>ga9d9d7e37b46179740e46fc8daf1e1d65</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
@@ -2922,10 +2922,10 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>mprGetAppPath</name>
       <anchorfile>group___mpr.html</anchorfile>
-      <anchor>gabfbea308cbe0f4db570bcc26e4f62815</anchor>
+      <anchor>ga51d6638f12faac68fb0da9f8536e5471</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
@@ -3069,10 +3069,10 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>mprGetCurrentPath</name>
       <anchorfile>group___mpr_path.html</anchorfile>
-      <anchor>ga368d0fe452a2d7216b32dda604e05891</anchor>
+      <anchor>ga837a34434ca4b0024610c770c4924e01</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
@@ -3552,6 +3552,13 @@
       <arglist>(MprTicks mark, MprTicks timeout)</arglist>
     </member>
     <member kind="function">
+      <type>MprRomInode *</type>
+      <name>mprGetRomFiles</name>
+      <anchorfile>group___mpr_file_system.html</anchorfile>
+      <anchor>ga8dcfab36fe684bfca96bb0af1a3cd24c</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
       <type>cchar *</type>
       <name>mprGetServerName</name>
       <anchorfile>group___mpr.html</anchorfile>
@@ -3809,6 +3816,13 @@
       <anchorfile>group___mpr_cache.html</anchorfile>
       <anchor>ga217793852b371ff5520edc80bc64358c</anchor>
       <arglist>(MprCache *cache, cchar *key, int64 amount)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprInitFileSystem</name>
+      <anchorfile>group___mpr_file_system.html</anchorfile>
+      <anchor>ga418af9ccff881e2d7671b7c4c54099fb</anchor>
+      <arglist>(MprFileSystem *fs, cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -5160,13 +5174,6 @@
       <anchorfile>group___mpr_file_system.html</anchorfile>
       <anchor>ga604f5f0da674b354c16dc30be6f058d2</anchor>
       <arglist>(cchar *path, cchar *separators)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>mprSetRomFileSystem</name>
-      <anchorfile>group___mpr_file_system.html</anchorfile>
-      <anchor>ga8ad660a935382da195d08a5d5d63067c</anchor>
-      <arglist>(MprRomInode *inodeList)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -7929,18 +7936,32 @@
       <arglist>(MprFileSystem *fs)</arglist>
     </member>
     <member kind="function">
-      <type>MprFileSystem *</type>
-      <name>mprCreateFileSystem</name>
+      <type>MprDiskFileSystem *</type>
+      <name>mprCreateDiskFileSystem</name>
       <anchorfile>group___mpr_file_system.html</anchorfile>
-      <anchor>gadde06254bb6b9cdaa7669d797ccd59ee</anchor>
+      <anchor>ga5d33c9eaec3fef58119ed5f63d550cf2</anchor>
       <arglist>(cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>MprRomFileSystem *</type>
       <name>mprCreateRomFileSystem</name>
       <anchorfile>group___mpr_file_system.html</anchorfile>
-      <anchor>ga7c499dabec9038118eb7f09ddf5ddd7e</anchor>
-      <arglist>(cchar *path)</arglist>
+      <anchor>gac4d574bd66524a7bbd61bd6f97b6e6dd</anchor>
+      <arglist>(cchar *path, MprRomInode *inodes)</arglist>
+    </member>
+    <member kind="function">
+      <type>MprRomInode *</type>
+      <name>mprGetRomFiles</name>
+      <anchorfile>group___mpr_file_system.html</anchorfile>
+      <anchor>ga8dcfab36fe684bfca96bb0af1a3cd24c</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>mprInitFileSystem</name>
+      <anchorfile>group___mpr_file_system.html</anchorfile>
+      <anchor>ga418af9ccff881e2d7671b7c4c54099fb</anchor>
+      <arglist>(MprFileSystem *fs, cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>MprFileSystem *</type>
@@ -7962,13 +7983,6 @@
       <anchorfile>group___mpr_file_system.html</anchorfile>
       <anchor>ga604f5f0da674b354c16dc30be6f058d2</anchor>
       <arglist>(cchar *path, cchar *separators)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>mprSetRomFileSystem</name>
-      <anchorfile>group___mpr_file_system.html</anchorfile>
-      <anchor>ga8ad660a935382da195d08a5d5d63067c</anchor>
-      <arglist>(MprRomInode *inodeList)</arglist>
     </member>
   </compound>
   <compound kind="group">
@@ -8164,10 +8178,10 @@
       <arglist>(cchar *path)</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>mprGetCurrentPath</name>
       <anchorfile>group___mpr_path.html</anchorfile>
-      <anchor>ga368d0fe452a2d7216b32dda604e05891</anchor>
+      <anchor>ga837a34434ca4b0024610c770c4924e01</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
@@ -10249,10 +10263,10 @@
       <arglist>(cchar *cmd)</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>mprGetAppDir</name>
       <anchorfile>group___mpr.html</anchorfile>
-      <anchor>ga3dfd4398a5607868c1110b47eebaea61</anchor>
+      <anchor>ga9d9d7e37b46179740e46fc8daf1e1d65</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
@@ -10263,10 +10277,10 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>mprGetAppPath</name>
       <anchorfile>group___mpr.html</anchorfile>
-      <anchor>gabfbea308cbe0f4db570bcc26e4f62815</anchor>
+      <anchor>ga51d6638f12faac68fb0da9f8536e5471</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">

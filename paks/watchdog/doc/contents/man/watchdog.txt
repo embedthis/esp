@@ -1,0 +1,90 @@
+WATCHDOG(1)                      User Commands                     WATCHDOG(1)
+
+
+
+NAME
+       watchdog - Watchdog program for services
+
+SYNOPSIS
+       watchdog [options] [commands]
+              [--args arguments] [--console] [--daemon] [--heartBeat interval]
+              [--home directory] [--log logFile:level] [--name  Service  name]
+              [--pidfile path] [--program Service program]
+
+DESCRIPTION
+       The  watchdog  program  is used to configure the running of system ser-
+       vices (daemons).  Watchdog provides a generic way to install/uninstall,
+       enable/disable,  start/stop, and run a service, regardless of the oper-
+       ating system. When used to run a service, it  starts  the  service  and
+       then  watches over it, to restart it should it fail. Watchdog also pro-
+       vides general management commands to enable, disable, start,  and  stop
+       appweb.
+
+COMMANDS
+       disable
+              Disable  the service from automatically starting when the system
+              is booted.
+
+       enable Enable the service to start automatically on system boot.
+
+       install
+              Install the service.
+
+       run    Run the service and monitor its execution. Watchdog  will  auto-
+              matically  restart  the  service  should it fail.  Watchdog will
+              block unless it is invoked with --daemon.
+
+       start  Start the service.
+
+       stop   Stop the service.
+
+       uninstall
+              Uninstall the service.
+
+OPTIONS
+       --args arguments
+              Arguments to use for the service program command  line  when  it
+              starts.
+
+       --console
+              Windows  specific option to allow the watchdog process to inter-
+              act with the users desktop.
+
+       --daemon
+              Run the watchdog as a daemon process. This causes  the  watchdog
+              to detach from the current shell and run in the background.
+
+       --heartBeat interval
+              Windows  specific option to set the frequency in seconds for the
+              watchdog to check on  service.   This  period  should  be  short
+              enough  that  the  service  will  be quickly restarted should it
+              fail, but not so short that the watchdog process  consumes  sig-
+              nificant  CPU resources.  If the service dies more than 30 times
+              per hour, the watchdog will suspend restarting the service.
+
+       --home directory
+              Set the home directory in which to start the service.
+
+       --log logFile:level
+              Specify a file to use  for  log  messages.  The  level  argument
+              defines  the  message  verbosity. Zero is the least and 9 is the
+              most verbose.
+
+       --retries count
+              Number of times to restart the service per hour.
+
+       -v     Output the product version number.
+
+
+REPORTING BUGS
+       Report bugs to dev@embedthis.com.
+
+COPYRIGHT
+       Copyright (C) Embedthis Software.
+
+SEE ALSO
+       appweb
+
+
+
+watchdog                         November 2014                     WATCHDOG(1)

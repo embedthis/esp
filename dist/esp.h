@@ -1755,11 +1755,11 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired);
 /*
     Internal
  */
-PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
+PUBLIC cchar *espGetVisualStudio();
 PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
 PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
-PUBLIC cchar *espGetVisualStudio();
+PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
 
 /********************************** Requests **********************************/
 /**

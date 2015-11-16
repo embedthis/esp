@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+<title>Watchdog Man Page</title>
+</head>
+<BODY><PRE>
+WATCHDOG(1)                      User Commands                     WATCHDOG(1)
+
+<B>NAME</B>
+       watchdog - Watchdog program for services
+
+<B>SYNOPSIS</B>
+       <B>watchdog [options] [commands]</B>
+              [<I>--args arguments</I>] [<I>--console</I>] [<I>--daemon</I>] [<I>--heartBeat interval</I>]
+              [<I>--home directory</I>] [<I>--log logFile:level</I>] [<I>--name  Service  name</I>]
+              [<I>--pidfile path</I>] [<I>--program Service program</I>]
+
+<B>DESCRIPTION</B>
+       The  watchdog  program  is used to configure the running of system ser-
+       vices (daemons).  Watchdog provides a generic way to install/uninstall,
+       enable/disable,  start/stop, and run a service, regardless of the oper-
+       ating system. When used to run a service, it  starts  the  service  and
+       then  watches over it, to restart it should it fail. Watchdog also pro-
+       vides general management commands to enable, disable, start,  and  stop
+       appweb.
+
+<B>COMMANDS</B>
+       <B>disable</B>
+              Disable  the service from automatically starting when the system
+              is booted.
+
+       <B>enable </B>Enable the service to start automatically on system boot.
+
+       <B>install</B>
+              Install the service.
+
+       <B>run    </B>Run the service and monitor its execution. Watchdog  will  auto-
+              matically  restart  the  service  should it fail.  Watchdog will
+              block unless it is invoked with --daemon.
+
+       <B>start  </B>Start the service.
+
+       <B>stop   </B>Stop the service.
+
+       <B>uninstall</B>
+              Uninstall the service.
+
+<B>OPTIONS</B>
+       <B>--args arguments</B>
+              Arguments to use for the service program command  line  when  it
+              starts.
+
+       <B>--console</B>
+              Windows  specific option to allow the watchdog process to inter-
+              act with the users desktop.
+
+       <B>--daemon</B>
+              Run the watchdog as a daemon process. This causes  the  watchdog
+              to detach from the current shell and run in the background.
+
+       <B>--heartBeat interval</B>
+              Windows  specific option to set the frequency in seconds for the
+              watchdog to check on  service.   This  period  should  be  short
+              enough  that  the  service  will  be quickly restarted should it
+              fail, but not so short that the watchdog process  consumes  sig-
+              nificant  CPU resources.  If the service dies more than 30 times
+              per hour, the watchdog will suspend restarting the service.
+
+       <B>--home directory</B>
+              Set the home directory in which to start the service.
+
+       <B>--log logFile:level</B>
+              Specify a file to use  for  log  messages.  The  level  argument
+              defines  the  message  verbosity. Zero is the least and 9 is the
+              most verbose.
+
+       <B>--retries count</B>
+              Number of times to restart the service per hour.
+
+       <B>-v     </B>Output the product version number.
+
+<B>REPORTING BUGS</B>
+       Report bugs to dev@embedthis.com.
+
+<B>COPYRIGHT</B>
+       Copyright (C) Embedthis Software.
+
+<B>SEE ALSO</B>
+       appweb
+
+watchdog                         November 2014                     WATCHDOG(1)
+</PRE></BODY>
+</html>

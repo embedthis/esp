@@ -66,30 +66,6 @@
 #ifndef ME_DESCRIPTION
     #define ME_DESCRIPTION "Embedthis ESP, the amazingly fast C-Language web framework"
 #endif
-#ifndef ME_EST_CAMELLIA
-    #define ME_EST_CAMELLIA 0
-#endif
-#ifndef ME_EST_DES
-    #define ME_EST_DES 0
-#endif
-#ifndef ME_EST_GEN_PRIME
-    #define ME_EST_GEN_PRIME 0
-#endif
-#ifndef ME_EST_PADLOCK
-    #define ME_EST_PADLOCK 0
-#endif
-#ifndef ME_EST_ROM_TABLES
-    #define ME_EST_ROM_TABLES 0
-#endif
-#ifndef ME_EST_SSL_CLIENT
-    #define ME_EST_SSL_CLIENT 0
-#endif
-#ifndef ME_EST_TEST_CERTS
-    #define ME_EST_TEST_CERTS 0
-#endif
-#ifndef ME_EST_XTEA
-    #define ME_EST_XTEA 0
-#endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
 #endif

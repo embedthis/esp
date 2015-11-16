@@ -403,7 +403,7 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         }
         key = (ssl->keyFile == 0) ? ssl->certFile : ssl->keyFile;
         if (key) {
-            if (setKeyFile(ctx, ssl->keyFile) < 0) {
+            if (setKeyFile(ctx, key) < 0) {
                 SSL_CTX_free(ctx);
                 return MPR_ERR_CANT_INITIALIZE;
             }
@@ -1094,7 +1094,7 @@ static int setKeyFile(SSL_CTX *ctx, cchar *keyFile)
     buf = 0;
     rc = -1;
 
-    if (ctx == NULL) {
+    if (ctx == NULL || keyFile == NULL) {
         ;
 
     } else if ((buf = mprReadPathContents(keyFile, NULL)) == 0) {

@@ -92,7 +92,6 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gab216150d5432ef9465462e8e69f5f31f" class="nameRef">espIsSecure</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the connection is using SSL and is secure.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1ga619751fdfd2aa494d0074bd661e5e103" class="nameRef">espLoadCompilerRules</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load the compiler rules from esp-compile.json.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1ga8719b78bdfb4e3228c6e9be843f45140" class="nameRef">espLoadConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Configure an ESP application.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1ga24a90a6be3709ef846828deb50ceb0c8" class="nameRef">espLoadModule</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *kind, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *source, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> **errMsg)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load an ESP module.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gacc2fb39132dab5f624a0f026d2e73440" class="nameRef">espMatchParam</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Match a request parameter with an expected value.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#esp_8h_1a2f63950b45dd427b2bdfa7ae1c8f85c0" class="nameRef">espOpen</a>(<a href="edi.html#mpr.html#group___mpr_module" class="ref">MprModule</a> *module)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>ESP initialization entry point.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_req_1ga84d7deb907925e1de92294aad5a57ee8" class="nameRef">espReadTable</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a table from the current database.</td></tr>
@@ -4613,29 +4612,6 @@ Windows SDK.
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    <a href="#struct_esp" class="ref">Esp</a></dd></dl>
-  </div>
-</div>
-<a name="group___esp_route_1ga24a90a6be3709ef846828deb50ceb0c8"></a>
-<div class="api">
-  <div class="prototype">
-    int
-    espLoadModule
-(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *kind, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *source, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> **errMsg)
-  </div>
-  <div class="apiDetail">
-<p>Load an ESP module.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>
-    <tr><td class="param">dispatcher</td><td>Dispatcher to use when waiting for compilation commands.</td>
-    <tr><td class="param">kind</td><td>Type of module. Set to &quot;view&quot; or &quot;controller&quot; or &quot;app&quot;.</td>
-    <tr><td class="param">source</td><td>Path to source code for the module.</td>
-    <tr><td class="param">errMsg</td><td>Output string reference to receive any error messages.</td>
-    </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
