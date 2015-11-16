@@ -18197,6 +18197,14 @@ PUBLIC char *mprGetPathExt(cchar *path)
 }
 
 
+#if LINUX
+static int sortFiles(MprDirEntry **dp1, MprDirEntry **dp2)
+{
+    return strcmp((*dp1)->name, (*dp2)->name);
+}
+#endif
+
+
 /*
     Find files in the directory "dir". If base is set, use that as the prefix for returned files.
     Returns a list of MprDirEntry objects.
