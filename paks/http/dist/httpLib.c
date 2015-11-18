@@ -962,13 +962,29 @@ PUBLIC bool httpConfigure(HttpConfigureProc proc, void *data, MprTicks timeout)
 PUBLIC int httpApplyUserGroup()
 {
 #if ME_UNIX_LIKE
-    Http    *http;
+    Http        *http;
+    HttpHost    *host;
+    HttpRoute   *route;
+    cchar       *path;
+    int         nextHost, nextRoute;
 
     http = HTTP;
     if (http->userChanged || http->groupChanged) {
         if (!smatch(MPR->logPath, "stdout") && !smatch(MPR->logPath, "stderr")) {
             if (chown(MPR->logPath, http->uid, http->gid) < 0) {
                 mprLog("critical http", 0, "Cannot change ownership on %s", MPR->logPath);
+            }
+        }
+        for (ITERATE_ITEMS(HTTP->hosts, host, nextHost)) {
+            for (ITERATE_ITEMS(host->routes, route, nextRoute)) {
+                if (route->trace) {
+                    path = route->trace->path;
+                    if (!smatch(path, "stdout") && !smatch(path, "stderr")) {
+                        if (chown(path, http->uid, http->gid) < 0) {
+                            mprLog("critical http", 0, "Cannot change ownership on %s", path);
+                        }
+                    }
+                }
             }
         }
     }
@@ -8511,7 +8527,7 @@ static int openFileHandler(HttpQueue *q)
         }
         if (!tx->etag) {
             /* Set the etag for caching in the client */
-            tx->etag = sfmt("\"%llx-%llx-%llx\"", (int64) info->inode, (int64) info->size, (int64) info->mtime);
+            tx->etag = itos(info->inode + info->size + info->mtime);
         }
         if (info->mtime) {
             dateCache = conn->http->dateCache;
@@ -8768,7 +8784,7 @@ static void incomingFile(HttpQueue *q, HttpPacket *packet)
         if (!tx->etag) {
             /* Set the etag for caching in the client */
             mprGetPathInfo(tx->filename, &tx->fileInfo);
-            tx->etag = sfmt("\"%llx-%llx-%llx\"", tx->fileInfo.inode, tx->fileInfo.size, tx->fileInfo.mtime);
+            tx->etag = itos(tx->fileInfo.inode + tx->fileInfo.size + tx->fileInfo.mtime);
         }
         return;
     }
@@ -19102,7 +19118,7 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name)
         if ((trace->events = mprCreateHash(0, MPR_HASH_STATIC_VALUES)) == 0) {
             return;
         }
-        mprAddKey(trace->events, "complete", ITOP(0));
+        mprAddKey(trace->events, "result", ITOP(0));
         formatter = httpCommonTraceFormatter;
     } else {
        formatter = httpDetailTraceFormatter;
@@ -19168,7 +19184,7 @@ PUBLIC bool httpTraceBody(HttpConn *conn, bool outgoing, HttpPacket *packet, ssi
             event = "rx.body.data";
         }
     }
-    return httpTracePacket(conn, event, type, packet, "length: %zd", len);
+    return httpTracePacket(conn, event, type, packet, "length:%zd", len);
 }
 
 
@@ -19575,7 +19591,7 @@ PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *ty
     assert(type && *type);
     assert(event && *event);
 
-    if (!smatch(event, "request.completion")) {
+    if (!smatch(event, "result")) {
         return;
     }
     rx = conn->rx;
@@ -20491,7 +20507,7 @@ PUBLIC bool httpSetFilename(HttpConn *conn, cchar *filename, int flags)
     }
     mprGetPathInfo(filename, info);
     if (info->valid) {
-        tx->etag = sfmt("\"%llx-%llx-%llx\"", (int64) info->inode, (int64) info->size, (int64) info->mtime);
+        tx->etag = itos(info->inode + info->size + info->mtime);
     }
     tx->filename = sclone(filename);
 

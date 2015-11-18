@@ -18813,6 +18813,7 @@ PUBLIC char *mprGetRelPath(cchar *destArg, cchar *originArg)
 PUBLIC char *mprGetTempPath(cchar *tempDir)
 {
     MprFile         *file;
+    cchar           *name;
     char            *dir, *path;
     int             i, now;
     static int      tempSeed = 0;
@@ -18836,8 +18837,9 @@ PUBLIC char *mprGetTempPath(cchar *tempDir)
     now = ((int) mprGetTime() & 0xFFFF) % 64000;
     file = 0;
     path = 0;
+    name = MPR->name ? MPR->name : "MPR";
     for (i = 0; i < 128; i++) {
-        path = sfmt("%s/MPR_%s_%d_%d_%d.tmp", dir, mprGetPathBase(MPR->name), getpid(), now, ++tempSeed);
+        path = sfmt("%s/%s-%d-%d-%d.tmp", dir, mprGetPathBase(MPR->name), getpid(), now, ++tempSeed);
         file = mprOpenFile(path, O_CREAT | O_EXCL | O_BINARY, 0664);
         if (file) {
             mprCloseFile(file);

@@ -798,7 +798,7 @@ PUBLIC bool httpTrace(struct HttpConn *conn, cchar *event, cchar *type, cchar *v
         if (HTTP->traceLevel > 0) { \
             HttpTrace *trace = conn ? ((HttpConn*) conn)->trace : HTTP->trace; \
             int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
-            if (__tlevel > 0 && __tlevel <= HTTP->traceLevel) { \
+            if (__tlevel >= 0 && __tlevel <= HTTP->traceLevel) { \
                 httpTraceProc(conn, event, type, __VA_ARGS__); \
             } \
         } else
