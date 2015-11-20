@@ -7527,8 +7527,9 @@ PUBLIC void mprSignalMultiCond(MprCond *cp)
 
 /*********************************** Locals ***********************************/
 
-#define BLOWFISH_SALT_LENGTH   16
-#define BLOWFISH_ROUNDS        128
+#define CRYPT_BLOWFISH          "BF1"
+#define BLOWFISH_SALT_LENGTH    16
+#define BLOWFISH_ROUNDS         128
 
 /*
     MD5 Constants for transform routine.
@@ -8714,13 +8715,13 @@ PUBLIC char *mprMakePassword(cchar *password, int saltLength, int rounds)
         rounds = BLOWFISH_ROUNDS;
     }
     salt = mprMakeSalt(saltLength);
-    return sfmt("BF1:%05d:%s:%s", rounds, salt, mprCryptPassword(password, salt, rounds));
+    return sfmt("%s:%05d:%s:%s", CRYPT_BLOWFISH, rounds, salt, mprCryptPassword(password, salt, rounds));
 }
 
 
 PUBLIC bool mprCheckPassword(cchar *plainTextPassword, cchar *passwordHash)
 {
-    cchar   *given, *rounds, *salt, *s1, *s2;
+    cchar   *algorithm, *given, *rounds, *salt, *s1, *s2;
     char    *tok, *hash;
     ssize   match;
 
@@ -8730,7 +8731,10 @@ PUBLIC bool mprCheckPassword(cchar *plainTextPassword, cchar *passwordHash)
     if (slen(plainTextPassword) > ME_MPR_MAX_PASSWORD) {
         return 0;
     }
-    stok(sclone(passwordHash), ":", &tok);
+    algorithm = stok(sclone(passwordHash), ":", &tok);
+    if (!smatch(algorithm, CRYPT_BLOWFISH)) {
+        return 0;
+    }
     rounds = stok(NULL, ":", &tok);
     salt = stok(NULL, ":", &tok);
     hash = stok(NULL, ":", &tok);
