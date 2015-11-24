@@ -85,16 +85,15 @@ Me.load({
 
         'get-roots': {
             action: `
-                /* WARNING: the default download has V1 certs which MatrixSSL cannot handle */
-                /* Google root certs at: https://pki.google.com/roots.pem */
                 let http = Http()
                 http.verify = false
+                // http.get('https://pki.google.com/roots.pem')
                 http.get('https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt')
                 let dest = Path('${BIN}/roots.crt')
                 trace('Create', dest)
                 dest.write(http.response)
             `
-        }
+        },
 
         /*
             WARNING: Self-signed server certificate for testing ONLY.

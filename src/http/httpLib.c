@@ -3202,15 +3202,19 @@ static void setDefaultHeaders(HttpConn *conn)
 
 PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *uri, struct MprSsl *ssl)
 {
+    HttpTx  *tx;
+
     assert(conn);
     assert(method && *method);
     assert(uri && *uri);
+
+    tx = conn->tx;
 
     if (httpServerConn(conn)) {
         httpError(conn, HTTP_CODE_BAD_GATEWAY, "Cannot call connect in a server");
         return MPR_ERR_BAD_STATE;
     }
-    if (conn->tx == 0 || conn->state != HTTP_STATE_BEGIN) {
+    if (tx == 0 || conn->state != HTTP_STATE_BEGIN) {
         /* WARNING: this will erase headers */
         httpPrepClientConn(conn, 0);
     }
@@ -3219,13 +3223,17 @@ PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *uri, struct MprSsl 
     /*
         Do not test if the URI is valid. Some test clients need the ability to create invalid URIs
      */
-    conn->tx->parsedUri = httpCreateUri(uri, HTTP_COMPLETE_URI_PATH);
-
+    if ((tx->parsedUri = httpCreateUri(uri, HTTP_COMPLETE_URI_PATH)) == 0) {
+        return MPR_ERR_BAD_ARGS;
+    }
+    if (tx->parsedUri->secure && !ssl) {
+        ssl = mprCreateSsl(0);
+    }
     if (openConnection(conn, ssl) == 0) {
         return MPR_ERR_CANT_OPEN;
     }
     conn->authRequested = 0;
-    conn->tx->method = supper(method);
+    tx->method = supper(method);
     conn->startMark = mprGetHiResTicks();
     /*
         The receive pipeline is created when parsing the response in parseIncoming()

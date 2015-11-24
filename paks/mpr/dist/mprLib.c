@@ -23784,10 +23784,14 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
     assert(sp);
 
     if (!ssl) {
+        sp->errorMsg = sclone("No SSL context configured");
         return MPR_ERR_BAD_ARGS;
     }
     if (!ss->loaded) {
         if (mprLoadSsl() < 0) {
+            if (!sp->errorMsg) {
+                sp->errorMsg = sclone("Cannot load SSL provider");
+            }
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
