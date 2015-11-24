@@ -27696,7 +27696,7 @@ PUBLIC int mprParseTime(MprTime *time, cchar *dateString, int zoneFlags, struct 
     str = slower(dateString);
 
     /*
-        Handle ISO dates: "2009-05-21t16:06:05.000z
+        Handle ISO dates: 2009-05-21t16:06:05.000z
      */
     if (strchr(str, ' ') == 0 && strchr(str, '-') && str[slen(str) - 1] == 'z') {
         for (cp = str; *cp; cp++) {
@@ -27727,22 +27727,26 @@ PUBLIC int mprParseTime(MprTime *time, cchar *dateString, int zoneFlags, struct 
                 tm.tm_mday = (int) value;
             }
 
-        } else if ((*token == '+') || (*token == '-') ||
-                ((strncmp(token, "gmt", 3) == 0 || strncmp(token, "utc", 3) == 0) &&
-                ((cp = strchr(&token[3], '+')) != 0 || (cp = strchr(&token[3], '-')) != 0))) {
+        } else if (strncmp(token, "gmt", 3) == 0 || strncmp(token, "utc", 3) == 0) {
             /*
-                Timezone. Format: [GMT|UTC][+-]NN[:]NN
+                Timezone format: GMT|UTC[+-]NN[:]NN
+                GMT-08:00, UTC-0800
              */
-            if (!isalpha((uchar) *token)) {
-                cp = token;
+            token += 3;
+            if (token[0] == '-' || token[0] == '+') {
+                negate = *token == '-' ? -1 : 1;
+                token++;
+            } else {
+                negate = 1;
             }
-            negate = *cp == '-' ? -1 : 1;
-            cp++;
-            hour = getNum(&cp, timeSep);
-            if (hour >= 100) {
+            if (schr(token, ':')) {
+                hour = getNum(&token, timeSep);
+                min = getNum(&token, timeSep);
+            } else {
+                hour = atoi(token);
+                min = hour % 100;
                 hour /= 100;
             }
-            min = getNum(&cp, timeSep);
             zoneOffset = negate * (hour * 60 + min);
             explicitZone = 1;
 

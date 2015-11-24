@@ -3177,15 +3177,15 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
 
 /**
     Convert a time value to universal time and format as a string.
-    @description Format a time string. This uses strftime if available and so the supported formats vary from platform to platform.
-        Strftime should supports some of these these formats described below.
+    @description Format a time string. This uses strftime if available and so the supported formats vary from 
+        platform to platform. Strftime should supports some of these these formats described below.
     @param fmt Time format string
             \n
-        %A ... full weekday name (Monday)
+         %A ... full weekday name (Monday)
             \n
-        %a ... abbreviated weekday name (Mon)
+         %a ... abbreviated weekday name (Mon)
             \n
-        %B ... full month name (January)
+         %B ... full month name (January)
             \n
          %b ... abbreviated month name (Jan)
             \n
@@ -3261,7 +3261,7 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
             \n
          %% ... percent sign
             \n\n
-     Some platforms may also support the following format extensions:
+            Some platforms may also support the following format extensions:
             \n
         %E* ... POSIX locale extensions. Where "*" is one of the characters: c, C, x, X, y, Y.
             \n
@@ -3285,7 +3285,7 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
             \n
         "%v "07-Jul-2003"
             \n
-        RFC3399: "%FT%TZ" "1985-04-12T23:20:50.52Z"
+        RFC3399: "%FT%TZ" "1985-04-12T23:20:50.52Z" which is April 12 1985, 23:20.50 and 52 msec
 \n\n
     @param time Time to format. Use mprGetTime to retrieve the current time.
     @return The formatting time string
@@ -3436,6 +3436,22 @@ PUBLIC MprTime mprMakeUniversalTime(struct tm *tm);
 
 /*
     Parse a string into a time value
+    @description Try to intelligently parse a date. 
+    This is a tolerant parser. It is not validating and will do its best to parse any possible date string.
+    Supports the following date/time formats:
+    \n\n
+        ISO dates: 2009-05-21t16:06:05.000z
+    \n\n
+        Date:  07/28/2014, 07/28/08, Jan/28/2014, Jaunuary-28-2014, 28-jan-2014.
+    \n\n
+        Support date order: dd/mm/yy, mm/dd/yy and yyyy/mm/dd
+    \n\n
+        Support separators "/", ".", "-"
+    \n\n
+        Timezones: GMT|UTC[+-]NN[:]NN
+    \n\n
+        Time: 10:52[:23]
+    \n\n
     @param time Pointer to a time value to receive the parsed time value
     @param dateString String to parse
     @param timezone Timezone in which to interpret the date
@@ -3443,6 +3459,7 @@ PUBLIC MprTime mprMakeUniversalTime(struct tm *tm);
     @returns Zero if successful
     @ingroup MprTime
     @stability Stable
+
  */
 PUBLIC int mprParseTime(MprTime *time, cchar *dateString, int timezone, struct tm *defaults);
 
