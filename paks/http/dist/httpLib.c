@@ -3208,16 +3208,15 @@ PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *uri, struct MprSsl 
     assert(method && *method);
     assert(uri && *uri);
 
-    tx = conn->tx;
-
     if (httpServerConn(conn)) {
         httpError(conn, HTTP_CODE_BAD_GATEWAY, "Cannot call connect in a server");
         return MPR_ERR_BAD_STATE;
     }
-    if (tx == 0 || conn->state != HTTP_STATE_BEGIN) {
+    if (conn->tx == 0 || conn->state != HTTP_STATE_BEGIN) {
         /* WARNING: this will erase headers */
         httpPrepClientConn(conn, 0);
     }
+    tx = conn->tx;
     assert(conn->state == HTTP_STATE_BEGIN);
 
     /*
