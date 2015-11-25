@@ -18843,7 +18843,7 @@ PUBLIC char *mprGetTempPath(cchar *tempDir)
     path = 0;
     name = MPR->name ? MPR->name : "MPR";
     for (i = 0; i < 128; i++) {
-        path = sfmt("%s/%s-%d-%d-%d.tmp", dir, mprGetPathBase(MPR->name), getpid(), now, ++tempSeed);
+        path = sfmt("%s/%s-%d-%d-%d.tmp", dir, mprGetPathBase(name), getpid(), now, ++tempSeed);
         file = mprOpenFile(path, O_CREAT | O_EXCL | O_BINARY, 0664);
         if (file) {
             mprCloseFile(file);
