@@ -8859,7 +8859,6 @@ PUBLIC char *mprGetPassword(cchar *prompt)
 
 
 
-#if ME_MPR_DISK
 /*********************************** Defines **********************************/
 
 #if WINDOWS
@@ -9006,45 +9005,6 @@ static MprFile *disk_openFile(MprFileSystem *fs, cchar *path, int omode, int per
 #endif
     }
     return file;
-}
-
-
-static ssize disk_readFile(MprFile *file, void *buf, ssize size)
-{
-    assert(file);
-    assert(buf);
-
-    return read(file->fd, buf, (uint) size);
-}
-
-
-static ssize disk_writeFile(MprFile *file, cvoid *buf, ssize count)
-{
-    assert(file);
-    assert(buf);
-
-#if VXWORKS
-    return write(file->fd, (void*) buf, count);
-#else
-    return write(file->fd, buf, (uint) count);
-#endif
-}
-
-
-static MprOff disk_seekFile(MprFile *file, int seekType, MprOff distance)
-{
-    assert(file);
-
-    if (file == 0) {
-        return MPR_ERR_BAD_HANDLE;
-    }
-#if ME_WIN_LIKE
-    return (MprOff) _lseeki64(file->fd, (int64) distance, seekType);
-#elif ME_COMPILER_HAS_OFF64
-    return (MprOff) lseek64(file->fd, (off64_t) distance, seekType);
-#else
-    return (MprOff) lseek(file->fd, (off_t) distance, seekType);
-#endif
 }
 
 
@@ -9389,6 +9349,35 @@ static char *disk_getPathLink(MprDiskFileSystem *fs, cchar *path)
 }
 
 
+/*
+    These functions are supported regardles
+ */
+static ssize disk_readFile(MprFile *file, void *buf, ssize size)
+{
+    assert(file);
+    assert(buf);
+
+    return read(file->fd, buf, (uint) size);
+}
+
+
+static MprOff disk_seekFile(MprFile *file, int seekType, MprOff distance)
+{
+    assert(file);
+
+    if (file == 0) {
+        return MPR_ERR_BAD_HANDLE;
+    }
+#if ME_WIN_LIKE
+    return (MprOff) _lseeki64(file->fd, (int64) distance, seekType);
+#elif ME_COMPILER_HAS_OFF64
+    return (MprOff) lseek64(file->fd, (off64_t) distance, seekType);
+#else
+    return (MprOff) lseek(file->fd, (off_t) distance, seekType);
+#endif
+}
+
+
 static int disk_truncateFile(MprDiskFileSystem *fs, cchar *path, MprOff size)
 {
     if (!mprPathExists(path, F_OK)) {
@@ -9442,14 +9431,24 @@ static void manageDiskFileSystem(MprDiskFileSystem *dfs, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(dfs->separators);
         mprMark(dfs->newline);
-#if UNUSED
-        mprMark(dfs->root);
-#endif
 #if ME_WIN_LIKE || CYGWIN
         mprMark(dfs->cygdrive);
         mprMark(dfs->cygwin);
 #endif
     }
+}
+
+
+static ssize disk_writeFile(MprFile *file, cvoid *buf, ssize count)
+{
+    assert(file);
+    assert(buf);
+
+#if VXWORKS
+    return write(file->fd, (void*) buf, count);
+#else
+    return write(file->fd, buf, (uint) count);
+#endif
 }
 
 
@@ -9479,8 +9478,6 @@ PUBLIC MprDiskFileSystem *mprCreateDiskFileSystem(cchar *path)
     dfs->writeFile = disk_writeFile;
     return dfs;
 }
-
-#endif /* ME_MPR_DISK */
 
 
 #if KEEP
@@ -11390,8 +11387,7 @@ PUBLIC MprFile *mprAttachFileFd(int fd, cchar *name, int omode)
     MprFileSystem   *fs;
     MprFile         *file;
 
-    fs = mprLookupFileSystem("/");
-
+    fs = mprLookupFileSystem(name);
     if ((file = mprAllocObj(MprFile, manageFile)) != 0) {
         file->fd = fd;
         file->fileSystem = fs;
@@ -12083,13 +12079,22 @@ PUBLIC void mprAddFileSystem(MprFileSystem *fs)
 PUBLIC MprFileSystem *mprLookupFileSystem(cchar *path)
 {
     MprFileSystem   *fs;
+    cchar           *rp, *pp;
     int             next;
 
     if (!path || *path == 0) {
         path = "/";
     }
     for (ITERATE_ITEMS(MPR->fileSystems, fs, next)) {
-        if (sstarts(path, fs->root)) {
+        for (rp = fs->root, pp = path; *rp & *pp; rp++, pp++) {
+            if ((*rp == fs->separators[0] || *rp == fs->separators[1]) &&
+                    (*pp == fs->separators[0] || *pp == fs->separators[1])) {
+                continue;
+            } else if (*rp != *pp) {
+                break;
+            }
+        }
+        if (*rp == 0) {
             return fs;
         }
     }
@@ -18386,7 +18391,7 @@ PUBLIC MprList *mprGlobPathFiles(cchar *path, cchar *pattern, int flags)
 
     result = mprCreateList(0, 0);
     if (path && pattern) {
-        fs = mprLookupFileSystem(pattern);
+        fs = mprLookupFileSystem(path);
         exclude = 0;
         pat = 0;
         relativeTo = (flags & MPR_PATH_RELATIVE) ? path : 0;
@@ -18968,16 +18973,18 @@ PUBLIC bool mprIsPathSeparator(cchar *path, cchar c)
  */
 PUBLIC char *mprJoinPath(cchar *path, cchar *other)
 {
-    MprFileSystem   *fs;
+    MprFileSystem   *pfs, *ofs;
     char            *join, *drive, *cp;
     int             sep;
 
-    fs = mprLookupFileSystem(path);
     if (other == NULL || *other == '\0' || strcmp(other, ".") == 0) {
         return sclone(path);
     }
-    if (isAbsPath(fs, other)) {
-        if (fs->hasDriveSpecs && !isFullPath(fs, other) && isFullPath(fs, path)) {
+    pfs = mprLookupFileSystem(path);
+    ofs = mprLookupFileSystem(other);
+
+    if (isAbsPath(ofs, other)) {
+        if (ofs->hasDriveSpecs && !isFullPath(ofs, other) && isFullPath(pfs, path)) {
             /*
                 Other is absolute, but without a drive. Use the drive from path.
              */
@@ -18993,12 +19000,12 @@ PUBLIC char *mprJoinPath(cchar *path, cchar *other)
     if (path == NULL || *path == '\0') {
         return mprNormalizePath(other);
     }
-    if ((cp = firstSep(fs, path)) != 0) {
+    if ((cp = firstSep(pfs, path)) != 0) {
         sep = *cp;
-    } else if ((cp = firstSep(fs, other)) != 0) {
+    } else if ((cp = firstSep(ofs, other)) != 0) {
         sep = *cp;
     } else {
-        sep = defaultSep(fs);
+        sep = defaultSep(ofs);
     }
     if ((join = sfmt("%s%c%s", path, sep, other)) == 0) {
         return 0;
@@ -19080,10 +19087,10 @@ PUBLIC int mprMakeLink(cchar *path, cchar *target, bool hard)
 {
     MprFileSystem   *fs;
 
-    fs = mprLookupFileSystem(path);
     if (mprPathExists(path, X_OK)) {
         return 0;
     }
+    fs = mprLookupFileSystem(target);
     return fs->makeLink(fs, path, target, hard);
 }
 
@@ -19344,9 +19351,9 @@ PUBLIC char *mprReplacePathExt(cchar *path, cchar *ext)
 
 
 /*
-    Resolve paths in the neighborhood of this path. Resolve operates like join, except that it joins the
-    given paths to the directory portion of the current ("this") path. For example:
-    Path("/usr/bin/ejs/bin").resolve("lib") will return "/usr/lib/ejs/lib". i.e. it will return the
+    Resolve paths in the neighborhood of a base path. Resolve operates like join, except that it joins the
+    given paths to the directory portion of the current (base) path. For example:
+    mprResolvePath("/usr/bin/mpr/bin", "lib") will return "/usr/lib/mpr/lib". i.e. it will return the
     sibling directory "lib".
 
     Resolve operates by determining a virtual current directory for this Path object. It then successively
@@ -19398,36 +19405,40 @@ PUBLIC char *mprResolvePath(cchar *base, cchar *path)
  */
 PUBLIC int mprSamePath(cchar *path1, cchar *path2)
 {
-    MprFileSystem   *fs;
+    MprFileSystem   *fs1, *fs2;
     cchar           *p1, *p2;
-
-    fs = mprLookupFileSystem(path1);
 
     if (!path1 || !path2) {
         return 0;
     }
+    fs1 = mprLookupFileSystem(path1);
+    fs2 = mprLookupFileSystem(path2);
+    if (fs1 != fs2) {
+        return 0;
+    }
+
     /*
         Convert to absolute (normalized) paths to compare.
      */
-    if (!isFullPath(fs, path1)) {
+    if (!isFullPath(fs1, path1)) {
         path1 = mprGetAbsPath(path1);
     } else {
         path1 = mprNormalizePath(path1);
     }
-    if (!isFullPath(fs, path2)) {
+    if (!isFullPath(fs2, path2)) {
         path2 = mprGetAbsPath(path2);
     } else {
         path2 = mprNormalizePath(path2);
     }
-    if (fs->caseSensitive) {
+    if (fs1->caseSensitive) {
         for (p1 = path1, p2 = path2; *p1 && *p2; p1++, p2++) {
-            if (*p1 != *p2 && !(isSep(fs, *p1) && isSep(fs, *p2))) {
+            if (*p1 != *p2 && !(isSep(fs1, *p1) && isSep(fs2, *p2))) {
                 break;
             }
         }
     } else {
         for (p1 = path1, p2 = path2; *p1 && *p2; p1++, p2++) {
-            if (tolower((uchar) *p1) != tolower((uchar) *p2) && !(isSep(fs, *p1) && isSep(fs, *p2))) {
+            if (tolower((uchar) *p1) != tolower((uchar) *p2) && !(isSep(fs1, *p1) && isSep(fs2, *p2))) {
                 break;
             }
         }
@@ -19441,29 +19452,36 @@ PUBLIC int mprSamePath(cchar *path1, cchar *path2)
  */
 PUBLIC int mprSamePathCount(cchar *path1, cchar *path2, ssize len)
 {
-    MprFileSystem   *fs;
+    MprFileSystem   *fs1, *fs2;
     cchar           *p1, *p2;
 
-    fs = mprLookupFileSystem(path1);
+    if (!path1 || !path2) {
+        return 0;
+    }
+    fs1 = mprLookupFileSystem(path1);
+    fs2 = mprLookupFileSystem(path2);
 
+    if (fs1 != fs2) {
+        return 0;
+    }
     /*
         Convert to absolute paths to compare.
      */
-    if (!isFullPath(fs, path1)) {
+    if (!isFullPath(fs1, path1)) {
         path1 = mprGetAbsPath(path1);
     }
-    if (!isFullPath(fs, path2)) {
+    if (!isFullPath(fs2, path2)) {
         path2 = mprGetAbsPath(path2);
     }
-    if (fs->caseSensitive) {
+    if (fs1->caseSensitive) {
         for (p1 = path1, p2 = path2; *p1 && *p2 && len > 0; p1++, p2++, len--) {
-            if (*p1 != *p2 && !(isSep(fs, *p1) && isSep(fs, *p2))) {
+            if (*p1 != *p2 && !(isSep(fs1, *p1) && isSep(fs2, *p2))) {
                 break;
             }
         }
     } else {
         for (p1 = path1, p2 = path2; *p1 && *p2 && len > 0; p1++, p2++, len--) {
-            if (tolower((uchar) *p1) != tolower((uchar) *p2) && !(isSep(fs, *p1) && isSep(fs, *p2))) {
+            if (tolower((uchar) *p1) != tolower((uchar) *p2) && !(isSep(fs1, *p1) && isSep(fs2, *p2))) {
                 break;
             }
         }
@@ -20183,11 +20201,11 @@ PUBLIC int mprStaticPrintf(cchar *fmt, ...)
     va_list         ap;
     char            buf[ME_MAX_BUFFER];
 
-    fs = mprLookupFileSystem(NULL, "/");
-
     va_start(ap, fmt);
     mprPrintfCore(buf, ME_MAX_BUFFER, fmt, ap);
     va_end(ap);
+
+    fs = mprLookupFileSystem(NULL, "/");
     return mprWriteFile(fs->stdOutput, buf, slen(buf));
 }
 
@@ -20201,11 +20219,11 @@ PUBLIC int mprStaticPrintfError(cchar *fmt, ...)
     va_list         ap;
     char            buf[ME_MAX_BUFFER];
 
-    fs = mprLookupFileSystem(NULL, "/");
 
     va_start(ap, fmt);
     mprPrintfCore(buf, ME_MAX_BUFFER, fmt, ap);
     va_end(ap);
+    fs = mprLookupFileSystem(NULL, "/");
     return mprWriteFile(fs->stdError, buf, slen(buf));
 }
 #endif
@@ -21043,13 +21061,13 @@ static int rom_deletePath(MprRomFileSystem *fileSystem, cchar *path)
 
 static int rom_makeDir(MprRomFileSystem *fileSystem, cchar *path, int perms, int owner, int group)
 {
-    return MPR_ERR_CANT_WRITE;
+    return MPR_ERR_CANT_CREATE;
 }
 
 
 static int rom_makeLink(MprRomFileSystem *fileSystem, cchar *path, cchar *target, int hard)
 {
-    return MPR_ERR_CANT_WRITE;
+    return MPR_ERR_CANT_CREATE;
 }
 
 
@@ -21206,6 +21224,7 @@ PUBLIC MprRomFileSystem *mprCreateRomFileSystem(cchar *path, MprRomInode *inodes
     }
     fs = &rfs->fileSystem;
     mprInitFileSystem(fs, path);
+    fs->hasDriveSpecs = 0;
     fs->accessPath = (MprAccessFileProc) rom_accessPath;
     fs->deletePath = (MprDeleteFileProc) rom_deletePath;
     fs->getPathInfo = (MprGetPathInfoProc) rom_getPathInfo;
