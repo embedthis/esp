@@ -13357,9 +13357,6 @@ PUBLIC void httpMapFile(HttpConn *conn)
     }
     filename = mprJoinPath(conn->rx->route->documents, filename);
     filename = httpMapContent(conn, filename);
-#if ME_ROM
-    filename = mprGetRelPath(filename, NULL);
-#endif
     httpSetFilename(conn, filename, 0);
 }
 
