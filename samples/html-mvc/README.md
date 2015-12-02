@@ -67,7 +67,7 @@ Documentation:
 * [ESP Directives](https://embedthis.com/esp/doc/users/dir/esp.html)
 * [ESP Tour](https://embedthis.com/esp/doc/users/tour.html)
 * [ESP Controllers](https://embedthis.com/esp/doc/users/controllers.html)
-* [ESP APIs](https://embedthis.com/esp/doc/api/esp.html)
+* [ESP APIs](https://embedthis.com/esp/doc/ref/api/esp.html)
 * [ESP Guide](https://embedthis.com/esp/doc/users/index.html)
 * [ESP Overview](https://embedthis.com/esp/doc/users/using.html)
 
