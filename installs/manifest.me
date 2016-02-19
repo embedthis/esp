@@ -41,7 +41,11 @@ Me.load({
 
         sets: {
             core: [ 
-                {   
+                {
+                    mkdir:      [ '${man}/man1' ],
+                    permissions: 0755,
+
+                }, {
                     from:       'esp${EXE}',
                     to:         '${abin}/',
                     symlink:    '${bin}/',
