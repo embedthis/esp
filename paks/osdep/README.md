@@ -1,13 +1,14 @@
-Embedthis O/S Dependent Layer
+O/S Dependent Layer
 ===
 
 Licensing
 ---
+
 See LICENSE.md for details.
 
 ### To Install
 
-    pak install pak-osdep
+    pak install osdep
 
 Resources
 ---

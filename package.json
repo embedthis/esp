@@ -34,7 +34,7 @@
         "http": "~6.2",
         "mpr": "~6.2",
         "mpr-version": "~0.1",
-        "osdep": "~0.8",
+        "osdep": "~0.9",
         "pcre": "~1.0"
     },
     "optionalDependencies": {

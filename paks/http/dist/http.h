@@ -251,6 +251,7 @@ struct HttpWebSocket;
 #define HTTP_CODE_UNSUPPORTED_MEDIA_TYPE    415     /**< The request media type is not supported by the server or resource */
 #define HTTP_CODE_RANGE_NOT_SATISFIABLE     416     /**< The request content range does not exist for the resource */
 #define HTTP_CODE_EXPECTATION_FAILED        417     /**< The server cannot satisfy the Expect header requirements */
+#define HTTP_CODE_IM_A_TEAPOT               418     /**< Short and stout error code (RFC 2324) */
 #define HTTP_CODE_NO_RESPONSE               444     /**< The connection was closed with no response to the client */
 #define HTTP_CODE_INTERNAL_SERVER_ERROR     500     /**< Server processing or configuration error. No response generated */
 #define HTTP_CODE_NOT_IMPLEMENTED           501     /**< The server does not recognize the request or method */

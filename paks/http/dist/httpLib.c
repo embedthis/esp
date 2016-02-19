@@ -19584,7 +19584,7 @@ PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *ty
     HttpTx      *tx;
     MprBuf      *buf;
     cchar       *fmt, *cp, *qualifier, *timeText, *value;
-    char        c, keyBuf[80];
+    char        c, keyBuf[256];
     int         len;
 
     assert(trace);
@@ -19674,11 +19674,10 @@ PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *ty
             qualifier = fmt;
             if ((cp = schr(qualifier, '}')) != 0) {
                 fmt = &cp[1];
-                scopy(keyBuf, sizeof(keyBuf), "HTTP_");
-                sncopy(&keyBuf[5], sizeof(keyBuf) - 5, qualifier, qualifier - cp);
                 switch (*fmt++) {
                 case 'i':
-                    value = (char*) mprLookupKey(rx->headers, supper(keyBuf));
+                    sncopy(keyBuf, sizeof(keyBuf), qualifier, cp - qualifier);
+                    value = (char*) mprLookupKey(rx->headers, keyBuf);
                     mprPutStringToBuf(buf, value ? value : "-");
                     break;
                 default:

@@ -10873,13 +10873,11 @@ PUBLIC int mprWaitForSingleIO(int fd, int mask, MprTicks timeout)
         mprLog("error mpr event", 0, "Epoll returned %d, errno %d", rc, errno);
 
     } else if (rc > 0) {
-        if (rc > 0) {
-            if ((events[0].events & (EPOLLIN | EPOLLERR | EPOLLHUP)) && (mask & MPR_READABLE)) {
-                result |= MPR_READABLE;
-            }
-            if ((events[0].events & (EPOLLOUT | EPOLLHUP)) && (mask & MPR_WRITABLE)) {
-                result |= MPR_WRITABLE;
-            }
+        if ((events[0].events & (EPOLLIN | EPOLLERR | EPOLLHUP)) && (mask & MPR_READABLE)) {
+            result |= MPR_READABLE;
+        }
+        if ((events[0].events & (EPOLLOUT | EPOLLHUP)) && (mask & MPR_WRITABLE)) {
+            result |= MPR_WRITABLE;
         }
     }
     return result;
@@ -13030,7 +13028,9 @@ static MprJson *jsonParse(MprJsonParser *parser, MprJson *obj)
 static void eatRestOfComment(MprJsonParser *parser)
 {
     cchar   *cp;
+    int     startLine;
 
+    startLine = parser->lineNumber;
     cp = parser->input;
     if (*cp == '/') {
         for (cp++; *cp && *cp != '\n'; cp++) {}
@@ -13042,7 +13042,11 @@ static void eatRestOfComment(MprJsonParser *parser)
                 parser->lineNumber++;
             }
         }
-        cp += 2;
+        if (*cp) {
+            cp += 2;
+        } else {
+            mprSetJsonError(parser, "Cannot find end of comment started on line %d", startLine);
+        }
     }
     parser->input = cp;
 }
@@ -13138,6 +13142,21 @@ static int gettok(MprJsonParser *parser)
                 c = *parser->input;
                 if (c == '*' || c == '/') {
                     eatRestOfComment(parser);
+                } else if (parser->state == MPR_JSON_STATE_NAME || parser->state == MPR_JSON_STATE_VALUE) {
+                    for (cp = parser->input; *cp; cp++) {
+                        if (*cp == '\\' && cp[1] == '/') {
+                            mprPutCharToBuf(parser->buf, '/');
+                        } else if (*cp == '/') {
+                            parser->tokid = JTOK_REGEXP;
+                            parser->input = cp + 1;
+                            break;
+                        } else {
+                            mprPutCharToBuf(parser->buf, *cp);
+                        }
+                    }
+                    if (*cp != '/') {
+                        mprSetJsonError(parser, "Missing closing slash for regular expression");
+                    }
                 } else {
                     mprSetJsonError(parser, "Unexpected input");
                 }
@@ -13149,6 +13168,7 @@ static int gettok(MprJsonParser *parser)
 
             case '"':
             case '\'':
+            case '`':
                 /*
                     Quoted strings: names or values
                     This parser is tolerant of embedded, unquoted control characters
@@ -13163,6 +13183,8 @@ static int gettok(MprJsonParser *parser)
                                 mprPutCharToBuf(parser->buf, '\'');
                             } else if (*cp == '"') {
                                 mprPutCharToBuf(parser->buf, '"');
+                            } else if (*cp == '`') {
+                                mprPutCharToBuf(parser->buf, '`');
                             } else if (*cp == '/') {
                                 mprPutCharToBuf(parser->buf, '/');
                             } else if (*cp == '"') {
@@ -13250,8 +13272,10 @@ static int gettok(MprJsonParser *parser)
                         parser->tokid = JTOK_UNDEFINED;
                     } else if (sfnumber(value)) {
                         parser->tokid = JTOK_NUMBER;
+#if UNUSED
                     } else if (*value == '/' && value[slen(value) - 1] == '/' && parser->tolerant) {
                         parser->tokid = JTOK_REGEXP;
+#endif
                     } else {
                         parser->tokid = JTOK_STRING;
                     }
@@ -13437,7 +13461,7 @@ PUBLIC void mprFormatJsonValue(MprBuf *buf, int type, cchar *value, int flags)
         if (value == 0) {
             mprPutStringToBuf(buf, "null");
         } else if (type & MPR_JSON_REGEXP) {
-            mprPutToBuf(buf, "\"/%s/\"", value);
+            mprPutToBuf(buf, "/%s/", value);
         } else {
             mprPutStringToBuf(buf, value);
         }
@@ -13452,6 +13476,8 @@ PUBLIC void mprFormatJsonValue(MprBuf *buf, int type, cchar *value, int flags)
         mprPutStringToBuf(buf, value);
         break;
     case MPR_JSON_REGEXP:
+        mprPutToBuf(buf, "/%s/", value);
+        break;
     case MPR_JSON_STRING:
     default:
         mprFormatJsonString(buf, value);
@@ -13822,7 +13848,7 @@ static char *splitExpression(char *property, int *operator, char **value)
         *vp++ = '\0';
         i = sspn(vp, seps);
         vp += i;
-        if (*vp == '\'' || *vp == '"') {
+        if (*vp == '\'' || *vp == '"' || *vp == '`') {
             for (end = &vp[1]; *end; end++) {
                 if (*end == '\\' && end[1]) {
                     end++;
@@ -16393,7 +16419,7 @@ PUBLIC int mprGetError()
 /*
     Set the mapped (portable, Posix) error code
  */
-PUBLIC void mprSetError(error)
+PUBLIC void mprSetError(int error)
 {
 #if !ME_WIN_LIKE
     mprSetOsError(error);
@@ -18320,7 +18346,7 @@ static cchar *getNextPattern(cchar *pattern, cchar **nextPat, bool *dwild)
     relativeTo  - Relative files are relative to this directory.
     path        - Directory to search. Will be a physical directory path.
     pattern     - Search pattern with optional wildcards.
-    exclude     - Exclusion pattern (not currently implemented as there is no API to pass in an exluded pattern).
+    exclude     - Exclusion pattern
 
     As this routine recurses, 'relativeTo' does not change, but path and pattern will.
  */
@@ -28114,7 +28140,7 @@ PUBLIC int mprGetRandomBytes(char *buf, int length, bool block)
     int     i;
 
     for (i = 0; i < length; i++) {
-        buf[i] = (char) (mprGetTime() >> i);
+        buf[i] = (char) (rand() & 0xff);
     }
     return 0;
 }

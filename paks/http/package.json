@@ -2,7 +2,7 @@
     "name": "http",
     "description": "Embedthis Http Library",
     "title": "Embedthis Http",
-    "version": "6.2.2",
+    "version": "6.2.3",
     "keywords": [
         "http",
         "webserver"
@@ -34,7 +34,7 @@
         "mbedtls": "~2.1",
         "mpr": "~6.2",
         "mpr-mbedtls": "~0.5",
-        "osdep": "~0.8",
+        "osdep": "~0.9",
         "pcre": "~1.0",
         "ssl": "~0.9"
     },

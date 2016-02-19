@@ -1,16 +1,15 @@
 {
     "name": "ssl",
-    "description": "Embedthis SSL Interface",
-    "title": "Embedthis Development",
-    "version": "0.9.3",
+    "description": "SSL Interface",
+    "title": "SSL Interface",
+    "version": "0.9.4",
     "keywords": [
         "me",
         "ssl"
     ],
     "author": {
-        "name": "Embedthis Software",
-        "email": "dev@embedthis.com",
-        "url": "https://embedthis.com"
+        "name": "Michael O'Brien",
+        "email": "mob@emobrien.com"
     },
     "repository": {
         "type": "git",

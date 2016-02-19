@@ -2,7 +2,7 @@
     "name": "mpr",
     "description": "Embedthis Multithreaded Portable Runtime",
     "title": "Embedthis MPR",
-    "version": "6.2.2",
+    "version": "6.2.3",
     "keywords": [
         "mpr",
         "runtime"
@@ -30,7 +30,7 @@
         }
     ],
     "dependencies": {
-        "osdep": "~0.8"
+        "osdep": "~0.9"
     },
     "optionalDependencies": {
         "certs": "~0.1",
