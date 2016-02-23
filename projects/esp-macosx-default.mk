@@ -932,7 +932,7 @@ $(BUILD)/bin/espman: $(DEPS_57)
 
 installPrep: $(DEPS_58)
 	if [ "`id -u`" != 0 ] ; \
-	then echo "Must run as root. Rerun with "sudo"" ; \
+	then echo "Must run as root. Rerun with sudo." ; \
 	exit 255 ; \
 	fi
 
@@ -950,18 +950,18 @@ installBinary: $(DEPS_60)
 	mkdir -p "$(ME_APP_PREFIX)" ; \
 	rm -f "$(ME_APP_PREFIX)/latest" ; \
 	ln -s "$(VERSION)" "$(ME_APP_PREFIX)/latest" ; \
+	mkdir -p "$(ME_MAN_PREFIX)/man1" ; \
+	chmod 755 "$(ME_MAN_PREFIX)/man1" ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \
 	cp $(BUILD)/bin/esp $(ME_VAPP_PREFIX)/bin/esp ; \
 	chmod 755 "$(ME_VAPP_PREFIX)/bin/esp" ; \
 	mkdir -p "$(ME_BIN_PREFIX)" ; \
-	chmod 755 "$(ME_BIN_PREFIX)" ; \
 	rm -f "$(ME_BIN_PREFIX)/esp" ; \
 	ln -s "$(ME_VAPP_PREFIX)/bin/esp" "$(ME_BIN_PREFIX)/esp" ; \
 	mkdir -p "$(ME_VAPP_PREFIX)/bin" ; \
 	cp $(BUILD)/bin/espman $(ME_VAPP_PREFIX)/bin/espman ; \
 	chmod 755 "$(ME_VAPP_PREFIX)/bin/espman" ; \
 	mkdir -p "$(ME_BIN_PREFIX)" ; \
-	chmod 755 "$(ME_BIN_PREFIX)" ; \
 	rm -f "$(ME_BIN_PREFIX)/espman" ; \
 	ln -s "$(ME_VAPP_PREFIX)/bin/espman" "$(ME_BIN_PREFIX)/espman" ; \
 	if [ "$(ME_COM_SSL)" = 1 ]; then true ; \
@@ -1038,6 +1038,12 @@ install: $(DEPS_62)
 DEPS_63 += stop
 
 uninstall: $(DEPS_63)
+
+#
+#   uninstallBinary
+#
+
+uninstallBinary: $(DEPS_64)
 	rm -fr "$(ME_VAPP_PREFIX)" ; \
 	rm -f "$(ME_APP_PREFIX)/latest" ; \
 	rmdir -p "$(ME_APP_PREFIX)" 2>/dev/null ; true
@@ -1046,6 +1052,6 @@ uninstall: $(DEPS_63)
 #   version
 #
 
-version: $(DEPS_64)
+version: $(DEPS_65)
 	echo $(VERSION)
 

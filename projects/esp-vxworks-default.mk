@@ -782,7 +782,7 @@ $(BUILD)/bin/espman.out: $(DEPS_57)
 
 installPrep: $(DEPS_58)
 	if [ "`id -u`" != 0 ] ; \
-	then echo "Must run as root. Rerun with "sudo"" ; \
+	then echo "Must run as root. Rerun with sudo." ; \
 	exit 255 ; \
 	fi
 
@@ -822,9 +822,15 @@ DEPS_63 += stop
 uninstall: $(DEPS_63)
 
 #
+#   uninstallBinary
+#
+
+uninstallBinary: $(DEPS_64)
+
+#
 #   version
 #
 
-version: $(DEPS_64)
+version: $(DEPS_65)
 	echo $(VERSION)
 
