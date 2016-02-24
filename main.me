@@ -70,18 +70,6 @@ Me.load({
     },
 
     targets: {
-        init: {
-            first: true,
-            path: 'init',
-            'generate-make': `
-                if [ ! -d /usr/include/openssl ] ; then echo
-                    echo Install libssl-dev to get /usr/include/openssl
-                    exit 255
-                fi
-            `,
-            action: ' ',
-            enable: "me.platform.os == 'linux'",
-        },
         mdb: {
             configurable: true,
             description: 'Embedthis MDB Database',
