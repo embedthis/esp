@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>Security Considerations</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -212,100 +213,100 @@
             <table title="sandbox" class="ui table segment">
                 <thead>
                     <tr>
-                        <th>Property
-                        <th>Description
-                    
-                
+                        <th>Property</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td class="pivot">http.limits.connections
+                        <td class="pivot">http.limits.connections</td>
                         <td>Maximum number of network connections. Note a client can open many network connections. A browser
-                            session will typically open 4-6 connections.
-                    
+                            session will typically open 4-6 connections.</td>
+                    </tr>
 
                     <tr>
-                        <td class="pivot">http.limits.clients
-                        <td>Maximum number of simultaneous clients
-                    
+                        <td class="pivot">http.limits.clients</td>
+                        <td>Maximum number of simultaneous clients</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.cache
-                        <td>Maximum size of the response cache
-                    
+                        <td class="pivot">http.limits.cache</td>
+                        <td>Maximum size of the response cache</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.cacheItem
-                        <td>Maximum size of a single item in the response cache
-                    
+                        <td class="pivot">http.limits.cacheItem</td>
+                        <td>Maximum size of a single item in the response cache</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.keepAlive
-                        <td>Maximum number of requests to serve using a single TCP/IP connection
-                    
+                        <td class="pivot">http.limits.keepAlive</td>
+                        <td>Maximum number of requests to serve using a single TCP/IP connection</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.memory
-                        <td>Maximum memory the server can allocate
-                    
+                        <td class="pivot">http.limits.memory</td>
+                        <td>Maximum memory the server can allocate</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.processes
-                        <td>Maximum number of simultaneous CGI processes the server will start
-                    
+                        <td class="pivot">http.limits.processes</td>
+                        <td>Maximum number of simultaneous CGI processes the server will start</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.requestBody
-                        <td>Maximum size of the incoming request body. Does not include file upload size.
-                    
+                        <td class="pivot">http.limits.requestBody</td>
+                        <td>Maximum size of the incoming request body. Does not include file upload size.</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.requestForm
-                        <td>Maximum size of request form data (POST data)
-                    
+                        <td class="pivot">http.limits.requestForm</td>
+                        <td>Maximum size of request form data (POST data)</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.requestHeader
-                        <td>Maximum size of the request header
-                    
+                        <td class="pivot">http.limits.requestHeader</td>
+                        <td>Maximum size of the request header</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.requests
-                        <td>Maximum number of simultaneous requests from a single client IP
-                    
+                        <td class="pivot">http.limits.requests</td>
+                        <td>Maximum number of simultaneous requests from a single client IP</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.uri
-                        <td>Maximum size of a URI
-                    
+                        <td class="pivot">http.limits.uri</td>
+                        <td>Maximum size of a URI</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.upload
-                        <td>Maximum size of a file upload request
-                    
+                        <td class="pivot">http.limits.upload</td>
+                        <td>Maximum size of a file upload request</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.limits.workers
+                        <td class="pivot">http.limits.workers</td>
                         <td>Maximum number of worker threads to service requests. A single worker may service many requests
                             as ESP will typically not block when serving a request. Workers are assigned to service network 
-                            events and are then returned to a worker pool to service the next event.
-                    
-                
+                            events and are then returned to a worker pool to service the next event.</td>
+                    </tr>
+                </tbody>
             </table>
             <h3>Sandbox Timeout Properties</h3>
             <table title="sandbox" class="ui table segment">
                 <thead>
                     <tr>
-                        <th>Property
-                        <th>Description
-                    
-                
+                        <th>Property</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td class="pivot">http.timeouts.inactivity
+                        <td class="pivot">http.timeouts.inactivity</td>
                         <td>Maximum request and connection inactivity duration. This can be defined per route, so if you
-                            have a long running request, create a dedicated route for that request.
-                    
+                            have a long running request, create a dedicated route for that request.</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.timeouts.parse
+                        <td class="pivot">http.timeouts.parse</td>
                         <td>Maximum duration to parse the request headers. This should be set very short. 
                             Typically a browser will send all the request headers in one network packet. Recommended
-                            value is 5 secs.
-                    
+                            value is 5 secs.</td>
+                    </tr>
                     <tr>
-                        <td class="pivot">http.timeouts.request
+                        <td class="pivot">http.timeouts.request</td>
                         <td>Maximum request duration. Set this to the maximum time a request can take. This can
                             be defined per route, so if you have a long running request, create a dedicated
-                            route and RequestTimeout for it.
-                    
-                
+                            route and RequestTimeout for it.</td>
+                    </tr>
+                </tbody>
             </table>
             <p>See the <a href="config.html">Configuring ESP</a> for further details.</p>
             <h2>Defensive Countermeasures</h2>
@@ -343,7 +344,7 @@ monitors: {
 
             <a id="chroot"></a>
             <h2>Chroot Jail</h2>
-            </p><p>One of the best forms of isolation for the server is to run inside a 
+            <p>One of the best forms of isolation for the server is to run inside a 
             <a href="http://en.wikipedia.org/wiki/Chroot">chroot</a> jail. A chroot jail is when an application changes
             its root directory to be isolated from the real file system root directory. Any access then to files 
             outside the jail is protected and impossible. ESP supports chroot jails via the 
@@ -508,7 +509,7 @@ headers: {
 &lt;/script&gt;
 </pre>
             <h3>Hidden Frames</h3>
-            </p><p>Hidden frames may be inserted by attackers to provide a launch-pad for running malicious scripts. Denying 
+            <p>Hidden frames may be inserted by attackers to provide a launch-pad for running malicious scripts. Denying 
             the ability to run frames can close of this attack vector.</p>
             <p>The following ESP directive will prevent frames or iframes from running in the web page.</p>
             <pre class="code">Header set X-Frame-Options deny</pre>
@@ -532,7 +533,7 @@ headers: {
                <li>Encrypted communications SSL/TLS</li>
                <li>TLS level compression</li>
             </ul>
-            </p><p>By default, ESP does not use TLS with TLS compression and is thus not vulnerable to this exploit. 
+            <p>By default, ESP does not use TLS with TLS compression and is thus not vulnerable to this exploit. 
             The OpenSSL SSL_COMP_add_compression_method will enable TLS compression, so it is important not to use this
             OpenSSL API.</p>
             <h3>Breach Exploit</h3>
@@ -583,24 +584,34 @@ headers: {
             <h2>Documented Vulnerabilities</h2>
             <p>ESP documents discovered security errors in its GitHub issue database 
             at </p>
-            <pre class="code"><a href="https://github.com/embedthis/esp/issues?state=open">https://github.com/embedthis/esp/issues?state=open</a></pre>
+            <pre class="code"><a href="https://github.com/embedthis/esp/issues?state=open"
+            >https://github.com/embedthis/esp/issues?state=open</a></pre>
             <p>Specific issue reports are created for all confirmed or erroneous 
             security reports that receive a CVE classification. You can search for specific 
             CVE numbers or see all via:</p>
-            <pre class="code"><a href="https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues">https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues</a></pre>
+            <pre class="code"><a
+href="https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues">https://github.com/embedthis/esp/search?q=CVE-&amp;type=Issues</a></pre>
             <p>Unfortunately some security researchers publish poorly diagnosed security alerts and sometimes do not contact the vendor for confirmation of the report. Consequently there exist some security CVE reports which are bogus. ESP creates parallel CVE issues in the ESP GitHub issue database to comment on these reports and provide accurate resolution information.</p>
             <h2>Other Security References</h2>
             <p>Some of these articles may provide good background regarding security web servers.</p>
             <ul>
-                <li><a href="http://www.isg.rhul.ac.uk/tls/TLStiming.pdf">http://www.isg.rhul.ac.uk/tls/TLStiming.pdf</a></li>
-                <li><a href="http://blog.cryptographyengineering.com/search?q=bram+cohen">http://blog.cryptographyengineering.com/search?q=bram+cohen</a></li>
+                <li><a href="http://www.isg.rhul.ac.uk/tls/TLStiming.pdf"
+                    >http://www.isg.rhul.ac.uk/tls/TLStiming.pdf</a></li>
+                <li><a href="http://blog.cryptographyengineering.com/search?q=bram+cohen"
+                    >http://blog.cryptographyengineering.com/search?q=bram+cohen</a></li>
                 <li><a href="http://html5sec.org/">http://html5sec.org/</a></li>
-                <li><a href="https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet">https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet</a></li>
-                <li><a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)">https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)</a></li>
-                <li><a href="https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf">https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf</a></li>
-                <li><a href="http://media.blackhat.com/bh-ad-11/Sutton/bh-ad-11-Sutton_Embeded_Web_Servers_WP.pdf">http://media.blackhat.com/bh-ad-11/Sutton/bh-ad-11-Sutton_Embeded_Web_Servers_WP.pdf</a></li>
-                <li><a href="http://www.imperialviolet.org/2012/07/19/hope9talk.html">http://www.imperialviolet.org/2012/07/19/hope9talk.html</a></li>
-                <li><a href="https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf">https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf</a></li>
+                <li><a href="https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet"
+                    >https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet</a></li>
+                <li><a href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)"
+                    >https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)</a></li>
+                <li><a href="https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf"
+                    >https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf</a></li>
+                <li><a href="http://media.blackhat.com/bh-ad-11/Sutton/bh-ad-11-Sutton_Embeded_Web_Servers_WP.pdf"
+                    >http://media.blackhat.com/bh-ad-11/Sutton/bh-ad-11-Sutton_Embeded_Web_Servers_WP.pdf</a></li>
+                <li><a href="http://www.imperialviolet.org/2012/07/19/hope9talk.html"
+                    >http://www.imperialviolet.org/2012/07/19/hope9talk.html</a></li>
+                <li><a href="https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf"
+                    >https://www.owasp.org/images/b/be/Cracking-into-embedded-devices-and-beyond.pdf</a></li>
             </ul>
             <h2>C Code</h2>
             <p>ESP applications are not immune to security flaws. It is highly recommended that
@@ -679,5 +690,5 @@ app: {
 
         
 
-
-
+</body>
+</html>

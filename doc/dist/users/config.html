@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>Configuring ESP</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -286,47 +287,47 @@
             <h2>Package.json Properties</h2>
             <table title="top-level collections" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>description
-                        <td>Short sentence description of the application.
-                    
+                        <td>description</td>
+                        <td>Short sentence description of the application.</td>
+                    </tr>
                     <tr>
-                        <td>dependencies
+                        <td>dependencies</td>
                         <td>Extension packages used by the ESP application. The key is the pak name and the value is a 
                         <a href="http://semver.org">SemVer</a> version expression. 
-                        See <a href="https://embedthis.com/pak/doc/index.html">Pak</a> Documentation for details.
-                    
+                        See <a href="https://embedthis.com/pak/doc/index.html">Pak</a> Documentation for details.</td>
+                    </tr>
                     <tr>
-                        <td><a href="#directories">directories</a>
-                        <td>Directory locations
-                    
+                        <td><a href="#directories">directories</a></td>
+                        <td>Directory locations</td>
+                    </tr>
                     <tr>
-                        <td>include
-                        <td>List of external files to include.
-                    
+                        <td>include</td>
+                        <td>List of external files to include.</td>
+                    </tr>
                     <tr>
-                        <td>name
+                        <td>name</td>
                         <td>One word application name. This value is used to name the application and will be used
-                            in controller and application function entry point names.
-                    
+                            in controller and application function entry point names.</td>
+                    </tr>
                     <tr>
-                        <td>pak.mode
+                        <td>pak.mode</td>
                         <td>Configuration mode for the application that selects a property collection of the 
                         same name from the <em>modes</em> collection in the <em>package.json</em> and 
-                        <em>esp.json</em> files. Those properties are copied up to the top level.
-                    
+                        <em>esp.json</em> files. Those properties are copied up to the top level.</td>
+                    </tr>
                     <tr>
-                        <td>title
-                        <td>Multi-word application name to display.
-                    
+                        <td>title</td>
+                        <td>Multi-word application name to display.</td>
+                    </tr>
                     <tr>
-                        <td>version
-                        <td>Application version conforming to <a href="http://semver.org">SemVer</a>.
-                    
-                
+                        <td>version</td>
+                        <td>Application version conforming to <a href="http://semver.org">SemVer</a>.</td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="dependencies"></a>
@@ -367,103 +368,103 @@
             <h3>Directory Configuration &mdash; directories.*</h3>
             <table title="directory" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>cache
-                        <td>Directory for caching compiled items. Defaults to <em>cache</em>.
-                    
+                        <td>cache</td>
+                        <td>Directory for caching compiled items. Defaults to <em>cache</em>.</td>
+                    </tr>
 
                     <tr>
-                        <td>controllers
-                        <td>Directory for server-side MVC controllers. Defaults to "<em>controllers</em>".
-                    
+                        <td>controllers</td>
+                        <td>Directory for server-side MVC controllers. Defaults to "<em>controllers</em>".</td>
+                    </tr>
                     <tr>
-                        <td>db
-                        <td>Directory for server-side database files. Defaults to "<em>db</em>".
-                    
+                        <td>db</td>
+                        <td>Directory for server-side database files. Defaults to "<em>db</em>".</td>
+                    </tr>
 
                     <tr>
-                        <td>documents
+                        <td>documents</td>
                         <td>Directory containing client visible document content. All files under this
-                            directory are visible to the client. Defaults to <em>documents</em>.
-                    
+                            directory are visible to the client. Defaults to <em>documents</em>.</td>
+                    </tr>
                     <tr>
-                        <td>home
-                        <td>Home directory for the application. Defaults to "<em>.</em>".
-                    
+                        <td>home</td>
+                        <td>Home directory for the application. Defaults to "<em>.</em>".</td>
+                    </tr>
                     <tr>
-                        <td>layouts
+                        <td>layouts</td>
                         <td>Directory for <a href="https://embedthis.com/expansive/">Expansive</a> layout pages. 
-                        Defaults to "<em>layouts</em>".
-                    
+                        Defaults to "<em>layouts</em>".</td>
+                    </tr>
                     <tr>
-                        <td>lib
-                        <td>Directory for public extension pack scripts and resources. Defaults to "<em>client/lib</em>".
-                    
+                        <td>lib</td>
+                        <td>Directory for public extension pack scripts and resources. Defaults to "<em>client/lib</em>".</td>
+                    </tr>
                     <tr>
-                        <td>paks
-                        <td>Directory to contain installed packages. Defaults to "<em>./paks</em>".
-                    
+                        <td>paks</td>
+                        <td>Directory to contain installed packages. Defaults to "<em>./paks</em>".</td>
+                    </tr>
                     <tr>
-                        <td>partials
+                        <td>partials</td>
                         <td>Directory for <a href="https://embedthis.com/expansive/">Expansive</a> partial pages. 
-                        Defaults to "<em>partials</em>".
-                    
+                        Defaults to "<em>partials</em>".</td>
+                    </tr>
                     <tr>
-                        <td>pakcache
-                        <td>Location of the per-user cache of packages. Defaults to "<em>~/.paks</em>".
-                    
+                        <td>pakcache</td>
+                        <td>Location of the per-user cache of packages. Defaults to "<em>~/.paks</em>".</td>
+                    </tr>
                     <tr>
-                        <td>source
+                        <td>source</td>
                         <td>Source of input documents for <a href="https://embedthis.com/expansive/">Expansive</a>
-                        to render. Defaults to "source". 
-                    
+                        to render. Defaults to "source". </td>
+                    </tr>
                     <tr>
-                        <td>src
-                        <td>Directory for application C/C++ code. Defaults to "<em>src</em>".
-                    
+                        <td>src</td>
+                        <td>Directory for application C/C++ code. Defaults to "<em>src</em>".</td>
+                    </tr>
                     <tr>
-                        <td>upload
-                        <td>Directory for uploaded files. Defaults to "<em>/tmp</em>".
-                    
-                
+                        <td>upload</td>
+                        <td>Directory for uploaded files. Defaults to "<em>/tmp</em>".</td>
+                    </tr>
+                </tbody>
             </table>
 
             <h2>Esp.json Properties</h2>
             <a name="top"></a>
             <table title="top" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td><a href="#esp">esp</a>
-                        <td>Collection of ESP configuration.
-                    
+                        <td><a href="#esp">esp</a></td>
+                        <td>Collection of ESP configuration.</td>
+                    </tr>
                     <tr>
-                        <td><a href="#http">http</a>
-                        <td>Collection of HTTP configuration.
-                    
+                        <td><a href="#http">http</a></td>
+                        <td>Collection of HTTP configuration.</td>
+                    </tr>
 
                     <tr>
-                        <td>modes
+                        <td>modes</td>
                         <td>Collection of mode specific configuration. Typically there will be collections for
-                        <em>debug</em> or <em>release</em> but can be any identifier word. 
-                    
-                
+                        <em>debug</em> or <em>release</em> but can be any identifier word. </td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="client"></a>
             <h3>Client Configuration &mdash; http.client.*</h3>
             <table title="client" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>mappings
+                        <td>mappings</td>
                         <td><p>Set of property keys that map server-side properties to client-side properties to send to the client. 
                         Mappings select a subset of properties so the entire JSON configuration is not sent to the client.
                         For example: </p>
@@ -475,11 +476,11 @@ mappings: {
     }
 }</code>
                             <p>This computes a JSON string with properties "auth" and "timeouts" to send to the client.</p>
-                            
-                        
+                            </td>
+                        </tr>
                     <tr>
-
-                        <td>render
+<!--  MOB - move -->
+                        <td>render</td>
                         <td><p>Ordered set of scripts to send to the client when parsing the ESP <em>scripts()</em> 
                             API. This may include the "*" wildcard to match any file or "**" to match any file in 
                             any directory. For example:</p>
@@ -491,20 +492,20 @@ mappings: {
         'main.js',
         '*/**.js*'
     ]
-}</code>
-                    
-                
+}</code></td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="esp"></a>
             <h3>ESP Collection &mdash; esp.*</h3>
             <table title="esp" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>app
+                        <td>app</td>
                         <td><p>Define whether the directory contains an ESP application or stand-alone ESP pages.
                         For example:<code class="inverted">app: true</code></p>
                         <p>An ESP application follows an MVC design pattern and provides controllers to respond to 
@@ -513,10 +514,10 @@ mappings: {
                         standard directories: <em>cache</em>, 
                         <em>controllers</em>, <em>contents</em>, <em>db</em>, <em>layouts</em>, 
                         <em>migrations</em>, <em>paks</em> and <em>partials</em>.</p>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>apps
+                        <td>apps</td>
                         <td><p>Define external ESP applications to load. ESP can host multiple applications by defining
                             the URI prefix and ESP configuration file for each application. This directive takes three
                             forms. The first is just a simple string with the path to the configuration file for a single
@@ -535,53 +536,53 @@ apps: [
         config: 'apps/blog/esp.json' 
     }
 ]
-</code></p>
-                    
+</code></p></td>
+                    </tr>
                     <tr>
-                        <td>build
-                        <td>Collection of compilation and link command lines for various platforms.
-                    
+                        <td>build</td>
+                        <td>Collection of compilation and link command lines for various platforms.</td>
+                    </tr>
                     <tr>
-                        <td>combine
+                        <td>combine</td>
                         <td>Define whether to combine the entire ESP application into a single output source 
-                            file and library. This is typically enabled for release mode. Defaults to false.
-                    
+                            file and library. This is typically enabled for release mode. Defaults to false.</td>
+                    </tr>
                     <tr>
-                        <td>compile
-                        <td>Enable compiling controllers, modules and views at runtime. Defaults to true.
-                    
+                        <td>compile</td>
+                        <td>Enable compiling controllers, modules and views at runtime. Defaults to true.</td>
+                    </tr>
                     <tr>
-                        <td>optimize
+                        <td>optimize</td>
                         <td>Define whether to compile optimized or with debug symbols. Set to "true" for an optimized
                             build and to "false" for building with debug symbols.
-                            Defaults to false.
-                    
+                            Defaults to false.</td>
+                    </tr>
                     <tr>
-                        <td>generate
-                        <td>Collection of properties guiding the <em>esp generate</em> commands.
-                    
+                        <td>generate</td>
+                        <td>Collection of properties guiding the <em>esp generate</em> commands.</td>
+                    </tr>
                     <tr>
-                        <td>keep
+                        <td>keep</td>
                         <td>Preserve intermediate source code in the cache directory for debugging. Defaults to false
-                            unless the package.json pak.mode is set to "debug".
-                    
+                            unless the package.json pak.mode is set to "debug".</td>
+                    </tr>
                     <tr>
-                        <td>preload
+                        <td>preload</td>
                         <td>List of source files to preload when starting the application.
-                        For example: <code class="inverted">preload: [ 'auth.c' ]</code>
-                    
+                        For example: <code class="inverted">preload: [ 'auth.c' ]</code></td>
+                    </tr>
                     <tr>
-                        <td>rules
+                        <td>rules</td>
                         <td>Path to the JSON file containing the compilation rules. Defaults to 
                             <em>esp-compile.json</em> in the ESP installation directory. If you want to modify 
-                            this file, take a copy and then set the <em>compile</em> property to point to it.
-                    
+                            this file, take a copy and then set the <em>compile</em> property to point to it.</td>
+                    </tr>
                     <tr>
-                        <td>update
+                        <td>update</td>
                         <td>Determine if updating of responding applications and pages is enabled. 
-                            Some web frameworks will automatically rebuild or reload applications if the source is modified.
-                    
-                
+                            Some web frameworks will automatically rebuild or reload applications if the source is modified.</td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="http"></a>
@@ -592,16 +593,16 @@ apps: [
             such as Appweb.</p>
             <table title="http" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>aliases
+                        <td>aliases</td>
                         <td>Collection of URL to directory mapping aliases. The property key is the leading URI prefix
-                            and the value is the directory
-                    
+                            and the value is the directory</td>
+                    </tr>
                     <tr>
-                        <td>attach
+                        <td>attach</td>
                         <td>
                         <a name="attach"></a>
                         List of listen endpoints on which to attach a virtual host.
@@ -610,19 +611,50 @@ apps: [
     '*:80',
 ],</code>
                         <p>If there is no attach property, the virtual host will attach to all listening endpoints.</p>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td><a href="#auth">auth</a>
-                        <td>Collection of authentication configuration.
-                    
+                        <td><a href="#auth">auth</a></td>
+                        <td>Collection of authentication configuration.</td>
+                    </tr>
                     <tr>
-                        <td><a href="#cache">cache</a>
-                        <td>List of cache directives.
-                    
-                    
+                        <td><a href="#cache">cache</a></td>
+                        <td>List of cache directives.</td>
+                    </tr>
+                    <!--
                     <tr>
-                        <td>compress
+                        <td><a href="#condition">condition</a></td>
+                        <td><p>Define a pre-condition that must be true for the route to be selected.
+                        <p>The Condition directive supports four rule varieties: </p>
+                        <ul>
+                            <li>missing &mdash; True if the default request filename is missing.</li>
+                            <li>directory &mdash; True the if rule argument evaluates to a directory</li>
+                            <li>exists &mdash; True if the rule argument evaluates to an existing file</li>
+                            <li>match &mdash; True if the regular expression pattern matches the string argument</li>
+                        </ul>
+
+                        <p>The rule result can be negated by prefixing with "<em>!</em>".</p>
+                        <p>The condition property supports the following forms:</p>
+                        <ul>
+                            <li>Condition [!] rule details ...</li>
+                            <li>Condition [!] missing</li>
+                            <li>Condition [!] directory string</li>
+                            <li>Condition [!] exists string</li>
+                            <li>Condition [!] match string regular-expression-pattern</li>
+                        </ul>
+                        <p>For example:</p>
+                        <pre class="code">
+conditions: {
+    missing: 'true'
+    directory: '${request:filename}
+    exists: '! exists ${request:filename}
+    match: '${header:User-Agent} (Chrome|Safari) 
+</pre>
+                        </td>
+                    </tr>
+                        -->
+                    <tr>
+                        <td>compress</td>
                         <td><p>Enable serving of compressed content. ESP can serve files compressed with gzip and with an
                             additional <b>.gz</b> extension. ESP adds the appropriate HTTP header so the browser can
                             automatically decompress. Ideal for big files or slow networks.</p>
@@ -632,36 +664,51 @@ compress: [ 'html', 'js', 'css' ]
 </code>
                             <p>If the Expansive exp-gzip extension is installed, suitable static content will be 
                                 automatically gzipped.</p>
-                            
-                    
+                            </td>
+                    </tr>
                     <tr>
-                        <td>database
+                        <td>database</td>
                         <td>Database to create and open for the application. Of the form:
                             <em>provider://name.ext</em> where provider is set to either "mdb" for the
                             embedded memory database or "sdb" for SQLite. The extensions are "mdb" or "sdb"
                             by convention. Set to "<em>default</em>" for a database named after the application with
-                            the default database provider.
-                    
+                            the default database provider.</td>
+                    </tr>
                     <tr>
-                        <td>deleteUploads
+                        <td>deleteUploads</td>
                         <td>Define if uploaded files should be automatically deleted after the request or if they should
-                            accumulate in the upload directory.
-                    
+                            accumulate in the upload directory.</td>
+                    </tr>
                     <tr>
-                        <td>domain
+                        <td>domain</td>
                         <td>Matching domain for virtual hosting. 
-                        For example: <code class="inverted">domain: '*embedthis',</code>
-                    
+                        For example: <code class="inverted">domain: '*embedthis',</code></td>
+                    </tr>
                     <tr>
-                        <td>errors
+                        <td>errors</td>
                         <td>Collection of error pages to serve for various HTTP status codes.
                         For example: <code class="inverted">errors: {
     '404': '/notFound.html,
-},</code>
-                    
-
+},</code></td>
+                    </tr>
+<!--
                     <tr>
-                        <td>headers
+                        <td>formats</td>
+                        <td>Collection default data formats for various data types. The <em>response</em> property specifies
+                        the default client-server interchange format. It can be set to "html" or "json".
+                        For dates, the property specifies an 
+                        <a href="https://docs.angularjs.org/api/ng/filter/date">Angular</a> style date format. For
+                        floats, it specifies the default number of decimal places.
+                        For example:
+                        <code class="inverted">formats': {
+    response: 'json',
+    date: 'yyyy-MM-dd',
+    float: 2,
+},</code></td>
+                    </tr>
+-->
+                    <tr>
+                        <td>headers</td>
                         <td>Collection response header directives. This includes sub-collections for headers to 
                             "<em>add</em>", "<em>remove</em>"" and "<em>set</em>". The "<em>remove</em>"" collection is a list, whereas 
                             "<em>add</em>" and "<em>set</em>" are collections.
@@ -675,11 +722,11 @@ compress: [ 'html', 'js', 'css' ]
         'Custom-Header': '43',
     }
 },</code>
-                            
-                    
+                            </td>
+                    </tr>
 
                     <tr>
-                        <td>hosts
+                        <td>hosts</td>
                         <td><p>A single server may support multiple virtual hosts on a shared IP address endpoint. 
                         The client HTTP request includes a <em>Host</em> header that specifies the desired hostname.
                         The supported virtual hosts are configured via the <em>hosts</em> directive which specifies one
@@ -703,19 +750,19 @@ hosts: [ {
     ],
 }]
 </pre>
-                           
-                                       
+                           </td>
+                    </tr>                   
                     <tr>
-                        <td>indexes
+                        <td>indexes</td>
                         <td>Ordered list of index documents to serve for directory level requests. For example:
 <code class="inverted">indexes: [
     'index.esp',
     'index.html'
 ],</code>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>languages
+                        <td>languages</td>
                         <td>Collection of language definitions to customize served content based on preferred language.
                         For example: <code class="inverted">languages: {
     en: {
@@ -724,10 +771,10 @@ hosts: [ {
         suffix: 'en',
         default: true,
     }
-}</code>             Typically, you would choose one of <em>prefix</em>, <em>suffix</em> or <em>path</em>
-                    
+}</code>             Typically, you would choose one of <em>prefix</em>, <em>suffix</em> or <em>path</em></td>
+                    </tr>
                     <tr>
-                        <td>limits
+                        <td>limits</td>
                         <td>
                         <a name="limits"></a>
                         Resource limits to "<em>sandbox</em>" the server.
@@ -759,10 +806,10 @@ hosts: [ {
     webSocketsPacket:   '50K',
     webSocketsFrame:    '4K',
     workers:            4,
-},</code>
-                    
+},</code></td>
+                    </tr>
                     <tr>
-                        <td>methods
+                        <td>methods</td>
                         <td>List of acceptable HTTP methods. For example:
 <code class="inverted">
 methods: [
@@ -771,10 +818,10 @@ methods: [
 ],</code>
                         Can also set "*" for all possible methods. 
                         The default set of methods is: "DELETE, GET, OPTIONS, POST, PUT".
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>params
+                        <td>params</td>
                         <td>List of required parameters before the request will match the current route.
                         For example:
 <code class="inverted">
@@ -786,10 +833,10 @@ params: [
     }
 ],
 </code>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>pattern
+                        <td>pattern</td>
                         <td><p>Matching URI regular expression for requests to be served by the current route.
                         The route pattern is an enhanced JavaScript-compatibile regular expression. It is enhanced by 
                         optionally embedding braced tokens "{name}" in the pattern. During request URI matching, 
@@ -804,10 +851,10 @@ params: [
                         <p>Use <em>^</em> to anchor to the start of the URI and $ for the end of the URI.
                         If the pattern does not start with <em>^</em>, the route pattern will have its parent 
                         route prefix prepended to the pattern.</p>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>pipeline
+                        <td>pipeline</td>
                         <td>Collection defining the request/response pipeline including filters and handlers.
                         The Filters property is an ordered list of filters which modify the incoming and outgoing request data.
                         Each entry specifies the filter name and the matching URI extensions. Use "*" to match all extensions.
@@ -825,14 +872,14 @@ pipeline: {
     },
 },
 </code>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>prefix
-                        <td>URI prefix to remove from request URIs before passing to the application.
-                    
+                        <td>prefix</td>
+                        <td>URI prefix to remove from request URIs before passing to the application.</td>
+                    </tr>
                     <tr>
-                        <td>redirect
+                        <td>redirect</td>
                         <td><p>Collection of redirection rules. These include the failing URI, destination URI and
                         redirection status.</p>
 <code class="inverted"> redirect: [
@@ -843,18 +890,18 @@ pipeline: {
     } 
 ]</code>
                     <p>Alternatively, a rule may be just the string "https://" in which case all HTTP content 
-                    will be redirected over HTTPS.</p>
-                    
+                    will be redirected over HTTPS.</p></td>
+                    </tr>
                     <tr>
-                        <td>renameUploads
+                        <td>renameUploads</td>
                         <td>Automatically rename uploaded files to use the client supplied filename after sanitizing.
                             ESP typically does not use this property and rather, an ESP controller or ESP page should
                             validate the client details and copy / rename the uploaded temporary file as required.
                             Recommended to not use this with ESP and only ever use on a private network. Defaults to false.
-                            accumulate in the upload directory.
-                    
+                            accumulate in the upload directory.</td>
+                    </tr>
                     <tr>
-                        <td>resources
+                        <td>resources</td>
                         <td><p>Create routes sets for the requested resources. Route sets select 
                         pre-defined route sets. Some of the available sets are: 'esp-server' and 'esp-restful'.
                         Resource groups create RESTful routes for a resource that has multiple 
@@ -865,10 +912,10 @@ resources: {
     groups: [ 'users', 'administrators' ],
     singletons: [ 'profile' ],
 }
-</code>
-                    
+</code></td>
+                    </tr>
                     <tr>
-                        <td>routes
+                        <td>routes</td>
                         <td>Ordered list of routes. This may be a pre-defined route set name or it may be an 
                         array of routes. Examples:
                             <code class="inverted">
@@ -881,54 +928,54 @@ routes [ {
     /* Any collection of properties */
 }
 </code>
-                           
-                    
+                           </td>
+                    </tr>
                     <tr>
-                        <td>scheme
+                        <td>scheme</td>
                         <td>Define the required HTTP protocol scheme for all requests. Set to "https" to permit only
                         secure connections. Alternatively use <em>redirect: "https://"</em> to redirect HTTPS traffic over
-                        to HTTPS.
-                    
+                        to HTTPS.</td>
+                    </tr>
                     <tr>
-                        <td><a href="#server">server</a>
+                        <td><a href="#server">server</a></td>
                         <td>Collection of properties that apply to the whole server and not per-route. The
                         <em>server</em> collection is special in that it is only parsed when ESP is not hosted in
                         a web server such as Appweb. If hosted, it is expected that the web server will define
-                        these attributes externally.
-                    
+                        these attributes externally.</td>
+                    </tr>
                     <tr>
-                        <td>showErrors
+                        <td>showErrors</td>
                         <td>Controls if application errors should be displayed in the browser.
                             Set to true to display errors in the browser. Defaults to true if the source is compiled in
-                            for debug and false if compiled in release mode.
-                    
+                            for debug and false if compiled in release mode.</td>
+                    </tr>
                     <tr>
-                        <td>source
-                        <td>Source file for the responding application. Used by ESP controllers.
-                    
+                        <td>source</td>
+                        <td>Source file for the responding application. Used by ESP controllers.</td>
+                    </tr>
                     <tr>
-                        <td><a href="#ssl">ssl</a>
-                        <td>Collection of SSL configuration.
-                    
+                        <td><a href="#ssl">ssl</a></td>
+                        <td>Collection of SSL configuration.</td>
+                    </tr>
                     <tr>
-                        <td>stealth
-                        <td>Respond in stealth mode emitting as little context information as possible.
-                    
+                        <td>stealth</td>
+                        <td>Respond in stealth mode emitting as little context information as possible.</td>
+                    </tr>
                     <tr>
-                        <td>stream
+                        <td>stream</td>
                         <td>Define whether the request body data should be buffered or stream. This property should be an array of objects with "mime", "uri" and "stream" properties. For example: <code class="inverted">stream: [
     { 
         mime: 'application/custom-mime', 
         stream: false, 
         uri: '/some-uri' 
     },
-],</code>
+],</code></td>
                     <tr>
-                        <td>target
-                        <td>Routing destination for processing the request.
-                    
+                        <td>target</td>
+                        <td>Routing destination for processing the request.</td>
+                    </tr>
                     <tr>
-                        <td><a href="#timeouts">timeouts</a>
+                        <td><a href="#timeouts">timeouts</a></td>
                         <td>Collection of timeouts. The timeout units are in seconds but may also be defined as
                             strings with natural suffixes such as "20secs", "1day" or "unlimited".
                         <pre class="code">timeouts: {
@@ -938,9 +985,9 @@ routes [ {
     request: 'unlimited',
     session: '30mins',
 }</pre>
-                    
+                    </tr>
                     <tr>
-                        <td>trace
+                        <td>trace</td>
                         <td>Trace filtering collection.
                         For example:
 <code class="inverted">trace: {
@@ -962,10 +1009,10 @@ routes [ {
                             <li>timestamp &mdash; Write a timestamp at this frequency.</li>
                             <li>maxContent &mdash; Maximum size of request body content to trace. Defaults to 40K.</li>
                         </ul>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>xsrf
+                        <td>xsrf</td>
                         <td>Control if an XSRF anti-forgery token should be checked for POST forms.
                             If enabled, server side ESP form pages should use the following to
                             generate a hidden input field that contains the XSRF token. 
@@ -981,9 +1028,9 @@ routes [ {
 </code>
                             <p>Note: restarting the server or creating a new ESP session will invalidate XSRF tokens. In this
                             case, the form will need to be reloaded to generate a new token.</p>
-                        
-                    
-                
+                        </td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="server"></a>
@@ -995,11 +1042,11 @@ routes [ {
 
             <table title="server" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>account
+                        <td>account</td>
                         <td>User and group account names. If defined, ESP must be run as super-user to be able to change
                         accounts. For example:
                         <code class="inverted">http: {
@@ -1007,14 +1054,14 @@ server: {
     account: {
         user: 'www-data',
         group: 'www-data',
-    },</code>
-                    
+    },</code></td>
+                    </tr>
                     <tr>
-                        <td>chroot
-                        <td>Path to set as the <em>root</em> directory when running using the <em>chroot</em> API.
-                    
+                        <td>chroot</td>
+                        <td>Path to set as the <em>root</em> directory when running using the <em>chroot</em> API.</td>
+                    </tr>
                     <tr>
-                        <td>defenses
+                        <td>defenses</td>
                         <td>Set of defense rules that can be utilized by <em>monitors</em>. 
                             
                             <code class="inverted">defenses: {
@@ -1027,10 +1074,10 @@ server: {
         },
     },
 },</code>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>listen
+                        <td>listen</td>
                         <td>List of IP:PORT endpoints on which to listen for requests.
                         To listen on all network interfaces, use "<em>*</em>". To listen using SSL, add https:// as a prefix.
                         For example:
@@ -1038,10 +1085,10 @@ server: {
     '*:4000',
     'https://127.0.0.1:4443',
 ],</code>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>log
+                        <td>log</td>
                         <td>Log file configuration.
                         For example:
 <code class="inverted">log: {
@@ -1060,10 +1107,10 @@ server: {
                             <li>size &mdash; Maximum size of the log before it will be restarted.</li>
                             <li>timestamp &mdash; Write a timestamp at this frequency.</li>
                         </ul>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>monitors
+                        <td>monitors</td>
                         <td>Set of counters to monitor for unusual activity.
                         For example:
                         <code class="inverted">missing: {
@@ -1071,36 +1118,36 @@ server: {
     period: '10 secs',
     defenses: [ 'block' ],
     enable: true,
-},</code> 
-                    
-                
+},</code> </td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="auth"></a>
             <h3>Authentication Configuration &mdash; http.auth.*</h3>
             <table title="auth" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>auto
+                        <td>auto</td>
                         <td>Collection of automatic login related properties. The <em>auto.name</em> property defines an 
                         account name that the application will automatically login. This is useful during development to bypass the
                         login step. The <em>auto.roles</em> property defines the roles for which the user will be 
-                        authorized. The <em>url</em> property defines the URI for the login dialog.
-                    
+                        authorized. The <em>url</em> property defines the URI for the login dialog.</td>
+                    </tr>
                     <tr>
-                        <td>login
+                        <td>login</td>
                         <td>Login page when using the <em>form</em> authentication scheme. If the user is not logged in, they
-                            will be redirected to this page.
-                    
+                            will be redirected to this page.</td>
+                    </tr>
                     <tr>
-                        <td>realm
-                        <td>Login realm string if using Basic or Digest authentication abilities.
-                    
+                        <td>realm</td>
+                        <td>Login realm string if using Basic or Digest authentication abilities.</td>
+                    </tr>
                     <tr>
-                        <td>require
+                        <td>require</td>
                         <td>The permitted user account names or roles that are required before authorization for this route. For
                         example:
 <code class="inverted">require: {
@@ -1110,25 +1157,25 @@ server: {
                         If <em>users</em> is defined, then a user must login before using the application. The
                         <em>users</em> property may be set to a list of users, a string with a single 
                         user name or <em>true</em> to imply any authenticated user. Note: it is 
-                        application dependent how the required login feature is implemented.
-                        
+                        application dependent how the required login feature is implemented.</td>
+                        </tr>
                         <tr>
-                        <td>single
+                        <td>single</td>
                         <td>Set to true to permit only one simultaneous login. Ideal for some management user
-                        interfaces. Note: it is application dependent how the required login feature is implemented.
-                    
+                        interfaces. Note: it is application dependent how the required login feature is implemented.</td>
+                    </tr>
                     <tr>
-                        <td>roles
+                        <td>roles</td>
                         <td>Definition of roles that users may perform. Each role consists of a set of abilities or roles.
                         For example:
                         <code class="inverted">roles: {
     executive:      ['manage', 'direct'],
     user:           ['view'],
     administrator:  ['view', 'edit'],
-},</code>
-                    
+},</code></td>
+                    </tr>
                     <tr>
-                        <td>session
+                        <td>session</td>
                         <td><p>Configure the user session details. 
                             The <em>cookie</em> property can define a unique prefix to use for the session cookie.
                             The default session cookie prefix is: "-http-session-". If set to 'none', then no cookie is 
@@ -1148,19 +1195,19 @@ session: {
     visible: true,
 },
 </code>
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>store
-                        <td>Authentication store. Set to "app", "config", or "system".
-                    
+                        <td>store</td>
+                        <td>Authentication store. Set to "app", "config", or "system".</td>
+                    </tr>
                     <tr>
-                        <td>type
+                        <td>type</td>
                         <td>Authentication type. Set to "basic", "digest" or "form". No need to define if
-                            using the "app" authentication store.
-                    
+                            using the "app" authentication store.</td>
+                    </tr>
                     <tr>
-                        <td>users
+                        <td>users</td>
                         <td>Definition of users, their passwords and roles if using the "config" authentication
                             store.  For example:
                         <code class="inverted">users: {
@@ -1169,9 +1216,9 @@ session: {
         roles:    ['user', 'administrator', 'purchase'],
     },
 },</code>
-                        
-                    
-                
+                        </td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="cache"></a>
@@ -1186,45 +1233,45 @@ session: {
 
             <table title="cache" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>extensions
-                        <td>List of extensions to cache
-                    
+                        <td>extensions</td>
+                        <td>List of extensions to cache</td>
+                    </tr>
                     <tr>
-                        <td>client
-                        <td>Define the lifespan of content cached in the client's browser. For example: client="1hour
-                    
+                        <td>client</td>
+                        <td>Define the lifespan of content cached in the client's browser. For example: client="1hour</td>
+                    </tr>
                     <tr>
-                        <td>server
-                        <td>Define the lifespan of content cached in the server. For example: server="1hour
-                    
+                        <td>server</td>
+                        <td>Define the lifespan of content cached in the server. For example: server="1hour</td>
+                    </tr>
                     <tr>
-                        <td>manual
+                        <td>manual</td>
                         <td>If true, then do not transparently cache qualifying response output. Rather, the application
-                        must seed the cache manually via httpWriteCached
-                    
+                        must seed the cache manually via httpWriteCached</td>
+                    </tr>
                     <tr>
-                        <td>methods
-                        <td>List of HTTP request methods to cache.
-                    
+                        <td>methods</td>
+                        <td>List of HTTP request methods to cache.</td>
+                    </tr>
                     <tr>
-                        <td>mime
+                        <td>mime</td>
                         <td>List of request content mime types to cache. For example:
-                        <code class="inverted">mime: [ 'image/jpeg', 'image/png' ]</code>
-                    
+                        <code class="inverted">mime: [ 'image/jpeg', 'image/png' ]</code></td>
+                    </tr>
                     <tr>
-                        <td>unique
+                        <td>unique</td>
                         <td>Uniquely cache requests using the full URI including the request query and parameters. By default,
-                        only the URI without parameters is considered when caching content.
-                    
+                        only the URI without parameters is considered when caching content.</td>
+                    </tr>
                     <tr>
-                        <td>uris
-                        <td>List of qualifying URIs to cache
-                    
-                
+                        <td>uris</td>
+                        <td>List of qualifying URIs to cache</td>
+                    </tr>
+                </tbody>
             </table>
 
             <a name="ssl"></a>
@@ -1249,21 +1296,21 @@ session: {
 },</code>
             <table title="ssl" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>authority
+                        <td>authority</td>
                         <td>Certificate authority <em>file</em> or <em>directory</em>. Choose one of these two properties
                         to define the CA certificates for verifying clients. Only used if ssl.verify.client or ssl.verify.issuer
-                        is true.
-                    
+                        is true.</td>
+                    </tr>
                     <tr>
-                        <td>certificate
-                        <td>Path to the SSL certificate to use for connections on this route.
-                    
+                        <td>certificate</td>
+                        <td>Path to the SSL certificate to use for connections on this route.</td>
+                    </tr>
                     <tr>
-                        <td>ciphers
+                        <td>ciphers</td>
                         <td>List of acceptable ciphers to use. These names are dependant on the SSL provider selected
                         The format of this directive varies depending on the SSL protocol stack. 
                         The OpenSSL stack uses its own proprietary 
@@ -1271,19 +1318,19 @@ session: {
                         <a href="http://www.openssl.org/docs/apps/ciphers.html">OpenSSL</a> documentation for how to format 
                         the ciphers.  Other stack use the standard 
                         <a href="http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-3">IANA Cipher Suite Registry</a>a names. 
-                        
-                    
+                        </td>
+                    </tr>
                     <tr>
-                        <td>key
-                        <td>Path to the private key file for connections on this route.
-                    
+                        <td>key</td>
+                        <td>Path to the private key file for connections on this route.</td>
+                    </tr>
                     <tr>
-                        <td>verify
+                        <td>verify</td>
                         <td>Control whether client certificates are required and verified. If 
                         <em>verify.client</em> is true, the client must provide a valid certificate. If 
                         <em>verify.issuer</em> is true, the client's certificate must be verifiable by the
-                        specified <em>authority</em> certificate.
-                    
+                        specified <em>authority</em> certificate.</td>
+                    </tr>
             </table>
 
             <a name="timeouts"></a>
@@ -1292,33 +1339,33 @@ session: {
                 Timeouts are expressed as strings with natural language suffixes like: "30mins".</p>
             <table title="ssl" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>exit
-                        <td>Maximum exit delay while waiting for requests to complete.
-                    
+                        <td>exit</td>
+                        <td>Maximum exit delay while waiting for requests to complete.</td>
+                    </tr>
                     <tr>
-                        <td>parse
-                        <td>Maximum time to receive a the request headers. Default 5 seconds.
-                    
+                        <td>parse</td>
+                        <td>Maximum time to receive a the request headers. Default 5 seconds.</td>
+                    </tr>
                     <tr>
-                        <td>inactivity
-                        <td>Maximum time a connection will be preserved in the absence of I/O activity. Default 30 seconds.
-                    
+                        <td>inactivity</td>
+                        <td>Maximum time a connection will be preserved in the absence of I/O activity. Default 30 seconds.</td>
+                    </tr>
                     <tr>
-                        <td>refresh
-                        <td>Default time to refresh pages with dynamic content.
-                    
+                        <td>refresh</td>
+                        <td>Default time to refresh pages with dynamic content.</td>
+                    </tr>
                     <tr>
-                        <td>request
-                        <td>Maximum time for a request to complete. Default infinite.
-                    
+                        <td>request</td>
+                        <td>Maximum time for a request to complete. Default infinite.</td>
+                    </tr>
                     <tr>
-                        <td>session
-                        <td>Maximum time to preserve session state storage for a client. Default 5 minutes.
-                    
+                        <td>session</td>
+                        <td>Maximum time to preserve session state storage for a client. Default 5 minutes.</td>
+                    </tr>
             </table>
 
     </div>
@@ -1333,5 +1380,5 @@ session: {
 
         
 
-
-
+</body>
+</html>

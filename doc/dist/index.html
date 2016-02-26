@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>ESP Overview</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
-    <link href="/esp/doc/" rel="canonical">
-    <link href="./images/favicon.ico" rel="shortcut icon">
-    <link href="lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="/esp/doc/" rel="canonical" />
+    <link href="./images/favicon.ico" rel="shortcut icon" />
+    <link href="lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -207,7 +208,7 @@
             <p>The C code is embedded between <em>&lt;%</em> and <em>%&gt;</em> tags. For example:
 <pre class="code">&lt;h1&gt;Hello World&lt;/h1&gt;
 &lt;p&gt;<b>&lt;% render("A random number %d", rand(0)); %&gt;</b>&lt;/p&gt;</pre>
-            </p><p>When the web page is requested, the web page including the code inside the ESP tags is compiled
+            <p>When the web page is requested, the web page including the code inside the ESP tags is compiled
             and saved as a shared library. When the page is requested, the call to <em>render</em> will 
             replace the code between <em>&lt;% ... %&gt;</em> with the result of the render call. Finally,
             then the composite page will be sent to the client. The next time the page is requested, it will 
@@ -271,7 +272,7 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             data for such apps.</p>
 
             <h2>ESP Web Framework</h2>
-            <img src="images/espArchitecture.jpg" alt="ESP Web Framework Architecture" class="centered">
+            <img src="images/espArchitecture.jpg" alt="ESP Web Framework Architecture" class="centered" />
             <p>The main components of the ESP Web Framework are:</p>
             <ul>
                 <li><a href="#http">HTTP Web Server</a></li>
@@ -306,21 +307,21 @@ ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
             <h3>ESP Page Directives</h3>
             <p>ESP supports the following special sequences for use in web pages.</p>
             <table class="ui table" title="directives">
-                <thead><tr><th class="three wide">Directive<th>Purpose
+                <thead><tr><th class="three wide">Directive</th><th>Purpose</th></tr></thead>
                 <tbody>
-                    <tr><td>&lt;% code %&gt;<td>Insert code at this location. At run-time, this 
-                        <em>C</em> code will execute.
-                    <tr><td>&lt;%= code %&gt;<td>Evaluate the expression and substitute the resulting value 
+                    <tr><td class="">&lt;% code %&gt;</td><td>Insert code at this location. At run-time, this 
+                        <em>C</em> code will execute.</td></tr>
+                    <tr><td>&lt;%= code %&gt;</td><td>Evaluate the expression and substitute the resulting value 
                         into the web page at this position. A printf format specifier can be used to specify a 
                         different variable type. For example, <em>&lt;%= %d ivar %&gt;</em>
-                        <em>C</em> code will execute.
-                    <tr><td>%!variable<td>Shortcut for &lt;%= variable %&gt;
-                    <tr><td>%!{expression}<td>Shortcut for &lt;%= expression %&gt;
-                    <tr><td>%$param<td>Substitutes the value of a request parameter or session 
-                        variable of the same name after HTML escaping the value.
-                    <tr><td>%#field<td>Substitute the field name in the current database record.
-                    <tr><td>%&#126;<td>Insert a URL to the top of the application.
-                
+                        <em>C</em> code will execute.</td></tr>
+                    <tr><td>%!variable</td><td>Shortcut for &lt;%= variable %&gt;</td></tr>
+                    <tr><td>%!{expression}</td><td>Shortcut for &lt;%= expression %&gt;</td></tr>
+                    <tr><td>%$param</td><td>Substitutes the value of a request parameter or session 
+                        variable of the same name after HTML escaping the value.</td></tr>
+                    <tr><td>%#field</td><td>Substitute the field name in the current database record.</td></tr>
+                    <tr><td>%&#126;</td><td>Insert a URL to the top of the application.</td></tr>
+                </tbody>
             </table>
 
             <p>See <a href="users/pages.html#directives">ESP Page Directives</a> for more details.</p>
@@ -408,5 +409,5 @@ static void update() {
 
         
 
-
-
+</body>
+</html>

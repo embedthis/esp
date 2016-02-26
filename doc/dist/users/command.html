@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>ESP Command</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -211,82 +212,92 @@
             <table class="ui table" title="switches">
                 <thead>
                     <tr>
-                        <th class="four wide">Switch
-                        <th>Description
-                    
-                
+                        <th class="four wide">Switch</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>--chdir dir
-                        <td>Change to the specified directory.
-                    
+                        <td>--chdir dir</td>
+                        <td>Change to the specified directory.</td>
+                    </tr>
                     <tr>
-                        <td class="nowrap">--database connector
+                        <td class="nowrap">--database connector</td>
                         <td>Select a database connector to use. Currently, this switch is not implemented and sqlite is
-                        the only connector supported.
-                    
-
+                        the only connector supported.</td>
+                    </tr>
+<!--
                     <tr>
-                        <td>--keep
-                        <td>Preserve intermediate files. Useful for debugging.
-                    
+                        <td>--genlink slink.c</td>
+                        <td>Generate a file of ESP initializers when using --static in combined mode.</td>
+                    </tr>
+-->
                     <tr>
-                        <td>--listen [ip:]port
-                        <td>Listen on the specified address. Overrides the Listen directive in package.json.
-                    
+                        <td>--keep</td>
+                        <td>Preserve intermediate files. Useful for debugging.</td>
+                    </tr>
                     <tr>
-                        <td>--log logFile:level
+                        <td>--listen [ip:]port</td>
+                        <td>Listen on the specified address. Overrides the Listen directive in package.json.</td>
+                    </tr>
+                    <tr>
+                        <td>--log logFile:level</td>
                         <td>Log errors and trace to the log file at the given verbosity level. Levels are 0-9 with
-                            nine being the most verbose.
-                    
+                            nine being the most verbose.</td>
+                    </tr>
                     <tr>
-                        <td>--name
-                        <td>Name for the application when combining.
-                    
+                        <td>--name</td>
+                        <td>Name for the application when combining.</td>
+                    </tr>
                     <tr>
-                        <td>--overwrite
+                        <td>--overwrite</td>
                         <td>Overwrite existing files. The <em>esp</em> command normally will not overwrite 
-                            existing files. This is to preserve user changes to previously generated files.
-                    
+                            existing files. This is to preserve user changes to previously generated files.</td>
+                    </tr>
                     <tr>
-                        <td>--quiet or -q
-                        <td>Run quietly and don't trace actions to the console.
-                    
+                        <td>--quiet or -q</td>
+                        <td>Run quietly and don't trace actions to the console.</td>
+                    </tr>
                     <tr>
-                        <td class="nowrap">--platform os-arch-profile
+                        <td class="nowrap">--platform os-arch-profile</td>
                         <td>Target platform. This may be a full path to an ESP platform directory in an
-                            ESP source tree.
-                    
+                            ESP source tree.</td>
+                    </tr>
                     <tr>
-                        <td>--rebuild
-                        <td>Force a rebuild of all components.
-                    
+                        <td>--rebuild</td>
+                        <td>Force a rebuild of all components.</td>
+                    </tr>
                     <tr>
-                        <td>--reverse
-                        <td>Reverse migrations.
-                    
+                        <td>--reverse</td>
+                        <td>Reverse migrations.</td>
+                    </tr>
                     <tr>
-                        <td>--routeName name
-                        <td>This selects the ESP route by name that will be used for the ESP configuration.
-                    
+                        <td>--routeName name</td>
+                        <td>This selects the ESP route by name that will be used for the ESP configuration.</td>
+                    </tr>
                     <tr>
-                        <td>--routePrefix prefix
-                        <td>This selects the ESP route by prefix that will be used for the ESP configuration.
-                    
+                        <td>--routePrefix prefix</td>
+                        <td>This selects the ESP route by prefix that will be used for the ESP configuration.</td>
+                    </tr>
                     <tr>
-                        <td>--show
-                        <td>Show all commands invoked by esp.
-                    
-
+                        <td>--show</td>
+                        <td>Show all commands invoked by esp.</td>
+                    </tr>
+<!--
                     <tr>
-                        <td>--verbose or -v
-                        <td>Run in verbose mode and trace actions to the console (default).
-                    
+                        <td>--static</td>
+                        <td>Use static linking when compiling ESP components.</td>
+                    </tr>
+-->
                     <tr>
-                        <td>--why
-                        <td>Show why a compile was performed or omitted.
-                    
-                
+                        <td>--verbose or -v</td>
+                        <td>Run in verbose mode and trace actions to the console (default).</td>
+                    </tr>
+                    <tr>
+                        <td>--why</td>
+                        <td>Show why a compile was performed or omitted.</td>
+                    </tr>
+                </tbody>
             </table>
 
     </div>
@@ -301,5 +312,5 @@
 
         
 
-
-
+</body>
+</html>

@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>ESP Pages</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -189,7 +190,7 @@
             code without any access to the original ESP page. If the system is rebooted, the on-disk cached module 
             will be loaded without recompilation.</p>
             
-            <img class="ui centered image" src="../images/esp/template/compile.jpg" alt="compile">
+            <img class="ui centered image" src="../images/esp/template/compile.jpg" alt="compile" />
             <p>The compilation of ESP pages happens automatically and quickly in the background when in development mode. 
             If the original web page is modified, the page is transparently recompiled and re-cached. For production, 
             pages can be pre-compiled, and locked-down without recompiling in the field. This updating behavior can 
@@ -225,65 +226,65 @@
             <table class="ui table" title="directives">
                 <thead>
                     <tr>
-                        <th class="five wide">Directive
-                        <th>Purpose
-                    
-                
+                        <th class="five wide">Directive</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
-                        <td>&lt;&#37;^ include "file" &#37;&gt;
-                        <td>Include the named file at this location
-                    
+                        <td>&lt;&#37;^ include "file" &#37;&gt;</td>
+                        <td>Include the named file at this location</td>
+                    </tr>
                     <tr>
-                        <td>&lt;&#37;^ global ...
+                        <td>&lt;&#37;^ global ...</td>
                         <td>Specify that the code from this block must be at a "global" C scope. This is useful
-                            for global declarations, extern statements and #include statements.
-                    
+                            for global declarations, extern statements and #include statements.</td>
+                    </tr>
                     <tr>
-                        <td>&lt;&#37;^ start ...
+                        <td>&lt;&#37;^ start ...</td>
                         <td>Specify that the code from this block will be positioned at the start of the
-                            generated function for the template. This is useful for local variable declarations.
-                    
+                            generated function for the template. This is useful for local variable declarations.</td>
+                    </tr>
                     <tr>
-                        <td>&lt;&#37;^ end ...
+                        <td>&lt;&#37;^ end ...</td>
                         <td>Specify that the code from this block will be positioned at the end of the
-                            generated function for the template.
+                            generated function for the template.</td>
                     <tr>
-                        <td>&lt;&#37;= expression &#37;&gt;
-                        <td><em>C</em> expression
-                    
+                        <td>&lt;&#37;= expression &#37;&gt;</td>
+                        <td><em>C</em> expression</td>
+                    </tr>
                     <tr>
-                        <td class="nowrap">&lt;&#37;= [&#37;fmt] expression &#37;&gt;
+                        <td class="nowrap">&lt;&#37;= [&#37;fmt] expression &#37;&gt;</td>
                         <td>Formatted <em>C</em> expression. The expression is passed through a "printf" style formatter.
-                            Use "&#37;S" for HTML-escaped safe strings.
-                    
+                            Use "&#37;S" for HTML-escaped safe strings.</td>
+                    </tr>
                     <tr>
-                        <td>&lt;&#37; statements &#37;&gt;
-                        <td><em>C</em> statements
-                    
+                        <td>&lt;&#37; statements &#37;&gt;</td>
+                        <td><em>C</em> statements</td>
+                    </tr>
                     <tr>
-                        <td>-&#37;&gt;
-                        <td>Trim the trailing newline for the generated block.
-                    
+                        <td>-&#37;&gt;</td>
+                        <td>Trim the trailing newline for the generated block.</td>
+                    </tr>
                     <tr>
-                        <td>&#37;&#36;name
-                        <td>Request parameter or session variable. This is equivalent to "<em>renderVar(variable)</em>"
-                    
+                        <td>&#37;&#36;name</td>
+                        <td>Request parameter or session variable. This is equivalent to "<em>renderVar(variable)</em>"</td>
+                    </tr>
                     <tr>
-                        <td>&#37;!variable
-                        <td>C string variable
-                    
+                        <td>&#37;!variable</td>
+                        <td>C string variable</td>
+                    </tr>
                     <tr>
-                        <td>&#37;#field
-                        <td>Record field variable. This is equivalent to "<em>ediGetField(getRec(), field))</em>"
-                    
+                        <td>&#37;#field</td>
+                        <td>Record field variable. This is equivalent to "<em>ediGetField(getRec(), field))</em>"</td>
+                    </tr>
                     <tr>
-                        <td>&#37;~
+                        <td>&#37;~</td>
                         <td>Top level application URL. Use this to create relative URLs without having to hard
-                            code URI prefixes in your application.
-                    
+                            code URI prefixes in your application.</td>
+                    </tr>
 
-                
+                </tbody>
             </table>
             <h3>&lt;&#37;^ include "file" &#37;&gt;</h3>
             <p>This directive can be used to include other HTML or ESP files at this location. The included 
@@ -313,7 +314,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <h3>&lt;&#37; statements &#37;&gt;</h3>
             <p>Use this directive to run <em>C</em> code statements. No value is substituted back into the page in
             place of the directive. If you need to write data inside a statement block, use the 
-            
+            <!--TODO-->
             render API.</p>
 
             <pre class="code">
@@ -323,7 +324,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
     }
 &#37;&gt;
 </pre>
-            
+            <!-- TODO links -->
             <p><em>Security Note</em>: you should never use <em>render</em> to write back user data that has not been
             validated. If you 
             must render user input data, use <em>renderSafe</em> which will escape any HTML sequences. This is essential
@@ -397,26 +398,26 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             Here is a collection of especially useful context items:</p>
             <table class="ui table" title="items">
                 <thead>
-                    <tr><th>Item<th>Description
-                
+                    <tr><th>Item</th><th>Description</th></tr>
+                </thead>
                 <tbody>
-                <tr><td>getConn()<td>Get the current HttpConn object. Can be used inside controllers and 
-                    template web pages
-                <tr><td>conn-&gt;rx<td>Request object
-                <tr><td>conn-&gt;tx<td>Transmit object
-                <tr><td>conn-&gt;host<td>Host object
-                <tr><td>conn-&gt;rx-&gt;route<td>Route object
-                <tr><td class="nowrap">conn-&gt;rx-&gt;route-&gt;eroute<td>ESP Extended Route object
-                <tr><td>rx-&gt;method<td>HTTP method string
-                <tr><td>rx-&gt;uri<td>Request URI
-                <tr><td>rx-&gt;pathInfo<td>Request path information after the scriptName
-                <tr><td class="nowrap">rx-&gt;scriptName<td>Script name portion of the request URI
-                <tr><td>tx-&gt;filename<td>Resource filename being served
-                <tr><td>tx-&gt;ext<td>Resource filename extension
-                <tr><td>tx-&gt;finalized<td>Set if response output has been completed
-                <tr><td>route-&gt;documents<td>Document root directory for the route
-                <tr><td>route-&gt;home<td>Route home directory
-                
+                <tr><td>getConn()</td><td>Get the current HttpConn object. Can be used inside controllers and 
+                    template web pages</td></tr>
+                <tr><td>conn-&gt;rx</td><td>Request object</td>
+                <tr><td>conn-&gt;tx</td><td>Transmit object</td>
+                <tr><td>conn-&gt;host</td><td>Host object</td>
+                <tr><td>conn-&gt;rx-&gt;route</td><td>Route object</td>
+                <tr><td class="nowrap">conn-&gt;rx-&gt;route-&gt;eroute</td><td>ESP Extended Route object</td>
+                <tr><td>rx-&gt;method</td><td>HTTP method string</td>
+                <tr><td>rx-&gt;uri</td><td>Request URI</td>
+                <tr><td>rx-&gt;pathInfo</td><td>Request path information after the scriptName</td>
+                <tr><td class="nowrap">rx-&gt;scriptName</td><td>Script name portion of the request URI</td>
+                <tr><td>tx-&gt;filename</td><td>Resource filename being served</td>
+                <tr><td>tx-&gt;ext</td><td>Resource filename extension</td>
+                <tr><td>tx-&gt;finalized</td><td>Set if response output has been completed</td>
+                <tr><td>route-&gt;documents</td><td>Document root directory for the route</td>
+                <tr><td>route-&gt;home</td><td>Route home directory</td>
+                </tbody>
             </table>
             <p>See the <a href="../ref/native.html">Native APIs</a> document for more details about the available
             APIs. See the <a href="command.html">ESP Generator</a> documentation for full details.</p>
@@ -476,7 +477,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             browser. The <a href="../ref/api/mpr.html#group___mpr_log_1ga21fa2199e7f70707c1fb3b63daed6ecf">mprLog</a> 
             function will print its arguments to esp log file. 
 
-            </p><p>To send trace to the browser, use the <em>
+            <p>To send trace to the browser, use the <em>
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a></em> function 
             to write data back to the browser. </p>
 
@@ -492,5 +493,5 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 
         
 
-
-
+</body>
+</html>

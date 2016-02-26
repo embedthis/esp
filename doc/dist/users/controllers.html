@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>ESP Controllers</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -226,21 +227,21 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         <p>ESP will create a initial set of Restful routes depending on the <em>esp.server.routes</em> configuration.</p>
 <table class="ui table" title="routes">
     <thead>
-<tr><th>Description<th>Method<th>Pattern<th>Action
-    
+<tr><th>Description</th><th>Method</th><th>Pattern</th><th>Action</th></tr>
+    </thead>
     <tbody>
-<tr><td>controller<td>GET<td>/controller$<td>${controller}
-<tr><td>delete<td>POST<td>/controller/{id=[0-9]+}/delete$<td>delete
-<tr><td>create<td>POST<td>/controller(/)*$<td>create
-<tr><td>edit<td>GET<td>/controller/{id=[0-9]+}/edit$<td>edit
-<tr><td>get<td>GET<td>/controller/{id=[0-9]+}$<td>get
-<tr><td>init<td>GET<td>/controller/init$<td>init
-<tr><td>list<td>GET<td>/controller/list$<td>list
-<tr><td>stream<td>GET<td>/controller/stream$<td>stream
-<tr><td>remove<td>DELETE<td>/controller/{id=[0-9]+}$<td>remove
-<tr><td>update<td>PUT<td>/controller/{id=[0-9]+}/{action}(/)*$<td>update
-<tr><td>action<td>GET,POST<td>/controller//{id=[0-9]+}{action}$<td>${controller}/${action}
-    
+<tr><td>controller</td><td>GET</td><td>/controller$</td><td>${controller}</td></tr>
+<tr><td>delete</td><td>POST</td><td>/controller/{id=[0-9]+}/delete$</td><td>delete</td></tr>
+<tr><td>create</td><td>POST</td><td>/controller(/)*$</td><td>create</td></tr>
+<tr><td>edit</td><td>GET</td><td>/controller/{id=[0-9]+}/edit$</td><td>edit</td></tr>
+<tr><td>get</td><td>GET</td><td>/controller/{id=[0-9]+}$</td><td>get</td></tr>
+<tr><td>init</td><td>GET</td><td>/controller/init$</td><td>init</td></tr>
+<tr><td>list</td><td>GET</td><td>/controller/list$</td><td>list</td></tr>
+<tr><td>stream</td><td>GET</td><td>/controller/stream$</td><td>stream</td></tr>
+<tr><td>remove</td><td>DELETE</td><td>/controller/{id=[0-9]+}$</td><td>remove</td></tr>
+<tr><td>update</td><td>PUT</td><td>/controller/{id=[0-9]+}/{action}(/)*$</td><td>update</td></tr>
+<tr><td>action</td><td>GET,POST</td><td>/controller//{id=[0-9]+}{action}$</td><td>${controller}/${action}</td></tr>
+    </tbody>
 </table>
     <p>The delete route is a POST method variant of remove. The stream route is for WebSockets streaming of
     updates. </p>
@@ -369,7 +370,8 @@ static void first() {
 <pre class="code">static void ACTION(HttpConn *conn) {
     /* Use the conn reference here */
 }</pre> 
-            <p>Alternatively, the connection object can can be retrieved using the <a href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">
+            <p>Alternatively, the connection object can can be retrieved using the <a
+                href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">
                 getConn</a> API.</p>
             <h3>Navigating the Connection Object</h3>
             <p>The <a href="../ref/api/http.html#group___http_conn">HttpConn</a> object represents the current
@@ -378,18 +380,18 @@ static void first() {
             navigated.</p> 
             <table class="table ui" title="properties">
                 <thead>
-                    <tr><th>HttpConn Property<th>Purpose
-                
+                    <tr><th>HttpConn Property</th><th>Purpose</th></tr>
+                </thead>
                 <tbody>
-                    <tr><td>rx<td>Reference to the HttpRx receive object
-                    <tr><td>tx<td>Reference to the HttpTx transmit object
-                    <tr><td>host<td>Reference to the HttpHost object
-                    <tr><td>http<td>Reference to the Http object
-                    <tr><td>endpoint<td>Reference to the HttpEndpoint transmit object
-                    <tr><td>limits<td>Reference to the HttpLimits object
-                    <tr><td>ip<td>Remote client IP address
-                    <tr><td>port<td>Remote client port
-                
+                    <tr><td>rx</td><td>Reference to the HttpRx receive object</td></tr>
+                    <tr><td>tx</td><td>Reference to the HttpTx transmit object</td></tr>
+                    <tr><td>host</td><td>Reference to the HttpHost object</td></tr>
+                    <tr><td>http</td><td>Reference to the Http object</td></tr>
+                    <tr><td>endpoint</td><td>Reference to the HttpEndpoint transmit object</td></tr>
+                    <tr><td>limits</td><td>Reference to the HttpLimits object</td></tr>
+                    <tr><td>ip</td><td>Remote client IP address</td></tr>
+                    <tr><td>port</td><td>Remote client port</td></tr>
+                </tbody>
             </table>
             <h3>Navigating the Receive Object</h3>
             <p>The <a href="../ref/api/http.html#group___http_rx">HttpRx</a> object represents the receive side of the
@@ -397,18 +399,18 @@ static void first() {
             object are public and can be accessed and navigated.</p> 
             <table class="table ui" title="fields">
                 <thead>
-                    <tr><th>HttpRx Property<th>Purpose
-                
+                    <tr><th>HttpRx Property</th><th>Purpose</th></tr>
+                </thead>
                 <tbody>
-                    <tr><td>method<td>HTTP request method
-                    <tr><td>uri<td>Current URI (may be rewritten)
-                    <tr><td>pathInfo<td>Path portion of the URI after the scriptName
-                    <tr><td>scriptName<td>ScriptName portion of the URI
-                    <tr><td>length<td>Content length
-                    <tr><td>route<td>Reference to current HttpRoute object
-                    <tr><td>params<td>Request params (query, form and route parameters)
-                    <tr><td>files<td>Uploaded files
-                
+                    <tr><td>method</td><td>HTTP request method</td></tr>
+                    <tr><td>uri</td><td>Current URI (may be rewritten)</td></tr>
+                    <tr><td>pathInfo</td><td>Path portion of the URI after the scriptName</td></tr>
+                    <tr><td>scriptName</td><td>ScriptName portion of the URI</td></tr>
+                    <tr><td>length</td><td>Content length</td></tr>
+                    <tr><td>route</td><td>Reference to current HttpRoute object</td></tr>
+                    <tr><td>params</td><td>Request params (query, form and route parameters)</td></tr>
+                    <tr><td>files</td><td>Uploaded files</td></tr>
+                </tbody>
             </table>
             <h3>Navigating the Tx Object</h3>
             <p>The <a href="../ref/api/http.html#group___http_tx">HttpTx</a> object represents the transmit side of the
@@ -416,16 +418,16 @@ static void first() {
             object are public and can be accessed and navigated.</p> 
             <table class="table ui" title="state">
                 <thead>
-                    <tr><th>HttpTx Property<th>Purpose
-                
+                    <tr><th>HttpTx Property</th><th>Purpose</th></tr>
+                </thead>
                 <tbody>
-                    <tr><td>filename<td>Name of the real file being served
-                    <tr><td>ext<td>Filename extension
-                    <tr><td>handler<td>Request handler object
-                    <tr><td>length<td>Response content length
-                    <tr><td>status<td>Response HTTP status
-                    <tr><td>headers<td>Response HTTP headers
-                
+                    <tr><td>filename</td><td>Name of the real file being served</td></tr>
+                    <tr><td>ext</td><td>Filename extension</td></tr>
+                    <tr><td>handler</td><td>Request handler object</td></tr>
+                    <tr><td>length</td><td>Response content length</td></tr>
+                    <tr><td>status</td><td>Response HTTP status</td></tr>
+                    <tr><td>headers</td><td>Response HTTP headers</td></tr>
+                </tbody>
             </table>
             
             <a id="models"></a>
@@ -434,87 +436,87 @@ static void first() {
             <table class="table ui" title="viewClass">
                 <thead>
                     <tr>
-                        <th class="nowrap">Method / Property
-                        <th>Description
-                    
-                
+                        <th class="nowrap">Method / Property</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gadba1deb080e78b4517119a0294489b44">
-                                addHeader</a> <td>Add a response HTTP header.
-                    
+                                addHeader</a></td> <td>Add a response HTTP header.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gab7b4049b554576b57f8cc49efc9e3a95">
                                 createSession</a>
-                        
-                        <td>Enable session control.
-                    
+                        </td>
+                        <td>Enable session control.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga35677b9aa8d61543db5ea80377e823a6">
                             destroySession</a>
-                        
-                        <td>Destroy a session.
-                    
+                        </td>
+                        <td>Destroy a session.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2">
                                 dontAutoFinalize</a>
-                        
-                        <td>Don't automatically finalize output when the action returns. Useful for async actions.
-                    
+                        </td>
+                        <td>Don't automatically finalize output when the action returns. Useful for async actions.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga03544bf56dde3a257391d07e1d6f6a3a">
                                 error</a>
-                        
-                        <td>Send an error flash message to the next web page.
-                    
+                        </td>
+                        <td>Send an error flash message to the next web page.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga8e8c0dccb4ded8a2fecec11d389cf8c8">
                                 inform</a>
-                        
-                        <td>Send an informational flash message to the next web page.
-                    
+                        </td>
+                        <td>Send an informational flash message to the next web page.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">
                             param</a>
-                        
-                        <td>Get a request parameter value.
-                    
+                        </td>
+                        <td>Get a request parameter value.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga79cf206805a9595395af14e7c35f289d">
-                                redirect</a>
-                        <td>Redirect the client to a new URI.
-                    
+                                redirect</a></td>
+                        <td>Redirect the client to a new URI.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">
-                                render</a>
-                        <td>Render the text data back to the client.
-                    
+                                render</a></td>
+                        <td>Render the text data back to the client.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gaa1e37f244a0e0796df494dfb756472a8">
-                                renderFile</a>
-                        <td>Render a file's contents back to the client.
-                    
+                                renderFile</a></td>
+                        <td>Render a file's contents back to the client.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gafe8d897ff436eabc6fc275f76222a5c3">
-                                setContentType</a>
-                        <td>Set the response content type.
-                    
+                                setContentType</a></td>
+                        <td>Set the response content type.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#esp_8h_1a85b884db9ea1993efaa01dbe686f601c">
-                                setCookie</a>
-                        <td>Define a cookie to include in the response.
-                    
+                                setCookie</a></td>
+                        <td>Define a cookie to include in the response.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1gadb4f7bc3020ab9c481f1ebcaf1ed3f2a">
-                                setSessionVar</a>
-                        <td>Set a variable in session state storage.
-                    
+                                setSessionVar</a></td>
+                        <td>Set a variable in session state storage.</td>
+                    </tr>
                     <tr>
                         <td><a href="../ref/api/esp.html#group___esp_abbrev_1ga56d17d8860dc351f63feaa55891cdf21">
-                                uri</a>
-                        <td>Make a URI from parameters.
-                    
-                
+                                uri</a></td>
+                        <td>Make a URI from parameters.</td>
+                    </tr>
+                </tbody>
             </table>
             
             <a id="parameters"></a>
@@ -547,7 +549,7 @@ esp generate controller name [actions...]
 </pre>
             <p><em>name</em> is the controller name. <em>actions...</em> are the names of the action functions you 
             want to generate. This command will create the controller source file under the <em>controllers</em> directory. 
-            </p><p>If no actions are requested when generating, <em>esp</em> will create a controller with 
+            <p>If no actions are requested when generating, <em>esp</em> will create a controller with 
             an initialization function but without any actions. If actions are specified, <em>esp</em> 
             will create an empty action method for each specified action. You can safely edit the
             controller source to meet your needs.</p>
@@ -589,5 +591,5 @@ ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route)
 
         
 
-
-
+</body>
+</html>

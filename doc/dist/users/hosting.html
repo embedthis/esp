@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>Hosting in Appweb</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -187,7 +188,44 @@
             <p>When compiling ESP applications to be hosted in Appweb, you must use the <em>appweb-esp</em> command instead
             of <em>esp</em>. This is because you must link with the Appweb libraries when compiling ESP applications.</p>
 
+<!--
+            <p>This defines an ESP application at the given directory that will receive 
+            requests that begin with specified URI prefix. </p>
 
+            <a id="controllers"></a>
+            <h2>ESP Controllers</h2>
+            <p>ESP Controllers may be used as part of an ESP application or they may be used stand-alone outside
+            an ESP app. A stand-alone controller must define a route that specifies the desired URI, the source file
+            containing the controller and the format of the URI to action mapping. For example:</p>
+            <code class="inverted">
+&lt;Route ^/greetings/{action}$&gt;
+    SetHandler espHandler
+    Source     greetings.c
+    Target     run greetings-$1
+&lt;/Route&gt;
+</code>
+            <p>This defines a controller in <em>greeting.c</em> to respond to URIs that begin with <em>/greetings</em>.
+            <p>Controllers are dynamically loaded and reloaded as required. Controllers contain one or more actions and have
+            a module initialization routine that defines the actions for ESP to support. For example:</p>
+<code class="inverted">
+#include "esp.h"
+static void hello() {
+    render("Hello World\n");
+}
+ESP_EXPORT int esp_controller_app_greetings(HttpRoute *route) {
+    espDefineAction(route, "greetings-hello", hello);
+    return 0;
+}
+</code>
+            <p>This defines a single action which renders the string "Hello World\n" in response to the client request 
+            for the URI <em>/greeting/hello</em>. When the URI is requested, the controller is compiled, linked into
+            a dynamic library, saved in the cache directory and loaded into Appweb. If the source is modified, the 
+            old controller is unloaded (after ensuring there are no active requests) and the new source is compiled and
+            loaded.</p>
+
+            <p>If you wish to pre-compile the controller, use the <em>esp</em> utility program. For example:</p>
+            <code class="inverted">esp compile greetings.c</code>
+-->
 
     </div>
     <div class="terms ui basic center aligned segment">
@@ -201,5 +239,5 @@
 
         
 
-
-
+</body>
+</html>

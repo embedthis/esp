@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>Monitoring and Defending</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="The amazing C web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="The amazing C web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
     
 
-
+</head>
 <body class="show-sidebar">
         <div class="sidebar">
         <div class="ui large left vertical inverted labeled menu">
@@ -207,7 +208,7 @@ monitors: {
             <p>This will test each minute if any client has more than 50 errors in the preceding period. 
             If so, the "block" defense will be invoked.
             <h3>Monitor Expressions</h3>
-            </p><p>Monitor expressions are simple comparisons between a server Counter and a limit wrapped in quotes. 
+            <p>Monitor expressions are simple comparisons between a server Counter and a limit wrapped in quotes. 
             They take the form:</p>
             <pre class="code">"Counter [&lt;|&gt;] Limit"</pre>
             <p>Although a monitor can only access one counter, multiple monitors can be created. </p>
@@ -229,22 +230,22 @@ monitors: {
             The value examined by Monitors is the current value of the counter.</p>
             <table title="monitors" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description<th>Notes
-                
+                    <tr><th>Name</th><th>Description</th><th>Notes</th></tr>
+                </thead>
                 <tbody>
                 <tr>
-                    <td>ActiveClients
-                    <td>Count of client IP addresses recently accessing the server.
+                    <td>ActiveClients</td>
+                    <td>Count of client IP addresses recently accessing the server.</td>
                     <td>The ActiveClients counter is pruned of old clients whenever a monitor runs to examine its value or every 5 minutes
-                        whichever is more.
-                
+                        whichever is more.</td>
+                </tr>
                 <tr>
-                    <td>Memory
-                    <td>Amount of memory used by ESP.
+                    <td>Memory</td>
+                    <td>Amount of memory used by ESP.</td>
                     <td>The Memory counter is not representative of an outside security threat, but is provided for 
-                        as it does impact the ability of the server to provide service.
-                
-            
+                        as it does impact the ability of the server to provide service.</td>
+                </tr>
+            </tbody>
             </table>
             <h3>Per-Client Counters</h3>
             <p>All the per-client counters are accumulated for each client IP address. For all counters 
@@ -252,20 +253,20 @@ monitors: {
             value over the monitor period. ActiveConnections and ActiveRequests are instantaneous values.</p>
             <table title="counters" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
-                    <tr><td>ActiveConnections <td>Count of active sockets.
-                    <tr><td>ActiveRequests <td> Count of active requests.
-                    <tr><td>BadRequestErrors <td> Count of requests that were badly formatted.
-                    <tr><td>Errors <td> Count of requests that resulted in an error of some kind.
-                    <tr><td>LimitErrors <td> Count of requests that violated the defined limits in 
-                        <em>esp.json</em>.
-                    <tr><td>NetworkIO <td> Total network I/O in bytes performed.
-                    <tr><td>NotFoundErrors <td> Count of requests that accessed a resource not found on the server.
-                    <tr><td>Requests <td> Count of requests.
-                    <tr><td>SSLErrors <td> Count of SSL Errors.
-            
+                    <tr><td>ActiveConnections </td><td>Count of active sockets.</td></tr>
+                    <tr><td>ActiveRequests </td><td> Count of active requests.</td></tr>
+                    <tr><td>BadRequestErrors </td><td> Count of requests that were badly formatted.</td></tr>
+                    <tr><td>Errors </td><td> Count of requests that resulted in an error of some kind.</td></tr>
+                    <tr><td>LimitErrors </td><td> Count of requests that violated the defined limits in 
+                        <em>esp.json</em>.</td></tr>
+                    <tr><td>NetworkIO </td><td> Total network I/O in bytes performed.</td></tr>
+                    <tr><td>NotFoundErrors </td><td> Count of requests that accessed a resource not found on the server.</td></tr>
+                    <tr><td>Requests </td><td> Count of requests.</td></tr>
+                    <tr><td>SSLErrors </td><td> Count of SSL Errors.</td></tr>
+            </tbody>
             </table>
             <p>Hackers often issue requests that result in errors as a means of profiling the vulnerabilities of a server. Too many
             BadRequestErrors or NotFoundErrors may indicate hacking activity. Similarly, too many SSLErrors may be an indication that
@@ -305,17 +306,17 @@ defenses: {
             remedy names are used in Defense <em>remedy</em> property.</p>
             <table title="remedies" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
-                    <tr><td>ban<td>Ban the client IP address.
-                    <tr><td>cmd<td>Run an external command.
-                    <tr><td>delay<td>Delay requests from a client IP address.
-                    <tr><td>email<td>Send an email message.
-                    <tr><td>http<td>Invoke a HTTP request.
-                    <tr><td>log<td>Write to the ESP error log.
-                    <tr><td>reboot<td>Reboot ESP
-                
+                    <tr><td>ban</td><td>Ban the client IP address.</td></tr>
+                    <tr><td>cmd</td><td>Run an external command.</td></tr>
+                    <tr><td>delay</td><td>Delay requests from a client IP address.</td></tr>
+                    <tr><td>email</td><td>Send an email message.</td></tr>
+                    <tr><td>http</td><td>Invoke a HTTP request.</td></tr>
+                    <tr><td>log</td><td>Write to the ESP error log.</td></tr>
+                    <tr><td>reboot</td><td>Reboot ESP</td></tr>
+                </tbody>
             </table>
             <h3>Ban Remedy</h3>
             <p>The <i>ban</i> remedy prevents requests from the banned client IP address for a period of time.
@@ -434,18 +435,18 @@ defenses: {
             <p>All remedies have access the following KEYWORD tokens. These are also used in the message:</p>
             <table title="keywords" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description
-                
+                    <tr><th>Name</th><th>Description</th></tr>
+                </thead>
                 <tbody>
-                    <tr><td>COUNTER<td>Name of the triggering counter
-                    <tr><td>DATE<td>Date when the monitor triggered
-                    <tr><td>IP<td>IP address of the offending client if relevant
-                    <tr><td>LIMIT<td>Limit configured by the Monitor
-                    <tr><td>MESSAGE<td>Generic or overridden message
-                    <tr><td>PERIOD<td>Sampling period defined by the Monitor
-                    <tr><td>SUBJECT<td>Descriptive title for the event
-                    <tr><td>VALUE<td>Counter value
-                
+                    <tr><td>COUNTER</td><td>Name of the triggering counter</td></tr>
+                    <tr><td>DATE</td><td>Date when the monitor triggered</td></tr>
+                    <tr><td>IP</td><td>IP address of the offending client if relevant</td></tr>
+                    <tr><td>LIMIT</td><td>Limit configured by the Monitor</td></tr>
+                    <tr><td>MESSAGE</td><td>Generic or overridden message</td></tr>
+                    <tr><td>PERIOD</td><td>Sampling period defined by the Monitor</td></tr>
+                    <tr><td>SUBJECT</td><td>Descriptive title for the event</td></tr>
+                    <tr><td>VALUE</td><td>Counter value</td></tr>
+                </tbody>
             </table>
             <a id="examples"></a>
             <h2>More Examples</h2>
@@ -516,5 +517,5 @@ monitors: {
 
         
 
-
-
+</body>
+</html>
