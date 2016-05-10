@@ -64,8 +64,8 @@ Me.load({
                     includes = [ inc ]
                     libraries = [ 'ssl', 'crypto' ]
                     libpaths = [ lib.parent ]
-                    imports = lib.parent.files('libssl.' + lib.extension + '*') + 
-                              lib.parent.files('libcrypto.' + lib.extension + '*')
+                    imports = lib.parent.files('libssl.*' + lib.extension + '*') + 
+                              lib.parent.files('libcrypto.*' + lib.extension + '*')
                     path = lib.dirname
                 }
                 includes.push(me.dir.inc)

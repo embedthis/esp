@@ -2681,7 +2681,7 @@ int mbedtls_asn1_write_raw_buffer( unsigned char **p, unsigned char *start,
 {
     size_t len = 0;
 
-    if( *p - start < (int) size )
+    if( *p < start || (size_t)( *p - start ) < size )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     len = size;
@@ -2701,7 +2701,7 @@ int mbedtls_asn1_write_mpi( unsigned char **p, unsigned char *start, const mbedt
     //
     len = mbedtls_mpi_size( X );
 
-    if( *p - start < (int) len )
+    if( *p < start || (size_t)( *p - start ) < len )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     (*p) -= len;
@@ -2785,7 +2785,7 @@ int mbedtls_asn1_write_bool( unsigned char **p, unsigned char *start, int boolea
     if( *p - start < 1 )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
-    *--(*p) = (boolean) ? 1 : 0;
+    *--(*p) = (boolean) ? 255 : 0;
     len++;
 
     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( p, start, len ) );
@@ -2864,7 +2864,7 @@ int mbedtls_asn1_write_bitstring( unsigned char **p, unsigned char *start,
 
     // Calculate byte length
     //
-    if( *p - start < (int) size + 1 )
+    if( *p < start || (size_t)( *p - start ) < size + 1 )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     len = size + 1;
@@ -2933,19 +2933,18 @@ mbedtls_asn1_named_data *mbedtls_asn1_store_named_data( mbedtls_asn1_named_data 
     }
     else if( cur->val.len < val_len )
     {
-        // Enlarge existing value buffer if needed
-        //
-        mbedtls_free( cur->val.p );
-        cur->val.p = NULL;
-
-        cur->val.len = val_len;
-        cur->val.p = mbedtls_calloc( 1, val_len );
-        if( cur->val.p == NULL )
-        {
-            mbedtls_free( cur->oid.p );
-            mbedtls_free( cur );
+        /*
+         * Enlarge existing value buffer if needed
+         * Preserve old data until the allocation succeeded, to leave list in
+         * a consistent state in case allocation fails.
+         */
+        void *p = mbedtls_calloc( 1, val_len );
+        if( p == NULL )
             return( NULL );
-        }
+
+        mbedtls_free( cur->val.p );
+        cur->val.p = p;
+        cur->val.len = val_len;
     }
 
     if( val != NULL )
@@ -3277,12 +3276,21 @@ int mbedtls_base64_self_test( int verbose )
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
+
 /*
- *  This MPI implementation is based on:
+ *  The following sources were referenced in the design of this Multi-precision
+ *  Integer library:
  *
- *  http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf
- *  http://www.stillhq.com/extracted/gnupg-api/mbedtls_mpi/
- *  http://math.libtomcrypt.com/files/tommath.pdf
+ *  [1] Handbook of Applied Cryptography - 1997
+ *      Menezes, van Oorschot and Vanstone
+ *
+ *  [2] Multi-Precision Math
+ *      Tom St Denis
+ *      https://github.com/libtom/libtommath/blob/develop/tommath.pdf
+ *
+ *  [3] GNU Multi-Precision Arithmetic Library
+ *      https://gmplib.org/manual/index.html
+ *
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -3309,7 +3317,7 @@ int mbedtls_base64_self_test( int verbose )
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
-static void bignum_zeroize( void *v, size_t n ) {
+static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
 
@@ -3349,7 +3357,7 @@ void mbedtls_mpi_free( mbedtls_mpi *X )
 
     if( X->p != NULL )
     {
-        bignum_zeroize( X->p, X->n * ciL );
+        mbedtls_zeroize( X->p, X->n * ciL );
         mbedtls_free( X->p );
     }
 
@@ -3376,7 +3384,7 @@ int mbedtls_mpi_grow( mbedtls_mpi *X, size_t nblimbs )
         if( X->p != NULL )
         {
             memcpy( p, X->p, X->n * ciL );
-            bignum_zeroize( X->p, X->n * ciL );
+            mbedtls_zeroize( X->p, X->n * ciL );
             mbedtls_free( X->p );
         }
 
@@ -3414,7 +3422,7 @@ int mbedtls_mpi_shrink( mbedtls_mpi *X, size_t nblimbs )
     if( X->p != NULL )
     {
         memcpy( p, X->p, i * ciL );
-        bignum_zeroize( X->p, X->n * ciL );
+        mbedtls_zeroize( X->p, X->n * ciL );
         mbedtls_free( X->p );
     }
 
@@ -3607,6 +3615,24 @@ size_t mbedtls_mpi_lsb( const mbedtls_mpi *X )
 }
 
 /*
+ * Count leading zero bits in a given integer
+ */
+static size_t mbedtls_clz( const mbedtls_mpi_uint x )
+{
+    size_t j;
+    mbedtls_mpi_uint mask = (mbedtls_mpi_uint) 1 << (biL - 1);
+
+    for( j = 0; j < biL; j++ )
+    {
+        if( x & mask ) break;
+
+        mask >>= 1;
+    }
+
+    return j;
+}
+
+/*
  * Return the number of bits
  */
 size_t mbedtls_mpi_bitlen( const mbedtls_mpi *X )
@@ -3620,9 +3646,7 @@ size_t mbedtls_mpi_bitlen( const mbedtls_mpi *X )
         if( X->p[i] != 0 )
             break;
 
-    for( j = biL; j > 0; j-- )
-        if( ( ( X->p[i] >> ( j - 1 ) ) & 1 ) != 0 )
-            break;
+    j = biL - mbedtls_clz( X->p[i] );
 
     return( ( i * biL ) + j );
 }
@@ -4446,6 +4470,102 @@ int mbedtls_mpi_mul_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_uint 
 }
 
 /*
+ * Unsigned integer divide - double mbedtls_mpi_uint dividend, u1/u0, and
+ * mbedtls_mpi_uint divisor, d
+ */
+static mbedtls_mpi_uint mbedtls_int_div_int( mbedtls_mpi_uint u1,
+            mbedtls_mpi_uint u0, mbedtls_mpi_uint d, mbedtls_mpi_uint *r )
+{
+#if defined(MBEDTLS_HAVE_UDBL)
+    mbedtls_t_udbl dividend, quotient;
+#else
+    const mbedtls_mpi_uint radix = (mbedtls_mpi_uint) 1 << biH;
+    const mbedtls_mpi_uint uint_halfword_mask = ( (mbedtls_mpi_uint) 1 << biH ) - 1;
+    mbedtls_mpi_uint d0, d1, q0, q1, rAX, r0, quotient;
+    mbedtls_mpi_uint u0_msw, u0_lsw;
+    size_t s;
+#endif
+
+    /*
+     * Check for overflow
+     */
+    if( 0 == d || u1 >= d )
+    {
+        if (r != NULL) *r = ~0;
+
+        return ( ~0 );
+    }
+
+#if defined(MBEDTLS_HAVE_UDBL)
+    dividend  = (mbedtls_t_udbl) u1 << biL;
+    dividend |= (mbedtls_t_udbl) u0;
+    quotient = dividend / d;
+    if( quotient > ( (mbedtls_t_udbl) 1 << biL ) - 1 )
+        quotient = ( (mbedtls_t_udbl) 1 << biL ) - 1;
+
+    if( r != NULL )
+        *r = (mbedtls_mpi_uint)( dividend - (quotient * d ) );
+
+    return (mbedtls_mpi_uint) quotient;
+#else
+
+    /*
+     * Algorithm D, Section 4.3.1 - The Art of Computer Programming
+     *   Vol. 2 - Seminumerical Algorithms, Knuth
+     */
+
+    /*
+     * Normalize the divisor, d, and dividend, u0, u1
+     */
+    s = mbedtls_clz( d );
+    d = d << s;
+
+    u1 = u1 << s;
+    u1 |= ( u0 >> ( biL - s ) ) & ( -(mbedtls_mpi_sint)s >> ( biL - 1 ) );
+    u0 =  u0 << s;
+
+    d1 = d >> biH;
+    d0 = d & uint_halfword_mask;
+
+    u0_msw = u0 >> biH;
+    u0_lsw = u0 & uint_halfword_mask;
+
+    /*
+     * Find the first quotient and remainder
+     */
+    q1 = u1 / d1;
+    r0 = u1 - d1 * q1;
+
+    while( q1 >= radix || ( q1 * d0 > radix * r0 + u0_msw ) )
+    {
+        q1 -= 1;
+        r0 += d1;
+
+        if ( r0 >= radix ) break;
+    }
+
+    rAX = ( u1 * radix ) + ( u0_msw - q1 * d );
+    q0 = rAX / d1;
+    r0 = rAX - q0 * d1;
+
+    while( q0 >= radix || ( q0 * d0 > radix * r0 + u0_lsw ) )
+    {
+        q0 -= 1;
+        r0 += d1;
+
+        if ( r0 >= radix ) break;
+    }
+
+    if (r != NULL)
+        *r = ( rAX * radix + u0_lsw - q0 * d ) >> s;
+
+    quotient = q1 * radix + q0;
+
+    return quotient;
+#endif
+}
+
+/*
  * Division by mbedtls_mpi: A = Q * B + R  (HAC 14.20)
  */
 int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, const mbedtls_mpi *B )
@@ -4502,57 +4622,8 @@ int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, c
             Z.p[i - t - 1] = ~0;
         else
         {
-#if defined(MBEDTLS_HAVE_UDBL)
-            mbedtls_t_udbl r;
-
-            r  = (mbedtls_t_udbl) X.p[i] << biL;
-            r |= (mbedtls_t_udbl) X.p[i - 1];
-            r /= Y.p[t];
-            if( r > ( (mbedtls_t_udbl) 1 << biL ) - 1 )
-                r = ( (mbedtls_t_udbl) 1 << biL ) - 1;
-
-            Z.p[i - t - 1] = (mbedtls_mpi_uint) r;
-#else
-            /*
-             * __udiv_qrnnd_c, from gmp/longlong.h
-             */
-            mbedtls_mpi_uint q0, q1, r0, r1;
-            mbedtls_mpi_uint d0, d1, d, m;
-
-            d  = Y.p[t];
-            d0 = ( d << biH ) >> biH;
-            d1 = ( d >> biH );
-
-            q1 = X.p[i] / d1;
-            r1 = X.p[i] - d1 * q1;
-            r1 <<= biH;
-            r1 |= ( X.p[i - 1] >> biH );
-
-            m = q1 * d0;
-            if( r1 < m )
-            {
-                q1--, r1 += d;
-                while( r1 >= d && r1 < m )
-                    q1--, r1 += d;
-            }
-            r1 -= m;
-
-            q0 = r1 / d1;
-            r0 = r1 - d1 * q0;
-            r0 <<= biH;
-            r0 |= ( X.p[i - 1] << biH ) >> biH;
-
-            m = q0 * d0;
-            if( r0 < m )
-            {
-                q0--, r0 += d;
-                while( r0 >= d && r0 < m )
-                    q0--, r0 += d;
-            }
-            r0 -= m;
-
-            Z.p[i - t - 1] = ( q1 << biH ) | q0;
-#endif /* MBEDTLS_HAVE_UDBL && !64-bit Apple with Clang 5.0 */
+            Z.p[i - t - 1] = mbedtls_int_div_int( X.p[i], X.p[i - 1],
+                                                            Y.p[t], NULL);
         }
 
         Z.p[i - t - 1]++;
@@ -13942,6 +14013,1115 @@ void mbedtls_ecdsa_free( mbedtls_ecdsa_context *ctx )
 
 
 
+/********* Start of file library/ecjpake.c ************/
+
+
+/*
+ *  Elliptic curve J-PAKE
+ *
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *  This file is part of mbed TLS (https://tls.mbed.org)
+ */
+
+/*
+ * References in the code are to the Thread v1.0 Specification,
+ * available to members of the Thread Group http://threadgroup.org/
+ */
+
+#if !defined(MBEDTLS_CONFIG_FILE)
+
+#else
+
+#endif
+
+#if defined(MBEDTLS_ECJPAKE_C)
+
+
+
+#include <string.h>
+
+/*
+ * Convert a mbedtls_ecjpake_role to identifier string
+ */
+static const char * const ecjpake_id[] = {
+    "client",
+    "server"
+};
+
+#define ID_MINE     ( ecjpake_id[ ctx->role ] )
+#define ID_PEER     ( ecjpake_id[ 1 - ctx->role ] )
+
+/*
+ * Initialize context
+ */
+void mbedtls_ecjpake_init( mbedtls_ecjpake_context *ctx )
+{
+    if( ctx == NULL )
+        return;
+
+    ctx->md_info = NULL;
+    mbedtls_ecp_group_init( &ctx->grp );
+    ctx->point_format = MBEDTLS_ECP_PF_UNCOMPRESSED;
+
+    mbedtls_ecp_point_init( &ctx->Xm1 );
+    mbedtls_ecp_point_init( &ctx->Xm2 );
+    mbedtls_ecp_point_init( &ctx->Xp1 );
+    mbedtls_ecp_point_init( &ctx->Xp2 );
+    mbedtls_ecp_point_init( &ctx->Xp  );
+
+    mbedtls_mpi_init( &ctx->xm1 );
+    mbedtls_mpi_init( &ctx->xm2 );
+    mbedtls_mpi_init( &ctx->s   );
+}
+
+/*
+ * Free context
+ */
+void mbedtls_ecjpake_free( mbedtls_ecjpake_context *ctx )
+{
+    if( ctx == NULL )
+        return;
+
+    ctx->md_info = NULL;
+    mbedtls_ecp_group_free( &ctx->grp );
+
+    mbedtls_ecp_point_free( &ctx->Xm1 );
+    mbedtls_ecp_point_free( &ctx->Xm2 );
+    mbedtls_ecp_point_free( &ctx->Xp1 );
+    mbedtls_ecp_point_free( &ctx->Xp2 );
+    mbedtls_ecp_point_free( &ctx->Xp  );
+
+    mbedtls_mpi_free( &ctx->xm1 );
+    mbedtls_mpi_free( &ctx->xm2 );
+    mbedtls_mpi_free( &ctx->s   );
+}
+
+/*
+ * Setup context
+ */
+int mbedtls_ecjpake_setup( mbedtls_ecjpake_context *ctx,
+                           mbedtls_ecjpake_role role,
+                           mbedtls_md_type_t hash,
+                           mbedtls_ecp_group_id curve,
+                           const unsigned char *secret,
+                           size_t len )
+{
+    int ret;
+
+    ctx->role = role;
+
+    if( ( ctx->md_info = mbedtls_md_info_from_type( hash ) ) == NULL )
+        return( MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE );
+
+    MBEDTLS_MPI_CHK( mbedtls_ecp_group_load( &ctx->grp, curve ) );
+
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &ctx->s, secret, len ) );
+
+cleanup:
+    if( ret != 0 )
+        mbedtls_ecjpake_free( ctx );
+
+    return( ret );
+}
+
+/*
+ * Check if context is ready for use
+ */
+int mbedtls_ecjpake_check( const mbedtls_ecjpake_context *ctx )
+{
+    if( ctx->md_info == NULL ||
+        ctx->grp.id == MBEDTLS_ECP_DP_NONE ||
+        ctx->s.p == NULL )
+    {
+        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+    }
+
+    return( 0 );
+}
+
+/*
+ * Write a point plus its length to a buffer
+ */
+static int ecjpake_write_len_point( unsigned char **p,
+                                    const unsigned char *end,
+                                    const mbedtls_ecp_group *grp,
+                                    const int pf,
+                                    const mbedtls_ecp_point *P )
+{
+    int ret;
+    size_t len;
+
+    /* Need at least 4 for length plus 1 for point */
+    if( end < *p || end - *p < 5 )
+        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+
+    ret = mbedtls_ecp_point_write_binary( grp, P, pf,
+                                          &len, *p + 4, end - ( *p + 4 ) );
+    if( ret != 0 )
+        return( ret );
+
+    (*p)[0] = (unsigned char)( ( len >> 24 ) & 0xFF );
+    (*p)[1] = (unsigned char)( ( len >> 16 ) & 0xFF );
+    (*p)[2] = (unsigned char)( ( len >>  8 ) & 0xFF );
+    (*p)[3] = (unsigned char)( ( len       ) & 0xFF );
+
+    *p += 4 + len;
+
+    return( 0 );
+}
+
+/*
+ * Size of the temporary buffer for ecjpake_hash:
+ * 3 EC points plus their length, plus ID and its length (4 + 6 bytes)
+ */
+#define ECJPAKE_HASH_BUF_LEN    ( 3 * ( 4 + MBEDTLS_ECP_MAX_PT_LEN ) + 4 + 6 )
+
+/*
+ * Compute hash for ZKP (7.4.2.2.2.1)
+ */
+static int ecjpake_hash( const mbedtls_md_info_t *md_info,
+                         const mbedtls_ecp_group *grp,
+                         const int pf,
+                         const mbedtls_ecp_point *G,
+                         const mbedtls_ecp_point *V,
+                         const mbedtls_ecp_point *X,
+                         const char *id,
+                         mbedtls_mpi *h )
+{
+    int ret;
+    unsigned char buf[ECJPAKE_HASH_BUF_LEN];
+    unsigned char *p = buf;
+    const unsigned char *end = buf + sizeof( buf );
+    const size_t id_len = strlen( id );
+    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
+
+    /* Write things to temporary buffer */
+    MBEDTLS_MPI_CHK( ecjpake_write_len_point( &p, end, grp, pf, G ) );
+    MBEDTLS_MPI_CHK( ecjpake_write_len_point( &p, end, grp, pf, V ) );
+    MBEDTLS_MPI_CHK( ecjpake_write_len_point( &p, end, grp, pf, X ) );
+
+    if( end - p < 4 )
+        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+
+    *p++ = (unsigned char)( ( id_len >> 24 ) & 0xFF );
+    *p++ = (unsigned char)( ( id_len >> 16 ) & 0xFF );
+    *p++ = (unsigned char)( ( id_len >>  8 ) & 0xFF );
+    *p++ = (unsigned char)( ( id_len       ) & 0xFF );
+
+    if( end < p || (size_t)( end - p ) < id_len )
+        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+
+    memcpy( p, id, id_len );
+    p += id_len;
+
+    /* Compute hash */
+    mbedtls_md( md_info, buf, p - buf, hash );
+
+    /* Turn it into an integer mod n */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( h, hash,
+                                        mbedtls_md_get_size( md_info ) ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( h, h, &grp->N ) );
+
+cleanup:
+    return( ret );
+}
+
+/*
+ * Parse a ECShnorrZKP (7.4.2.2.2) and verify it (7.4.2.3.3)
+ */
+static int ecjpake_zkp_read( const mbedtls_md_info_t *md_info,
+                             const mbedtls_ecp_group *grp,
+                             const int pf,
+                             const mbedtls_ecp_point *G,
+                             const mbedtls_ecp_point *X,
+                             const char *id,
+                             const unsigned char **p,
+                             const unsigned char *end )
+{
+    int ret;
+    mbedtls_ecp_point V, VV;
+    mbedtls_mpi r, h;
+    size_t r_len;
+
+    mbedtls_ecp_point_init( &V );
+    mbedtls_ecp_point_init( &VV );
+    mbedtls_mpi_init( &r );
+    mbedtls_mpi_init( &h );
+
+    /*
+     * struct {
+     *     ECPoint V;
+     *     opaque r<1..2^8-1>;
+     * } ECSchnorrZKP;
+     */
+    if( end < *p )
+        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+
+    MBEDTLS_MPI_CHK( mbedtls_ecp_tls_read_point( grp, &V, p, end - *p ) );
+
+    if( end < *p || (size_t)( end - *p ) < 1 )
+    {
+        ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+        goto cleanup;
+    }
+
+    r_len = *(*p)++;
+
+    if( end < *p || (size_t)( end - *p ) < r_len )
+    {
+        ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+        goto cleanup;
+    }
+
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &r, *p, r_len ) );
+    *p += r_len;
+
+    /*
+     * Verification
+     */
+    MBEDTLS_MPI_CHK( ecjpake_hash( md_info, grp, pf, G, &V, X, id, &h ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_muladd( (mbedtls_ecp_group *) grp,
+                     &VV, &h, X, &r, G ) );
+
+    if( mbedtls_ecp_point_cmp( &VV, &V ) != 0 )
+    {
+        ret = MBEDTLS_ERR_ECP_VERIFY_FAILED;
+        goto cleanup;
+    }
+
+cleanup:
+    mbedtls_ecp_point_free( &V );
+    mbedtls_ecp_point_free( &VV );
+    mbedtls_mpi_free( &r );
+    mbedtls_mpi_free( &h );
+
+    return( ret );
+}
+
+/*
+ * Generate ZKP (7.4.2.3.2) and write it as ECSchnorrZKP (7.4.2.2.2)
+ */
+static int ecjpake_zkp_write( const mbedtls_md_info_t *md_info,
+                              const mbedtls_ecp_group *grp,
+                              const int pf, 
+                              const mbedtls_ecp_point *G,
+                              const mbedtls_mpi *x,
+                              const mbedtls_ecp_point *X,
+                              const char *id,
+                              unsigned char **p,
+                              const unsigned char *end,
+                              int (*f_rng)(void *, unsigned char *, size_t),
+                              void *p_rng )
+{
+    int ret;
+    mbedtls_ecp_point V;
+    mbedtls_mpi v;
+    mbedtls_mpi h; /* later recycled to hold r */
+    size_t len;
+
+    if( end < *p )
+        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+
+    mbedtls_ecp_point_init( &V );
+    mbedtls_mpi_init( &v );
+    mbedtls_mpi_init( &h );
+
+    /* Compute signature */
+    MBEDTLS_MPI_CHK( mbedtls_ecp_gen_keypair_base( (mbedtls_ecp_group *) grp,
+                                                   G, &v, &V, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( ecjpake_hash( md_info, grp, pf, G, &V, X, id, &h ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &h, &h, x ) ); /* x*h */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &h, &v, &h ) ); /* v - x*h */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &h, &h, &grp->N ) ); /* r */
+
+    /* Write it out */
+    MBEDTLS_MPI_CHK( mbedtls_ecp_tls_write_point( grp, &V,
+                pf, &len, *p, end - *p ) );
+    *p += len;
+
+    len = mbedtls_mpi_size( &h ); /* actually r */
+    if( end < *p || (size_t)( end - *p ) < 1 + len || len > 255 )
+    {
+        ret = MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
+        goto cleanup;
+    }
+
+    *(*p)++ = (unsigned char)( len & 0xFF );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &h, *p, len ) ); /* r */
+    *p += len;
+
+cleanup:
+    mbedtls_ecp_point_free( &V );
+    mbedtls_mpi_free( &v );
+    mbedtls_mpi_free( &h );
+
+    return( ret );
+}
+
+/*
+ * Parse a ECJPAKEKeyKP (7.4.2.2.1) and check proof
+ * Output: verified public key X
+ */
+static int ecjpake_kkp_read( const mbedtls_md_info_t *md_info,
+                             const mbedtls_ecp_group *grp,
+                             const int pf,
+                             const mbedtls_ecp_point *G,
+                             mbedtls_ecp_point *X,
+                             const char *id,
+                             const unsigned char **p,
+                             const unsigned char *end )
+{
+    int ret;
+
+    if( end < *p )
+        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+
+    /*
+     * struct {
+     *     ECPoint X;
+     *     ECSchnorrZKP zkp;
+     * } ECJPAKEKeyKP;
+     */
+    MBEDTLS_MPI_CHK( mbedtls_ecp_tls_read_point( grp, X, p, end - *p ) );
+    if( mbedtls_ecp_is_zero( X ) )
+    {
+        ret = MBEDTLS_ERR_ECP_INVALID_KEY;
+        goto cleanup;
+    }
+
+    MBEDTLS_MPI_CHK( ecjpake_zkp_read( md_info, grp, pf, G, X, id, p, end ) );
+
+cleanup:
+    return( ret );
+}
+
+/*
+ * Generate an ECJPAKEKeyKP
+ * Output: the serialized structure, plus private/public key pair
+ */
+static int ecjpake_kkp_write( const mbedtls_md_info_t *md_info,
+                              const mbedtls_ecp_group *grp,
+                              const int pf,
+                              const mbedtls_ecp_point *G,
+                              mbedtls_mpi *x,
+                              mbedtls_ecp_point *X,
+                              const char *id,
+                              unsigned char **p,
+                              const unsigned char *end,
+                              int (*f_rng)(void *, unsigned char *, size_t),
+                              void *p_rng )
+{
+    int ret;
+    size_t len;
+
+    if( end < *p )
+        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+
+    /* Generate key (7.4.2.3.1) and write it out */
+    MBEDTLS_MPI_CHK( mbedtls_ecp_gen_keypair_base( (mbedtls_ecp_group *) grp, G, x, X,
+                                                   f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_tls_write_point( grp, X,
+                pf, &len, *p, end - *p ) );
+    *p += len;
+
+    /* Generate and write proof */
+    MBEDTLS_MPI_CHK( ecjpake_zkp_write( md_info, grp, pf, G, x, X, id,
+                                        p, end, f_rng, p_rng ) );
+
+cleanup:
+    return( ret );
+}
+
+/*
+ * Read a ECJPAKEKeyKPPairList (7.4.2.3) and check proofs
+ * Ouputs: verified peer public keys Xa, Xb
+ */
+static int ecjpake_kkpp_read( const mbedtls_md_info_t *md_info,
+                              const mbedtls_ecp_group *grp,
+                              const int pf,
+                              const mbedtls_ecp_point *G,
+                              mbedtls_ecp_point *Xa,
+                              mbedtls_ecp_point *Xb,
+                              const char *id,
+                              const unsigned char *buf,
+                              size_t len )
+{
+    int ret;
+    const unsigned char *p = buf;
+    const unsigned char *end = buf + len;
+
+    /*
+     * struct {
+     *     ECJPAKEKeyKP ecjpake_key_kp_pair_list[2];
+     * } ECJPAKEKeyKPPairList;
+     */
+    MBEDTLS_MPI_CHK( ecjpake_kkp_read( md_info, grp, pf, G, Xa, id, &p, end ) );
+    MBEDTLS_MPI_CHK( ecjpake_kkp_read( md_info, grp, pf, G, Xb, id, &p, end ) );
+
+    if( p != end )
+        ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+
+cleanup:
+    return( ret );
+}
+
+/*
+ * Generate a ECJPAKEKeyKPPairList
+ * Outputs: the serialized structure, plus two private/public key pairs
+ */
+static int ecjpake_kkpp_write( const mbedtls_md_info_t *md_info,
+                               const mbedtls_ecp_group *grp,
+                               const int pf,
+                               const mbedtls_ecp_point *G,
+                               mbedtls_mpi *xm1,
+                               mbedtls_ecp_point *Xa,
+                               mbedtls_mpi *xm2,
+                               mbedtls_ecp_point *Xb,
+                               const char *id,
+                               unsigned char *buf,
+                               size_t len,
+                               size_t *olen,
+                               int (*f_rng)(void *, unsigned char *, size_t),
+                               void *p_rng )
+{
+    int ret;
+    unsigned char *p = buf;
+    const unsigned char *end = buf + len;
+
+    MBEDTLS_MPI_CHK( ecjpake_kkp_write( md_info, grp, pf, G, xm1, Xa, id,
+                &p, end, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( ecjpake_kkp_write( md_info, grp, pf, G, xm2, Xb, id,
+                &p, end, f_rng, p_rng ) );
+
+    *olen = p - buf;
+
+cleanup:
+    return( ret );
+}
+
+/*
+ * Read and process the first round message
+ */
+int mbedtls_ecjpake_read_round_one( mbedtls_ecjpake_context *ctx,
+                                    const unsigned char *buf,
+                                    size_t len )
+{
+    return( ecjpake_kkpp_read( ctx->md_info, &ctx->grp, ctx->point_format,
+                               &ctx->grp.G,
+                               &ctx->Xp1, &ctx->Xp2, ID_PEER,
+                               buf, len ) );
+}
+
+/*
+ * Generate and write the first round message
+ */
+int mbedtls_ecjpake_write_round_one( mbedtls_ecjpake_context *ctx,
+                            unsigned char *buf, size_t len, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng )
+{
+    return( ecjpake_kkpp_write( ctx->md_info, &ctx->grp, ctx->point_format,
+                                &ctx->grp.G,
+                                &ctx->xm1, &ctx->Xm1, &ctx->xm2, &ctx->Xm2,
+                                ID_MINE, buf, len, olen, f_rng, p_rng ) );
+}
+
+/*
+ * Compute the sum of three points R = A + B + C
+ */
+static int ecjpake_ecp_add3( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
+                             const mbedtls_ecp_point *A,
+                             const mbedtls_ecp_point *B,
+                             const mbedtls_ecp_point *C )
+{
+    int ret;
+    mbedtls_mpi one;
+
+    mbedtls_mpi_init( &one );
+
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &one, 1 ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_muladd( grp, R, &one, A, &one, B ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_muladd( grp, R, &one, R, &one, C ) );
+
+cleanup:
+    mbedtls_mpi_free( &one );
+
+    return( ret );
+}
+
+/*
+ * Read and process second round message (C: 7.4.2.5, S: 7.4.2.6)
+ */
+int mbedtls_ecjpake_read_round_two( mbedtls_ecjpake_context *ctx,
+                                            const unsigned char *buf,
+                                            size_t len )
+{
+    int ret;
+    const unsigned char *p = buf;
+    const unsigned char *end = buf + len;
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_point G;    /* C: GB, S: GA */
+
+    mbedtls_ecp_group_init( &grp );
+    mbedtls_ecp_point_init( &G );
+
+    /*
+     * Server: GA = X3  + X4  + X1      (7.4.2.6.1)
+     * Client: GB = X1  + X2  + X3      (7.4.2.5.1)
+     * Unified: G = Xm1 + Xm2 + Xp1
+     * We need that before parsing in order to check Xp as we read it
+     */
+    MBEDTLS_MPI_CHK( ecjpake_ecp_add3( &ctx->grp, &G,
+                                       &ctx->Xm1, &ctx->Xm2, &ctx->Xp1 ) );
+
+    /*
+     * struct {
+     *     ECParameters curve_params;   // only client reading server msg
+     *     ECJPAKEKeyKP ecjpake_key_kp;
+     * } Client/ServerECJPAKEParams;
+     */
+    if( ctx->role == MBEDTLS_ECJPAKE_CLIENT )
+    {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_tls_read_group( &grp, &p, len ) );
+        if( grp.id != ctx->grp.id )
+        {
+            ret = MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
+            goto cleanup;
+        }
+    }
+
+    MBEDTLS_MPI_CHK( ecjpake_kkp_read( ctx->md_info, &ctx->grp,
+                            ctx->point_format,
+                            &G, &ctx->Xp, ID_PEER, &p, end ) );
+
+    if( p != end )
+    {
+        ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+        goto cleanup;
+    }
+
+cleanup:
+    mbedtls_ecp_group_free( &grp );
+    mbedtls_ecp_point_free( &G );
+
+    return( ret );
+}
+
+/*
+ * Compute R = +/- X * S mod N, taking care not to leak S
+ */
+static int ecjpake_mul_secret( mbedtls_mpi *R, int sign,
+                               const mbedtls_mpi *X,
+                               const mbedtls_mpi *S,
+                               const mbedtls_mpi *N,
+                               int (*f_rng)(void *, unsigned char *, size_t),
+                               void *p_rng )
+{
+    int ret;
+    mbedtls_mpi b; /* Blinding value, then s + N * blinding */
+
+    mbedtls_mpi_init( &b );
+
+    /* b = s + rnd-128-bit * N */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &b, 16, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &b, &b, N ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &b, &b, S ) );
+
+    /* R = sign * X * b mod N */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( R, X, &b ) );
+    R->s *= sign;
+    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( R, R, N ) );
+
+cleanup:
+    mbedtls_mpi_free( &b );
+
+    return( ret );
+}
+
+/*
+ * Generate and write the second round message (S: 7.4.2.5, C: 7.4.2.6)
+ */
+int mbedtls_ecjpake_write_round_two( mbedtls_ecjpake_context *ctx,
+                            unsigned char *buf, size_t len, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng )
+{
+    int ret;
+    mbedtls_ecp_point G;    /* C: GA, S: GB */
+    mbedtls_ecp_point Xm;   /* C: Xc, S: Xs */
+    mbedtls_mpi xm;         /* C: xc, S: xs */
+    unsigned char *p = buf;
+    const unsigned char *end = buf + len;
+    size_t ec_len;
+
+    mbedtls_ecp_point_init( &G );
+    mbedtls_ecp_point_init( &Xm );
+    mbedtls_mpi_init( &xm );
+
+    /*
+     * First generate private/public key pair (S: 7.4.2.5.1, C: 7.4.2.6.1)
+     *
+     * Client:  GA = X1  + X3  + X4  | xs = x2  * s | Xc = xc * GA
+     * Server:  GB = X3  + X1  + X2  | xs = x4  * s | Xs = xs * GB
+     * Unified: G  = Xm1 + Xp1 + Xp2 | xm = xm2 * s | Xm = xm * G
+     */
+    MBEDTLS_MPI_CHK( ecjpake_ecp_add3( &ctx->grp, &G,
+                                       &ctx->Xp1, &ctx->Xp2, &ctx->Xm1 ) );
+    MBEDTLS_MPI_CHK( ecjpake_mul_secret( &xm, 1, &ctx->xm2, &ctx->s,
+                                         &ctx->grp.N, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( &ctx->grp, &Xm, &xm, &G, f_rng, p_rng ) );
+
+    /*
+     * Now write things out
+     *
+     * struct {
+     *     ECParameters curve_params;   // only server writing its message
+     *     ECJPAKEKeyKP ecjpake_key_kp;
+     * } Client/ServerECJPAKEParams;
+     */
+    if( ctx->role == MBEDTLS_ECJPAKE_SERVER )
+    {
+        if( end < p )
+        {
+            ret = MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
+            goto cleanup;
+        }
+        MBEDTLS_MPI_CHK( mbedtls_ecp_tls_write_group( &ctx->grp, &ec_len,
+                                                      p, end - p ) );
+        p += ec_len;
+    }
+
+    if( end < p )
+    {
+        ret = MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
+        goto cleanup;
+    }
+    MBEDTLS_MPI_CHK( mbedtls_ecp_tls_write_point( &ctx->grp, &Xm,
+                     ctx->point_format, &ec_len, p, end - p ) );
+    p += ec_len;
+
+    MBEDTLS_MPI_CHK( ecjpake_zkp_write( ctx->md_info, &ctx->grp,
+                                        ctx->point_format,
+                                        &G, &xm, &Xm, ID_MINE,
+                                        &p, end, f_rng, p_rng ) );
+
+    *olen = p - buf;
+
+cleanup:
+    mbedtls_ecp_point_free( &G );
+    mbedtls_ecp_point_free( &Xm );
+    mbedtls_mpi_free( &xm );
+
+    return( ret );
+}
+
+/*
+ * Derive PMS (7.4.2.7 / 7.4.2.8)
+ */
+int mbedtls_ecjpake_derive_secret( mbedtls_ecjpake_context *ctx,
+                            unsigned char *buf, size_t len, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng )
+{
+    int ret;
+    mbedtls_ecp_point K;
+    mbedtls_mpi m_xm2_s, one;
+    unsigned char kx[MBEDTLS_ECP_MAX_BYTES];
+    size_t x_bytes;
+
+    *olen = mbedtls_md_get_size( ctx->md_info );
+    if( len < *olen )
+        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+
+    mbedtls_ecp_point_init( &K );
+    mbedtls_mpi_init( &m_xm2_s );
+    mbedtls_mpi_init( &one );
+
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &one, 1 ) );
+
+    /*
+     * Client:  K = ( Xs - X4  * x2  * s ) * x2
+     * Server:  K = ( Xc - X2  * x4  * s ) * x4
+     * Unified: K = ( Xp - Xp2 * xm2 * s ) * xm2
+     */
+    MBEDTLS_MPI_CHK( ecjpake_mul_secret( &m_xm2_s, -1, &ctx->xm2, &ctx->s,
+                                         &ctx->grp.N, f_rng, p_rng ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_muladd( &ctx->grp, &K,
+                                         &one, &ctx->Xp,
+                                         &m_xm2_s, &ctx->Xp2 ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( &ctx->grp, &K, &ctx->xm2, &K,
+                                      f_rng, p_rng ) );
+
+    /* PMS = SHA-256( K.X ) */
+    x_bytes = ( ctx->grp.pbits + 7 ) / 8;
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &K.X, kx, x_bytes ) );
+    MBEDTLS_MPI_CHK( mbedtls_md( ctx->md_info, kx, x_bytes, buf ) );
+
+cleanup:
+    mbedtls_ecp_point_free( &K );
+    mbedtls_mpi_free( &m_xm2_s );
+    mbedtls_mpi_free( &one );
+
+    return( ret );
+}
+
+#undef ID_MINE
+#undef ID_PEER
+
+
+#if defined(MBEDTLS_SELF_TEST)
+
+#if defined(MBEDTLS_PLATFORM_C)
+
+#else
+#include <stdio.h>
+#define mbedtls_printf     printf
+#endif
+
+#if !defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
+    !defined(MBEDTLS_SHA256_C)
+int mbedtls_ecjpake_self_test( int verbose )
+{
+    (void) verbose;
+    return( 0 );
+}
+#else
+
+static const unsigned char ecjpake_test_password[] = {
+    0x74, 0x68, 0x72, 0x65, 0x61, 0x64, 0x6a, 0x70, 0x61, 0x6b, 0x65, 0x74,
+    0x65, 0x73, 0x74
+};
+
+static const unsigned char ecjpake_test_x1[] = {
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
+    0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+    0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x21
+};
+
+static const unsigned char ecjpake_test_x2[] = {
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c,
+    0x6d, 0x6e, 0x6f, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78,
+    0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f, 0x81
+};
+
+static const unsigned char ecjpake_test_x3[] = {
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c,
+    0x6d, 0x6e, 0x6f, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78,
+    0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f, 0x81
+};
+
+static const unsigned char ecjpake_test_x4[] = {
+    0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc,
+    0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8,
+    0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe1
+};
+
+static const unsigned char ecjpake_test_cli_one[] = {
+    0x41, 0x04, 0xac, 0xcf, 0x01, 0x06, 0xef, 0x85, 0x8f, 0xa2, 0xd9, 0x19,
+    0x33, 0x13, 0x46, 0x80, 0x5a, 0x78, 0xb5, 0x8b, 0xba, 0xd0, 0xb8, 0x44,
+    0xe5, 0xc7, 0x89, 0x28, 0x79, 0x14, 0x61, 0x87, 0xdd, 0x26, 0x66, 0xad,
+    0xa7, 0x81, 0xbb, 0x7f, 0x11, 0x13, 0x72, 0x25, 0x1a, 0x89, 0x10, 0x62,
+    0x1f, 0x63, 0x4d, 0xf1, 0x28, 0xac, 0x48, 0xe3, 0x81, 0xfd, 0x6e, 0xf9,
+    0x06, 0x07, 0x31, 0xf6, 0x94, 0xa4, 0x41, 0x04, 0x1d, 0xd0, 0xbd, 0x5d,
+    0x45, 0x66, 0xc9, 0xbe, 0xd9, 0xce, 0x7d, 0xe7, 0x01, 0xb5, 0xe8, 0x2e,
+    0x08, 0xe8, 0x4b, 0x73, 0x04, 0x66, 0x01, 0x8a, 0xb9, 0x03, 0xc7, 0x9e,
+    0xb9, 0x82, 0x17, 0x22, 0x36, 0xc0, 0xc1, 0x72, 0x8a, 0xe4, 0xbf, 0x73,
+    0x61, 0x0d, 0x34, 0xde, 0x44, 0x24, 0x6e, 0xf3, 0xd9, 0xc0, 0x5a, 0x22,
+    0x36, 0xfb, 0x66, 0xa6, 0x58, 0x3d, 0x74, 0x49, 0x30, 0x8b, 0xab, 0xce,
+    0x20, 0x72, 0xfe, 0x16, 0x66, 0x29, 0x92, 0xe9, 0x23, 0x5c, 0x25, 0x00,
+    0x2f, 0x11, 0xb1, 0x50, 0x87, 0xb8, 0x27, 0x38, 0xe0, 0x3c, 0x94, 0x5b,
+    0xf7, 0xa2, 0x99, 0x5d, 0xda, 0x1e, 0x98, 0x34, 0x58, 0x41, 0x04, 0x7e,
+    0xa6, 0xe3, 0xa4, 0x48, 0x70, 0x37, 0xa9, 0xe0, 0xdb, 0xd7, 0x92, 0x62,
+    0xb2, 0xcc, 0x27, 0x3e, 0x77, 0x99, 0x30, 0xfc, 0x18, 0x40, 0x9a, 0xc5,
+    0x36, 0x1c, 0x5f, 0xe6, 0x69, 0xd7, 0x02, 0xe1, 0x47, 0x79, 0x0a, 0xeb,
+    0x4c, 0xe7, 0xfd, 0x65, 0x75, 0xab, 0x0f, 0x6c, 0x7f, 0xd1, 0xc3, 0x35,
+    0x93, 0x9a, 0xa8, 0x63, 0xba, 0x37, 0xec, 0x91, 0xb7, 0xe3, 0x2b, 0xb0,
+    0x13, 0xbb, 0x2b, 0x41, 0x04, 0xa4, 0x95, 0x58, 0xd3, 0x2e, 0xd1, 0xeb,
+    0xfc, 0x18, 0x16, 0xaf, 0x4f, 0xf0, 0x9b, 0x55, 0xfc, 0xb4, 0xca, 0x47,
+    0xb2, 0xa0, 0x2d, 0x1e, 0x7c, 0xaf, 0x11, 0x79, 0xea, 0x3f, 0xe1, 0x39,
+    0x5b, 0x22, 0xb8, 0x61, 0x96, 0x40, 0x16, 0xfa, 0xba, 0xf7, 0x2c, 0x97,
+    0x56, 0x95, 0xd9, 0x3d, 0x4d, 0xf0, 0xe5, 0x19, 0x7f, 0xe9, 0xf0, 0x40,
+    0x63, 0x4e, 0xd5, 0x97, 0x64, 0x93, 0x77, 0x87, 0xbe, 0x20, 0xbc, 0x4d,
+    0xee, 0xbb, 0xf9, 0xb8, 0xd6, 0x0a, 0x33, 0x5f, 0x04, 0x6c, 0xa3, 0xaa,
+    0x94, 0x1e, 0x45, 0x86, 0x4c, 0x7c, 0xad, 0xef, 0x9c, 0xf7, 0x5b, 0x3d,
+    0x8b, 0x01, 0x0e, 0x44, 0x3e, 0xf0
+};
+
+static const unsigned char ecjpake_test_srv_one[] = {
+    0x41, 0x04, 0x7e, 0xa6, 0xe3, 0xa4, 0x48, 0x70, 0x37, 0xa9, 0xe0, 0xdb,
+    0xd7, 0x92, 0x62, 0xb2, 0xcc, 0x27, 0x3e, 0x77, 0x99, 0x30, 0xfc, 0x18,
+    0x40, 0x9a, 0xc5, 0x36, 0x1c, 0x5f, 0xe6, 0x69, 0xd7, 0x02, 0xe1, 0x47,
+    0x79, 0x0a, 0xeb, 0x4c, 0xe7, 0xfd, 0x65, 0x75, 0xab, 0x0f, 0x6c, 0x7f,
+    0xd1, 0xc3, 0x35, 0x93, 0x9a, 0xa8, 0x63, 0xba, 0x37, 0xec, 0x91, 0xb7,
+    0xe3, 0x2b, 0xb0, 0x13, 0xbb, 0x2b, 0x41, 0x04, 0x09, 0xf8, 0x5b, 0x3d,
+    0x20, 0xeb, 0xd7, 0x88, 0x5c, 0xe4, 0x64, 0xc0, 0x8d, 0x05, 0x6d, 0x64,
+    0x28, 0xfe, 0x4d, 0xd9, 0x28, 0x7a, 0xa3, 0x65, 0xf1, 0x31, 0xf4, 0x36,
+    0x0f, 0xf3, 0x86, 0xd8, 0x46, 0x89, 0x8b, 0xc4, 0xb4, 0x15, 0x83, 0xc2,
+    0xa5, 0x19, 0x7f, 0x65, 0xd7, 0x87, 0x42, 0x74, 0x6c, 0x12, 0xa5, 0xec,
+    0x0a, 0x4f, 0xfe, 0x2f, 0x27, 0x0a, 0x75, 0x0a, 0x1d, 0x8f, 0xb5, 0x16,
+    0x20, 0x93, 0x4d, 0x74, 0xeb, 0x43, 0xe5, 0x4d, 0xf4, 0x24, 0xfd, 0x96,
+    0x30, 0x6c, 0x01, 0x17, 0xbf, 0x13, 0x1a, 0xfa, 0xbf, 0x90, 0xa9, 0xd3,
+    0x3d, 0x11, 0x98, 0xd9, 0x05, 0x19, 0x37, 0x35, 0x14, 0x41, 0x04, 0x19,
+    0x0a, 0x07, 0x70, 0x0f, 0xfa, 0x4b, 0xe6, 0xae, 0x1d, 0x79, 0xee, 0x0f,
+    0x06, 0xae, 0xb5, 0x44, 0xcd, 0x5a, 0xdd, 0xaa, 0xbe, 0xdf, 0x70, 0xf8,
+    0x62, 0x33, 0x21, 0x33, 0x2c, 0x54, 0xf3, 0x55, 0xf0, 0xfb, 0xfe, 0xc7,
+    0x83, 0xed, 0x35, 0x9e, 0x5d, 0x0b, 0xf7, 0x37, 0x7a, 0x0f, 0xc4, 0xea,
+    0x7a, 0xce, 0x47, 0x3c, 0x9c, 0x11, 0x2b, 0x41, 0xcc, 0xd4, 0x1a, 0xc5,
+    0x6a, 0x56, 0x12, 0x41, 0x04, 0x36, 0x0a, 0x1c, 0xea, 0x33, 0xfc, 0xe6,
+    0x41, 0x15, 0x64, 0x58, 0xe0, 0xa4, 0xea, 0xc2, 0x19, 0xe9, 0x68, 0x31,
+    0xe6, 0xae, 0xbc, 0x88, 0xb3, 0xf3, 0x75, 0x2f, 0x93, 0xa0, 0x28, 0x1d,
+    0x1b, 0xf1, 0xfb, 0x10, 0x60, 0x51, 0xdb, 0x96, 0x94, 0xa8, 0xd6, 0xe8,
+    0x62, 0xa5, 0xef, 0x13, 0x24, 0xa3, 0xd9, 0xe2, 0x78, 0x94, 0xf1, 0xee,
+    0x4f, 0x7c, 0x59, 0x19, 0x99, 0x65, 0xa8, 0xdd, 0x4a, 0x20, 0x91, 0x84,
+    0x7d, 0x2d, 0x22, 0xdf, 0x3e, 0xe5, 0x5f, 0xaa, 0x2a, 0x3f, 0xb3, 0x3f,
+    0xd2, 0xd1, 0xe0, 0x55, 0xa0, 0x7a, 0x7c, 0x61, 0xec, 0xfb, 0x8d, 0x80,
+    0xec, 0x00, 0xc2, 0xc9, 0xeb, 0x12
+};
+
+static const unsigned char ecjpake_test_srv_two[] = {
+    0x03, 0x00, 0x17, 0x41, 0x04, 0x0f, 0xb2, 0x2b, 0x1d, 0x5d, 0x11, 0x23,
+    0xe0, 0xef, 0x9f, 0xeb, 0x9d, 0x8a, 0x2e, 0x59, 0x0a, 0x1f, 0x4d, 0x7c,
+    0xed, 0x2c, 0x2b, 0x06, 0x58, 0x6e, 0x8f, 0x2a, 0x16, 0xd4, 0xeb, 0x2f,
+    0xda, 0x43, 0x28, 0xa2, 0x0b, 0x07, 0xd8, 0xfd, 0x66, 0x76, 0x54, 0xca,
+    0x18, 0xc5, 0x4e, 0x32, 0xa3, 0x33, 0xa0, 0x84, 0x54, 0x51, 0xe9, 0x26,
+    0xee, 0x88, 0x04, 0xfd, 0x7a, 0xf0, 0xaa, 0xa7, 0xa6, 0x41, 0x04, 0x55,
+    0x16, 0xea, 0x3e, 0x54, 0xa0, 0xd5, 0xd8, 0xb2, 0xce, 0x78, 0x6b, 0x38,
+    0xd3, 0x83, 0x37, 0x00, 0x29, 0xa5, 0xdb, 0xe4, 0x45, 0x9c, 0x9d, 0xd6,
+    0x01, 0xb4, 0x08, 0xa2, 0x4a, 0xe6, 0x46, 0x5c, 0x8a, 0xc9, 0x05, 0xb9,
+    0xeb, 0x03, 0xb5, 0xd3, 0x69, 0x1c, 0x13, 0x9e, 0xf8, 0x3f, 0x1c, 0xd4,
+    0x20, 0x0f, 0x6c, 0x9c, 0xd4, 0xec, 0x39, 0x22, 0x18, 0xa5, 0x9e, 0xd2,
+    0x43, 0xd3, 0xc8, 0x20, 0xff, 0x72, 0x4a, 0x9a, 0x70, 0xb8, 0x8c, 0xb8,
+    0x6f, 0x20, 0xb4, 0x34, 0xc6, 0x86, 0x5a, 0xa1, 0xcd, 0x79, 0x06, 0xdd,
+    0x7c, 0x9b, 0xce, 0x35, 0x25, 0xf5, 0x08, 0x27, 0x6f, 0x26, 0x83, 0x6c
+};
+
+static const unsigned char ecjpake_test_cli_two[] = {
+    0x41, 0x04, 0x69, 0xd5, 0x4e, 0xe8, 0x5e, 0x90, 0xce, 0x3f, 0x12, 0x46,
+    0x74, 0x2d, 0xe5, 0x07, 0xe9, 0x39, 0xe8, 0x1d, 0x1d, 0xc1, 0xc5, 0xcb,
+    0x98, 0x8b, 0x58, 0xc3, 0x10, 0xc9, 0xfd, 0xd9, 0x52, 0x4d, 0x93, 0x72,
+    0x0b, 0x45, 0x54, 0x1c, 0x83, 0xee, 0x88, 0x41, 0x19, 0x1d, 0xa7, 0xce,
+    0xd8, 0x6e, 0x33, 0x12, 0xd4, 0x36, 0x23, 0xc1, 0xd6, 0x3e, 0x74, 0x98,
+    0x9a, 0xba, 0x4a, 0xff, 0xd1, 0xee, 0x41, 0x04, 0x07, 0x7e, 0x8c, 0x31,
+    0xe2, 0x0e, 0x6b, 0xed, 0xb7, 0x60, 0xc1, 0x35, 0x93, 0xe6, 0x9f, 0x15,
+    0xbe, 0x85, 0xc2, 0x7d, 0x68, 0xcd, 0x09, 0xcc, 0xb8, 0xc4, 0x18, 0x36,
+    0x08, 0x91, 0x7c, 0x5c, 0x3d, 0x40, 0x9f, 0xac, 0x39, 0xfe, 0xfe, 0xe8,
+    0x2f, 0x72, 0x92, 0xd3, 0x6f, 0x0d, 0x23, 0xe0, 0x55, 0x91, 0x3f, 0x45,
+    0xa5, 0x2b, 0x85, 0xdd, 0x8a, 0x20, 0x52, 0xe9, 0xe1, 0x29, 0xbb, 0x4d,
+    0x20, 0x0f, 0x01, 0x1f, 0x19, 0x48, 0x35, 0x35, 0xa6, 0xe8, 0x9a, 0x58,
+    0x0c, 0x9b, 0x00, 0x03, 0xba, 0xf2, 0x14, 0x62, 0xec, 0xe9, 0x1a, 0x82,
+    0xcc, 0x38, 0xdb, 0xdc, 0xae, 0x60, 0xd9, 0xc5, 0x4c
+};
+
+static const unsigned char ecjpake_test_pms[] = {
+    0xf3, 0xd4, 0x7f, 0x59, 0x98, 0x44, 0xdb, 0x92, 0xa5, 0x69, 0xbb, 0xe7,
+    0x98, 0x1e, 0x39, 0xd9, 0x31, 0xfd, 0x74, 0x3b, 0xf2, 0x2e, 0x98, 0xf9,
+    0xb4, 0x38, 0xf7, 0x19, 0xd3, 0xc4, 0xf3, 0x51
+};
+
+/* Load my private keys and generate the correponding public keys */
+static int ecjpake_test_load( mbedtls_ecjpake_context *ctx,
+                              const unsigned char *xm1, size_t len1,
+                              const unsigned char *xm2, size_t len2 )
+{
+    int ret;
+
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &ctx->xm1, xm1, len1 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( &ctx->xm2, xm2, len2 ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( &ctx->grp, &ctx->Xm1, &ctx->xm1,
+                                      &ctx->grp.G, NULL, NULL ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( &ctx->grp, &ctx->Xm2, &ctx->xm2,
+                                      &ctx->grp.G, NULL, NULL ) );
+
+cleanup:
+    return( ret );
+}
+
+/* For tests we don't need a secure RNG;
+ * use the LGC from Numerical Recipes for simplicity */
+static int ecjpake_lgc( void *p, unsigned char *out, size_t len )
+{
+    static uint32_t x = 42;
+    (void) p;
+
+    while( len > 0 )
+    {
+        size_t use_len = len > 4 ? 4 : len;
+        x = 1664525 * x + 1013904223;
+        memcpy( out, &x, use_len );
+        out += use_len;
+        len -= use_len;
+    }
+
+    return( 0 );
+}
+
+#define TEST_ASSERT( x )    \
+    do {                    \
+        if( x )             \
+            ret = 0;        \
+        else                \
+        {                   \
+            ret = 1;        \
+            goto cleanup;   \
+        }                   \
+    } while( 0 )
+
+/*
+ * Checkup routine
+ */
+int mbedtls_ecjpake_self_test( int verbose )
+{
+    int ret;
+    mbedtls_ecjpake_context cli;
+    mbedtls_ecjpake_context srv;
+    unsigned char buf[512], pms[32];
+    size_t len, pmslen;
+
+    mbedtls_ecjpake_init( &cli );
+    mbedtls_ecjpake_init( &srv );
+
+    if( verbose != 0 )
+        mbedtls_printf( "  ECJPAKE test #0 (setup): " );
+
+    TEST_ASSERT( mbedtls_ecjpake_setup( &cli, MBEDTLS_ECJPAKE_CLIENT,
+                    MBEDTLS_MD_SHA256, MBEDTLS_ECP_DP_SECP256R1,
+                    ecjpake_test_password,
+            sizeof( ecjpake_test_password ) ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_setup( &srv, MBEDTLS_ECJPAKE_SERVER,
+                    MBEDTLS_MD_SHA256, MBEDTLS_ECP_DP_SECP256R1,
+                    ecjpake_test_password,
+            sizeof( ecjpake_test_password ) ) == 0 );
+
+    if( verbose != 0 )
+        mbedtls_printf( "passed\n" );
+
+    if( verbose != 0 )
+        mbedtls_printf( "  ECJPAKE test #1 (random handshake): " );
+
+    TEST_ASSERT( mbedtls_ecjpake_write_round_one( &cli,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_read_round_one( &srv, buf, len ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_write_round_one( &srv,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_read_round_one( &cli, buf, len ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_write_round_two( &srv,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_read_round_two( &cli, buf, len ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_derive_secret( &cli,
+                 pms, sizeof( pms ), &pmslen, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_write_round_two( &cli,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_read_round_two( &srv, buf, len ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_derive_secret( &srv,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( len == pmslen );
+    TEST_ASSERT( memcmp( buf, pms, len ) == 0 );
+
+    if( verbose != 0 )
+        mbedtls_printf( "passed\n" );
+
+    if( verbose != 0 )
+        mbedtls_printf( "  ECJPAKE test #2 (reference handshake): " );
+
+    /* Simulate generation of round one */
+    MBEDTLS_MPI_CHK( ecjpake_test_load( &cli,
+                ecjpake_test_x1, sizeof( ecjpake_test_x1 ),
+                ecjpake_test_x2, sizeof( ecjpake_test_x2 ) ) );
+
+    MBEDTLS_MPI_CHK( ecjpake_test_load( &srv,
+                ecjpake_test_x3, sizeof( ecjpake_test_x3 ),
+                ecjpake_test_x4, sizeof( ecjpake_test_x4 ) ) );
+
+    /* Read round one */
+    TEST_ASSERT( mbedtls_ecjpake_read_round_one( &srv,
+                                    ecjpake_test_cli_one,
+                            sizeof( ecjpake_test_cli_one ) ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_read_round_one( &cli,
+                                    ecjpake_test_srv_one,
+                            sizeof( ecjpake_test_srv_one ) ) == 0 );
+
+    /* Skip generation of round two, read round two */
+    TEST_ASSERT( mbedtls_ecjpake_read_round_two( &cli,
+                                    ecjpake_test_srv_two,
+                            sizeof( ecjpake_test_srv_two ) ) == 0 );
+
+    TEST_ASSERT( mbedtls_ecjpake_read_round_two( &srv,
+                                    ecjpake_test_cli_two,
+                            sizeof( ecjpake_test_cli_two ) ) == 0 );
+
+    /* Server derives PMS */
+    TEST_ASSERT( mbedtls_ecjpake_derive_secret( &srv,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( len == sizeof( ecjpake_test_pms ) );
+    TEST_ASSERT( memcmp( buf, ecjpake_test_pms, len ) == 0 );
+
+    memset( buf, 0, len ); /* Avoid interferences with next step */
+
+    /* Client derives PMS */
+    TEST_ASSERT( mbedtls_ecjpake_derive_secret( &cli,
+                 buf, sizeof( buf ), &len, ecjpake_lgc, NULL ) == 0 );
+
+    TEST_ASSERT( len == sizeof( ecjpake_test_pms ) );
+    TEST_ASSERT( memcmp( buf, ecjpake_test_pms, len ) == 0 );
+
+    if( verbose != 0 )
+        mbedtls_printf( "passed\n" );
+
+cleanup:
+    mbedtls_ecjpake_free( &cli );
+    mbedtls_ecjpake_free( &srv );
+
+    if( ret != 0 )
+    {
+        if( verbose != 0 )
+            mbedtls_printf( "failed\n" );
+
+        ret = 1;
+    }
+
+    if( verbose != 0 )
+        mbedtls_printf( "\n" );
+
+    return( ret );
+}
+
+#undef TEST_ASSERT
+
+#endif /* MBEDTLS_ECP_DP_SECP256R1_ENABLED && MBEDTLS_SHA256_C */
+
+#endif /* MBEDTLS_SELF_TEST */
+
+#endif /* MBEDTLS_ECJPAKE_C */
+
+
+
 /********* Start of file library/ecp.c ************/
 
 
@@ -14348,6 +15528,22 @@ cleanup:
 int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt )
 {
     return( mbedtls_mpi_cmp_int( &pt->Z, 0 ) == 0 );
+}
+
+/*
+ * Compare two points lazyly
+ */
+int mbedtls_ecp_point_cmp( const mbedtls_ecp_point *P,
+                           const mbedtls_ecp_point *Q )
+{
+    if( mbedtls_mpi_cmp_mpi( &P->X, &Q->X ) == 0 &&
+        mbedtls_mpi_cmp_mpi( &P->Y, &Q->Y ) == 0 &&
+        mbedtls_mpi_cmp_mpi( &P->Z, &Q->Z ) == 0 )
+    {
+        return( 0 );
+    }
+
+    return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 }
 
 /*
@@ -15615,7 +16811,38 @@ cleanup:
 #endif /* ECP_SHORTWEIERSTRASS */
 
 /*
+ * R = m * P with shortcuts for m == 1 and m == -1
+ * NOT constant-time - ONLY for short Weierstrass!
+ */
+static int mbedtls_ecp_mul_shortcuts( mbedtls_ecp_group *grp,
+                                      mbedtls_ecp_point *R,
+                                      const mbedtls_mpi *m,
+                                      const mbedtls_ecp_point *P )
+{
+    int ret;
+
+    if( mbedtls_mpi_cmp_int( m, 1 ) == 0 )
+    {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_copy( R, P ) );
+    }
+    else if( mbedtls_mpi_cmp_int( m, -1 ) == 0 )
+    {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_copy( R, P ) );
+        if( mbedtls_mpi_cmp_int( &R->Y, 0 ) != 0 )
+            MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &R->Y, &grp->P, &R->Y ) );
+    }
+    else
+    {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, R, m, P, NULL, NULL ) );
+    }
+
+cleanup:
+    return( ret );
+}
+
+/*
  * Linear combination
+ * NOT constant-time
  */
 int mbedtls_ecp_muladd( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
              const mbedtls_mpi *m, const mbedtls_ecp_point *P,
@@ -15629,8 +16856,9 @@ int mbedtls_ecp_muladd( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 
     mbedtls_ecp_point_init( &mP );
 
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, &mP, m, P, NULL, NULL ) );
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, R,   n, Q, NULL, NULL ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, &mP, m, P ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, R,   n, Q ) );
+
     MBEDTLS_MPI_CHK( ecp_add_mixed( grp, R, &mP, R ) );
     MBEDTLS_MPI_CHK( ecp_normalize_jac( grp, R ) );
 
@@ -15709,9 +16937,11 @@ int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *
 }
 
 /*
- * Generate a keypair
+ * Generate a keypair with configurable base point
  */
-int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp_point *Q,
+int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
+                     const mbedtls_ecp_point *G,
+                     mbedtls_mpi *d, mbedtls_ecp_point *Q,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
@@ -15783,7 +17013,18 @@ cleanup:
     if( ret != 0 )
         return( ret );
 
-    return( mbedtls_ecp_mul( grp, Q, d, &grp->G, f_rng, p_rng ) );
+    return( mbedtls_ecp_mul( grp, Q, d, G, f_rng, p_rng ) );
+}
+
+/*
+ * Generate key pair, wrapper for conventional base point
+ */
+int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp,
+                             mbedtls_mpi *d, mbedtls_ecp_point *Q,
+                             int (*f_rng)(void *, unsigned char *, size_t),
+                             void *p_rng )
+{
+    return( mbedtls_ecp_gen_keypair_base( grp, &grp->G, d, Q, f_rng, p_rng ) );
 }
 
 /*
@@ -18470,6 +19711,8 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
             mbedtls_snprintf( buf, buflen, "SSL - The operation timed out" );
         if( use_ret == -(MBEDTLS_ERR_SSL_CLIENT_RECONNECT) )
             mbedtls_snprintf( buf, buflen, "SSL - The client initiated a reconnect from the same port" );
+        if( use_ret == -(MBEDTLS_ERR_SSL_UNEXPECTED_RECORD) )
+            mbedtls_snprintf( buf, buflen, "SSL - Record header looks valid but is not expected" );
 #endif /* MBEDTLS_SSL_TLS_C */
 
 #if defined(MBEDTLS_X509_USE_C) || defined(MBEDTLS_X509_CREATE_C)
@@ -19106,7 +20349,7 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
     /* Total length is restricted to 2^39 - 256 bits, ie 2^36 - 2^5 bytes
      * Also check for possible overflow */
     if( ctx->len + length < ctx->len ||
-        (uint64_t) ctx->len + length > 0x03FFFFE0ull )
+        (uint64_t) ctx->len + length > 0xFFFFFFFE0ull )
     {
         return( MBEDTLS_ERR_GCM_BAD_INPUT );
     }
@@ -24280,7 +25523,7 @@ static const oid_x509_ext_t oid_x509_ext[] =
         MBEDTLS_X509_EXT_KEY_USAGE,
     },
     {
-        { ADD_LEN( MBEDTLS_OID_EXTENDED_KEY_USAGE ),   "id-ce-keyUsage",           "Extended Key Usage" },
+        { ADD_LEN( MBEDTLS_OID_EXTENDED_KEY_USAGE ),   "id-ce-extKeyUsage",        "Extended Key Usage" },
         MBEDTLS_X509_EXT_EXTENDED_KEY_USAGE,
     },
     {
@@ -28391,6 +29634,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
         return( ret );
 #endif /* MBEDTLS_PKCS12_C || MBEDTLS_PKCS5_C */
 #else
+    ((void) ret);
     ((void) pwd);
     ((void) pwdlen);
 #endif /* MBEDTLS_PEM_PARSE_C */
@@ -28604,7 +29848,7 @@ static int pk_write_ec_pubkey( unsigned char **p, unsigned char *start,
         return( ret );
     }
 
-    if( *p - start < (int) len )
+    if( *p < start || (size_t)( *p - start ) < len )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     *p -= len;
@@ -29992,6 +31236,10 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     size_t olen;
     mbedtls_mpi T, T1, T2;
 
+    /* Make sure we have private key info, prevent possible misuse */
+    if( ctx->P.p == NULL || ctx->Q.p == NULL || ctx->D.p == NULL )
+        return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
+
     mbedtls_mpi_init( &T ); mbedtls_mpi_init( &T1 ); mbedtls_mpi_init( &T2 );
 
 #if defined(MBEDTLS_THREADING_C)
@@ -30715,9 +31963,15 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
      * temporary buffer and check it before returning it.
      */
     sig_try = mbedtls_calloc( 1, ctx->len );
-    verif   = mbedtls_calloc( 1, ctx->len );
-    if( sig_try == NULL || verif == NULL )
+    if( sig_try == NULL )
         return( MBEDTLS_ERR_MPI_ALLOC_FAILED );
+
+    verif   = mbedtls_calloc( 1, ctx->len );
+    if( verif == NULL )
+    {
+        mbedtls_free( sig_try );
+        return( MBEDTLS_ERR_MPI_ALLOC_FAILED );
+    }
 
     MBEDTLS_MPI_CHK( mbedtls_rsa_private( ctx, f_rng, p_rng, sig, sig_try ) );
     MBEDTLS_MPI_CHK( mbedtls_rsa_public( ctx, sig_try, verif ) );
@@ -33157,7 +34411,7 @@ void mbedtls_ssl_cache_free( mbedtls_ssl_cache_context *cache )
  *
  * Current rule (except rc4, weak and null which come last):
  * 1. By key exchange:
- *    Forward-secure non-PSK > forward-secure PSK > other non-PSK > other PSK
+ *    Forward-secure non-PSK > forward-secure PSK > ECJPAKE > other non-PSK > other PSK
  * 2. By key length and cipher:
  *    AES-256 > Camellia-256 > AES-128 > Camellia-128 > 3DES
  * 3. By cipher mode when relevant GCM > CCM > CBC > CCM_8
@@ -33247,6 +34501,9 @@ static const int ciphersuite_preference[] =
 
     MBEDTLS_TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA,
     MBEDTLS_TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA,
+
+    /* The ECJPAKE suite */
+    MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8,
 
     /* All AES-256 suites */
     MBEDTLS_TLS_RSA_WITH_AES_256_GCM_SHA384,
@@ -34627,6 +35884,18 @@ static const mbedtls_ssl_ciphersuite_t ciphersuite_definitions[] =
 #endif /* MBEDTLS_ARC4_C */
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED */
 
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+#if defined(MBEDTLS_AES_C)
+#if defined(MBEDTLS_CCM_C)
+    { MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8, "TLS-ECJPAKE-WITH-AES-128-CCM-8",
+      MBEDTLS_CIPHER_AES_128_CCM, MBEDTLS_MD_SHA256, MBEDTLS_KEY_EXCHANGE_ECJPAKE,
+      MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
+      MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
+      MBEDTLS_CIPHERSUITE_SHORT_TAG },
+#endif /* MBEDTLS_CCM_C */
+#endif /* MBEDTLS_AES_C */
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
 #if defined(MBEDTLS_ENABLE_WEAK_CIPHERSUITES)
 #if defined(MBEDTLS_CIPHER_NULL_CIPHER)
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
@@ -35024,7 +36293,7 @@ static void ssl_cli_zeroize( void *v, size_t n ) {
 #endif
 
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
-static void ssl_write_hostname_ext( mbedtls_ssl_context *ssl,
+static void ssl_cli_write_hostname_ext( mbedtls_ssl_context *ssl,
                                     unsigned char *buf,
                                     size_t *olen )
 {
@@ -35127,7 +36396,7 @@ static void ssl_cli_write_renegotiation_ext( mbedtls_ssl_context *ssl,
  */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
     defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-static void ssl_write_signature_algorithms_ext( mbedtls_ssl_context *ssl,
+static void ssl_cli_write_signature_algorithms_ext( mbedtls_ssl_context *ssl,
                                                 unsigned char *buf,
                                                 size_t *olen )
 {
@@ -35210,8 +36479,9 @@ static void ssl_write_signature_algorithms_ext( mbedtls_ssl_context *ssl,
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 &&
           MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
-static void ssl_write_supported_elliptic_curves_ext( mbedtls_ssl_context *ssl,
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static void ssl_cli_write_supported_elliptic_curves_ext( mbedtls_ssl_context *ssl,
                                                      unsigned char *buf,
                                                      size_t *olen )
 {
@@ -35305,7 +36575,86 @@ static void ssl_cli_write_supported_point_formats_ext( mbedtls_ssl_context *ssl,
 
     *olen = 6;
 }
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || 
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static void ssl_cli_write_ecjpake_kkpp_ext( mbedtls_ssl_context *ssl,
+                                        unsigned char *buf,
+                                        size_t *olen )
+{
+    int ret;
+    unsigned char *p = buf;
+    const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
+    size_t kkpp_len;
+
+    *olen = 0;
+
+    /* Skip costly extension if we can't use EC J-PAKE anyway */
+    if( mbedtls_ecjpake_check( &ssl->handshake->ecjpake_ctx ) != 0 )
+        return;
+
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, adding ecjpake_kkpp extension" ) );
+
+    if( end - p < 4 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
+        return;
+    }
+
+    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_ECJPAKE_KKPP >> 8 ) & 0xFF );
+    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_ECJPAKE_KKPP      ) & 0xFF );
+
+    /*
+     * We may need to send ClientHello multiple times for Hello verification.
+     * We don't want to compute fresh values every time (both for performance
+     * and consistency reasons), so cache the extension content.
+     */
+    if( ssl->handshake->ecjpake_cache == NULL ||
+        ssl->handshake->ecjpake_cache_len == 0 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "generating new ecjpake parameters" ) );
+
+        ret = mbedtls_ecjpake_write_round_one( &ssl->handshake->ecjpake_ctx,
+                                        p + 2, end - p - 2, &kkpp_len,
+                                        ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1 , "mbedtls_ecjpake_write_round_one", ret );
+            return;
+        }
+
+        ssl->handshake->ecjpake_cache = mbedtls_calloc( 1, kkpp_len );
+        if( ssl->handshake->ecjpake_cache == NULL )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "allocation failed" ) );
+            return;
+        }
+
+        memcpy( ssl->handshake->ecjpake_cache, p + 2, kkpp_len );
+        ssl->handshake->ecjpake_cache_len = kkpp_len;
+    }
+    else
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "re-using cached ecjpake parameters" ) );
+
+        kkpp_len = ssl->handshake->ecjpake_cache_len;
+
+        if( (size_t)( end - p - 2 ) < kkpp_len )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
+            return;
+        }
+
+        memcpy( p + 2, ssl->handshake->ecjpake_cache, kkpp_len );
+    }
+
+    *p++ = (unsigned char)( ( kkpp_len >> 8 ) & 0xFF );
+    *p++ = (unsigned char)( ( kkpp_len      ) & 0xFF );
+
+    *olen = kkpp_len + 4;
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
 static void ssl_cli_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
@@ -35759,8 +37108,14 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
             continue;
 #endif
 
-        MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, add ciphersuite: %2d",
-                       ciphersuites[i] ) );
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+        if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE &&
+            mbedtls_ecjpake_check( &ssl->handshake->ecjpake_ctx ) != 0 )
+            continue;
+#endif
+
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, add ciphersuite: %04x",
+                                    ciphersuites[i] ) );
 
         n++;
         *p++ = (unsigned char)( ciphersuites[i] >> 8 );
@@ -35835,7 +37190,7 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
     // First write extensions, then the total length
     //
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
-    ssl_write_hostname_ext( ssl, p + 2 + ext_len, &olen );
+    ssl_cli_write_hostname_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 #endif
 
@@ -35846,15 +37201,21 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
     defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-    ssl_write_signature_algorithms_ext( ssl, p + 2 + ext_len, &olen );
+    ssl_cli_write_signature_algorithms_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 #endif
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
-    ssl_write_supported_elliptic_curves_ext( ssl, p + 2 + ext_len, &olen );
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    ssl_cli_write_supported_elliptic_curves_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 
     ssl_cli_write_supported_point_formats_ext( ssl, p + 2 + ext_len, &olen );
+    ext_len += olen;
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    ssl_cli_write_ecjpake_kkpp_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 #endif
 
@@ -36065,7 +37426,8 @@ static int ssl_cli_parse_session_ticket_ext( mbedtls_ssl_context *ssl,
 }
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
 static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
                                                   const unsigned char *buf,
                                                   size_t len )
@@ -36086,7 +37448,12 @@ static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
         if( p[0] == MBEDTLS_ECP_PF_UNCOMPRESSED ||
             p[0] == MBEDTLS_ECP_PF_COMPRESSED )
         {
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
             ssl->handshake->ecdh_ctx.point_format = p[0];
+#endif            
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+            ssl->handshake->ecjpake_ctx.point_format = p[0];
+#endif
             MBEDTLS_SSL_DEBUG_MSG( 4, ( "point format selected: %d", p[0] ) );
             return( 0 );
         }
@@ -36098,7 +37465,38 @@ static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
     MBEDTLS_SSL_DEBUG_MSG( 1, ( "no point format in common" ) );
     return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO );
 }
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || 
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static int ssl_parse_ecjpake_kkpp( mbedtls_ssl_context *ssl,
+                                   const unsigned char *buf,
+                                   size_t len )
+{
+    int ret;
+
+    if( ssl->transform_negotiate->ciphersuite_info->key_exchange !=
+        MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "skip ecjpake kkpp extension" ) );
+        return( 0 );
+    }
+
+    /* If we got here, we no longer need our cached extension */
+    mbedtls_free( ssl->handshake->ecjpake_cache );
+    ssl->handshake->ecjpake_cache = NULL;
+    ssl->handshake->ecjpake_cache_len = 0;
+
+    if( ( ret = mbedtls_ecjpake_read_round_one( &ssl->handshake->ecjpake_ctx,
+                                                buf, len ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_read_round_one", ret );
+        return( ret );
+    }
+
+    return( 0 );
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_ALPN)
 static int ssl_cli_parse_alpn_ext( mbedtls_ssl_context *ssl,
@@ -36448,7 +37846,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "%s session has been resumed",
                    ssl->handshake->resume ? "a" : "no" ) );
 
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %d", i ) );
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %04x", i ) );
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, compress alg.: %d", buf[37 + n] ) );
 
     suite_info = mbedtls_ssl_ciphersuite_from_id( ssl->session_negotiate->ciphersuite );
@@ -36462,6 +37860,8 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server hello message" ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO );
     }
+
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %s", suite_info->name ) );
 
     i = 0;
     while( 1 )
@@ -36586,7 +37986,8 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
             break;
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
         case MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS:
             MBEDTLS_SSL_DEBUG_MSG( 3, ( "found supported_point_formats extension" ) );
 
@@ -36597,7 +37998,21 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
             }
 
             break;
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C ||
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+        case MBEDTLS_TLS_EXT_ECJPAKE_KKPP:
+            MBEDTLS_SSL_DEBUG_MSG( 3, ( "found ecjpake_kkpp extension" ) );
+
+            if( ( ret = ssl_parse_ecjpake_kkpp( ssl,
+                            ext + 4, ext_size ) ) != 0 )
+            {
+                return( ret );
+            }
+
+            break;
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_ALPN)
         case MBEDTLS_TLS_EXT_ALPN:
@@ -36892,7 +38307,9 @@ static int ssl_write_encrypted_pms( mbedtls_ssl_context *ssl,
           MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED */
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) ||                       \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
                                           unsigned char **p,
                                           unsigned char *end,
@@ -36917,7 +38334,7 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
      */
     if( ( *md_alg = mbedtls_ssl_md_alg_from_hash( (*p)[0] ) ) == MBEDTLS_MD_NONE )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "Server used unsupported "
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "Server used unsupported "
                             "HashAlgorithm %d", *(p)[0] ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
     }
@@ -36927,7 +38344,7 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
      */
     if( ( *pk_alg = mbedtls_ssl_pk_alg_from_sig( (*p)[1] ) ) == MBEDTLS_PK_NONE )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "server used unsupported "
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "server used unsupported "
                             "SignatureAlgorithm %d", (*p)[1] ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
     }
@@ -36937,7 +38354,7 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
      */
     if( mbedtls_ssl_check_sig_hash( ssl, *md_alg ) != 0 )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "server used HashAlgorithm "
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "server used HashAlgorithm "
                                     "that was not offered" ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
     }
@@ -36948,7 +38365,9 @@ static int ssl_parse_signature_algorithm( mbedtls_ssl_context *ssl,
 
     return( 0 );
 }
-#endif /* MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED */
+#endif /* MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED ||
+          MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
+          MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
@@ -37116,6 +38535,19 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
 #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
           MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
           MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        ret = mbedtls_ecjpake_read_round_two( &ssl->handshake->ecjpake_ctx,
+                                              p, end - p );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_read_round_two", ret );
+            return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
+        }
+    }
+    else
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
         return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
@@ -37320,7 +38752,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
         ssl->state++;
@@ -37344,7 +38777,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
         ssl->state++;
@@ -37725,6 +39159,31 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
     }
     else
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        i = 4;
+
+        ret = mbedtls_ecjpake_write_round_two( &ssl->handshake->ecjpake_ctx,
+                ssl->out_msg + i, MBEDTLS_SSL_MAX_CONTENT_LEN - i, &n,
+                ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_write_round_two", ret );
+            return( ret );
+        }
+
+        ret = mbedtls_ecjpake_derive_secret( &ssl->handshake->ecjpake_ctx,
+                ssl->handshake->premaster, 32, &ssl->handshake->pmslen,
+                ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_derive_secret", ret );
+            return( ret );
+        }
+    }
+    else
+#endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED */
     {
         ((void) ciphersuite_info);
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
@@ -37768,7 +39227,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
         ssl->state++;
@@ -37800,7 +39260,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
         ssl->state++;
@@ -38672,7 +40133,8 @@ have_sig_alg:
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 &&
           MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
 static int ssl_parse_supported_elliptic_curves( mbedtls_ssl_context *ssl,
                                                 const unsigned char *buf,
                                                 size_t len )
@@ -38745,7 +40207,12 @@ static int ssl_parse_supported_point_formats( mbedtls_ssl_context *ssl,
         if( p[0] == MBEDTLS_ECP_PF_UNCOMPRESSED ||
             p[0] == MBEDTLS_ECP_PF_COMPRESSED )
         {
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
             ssl->handshake->ecdh_ctx.point_format = p[0];
+#endif
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+            ssl->handshake->ecjpake_ctx.point_format = p[0];
+#endif
             MBEDTLS_SSL_DEBUG_MSG( 4, ( "point format selected: %d", p[0] ) );
             return( 0 );
         }
@@ -38756,7 +40223,35 @@ static int ssl_parse_supported_point_formats( mbedtls_ssl_context *ssl,
 
     return( 0 );
 }
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C ||
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static int ssl_parse_ecjpake_kkpp( mbedtls_ssl_context *ssl,
+                                   const unsigned char *buf,
+                                   size_t len )
+{
+    int ret;
+
+    if( mbedtls_ecjpake_check( &ssl->handshake->ecjpake_ctx ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "skip ecjpake kkpp extension" ) );
+        return( 0 );
+    }
+
+    if( ( ret = mbedtls_ecjpake_read_round_one( &ssl->handshake->ecjpake_ctx,
+                                                buf, len ) ) != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_read_round_one", ret );
+        return( ret );
+    }
+
+    /* Only mark the extension as OK when we're sure it is */
+    ssl->handshake->cli_exts |= MBEDTLS_TLS_EXT_ECJPAKE_KKPP_OK;
+
+    return( 0 );
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
 static int ssl_srv_parse_max_fragment_length_ext( mbedtls_ssl_context *ssl,
@@ -39146,6 +40641,17 @@ static int ssl_ciphersuite_match( mbedtls_ssl_context *ssl, int suite_id,
         return( 0 );
     }
 #endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( suite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE &&
+        ( ssl->handshake->cli_exts & MBEDTLS_TLS_EXT_ECJPAKE_KKPP_OK ) == 0 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 3, ( "ciphersuite mismatch: ecjpake "
+                                    "not configured or ext missing" ) );
+        return( 0 );
+    }
+#endif
+
 
 #if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
     if( mbedtls_ssl_ciphersuite_uses_ec( suite_info ) &&
@@ -39981,7 +41487,8 @@ read_record_header:
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 &&
           MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
         case MBEDTLS_TLS_EXT_SUPPORTED_ELLIPTIC_CURVES:
             MBEDTLS_SSL_DEBUG_MSG( 3, ( "found supported elliptic curves extension" ) );
 
@@ -39998,7 +41505,18 @@ read_record_header:
             if( ret != 0 )
                 return( ret );
             break;
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C ||
+          MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+        case MBEDTLS_TLS_EXT_ECJPAKE_KKPP:
+            MBEDTLS_SSL_DEBUG_MSG( 3, ( "found ecjpake kkpp extension" ) );
+
+            ret = ssl_parse_ecjpake_kkpp( ssl, ext + 4, ext_size );
+            if( ret != 0 )
+                return( ret );
+            break;
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
         case MBEDTLS_TLS_EXT_MAX_FRAGMENT_LENGTH:
@@ -40420,7 +41938,8 @@ static void ssl_srv_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
 }
 #endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
 static void ssl_srv_write_supported_point_formats_ext( mbedtls_ssl_context *ssl,
                                                    unsigned char *buf,
                                                    size_t *olen )
@@ -40448,7 +41967,51 @@ static void ssl_srv_write_supported_point_formats_ext( mbedtls_ssl_context *ssl,
 
     *olen = 6;
 }
-#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C */
+#endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+static void ssl_srv_write_ecjpake_kkpp_ext( mbedtls_ssl_context *ssl,
+                                        unsigned char *buf,
+                                        size_t *olen )
+{
+    int ret;
+    unsigned char *p = buf;
+    const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
+    size_t kkpp_len;
+
+    *olen = 0;
+
+    /* Skip costly computation if not needed */
+    if( ssl->transform_negotiate->ciphersuite_info->key_exchange !=
+        MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+        return;
+
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, ecjpake kkpp extension" ) );
+
+    if( end - p < 4 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
+        return;
+    }
+
+    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_ECJPAKE_KKPP >> 8 ) & 0xFF );
+    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_ECJPAKE_KKPP      ) & 0xFF );
+
+    ret = mbedtls_ecjpake_write_round_one( &ssl->handshake->ecjpake_ctx,
+                                        p + 2, end - p - 2, &kkpp_len,
+                                        ssl->conf->f_rng, ssl->conf->p_rng );
+    if( ret != 0 )
+    {
+        MBEDTLS_SSL_DEBUG_RET( 1 , "mbedtls_ecjpake_write_round_one", ret );
+        return;
+    }
+
+    *p++ = (unsigned char)( ( kkpp_len >> 8 ) & 0xFF );
+    *p++ = (unsigned char)( ( kkpp_len      ) & 0xFF );
+
+    *olen = kkpp_len + 4;
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_ALPN )
 static void ssl_srv_write_alpn_ext( mbedtls_ssl_context *ssl,
@@ -40734,8 +42297,14 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
     ext_len += olen;
 #endif
 
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
     ssl_srv_write_supported_point_formats_ext( ssl, p + 2 + ext_len, &olen );
+    ext_len += olen;
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    ssl_srv_write_ecjpake_kkpp_ext( ssl, p + 2 + ext_len, &olen );
     ext_len += olen;
 #endif
 
@@ -40777,7 +42346,8 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate request" ) );
         ssl->state++;
@@ -40814,6 +42384,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
         authmode == MBEDTLS_SSL_VERIFY_NONE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate request" ) );
@@ -40918,7 +42489,9 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     {
         dn_size = crt->subject_raw.len;
 
-        if( end < p || (size_t)( end - p ) < 2 + dn_size )
+        if( end < p ||
+            (size_t)( end - p ) < dn_size ||
+            (size_t)( end - p ) < 2 + dn_size )
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "skipping CAs: buffer too short" ) );
             break;
@@ -40988,12 +42561,14 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
     defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) ||                       \
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
     unsigned char *p = ssl->out_msg + 4;
     unsigned char *dig_signed = p;
     size_t dig_signed_len = 0, len;
     ((void) dig_signed);
     ((void) dig_signed_len);
+    ((void) len);
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write server key exchange" ) );
@@ -41023,6 +42598,25 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
         return( 0 );
     }
 #endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        size_t jlen;
+        const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
+
+        ret = mbedtls_ecjpake_write_round_two( &ssl->handshake->ecjpake_ctx,
+                p, end - p, &jlen, ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_write_round_two", ret );
+            return( ret );
+        }
+
+        p += jlen;
+        n += jlen;
+    }
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) ||                       \
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
@@ -41775,6 +43369,28 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
     }
     else
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
+    {
+        ret = mbedtls_ecjpake_read_round_two( &ssl->handshake->ecjpake_ctx,
+                                              p, end - p );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_read_round_two", ret );
+            return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
+        }
+
+        ret = mbedtls_ecjpake_derive_secret( &ssl->handshake->ecjpake_ctx,
+                ssl->handshake->premaster, 32, &ssl->handshake->pmslen,
+                ssl->conf->f_rng, ssl->conf->p_rng );
+        if( ret != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecjpake_derive_secret", ret );
+            return( ret );
+        }
+    }
+    else
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
         return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
@@ -41806,7 +43422,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
         ssl->state++;
@@ -41836,6 +43453,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
         ssl->session_negotiate->peer_cert == NULL )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
@@ -43532,6 +45150,16 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
     }
 #endif /* MBEDTLS_SSL_HW_RECORD_ACCEL */
 
+#if defined(MBEDTLS_SSL_EXPORT_KEYS)
+    if( ssl->conf->f_export_keys != NULL )
+    {
+        ssl->conf->f_export_keys( ssl->conf->p_export_keys,
+                                  session->master, keyblk,
+                                  transform->maclen, transform->keylen,
+                                  iv_copy_len );
+    }
+#endif
+
     if( ( ret = mbedtls_cipher_setup( &transform->cipher_ctx_enc,
                                  cipher_info ) ) != 0 )
     {
@@ -43765,11 +45393,16 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
 #if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     if( key_ex == MBEDTLS_KEY_EXCHANGE_PSK )
     {
-        if( end - p < 2 + (int) psk_len )
+        if( end - p < 2 )
             return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
         *(p++) = (unsigned char)( psk_len >> 8 );
         *(p++) = (unsigned char)( psk_len      );
+
+        if( end < p || (size_t)( end - p ) < psk_len )
+            return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
+
+        memset( p, 0, psk_len );
         p += psk_len;
     }
     else
@@ -43837,11 +45470,15 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
     }
 
     /* opaque psk<0..2^16-1>; */
-    if( end - p < 2 + (int) psk_len )
-            return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
+    if( end - p < 2 )
+        return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
 
     *(p++) = (unsigned char)( psk_len >> 8 );
     *(p++) = (unsigned char)( psk_len      );
+
+    if( end < p || (size_t)( end - p ) < psk_len )
+        return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
+
     memcpy( p, psk, psk_len );
     p += psk_len;
 
@@ -46116,6 +47753,18 @@ static int ssl_handle_possible_reconnect( mbedtls_ssl_context *ssl )
  * uint16 epoch;            // DTLS only
  * uint48 sequence_number;  // DTLS only
  * uint16 length;
+ *
+ * Return 0 if header looks sane (and, for DTLS, the record is expected)
+ * MBEDTLS_ERR_SSL_INVALID_RECORD if the header looks bad,
+ * MBEDTLS_ERR_SSL_UNEXPECTED_RECORD (DTLS only) if sane but unexpected.
+ *
+ * With DTLS, mbedtls_ssl_read_record() will:
+ * 1. proceed with the record if this function returns 0
+ * 2. drop only the current record if this function returns UNEXPECTED_RECORD
+ * 3. return CLIENT_RECONNECT if this function return that value
+ * 4. drop the whole datagram if this function returns anything else.
+ * Point 2 is needed when the peer is resending, and we have already received
+ * the first record from a datagram but are still waiting for the others.
  */
 static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
 {
@@ -46151,34 +47800,6 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
         return( MBEDTLS_ERR_SSL_INVALID_RECORD );
     }
 
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
-    if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
-    {
-        /* Drop unexpected ChangeCipherSpec messages */
-        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_CHANGE_CIPHER_SPEC &&
-            ssl->state != MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC &&
-            ssl->state != MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ChangeCipherSpec" ) );
-            return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-
-        /* Drop unexpected ApplicationData records,
-         * except at the beginning of renegotiations */
-        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_APPLICATION_DATA &&
-            ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER
-#if defined(MBEDTLS_SSL_RENEGOTIATION)
-            && ! ( ssl->renego_status == MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS &&
-                   ssl->state == MBEDTLS_SSL_SERVER_HELLO )
-#endif
-            )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ApplicationData" ) );
-            return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-    }
-#endif
-
     /* Check version */
     if( major_ver != ssl->major_ver )
     {
@@ -46191,53 +47812,6 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "minor version mismatch" ) );
         return( MBEDTLS_ERR_SSL_INVALID_RECORD );
     }
-
-    /* Check epoch (and sequence number) with DTLS */
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
-    if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
-    {
-        unsigned int rec_epoch = ( ssl->in_ctr[0] << 8 ) | ssl->in_ctr[1];
-
-        if( rec_epoch != ssl->in_epoch )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "record from another epoch: "
-                                        "expected %d, received %d",
-                                        ssl->in_epoch, rec_epoch ) );
-
-#if defined(MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE) && defined(MBEDTLS_SSL_SRV_C)
-            /*
-             * Check for an epoch 0 ClientHello. We can't use in_msg here to
-             * access the first byte of record content (handshake type), as we
-             * have an active transform (possibly iv_len != 0), so use the
-             * fact that the record header len is 13 instead.
-             */
-            if( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
-                ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER &&
-                rec_epoch == 0 &&
-                ssl->in_msgtype == MBEDTLS_SSL_MSG_HANDSHAKE &&
-                ssl->in_left > 13 &&
-                ssl->in_buf[13] == MBEDTLS_SSL_HS_CLIENT_HELLO )
-            {
-                MBEDTLS_SSL_DEBUG_MSG( 1, ( "possible client reconnect "
-                                            "from the same port" ) );
-                return( ssl_handle_possible_reconnect( ssl ) );
-            }
-            else
-#endif /* MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE && MBEDTLS_SSL_SRV_C */
-                return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-
-#if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
-        /* Replay detection only works for the current epoch */
-        if( rec_epoch == ssl->in_epoch &&
-            mbedtls_ssl_dtls_replay_check( ssl ) != 0 )
-        {
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "replayed record" ) );
-            return( MBEDTLS_ERR_SSL_INVALID_RECORD );
-        }
-#endif
-    }
-#endif /* MBEDTLS_SSL_PROTO_DTLS */
 
     /* Check length against the size of our buffer */
     if( ssl->in_msglen > MBEDTLS_SSL_BUFFER_LEN
@@ -46287,6 +47861,82 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
         }
 #endif
     }
+
+    /*
+     * DTLS-related tests done last, because most of them may result in
+     * silently dropping the record (but not the whole datagram), and we only
+     * want to consider that after ensuring that the "basic" fields (type,
+     * version, length) are sane.
+     */
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
+    if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM )
+    {
+        unsigned int rec_epoch = ( ssl->in_ctr[0] << 8 ) | ssl->in_ctr[1];
+
+        /* Drop unexpected ChangeCipherSpec messages */
+        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_CHANGE_CIPHER_SPEC &&
+            ssl->state != MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC &&
+            ssl->state != MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ChangeCipherSpec" ) );
+            return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+
+        /* Drop unexpected ApplicationData records,
+         * except at the beginning of renegotiations */
+        if( ssl->in_msgtype == MBEDTLS_SSL_MSG_APPLICATION_DATA &&
+            ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER
+#if defined(MBEDTLS_SSL_RENEGOTIATION)
+            && ! ( ssl->renego_status == MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS &&
+                   ssl->state == MBEDTLS_SSL_SERVER_HELLO )
+#endif
+            )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "dropping unexpected ApplicationData" ) );
+            return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+
+        /* Check epoch (and sequence number) with DTLS */
+        if( rec_epoch != ssl->in_epoch )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "record from another epoch: "
+                                        "expected %d, received %d",
+                                        ssl->in_epoch, rec_epoch ) );
+
+#if defined(MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE) && defined(MBEDTLS_SSL_SRV_C)
+            /*
+             * Check for an epoch 0 ClientHello. We can't use in_msg here to
+             * access the first byte of record content (handshake type), as we
+             * have an active transform (possibly iv_len != 0), so use the
+             * fact that the record header len is 13 instead.
+             */
+            if( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
+                ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER &&
+                rec_epoch == 0 &&
+                ssl->in_msgtype == MBEDTLS_SSL_MSG_HANDSHAKE &&
+                ssl->in_left > 13 &&
+                ssl->in_buf[13] == MBEDTLS_SSL_HS_CLIENT_HELLO )
+            {
+                MBEDTLS_SSL_DEBUG_MSG( 1, ( "possible client reconnect "
+                                            "from the same port" ) );
+                return( ssl_handle_possible_reconnect( ssl ) );
+            }
+            else
+#endif /* MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE && MBEDTLS_SSL_SRV_C */
+                return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+
+#if defined(MBEDTLS_SSL_DTLS_ANTI_REPLAY)
+        /* Replay detection only works for the current epoch */
+        if( rec_epoch == ssl->in_epoch &&
+            mbedtls_ssl_dtls_replay_check( ssl ) != 0 )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "replayed record" ) );
+            return( MBEDTLS_ERR_SSL_UNEXPECTED_RECORD );
+        }
+#endif
+    }
+#endif /* MBEDTLS_SSL_PROTO_DTLS */
 
     return( 0 );
 }
@@ -46366,8 +48016,9 @@ static void ssl_handshake_wrapup_free_hs_transform( mbedtls_ssl_context *ssl );
 /*
  * Read a record.
  *
- * For DTLS, silently ignore invalid records (RFC 4.1.2.7.)
- * and continue reading until a valid record is found.
+ * Silently ignore non-fatal alert (and for DTLS, invalid records as well,
+ * RFC 6347 4.1.2.7) and continue reading until a valid record is found.
+ *
  */
 int mbedtls_ssl_read_record( mbedtls_ssl_context *ssl )
 {
@@ -46399,9 +48050,7 @@ int mbedtls_ssl_read_record( mbedtls_ssl_context *ssl )
     /*
      * Read the record header and parse it
      */
-#if defined(MBEDTLS_SSL_PROTO_DTLS)
 read_record_header:
-#endif
     if( ( ret = mbedtls_ssl_fetch_input( ssl, mbedtls_ssl_hdr_len( ssl ) ) ) != 0 )
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_fetch_input", ret );
@@ -46414,13 +48063,26 @@ read_record_header:
         if( ssl->conf->transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
             ret != MBEDTLS_ERR_SSL_CLIENT_RECONNECT )
         {
-            /* Ignore bad record and get next one; drop the whole datagram
-             * since current header cannot be trusted to find the next record
-             * in current datagram */
-            ssl->next_record_offset = 0;
-            ssl->in_left = 0;
+            if( ret == MBEDTLS_ERR_SSL_UNEXPECTED_RECORD )
+            {
+                /* Skip unexpected record (but not whole datagram) */
+                ssl->next_record_offset = ssl->in_msglen
+                                        + mbedtls_ssl_hdr_len( ssl );
 
-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "discarding invalid record (header)" ) );
+                MBEDTLS_SSL_DEBUG_MSG( 1, ( "discarding unexpected record "
+                                            "(header)" ) );
+            }
+            else
+            {
+                /* Skip invalid record and the rest of the datagram */
+                ssl->next_record_offset = 0;
+                ssl->in_left = 0;
+
+                MBEDTLS_SSL_DEBUG_MSG( 1, ( "discarding invalid record "
+                                            "(header)" ) );
+            }
+
+            /* Get next record */
             goto read_record_header;
         }
 #endif
@@ -46557,7 +48219,7 @@ read_record_header:
                        ssl->in_msg[0], ssl->in_msg[1] ) );
 
         /*
-         * Ignore non-fatal alerts, except close_notify
+         * Ignore non-fatal alerts, except close_notify and no_renegotiation
          */
         if( ssl->in_msg[0] == MBEDTLS_SSL_ALERT_LEVEL_FATAL )
         {
@@ -46572,6 +48234,31 @@ read_record_header:
             MBEDTLS_SSL_DEBUG_MSG( 2, ( "is a close notify message" ) );
             return( MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY );
         }
+
+#if defined(MBEDTLS_SSL_RENEGOTIATION_ENABLED)
+        if( ssl->in_msg[0] == MBEDTLS_SSL_ALERT_LEVEL_WARNING &&
+            ssl->in_msg[1] == MBEDTLS_SSL_ALERT_MSG_NO_RENEGOTIATION )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 2, ( "is a SSLv3 no_cert" ) );
+            /* Will be handled when trying to parse ServerHello */
+            return( 0 );
+        }
+#endif
+
+#if defined(MBEDTLS_SSL_PROTO_SSL3) && defined(MBEDTLS_SSL_SRV_C)
+        if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_0 &&
+            ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
+            ssl->in_msg[0] == MBEDTLS_SSL_ALERT_LEVEL_WARNING &&
+            ssl->in_msg[1] == MBEDTLS_SSL_ALERT_MSG_NO_CERT )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 2, ( "is a SSLv3 no_cert" ) );
+            /* Will be handled in mbedtls_ssl_parse_certificate() */
+            return( 0 );
+        }
+#endif /* MBEDTLS_SSL_PROTO_SSL3 && MBEDTLS_SSL_SRV_C */
+
+        /* Silently ignore: fetch new message */
+        goto read_record_header;
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= read record" ) );
@@ -46638,7 +48325,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
 
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate" ) );
         ssl->state++;
@@ -46657,7 +48345,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
 
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate" ) );
         ssl->state++;
@@ -46679,7 +48368,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
 
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate" ) );
         ssl->state++;
@@ -46794,7 +48484,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
 
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate" ) );
         ssl->state++;
@@ -47816,6 +49507,13 @@ static void ssl_handshake_params_init( mbedtls_ssl_handshake_params *handshake )
 #if defined(MBEDTLS_ECDH_C)
     mbedtls_ecdh_init( &handshake->ecdh_ctx );
 #endif
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    mbedtls_ecjpake_init( &handshake->ecjpake_ctx );
+#if defined(MBEDTLS_SSL_CLI_C)
+    handshake->ecjpake_cache = NULL;
+    handshake->ecjpake_cache_len = 0;
+#endif
+#endif
 
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
     handshake->sni_authmode = MBEDTLS_SSL_VERIFY_UNSET;
@@ -48349,6 +50047,32 @@ void mbedtls_ssl_set_hs_authmode( mbedtls_ssl_context *ssl,
 }
 #endif /* MBEDTLS_SSL_SERVER_NAME_INDICATION */
 
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+/*
+ * Set EC J-PAKE password for current handshake
+ */
+int mbedtls_ssl_set_hs_ecjpake_password( mbedtls_ssl_context *ssl,
+                                         const unsigned char *pw,
+                                         size_t pw_len )
+{
+    mbedtls_ecjpake_role role;
+
+    if( ssl->handshake == NULL && ssl->conf == NULL )
+        return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
+
+    if( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER )
+        role = MBEDTLS_ECJPAKE_SERVER;
+    else
+        role = MBEDTLS_ECJPAKE_CLIENT;
+
+    return( mbedtls_ecjpake_setup( &ssl->handshake->ecjpake_ctx,
+                                   role,
+                                   MBEDTLS_MD_SHA256,
+                                   MBEDTLS_ECP_DP_SECP256R1,
+                                   pw, pw_len ) );
+}
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
+
 #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
 int mbedtls_ssl_conf_psk( mbedtls_ssl_config *conf,
                 const unsigned char *psk, size_t psk_len,
@@ -48371,6 +50095,8 @@ int mbedtls_ssl_conf_psk( mbedtls_ssl_config *conf,
     {
         mbedtls_free( conf->psk );
         mbedtls_free( conf->psk_identity );
+        conf->psk = NULL;
+        conf->psk_identity = NULL;
     }
 
     if( ( conf->psk = mbedtls_calloc( 1, psk_len ) ) == NULL ||
@@ -48405,11 +50131,7 @@ int mbedtls_ssl_set_hs_psk( mbedtls_ssl_context *ssl,
         mbedtls_free( ssl->handshake->psk );
 
     if( ( ssl->handshake->psk = mbedtls_calloc( 1, psk_len ) ) == NULL )
-    {
-        mbedtls_free( ssl->handshake->psk );
-        ssl->handshake->psk = NULL;
         return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
-    }
 
     ssl->handshake->psk_len = psk_len;
     memcpy( ssl->handshake->psk, psk, ssl->handshake->psk_len );
@@ -48470,7 +50192,7 @@ void mbedtls_ssl_conf_dhm_min_bitlen( mbedtls_ssl_config *conf,
 }
 #endif /* MBEDTLS_DHM_C && MBEDTLS_SSL_CLI_C */
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
 /*
  * Set allowed/preferred hashes for handshake signatures
  */
@@ -48675,6 +50397,16 @@ void mbedtls_ssl_conf_session_tickets_cb( mbedtls_ssl_config *conf,
 }
 #endif
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
+
+#if defined(MBEDTLS_SSL_EXPORT_KEYS)
+void mbedtls_ssl_conf_export_keys_cb( mbedtls_ssl_config *conf,
+        mbedtls_ssl_export_keys_t *f_export_keys,
+        void *p_export_keys )
+{
+    conf->f_export_keys = f_export_keys;
+    conf->p_export_keys = p_export_keys;
+}
+#endif
 
 /*
  * SSL get accessors
@@ -49496,6 +51228,14 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_handshake_params *handshake )
 #if defined(MBEDTLS_ECDH_C)
     mbedtls_ecdh_free( &handshake->ecdh_ctx );
 #endif
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    mbedtls_ecjpake_free( &handshake->ecjpake_ctx );
+#if defined(MBEDTLS_SSL_CLI_C)
+    mbedtls_free( handshake->ecjpake_cache );
+    handshake->ecjpake_cache = NULL;
+    handshake->ecjpake_cache_len = 0;
+#endif
+#endif
 
 #if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
     /* explicit void pointer cast for buggy MS compiler */
@@ -49645,13 +51385,30 @@ void mbedtls_ssl_config_init( mbedtls_ssl_config *conf )
     memset( conf, 0, sizeof( mbedtls_ssl_config ) );
 }
 
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+static int ssl_preset_default_hashes[] = {
+#if defined(MBEDTLS_SHA512_C)
+    MBEDTLS_MD_SHA512,
+    MBEDTLS_MD_SHA384,
+#endif
+#if defined(MBEDTLS_SHA256_C)
+    MBEDTLS_MD_SHA256,
+    MBEDTLS_MD_SHA224,
+#endif
+#if defined(MBEDTLS_SHA1_C)
+    MBEDTLS_MD_SHA1,
+#endif
+    MBEDTLS_MD_NONE
+};
+#endif
+
 static int ssl_preset_suiteb_ciphersuites[] = {
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
     0
 };
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
 static int ssl_preset_suiteb_hashes[] = {
     MBEDTLS_MD_SHA256,
     MBEDTLS_MD_SHA384,
@@ -49767,7 +51524,7 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
             conf->cert_profile = &mbedtls_x509_crt_profile_suiteb;
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
             conf->sig_hashes = ssl_preset_suiteb_hashes;
 #endif
 
@@ -49800,8 +51557,8 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
             conf->cert_profile = &mbedtls_x509_crt_profile_default;
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
-            conf->sig_hashes = mbedtls_md_list();
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+            conf->sig_hashes = ssl_preset_default_hashes;
 #endif
 
 #if defined(MBEDTLS_ECP_C)
@@ -49845,7 +51602,8 @@ void mbedtls_ssl_config_free( mbedtls_ssl_config *conf )
     ssl_tls_zeroize( conf, sizeof( mbedtls_ssl_config ) );
 }
 
-#if defined(MBEDTLS_PK_C)
+#if defined(MBEDTLS_PK_C) && \
+    ( defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C) )
 /*
  * Convert between MBEDTLS_PK_XXX and SSL_SIG_XXX
  */
@@ -49878,7 +51636,7 @@ mbedtls_pk_type_t mbedtls_ssl_pk_alg_from_sig( unsigned char sig )
             return( MBEDTLS_PK_NONE );
     }
 }
-#endif /* MBEDTLS_PK_C */
+#endif /* MBEDTLS_PK_C && ( MBEDTLS_RSA_C || MBEDTLS_ECDSA_C ) */
 
 /*
  * Convert from MBEDTLS_SSL_HASH_XXX to MBEDTLS_MD_XXX
@@ -49964,7 +51722,7 @@ int mbedtls_ssl_check_curve( const mbedtls_ssl_context *ssl, mbedtls_ecp_group_i
 }
 #endif /* MBEDTLS_ECP_C */
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
 /*
  * Check if a hash proposed by the peer is in our list.
  * Return 0 if we're willing to use it, -1 otherwise.
@@ -49983,7 +51741,7 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
 
     return( -1 );
 }
-#endif /* MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED */
+#endif /* MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
@@ -50034,6 +51792,7 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
             case MBEDTLS_KEY_EXCHANGE_PSK:
             case MBEDTLS_KEY_EXCHANGE_DHE_PSK:
             case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
+            case MBEDTLS_KEY_EXCHANGE_ECJPAKE:
                 usage = 0;
         }
     }
@@ -51127,6 +52886,9 @@ static const char *features[] = {
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED)
     "MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED",
 #endif /* MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    "MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED",
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 #if defined(MBEDTLS_PK_PARSE_EC_EXTENDED)
     "MBEDTLS_PK_PARSE_EC_EXTENDED",
 #endif /* MBEDTLS_PK_PARSE_EC_EXTENDED */
@@ -51241,6 +53003,9 @@ static const char *features[] = {
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
     "MBEDTLS_SSL_SESSION_TICKETS",
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
+#if defined(MBEDTLS_SSL_EXPORT_KEYS)
+    "MBEDTLS_SSL_EXPORT_KEYS",
+#endif /* MBEDTLS_SSL_EXPORT_KEYS */
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
     "MBEDTLS_SSL_SERVER_NAME_INDICATION",
 #endif /* MBEDTLS_SSL_SERVER_NAME_INDICATION */
@@ -51328,6 +53093,9 @@ static const char *features[] = {
 #if defined(MBEDTLS_ECDSA_C)
     "MBEDTLS_ECDSA_C",
 #endif /* MBEDTLS_ECDSA_C */
+#if defined(MBEDTLS_ECJPAKE_C)
+    "MBEDTLS_ECJPAKE_C",
+#endif /* MBEDTLS_ECJPAKE_C */
 #if defined(MBEDTLS_ECP_C)
     "MBEDTLS_ECP_C",
 #endif /* MBEDTLS_ECP_C */
@@ -52787,12 +54555,15 @@ int mbedtls_x509_write_sig( unsigned char **p, unsigned char *start,
     int ret;
     size_t len = 0;
 
-    if( *p - start < (int) size + 1 )
+    if( *p < start || (size_t)( *p - start ) < size )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     len = size;
     (*p) -= len;
     memcpy( *p, sig, len );
+
+    if( *p - start < 1 )
+        return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     *--(*p) = 0;
     len += 1;
@@ -53789,8 +55560,10 @@ static int x509_profile_check_key( const mbedtls_x509_crt_profile *profile,
     }
 #endif
 
-#if defined(MBEDTLS_ECDSA_C)
-    if( pk_alg == MBEDTLS_PK_ECDSA )
+#if defined(MBEDTLS_ECP_C)
+    if( pk_alg == MBEDTLS_PK_ECDSA ||
+        pk_alg == MBEDTLS_PK_ECKEY ||
+        pk_alg == MBEDTLS_PK_ECKEY_DH )
     {
         mbedtls_ecp_group_id gid = mbedtls_pk_ec( *pk )->grp.id;
 
@@ -54700,7 +56473,7 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
     WCHAR szDir[MAX_PATH];
     char filename[MAX_PATH];
     char *p;
-    int len = (int) strlen( path );
+    size_t len = strlen( path );
 
     WIN32_FIND_DATAW file_data;
     HANDLE hFind;
@@ -54734,7 +56507,7 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
 
         w_ret = WideCharToMultiByte( CP_ACP, 0, file_data.cFileName,
                                      lstrlenW( file_data.cFileName ),
-                                     p, len - 1,
+                                     p, (int) len - 1,
                                      NULL, NULL );
         if( w_ret == 0 )
             return( MBEDTLS_ERR_X509_FILE_IO_ERROR );
@@ -55478,7 +57251,7 @@ static int x509_crt_verify_top(
                 mbedtls_x509_crt *child, mbedtls_x509_crt *trust_ca,
                 mbedtls_x509_crl *ca_crl,
                 const mbedtls_x509_crt_profile *profile,
-                int path_cnt, uint32_t *flags,
+                int path_cnt, int self_cnt, uint32_t *flags,
                 int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
                 void *p_vrfy )
 {
@@ -55534,8 +57307,9 @@ static int x509_crt_verify_top(
             check_path_cnt--;
         }
 
+        /* Self signed certificates do not count towards the limit */
         if( trust_ca->max_pathlen > 0 &&
-            trust_ca->max_pathlen < check_path_cnt )
+            trust_ca->max_pathlen < check_path_cnt - self_cnt )
         {
             continue;
         }
@@ -55607,7 +57381,7 @@ static int x509_crt_verify_child(
                 mbedtls_x509_crt *child, mbedtls_x509_crt *parent,
                 mbedtls_x509_crt *trust_ca, mbedtls_x509_crl *ca_crl,
                 const mbedtls_x509_crt_profile *profile,
-                int path_cnt, uint32_t *flags,
+                int path_cnt, int self_cnt, uint32_t *flags,
                 int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
                 void *p_vrfy )
 {
@@ -55616,6 +57390,10 @@ static int x509_crt_verify_child(
     unsigned char hash[MBEDTLS_MD_MAX_SIZE];
     mbedtls_x509_crt *grandparent;
     const mbedtls_md_info_t *md_info;
+
+    /* Counting intermediate self signed certificates */
+    if( ( path_cnt != 0 ) && x509_name_cmp( &child->issuer, &child->subject ) == 0 )
+        self_cnt++;
 
     /* path_cnt is 0 for the first intermediate CA */
     if( 1 + path_cnt > MBEDTLS_X509_MAX_INTERMEDIATE_CA )
@@ -55677,7 +57455,7 @@ static int x509_crt_verify_child(
     if( grandparent != NULL )
     {
         ret = x509_crt_verify_top( parent, grandparent, ca_crl, profile,
-                                path_cnt + 1, &parent_flags, f_vrfy, p_vrfy );
+                                path_cnt + 1, self_cnt, &parent_flags, f_vrfy, p_vrfy );
         if( ret != 0 )
             return( ret );
     }
@@ -55688,6 +57466,15 @@ static int x509_crt_verify_child(
              grandparent != NULL;
              grandparent = grandparent->next )
         {
+            /* +2 because the current step is not yet accounted for
+             * and because max_pathlen is one higher than it should be.
+             * Also self signed certificates do not count to the limit. */
+            if( grandparent->max_pathlen > 0 &&
+                grandparent->max_pathlen < 2 + path_cnt - self_cnt )
+            {
+                continue;
+            }
+
             if( x509_crt_check_parent( parent, grandparent,
                                        0, path_cnt == 0 ) == 0 )
                 break;
@@ -55697,7 +57484,7 @@ static int x509_crt_verify_child(
         if( grandparent != NULL )
         {
             ret = x509_crt_verify_child( parent, grandparent, trust_ca, ca_crl,
-                                         profile, path_cnt + 1, &parent_flags,
+                                         profile, path_cnt + 1, self_cnt, &parent_flags,
                                          f_vrfy, p_vrfy );
             if( ret != 0 )
                 return( ret );
@@ -55705,7 +57492,7 @@ static int x509_crt_verify_child(
         else
         {
             ret = x509_crt_verify_top( parent, trust_ca, ca_crl, profile,
-                                       path_cnt + 1, &parent_flags,
+                                       path_cnt + 1, self_cnt, &parent_flags,
                                        f_vrfy, p_vrfy );
             if( ret != 0 )
                 return( ret );
@@ -55750,10 +57537,11 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
 {
     size_t cn_len;
     int ret;
-    int pathlen = 0;
+    int pathlen = 0, selfsigned = 0;
     mbedtls_x509_crt *parent;
     mbedtls_x509_name *name;
     mbedtls_x509_sequence *cur = NULL;
+    mbedtls_pk_type_t pk_type;
 
     if( profile == NULL )
         return( MBEDTLS_ERR_X509_BAD_INPUT_DATA );
@@ -55812,6 +57600,15 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
         }
     }
 
+    /* Check the type and size of the key */
+    pk_type = mbedtls_pk_get_type( &crt->pk );
+
+    if( x509_profile_check_pk_alg( profile, pk_type ) != 0 )
+        *flags |= MBEDTLS_X509_BADCERT_BAD_PK;
+
+    if( x509_profile_check_key( profile, pk_type, &crt->pk ) != 0 )
+        *flags |= MBEDTLS_X509_BADCERT_BAD_KEY;
+
     /* Look for a parent in trusted CAs */
     for( parent = trust_ca; parent != NULL; parent = parent->next )
     {
@@ -55822,7 +57619,7 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
     if( parent != NULL )
     {
         ret = x509_crt_verify_top( crt, parent, ca_crl, profile,
-                                   pathlen, flags, f_vrfy, p_vrfy );
+                                   pathlen, selfsigned, flags, f_vrfy, p_vrfy );
         if( ret != 0 )
             return( ret );
     }
@@ -55830,23 +57627,21 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
     {
         /* Look for a parent upwards the chain */
         for( parent = crt->next; parent != NULL; parent = parent->next )
-        {
             if( x509_crt_check_parent( crt, parent, 0, pathlen == 0 ) == 0 )
                 break;
-        }
 
         /* Are we part of the chain or at the top? */
         if( parent != NULL )
         {
             ret = x509_crt_verify_child( crt, parent, trust_ca, ca_crl, profile,
-                                         pathlen, flags, f_vrfy, p_vrfy );
+                                         pathlen, selfsigned, flags, f_vrfy, p_vrfy );
             if( ret != 0 )
                 return( ret );
         }
         else
         {
             ret = x509_crt_verify_top( crt, trust_ca, ca_crl, profile,
-                                       pathlen, flags, f_vrfy, p_vrfy );
+                                       pathlen, selfsigned, flags, f_vrfy, p_vrfy );
             if( ret != 0 )
                 return( ret );
         }

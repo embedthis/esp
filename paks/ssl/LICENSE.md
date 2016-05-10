@@ -1,4 +1,4 @@
-Embedthis License
+License
 ===
 
 This software is distributed under commercial and GPL open source licenses.

@@ -1294,23 +1294,12 @@ PUBLIC int httpSetPlatformDir(cchar *path)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -1380,23 +1369,12 @@ PUBLIC int httpOpenActionHandler()
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -2103,23 +2081,12 @@ PUBLIC int formParse(HttpConn *conn, cchar **username, cchar **password)
 #undef  GRADUATE_HASH
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -2204,23 +2171,12 @@ PUBLIC bool httpBasicSetHeaders(HttpConn *conn, cchar *username, cchar *password
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -2774,23 +2730,12 @@ static cchar *setHeadersFromCache(HttpConn *conn, cchar *content)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -3042,23 +2987,12 @@ static void setChunkPrefix(HttpQueue *q, HttpPacket *packet)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -3628,23 +3562,12 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -5687,23 +5610,12 @@ PUBLIC int httpInitParser()
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -6692,23 +6604,12 @@ PUBLIC void httpSetConnReqData(HttpConn *conn, void *data)
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -7112,23 +7013,12 @@ static char *calcDigest(HttpConn *conn, HttpDigest *dp, cchar *username)
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -7764,23 +7654,12 @@ PUBLIC int httpOpenDirHandler()
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -8201,23 +8080,12 @@ PUBLIC void httpSetInfoLevel(int level)
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -8429,23 +8297,12 @@ PUBLIC void httpMemoryError(HttpConn *conn)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -8974,23 +8831,12 @@ PUBLIC int httpOpenFileHandler()
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -9439,23 +9285,12 @@ PUBLIC void httpSetStreaming(HttpHost *host, cchar *mime, cchar *uri, bool enabl
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -10149,23 +9984,12 @@ PUBLIC int httpAddRemedies()
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -10483,23 +10307,12 @@ static void adjustNetVec(HttpQueue *q, ssize written)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -11009,23 +10822,12 @@ bool httpIsLastPacket(HttpPacket *packet)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -11170,23 +10972,12 @@ static int pamChat(int msgCount, const struct pam_message **msg, struct pam_resp
 #endif /* ME_COMPILER_HAS_PAM */
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -11294,23 +11085,12 @@ PUBLIC int httpOpenPassHandler()
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -11755,23 +11535,12 @@ static bool matchFilter(HttpConn *conn, HttpStage *filter, HttpRoute *route, int
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -12264,23 +12033,12 @@ PUBLIC bool httpVerifyQueue(HttpQueue *q)
 #endif
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -12604,23 +12362,12 @@ static bool fixRangeLength(HttpConn *conn, HttpQueue *q)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -16034,23 +15781,12 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits)
 #undef  GRADUATE_LIST
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -18028,23 +17764,12 @@ static int sendContinue(HttpConn *conn)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -18384,23 +18109,12 @@ PUBLIC void httpSendOutgoingService(HttpQueue *q) {}
 #endif /* !ME_ROM */
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -18815,23 +18529,12 @@ PUBLIC bool httpCheckSecurityToken(HttpConn *conn)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -18989,23 +18692,12 @@ PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -19706,23 +19398,12 @@ PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *ty
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -20753,23 +20434,12 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -21456,23 +21126,12 @@ static void cleanUploadedFiles(HttpConn *conn)
 }
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -22471,23 +22130,12 @@ static char *actionRoute(HttpRoute *route, cchar *controller, cchar *action)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -22713,23 +22361,12 @@ PUBLIC void httpSetConnUser(HttpConn *conn, HttpUser *user)
 #undef  GRADUATE_HASH
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -23059,23 +22696,12 @@ PUBLIC bool httpMatchParam(HttpConn *conn, cchar *var, cchar *value)
 
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 
 
@@ -24300,23 +23926,13 @@ static void traceErrorProc(HttpConn *conn, cchar *fmt, ...)
 }
 
 #endif /* ME_HTTP_WEB_SOCKETS */
+
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
 

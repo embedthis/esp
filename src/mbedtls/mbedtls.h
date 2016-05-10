@@ -21,6 +21,10 @@
  *
  * \brief Configuration options (set of defines)
  *
+ *  This set of compile-time options may be used to enable
+ *  or disable features selectively, and reduce the global
+ *  memory footprint.
+ *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -39,11 +43,6 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-/*
- * This set of compile-time options may be used to enable
- * or disable features selectively, and reduce the global
- * memory footprint.
- */
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
@@ -150,10 +149,10 @@
 //#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 
 /**
- * \def MBEDTLS_PLATFORM_XXX_ALT
+ * \def MBEDTLS_PLATFORM_EXIT_ALT
  *
- * Uncomment a macro to let mbed TLS support the function in the platform
- * abstraction layer.
+ * MBEDTLS_PLATFORM_XXX_ALT: Uncomment a macro to let mbed TLS support the
+ * function in the platform abstraction layer.
  *
  * Example: In case you uncomment MBEDTLS_PLATFORM_PRINTF_ALT, mbed TLS will
  * provide a function "mbedtls_platform_set_printf()" that allows you to set an
@@ -226,12 +225,12 @@
 //#define MBEDTLS_TIMING_ALT
 
 /**
- * \def MBEDTLS__MODULE_NAME__ALT
+ * \def MBEDTLS_AES_ALT
  *
- * Uncomment a macro to let mbed TLS use your alternate core implementation of
- * a symmetric crypto or hash module (e.g. platform specific assembly
- * optimized implementations). Keep in mind that the function prototypes
- * should remain the same.
+ * MBEDTLS__MODULE_NAME__ALT: Uncomment a macro to let mbed TLS use your
+ * alternate core implementation of a symmetric crypto or hash module (e.g.
+ * platform specific assembly optimized implementations). Keep in mind that
+ * the function prototypes should remain the same.
  *
  * This replaces the whole module. If you only want to replace one of the
  * functions, use one of the MBEDTLS__FUNCTION_NAME__ALT flags.
@@ -259,11 +258,11 @@
 //#define MBEDTLS_SHA512_ALT
 
 /**
- * \def MBEDTLS__FUNCTION_NAME__ALT
+ * \def MBEDTLS_MD2_PROCESS_ALT
  *
- * Uncomment a macro to let mbed TLS use you alternate core implementation of
- * symmetric crypto or hash function. Keep in mind that function prototypes
- * should remain the same.
+ * MBEDTLS__FUNCTION_NAME__ALT: Uncomment a macro to let mbed TLS use you
+ * alternate core implementation of symmetric crypto or hash function. Keep in
+ * mind that function prototypes should remain the same.
  *
  * This replaces only one function. The header file from mbed TLS is still
  * used, in contrast to the MBEDTLS__MODULE_NAME__ALT flags.
@@ -382,10 +381,11 @@
 //#define MBEDTLS_CIPHER_NULL_CIPHER
 
 /**
- * \def MBEDTLS_CIPHER_PADDING_XXX
+ * \def MBEDTLS_CIPHER_PADDING_PKCS7
  *
- * Uncomment or comment macros to add support for specific padding modes
- * in the cipher layer with cipher modes that support padding (e.g. CBC)
+ * MBEDTLS_CIPHER_PADDING_XXX: Uncomment or comment macros to add support for
+ * specific padding modes in the cipher layer with cipher modes that support
+ * padding (e.g. CBC)
  *
  * If you disable all padding modes, only full blocks can be used with CBC.
  *
@@ -425,10 +425,10 @@
 #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 
 /**
- * \def MBEDTLS_ECP_XXXX_ENABLED
+ * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
  *
- * Enables specific curves within the Elliptic Curve module.
- * By default all supported curves are enabled.
+ * MBEDTLS_ECP_XXXX_ENABLED: Enables specific curves within the Elliptic Curve
+ * module.  By default all supported curves are enabled.
  *
  * Comment macros to disable the curve and functions for it
  */
@@ -711,6 +711,25 @@
  *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384
  */
 #define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
+
+/**
+ * \def MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
+ *
+ * Enable the ECJPAKE based ciphersuite modes in SSL / TLS.
+ *
+ * \warning This is currently experimental. EC J-PAKE support is based on the
+ * Thread v1.0.0 specification; incompatible changes to the specification
+ * might still happen. For this reason, this is disabled by default.
+ *
+ * Requires: MBEDTLS_ECJPAKE_C
+ *           MBEDTLS_SHA256_C
+ *           MBEDTLS_ECP_DP_SECP256R1_ENABLED
+ *
+ * This enables the following ciphersuites (if other requisites are
+ * enabled as well):
+ *      MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8
+ */
+//#define MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
 
 /**
  * \def MBEDTLS_PK_PARSE_EC_EXTENDED
@@ -1192,6 +1211,16 @@
  * Comment this macro to disable support for SSL session tickets
  */
 #define MBEDTLS_SSL_SESSION_TICKETS
+
+/**
+ * \def MBEDTLS_SSL_EXPORT_KEYS
+ *
+ * Enable support for exporting key block and master secret.
+ * This is required for certain users of TLS, e.g. EAP-TLS.
+ *
+ * Comment this macro to disable support for key export
+ */
+#define MBEDTLS_SSL_EXPORT_KEYS
 
 /**
  * \def MBEDTLS_SSL_SERVER_NAME_INDICATION
@@ -1707,6 +1736,25 @@
 #define MBEDTLS_ECDSA_C
 
 /**
+ * \def MBEDTLS_ECJPAKE_C
+ *
+ * Enable the elliptic curve J-PAKE library.
+ *
+ * \warning This is currently experimental. EC J-PAKE support is based on the
+ * Thread v1.0.0 specification; incompatible changes to the specification
+ * might still happen. For this reason, this is disabled by default.
+ *
+ * Module:  library/ecjpake.c
+ * Caller:
+ *
+ * This module is used by the following key exchanges:
+ *      ECJPAKE
+ *
+ * Requires: MBEDTLS_ECP_C, MBEDTLS_MD_C
+ */
+//#define MBEDTLS_ECJPAKE_C
+
+/**
  * \def MBEDTLS_ECP_C
  *
  * Enable the elliptic curve over GF(p) library.
@@ -1714,6 +1762,7 @@
  * Module:  library/ecp.c
  * Caller:  library/ecdh.c
  *          library/ecdsa.c
+ *          library/ecjpake.c
  *
  * Requires: MBEDTLS_BIGNUM_C and at least one MBEDTLS_ECP_DP_XXX_ENABLED
  */
@@ -2574,6 +2623,11 @@
 #error "MBEDTLS_ECDSA_C defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_ECJPAKE_C) &&           \
+    ( !defined(MBEDTLS_ECP_C) || !defined(MBEDTLS_MD_C) )
+#error "MBEDTLS_ECJPAKE_C defined, but not all prerequisites"
+#endif
+
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC) && !defined(MBEDTLS_HMAC_DRBG_C)
 #error "MBEDTLS_ECDSA_DETERMINISTIC defined, but not all prerequisites"
 #endif
@@ -2671,6 +2725,12 @@
     ( !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_X509_CRT_PARSE_C) || \
       !defined(MBEDTLS_PKCS1_V15) )
 #error "MBEDTLS_KEY_EXCHANGE_RSA_ENABLED defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED) &&                    \
+    ( !defined(MBEDTLS_ECJPAKE_C) || !defined(MBEDTLS_SHA256_C) ||      \
+      !defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) )
+#error "MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) &&                          \
@@ -3477,6 +3537,7 @@ extern mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex;
      #define MBEDTLS_HAVE_INT64
      typedef  int64_t mbedtls_mpi_sint;
      typedef uint64_t mbedtls_mpi_uint;
+     /* mbedtls_t_udbl defined as 128-bit unsigned int */
      typedef unsigned int mbedtls_t_udbl __attribute__((mode(TI)));
      #define MBEDTLS_HAVE_UDBL
   #else
@@ -4700,7 +4761,7 @@ int mbedtls_dhm_self_test( int verbose );
  * ECP       4   8 (Started from top)
  * MD        5   4
  * CIPHER    6   6
- * SSL       6   16 (Started from top)
+ * SSL       6   17 (Started from top)
  * SSL       7   31
  *
  * Module dependent error code (5 bits 0x.00.-0x.F8.)
@@ -4733,7 +4794,7 @@ void mbedtls_strerror( int errnum, char *buffer, size_t buflen );
 
 
 /**
- * \file mbedtls_md.h
+ * \file md.h
  *
  * \brief Generic message digest wrapper
  *
@@ -5212,7 +5273,7 @@ extern const mbedtls_md_info_t mbedtls_sha512_info;
 
 
 /**
- * \file mbedtls_md5.h
+ * \file md5.h
  *
  * \brief MD5 message digest algorithm (hash function)
  *
@@ -5356,7 +5417,7 @@ int mbedtls_md5_self_test( int verbose );
 
 
 /**
- * \file mbedtls_md2.h
+ * \file md2.h
  *
  * \brief MD2 message digest algorithm (hash function)
  *
@@ -5498,7 +5559,7 @@ void mbedtls_md2_process( mbedtls_md2_context *ctx );
 
 
 /**
- * \file mbedtls_md4.h
+ * \file md4.h
  *
  * \brief MD4 message digest algorithm (hash function)
  *
@@ -6996,6 +7057,21 @@ int mbedtls_ecp_set_zero( mbedtls_ecp_point *pt );
 int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt );
 
 /**
+ * \brief           Compare two points
+ *
+ * \note            This assumes the points are normalized. Otherwise,
+ *                  they may compare as "not equal" even if they are.
+ *
+ * \param P         First point to compare
+ * \param Q         Second point to compare
+ *
+ * \return          0 if the points are equal,
+ *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA otherwise
+ */
+int mbedtls_ecp_point_cmp( const mbedtls_ecp_point *P,
+                           const mbedtls_ecp_point *Q );
+
+/**
  * \brief           Import a non-zero point from two ASCII strings
  *
  * \param P         Destination point
@@ -7217,6 +7293,29 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_po
  *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
  */
 int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *d );
+
+/**
+ * \brief           Generate a keypair with configurable base point
+ *
+ * \param grp       ECP group
+ * \param G         Chosen base point
+ * \param d         Destination MPI (secret part)
+ * \param Q         Destination point (public part)
+ * \param f_rng     RNG function
+ * \param p_rng     RNG parameter
+ *
+ * \return          0 if successful,
+ *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
+ *
+ * \note            Uses bare components rather than an mbedtls_ecp_keypair structure
+ *                  in order to ease use with other structures such as
+ *                  mbedtls_ecdh_context of mbedtls_ecdsa_context.
+ */
+int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
+                     const mbedtls_ecp_point *G,
+                     mbedtls_mpi *d, mbedtls_ecp_point *Q,
+                     int (*f_rng)(void *, unsigned char *, size_t),
+                     void *p_rng );
 
 /**
  * \brief           Generate a keypair
@@ -7532,6 +7631,250 @@ void mbedtls_ecdsa_free( mbedtls_ecdsa_context *ctx );
 #endif
 
 #endif /* ecdsa.h */
+
+
+
+/********* Start of file include/mbedtls/ecjpake.h ************/
+
+
+/**
+ * \file ecjpake.h
+ *
+ * \brief Elliptic curve J-PAKE
+ *
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *  This file is part of mbed TLS (https://tls.mbed.org)
+ */
+#ifndef MBEDTLS_ECJPAKE_H
+#define MBEDTLS_ECJPAKE_H
+
+/*
+ * J-PAKE is a password-authenticated key exchange that allows deriving a
+ * strong shared secret from a (potentially low entropy) pre-shared
+ * passphrase, with forward secrecy and mutual authentication.
+ * https://en.wikipedia.org/wiki/Password_Authenticated_Key_Exchange_by_Juggling
+ *
+ * This file implements the Elliptic Curve variant of J-PAKE,
+ * as defined in Chapter 7.4 of the Thread v1.0 Specification,
+ * available to members of the Thread Group http://threadgroup.org/
+ *
+ * As the J-PAKE algorithm is inherently symmetric, so is our API.
+ * Each party needs to send its first round message, in any order, to the
+ * other party, then each sends its second round message, in any order.
+ * The payloads are serialized in a way suitable for use in TLS, but could
+ * also be use outside TLS.
+ */
+
+
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Roles in the EC J-PAKE exchange
+ */
+typedef enum {
+    MBEDTLS_ECJPAKE_CLIENT = 0,         /**< Client                         */
+    MBEDTLS_ECJPAKE_SERVER,             /**< Server                         */
+} mbedtls_ecjpake_role;
+
+/**
+ * EC J-PAKE context structure.
+ *
+ * J-PAKE is a symmetric protocol, except for the identifiers used in
+ * Zero-Knowledge Proofs, and the serialization of the second message
+ * (KeyExchange) as defined by the Thread spec.
+ *
+ * In order to benefit from this symmetry, we choose a different naming
+ * convetion from the Thread v1.0 spec. Correspondance is indicated in the
+ * description as a pair C: client name, S: server name
+ */
+typedef struct
+{
+    const mbedtls_md_info_t *md_info;   /**< Hash to use                    */
+    mbedtls_ecp_group grp;              /**< Elliptic curve                 */
+    mbedtls_ecjpake_role role;          /**< Are we client or server?       */
+    int point_format;                   /**< Format for point export        */
+
+    mbedtls_ecp_point Xm1;              /**< My public key 1   C: X1, S: X3 */
+    mbedtls_ecp_point Xm2;              /**< My public key 2   C: X2, S: X4 */
+    mbedtls_ecp_point Xp1;              /**< Peer public key 1 C: X3, S: X1 */
+    mbedtls_ecp_point Xp2;              /**< Peer public key 2 C: X4, S: X2 */
+    mbedtls_ecp_point Xp;               /**< Peer public key   C: Xs, S: Xc */
+
+    mbedtls_mpi xm1;                    /**< My private key 1  C: x1, S: x3 */
+    mbedtls_mpi xm2;                    /**< My private key 2  C: x2, S: x4 */
+
+    mbedtls_mpi s;                      /**< Pre-shared secret (passphrase) */
+} mbedtls_ecjpake_context;
+
+/**
+ * \brief           Initialize a context
+ *                  (just makes it ready for setup() or free()).
+ *
+ * \param ctx       context to initialize
+ */
+void mbedtls_ecjpake_init( mbedtls_ecjpake_context *ctx );
+
+/**
+ * \brief           Set up a context for use
+ *
+ * \note            Currently the only values for hash/curve allowed by the
+ *                  standard are MBEDTLS_MD_SHA256/MBEDTLS_ECP_DP_SECP256R1.
+ *
+ * \param ctx       context to set up
+ * \param role      Our role: client or server
+ * \param hash      hash function to use (MBEDTLS_MD_XXX)
+ * \param curve     elliptic curve identifier (MBEDTLS_ECP_DP_XXX)
+ * \param secret    pre-shared secret (passphrase)
+ * \param len       length of the shared secret
+ *
+ * \return          0 if successfull,
+ *                  a negative error code otherwise
+ */
+int mbedtls_ecjpake_setup( mbedtls_ecjpake_context *ctx,
+                           mbedtls_ecjpake_role role,
+                           mbedtls_md_type_t hash,
+                           mbedtls_ecp_group_id curve,
+                           const unsigned char *secret,
+                           size_t len );
+
+/*
+ * \brief           Check if a context is ready for use
+ *
+ * \param ctx       Context to check
+ *
+ * \return          0 if the context is ready for use,
+ *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA otherwise
+ */
+int mbedtls_ecjpake_check( const mbedtls_ecjpake_context *ctx );
+
+/**
+ * \brief           Generate and write the first round message
+ *                  (TLS: contents of the Client/ServerHello extension,
+ *                  excluding extension type and length bytes)
+ *
+ * \param ctx       Context to use
+ * \param buf       Buffer to write the contents to
+ * \param len       Buffer size
+ * \param olen      Will be updated with the number of bytes written
+ * \param f_rng     RNG function
+ * \param p_rng     RNG parameter
+ *
+ * \return          0 if successfull,
+ *                  a negative error code otherwise
+ */
+int mbedtls_ecjpake_write_round_one( mbedtls_ecjpake_context *ctx,
+                            unsigned char *buf, size_t len, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng );
+
+/**
+ * \brief           Read and process the first round message
+ *                  (TLS: contents of the Client/ServerHello extension,
+ *                  excluding extension type and length bytes)
+ *
+ * \param ctx       Context to use
+ * \param buf       Pointer to extension contents
+ * \param len       Extension length
+ *
+ * \return          0 if successfull,
+ *                  a negative error code otherwise
+ */
+int mbedtls_ecjpake_read_round_one( mbedtls_ecjpake_context *ctx,
+                                    const unsigned char *buf,
+                                    size_t len );
+
+/**
+ * \brief           Generate and write the second round message
+ *                  (TLS: contents of the Client/ServerKeyExchange)
+ *
+ * \param ctx       Context to use
+ * \param buf       Buffer to write the contents to
+ * \param len       Buffer size
+ * \param olen      Will be updated with the number of bytes written
+ * \param f_rng     RNG function
+ * \param p_rng     RNG parameter
+ *
+ * \return          0 if successfull,
+ *                  a negative error code otherwise
+ */
+int mbedtls_ecjpake_write_round_two( mbedtls_ecjpake_context *ctx,
+                            unsigned char *buf, size_t len, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng );
+
+/**
+ * \brief           Read and process the second round message
+ *                  (TLS: contents of the Client/ServerKeyExchange)
+ *
+ * \param ctx       Context to use
+ * \param buf       Pointer to the message
+ * \param len       Message length
+ *
+ * \return          0 if successfull,
+ *                  a negative error code otherwise
+ */
+int mbedtls_ecjpake_read_round_two( mbedtls_ecjpake_context *ctx,
+                                    const unsigned char *buf,
+                                    size_t len );
+
+/**
+ * \brief           Derive the shared secret
+ *                  (TLS: Pre-Master Secret)
+ *
+ * \param ctx       Context to use
+ * \param buf       Buffer to write the contents to
+ * \param len       Buffer size
+ * \param olen      Will be updated with the number of bytes written
+ * \param f_rng     RNG function
+ * \param p_rng     RNG parameter
+ *
+ * \return          0 if successfull,
+ *                  a negative error code otherwise
+ */
+int mbedtls_ecjpake_derive_secret( mbedtls_ecjpake_context *ctx,
+                            unsigned char *buf, size_t len, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng );
+
+/**
+ * \brief           Free a context's content
+ *
+ * \param ctx       context to free
+ */
+void mbedtls_ecjpake_free( mbedtls_ecjpake_context *ctx );
+
+#if defined(MBEDTLS_SELF_TEST)
+/**
+ * \brief          Checkup routine
+ *
+ * \return         0 if successful, or 1 if a test failed
+ */
+int mbedtls_ecjpake_self_test( int verbose );
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* ecjpake.h */
 
 
 
@@ -7861,7 +8204,7 @@ int mbedtls_pk_verify_ext( mbedtls_pk_type_t type, const void *options,
 /**
  * \brief           Make signature, including padding if relevant.
  *
- * \param ctx       PK context to use
+ * \param ctx       PK context to use - must hold a private key
  * \param md_alg    Hash algorithm used (see notes)
  * \param hash      Hash of the message to sign
  * \param hash_len  Hash length or 0 (see notes)
@@ -7890,7 +8233,7 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
 /**
  * \brief           Decrypt message (including padding if relevant).
  *
- * \param ctx       PK context to use
+ * \param ctx       PK context to use - must hold a private key
  * \param input     Input to decrypt
  * \param ilen      Input size
  * \param output    Decrypted output
@@ -8617,7 +8960,7 @@ int mbedtls_x509_write_sig( unsigned char **p, unsigned char *start,
 
 
 /**
- * \file mbedtls_x509_crl.h
+ * \file x509_crl.h
  *
  * \brief X.509 certificate revocation list parsing
  *
@@ -8718,6 +9061,7 @@ mbedtls_x509_crl;
  *
  * \param chain    points to the start of the chain
  * \param buf      buffer holding the CRL data in DER format
+ * \param buflen   size of the buffer
  *                 (including the terminating null byte for PEM data)
  *
  * \return         0 if successful, or a specific X509 or PEM error code
@@ -8795,7 +9139,7 @@ void mbedtls_x509_crl_free( mbedtls_x509_crl *crl );
 
 
 /**
- * \file mbedtls_x509_crt.h
+ * \file x509_crt.h
  *
  * \brief X.509 certificate parsing and writing
  *
@@ -9097,8 +9441,8 @@ int mbedtls_x509_crt_verify( mbedtls_x509_crt *crt,
  *                 security profile.
  *
  * \note           The restrictions on keys (RSA minimum size, allowed curves
- *                 for ECDSA) only applys to (intermediate) CAs, not to the
- *                 end-entity certificate.
+ *                 for ECDSA) apply to all certificates: trusted root,
+ *                 intermediate CAs if any, and end entity certificate.
  *
  * \param crt      a certificate to be verified
  * \param trust_ca the trusted CA chain
@@ -9446,7 +9790,7 @@ int mbedtls_x509write_crt_pem( mbedtls_x509write_cert *ctx, unsigned char *buf, 
 
 
 /**
- * \file mbedtls_x509_csr.h
+ * \file x509_csr.h
  *
  * \brief X.509 certificate signing request parsing and writing
  *
@@ -10793,8 +11137,10 @@ extern "C" {
 #define MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8      0xC0AE  /**< TLS 1.2 */
 #define MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8      0xC0AF  /**< TLS 1.2 */
 
+#define MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8          0xC0FF  /**< experimental */
+
 /* Reminder: update mbedtls_ssl_premaster_secret when adding a new key exchange.
- * Reminder: update MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED below.
+ * Reminder: update MBEDTLS_KEY_EXCHANGE__xxx below
  */
 typedef enum {
     MBEDTLS_KEY_EXCHANGE_NONE = 0,
@@ -10808,17 +11154,33 @@ typedef enum {
     MBEDTLS_KEY_EXCHANGE_ECDHE_PSK,
     MBEDTLS_KEY_EXCHANGE_ECDH_RSA,
     MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA,
+    MBEDTLS_KEY_EXCHANGE_ECJPAKE,
 } mbedtls_key_exchange_type_t;
 
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)          || \
-    defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)      || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)    || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)  || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED)      || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)    || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED)     || \
+/* Key exchanges using a certificate */
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)           || \
+    defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)       || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)     || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)   || \
+    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED)       || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED)      || \
     defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)
 #define MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
+#endif
+
+/* Key exchanges using a PSK */
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)           || \
+    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED)       || \
+    defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)       || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#define MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
+#endif
+
+/* Key exchanges using a ECDHE */
+#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)     || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)   || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#define MBEDTLS_KEY_EXCHANGE__SOME__ECDHE_ENABLED
 #endif
 
 typedef struct mbedtls_ssl_ciphersuite_t mbedtls_ssl_ciphersuite_t;
@@ -11092,7 +11454,7 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
 
 
 /**
- * \file mbedtls_sha1.h
+ * \file sha1.h
  *
  * \brief SHA-1 cryptographic hash function
  *
@@ -11236,7 +11598,7 @@ int mbedtls_sha1_self_test( int verbose );
 
 
 /**
- * \file mbedtls_sha256.h
+ * \file sha256.h
  *
  * \brief SHA-224 and SHA-256 cryptographic hash function
  *
@@ -11385,7 +11747,7 @@ int mbedtls_sha256_self_test( int verbose );
 
 
 /**
- * \file mbedtls_sha512.h
+ * \file sha512.h
  *
  * \brief SHA-384 and SHA-512 cryptographic hash function
  *
@@ -12582,10 +12944,11 @@ int mbedtls_base64_self_test( int verbose );
 #endif /* PPC32 */
 
 /*
- * The Sparc64 assembly is reported to be broken.
+ * The Sparc(64) assembly is reported to be broken.
  * Disable it for now, until we're able to fix it.
  */
-#if 0 && defined(__sparc__) && defined(__sparc64__)
+#if 0 && defined(__sparc__)
+#if defined(__sparc64__)
 
 #define MULADDC_INIT                                    \
     asm(                                                \
@@ -12616,9 +12979,8 @@ int mbedtls_base64_self_test( int verbose );
         : "g1", "o0", "o1", "o2", "o3", "o4",   \
           "o5"                                  \
         );
-#endif /* SPARCv9 */
 
-#if defined(__sparc__) && !defined(__sparc64__)
+#else /* __sparc64__ */
 
 #define MULADDC_INIT                                    \
     asm(                                                \
@@ -12650,7 +13012,8 @@ int mbedtls_base64_self_test( int verbose );
           "o5"                                  \
         );
 
-#endif /* SPARCv8 */
+#endif /* __sparc64__ */
+#endif /* __sparc__ */
 
 #if defined(__microblaze__) || defined(microblaze)
 
@@ -14955,26 +15318,6 @@ int mbedtls_xtea_self_test( int verbose );
 #include <time.h>
 #endif
 
-/* For convenience below and in programs */
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) ||                           \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) ||                       \
-    defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) ||                       \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
-#define MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
-#endif
-
-#if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
-#define MBEDTLS_KEY_EXCHANGE__SOME__ECDHE_ENABLED
-#endif
-
-#if defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) ||                       \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-#define MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED
-#endif
-
 /*
  * SSL Error codes
  */
@@ -15026,6 +15369,7 @@ int mbedtls_xtea_self_test( int verbose );
 #define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880  /**< Connection requires a write call. */
 #define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800  /**< The operation timed out. */
 #define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780  /**< The client initiated a reconnect from the same port. */
+#define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700  /**< Record header looks valid but is not expected. */
 
 /*
  * Various constants
@@ -15252,6 +15596,8 @@ int mbedtls_xtea_self_test( int verbose );
 
 #define MBEDTLS_TLS_EXT_SESSION_TICKET              35
 
+#define MBEDTLS_TLS_EXT_ECJPAKE_KKPP               256 /* experimental */
+
 #define MBEDTLS_TLS_EXT_RENEGOTIATION_INFO      0xFF01
 
 /*
@@ -15289,6 +15635,9 @@ union mbedtls_ssl_premaster_secret
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
     unsigned char _pms_ecdhe_psk[4 + MBEDTLS_ECP_MAX_BYTES
                                    + MBEDTLS_PSK_MAX_LEN];     /* RFC 5489 2 */
+#endif
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    unsigned char _pms_ecjpake[32];     /* Thread spec: SHA-256 output */
 #endif
 };
 
@@ -15442,6 +15791,13 @@ struct mbedtls_ssl_config
     void *p_ticket;                 /*!< context for the ticket callbacks   */
 #endif /* MBEDTLS_SSL_SESSION_TICKETS && MBEDTLS_SSL_SRV_C */
 
+#if defined(MBEDTLS_SSL_EXPORT_KEYS)
+    /** Callback to export key block and master secret                      */
+    int (*f_export_keys)( void *, const unsigned char *,
+            const unsigned char *, size_t, size_t, size_t );
+    void *p_export_keys;            /*!< context for key export callback    */
+#endif
+
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     const mbedtls_x509_crt_profile *cert_profile; /*!< verification profile */
     mbedtls_ssl_key_cert *key_cert; /*!< own certificate/key pair(s)        */
@@ -15449,7 +15805,7 @@ struct mbedtls_ssl_config
     mbedtls_x509_crl *ca_crl;       /*!< trusted CAs CRLs                   */
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
     const int *sig_hashes;          /*!< allowed signature hashes           */
 #endif
 
@@ -15970,6 +16326,35 @@ typedef int mbedtls_ssl_ticket_write_t( void *p_ticket,
                                         size_t *tlen,
                                         uint32_t *lifetime );
 
+#if defined(MBEDTLS_SSL_EXPORT_KEYS)
+/**
+ * \brief           Callback type: Export key block and master secret
+ *
+ * \note            This is required for certain uses of TLS, e.g. EAP-TLS
+ *                  (RFC 5216) and Thread. The key pointers are ephemeral and
+ *                  therefore must not be stored. The master secret and keys
+ *                  should not be used directly except as an input to a key
+ *                  derivation function.
+ *
+ * \param p_expkey  Context for the callback
+ * \param ms        Pointer to master secret (fixed length: 48 bytes)
+ * \param kb        Pointer to key block, see RFC 5246 section 6.3
+ *                  (variable length: 2 * maclen + 2 * keylen + 2 * ivlen).
+ * \param maclen    MAC length
+ * \param keylen    Key length
+ * \param ivlen     IV length
+ *
+ * \return          0 if successful, or
+ *                  a specific MBEDTLS_ERR_XXX code.
+ */
+typedef int mbedtls_ssl_export_keys_t( void *p_expkey,
+                                const unsigned char *ms,
+                                const unsigned char *kb,
+                                size_t maclen,
+                                size_t keylen,
+                                size_t ivlen );
+#endif /* MBEDTLS_SSL_EXPORT_KEYS */
+
 /**
  * \brief           Callback type: parse and load session ticket
  *
@@ -16018,6 +16403,22 @@ void mbedtls_ssl_conf_session_tickets_cb( mbedtls_ssl_config *conf,
         mbedtls_ssl_ticket_parse_t *f_ticket_parse,
         void *p_ticket );
 #endif /* MBEDTLS_SSL_SESSION_TICKETS && MBEDTLS_SSL_SRV_C */
+
+#if defined(MBEDTLS_SSL_EXPORT_KEYS)
+/**
+ * \brief           Configure key export callback.
+ *                  (Default: none.)
+ *
+ * \note            See \c mbedtls_ssl_export_keys_t.
+ *
+ * \param conf      SSL configuration context
+ * \param f_export_keys     Callback for exporting keys
+ * \param p_export_keys     Context for the callback
+ */
+void mbedtls_ssl_conf_export_keys_cb( mbedtls_ssl_config *conf,
+        mbedtls_ssl_export_keys_t *f_export_keys,
+        void *p_export_keys );
+#endif /* MBEDTLS_SSL_EXPORT_KEYS */
 
 /**
  * \brief          Callback type: generate a cookie
@@ -16286,6 +16687,10 @@ void mbedtls_ssl_conf_ciphersuites_for_version( mbedtls_ssl_config *conf,
 /**
  * \brief          Set the X.509 security profile used for verification
  *
+ * \note           The restrictions are enforced for all certificates in the
+ *                 chain. However, signatures in the handshake are not covered
+ *                 by this setting but by \b mbedtls_ssl_conf_sig_hashes().
+ *
  * \param conf     SSL configuration
  * \param profile  Profile to use
  */
@@ -16447,16 +16852,14 @@ void mbedtls_ssl_conf_dhm_min_bitlen( mbedtls_ssl_config *conf,
  *                 On client: this affects the list of curves offered for any
  *                 use. The server can override our preference order.
  *
- *                 Both sides: limits the set of curves used by peer to the
- *                 listed curves for any use ECDHE and the end-entity
- *                 certificate.
+ *                 Both sides: limits the set of curves accepted for use in
+ *                 ECDHE and in the peer's end-entity certificate.
  *
- * \note           This has no influence on which curve are allowed inside the
+ * \note           This has no influence on which curves are allowed inside the
  *                 certificate chains, see \c mbedtls_ssl_conf_cert_profile()
- *                 for that. For example, if the peer's certificate chain is
- *                 EE -> CA_int -> CA_root, then the allowed curves for EE are
- *                 controlled by \c mbedtls_ssl_conf_curves() but for CA_int
- *                 and CA_root it's \c mbedtls_ssl_conf_cert_profile().
+ *                 for that. For the end-entity certificate however, the key
+ *                 will be accepted only if it is allowed both by this list
+ *                 and by the cert profile.
  *
  * \note           This list should be ordered by decreasing preference
  *                 (preferred curve first).
@@ -16469,10 +16872,10 @@ void mbedtls_ssl_conf_curves( mbedtls_ssl_config *conf,
                               const mbedtls_ecp_group_id *curves );
 #endif /* MBEDTLS_ECP_C */
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
 /**
  * \brief          Set the allowed hashes for signatures during the handshake.
- *                 (Default: all available hashes.)
+ *                 (Default: all available hashes except MD5.)
  *
  * \note           This only affects which hashes are offered and can be used
  *                 for signatures during the handshake. Hashes for message
@@ -16490,7 +16893,7 @@ void mbedtls_ssl_conf_curves( mbedtls_ssl_config *conf,
  */
 void mbedtls_ssl_conf_sig_hashes( mbedtls_ssl_config *conf,
                                   const int *hashes );
-#endif /* MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED */
+#endif /* MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**
@@ -16579,6 +16982,29 @@ void mbedtls_ssl_conf_sni( mbedtls_ssl_config *conf,
                                size_t),
                   void *p_sni );
 #endif /* MBEDTLS_SSL_SERVER_NAME_INDICATION */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+/**
+ * \brief          Set the EC J-PAKE password for current handshake.
+ *
+ * \note           An internal copy is made, and destroyed as soon as the
+ *                 handshake is completed, or when the SSL context is reset or
+ *                 freed.
+ *
+ * \note           The SSL context needs to be already set up. The right place
+ *                 to call this function is between \c mbedtls_ssl_setup() or
+ *                 \c mbedtls_ssl_reset() and \c mbedtls_ssl_handshake().
+ *
+ * \param ssl      SSL context
+ * \param pw       EC J-PAKE password (pre-shared secret)
+ * \param pw_len   length of pw in bytes
+ *
+ * \return         0 on success, or a negative error code.
+ */
+int mbedtls_ssl_set_hs_ecjpake_password( mbedtls_ssl_context *ssl,
+                                         const unsigned char *pw,
+                                         size_t pw_len );
+#endif /*MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_ALPN)
 /**
@@ -17006,7 +17432,8 @@ int mbedtls_ssl_get_session( const mbedtls_ssl_context *ssl, mbedtls_ssl_session
  * \note           If this function returns something other than 0 or
  *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
  *                 becomes unusable, and you should either free it or call
- *                 \c mbedtls_ssl_session_reset() on it before re-using it.
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  *
  * \note           If DTLS is in use, then you may choose to handle
  *                 MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED specially for logging
@@ -17021,6 +17448,12 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl );
  * \note           The state of the context (ssl->state) will be at
  *                 the following state after execution of this function.
  *                 Do not call this function if state is MBEDTLS_SSL_HANDSHAKE_OVER.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  *
  * \param ssl      SSL context
  *
@@ -17040,6 +17473,12 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl );
  * \param ssl      SSL context
  *
  * \return         0 if successful, or any mbedtls_ssl_handshake() return value.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_renegotiate( mbedtls_ssl_context *ssl );
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
@@ -17056,6 +17495,13 @@ int mbedtls_ssl_renegotiate( mbedtls_ssl_context *ssl );
  *                 MBEDTLS_ERR_SSL_WANT_READ or MBEDTLS_ERR_SSL_WANT_WRITE, or
  *                 MBEDTLS_ERR_SSL_CLIENT_RECONNECT (see below), or
  *                 another negative error code.
+ *
+ * \note           If this function returns something other than a positive
+ *                 value or MBEDTLS_ERR_SSL_WANT_READ/WRITE or
+ *                 MBEDTLS_ERR_SSL_CLIENT_RECONNECT, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  *
  * \note           When this function return MBEDTLS_ERR_SSL_CLIENT_RECONNECT
  *                 (which can only happen server-side), it means that a client
@@ -17090,6 +17536,12 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
  *                 or MBEDTLS_ERR_SSL_WANT_WRITE of MBEDTLS_ERR_SSL_WANT_READ,
  *                 or another negative error code.
  *
+ * \note           If this function returns something other than a positive
+ *                 value or MBEDTLS_ERR_SSL_WANT_READ/WRITE, the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
+ *
  * \note           When this function returns MBEDTLS_ERR_SSL_WANT_WRITE/READ,
  *                 it must be called later with the *same* arguments,
  *                 until it returns a positive value.
@@ -17113,6 +17565,12 @@ int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_
  * \param message   The alert message (SSL_ALERT_MSG_*)
  *
  * \return          0 if successful, or a specific SSL error code.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *ssl,
                             unsigned char level,
@@ -17121,6 +17579,14 @@ int mbedtls_ssl_send_alert_message( mbedtls_ssl_context *ssl,
  * \brief          Notify the peer that the connection is being closed
  *
  * \param ssl      SSL context
+ *
+ * \return          0 if successful, or a specific SSL error code.
+ *
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
+ *                 becomes unusable, and you should either free it or call
+ *                 \c mbedtls_ssl_session_reset() on it before re-using it for
+ *                 a new connection; the current connection must be closed.
  */
 int mbedtls_ssl_close_notify( mbedtls_ssl_context *ssl );
 
@@ -17352,6 +17818,10 @@ mbedtls_ssl_cookie_check_t mbedtls_ssl_cookie_check;
 
 #endif
 
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+
+#endif
+
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
     !defined(inline) && !defined(__cplusplus)
 #define inline __inline
@@ -17458,6 +17928,7 @@ mbedtls_ssl_cookie_check_t mbedtls_ssl_cookie_check;
  * of state of the renegotiation flag, so no indicator is required)
  */
 #define MBEDTLS_TLS_EXT_SUPPORTED_POINT_FORMATS_PRESENT (1 << 0)
+#define MBEDTLS_TLS_EXT_ECJPAKE_KKPP_OK                 (1 << 1)
 
 #ifdef __cplusplus
 extern "C" {
@@ -17480,7 +17951,15 @@ struct mbedtls_ssl_handshake_params
 #if defined(MBEDTLS_ECDH_C)
     mbedtls_ecdh_context ecdh_ctx;              /*!<  ECDH key exchange       */
 #endif
-#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
+#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
+    mbedtls_ecjpake_context ecjpake_ctx;        /*!< EC J-PAKE key exchange */
+#if defined(MBEDTLS_SSL_CLI_C)
+    unsigned char *ecjpake_cache;               /*!< Cache for ClientHello ext */
+    size_t ecjpake_cache_len;                   /*!< Length of cached data */
+#endif
+#endif
+#if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
     const mbedtls_ecp_curve_info **curves;      /*!<  Supported elliptic curves */
 #endif
 #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
@@ -17688,7 +18167,7 @@ unsigned char mbedtls_ssl_hash_from_md_alg( int md );
 int mbedtls_ssl_check_curve( const mbedtls_ssl_context *ssl, mbedtls_ecp_group_id grp_id );
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE__SOME__SIGNATURE_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
 int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
                                 mbedtls_md_type_t md );
 #endif
@@ -17920,7 +18399,7 @@ void mbedtls_ssl_cache_set_timeout( mbedtls_ssl_cache_context *cache, int timeou
 #endif /* MBEDTLS_HAVE_TIME */
 
 /**
- * \brief          Set the cache timeout
+ * \brief          Set the maximum number of cache entries
  *                 (Default: MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES (50))
  *
  * \param cache    SSL cache context
@@ -20472,7 +20951,7 @@ int mbedtls_oid_get_pkcs12_pbe_alg( const mbedtls_asn1_buf *oid, mbedtls_md_type
 
 
 /**
- * \file mbedtls_ripemd160.h
+ * \file ripemd160.h
  *
  * \brief RIPE MD-160 message digest
  *
@@ -20657,17 +21136,17 @@ int mbedtls_ripemd160_self_test( int verbose );
  * Major, Minor, Patchlevel
  */
 #define MBEDTLS_VERSION_MAJOR  2
-#define MBEDTLS_VERSION_MINOR  1
-#define MBEDTLS_VERSION_PATCH  2
+#define MBEDTLS_VERSION_MINOR  2
+#define MBEDTLS_VERSION_PATCH  1
 
 /**
  * The single version number has the following structure:
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define MBEDTLS_VERSION_NUMBER         0x02010200
-#define MBEDTLS_VERSION_STRING         "2.1.2"
-#define MBEDTLS_VERSION_STRING_FULL    "mbed TLS 2.1.2"
+#define MBEDTLS_VERSION_NUMBER         0x02020100
+#define MBEDTLS_VERSION_STRING         "2.2.1"
+#define MBEDTLS_VERSION_STRING_FULL    "mbed TLS 2.2.1"
 
 #if defined(MBEDTLS_VERSION_C)
 

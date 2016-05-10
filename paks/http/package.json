@@ -31,7 +31,6 @@
     ],
     "dependencies": {
         "certs": "~0.1",
-        "mbedtls": "~2.1",
         "mpr": "~6.2",
         "mpr-mbedtls": "~0.5",
         "osdep": "~0.9",

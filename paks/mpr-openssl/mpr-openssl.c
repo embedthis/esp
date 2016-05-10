@@ -22,6 +22,13 @@
 /* Clashes with WinCrypt.h */
 #undef OCSP_RESPONSE
 
+#ifndef  ME_MPR_SSL_HANDSHAKES
+    #define ME_MPR_SSL_HANDSHAKES 0     /* Defaults to infinite */
+#endif
+#ifndef  ME_MPR_SSL_RENEGOTIATE
+    #define ME_MPR_SSL_RENEGOTIATE 1
+#endif
+
  /*
     Indent includes to bypass MakeMe dependencies
   */
@@ -167,6 +174,7 @@ typedef struct OpenConfig {
     DH              *dhKey;
     int             clearFlags;
     int             setFlags;
+    int             maxHandshakes;
 } OpenConfig;
 
 typedef struct OpenSocket {
@@ -175,6 +183,7 @@ typedef struct OpenSocket {
     char            *requiredPeerName;
     SSL             *handle;
     BIO             *bio;
+    int             handshakes;
 } OpenSocket;
 
 typedef struct RandBuf {
@@ -215,6 +224,7 @@ static DH       *getDhKey();
 static char     *getOssSession(MprSocket *sp);
 static char     *getOssState(MprSocket *sp);
 static char     *getOssError(MprSocket *sp);
+static void     infoCallback(const SSL *ssl, int where, int rc);
 static void     manageOpenConfig(OpenConfig *cfg, int flags);
 static void     manageOpenProvider(MprSocketProvider *provider, int flags);
 static void     manageOpenSocket(OpenSocket *ssp, int flags);
@@ -524,6 +534,10 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
     #endif
 #endif
 
+#if defined(ME_MPR_SSL_HANDSHAKES)
+    cfg->maxHandshakes = ME_MPR_SSL_HANDSHAKES;
+#endif
+
 #if defined(SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS)
     /*
         Disables a countermeasure against a SSL 3.0/TLS 1.0 protocol vulnerability affecting CBC ciphers.
@@ -716,17 +730,23 @@ static int upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName)
         setSecured(sp);
         mprSetSocketBlockingMode(sp, 0);
     }
-#if defined(ME_MPR_SSL_RENEGOTIATE) && !ME_MPR_SSL_RENEGOTIATE
-    /*
-        Disable renegotiation after the initial handshake if renegotiate is explicitly set to false (CVE-2009-3555).
-        Note: this really is a bogus CVE as disabling renegotiation is not required nor does it enhance security if
-        used with up-to-date (patched) SSL stacks.
-     */
-    if (osp->handle->s3) {
-        osp->handle->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
+    if (ME_MPR_SSL_HANDSHAKES) {
+        SSL_CTX_set_info_callback(cfg->ctx, infoCallback);
     }
-#endif
     return 0;
+}
+
+
+static void infoCallback(const SSL *ssl, int where, int rc)
+{
+    OpenSocket  *osp;
+
+    if (where & SSL_CB_HANDSHAKE_START) {
+        if ((osp = (OpenSocket*) SSL_get_app_data(ssl)) == 0) {
+            return;
+        }
+        osp->handshakes++;
+    }
 }
 
 
@@ -765,6 +785,12 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
             mprLog("info mpr ssl openssl", 5, "SSL_read %s", getOssError(sp));
         }
         break;
+    }
+    if (osp->cfg->maxHandshakes && osp->handshakes > osp->cfg->maxHandshakes) {
+        mprLog("error mpr ssl openssl", 4, "TLS renegotiation attack");
+        rc = -1;
+        sp->flags |= MPR_SOCKET_EOF;
+        return MPR_ERR_BAD_STATE;
     }
     if (rc <= 0) {
         error = SSL_get_error(osp->handle, rc);
@@ -824,6 +850,11 @@ static ssize writeOss(MprSocket *sp, cvoid *buf, ssize len)
                 break;
             }
             return MPR_ERR_CANT_WRITE;
+        } else if (osp->cfg->maxHandshakes && osp->handshakes > osp->cfg->maxHandshakes) {
+            mprLog("error mpr ssl openssl", 4, "TLS renegotiation attack");
+            rc = -1;
+            sp->flags |= MPR_SOCKET_EOF;
+            return MPR_ERR_BAD_STATE;
         }
         totalWritten += rc;
         buf = (void*) ((char*) buf + rc);
@@ -1402,21 +1433,10 @@ static DH *dhcallback(SSL *handle, int isExport, int keyLength)
 #endif /* ME_COM_OPENSSL */
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */

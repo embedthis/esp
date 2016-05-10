@@ -987,10 +987,10 @@ typedef struct MprFreeQueue {
 #define MPR_MANAGER_OFFSET          1
 #define MPR_MEM_PAD_PTR(mp, offset) ((void*) (((char*) mp) + mp->size - ((offset) * sizeof(void*))))
 #define GET_MANAGER(mp)             ((MprManager) (*(void**) ((MPR_MEM_PAD_PTR(mp, MPR_MANAGER_OFFSET)))))
-#define SET_MANAGER(mp, fn)         if (1) { \
+#define SET_MANAGER(mp, fn)         do { \
                                         *((MprManager*) MPR_MEM_PAD_PTR(mp, MPR_MANAGER_OFFSET)) = fn ; \
                                         mp->hasManager = 1; \
-                                    } else
+                                    } while (0);
 /*
     Manager callback flags
  */
@@ -1698,7 +1698,7 @@ PUBLIC void mprRemoveRoot(cvoid *ptr);
                 } \
                 HINC(marked); \
             } \
-        } else
+        } else {}
 #endif
 
 /*
@@ -10515,21 +10515,10 @@ PUBLIC void mprWriteToOsLog(cchar *msg, int level);
 #endif /* _h_MPR */
 
 /*
-    @copy   default
-
     Copyright (c) Embedthis Software. All Rights Reserved.
-
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
     commercial license from Embedthis Software. You agree to be fully bound
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
-
-    Local variables:
-    tab-width: 4
-    c-basic-offset: 4
-    End:
-    vim: sw=4 ts=4 expandtab
-
-    @end
  */
