@@ -35,7 +35,7 @@
     "optionalDependencies": {
         "certs": "~0.1",
         "ssl": "~0.9",
-        "mpr-openssl": "~0.4",
+        "mpr-openssl": "~0.5",
         "mpr-mbedtls": "~0.5"
     },
     "devDependencies": {

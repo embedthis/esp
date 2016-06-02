@@ -3930,10 +3930,10 @@ PUBLIC void mprAtomicBarrier()
     #elif ME_COMPILER_HAS_SYNC
         __sync_synchronize();
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64) && !VXWORKS
         asm volatile ("mfence" : : : "memory");
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_PPC)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_PPC) && !VXWORKS
         asm volatile ("sync" : : : "memory");
 
     #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_ARM) && KEEP
@@ -3969,14 +3969,14 @@ PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
     #elif ME_COMPILER_HAS_SYNC_CAS
         return __sync_bool_compare_and_swap(addr, expected, (void*) value);
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86) && !VXWORKS
         void *prev;
         asm volatile ("lock; cmpxchgl %2, %1"
             : "=a" (prev), "=m" (*addr)
             : "r" (value), "m" (*addr), "0" (expected));
         return expected == prev;
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X64)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X64) && !VXWORKS
         void *prev;
         asm volatile ("lock; cmpxchgq %q2, %1"
             : "=a" (prev), "=m" (*addr)
@@ -4020,7 +4020,7 @@ PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
     #elif VXWORKS && _VX_ATOMIC_INIT
         vxAtomicAdd(ptr, value);
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64) && !VXWORKS
         asm volatile("lock; addl %1,%0"
              : "+m" (*ptr)
              : "ir" (value));
@@ -4051,13 +4051,13 @@ PUBLIC void mprAtomicAdd64(volatile int64 *ptr, int64 value)
     #elif ME_COMPILER_HAS_SYNC64 && (ME_64 || ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
         __sync_add_and_fetch(ptr, value);
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X86) && !VXWORKS
         asm volatile ("lock; xaddl %0,%1"
             : "=r" (value), "=m" (*ptr)
             : "0" (value), "m" (*ptr)
             : "memory", "cc");
 
-    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X64)
+    #elif __GNUC__ && (ME_CPU_ARCH == ME_CPU_X64) && !VXWORKS
         asm volatile("lock; addq %1,%0"
              : "=m" (*ptr)
              : "er" (value), "m" (*ptr));
@@ -6177,13 +6177,14 @@ PUBLIC int mprWaitForCmd(MprCmd *cmd, MprTicks timeout)
  */
 static void reapCmd(MprCmd *cmd, bool finalizing)
 {
-    int     status, rc;
-
-    status = 0;
     if (cmd->pid == 0) {
         return;
     }
 #if ME_UNIX_LIKE
+{
+    int     status, rc;
+
+    status = 0;
     if ((rc = waitpid(cmd->pid, &status, WNOHANG | __WALL)) < 0) {
         mprLog("error mpr cmd", 0, "Waitpid failed for pid %d, errno %d", cmd->pid, errno);
 
@@ -6204,6 +6205,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
     } else {
         mprDebug("mpr cmd", 5, "Still running pid %d, thread %s", cmd->pid, mprGetCurrentThreadName());
     }
+}
 #endif
 #if VXWORKS
     /*
@@ -6211,16 +6213,20 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
      */
     if (!cmd->stopped) {
         if (semTake(cmd->exitCond, MPR_TIMEOUT_STOP_TASK) != OK) {
-            mprLog("error mpr cmd", 0, "Child %s did not exit, errno %d", cmd->program);
+            mprLog("error mpr cmd", 0, "Child %s did not exit, errno %d", cmd->program, errno);
             return;
         }
     }
     semDelete(cmd->exitCond);
     cmd->exitCond = 0;
     cmd->pid = 0;
-    rc = 0;
 #endif
 #if ME_WIN_LIKE
+{
+    int     status, rc;
+
+    status = 0;
+
     if (GetExitCodeProcess(cmd->process, (ulong*) &status) == 0) {
         mprLog("error mpr cmd", 0, "GetExitProcess error");
         return;
@@ -6235,6 +6241,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
         cmd->thread = 0;
         cmd->pid = 0;
     }
+}
 #endif
     if (cmd->pid == 0) {
         if (cmd->eofCount >= cmd->requiredEof) {
@@ -26620,10 +26627,11 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
 {
     MprTime     timeForZoneCalc, secs;
     struct tm   t;
-    char        *zoneName;
     int         year, offset, dst;
+#if ME_UNIX_LIKE && !CYGWIN
+    char        *zoneName = 0;
+#endif
 
-    zoneName = 0;
     offset = dst = 0;
 
     if (local) {
@@ -27855,10 +27863,10 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
 #if ME_CPU_ARCH == MPR_CPU_IX86 || ME_CPU_ARCH == MPR_CPU_IX64 || ME_CPU_ARCH == MPR_CPU_SH
     entry = sjoin("_", entry, NULL);
 #endif
-    if (!mp->entry || mprFindFxSym(sysSymTbl, entry, (char**) (void*) &fn) == -1) {
+    if (!mp->entry || mprFindVxSym(sysSymTbl, entry, (char**) (void*) &fn) == -1) {
         if ((at = mprSearchForModule(mp->path)) == 0) {
-            mprLog("error mpr", 0, "Cannot find module \"%s\", cwd: \"%s\", search path \"%s\"", mp->path, mprGetCurrentPath(),
-                mprGetModuleSearchPath());
+            mprLog("error mpr", 0, "Cannot find module \"%s\", cwd: \"%s\", search path \"%s\"", mp->path,
+                 mprGetCurrentPath(), mprGetModuleSearchPath());
             return MPR_ERR_CANT_ACCESS;
         }
         mp->path = at;

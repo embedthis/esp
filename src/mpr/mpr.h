@@ -204,8 +204,12 @@ struct  MprXml;
         #define ME_EVENT_NOTIFIER MPR_EVENT_ASYNC
     #elif VXWORKS
         #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
-    #elif (LINUX || ME_BSD_LIKE) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
-        #define ME_EVENT_NOTIFIER MPR_EVENT_EPOLL
+    #elif (LINUX || ME_BSD_LIKE)
+        #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+            #define ME_EVENT_NOTIFIER MPR_EVENT_EPOLL
+        #else
+            #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
+        #endif
     #else
         #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
     #endif
@@ -4581,7 +4585,6 @@ PUBLIC void mprSetPathSeparators(cchar *path, cchar *separators);
  */
 PUBLIC void mprSetPathNewline(cchar *path, cchar *newline);
 
-//MOB
 PUBLIC MprList *mprGetDirList(cchar *path);
 
 /**

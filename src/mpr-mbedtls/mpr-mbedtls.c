@@ -193,7 +193,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
 {
     MbedConfig          *cfg;
     mbedtls_ssl_config  *mconf;
-    int                 next, rc;
+    int                 rc;
 
     if (ssl->config && !ssl->changed) {
         return 0;
@@ -317,7 +317,6 @@ static int upgradeMbed(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 {
     MbedSocket          *mb;
     mbedtls_ssl_context *ctx;
-    int                 next;
 
     assert(sp);
 
@@ -756,8 +755,6 @@ static char *getMbedState(MprSocket *sp)
     mbedtls_ssl_context     *ctx;
     mbedtls_ssl_session     *session;
     MprBuf                  *buf;
-    char                    *ownPrefix, *peerPrefix;
-    char                    cbuf[5120];
 
     if ((mb = sp->sslSocket) == 0) {
         return 0;
@@ -798,7 +795,7 @@ static int *getCipherSuite(MprSsl *ssl)
     cchar   *ciphers;
     char    *cipher, *next, buf[128];
     cint    *cp;
-    int     nciphers, i, *result, code, count;
+    int     nciphers, i, *result, code;
 
     result = 0;
     ciphers = ssl->ciphers;
