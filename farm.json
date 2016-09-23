@@ -3,7 +3,7 @@
     steps:     ['prep', 'download', 'configure', 'build', 'test', 'package'],
     commands: {
         clean: 'me clean',
-        configure: './configure',
+        configure: './configure --${profile}',
         build: 'me build',
         test: 'me test',
         package: 'me package',
