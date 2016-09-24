@@ -2279,9 +2279,7 @@ static ME_INLINE int findLastBit(size_t word)
  */
 static ME_INLINE bool acquire(MprFreeQueue *freeq)
 {
-#if MACOSX
-    return OSSpinLockTry(&freeq->lock.cs);
-#elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
+#if ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
     return pthread_spin_trylock(&freeq->lock.cs) == 0;
 #elif ME_UNIX_LIKE
     return pthread_mutex_trylock(&freeq->lock.cs) == 0;
@@ -2297,9 +2295,7 @@ static ME_INLINE bool acquire(MprFreeQueue *freeq)
 
 static ME_INLINE void release(MprFreeQueue *freeq)
 {
-#if MACOSX
-    OSSpinLockUnlock(&freeq->lock.cs);
-#elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
+#if ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
     pthread_spin_unlock(&freeq->lock.cs);
 #elif ME_UNIX_LIKE
     pthread_mutex_unlock(&freeq->lock.cs);
@@ -2457,7 +2453,7 @@ PUBLIC int mprIsValid(cvoid *ptr)
     This stops busy waiting which can be a problem on VxWorks if higher priority threads outside the MPR
     can starve the MPR of cpu while contenting for memory via mprCreateEvent.
  */
-static void dontBusyWait() 
+static void dontBusyWait()
 {
 #if ME_UNIX_LIKE || VXWORKS
     struct timespec nap;
@@ -15655,9 +15651,6 @@ PUBLIC MprSpin *mprInitSpinLock(MprSpin *lock)
 #if USE_MPR_LOCK
     mprInitLock(&lock->cs);
 
-#elif MACOSX
-    lock->cs = OS_SPINLOCK_INIT;
-
 #elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
     pthread_spin_init(&lock->cs, 0);
 
@@ -15698,8 +15691,6 @@ PUBLIC bool mprTrySpinLock(MprSpin *lock)
 
 #if USE_MPR_LOCK
     mprTryLock(&lock->cs);
-#elif MACOSX
-    rc = !OSSpinLockTry(&lock->cs);
 #elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
     rc = pthread_spin_trylock(&lock->cs) != 0;
 #elif ME_UNIX_LIKE
@@ -15802,8 +15793,6 @@ PUBLIC void mprSpinLock(MprSpin *lock)
 
 #if USE_MPR_LOCK
     mprTryLock(&lock->cs);
-#elif MACOSX
-    OSSpinLockLock(&lock->cs);
 #elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
     pthread_spin_lock(&lock->cs);
 #elif ME_UNIX_LIKE
@@ -15832,8 +15821,6 @@ PUBLIC void mprSpinUnlock(MprSpin *lock)
 
 #if USE_MPR_LOCK
     mprUnlock(&lock->cs);
-#elif MACOSX
-    OSSpinLockUnlock(&lock->cs);
 #elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
     pthread_spin_unlock(&lock->cs);
 #elif ME_UNIX_LIKE
@@ -17934,6 +17921,7 @@ PUBLIC cchar *mprGetPathBaseRef(cchar *path)
     char            *cp;
 
     if (path == 0) {
+        //  TODO - should not clone
         return sclone("");
     }
     fs = mprLookupFileSystem(path);

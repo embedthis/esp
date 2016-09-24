@@ -515,8 +515,6 @@ typedef struct MprSpin {
         bool                    freed;         /**< Mutex has been destroyed */
     #elif VXWORKS
         SEM_ID                  cs;
-    #elif MACOSX
-        OSSpinLock              cs;
     #elif ME_UNIX_LIKE
         #if ME_COMPILER_HAS_SPINLOCK
             pthread_spinlock_t  cs;
@@ -609,10 +607,7 @@ PUBLIC bool mprTrySpinLock(MprSpin *lock);
     /*
         Spin lock macros
      */
-    #if MACOSX
-        #define mprSpinLock(lock)   if (lock) OSSpinLockLock(&((lock)->cs))
-        #define mprSpinUnlock(lock) if (lock) OSSpinLockUnlock(&((lock)->cs))
-    #elif ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
+    #if ME_UNIX_LIKE && ME_COMPILER_HAS_SPINLOCK
         #define mprSpinLock(lock)   if (lock) pthread_spin_lock(&((lock)->cs))
         #define mprSpinUnlock(lock) if (lock) pthread_spin_unlock(&((lock)->cs))
     #elif ME_UNIX_LIKE
@@ -5082,7 +5077,7 @@ PUBLIC MprList *mprGetPathFiles(cchar *dir, int flags);
     Create a list of files in a directory or subdirectories that match the given wildcard pattern.
         This call returns a list of filenames.
     @description Get the list of files in a directory and return a list. The pattern list may contain
-    wild cards: "?" Matches any single character, "*" matches zero or more characters of the file or directory, 
+    wild cards: "?" Matches any single character, "*" matches zero or more characters of the file or directory,
     "**"/ matches zero or more directories, "**" matches zero or more files or directories.
     An exclusion pattern may be specified to apply to subsequent patterns by appending with "!".
     @param path Directory to list.
