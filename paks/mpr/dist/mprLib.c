@@ -3911,10 +3911,7 @@ PUBLIC void mprAtomicOpen()
  */
 PUBLIC void mprAtomicBarrier()
 {
-    #if MACOSX
-        OSMemoryBarrier();
-
-    #elif defined(VX_MEM_BARRIER_RW)
+    #if defined(VX_MEM_BARRIER_RW)
         VX_MEM_BARRIER_RW();
 
     #elif ME_WIN_LIKE
@@ -3948,10 +3945,7 @@ PUBLIC void mprAtomicBarrier()
  */
 PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
 {
-    #if MACOSX
-        return OSAtomicCompareAndSwapPtrBarrier(expected, (void*) value, (void*) addr);
-
-    #elif VXWORKS && _VX_ATOMIC_INIT && !ME_64
+    #if VXWORKS && _VX_ATOMIC_INIT && !ME_64
         /* vxCas operates with integer values */
         return vxCas((atomic_t*) addr, (atomicVal_t) expected, (atomicVal_t) value);
 
@@ -4000,10 +3994,7 @@ PUBLIC int mprAtomicCas(void * volatile *addr, void *expected, cvoid *value)
  */
 PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
 {
-    #if MACOSX
-        OSAtomicAdd32(value, ptr);
-
-    #elif ME_WIN_LIKE
+    #if ME_WIN_LIKE
         InterlockedExchangeAdd(ptr, value);
 
     #elif ME_COMPILER_HAS_ATOMIC
@@ -4034,10 +4025,7 @@ PUBLIC void mprAtomicAdd(volatile int *ptr, int value)
  */
 PUBLIC void mprAtomicAdd64(volatile int64 *ptr, int64 value)
 {
-    #if MACOSX
-        OSAtomicAdd64(value, ptr);
-
-    #elif ME_WIN_LIKE && ME_64
+    #if ME_WIN_LIKE && ME_64
         InterlockedExchangeAdd64(ptr, value);
 
     #elif ME_COMPILER_HAS_ATOMIC64 && (ME_64 || ME_CPU_ARCH == ME_CPU_X86 || ME_CPU_ARCH == ME_CPU_X64)
@@ -4070,12 +4058,7 @@ PUBLIC void mprAtomicAdd64(volatile int64 *ptr, int64 value)
 #if KEEP
 PUBLIC void *mprAtomicExchange(void *volatile *addr, cvoid *value)
 {
-    #if MACOSX
-        void *old = *(void**) addr;
-        OSAtomicCompareAndSwapPtrBarrier(old, (void*) value, addr);
-        return old;
-
-    #elif ME_WIN_LIKE
+    #if ME_WIN_LIKE
         return (void*) InterlockedExchange((volatile LONG*) addr, (LONG) value);
 
     #elif ME_COMPILER_HAS_ATOMIC
