@@ -10,7 +10,7 @@
     http: {
         server: {
             listen: [
-                'http://127.0.0.1:4100',
+                'http://127.0.0.1:7300',
             ],
             "log": {
                 "location": "error.log",
