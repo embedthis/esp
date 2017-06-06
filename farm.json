@@ -1,5 +1,5 @@
 {
-    platforms: ['linux-x64', 'macosx-x64', 'windows-x64'],
+    platforms: ['linux-x64'],
     steps:     ['prep', 'download', 'configure', 'build', 'package', 'test'],
     options:   ['publish'],
     commands: {
