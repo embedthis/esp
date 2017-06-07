@@ -5239,6 +5239,7 @@ static void pruneCache(MprCache *cache, MprEvent *event)
                         mprDebug("debug mpr cache", 3, "Cache too big, execess keys %zd, mem %zd, prune key %s",
                             excessKeys, (cache->maxMem - cache->usedMem), kp->key);
                         removeItem(cache, item);
+                        excessKeys--;
                     }
                 }
                 factor *= 4;
