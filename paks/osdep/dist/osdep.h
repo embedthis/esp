@@ -397,7 +397,6 @@
     #include    <sys/mman.h>
     #include    <sys/poll.h>
     #include    <sys/resource.h>
-    #include    <sys/sem.h>
     #include    <sys/select.h>
     #include    <sys/time.h>
     #include    <sys/times.h>

@@ -17329,7 +17329,7 @@ static void parseUri(HttpConn *conn)
         if (!hostname) {
             hostname = conn->sock->acceptIp;
         }
-        if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0) {
+        if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0 || up->host == 0 || *up->host == '\0') {
             if (!conn->error) {
                 httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host");
             }
