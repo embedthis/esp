@@ -42,25 +42,13 @@ The full product documentation is supplied in HTML format under the doc director
 Licensing
 ---
 
-Please see: 
+Please see:
 
 https://embedthis.com/licensing/index.html
-
-
-Support
----
-You have a variety of support choices for Embedthis Software products. You can avail yourself of free support via 
-our Online Forum. This is a community based forum where users can share ideas and ask questions. You can also search the
-forum for answers to past questions. To visit the ESP forum, go to:
-
-https://groups.google.com/group/esp
-
-You also have the option of purchasing support with the Embedthis Commercial License. It includes paid support as 
-part of the license benefits.
 
 
 Copyright
 ---
 
-Copyright (c) Embedthis Software. All Rights Reserved.  Embedthis and ESP are trademarks of 
+Copyright (c) Embedthis Software. All Rights Reserved.  Embedthis and ESP are trademarks of
 Embedthis Software, LLC. Other brands and their products are trademarks of their respective holders.
