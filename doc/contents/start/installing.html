@@ -4,18 +4,44 @@
         { 'Getting Started': 'index.html' },
     ],
 }
-            <h1>Installation Overview</h1>
-            <p>Please read the overview information below, then refer to the specific instructions for your operating
-            system.  The ESP binary installation is available for:</p>
+
+            <h1>Installing ESP</h1>
+            <p>ESP is available as a source code distribution. Several build environments are supported:</p>
             <ul>
-                <li><a href="linux.html">Linux Installation Instructions</a></li>
-                <li><a href="mac.html">Mac OS X Installation Instructions</a></li>
-                <li><a href="windows.html">Windows Installation Instructions</a></li>
+                <li><b>Linux</b> &mdash; Linux 2.6 with GNU C/C++</li>
+                <li><b>Windows</b> &mdash; Microsoft Windows 7 with Visual Studio 2010 or later</li>
+                <li><b>Mac OS X</b> &mdash; Mac OS X 10.8 (Mountain Lion) or later</li>
             </ul>
-            <p><a class="ui labeled small icon blue button" href="https://embedthis.com/esp/download.html">
-                <i class="download cloud icon"></i>
-                Download ESP</a>
-            </p>
+            <p>The source code has been designed to run on FreeBSD, Linux, Mac OS X, VxWorks and other operating systems. It has been tested under Fedora and Ubuntu Linux based on the Linux 2.6 Kernel, Microsoft Windows 7, 8 (32 and 64-bit), VxWorks 6.X and MAC OS X 10.8. </p>
+
+            <h2>Accessing the Source Code</h2>
+            <p>With each ESP release, a complete source code snapshot is provided. You can download a source package from the ESP web site or you can retrieve it from the ESP GitHub repository. If you download from the repository, please use the <em>master</em> branch for the most recent stable snapshot. For less stable daily builds, use the <em>dev</em> branch.</p>
+
+            <a class="ui primary right labeled icon button"
+                href="https://embedthis.com/esp/download.html">
+                <i class="right long arrow icon"></i>Download Source
+            </a>
+            <a class="ui secondary right labeled icon button"
+                href="https://github.com/embedthis/esp">
+                <i class="right long arrow icon"></i>GitHub Repository
+            </a>
+
+            <h2>Building ESP from Source</h2>
+            <p>The ESP source distribution contains all the required source files, headers, and test framework to reconfigure, build, and verify ESP. The software supports three methods for building from source.</p>
+            <ul>
+                <li><a href="http://www.gnu.org/software/make/">Make</a></li>
+                <li><a href="https://embedthis.com/makeme/">MakeMe</a></li>
+                <li>Visual Studio or Xcode</li>
+            </ul>
+            <p>Building via <em>make</em> is the simplest way to build. Use <em>make</em> if you want a default build or if you need to integrate ESP with an existing make-based build system. Build with <a href="https://embedthis.com/makeme/">MakeMe</a> if you want to customize or configure the software for your system, or if you need to cross-compile for another operating system or architecture. Use the Visual Studio or Xcode if you are most comfortable with these tools and want a default build.</p>
+
+            <h2>Building</h2>
+            <p>We use the <a href="https://embedthis.com/makeme/">MakeMe</a> tool internally to generate the ESP Makefiles, MakeMe and IDE projects. This cool tool generates clean, efficient makefiles and projects. The MakeMe project documents how to use these generated Makefiles and projects as they are the same for all projects that use MakeMe. For full details, read on, courtesy of MakeMe:</p>
+
+            <p><a class="ui green large right labeled icon button"
+                href="https://embedthis.com/makeme/doc/source/">
+                <i class="right long arrow icon"></i>Building from Source
+            </a></p>
 
             <h2>Essential Tools</h2>
             <p>ESP makes heavy use of two sibling tools from Embedthis.</p>
@@ -25,22 +51,12 @@
                     and web site tooling.</li>
             </ul>
             <p>
-            <a class="ui labeled small icon purple button" href="https://embedthis.com/pak/download.html">
+            <a class="ui labeled small icon button" href="https://embedthis.com/pak/download.html">
                 <i class="download cloud icon"></i>
                 Download Pak
             </a>
-            <a class="ui labeled small icon red button" href="https://embedthis.com/expansive/download.html">
+            <a class="ui labeled small icon button" href="https://embedthis.com/expansive/download.html">
                 <i class="download cloud icon"></i>
                 Download Expansive
             </a>
             </p>
-
-            <h2>Source Code</h2>
-            <p>The ESP source code is provided as a separate download distribution.
-            It is also available via the source code <a href="https://github.com/embedthis/esp">repository</a>
-            for developers who wish to participate in the development of ESP.</p>
-
-            <a class="ui right labeled small icon teal button" href="https://github.com/embedthis/esp">
-                <i class="right long arrow icon"></i>
-                ESP Source Code
-            </a>

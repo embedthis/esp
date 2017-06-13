@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Installing on Linux</title>
+    <title>Installing on Mac</title>
     <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
@@ -155,7 +155,7 @@
             
             
             <div class="divider">/</div>
-            <a class="active section" href="linux.html">Installing on Linux</a>
+            <a class="active section" href="mac.old">Installing on Mac</a>
             
         </div>
         
@@ -164,16 +164,27 @@
     </div>
     <div class="content">
 
-            <h1>Installing on Linux</h1>
-            <p>Running ESP on Linux is supported by building from source code. </p>
-            <p>Please see instructions at <a href="source.html">Building from Source</a>.</p>
-            
-            <a id="running"></a>
-            <h2>Running ESP</h2>
-            <p>To run esp and display command options</p>
-            <code class="inverted">
-esp --help
+            <h1>Installing on MAC OS X</h1>
+            <p>The Embedthis ESP install distribution for Mac OSX is published as a an
+            installable pkg file.</p>
+
+            <a id="pkg"></a>
+            <h2>Installing the PKG Image</h2>
+            <ol>
+                <li>Double click on the PKG image.</li>
+            </ol>
+
+            <a id="removing"></a>
+            <h2>Removing ESP</h2>
+            <ol>
+                <li>Run a terminal and change directory to the installation directory for ESP. This is typically
+                <em>/usr/lib/esp/latest</em></li>
+                <li><p>Run the remove script in the install directory for ESP by typing:</p>
+                    <code class="inverted">
+sudo ./uninstall
 </code>
+                </li>
+            </ol>
 
     </div>
     <div class="terms ui basic center aligned segment">

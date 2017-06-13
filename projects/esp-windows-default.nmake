@@ -3,7 +3,7 @@
 #
 
 NAME                  = esp
-VERSION               = 6.2.1
+VERSION               = 6.2.3
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -352,7 +352,7 @@ DEPS_14 = $(DEPS_14) src\mbedtls\mbedtls.h
 build\$(CONFIG)\obj\mbedtls.obj: \
     src\mbedtls\mbedtls.c $(DEPS_14)
 	@echo .. [Compile] build\$(CONFIG)\obj\mbedtls.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mbedtls.obj -Fd$(BUILD)\obj\mbedtls.pdb -nologo -GR- -Zi -Od -MDd $(DFLAGS) -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mbedtls\mbedtls.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mbedtls.obj -Fd$(BUILD)\obj\mbedtls.pdb -nologo -GR- -Zi -Od -MDd -Wno-format-zero-length $(DFLAGS) -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mbedtls\mbedtls.c $(LOG)
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
 #

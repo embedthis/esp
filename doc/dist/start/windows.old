@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Installing on Mac</title>
+    <title>Installing on Windows</title>
     <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
@@ -149,13 +149,13 @@
             </a>
             
             <div class="divider">/</div>
-            <a class="section" href="installing.html">
+            <a class="section" href="index.html">
                 Installing
             </a>
             
             
             <div class="divider">/</div>
-            <a class="active section" href="mac.html">Installing on Mac</a>
+            <a class="active section" href="windows.old">Installing on Windows</a>
             
         </div>
         
@@ -164,27 +164,43 @@
     </div>
     <div class="content">
 
-            <h1>Installing on MAC OS X</h1>
-            <p>The Embedthis ESP install distribution for Mac OSX is published as a an 
-            installable pkg file.</p>
-            
-            <a id="pkg"></a>
-            <h2>Installing the PKG Image</h2>
+            <h1>Installing on Windows</h1>
+            <p>The Embedthis ESP install package for Windows is an installation executable compressed in a ZIP file
+            called:</p>
+            <pre class="code">
+esp-VERSION-BUILD-MS-WIN-i686.exe.zip
+</pre>
+            <p>The distribution image contains the binary distribution, documentation and development headers, and
+            libraries in the one package. During installation you will have the option of installing the full package
+            or portions of the distribution.</p><a id="exe"></a>
+            <h2>Installing the EXE Image</h2>
             <ol>
-                <li>Double click on the PKG image.</li>
-            </ol>
-            
-            <a id="removing"></a>
+                <li>Login with administrator privileges.</li>
+                <li>Run winzip and extract the contents of the zipped EXE install image to a folder of your
+                choosing.</li>
+                <li>Browse to the location holding the EXE install image and run it.</li>
+            </ol><a id="removing"></a>
             <h2>Removing ESP</h2>
             <ol>
-                <li>Run a terminal and change directory to the installation directory for ESP. This is typically
-                <em>/usr/lib/esp/latest</em></li>
-                <li><p>Run the remove script in the install directory for ESP by typing:</p>
-                    <code class="inverted">
-sudo ./uninstall
-</code>
-                </li>
+                <li>Login with administrator privileges.</li>
+                <li>Run the <b>Add / Remove Programs</b> applet from the <b>control panel</b>.</li>
+                <li>Select <b>Embedthis ESP</b> and choose remove.</li>
             </ol>
+            <a id="silentInstallation"></a>
+            <h2>Silent Installation</h2>
+            <p>If you need to do batch or unattended installations, you can install ESP silently. Use the
+            <b>/silent</b> switch to suppress questions and <b>/verysilent</b> to suppress all visual
+            output.</p>
+
+            <a id="running"></a>
+            <h2>Running ESP</h2>
+            <p>To start ESP type:</p>
+
+            <pre class="code">$ esp</pre>
+
+            <p>To get all the options for Expansive:</p>
+
+            <pre class="code">$ esp --help</pre>
 
     </div>
     <div class="terms ui basic center aligned segment">

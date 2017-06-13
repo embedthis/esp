@@ -6,15 +6,15 @@
     ],
 }
             <h1>Installing on MAC OS X</h1>
-            <p>The Embedthis ESP install distribution for Mac OSX is published as a an 
+            <p>The Embedthis ESP install distribution for Mac OSX is published as a an
             installable pkg file.</p>
-            
+
             <a id="pkg"></a>
             <h2>Installing the PKG Image</h2>
             <ol>
                 <li>Double click on the PKG image.</li>
             </ol>
-            
+
             <a id="removing"></a>
             <h2>Removing ESP</h2>
             <ol>
