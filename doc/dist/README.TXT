@@ -140,6 +140,6 @@ Embedthis is a trademark of Embedthis Software LLC. Embedthis, ESP and Ejscript 
 Embedthis Software, LLC.
 4616 25th Ave NE, #733
 Seattle, WA 98105.
-+1 (425) 329-3490
++1 (408) 905-7017
 embedthis.com
 info@embedthis.com

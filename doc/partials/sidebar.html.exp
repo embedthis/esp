@@ -78,7 +78,7 @@
             <div class="item">
                 <a href="@~/users/project.html">Project Resources</a>
                 <div class="menu">
-                    <a class="item" href="http://goo.gl/ZQsfIC">Official ESP News</a>
+                    <a class="item" href="https://embedthis.com/blog/categories/ESP/">Official ESP News</a>
                     <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
                     <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
                     <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
