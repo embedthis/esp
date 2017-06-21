@@ -323,6 +323,7 @@
     #include    <process.h>
     #include    <windows.h>
     #include    <shlobj.h>
+    #include    <stdbool.h>
     #if ME_DEBUG
         #include <crtdbg.h>
     #endif
