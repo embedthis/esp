@@ -8,7 +8,7 @@
 
         conn = getConn();
         for (ITERATE_ITEMS(conn->rx->files, file, index)) {
-            mprTrace(0, "FILE %x\n", file);
+            mprLog("trace", "FILE %x\n", file);
             render("NAME %s\n", file->name);
             render("FILENAME %s\n", file->filename);
             render("CLIENT_NAME %s\n", file->clientFilename);

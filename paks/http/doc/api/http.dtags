@@ -2550,6 +2550,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpSetRouteUploadDir</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga96f166bda637b5071c6c29c8b78886e3</anchor>
+      <arglist>(HttpRoute *route, cchar *dir)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpSetRouteVar</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>ga3c0b5cdd207914add45a78054b96f9fe</anchor>
