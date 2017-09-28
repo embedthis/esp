@@ -158,10 +158,6 @@ struct  MprXml;
 
 #define MPR_MAX_TIMEOUT         MAXINT64
 
-#if DEPRECATED
-#define MPR_TICKS_PER_SEC       TPS        /**< Time ticks per second */
-#endif
-
 /*
     Default thread counts
  */
@@ -272,7 +268,7 @@ struct  MprXml;
 #define MPR_ERR_WOULD_BLOCK             -33     /**< Blocking operation would block */
 #define MPR_ERR_MAX                     -34
 
-#if DEPRECATED || 1
+#if DEPRECATE
 /**
     Standard logging trace levels are 0 to 5 with 0 being the least verbose.
  */
@@ -2113,7 +2109,7 @@ PUBLIC bool snumber(cchar *s);
     @stability Stable
  */
 PUBLIC char *stitle(cchar *str);
-#if DEPRECATED || 1
+#if DEPRECATE
 #define spascal(s) stitle(s)
 #endif
 
@@ -4061,7 +4057,7 @@ PUBLIC void mprLogProc(cchar *tags, int level, cchar *fmt, ...) PRINTF_ATTRIBUTE
  */
 PUBLIC void mprLogConfig();
 
-#if DEPRECATED || 1
+#if DEPRECATE
 #define mprLogHeader mprLogConfig
 #endif
 
@@ -4153,7 +4149,7 @@ PUBLIC int mprUsingDefaultLogHandler();
     #define mprLog(tags, l, ...) if (1) ; else {}
 #endif
 
-#if DEPRECATED || 1
+#if DEPRECATE
 /*
     Should use mprDebug for debug messages and mprLog for production messages
  */
@@ -6049,7 +6045,7 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 
-#if DEPRECATED || 1
+#if DEPRECATE
 PUBLIC int mprCreateEventOutside(MprDispatcher *dispatcher, cchar *name, void *proc, void *data, int flags);
 #endif
 
@@ -6778,7 +6774,7 @@ PUBLIC cchar *mprReadJson(MprJson *obj, cchar *name);
  */
 PUBLIC MprJson *mprReadJsonValue(MprJson *obj, cchar *value);
 
-#if DEPRECATED
+#if DEPRECATE
 #define mprLookupJsonObj mprReadJsonObj
 #define mprLookupJson mprReadJson
 #define mprLookupJsonValue mprReadJsonValue
@@ -7029,16 +7025,7 @@ PUBLIC cchar *mprGetCurrentThreadName();
  */
 PUBLIC cchar *mprGetThreadName(MprThread *thread);
 
-/**
-    Get the thread priroity
-    @description Get the current priority for the specified thread.
-    @param thread Thread object returned by #mprCreateThread
-    @returns An integer MPR thread priority between 0 and 100 inclusive.
-    @ingroup MprThread
-    @stability Deprecated
- */
-PUBLIC int mprGetThreadPriority(MprThread *thread);
-
+#if DEPRECATE
 /**
     Set the thread priroity for the current thread.
     @description Set the current priority for the specified thread.
@@ -7067,6 +7054,7 @@ PUBLIC void mprSetCurrentThreadPriority(int priority);
     @stability Deprecated
  */
 PUBLIC void mprSetThreadPriority(MprThread *thread, int priority);
+#endif /* DEPRECATE */
 
 /**
     Set whether a thread can yield for GC

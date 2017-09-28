@@ -2176,7 +2176,7 @@ PUBLIC size_t mprGetMem()
 
 #if LINUX
     static int  procfd = -1;
-    char        buf[ME_MAX_BUFFER], *cp;
+    char        buf[ME_BUFSIZE], *cp;
     int         nbytes;
 
     if (procfd < 0) {
@@ -2224,7 +2224,7 @@ PUBLIC uint64 mprGetCPU()
     char path[ME_MAX_PATH];
     sprintf(path, "/proc/%d/stat", getpid());
     if ((fd = open(path, O_RDONLY)) >= 0) {
-        char buf[ME_MAX_BUFFER];
+        char buf[ME_BUFSIZE];
         int nbytes = read(fd, buf, sizeof(buf) - 1);
         close(fd);
         if (nbytes > 0) {
@@ -4131,7 +4131,7 @@ PUBLIC MprBuf *mprCreateBuf(ssize initialSize, ssize maxSize)
     MprBuf      *bp;
 
     if (initialSize <= 0) {
-        initialSize = ME_MAX_BUFFER;
+        initialSize = ME_BUFSIZE;
     }
     if ((bp = mprAllocObj(MprBuf, manageBuf)) == 0) {
         return 0;
@@ -5668,10 +5668,10 @@ PUBLIC int mprRunCmdV(MprCmd *cmd, int argc, cchar **argv, cchar **envp, cchar *
         flags &= ~MPR_CMD_OUT;
     }
     if (flags & MPR_CMD_OUT) {
-        cmd->stdoutBuf = mprCreateBuf(ME_MAX_BUFFER, -1);
+        cmd->stdoutBuf = mprCreateBuf(ME_BUFSIZE, -1);
     }
     if (flags & MPR_CMD_ERR) {
-        cmd->stderrBuf = mprCreateBuf(ME_MAX_BUFFER, -1);
+        cmd->stderrBuf = mprCreateBuf(ME_BUFSIZE, -1);
     }
     mprSetCmdCallback(cmd, defaultCmdCallback, NULL);
     rc = mprStartCmd(cmd, argc, argv, envp, flags);
@@ -6267,8 +6267,8 @@ static void defaultCmdCallback(MprCmd *cmd, int channel, void *data)
         Read and aggregate the result into a single string
      */
     space = mprGetBufSpace(buf);
-    if (space < (ME_MAX_BUFFER / 4)) {
-        if (mprGrowBuf(buf, ME_MAX_BUFFER) < 0) {
+    if (space < (ME_BUFSIZE / 4)) {
+        if (mprGrowBuf(buf, ME_BUFSIZE) < 0) {
             mprCloseCmdFd(cmd, channel);
             return;
         }
@@ -6809,7 +6809,7 @@ static int makeChannel(MprCmd *cmd, int index)
     file = &cmd->files[index];
     file->name = sfmt("/pipe/%s_%d_%d", ME_NAME, taskIdSelf(), tempSeed++);
 
-    if (pipeDevCreate(file->name, 5, ME_MAX_BUFFER) < 0) {
+    if (pipeDevCreate(file->name, 5, ME_BUFSIZE) < 0) {
         mprLog("error mpr cmd", 0, "Cannot create pipes to run %s", cmd->program);
         return MPR_ERR_CANT_OPEN;
     }
@@ -8655,7 +8655,7 @@ PUBLIC char *mprGetPassword(cchar *prompt)
     char    *cp, *password, *result;
 
 #if ME_BSD_LIKE
-    char    passbuf[ME_MAX_BUFFER];
+    char    passbuf[ME_BUFSIZE];
 
     if (!prompt || !*prompt) {
         prompt = "Password: ";
@@ -8671,7 +8671,7 @@ PUBLIC char *mprGetPassword(cchar *prompt)
         return 0;
     }
 #elif ME_WIN_LIKE || VXWORKS
-    char    passbuf[ME_MAX_BUFFER];
+    char    passbuf[ME_BUFSIZE];
     int     c, i;
 
     if (!prompt || !*prompt) {
@@ -11000,7 +11000,7 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATE
 PUBLIC int mprCreateEventOutside(MprDispatcher *dispatcher, cchar *name, void *proc, void *data, int flags)
 {
     if (mprCreateEvent(dispatcher, name, 0, proc, data, flags) == 0) {
@@ -11385,7 +11385,7 @@ PUBLIC int mprGetFileChar(MprFile *file)
         return MPR_ERR;
     }
     if (file->buf == 0) {
-        file->buf = mprCreateBuf(ME_MAX_BUFFER, ME_MAX_BUFFER);
+        file->buf = mprCreateBuf(ME_BUFSIZE, ME_BUFSIZE);
     }
     bp = file->buf;
 
@@ -11458,7 +11458,7 @@ PUBLIC char *mprReadLine(MprFile *file, ssize maxline, ssize *lenp)
         *lenp = 0;
     }
     if (maxline <= 0) {
-        maxline = ME_MAX_BUFFER;
+        maxline = ME_BUFSIZE;
     }
     fs = file->fileSystem;
     newline = fs->newline;
@@ -11554,7 +11554,7 @@ PUBLIC ssize mprPutFileString(MprFile *file, cchar *str)
         Buffer output and flush when full.
      */
     if (file->buf == 0) {
-        file->buf = mprCreateBuf(ME_MAX_BUFFER, 0);
+        file->buf = mprCreateBuf(ME_BUFSIZE, 0);
         if (file->buf == 0) {
             return MPR_ERR_CANT_ALLOCATE;
         }
@@ -11601,7 +11601,7 @@ PUBLIC int mprPeekFileChar(MprFile *file)
         return MPR_ERR;
     }
     if (file->buf == 0) {
-        file->buf = mprCreateBuf(ME_MAX_BUFFER, ME_MAX_BUFFER);
+        file->buf = mprCreateBuf(ME_BUFSIZE, ME_BUFSIZE);
     }
     bp = file->buf;
 
@@ -11829,10 +11829,10 @@ PUBLIC int mprEnableFileBuffering(MprFile *file, ssize initialSize, ssize maxSiz
         return MPR_ERR_BAD_STATE;
     }
     if (initialSize <= 0) {
-        initialSize = ME_MAX_BUFFER;
+        initialSize = ME_BUFSIZE;
     }
     if (maxSize <= 0) {
-        maxSize = ME_MAX_BUFFER;
+        maxSize = ME_BUFSIZE;
     }
     if (maxSize <= initialSize) {
         maxSize = initialSize;
@@ -11908,16 +11908,7 @@ PUBLIC void mprInitFileSystem(MprFileSystem *fs, cchar *path)
 #if ME_WIN_LIKE || VXWORKS || CYGWIN
     fs->hasDriveSpecs = 1;
 #endif
-
-#if UNUSED
-    char    *cp;
-    fs->root = mprGetAbsPath(path);
-    if ((cp = strpbrk(fs->root, fs->separators)) != 0) {
-        *++cp = '\0';
-    }
-#else
     fs->root = sclone(path);
-#endif
 #if ME_WIN_LIKE || CYGWIN
     fs->cygwin = mprReadRegistry("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygwin\\setup", "rootdir");
     fs->cygdrive = sclone("/cygdrive");
@@ -13122,10 +13113,6 @@ static int gettok(MprJsonParser *parser)
                         parser->tokid = JTOK_UNDEFINED;
                     } else if (sfnumber(value)) {
                         parser->tokid = JTOK_NUMBER;
-#if UNUSED
-                    } else if (*value == '/' && value[slen(value) - 1] == '/' && parser->tolerant) {
-                        parser->tokid = JTOK_REGEXP;
-#endif
                     } else {
                         parser->tokid = JTOK_STRING;
                     }
@@ -17579,7 +17566,7 @@ PUBLIC int mprCopyPath(cchar *fromName, cchar *toName, int mode)
 {
     MprFile     *from, *to;
     ssize       count;
-    char        buf[ME_MAX_BUFFER];
+    char        buf[ME_BUFSIZE];
 
     if ((from = mprOpenFile(fromName, O_RDONLY | O_BINARY, 0)) == 0) {
         return MPR_ERR_CANT_OPEN;
@@ -17897,7 +17884,7 @@ PUBLIC char *mprGetPathBase(cchar *path)
 
 /*
     Return the last portion of a pathname. The separators are not mapped and the path is not cleaned.
-    This returns a reference into the original string
+    Caller must not free.
  */
 PUBLIC cchar *mprGetPathBaseRef(cchar *path)
 {
@@ -17905,8 +17892,7 @@ PUBLIC cchar *mprGetPathBaseRef(cchar *path)
     char            *cp;
 
     if (path == 0) {
-        //  TODO - should not clone
-        return sclone("");
+        return "";
     }
     fs = mprLookupFileSystem(path);
     if ((cp = (char*) lastSep(fs, path)) == 0) {
@@ -19957,10 +19943,10 @@ PUBLIC int mprStaticPrintf(cchar *fmt, ...)
 {
     MprFileSystem   *fs;
     va_list         ap;
-    char            buf[ME_MAX_BUFFER];
+    char            buf[ME_BUFSIZE];
 
     va_start(ap, fmt);
-    mprPrintfCore(buf, ME_MAX_BUFFER, fmt, ap);
+    mprPrintfCore(buf, ME_BUFSIZE, fmt, ap);
     va_end(ap);
 
     fs = mprLookupFileSystem(NULL, "/");
@@ -19975,11 +19961,11 @@ PUBLIC int mprStaticPrintfError(cchar *fmt, ...)
 {
     MprFileSystem   *fs;
     va_list         ap;
-    char            buf[ME_MAX_BUFFER];
+    char            buf[ME_BUFSIZE];
 
 
     va_start(ap, fmt);
-    mprPrintfCore(buf, ME_MAX_BUFFER, fmt, ap);
+    mprPrintfCore(buf, ME_BUFSIZE, fmt, ap);
     va_end(ap);
     fs = mprLookupFileSystem(NULL, "/");
     return mprWriteFile(fs->stdError, buf, slen(buf));
@@ -22297,7 +22283,7 @@ PUBLIC void mprDisconnectSocket(MprSocket *sp)
 
 static void disconnectSocket(MprSocket *sp)
 {
-    char    buf[ME_MAX_BUFFER];
+    char    buf[ME_BUFSIZE];
     int     i;
 
     /*
@@ -22703,7 +22689,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count)
 #if !LINUX || __UCLIBC__ || !ME_MPR_DISK
 static ssize localSendfile(MprSocket *sp, MprFile *file, MprOff offset, ssize len)
 {
-    char    buf[ME_MAX_BUFFER];
+    char    buf[ME_BUFSIZE];
 
     mprSeekFile(file, SEEK_SET, (int) offset);
     len = min(len, sizeof(buf));
@@ -23403,13 +23389,15 @@ static void manageSsl(MprSsl *ssl, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(ssl->certFile);
         mprMark(ssl->caFile);
-        mprMark(ssl->caPath);
         mprMark(ssl->ciphers);
         mprMark(ssl->config);
         mprMark(ssl->keyFile);
         mprMark(ssl->hostname);
         mprMark(ssl->mutex);
         mprMark(ssl->revoke);
+#if DEPRECATE
+        mprMark(ssl->caPath);
+#endif
     }
 }
 
@@ -24963,6 +24951,7 @@ PUBLIC cchar *mprGetCurrentThreadName()
 }
 
 
+#if DEPRECATE
 /*
     Return the current thread object
  */
@@ -24975,6 +24964,7 @@ PUBLIC void mprSetCurrentThreadPriority(int pri)
     }
     mprSetThreadPriority(tp, pri);
 }
+#endif
 
 
 /*
@@ -25151,6 +25141,7 @@ PUBLIC MprOsThread mprGetCurrentOsThread()
 }
 
 
+#if DEPRECATE
 PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
 {
 #if ME_WIN_LIKE || VXWORKS
@@ -25161,7 +25152,7 @@ PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
     SetThreadPriority(tp->threadHandle, osPri);
 #elif VXWORKS
     taskPrioritySet(tp->osThread, osPri);
-#elif ME_UNIX_LIKE && DISABLED && DEPRECATED
+#elif ME_UNIX_LIKE && DISABLED
     /*
         Not worth setting thread priorities on linux
      */
@@ -25177,7 +25168,7 @@ PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
 
     pthread_setschedprio(ost, max_prio_for_policy);
     pthread_attr_destroy(&thAttr);
-#elif DEPRECATED
+#elif DEPRECATE && DISABLED
     /*
         Don't set process priority
      */
@@ -25188,6 +25179,7 @@ PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
     tp->priority = newPriority;
     unlock(tp);
 }
+#endif
 
 
 static void manageThreadLocal(MprThreadLocal *tls, int flags)
@@ -29592,7 +29584,7 @@ PUBLIC void mprWriteToOsLog(cchar *message, int level)
     void        *event;
     long        errorType;
     ulong       exists;
-    char        buf[ME_MAX_BUFFER], logName[ME_MAX_BUFFER], *cp, *value;
+    char        buf[ME_BUFSIZE], logName[ME_BUFSIZE], *cp, *value;
     wchar       *lines[9];
     int         type;
     static int  once = 0;
@@ -29859,7 +29851,7 @@ PUBLIC MprXml *mprXmlOpen(ssize initialSize, ssize maxSize)
 
     xp = mprAllocObj(MprXml, manageXml);
 
-    xp->inBuf = mprCreateBuf(ME_MAX_BUFFER, ME_MAX_BUFFER);
+    xp->inBuf = mprCreateBuf(ME_BUFSIZE, ME_BUFSIZE);
     xp->tokBuf = mprCreateBuf(initialSize, maxSize);
     return xp;
 }

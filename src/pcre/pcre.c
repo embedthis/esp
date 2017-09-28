@@ -448,16 +448,6 @@ PCRE_EXP_DATA_DEFN only if they are not already set. */
 #  endif
 #endif
 
-/* EMBEDTHIS */
-#if UNUSED
-#undef PCRE_EXP_DEFN
-#define PCRE_EXP_DEFN 
-#undef PCRE_EXP_DATA_DEFN
-#define PCRE_EXP_DATA_DEFN 
-#undef PCRE_EXP_DECL
-#define PCRE_EXP_DECL extern
-#endif
-
 /* We need to have types that specify unsigned 16-bit and 32-bit integers. We
 cannot determine these outside the compilation (e.g. by running a program as
 part of "configure") because PCRE is often cross-compiled for use on other

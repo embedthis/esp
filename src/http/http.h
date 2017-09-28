@@ -2995,7 +2995,7 @@ typedef struct HttpConn {
     bool            suppressTrace: 1;       /**< Do not trace this connection */
     bool            upgraded: 1;            /**< Request protocol upgraded */
     bool            worker: 1;              /**< Use worker */
-#if DEPRECATED || 1
+#if DEPRECATE
     bool            io: 1;                  /**< In httpIOEvent */
 #endif
 
@@ -3915,7 +3915,7 @@ PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth 
  */
 PUBLIC void httpSetAuthSession(HttpAuth *auth, bool noSession);
 
-#if DEPRECATED || 1
+#if DEPRECATE
 #define httpAddAuthType httpCreateAuthType
 #endif
 
@@ -4081,7 +4081,7 @@ PUBLIC bool httpIsAuthenticated(HttpConn *conn);
  */
 PUBLIC bool httpLogin(HttpConn *conn, cchar *username, cchar *password);
 
-#if DEPRECATED || 1
+#if DEPRECATE
 #define httpLoggedIn httpIsAuthenticated
 #endif
 
@@ -4472,7 +4472,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_OWN_LISTEN           0x80000     /**< Override listening endpoints */
 #define HTTP_ROUTE_UTILITY              0x100000    /**< Route hosted by a utility */
 
-#if DEPRECATED || 1
+#if DEPRECATE
 #define HTTP_ROUTE_SET_DEFINED          0x10000     /**< Route set defined */
 #endif
 
@@ -4503,7 +4503,7 @@ typedef struct HttpRoute {
     char            *startWith;             /**< Starting literal portion of pattern */
     char            *optimizedPattern;      /**< Processed pattern (excludes prefix) */
     char            *prefix;                /**< Application scriptName prefix. Set to '' for '/'. Always set */
-#if DEPRECATED || 1
+#if DEPRECATE
     char            *serverPrefix;          /**< Prefix for the server-side. Does not include prefix. Always set */
 #endif
     char            *tplate;                /**< URI template for forming links based on this route (includes prefix) */
@@ -5378,7 +5378,7 @@ PUBLIC void httpSetRouteAuth(HttpRoute *route, HttpAuth *auth);
 PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
 
 /**
-    Define whether updating a request may compile from source 
+    Define whether updating a request may compile from source
     @param route Route to modify
     @param on Set to true to enable
     @ingroup HttpRoute
@@ -5598,7 +5598,7 @@ PUBLIC void httpSetRouteRenameUploads(HttpRoute *route, bool enable);
  */
 PUBLIC void httpSetRouteScript(HttpRoute *route, cchar *script, cchar *scriptPath);
 
-#if DEPRECATED || 1
+#if DEPRECATE
 /**
     Set the route prefix for server-side URIs
     @description The server-side route prefix is appended to the route prefix to create the complete prefix
@@ -5762,7 +5762,6 @@ PUBLIC void httpSetRouteVar(HttpRoute *route, cchar *token, cchar *value);
  */
 PUBLIC void httpSetRouteUpdate(HttpRoute *route, bool on);
 
-#if DEPRECATED || 1
 /**
     Set the default upload directory for file uploads
     @param route Route to modify
@@ -5771,7 +5770,6 @@ PUBLIC void httpSetRouteUpdate(HttpRoute *route, bool on);
     @stability Evolving
  */
 PUBLIC void httpSetRouteUploadDir(HttpRoute *route, cchar *dir);
-#endif
 
 /**
     Define the maximum number of workers for a route
@@ -6977,7 +6975,7 @@ PUBLIC ssize httpFormatResponseBody(HttpConn *conn, cchar *title, cchar *fmt, ..
     Get a tx http header.
     @description Get a http response header value for a given header key.
     @param conn HttpConn connection object created via #httpCreateConn
-    @param key Name of the header to retrieve. 
+    @param key Name of the header to retrieve.
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup HttpTx
     @stability Prototype
@@ -7120,7 +7118,7 @@ PUBLIC void httpSetContentType(HttpConn *conn, cchar *mimeType);
     @ingroup HttpTx
     @stability Stable
  */
-PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, 
+PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
     int flags);
 
 /**

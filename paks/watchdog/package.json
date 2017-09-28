@@ -30,7 +30,7 @@
         }
     ],
     "dependencies": {
-        "mpr": "~6.2"
+        "mpr": "~7"
     },
     "devDependencies": {
         "makeme": ">=0.9.0",

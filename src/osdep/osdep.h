@@ -1,5 +1,5 @@
 /**
-    osdep.h -- O/S abstraction for products using MakeMe. 
+    osdep.h -- O/S abstraction for products using MakeMe.
  */
 
 #ifndef _h_OSDEP
@@ -48,7 +48,7 @@
 #define ME_BIG_ENDIAN      2           /**< Big endian byte ordering */
 
 /*
-    Use compiler definitions to determine the CPU type. 
+    Use compiler definitions to determine the CPU type.
     The default endianness can be overridden by configure --endian big|little.
  */
 #if defined(__alpha__)
@@ -115,7 +115,7 @@
 
 /*
     Operating system defines. Use compiler standard defintions to sleuth.  Works for all except VxWorks which does not
-    define any special symbol.  NOTE: Support for SCOV Unix, LynxOS and UnixWare is deprecated. 
+    define any special symbol.  NOTE: Support for SCOV Unix, LynxOS and UnixWare is deprecated.
  */
 #if defined(__APPLE__)
     #define ME_OS "macosx"
@@ -227,7 +227,7 @@
     #define ME_UNIX_LIKE 0
     #define ME_WIN_LIKE 0
 
-#elif defined(TIDSP) 
+#elif defined(TIDSP)
     #define ME_OS "tidsp"
     #define ME_UNIX_LIKE 0
     #define ME_WIN_LIKE 0
@@ -278,8 +278,8 @@
         /* Target Windows 7 by default */
         #define _WIN32_WINNT 0x601
     #endif
-    /* 
-        Work-around to allow the windows 7.* SDK to be used with VS 2012 
+    /*
+        Work-around to allow the windows 7.* SDK to be used with VS 2012
         MSC_VER 1800 2013
         MSC_VER 1900 2015
      */
@@ -349,7 +349,7 @@
     #include    <math.h>
 #endif
 #if ME_UNIX_LIKE
-    #include    <grp.h> 
+    #include    <grp.h>
 #endif
 #if ME_WIN_LIKE
     #include    <io.h>
@@ -368,8 +368,8 @@
     #include    <netinet/ip.h>
 #endif
 #if ME_UNIX_LIKE
-    #include    <pthread.h> 
-    #include    <pwd.h> 
+    #include    <pthread.h>
+    #include    <pwd.h>
 #if !CYGWIN
     #include    <resolv.h>
 #endif
@@ -836,7 +836,7 @@ typedef int64 Ticks;
 
 #if ME_WIN_LIKE
     /*
-        Use PUBLIC on function declarations and definitions (*.c and *.h). 
+        Use PUBLIC on function declarations and definitions (*.c and *.h).
      */
     #define PUBLIC      __declspec(dllexport)
     #define PUBLIC_DATA __declspec(dllexport)
@@ -847,18 +847,18 @@ typedef int64 Ticks;
     #define PRIVATE     static
 #endif
 
-#ifndef max
-    #define max(a,b)  (((a) > (b)) ? (a) : (b))
-#endif
-#ifndef min
-    #define min(a,b)  (((a) < (b)) ? (a) : (b))
-#endif
+/* Undefines for Qt - Ugh */
+#undef max
+#undef min
+
+#define max(a,b)  (((a) > (b)) ? (a) : (b))
+#define min(a,b)  (((a) < (b)) ? (a) : (b))
 
 #ifndef PRINTF_ATTRIBUTE
     #if ((__GNUC__ >= 3) && !DOXYGEN) || MACOSX
-        /** 
-            Use gcc attribute to check printf fns.  a1 is the 1-based index of the parameter containing the format, 
-            and a2 the index of the first argument. Note that some gcc 2.x versions don't handle this properly 
+        /**
+            Use gcc attribute to check printf fns.  a1 is the 1-based index of the parameter containing the format,
+            and a2 the index of the first argument. Note that some gcc 2.x versions don't handle this properly
          */
         #define PRINTF_ATTRIBUTE(a1, a2) __attribute__ ((format (__printf__, a1, a2)))
     #else
@@ -929,9 +929,9 @@ typedef int64 Ticks;
     Deprecated API warnings
  */
 #if ((__GNUC__ >= 3) || MACOSX) && !VXWORKS
-    #define ME_DEPRECATED(MSG) __attribute__ ((deprecated(MSG)))
+    #define ME_DEPRECATE(MSG) __attribute__ ((deprecated(MSG)))
 #else
-    #define ME_DEPRECATED(MSG) 
+    #define ME_DEPRECATE(MSG)
 #endif
 
 /********************************** Tunables *********************************/
@@ -948,15 +948,16 @@ typedef int64 Ticks;
 #ifndef ME_MAX_PATH
     #define ME_MAX_PATH         1024        /**< Reasonable filename size */
 #endif
-#if DEPRECATE || 1
-/* This is not a maximum, but a default size */
-#ifndef ME_MAX_BUFFER
-    #define ME_MAX_BUFFER       4096        /**< Reasonable size for buffers */
-#endif
-#endif
 #ifndef ME_BUFSIZE
     #define ME_BUFSIZE          4096        /**< Reasonable size for buffers */
 #endif
+#if DEPRECATE || 1
+/* Use ME_BUFSIZE instead. This is not a maximum, but a default size. This can be deprecated after one more cycle. */
+#ifndef ME_MAX_BUFFER
+    #define ME_MAX_BUFFER       ME_BUFSIZE  /**< Reasonable size for buffers */
+#endif
+#endif
+
 #ifndef ME_MAX_ARGC
     #define ME_MAX_ARGC         32          /**< Maximum number of command line args if using MAIN()*/
 #endif
@@ -1092,7 +1093,7 @@ typedef int64 Ticks;
     #define FILE_TEXT       "t"
 
     /*
-        Error codes 
+        Error codes
      */
     #define EPERM           1
     #define ENOENT          2
@@ -1206,7 +1207,7 @@ typedef int64 Ticks;
     /*
         stat flags
      */
-    #define S_IFMT          0170000 
+    #define S_IFMT          0170000
     #define S_IFDIR         0040000
     #define S_IFCHR         0020000         /* character special */
     #define S_IFIFO         0010000

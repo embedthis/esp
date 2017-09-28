@@ -2501,13 +2501,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>httpSetRouteServerPrefix</name>
-      <anchorfile>group___http_route.html</anchorfile>
-      <anchor>ga614be974f6b3149723767cb1f2f5931b</anchor>
-      <arglist>(HttpRoute *route, cchar *prefix)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>httpSetRouteSessionVisibility</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gaeca3e06924e7ffadd182db344bcdb2fb</anchor>
@@ -2554,13 +2547,6 @@
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gadd1a24220790d954d8bc16da793d1ec9</anchor>
       <arglist>(HttpRoute *route, bool on)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>httpSetRouteUploadDir</name>
-      <anchorfile>group___http_route.html</anchorfile>
-      <anchor>ga96f166bda637b5071c6c29c8b78886e3</anchor>
-      <arglist>(HttpRoute *route, cchar *dir)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

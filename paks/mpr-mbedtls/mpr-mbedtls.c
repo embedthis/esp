@@ -954,7 +954,7 @@ static void traceMbed(void *context, int level, cchar *file, int line, cchar *st
 static void merror(int rc, cchar *fmt, ...)
 {
     va_list     ap;
-    char        ebuf[ME_MAX_BUFFER];
+    char        ebuf[ME_BUFSIZE];
 
     va_start(ap, fmt);
     mbedtls_strerror(-rc, ebuf, sizeof(ebuf));

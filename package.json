@@ -2,7 +2,7 @@
     "name": "esp",
     "description": "Embedthis ESP, the amazingly fast C-Language web framework",
     "title": "Embedthis ESP",
-    "version": "6.2.3",
+    "version": "7.0.0",
     "keywords": [
         "esp",
         "package"
@@ -31,8 +31,8 @@
         }
     ],
     "dependencies": {
-        "http": "~6.2",
-        "mpr": "~6.2",
+        "http": "~7",
+        "mpr": "~7",
         "mpr-version": "~0.1",
         "osdep": "~0.9",
         "pcre": "~1.0"
