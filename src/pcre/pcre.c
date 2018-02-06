@@ -4832,6 +4832,212 @@ static const cnode ucp_table[] = {
 
 
 
+/********* Start of file src/pcre_chartables.c ************/
+
+
+/*************************************************
+*      Perl-Compatible Regular Expressions       *
+*************************************************/
+
+/* This file contains character tables that are used when no external tables
+are passed to PCRE by the application that calls it. The tables are used only
+for characters whose code values are less than 256.
+
+This is a default version of the tables that assumes ASCII encoding. A program
+called dftables (which is distributed with PCRE) can be used to build
+alternative versions of this file. This is necessary if you are running in an
+EBCDIC environment, or if you want to default to a different encoding, for
+example ISO-8859-1. When dftables is run, it creates these tables in the
+current locale. If PCRE is configured with --enable-rebuild-chartables, this
+happens automatically.
+
+The following #includes are present because without the gcc 4.x may remove the
+array definition from the final binary if PCRE is built into a static library
+and dead code stripping is activated. This leads to link errors. Pulling in the
+header ensures that the array gets flagged as "someone outside this compilation
+unit might reference this" and so it will always be supplied to the linker. */
+
+#include "me.h"
+
+
+#if ME_COM_PCRE
+
+
+
+const unsigned char _pcre_default_tables[] = {
+
+/* This table is a lower casing table. */
+
+    0,  1,  2,  3,  4,  5,  6,  7,
+    8,  9, 10, 11, 12, 13, 14, 15,
+   16, 17, 18, 19, 20, 21, 22, 23,
+   24, 25, 26, 27, 28, 29, 30, 31,
+   32, 33, 34, 35, 36, 37, 38, 39,
+   40, 41, 42, 43, 44, 45, 46, 47,
+   48, 49, 50, 51, 52, 53, 54, 55,
+   56, 57, 58, 59, 60, 61, 62, 63,
+   64, 97, 98, 99,100,101,102,103,
+  104,105,106,107,108,109,110,111,
+  112,113,114,115,116,117,118,119,
+  120,121,122, 91, 92, 93, 94, 95,
+   96, 97, 98, 99,100,101,102,103,
+  104,105,106,107,108,109,110,111,
+  112,113,114,115,116,117,118,119,
+  120,121,122,123,124,125,126,127,
+  128,129,130,131,132,133,134,135,
+  136,137,138,139,140,141,142,143,
+  144,145,146,147,148,149,150,151,
+  152,153,154,155,156,157,158,159,
+  160,161,162,163,164,165,166,167,
+  168,169,170,171,172,173,174,175,
+  176,177,178,179,180,181,182,183,
+  184,185,186,187,188,189,190,191,
+  192,193,194,195,196,197,198,199,
+  200,201,202,203,204,205,206,207,
+  208,209,210,211,212,213,214,215,
+  216,217,218,219,220,221,222,223,
+  224,225,226,227,228,229,230,231,
+  232,233,234,235,236,237,238,239,
+  240,241,242,243,244,245,246,247,
+  248,249,250,251,252,253,254,255,
+
+/* This table is a case flipping table. */
+
+    0,  1,  2,  3,  4,  5,  6,  7,
+    8,  9, 10, 11, 12, 13, 14, 15,
+   16, 17, 18, 19, 20, 21, 22, 23,
+   24, 25, 26, 27, 28, 29, 30, 31,
+   32, 33, 34, 35, 36, 37, 38, 39,
+   40, 41, 42, 43, 44, 45, 46, 47,
+   48, 49, 50, 51, 52, 53, 54, 55,
+   56, 57, 58, 59, 60, 61, 62, 63,
+   64, 97, 98, 99,100,101,102,103,
+  104,105,106,107,108,109,110,111,
+  112,113,114,115,116,117,118,119,
+  120,121,122, 91, 92, 93, 94, 95,
+   96, 65, 66, 67, 68, 69, 70, 71,
+   72, 73, 74, 75, 76, 77, 78, 79,
+   80, 81, 82, 83, 84, 85, 86, 87,
+   88, 89, 90,123,124,125,126,127,
+  128,129,130,131,132,133,134,135,
+  136,137,138,139,140,141,142,143,
+  144,145,146,147,148,149,150,151,
+  152,153,154,155,156,157,158,159,
+  160,161,162,163,164,165,166,167,
+  168,169,170,171,172,173,174,175,
+  176,177,178,179,180,181,182,183,
+  184,185,186,187,188,189,190,191,
+  192,193,194,195,196,197,198,199,
+  200,201,202,203,204,205,206,207,
+  208,209,210,211,212,213,214,215,
+  216,217,218,219,220,221,222,223,
+  224,225,226,227,228,229,230,231,
+  232,233,234,235,236,237,238,239,
+  240,241,242,243,244,245,246,247,
+  248,249,250,251,252,253,254,255,
+
+/* This table contains bit maps for various character classes. Each map is 32
+bytes long and the bits run from the least significant end of each byte. The
+classes that have their own maps are: space, xdigit, digit, upper, lower, word,
+graph, print, punct, and cntrl. Other classes are built from combinations. */
+
+  0x00,0x3e,0x00,0x00,0x01,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x03,
+  0x7e,0x00,0x00,0x00,0x7e,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x03,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0xfe,0xff,0xff,0x07,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0xfe,0xff,0xff,0x07,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x03,
+  0xfe,0xff,0xff,0x87,0xfe,0xff,0xff,0x07,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0xfe,0xff,0xff,0xff,
+  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x7f,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0xff,0xff,0xff,0xff,
+  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x7f,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0x00,0x00,0x00,0x00,0xfe,0xff,0x00,0xfc,
+  0x01,0x00,0x00,0xf8,0x01,0x00,0x00,0x78,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+  0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+
+/* This table identifies various classes of character by individual bits:
+  0x01   white space character
+  0x02   letter
+  0x04   decimal digit
+  0x08   hexadecimal digit
+  0x10   alphanumeric or '_'
+  0x80   regular expression metacharacter or binary zero
+*/
+
+  0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /*   0-  7 */
+  0x00,0x01,0x01,0x00,0x01,0x01,0x00,0x00, /*   8- 15 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /*  16- 23 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /*  24- 31 */
+  0x01,0x00,0x00,0x00,0x80,0x00,0x00,0x00, /*    - '  */
+  0x80,0x80,0x80,0x80,0x00,0x00,0x80,0x00, /*  ( - /  */
+  0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c, /*  0 - 7  */
+  0x1c,0x1c,0x00,0x00,0x00,0x00,0x00,0x80, /*  8 - ?  */
+  0x00,0x1a,0x1a,0x1a,0x1a,0x1a,0x1a,0x12, /*  @ - G  */
+  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  H - O  */
+  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  P - W  */
+  0x12,0x12,0x12,0x80,0x80,0x00,0x80,0x10, /*  X - _  */
+  0x00,0x1a,0x1a,0x1a,0x1a,0x1a,0x1a,0x12, /*  ` - g  */
+  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  h - o  */
+  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  p - w  */
+  0x12,0x12,0x12,0x80,0x80,0x00,0x00,0x00, /*  x -127 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 128-135 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 136-143 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 144-151 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 152-159 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 160-167 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 168-175 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 176-183 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 184-191 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 192-199 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 200-207 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 208-215 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 216-223 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 224-231 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 232-239 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 240-247 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};/* 248-255 */
+
+/* End of pcre_chartables.c */
+#endif /* ME_COM_PCRE */
+
+
+
 /********* Start of file src/pcre_compile.c ************/
 
 
@@ -11277,963 +11483,6 @@ return (pcre *)re;
 
 
 
-/********* Start of file src/pcre_xclass.c ************/
-
-
-/*************************************************
-*      Perl-Compatible Regular Expressions       *
-*************************************************/
-
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
-
-                       Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
-
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
-*/
-
-
-/* This module contains an internal function that is used to match an extended
-class (one that contains characters whose values are > 255). It is used by both
-pcre_exec() and pcre_def_exec(). */
-
-
-#include "me.h"
-
-
-#if ME_COM_PCRE
-
-
-
-/*************************************************
-*       Match character against an XCLASS        *
-*************************************************/
-
-/* This function is called to match a character against an extended class that
-might contain values > 255.
-
-Arguments:
-  c           the character
-  data        points to the flag byte of the XCLASS data
-
-Returns:      TRUE if character matches, else FALSE
-*/
-
-BOOL
-_pcre_xclass(int c, const uschar *data)
-{
-int t;
-BOOL negated = (*data & XCL_NOT) != 0;
-
-/* Character values < 256 are matched against a bitmap, if one is present. If
-not, we still carry on, because there may be ranges that start below 256 in the
-additional data. */
-
-if (c < 256)
-  {
-  if ((*data & XCL_MAP) != 0 && (data[1 + c/8] & (1 << (c&7))) != 0)
-    return !negated;   /* char found */
-  }
-
-/* First skip the bit map if present. Then match against the list of Unicode
-properties or large chars or ranges that end with a large char. We won't ever
-encounter XCL_PROP or XCL_NOTPROP when UCP support is not compiled. */
-
-if ((*data++ & XCL_MAP) != 0) data += 32;
-
-while ((t = *data++) != XCL_END)
-  {
-  int x, y;
-  if (t == XCL_SINGLE)
-    {
-    GETCHARINC(x, data);
-    if (c == x) return !negated;
-    }
-  else if (t == XCL_RANGE)
-    {
-    GETCHARINC(x, data);
-    GETCHARINC(y, data);
-    if (c >= x && c <= y) return !negated;
-    }
-
-#ifdef SUPPORT_UCP
-  else  /* XCL_PROP & XCL_NOTPROP */
-    {
-    int chartype, script;
-    int category = _pcre_ucp_findprop(c, &chartype, &script);
-
-    switch(*data)
-      {
-      case PT_ANY:
-      if (t == XCL_PROP) return !negated;
-      break;
-
-      case PT_LAMP:
-      if ((chartype == ucp_Lu || chartype == ucp_Ll || chartype == ucp_Lt) ==
-          (t == XCL_PROP)) return !negated;
-      break;
-
-      case PT_GC:
-      if ((data[1] == category) == (t == XCL_PROP)) return !negated;
-      break;
-
-      case PT_PC:
-      if ((data[1] == chartype) == (t == XCL_PROP)) return !negated;
-      break;
-
-      case PT_SC:
-      if ((data[1] == script) == (t == XCL_PROP)) return !negated;
-      break;
-
-      /* This should never occur, but compilers may mutter if there is no
-      default. */
-
-      default:
-      return FALSE;
-      }
-
-    data += 2;
-    }
-#endif  /* SUPPORT_UCP */
-  }
-
-return negated;   /* char did not match */
-}
-
-/* End of pcre_xclass.c */
-#endif /* ME_COM_PCRE */
-
-
-
-/********* Start of file src/pcre_try_flipped.c ************/
-
-
-/*************************************************
-*      Perl-Compatible Regular Expressions       *
-*************************************************/
-
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
-
-                       Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
-
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
-*/
-
-
-/* This module contains an internal function that tests a compiled pattern to
-see if it was compiled with the opposite endianness. If so, it uses an
-auxiliary local function to flip the appropriate bytes. */
-
-
-#include "me.h"
-
-
-#if ME_COM_PCRE
-
-
-
-/*************************************************
-*         Flip bytes in an integer               *
-*************************************************/
-
-/* This function is called when the magic number in a regex doesn't match, in
-order to flip its bytes to see if we are dealing with a pattern that was
-compiled on a host of different endianness. If so, this function is used to
-flip other byte values.
-
-Arguments:
-  value        the number to flip
-  n            the number of bytes to flip (assumed to be 2 or 4)
-
-Returns:       the flipped value
-*/
-
-static unsigned long int
-byteflip(unsigned long int value, int n)
-{
-if (n == 2) return ((value & 0x00ff) << 8) | ((value & 0xff00) >> 8);
-return ((value & 0x000000ff) << 24) |
-       ((value & 0x0000ff00) <<  8) |
-       ((value & 0x00ff0000) >>  8) |
-       ((value & 0xff000000) >> 24);
-}
-
-
-
-/*************************************************
-*       Test for a byte-flipped compiled regex   *
-*************************************************/
-
-/* This function is called from pcre_exec(), pcre_dfa_exec(), and also from
-pcre_fullinfo(). Its job is to test whether the regex is byte-flipped - that
-is, it was compiled on a system of opposite endianness. The function is called
-only when the native MAGIC_NUMBER test fails. If the regex is indeed flipped,
-we flip all the relevant values into a different data block, and return it.
-
-Arguments:
-  re               points to the regex
-  study            points to study data, or NULL
-  internal_re      points to a new regex block
-  internal_study   points to a new study block
-
-Returns:           the new block if is is indeed a byte-flipped regex
-                   NULL if it is not
-*/
-
-real_pcre *
-_pcre_try_flipped(const real_pcre *re, real_pcre *internal_re,
-  const pcre_study_data *study, pcre_study_data *internal_study)
-{
-if (byteflip(re->magic_number, sizeof(re->magic_number)) != MAGIC_NUMBER)
-  return NULL;
-
-*internal_re = *re;           /* To copy other fields */
-internal_re->size = (int) byteflip(re->size, sizeof(re->size));
-internal_re->options = (int) byteflip(re->options, sizeof(re->options));
-internal_re->flags = (pcre_uint16)byteflip(re->flags, sizeof(re->flags));
-internal_re->top_bracket =
-  (pcre_uint16)byteflip(re->top_bracket, sizeof(re->top_bracket));
-internal_re->top_backref =
-  (pcre_uint16)byteflip(re->top_backref, sizeof(re->top_backref));
-internal_re->first_byte =
-  (pcre_uint16)byteflip(re->first_byte, sizeof(re->first_byte));
-internal_re->req_byte =
-  (pcre_uint16)byteflip(re->req_byte, sizeof(re->req_byte));
-internal_re->name_table_offset =
-  (pcre_uint16)byteflip(re->name_table_offset, sizeof(re->name_table_offset));
-internal_re->name_entry_size =
-  (pcre_uint16)byteflip(re->name_entry_size, sizeof(re->name_entry_size));
-internal_re->name_count =
-  (pcre_uint16)byteflip(re->name_count, sizeof(re->name_count));
-
-if (study != NULL)
-  {
-  *internal_study = *study;   /* To copy other fields */
-  internal_study->size = (int) byteflip(study->size, sizeof(study->size));
-  internal_study->options = (int) byteflip(study->options, sizeof(study->options));
-  }
-
-return internal_re;
-}
-
-/* End of pcre_tryflipped.c */
-#endif /* ME_COM_PCRE */
-
-
-
-/********* Start of file src/pcre_ucp_searchfuncs.c ************/
-
-
-/*************************************************
-*      Perl-Compatible Regular Expressions       *
-*************************************************/
-
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
-
-                       Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
-
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
-*/
-
-
-/* This module contains code for searching the table of Unicode character
-properties. */
-
-#include "me.h"
-
-
-#if ME_COM_PCRE
-
-
-
-
-
-
-
-/* Table to translate from particular type value to the general value. */
-
-static const int ucp_gentype[] = {
-  ucp_C, ucp_C, ucp_C, ucp_C, ucp_C,  /* Cc, Cf, Cn, Co, Cs */
-  ucp_L, ucp_L, ucp_L, ucp_L, ucp_L,  /* Ll, Lu, Lm, Lo, Lt */
-  ucp_M, ucp_M, ucp_M,                /* Mc, Me, Mn */
-  ucp_N, ucp_N, ucp_N,                /* Nd, Nl, No */
-  ucp_P, ucp_P, ucp_P, ucp_P, ucp_P,  /* Pc, Pd, Pe, Pf, Pi */
-  ucp_P, ucp_P,                       /* Ps, Po */
-  ucp_S, ucp_S, ucp_S, ucp_S,         /* Sc, Sk, Sm, So */
-  ucp_Z, ucp_Z, ucp_Z                 /* Zl, Zp, Zs */
-};
-
-
-
-/*************************************************
-*         Search table and return type           *
-*************************************************/
-
-/* Three values are returned: the category is ucp_C, ucp_L, etc. The detailed
-character type is ucp_Lu, ucp_Nd, etc. The script is ucp_Latin, etc.
-
-Arguments:
-  c           the character value
-  type_ptr    the detailed character type is returned here
-  script_ptr  the script is returned here
-
-Returns:      the character type category
-*/
-
-int
-_pcre_ucp_findprop(const unsigned int c, int *type_ptr, int *script_ptr)
-{
-int bot = 0;
-int top = sizeof(ucp_table)/sizeof(cnode);
-int mid;
-
-/* The table is searched using a binary chop. You might think that using
-intermediate variables to hold some of the common expressions would speed
-things up, but tests with gcc 3.4.4 on Linux showed that, on the contrary, it
-makes things a lot slower. */
-
-for (;;)
-  {
-  if (top <= bot)
-    {
-    *type_ptr = ucp_Cn;
-    *script_ptr = ucp_Common;
-    return ucp_C;
-    }
-  mid = (bot + top) >> 1;
-  if (c == (ucp_table[mid].f0 & f0_charmask)) break;
-  if (c < (ucp_table[mid].f0 & f0_charmask)) top = mid;
-  else
-    {
-    if ((ucp_table[mid].f0 & f0_rangeflag) != 0 &&
-        c <= (ucp_table[mid].f0 & f0_charmask) +
-             (ucp_table[mid].f1 & f1_rangemask)) break;
-    bot = mid + 1;
-    }
-  }
-
-/* Found an entry in the table. Set the script and detailed type values, and
-return the general type. */
-
-*script_ptr = (ucp_table[mid].f0 & f0_scriptmask) >> f0_scriptshift;
-*type_ptr = (ucp_table[mid].f1 & f1_typemask) >> f1_typeshift;
-
-return ucp_gentype[*type_ptr];
-}
-
-
-
-/*************************************************
-*       Search table and return other case       *
-*************************************************/
-
-/* If the given character is a letter, and there is another case for the
-letter, return the other case. Otherwise, return -1.
-
-Arguments:
-  c           the character value
-
-Returns:      the other case or NOTACHAR if none
-*/
-
-unsigned int
-_pcre_ucp_othercase(const unsigned int c)
-{
-int bot = 0;
-int top = sizeof(ucp_table)/sizeof(cnode);
-int mid, offset;
-
-/* The table is searched using a binary chop. You might think that using
-intermediate variables to hold some of the common expressions would speed
-things up, but tests with gcc 3.4.4 on Linux showed that, on the contrary, it
-makes things a lot slower. */
-
-for (;;)
-  {
-  if (top <= bot) return -1;
-  mid = (bot + top) >> 1;
-  if (c == (ucp_table[mid].f0 & f0_charmask)) break;
-  if (c < (ucp_table[mid].f0 & f0_charmask)) top = mid;
-  else
-    {
-    if ((ucp_table[mid].f0 & f0_rangeflag) != 0 &&
-        c <= (ucp_table[mid].f0 & f0_charmask) +
-             (ucp_table[mid].f1 & f1_rangemask)) break;
-    bot = mid + 1;
-    }
-  }
-
-/* Found an entry in the table. Return NOTACHAR for a range entry. Otherwise
-return the other case if there is one, else NOTACHAR. */
-
-if ((ucp_table[mid].f0 & f0_rangeflag) != 0) return NOTACHAR;
-
-offset = ucp_table[mid].f1 & f1_casemask;
-if ((offset & f1_caseneg) != 0) offset |= f1_caseneg;
-return (offset == 0)? NOTACHAR : c + offset;
-}
-
-
-/* End of pcre_ucp_searchfuncs.c */
-#endif /* ME_COM_PCRE */
-
-
-
-/********* Start of file src/pcre_get.c ************/
-
-
-/*************************************************
-*      Perl-Compatible Regular Expressions       *
-*************************************************/
-
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
-
-                       Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
-
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
-*/
-
-
-/* This module contains some convenience functions for extracting substrings
-from the subject string after a regex match has succeeded. The original idea
-for these functions came from Scott Wimer. */
-
-
-#include "me.h"
-
-
-#if ME_COM_PCRE
-
-
-
-/*************************************************
-*           Find number for named string         *
-*************************************************/
-
-/* This function is used by the get_first_set() function below, as well
-as being generally available. It assumes that names are unique.
-
-Arguments:
-  code        the compiled regex
-  stringname  the name whose number is required
-
-Returns:      the number of the named parentheses, or a negative number
-                (PCRE_ERROR_NOSUBSTRING) if not found
-*/
-
-int
-pcre_get_stringnumber(const pcre *code, const char *stringname)
-{
-int rc;
-int entrysize;
-int top, bot;
-uschar *nametable;
-
-if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMECOUNT, &top)) != 0)
-  return rc;
-if (top <= 0) return PCRE_ERROR_NOSUBSTRING;
-
-if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMEENTRYSIZE, &entrysize)) != 0)
-  return rc;
-if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMETABLE, &nametable)) != 0)
-  return rc;
-
-bot = 0;
-while (top > bot)
-  {
-  int mid = (top + bot) / 2;
-  uschar *entry = nametable + entrysize*mid;
-  int c = strcmp(stringname, (char *)(entry + 2));
-  if (c == 0) return (entry[0] << 8) + entry[1];
-  if (c > 0) bot = mid + 1; else top = mid;
-  }
-
-return PCRE_ERROR_NOSUBSTRING;
-}
-
-
-
-/*************************************************
-*     Find (multiple) entries for named string   *
-*************************************************/
-
-/* This is used by the get_first_set() function below, as well as being
-generally available. It is used when duplicated names are permitted.
-
-Arguments:
-  code        the compiled regex
-  stringname  the name whose entries required
-  firstptr    where to put the pointer to the first entry
-  lastptr     where to put the pointer to the last entry
-
-Returns:      the length of each entry, or a negative number
-                (PCRE_ERROR_NOSUBSTRING) if not found
-*/
-
-int
-pcre_get_stringtable_entries(const pcre *code, const char *stringname,
-  char **firstptr, char **lastptr)
-{
-int rc;
-int entrysize;
-int top, bot;
-uschar *nametable, *lastentry;
-
-if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMECOUNT, &top)) != 0)
-  return rc;
-if (top <= 0) return PCRE_ERROR_NOSUBSTRING;
-
-if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMEENTRYSIZE, &entrysize)) != 0)
-  return rc;
-if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMETABLE, &nametable)) != 0)
-  return rc;
-
-lastentry = nametable + entrysize * (top - 1);
-bot = 0;
-while (top > bot)
-  {
-  int mid = (top + bot) / 2;
-  uschar *entry = nametable + entrysize*mid;
-  int c = strcmp(stringname, (char *)(entry + 2));
-  if (c == 0)
-    {
-    uschar *first = entry;
-    uschar *last = entry;
-    while (first > nametable)
-      {
-      if (strcmp(stringname, (char *)(first - entrysize + 2)) != 0) break;
-      first -= entrysize;
-      }
-    while (last < lastentry)
-      {
-      if (strcmp(stringname, (char *)(last + entrysize + 2)) != 0) break;
-      last += entrysize;
-      }
-    *firstptr = (char *)first;
-    *lastptr = (char *)last;
-    return entrysize;
-    }
-  if (c > 0) bot = mid + 1; else top = mid;
-  }
-
-return PCRE_ERROR_NOSUBSTRING;
-}
-
-
-
-/*************************************************
-*    Find first set of multiple named strings    *
-*************************************************/
-
-/* This function allows for duplicate names in the table of named substrings.
-It returns the number of the first one that was set in a pattern match.
-
-Arguments:
-  code         the compiled regex
-  stringname   the name of the capturing substring
-  ovector      the vector of matched substrings
-
-Returns:       the number of the first that is set,
-               or the number of the last one if none are set,
-               or a negative number on error
-*/
-
-static int
-get_first_set(const pcre *code, const char *stringname, int *ovector)
-{
-const real_pcre *re = (const real_pcre *)code;
-int entrysize;
-char *first, *last;
-uschar *entry;
-if ((re->options & PCRE_DUPNAMES) == 0 && (re->flags & PCRE_JCHANGED) == 0)
-  return pcre_get_stringnumber(code, stringname);
-entrysize = pcre_get_stringtable_entries(code, stringname, &first, &last);
-if (entrysize <= 0) return entrysize;
-for (entry = (uschar *)first; entry <= (uschar *)last; entry += entrysize)
-  {
-  int n = (entry[0] << 8) + entry[1];
-  if (ovector[n*2] >= 0) return n;
-  }
-return (first[0] << 8) + first[1];
-}
-
-
-
-
-/*************************************************
-*      Copy captured string to given buffer      *
-*************************************************/
-
-/* This function copies a single captured substring into a given buffer.
-Note that we use memcpy() rather than strncpy() in case there are binary zeros
-in the string.
-
-Arguments:
-  subject        the subject string that was matched
-  ovector        pointer to the offsets table
-  stringcount    the number of substrings that were captured
-                   (i.e. the yield of the pcre_exec call, unless
-                   that was zero, in which case it should be 1/3
-                   of the offset table size)
-  stringnumber   the number of the required substring
-  buffer         where to put the substring
-  size           the size of the buffer
-
-Returns:         if successful:
-                   the length of the copied string, not including the zero
-                   that is put on the end; can be zero
-                 if not successful:
-                   PCRE_ERROR_NOMEMORY (-6) buffer too small
-                   PCRE_ERROR_NOSUBSTRING (-7) no such captured substring
-*/
-
-int
-pcre_copy_substring(const char *subject, int *ovector, int stringcount,
-  int stringnumber, char *buffer, int size)
-{
-int yield;
-if (stringnumber < 0 || stringnumber >= stringcount)
-  return PCRE_ERROR_NOSUBSTRING;
-stringnumber *= 2;
-yield = ovector[stringnumber+1] - ovector[stringnumber];
-if (size < yield + 1) return PCRE_ERROR_NOMEMORY;
-memcpy(buffer, subject + ovector[stringnumber], yield);
-buffer[yield] = 0;
-return yield;
-}
-
-
-
-/*************************************************
-*   Copy named captured string to given buffer   *
-*************************************************/
-
-/* This function copies a single captured substring into a given buffer,
-identifying it by name. If the regex permits duplicate names, the first
-substring that is set is chosen.
-
-Arguments:
-  code           the compiled regex
-  subject        the subject string that was matched
-  ovector        pointer to the offsets table
-  stringcount    the number of substrings that were captured
-                   (i.e. the yield of the pcre_exec call, unless
-                   that was zero, in which case it should be 1/3
-                   of the offset table size)
-  stringname     the name of the required substring
-  buffer         where to put the substring
-  size           the size of the buffer
-
-Returns:         if successful:
-                   the length of the copied string, not including the zero
-                   that is put on the end; can be zero
-                 if not successful:
-                   PCRE_ERROR_NOMEMORY (-6) buffer too small
-                   PCRE_ERROR_NOSUBSTRING (-7) no such captured substring
-*/
-
-int
-pcre_copy_named_substring(const pcre *code, const char *subject, int *ovector,
-  int stringcount, const char *stringname, char *buffer, int size)
-{
-int n = get_first_set(code, stringname, ovector);
-if (n <= 0) return n;
-return pcre_copy_substring(subject, ovector, stringcount, n, buffer, size);
-}
-
-
-
-/*************************************************
-*      Copy all captured strings to new store    *
-*************************************************/
-
-/* This function gets one chunk of store and builds a list of pointers and all
-of the captured substrings in it. A NULL pointer is put on the end of the list.
-
-Arguments:
-  subject        the subject string that was matched
-  ovector        pointer to the offsets table
-  stringcount    the number of substrings that were captured
-                   (i.e. the yield of the pcre_exec call, unless
-                   that was zero, in which case it should be 1/3
-                   of the offset table size)
-  listptr        set to point to the list of pointers
-
-Returns:         if successful: 0
-                 if not successful:
-                   PCRE_ERROR_NOMEMORY (-6) failed to get store
-*/
-
-int
-pcre_get_substring_list(const char *subject, int *ovector, int stringcount,
-  const char ***listptr)
-{
-int i;
-int size = sizeof(char *);
-int double_count = stringcount * 2;
-char **stringlist;
-char *p;
-
-for (i = 0; i < double_count; i += 2)
-  size += sizeof(char *) + ovector[i+1] - ovector[i] + 1;
-
-stringlist = (char **)(pcre_malloc)(size);
-if (stringlist == NULL) return PCRE_ERROR_NOMEMORY;
-
-*listptr = (const char **)stringlist;
-p = (char *)(stringlist + stringcount + 1);
-
-for (i = 0; i < double_count; i += 2)
-  {
-  int len = ovector[i+1] - ovector[i];
-  memcpy(p, subject + ovector[i], len);
-  *stringlist++ = p;
-  p += len;
-  *p++ = 0;
-  }
-
-*stringlist = NULL;
-return 0;
-}
-
-
-
-/*************************************************
-*   Free store obtained by get_substring_list    *
-*************************************************/
-
-/* This function exists for the benefit of people calling PCRE from non-C
-programs that can call its functions, but not free() or (pcre_free)() directly.
-
-Argument:   the result of a previous pcre_get_substring_list()
-Returns:    nothing
-*/
-
-void
-pcre_free_substring_list(const char **pointer)
-{
-(pcre_free)((void *)pointer);
-}
-
-
-
-/*************************************************
-*      Copy captured string to new store         *
-*************************************************/
-
-/* This function copies a single captured substring into a piece of new
-store
-
-Arguments:
-  subject        the subject string that was matched
-  ovector        pointer to the offsets table
-  stringcount    the number of substrings that were captured
-                   (i.e. the yield of the pcre_exec call, unless
-                   that was zero, in which case it should be 1/3
-                   of the offset table size)
-  stringnumber   the number of the required substring
-  stringptr      where to put a pointer to the substring
-
-Returns:         if successful:
-                   the length of the string, not including the zero that
-                   is put on the end; can be zero
-                 if not successful:
-                   PCRE_ERROR_NOMEMORY (-6) failed to get store
-                   PCRE_ERROR_NOSUBSTRING (-7) substring not present
-*/
-
-int
-pcre_get_substring(const char *subject, int *ovector, int stringcount,
-  int stringnumber, const char **stringptr)
-{
-int yield;
-char *substring;
-if (stringnumber < 0 || stringnumber >= stringcount)
-  return PCRE_ERROR_NOSUBSTRING;
-stringnumber *= 2;
-yield = ovector[stringnumber+1] - ovector[stringnumber];
-substring = (char *)(pcre_malloc)(yield + 1);
-if (substring == NULL) return PCRE_ERROR_NOMEMORY;
-memcpy(substring, subject + ovector[stringnumber], yield);
-substring[yield] = 0;
-*stringptr = substring;
-return yield;
-}
-
-
-
-/*************************************************
-*   Copy named captured string to new store      *
-*************************************************/
-
-/* This function copies a single captured substring, identified by name, into
-new store. If the regex permits duplicate names, the first substring that is
-set is chosen.
-
-Arguments:
-  code           the compiled regex
-  subject        the subject string that was matched
-  ovector        pointer to the offsets table
-  stringcount    the number of substrings that were captured
-                   (i.e. the yield of the pcre_exec call, unless
-                   that was zero, in which case it should be 1/3
-                   of the offset table size)
-  stringname     the name of the required substring
-  stringptr      where to put the pointer
-
-Returns:         if successful:
-                   the length of the copied string, not including the zero
-                   that is put on the end; can be zero
-                 if not successful:
-                   PCRE_ERROR_NOMEMORY (-6) couldn't get memory
-                   PCRE_ERROR_NOSUBSTRING (-7) no such captured substring
-*/
-
-int
-pcre_get_named_substring(const pcre *code, const char *subject, int *ovector,
-  int stringcount, const char *stringname, const char **stringptr)
-{
-int n = get_first_set(code, stringname, ovector);
-if (n <= 0) return n;
-return pcre_get_substring(subject, ovector, stringcount, n, stringptr);
-}
-
-
-
-
-/*************************************************
-*       Free store obtained by get_substring     *
-*************************************************/
-
-/* This function exists for the benefit of people calling PCRE from non-C
-programs that can call its functions, but not free() or (pcre_free)() directly.
-
-Argument:   the result of a previous pcre_get_substring()
-Returns:    nothing
-*/
-
-void
-pcre_free_substring(const char *pointer)
-{
-(pcre_free)((void *)pointer);
-}
-
-#endif /* ME_COM_PCRE */
-/* End of pcre_get.c */
-
-
-
 /********* Start of file src/pcre_exec.c ************/
 
 
@@ -17225,6 +16474,983 @@ else
 
 
 
+/********* Start of file src/pcre_fullinfo.c ************/
+
+
+/*************************************************
+*      Perl-Compatible Regular Expressions       *
+*************************************************/
+
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
+
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
+
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+
+
+/* This module contains the external function pcre_fullinfo(), which returns
+information about a compiled pattern. */
+
+
+#include "me.h"
+
+
+#if ME_COM_PCRE
+
+
+
+/*************************************************
+*        Return info about compiled pattern      *
+*************************************************/
+
+/* This is a newer "info" function which has an extensible interface so
+that additional items can be added compatibly.
+
+Arguments:
+  argument_re      points to compiled code
+  extra_data       points extra data, or NULL
+  what             what information is required
+  where            where to put the information
+
+Returns:           0 if data returned, negative on error
+*/
+
+PCRE_EXP_DEFN int
+pcre_fullinfo(const pcre *argument_re, const pcre_extra *extra_data, int what,
+  void *where)
+{
+real_pcre internal_re;
+pcre_study_data internal_study;
+const real_pcre *re = (const real_pcre *)argument_re;
+const pcre_study_data *study = NULL;
+
+if (re == NULL || where == NULL) return PCRE_ERROR_NULL;
+
+if (extra_data != NULL && (extra_data->flags & PCRE_EXTRA_STUDY_DATA) != 0)
+  study = (const pcre_study_data *)extra_data->study_data;
+
+if (re->magic_number != MAGIC_NUMBER)
+  {
+  re = _pcre_try_flipped(re, &internal_re, study, &internal_study);
+  if (re == NULL) return PCRE_ERROR_BADMAGIC;
+  if (study != NULL) study = &internal_study;
+  }
+
+switch (what)
+  {
+  case PCRE_INFO_OPTIONS:
+  *((unsigned long int *)where) = re->options & PUBLIC_OPTIONS;
+  break;
+
+  case PCRE_INFO_SIZE:
+  *((size_t *)where) = re->size;
+  break;
+
+  case PCRE_INFO_STUDYSIZE:
+  *((size_t *)where) = (study == NULL)? 0 : study->size;
+  break;
+
+  case PCRE_INFO_CAPTURECOUNT:
+  *((int *)where) = re->top_bracket;
+  break;
+
+  case PCRE_INFO_BACKREFMAX:
+  *((int *)where) = re->top_backref;
+  break;
+
+  case PCRE_INFO_FIRSTBYTE:
+  *((int *)where) =
+    ((re->flags & PCRE_FIRSTSET) != 0)? re->first_byte :
+    ((re->flags & PCRE_STARTLINE) != 0)? -1 : -2;
+  break;
+
+  /* Make sure we pass back the pointer to the bit vector in the external
+  block, not the internal copy (with flipped integer fields). */
+
+  case PCRE_INFO_FIRSTTABLE:
+  *((const uschar **)where) =
+    (study != NULL && (study->options & PCRE_STUDY_MAPPED) != 0)?
+      ((const pcre_study_data *)extra_data->study_data)->start_bits : NULL;
+  break;
+
+  case PCRE_INFO_LASTLITERAL:
+  *((int *)where) =
+    ((re->flags & PCRE_REQCHSET) != 0)? re->req_byte : -1;
+  break;
+
+  case PCRE_INFO_NAMEENTRYSIZE:
+  *((int *)where) = re->name_entry_size;
+  break;
+
+  case PCRE_INFO_NAMECOUNT:
+  *((int *)where) = re->name_count;
+  break;
+
+  case PCRE_INFO_NAMETABLE:
+  *((const uschar **)where) = (const uschar *)re + re->name_table_offset;
+  break;
+
+  case PCRE_INFO_DEFAULT_TABLES:
+  *((const uschar **)where) = (const uschar *)(_pcre_default_tables);
+  break;
+
+  case PCRE_INFO_OKPARTIAL:
+  *((int *)where) = (re->flags & PCRE_NOPARTIAL) == 0;
+  break;
+
+  case PCRE_INFO_JCHANGED:
+  *((int *)where) = (re->flags & PCRE_JCHANGED) != 0;
+  break;
+
+  case PCRE_INFO_HASCRORLF:
+  *((int *)where) = (re->flags & PCRE_HASCRORLF) != 0;
+  break;
+
+  default: return PCRE_ERROR_BADOPTION;
+  }
+
+return 0;
+}
+
+/* End of pcre_fullinfo.c */
+#endif /* ME_COM_PCRE */
+
+
+
+/********* Start of file src/pcre_get.c ************/
+
+
+/*************************************************
+*      Perl-Compatible Regular Expressions       *
+*************************************************/
+
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
+
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
+
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+
+
+/* This module contains some convenience functions for extracting substrings
+from the subject string after a regex match has succeeded. The original idea
+for these functions came from Scott Wimer. */
+
+
+#include "me.h"
+
+
+#if ME_COM_PCRE
+
+
+
+/*************************************************
+*           Find number for named string         *
+*************************************************/
+
+/* This function is used by the get_first_set() function below, as well
+as being generally available. It assumes that names are unique.
+
+Arguments:
+  code        the compiled regex
+  stringname  the name whose number is required
+
+Returns:      the number of the named parentheses, or a negative number
+                (PCRE_ERROR_NOSUBSTRING) if not found
+*/
+
+int
+pcre_get_stringnumber(const pcre *code, const char *stringname)
+{
+int rc;
+int entrysize;
+int top, bot;
+uschar *nametable;
+
+if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMECOUNT, &top)) != 0)
+  return rc;
+if (top <= 0) return PCRE_ERROR_NOSUBSTRING;
+
+if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMEENTRYSIZE, &entrysize)) != 0)
+  return rc;
+if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMETABLE, &nametable)) != 0)
+  return rc;
+
+bot = 0;
+while (top > bot)
+  {
+  int mid = (top + bot) / 2;
+  uschar *entry = nametable + entrysize*mid;
+  int c = strcmp(stringname, (char *)(entry + 2));
+  if (c == 0) return (entry[0] << 8) + entry[1];
+  if (c > 0) bot = mid + 1; else top = mid;
+  }
+
+return PCRE_ERROR_NOSUBSTRING;
+}
+
+
+
+/*************************************************
+*     Find (multiple) entries for named string   *
+*************************************************/
+
+/* This is used by the get_first_set() function below, as well as being
+generally available. It is used when duplicated names are permitted.
+
+Arguments:
+  code        the compiled regex
+  stringname  the name whose entries required
+  firstptr    where to put the pointer to the first entry
+  lastptr     where to put the pointer to the last entry
+
+Returns:      the length of each entry, or a negative number
+                (PCRE_ERROR_NOSUBSTRING) if not found
+*/
+
+int
+pcre_get_stringtable_entries(const pcre *code, const char *stringname,
+  char **firstptr, char **lastptr)
+{
+int rc;
+int entrysize;
+int top, bot;
+uschar *nametable, *lastentry;
+
+if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMECOUNT, &top)) != 0)
+  return rc;
+if (top <= 0) return PCRE_ERROR_NOSUBSTRING;
+
+if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMEENTRYSIZE, &entrysize)) != 0)
+  return rc;
+if ((rc = pcre_fullinfo(code, NULL, PCRE_INFO_NAMETABLE, &nametable)) != 0)
+  return rc;
+
+lastentry = nametable + entrysize * (top - 1);
+bot = 0;
+while (top > bot)
+  {
+  int mid = (top + bot) / 2;
+  uschar *entry = nametable + entrysize*mid;
+  int c = strcmp(stringname, (char *)(entry + 2));
+  if (c == 0)
+    {
+    uschar *first = entry;
+    uschar *last = entry;
+    while (first > nametable)
+      {
+      if (strcmp(stringname, (char *)(first - entrysize + 2)) != 0) break;
+      first -= entrysize;
+      }
+    while (last < lastentry)
+      {
+      if (strcmp(stringname, (char *)(last + entrysize + 2)) != 0) break;
+      last += entrysize;
+      }
+    *firstptr = (char *)first;
+    *lastptr = (char *)last;
+    return entrysize;
+    }
+  if (c > 0) bot = mid + 1; else top = mid;
+  }
+
+return PCRE_ERROR_NOSUBSTRING;
+}
+
+
+
+/*************************************************
+*    Find first set of multiple named strings    *
+*************************************************/
+
+/* This function allows for duplicate names in the table of named substrings.
+It returns the number of the first one that was set in a pattern match.
+
+Arguments:
+  code         the compiled regex
+  stringname   the name of the capturing substring
+  ovector      the vector of matched substrings
+
+Returns:       the number of the first that is set,
+               or the number of the last one if none are set,
+               or a negative number on error
+*/
+
+static int
+get_first_set(const pcre *code, const char *stringname, int *ovector)
+{
+const real_pcre *re = (const real_pcre *)code;
+int entrysize;
+char *first, *last;
+uschar *entry;
+if ((re->options & PCRE_DUPNAMES) == 0 && (re->flags & PCRE_JCHANGED) == 0)
+  return pcre_get_stringnumber(code, stringname);
+entrysize = pcre_get_stringtable_entries(code, stringname, &first, &last);
+if (entrysize <= 0) return entrysize;
+for (entry = (uschar *)first; entry <= (uschar *)last; entry += entrysize)
+  {
+  int n = (entry[0] << 8) + entry[1];
+  if (ovector[n*2] >= 0) return n;
+  }
+return (first[0] << 8) + first[1];
+}
+
+
+
+
+/*************************************************
+*      Copy captured string to given buffer      *
+*************************************************/
+
+/* This function copies a single captured substring into a given buffer.
+Note that we use memcpy() rather than strncpy() in case there are binary zeros
+in the string.
+
+Arguments:
+  subject        the subject string that was matched
+  ovector        pointer to the offsets table
+  stringcount    the number of substrings that were captured
+                   (i.e. the yield of the pcre_exec call, unless
+                   that was zero, in which case it should be 1/3
+                   of the offset table size)
+  stringnumber   the number of the required substring
+  buffer         where to put the substring
+  size           the size of the buffer
+
+Returns:         if successful:
+                   the length of the copied string, not including the zero
+                   that is put on the end; can be zero
+                 if not successful:
+                   PCRE_ERROR_NOMEMORY (-6) buffer too small
+                   PCRE_ERROR_NOSUBSTRING (-7) no such captured substring
+*/
+
+int
+pcre_copy_substring(const char *subject, int *ovector, int stringcount,
+  int stringnumber, char *buffer, int size)
+{
+int yield;
+if (stringnumber < 0 || stringnumber >= stringcount)
+  return PCRE_ERROR_NOSUBSTRING;
+stringnumber *= 2;
+yield = ovector[stringnumber+1] - ovector[stringnumber];
+if (size < yield + 1) return PCRE_ERROR_NOMEMORY;
+memcpy(buffer, subject + ovector[stringnumber], yield);
+buffer[yield] = 0;
+return yield;
+}
+
+
+
+/*************************************************
+*   Copy named captured string to given buffer   *
+*************************************************/
+
+/* This function copies a single captured substring into a given buffer,
+identifying it by name. If the regex permits duplicate names, the first
+substring that is set is chosen.
+
+Arguments:
+  code           the compiled regex
+  subject        the subject string that was matched
+  ovector        pointer to the offsets table
+  stringcount    the number of substrings that were captured
+                   (i.e. the yield of the pcre_exec call, unless
+                   that was zero, in which case it should be 1/3
+                   of the offset table size)
+  stringname     the name of the required substring
+  buffer         where to put the substring
+  size           the size of the buffer
+
+Returns:         if successful:
+                   the length of the copied string, not including the zero
+                   that is put on the end; can be zero
+                 if not successful:
+                   PCRE_ERROR_NOMEMORY (-6) buffer too small
+                   PCRE_ERROR_NOSUBSTRING (-7) no such captured substring
+*/
+
+int
+pcre_copy_named_substring(const pcre *code, const char *subject, int *ovector,
+  int stringcount, const char *stringname, char *buffer, int size)
+{
+int n = get_first_set(code, stringname, ovector);
+if (n <= 0) return n;
+return pcre_copy_substring(subject, ovector, stringcount, n, buffer, size);
+}
+
+
+
+/*************************************************
+*      Copy all captured strings to new store    *
+*************************************************/
+
+/* This function gets one chunk of store and builds a list of pointers and all
+of the captured substrings in it. A NULL pointer is put on the end of the list.
+
+Arguments:
+  subject        the subject string that was matched
+  ovector        pointer to the offsets table
+  stringcount    the number of substrings that were captured
+                   (i.e. the yield of the pcre_exec call, unless
+                   that was zero, in which case it should be 1/3
+                   of the offset table size)
+  listptr        set to point to the list of pointers
+
+Returns:         if successful: 0
+                 if not successful:
+                   PCRE_ERROR_NOMEMORY (-6) failed to get store
+*/
+
+int
+pcre_get_substring_list(const char *subject, int *ovector, int stringcount,
+  const char ***listptr)
+{
+int i;
+int size = sizeof(char *);
+int double_count = stringcount * 2;
+char **stringlist;
+char *p;
+
+for (i = 0; i < double_count; i += 2)
+  size += sizeof(char *) + ovector[i+1] - ovector[i] + 1;
+
+stringlist = (char **)(pcre_malloc)(size);
+if (stringlist == NULL) return PCRE_ERROR_NOMEMORY;
+
+*listptr = (const char **)stringlist;
+p = (char *)(stringlist + stringcount + 1);
+
+for (i = 0; i < double_count; i += 2)
+  {
+  int len = ovector[i+1] - ovector[i];
+  memcpy(p, subject + ovector[i], len);
+  *stringlist++ = p;
+  p += len;
+  *p++ = 0;
+  }
+
+*stringlist = NULL;
+return 0;
+}
+
+
+
+/*************************************************
+*   Free store obtained by get_substring_list    *
+*************************************************/
+
+/* This function exists for the benefit of people calling PCRE from non-C
+programs that can call its functions, but not free() or (pcre_free)() directly.
+
+Argument:   the result of a previous pcre_get_substring_list()
+Returns:    nothing
+*/
+
+void
+pcre_free_substring_list(const char **pointer)
+{
+(pcre_free)((void *)pointer);
+}
+
+
+
+/*************************************************
+*      Copy captured string to new store         *
+*************************************************/
+
+/* This function copies a single captured substring into a piece of new
+store
+
+Arguments:
+  subject        the subject string that was matched
+  ovector        pointer to the offsets table
+  stringcount    the number of substrings that were captured
+                   (i.e. the yield of the pcre_exec call, unless
+                   that was zero, in which case it should be 1/3
+                   of the offset table size)
+  stringnumber   the number of the required substring
+  stringptr      where to put a pointer to the substring
+
+Returns:         if successful:
+                   the length of the string, not including the zero that
+                   is put on the end; can be zero
+                 if not successful:
+                   PCRE_ERROR_NOMEMORY (-6) failed to get store
+                   PCRE_ERROR_NOSUBSTRING (-7) substring not present
+*/
+
+int
+pcre_get_substring(const char *subject, int *ovector, int stringcount,
+  int stringnumber, const char **stringptr)
+{
+int yield;
+char *substring;
+if (stringnumber < 0 || stringnumber >= stringcount)
+  return PCRE_ERROR_NOSUBSTRING;
+stringnumber *= 2;
+yield = ovector[stringnumber+1] - ovector[stringnumber];
+substring = (char *)(pcre_malloc)(yield + 1);
+if (substring == NULL) return PCRE_ERROR_NOMEMORY;
+memcpy(substring, subject + ovector[stringnumber], yield);
+substring[yield] = 0;
+*stringptr = substring;
+return yield;
+}
+
+
+
+/*************************************************
+*   Copy named captured string to new store      *
+*************************************************/
+
+/* This function copies a single captured substring, identified by name, into
+new store. If the regex permits duplicate names, the first substring that is
+set is chosen.
+
+Arguments:
+  code           the compiled regex
+  subject        the subject string that was matched
+  ovector        pointer to the offsets table
+  stringcount    the number of substrings that were captured
+                   (i.e. the yield of the pcre_exec call, unless
+                   that was zero, in which case it should be 1/3
+                   of the offset table size)
+  stringname     the name of the required substring
+  stringptr      where to put the pointer
+
+Returns:         if successful:
+                   the length of the copied string, not including the zero
+                   that is put on the end; can be zero
+                 if not successful:
+                   PCRE_ERROR_NOMEMORY (-6) couldn't get memory
+                   PCRE_ERROR_NOSUBSTRING (-7) no such captured substring
+*/
+
+int
+pcre_get_named_substring(const pcre *code, const char *subject, int *ovector,
+  int stringcount, const char *stringname, const char **stringptr)
+{
+int n = get_first_set(code, stringname, ovector);
+if (n <= 0) return n;
+return pcre_get_substring(subject, ovector, stringcount, n, stringptr);
+}
+
+
+
+
+/*************************************************
+*       Free store obtained by get_substring     *
+*************************************************/
+
+/* This function exists for the benefit of people calling PCRE from non-C
+programs that can call its functions, but not free() or (pcre_free)() directly.
+
+Argument:   the result of a previous pcre_get_substring()
+Returns:    nothing
+*/
+
+void
+pcre_free_substring(const char *pointer)
+{
+(pcre_free)((void *)pointer);
+}
+
+#endif /* ME_COM_PCRE */
+/* End of pcre_get.c */
+
+
+
+/********* Start of file src/pcre_globals.c ************/
+
+
+/*************************************************
+*      Perl-Compatible Regular Expressions       *
+*************************************************/
+
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
+
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
+
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+
+
+/* This module contains global variables that are exported by the PCRE library.
+PCRE is thread-clean and doesn't use any global variables in the normal sense.
+However, it calls memory allocation and freeing functions via the four
+indirections below, and it can optionally do callouts, using the fifth
+indirection. These values can be changed by the caller, but are shared between
+all threads. However, when compiling for Virtual Pascal, things are done
+differently, and global variables are not used (see pcre.in). */
+
+#include "me.h"
+
+
+#if ME_COM_PCRE
+
+
+#ifndef VPCOMPAT
+PCRE_EXP_DATA_DEFN void *(*pcre_malloc)(size_t) = malloc;
+PCRE_EXP_DATA_DEFN void  (*pcre_free)(void *) = free;
+PCRE_EXP_DATA_DEFN void *(*pcre_stack_malloc)(size_t) = malloc;
+PCRE_EXP_DATA_DEFN void  (*pcre_stack_free)(void *) = free;
+PCRE_EXP_DATA_DEFN int   (*pcre_callout)(pcre_callout_block *) = NULL;
+#endif
+
+/* End of pcre_globals.c */
+#endif /* ME_COM_PCRE */
+
+
+
+/********* Start of file src/pcre_newline.c ************/
+
+
+/*************************************************
+*      Perl-Compatible Regular Expressions       *
+*************************************************/
+
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
+
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
+
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+
+
+/* This module contains internal functions for testing newlines when more than
+one kind of newline is to be recognized. When a newline is found, its length is
+returned. In principle, we could implement several newline "types", each
+referring to a different set of newline characters. At present, PCRE supports
+only NLTYPE_FIXED, which gets handled without these functions, NLTYPE_ANYCRLF,
+and NLTYPE_ANY. The full list of Unicode newline characters is taken from
+http://unicode.org/unicode/reports/tr18/. */
+
+
+#include "me.h"
+
+
+#if ME_COM_PCRE
+
+
+
+
+/*************************************************
+*      Check for newline at given position       *
+*************************************************/
+
+/* It is guaranteed that the initial value of ptr is less than the end of the
+string that is being processed.
+
+Arguments:
+  ptr          pointer to possible newline
+  type         the newline type
+  endptr       pointer to the end of the string
+  lenptr       where to return the length
+  utf8         TRUE if in utf8 mode
+
+Returns:       TRUE or FALSE
+*/
+
+BOOL
+_pcre_is_newline(const uschar *ptr, int type, const uschar *endptr,
+  int *lenptr, BOOL utf8)
+{
+int c;
+if (utf8) { GETCHAR(c, ptr); } else c = *ptr;
+
+if (type == NLTYPE_ANYCRLF) switch(c)
+  {
+  case 0x000a: *lenptr = 1; return TRUE;             /* LF */
+  case 0x000d: *lenptr = (ptr < endptr - 1 && ptr[1] == 0x0a)? 2 : 1;
+               return TRUE;                          /* CR */
+  default: return FALSE;
+  }
+
+/* NLTYPE_ANY */
+
+else switch(c)
+  {
+  case 0x000a:                                       /* LF */
+  case 0x000b:                                       /* VT */
+  case 0x000c: *lenptr = 1; return TRUE;             /* FF */
+  case 0x000d: *lenptr = (ptr < endptr - 1 && ptr[1] == 0x0a)? 2 : 1;
+               return TRUE;                          /* CR */
+  case 0x0085: *lenptr = utf8? 2 : 1; return TRUE;   /* NEL */
+  case 0x2028:                                       /* LS */
+  case 0x2029: *lenptr = 3; return TRUE;             /* PS */
+  default: return FALSE;
+  }
+}
+
+
+
+/*************************************************
+*     Check for newline at previous position     *
+*************************************************/
+
+/* It is guaranteed that the initial value of ptr is greater than the start of
+the string that is being processed.
+
+Arguments:
+  ptr          pointer to possible newline
+  type         the newline type
+  startptr     pointer to the start of the string
+  lenptr       where to return the length
+  utf8         TRUE if in utf8 mode
+
+Returns:       TRUE or FALSE
+*/
+
+BOOL
+_pcre_was_newline(const uschar *ptr, int type, const uschar *startptr,
+  int *lenptr, BOOL utf8)
+{
+int c;
+ptr--;
+#ifdef SUPPORT_UTF8
+if (utf8)
+  {
+  BACKCHAR(ptr);
+  GETCHAR(c, ptr);
+  }
+else c = *ptr;
+#else   /* no UTF-8 support */
+c = *ptr;
+#endif  /* SUPPORT_UTF8 */
+
+if (type == NLTYPE_ANYCRLF) switch(c)
+  {
+  case 0x000a: *lenptr = (ptr > startptr && ptr[-1] == 0x0d)? 2 : 1;
+               return TRUE;                         /* LF */
+  case 0x000d: *lenptr = 1; return TRUE;            /* CR */
+  default: return FALSE;
+  }
+
+else switch(c)
+  {
+  case 0x000a: *lenptr = (ptr > startptr && ptr[-1] == 0x0d)? 2 : 1;
+               return TRUE;                         /* LF */
+  case 0x000b:                                      /* VT */
+  case 0x000c:                                      /* FF */
+  case 0x000d: *lenptr = 1; return TRUE;            /* CR */
+  case 0x0085: *lenptr = utf8? 2 : 1; return TRUE;  /* NEL */
+  case 0x2028:                                      /* LS */
+  case 0x2029: *lenptr = 3; return TRUE;            /* PS */
+  default: return FALSE;
+  }
+}
+
+/* End of pcre_newline.c */
+#endif /* ME_COM_PCRE */
+
+
+
+/********* Start of file src/pcre_ord2utf8.c ************/
+
+
+/*************************************************
+*      Perl-Compatible Regular Expressions       *
+*************************************************/
+
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
+
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
+
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+
+
+/* This file contains a private PCRE function that converts an ordinal
+character value into a UTF8 string. */
+
+#include "me.h"
+
+
+#if ME_COM_PCRE
+
+
+
+/*************************************************
+*       Convert character value to UTF-8         *
+*************************************************/
+
+/* This function takes an integer value in the range 0 - 0x7fffffff
+and encodes it as a UTF-8 character in 0 to 6 bytes.
+
+Arguments:
+  cvalue     the character value
+  buffer     pointer to buffer for result - at least 6 bytes long
+
+Returns:     number of characters placed in the buffer
+*/
+
+int
+_pcre_ord2utf8(int cvalue, uschar *buffer)
+{
+#ifdef SUPPORT_UTF8
+register int i, j;
+for (i = 0; i < _pcre_utf8_table1_size; i++)
+  if (cvalue <= _pcre_utf8_table1[i]) break;
+buffer += i;
+for (j = i; j > 0; j--)
+ {
+ *buffer-- = 0x80 | (cvalue & 0x3f);
+ cvalue >>= 6;
+ }
+*buffer = _pcre_utf8_table2[i] | cvalue;
+return i + 1;
+#else
+return 0;   /* Keep compiler happy; this function won't ever be */
+#endif      /* called when SUPPORT_UTF8 is not defined. */
+}
+
+/* End of pcre_ord2utf8.c */
+#endif /* ME_COM_PCRE */
+
+
+
 /********* Start of file src/pcre_tables.c ************/
 
 
@@ -17550,7 +17776,7 @@ const int _pcre_utt_size = sizeof(_pcre_utt)/sizeof(ucp_type_table);
 
 
 
-/********* Start of file src/pcre_newline.c ************/
+/********* Start of file src/pcre_try_flipped.c ************/
 
 
 /*************************************************
@@ -17593,13 +17819,9 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-/* This module contains internal functions for testing newlines when more than
-one kind of newline is to be recognized. When a newline is found, its length is
-returned. In principle, we could implement several newline "types", each
-referring to a different set of newline characters. At present, PCRE supports
-only NLTYPE_FIXED, which gets handled without these functions, NLTYPE_ANYCRLF,
-and NLTYPE_ANY. The full list of Unicode newline characters is taken from
-http://unicode.org/unicode/reports/tr18/. */
+/* This module contains an internal function that tests a compiled pattern to
+see if it was compiled with the opposite endianness. If so, it uses an
+auxiliary local function to flip the appropriate bytes. */
 
 
 #include "me.h"
@@ -17609,119 +17831,96 @@ http://unicode.org/unicode/reports/tr18/. */
 
 
 
-
 /*************************************************
-*      Check for newline at given position       *
+*         Flip bytes in an integer               *
 *************************************************/
 
-/* It is guaranteed that the initial value of ptr is less than the end of the
-string that is being processed.
+/* This function is called when the magic number in a regex doesn't match, in
+order to flip its bytes to see if we are dealing with a pattern that was
+compiled on a host of different endianness. If so, this function is used to
+flip other byte values.
 
 Arguments:
-  ptr          pointer to possible newline
-  type         the newline type
-  endptr       pointer to the end of the string
-  lenptr       where to return the length
-  utf8         TRUE if in utf8 mode
+  value        the number to flip
+  n            the number of bytes to flip (assumed to be 2 or 4)
 
-Returns:       TRUE or FALSE
+Returns:       the flipped value
 */
 
-BOOL
-_pcre_is_newline(const uschar *ptr, int type, const uschar *endptr,
-  int *lenptr, BOOL utf8)
+static unsigned long int
+byteflip(unsigned long int value, int n)
 {
-int c;
-if (utf8) { GETCHAR(c, ptr); } else c = *ptr;
-
-if (type == NLTYPE_ANYCRLF) switch(c)
-  {
-  case 0x000a: *lenptr = 1; return TRUE;             /* LF */
-  case 0x000d: *lenptr = (ptr < endptr - 1 && ptr[1] == 0x0a)? 2 : 1;
-               return TRUE;                          /* CR */
-  default: return FALSE;
-  }
-
-/* NLTYPE_ANY */
-
-else switch(c)
-  {
-  case 0x000a:                                       /* LF */
-  case 0x000b:                                       /* VT */
-  case 0x000c: *lenptr = 1; return TRUE;             /* FF */
-  case 0x000d: *lenptr = (ptr < endptr - 1 && ptr[1] == 0x0a)? 2 : 1;
-               return TRUE;                          /* CR */
-  case 0x0085: *lenptr = utf8? 2 : 1; return TRUE;   /* NEL */
-  case 0x2028:                                       /* LS */
-  case 0x2029: *lenptr = 3; return TRUE;             /* PS */
-  default: return FALSE;
-  }
+if (n == 2) return ((value & 0x00ff) << 8) | ((value & 0xff00) >> 8);
+return ((value & 0x000000ff) << 24) |
+       ((value & 0x0000ff00) <<  8) |
+       ((value & 0x00ff0000) >>  8) |
+       ((value & 0xff000000) >> 24);
 }
 
 
 
 /*************************************************
-*     Check for newline at previous position     *
+*       Test for a byte-flipped compiled regex   *
 *************************************************/
 
-/* It is guaranteed that the initial value of ptr is greater than the start of
-the string that is being processed.
+/* This function is called from pcre_exec(), pcre_dfa_exec(), and also from
+pcre_fullinfo(). Its job is to test whether the regex is byte-flipped - that
+is, it was compiled on a system of opposite endianness. The function is called
+only when the native MAGIC_NUMBER test fails. If the regex is indeed flipped,
+we flip all the relevant values into a different data block, and return it.
 
 Arguments:
-  ptr          pointer to possible newline
-  type         the newline type
-  startptr     pointer to the start of the string
-  lenptr       where to return the length
-  utf8         TRUE if in utf8 mode
+  re               points to the regex
+  study            points to study data, or NULL
+  internal_re      points to a new regex block
+  internal_study   points to a new study block
 
-Returns:       TRUE or FALSE
+Returns:           the new block if is is indeed a byte-flipped regex
+                   NULL if it is not
 */
 
-BOOL
-_pcre_was_newline(const uschar *ptr, int type, const uschar *startptr,
-  int *lenptr, BOOL utf8)
+real_pcre *
+_pcre_try_flipped(const real_pcre *re, real_pcre *internal_re,
+  const pcre_study_data *study, pcre_study_data *internal_study)
 {
-int c;
-ptr--;
-#ifdef SUPPORT_UTF8
-if (utf8)
-  {
-  BACKCHAR(ptr);
-  GETCHAR(c, ptr);
-  }
-else c = *ptr;
-#else   /* no UTF-8 support */
-c = *ptr;
-#endif  /* SUPPORT_UTF8 */
+if (byteflip(re->magic_number, sizeof(re->magic_number)) != MAGIC_NUMBER)
+  return NULL;
 
-if (type == NLTYPE_ANYCRLF) switch(c)
+*internal_re = *re;           /* To copy other fields */
+internal_re->size = (int) byteflip(re->size, sizeof(re->size));
+internal_re->options = (int) byteflip(re->options, sizeof(re->options));
+internal_re->flags = (pcre_uint16)byteflip(re->flags, sizeof(re->flags));
+internal_re->top_bracket =
+  (pcre_uint16)byteflip(re->top_bracket, sizeof(re->top_bracket));
+internal_re->top_backref =
+  (pcre_uint16)byteflip(re->top_backref, sizeof(re->top_backref));
+internal_re->first_byte =
+  (pcre_uint16)byteflip(re->first_byte, sizeof(re->first_byte));
+internal_re->req_byte =
+  (pcre_uint16)byteflip(re->req_byte, sizeof(re->req_byte));
+internal_re->name_table_offset =
+  (pcre_uint16)byteflip(re->name_table_offset, sizeof(re->name_table_offset));
+internal_re->name_entry_size =
+  (pcre_uint16)byteflip(re->name_entry_size, sizeof(re->name_entry_size));
+internal_re->name_count =
+  (pcre_uint16)byteflip(re->name_count, sizeof(re->name_count));
+
+if (study != NULL)
   {
-  case 0x000a: *lenptr = (ptr > startptr && ptr[-1] == 0x0d)? 2 : 1;
-               return TRUE;                         /* LF */
-  case 0x000d: *lenptr = 1; return TRUE;            /* CR */
-  default: return FALSE;
+  *internal_study = *study;   /* To copy other fields */
+  internal_study->size = (int) byteflip(study->size, sizeof(study->size));
+  internal_study->options = (int) byteflip(study->options, sizeof(study->options));
   }
 
-else switch(c)
-  {
-  case 0x000a: *lenptr = (ptr > startptr && ptr[-1] == 0x0d)? 2 : 1;
-               return TRUE;                         /* LF */
-  case 0x000b:                                      /* VT */
-  case 0x000c:                                      /* FF */
-  case 0x000d: *lenptr = 1; return TRUE;            /* CR */
-  case 0x0085: *lenptr = utf8? 2 : 1; return TRUE;  /* NEL */
-  case 0x2028:                                      /* LS */
-  case 0x2029: *lenptr = 3; return TRUE;            /* PS */
-  default: return FALSE;
-  }
+return internal_re;
 }
 
-/* End of pcre_newline.c */
+/* End of pcre_tryflipped.c */
 #endif /* ME_COM_PCRE */
 
 
 
-/********* Start of file src/pcre_fullinfo.c ************/
+/********* Start of file src/pcre_ucp_searchfuncs.c ************/
 
 
 /*************************************************
@@ -17764,9 +17963,8 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-/* This module contains the external function pcre_fullinfo(), which returns
-information about a compiled pattern. */
-
+/* This module contains code for searching the table of Unicode character
+properties. */
 
 #include "me.h"
 
@@ -17775,282 +17973,135 @@ information about a compiled pattern. */
 
 
 
+
+
+
+
+/* Table to translate from particular type value to the general value. */
+
+static const int ucp_gentype[] = {
+  ucp_C, ucp_C, ucp_C, ucp_C, ucp_C,  /* Cc, Cf, Cn, Co, Cs */
+  ucp_L, ucp_L, ucp_L, ucp_L, ucp_L,  /* Ll, Lu, Lm, Lo, Lt */
+  ucp_M, ucp_M, ucp_M,                /* Mc, Me, Mn */
+  ucp_N, ucp_N, ucp_N,                /* Nd, Nl, No */
+  ucp_P, ucp_P, ucp_P, ucp_P, ucp_P,  /* Pc, Pd, Pe, Pf, Pi */
+  ucp_P, ucp_P,                       /* Ps, Po */
+  ucp_S, ucp_S, ucp_S, ucp_S,         /* Sc, Sk, Sm, So */
+  ucp_Z, ucp_Z, ucp_Z                 /* Zl, Zp, Zs */
+};
+
+
+
 /*************************************************
-*        Return info about compiled pattern      *
+*         Search table and return type           *
 *************************************************/
 
-/* This is a newer "info" function which has an extensible interface so
-that additional items can be added compatibly.
+/* Three values are returned: the category is ucp_C, ucp_L, etc. The detailed
+character type is ucp_Lu, ucp_Nd, etc. The script is ucp_Latin, etc.
 
 Arguments:
-  argument_re      points to compiled code
-  extra_data       points extra data, or NULL
-  what             what information is required
-  where            where to put the information
-
-Returns:           0 if data returned, negative on error
-*/
-
-PCRE_EXP_DEFN int
-pcre_fullinfo(const pcre *argument_re, const pcre_extra *extra_data, int what,
-  void *where)
-{
-real_pcre internal_re;
-pcre_study_data internal_study;
-const real_pcre *re = (const real_pcre *)argument_re;
-const pcre_study_data *study = NULL;
-
-if (re == NULL || where == NULL) return PCRE_ERROR_NULL;
-
-if (extra_data != NULL && (extra_data->flags & PCRE_EXTRA_STUDY_DATA) != 0)
-  study = (const pcre_study_data *)extra_data->study_data;
-
-if (re->magic_number != MAGIC_NUMBER)
-  {
-  re = _pcre_try_flipped(re, &internal_re, study, &internal_study);
-  if (re == NULL) return PCRE_ERROR_BADMAGIC;
-  if (study != NULL) study = &internal_study;
-  }
-
-switch (what)
-  {
-  case PCRE_INFO_OPTIONS:
-  *((unsigned long int *)where) = re->options & PUBLIC_OPTIONS;
-  break;
-
-  case PCRE_INFO_SIZE:
-  *((size_t *)where) = re->size;
-  break;
-
-  case PCRE_INFO_STUDYSIZE:
-  *((size_t *)where) = (study == NULL)? 0 : study->size;
-  break;
-
-  case PCRE_INFO_CAPTURECOUNT:
-  *((int *)where) = re->top_bracket;
-  break;
-
-  case PCRE_INFO_BACKREFMAX:
-  *((int *)where) = re->top_backref;
-  break;
-
-  case PCRE_INFO_FIRSTBYTE:
-  *((int *)where) =
-    ((re->flags & PCRE_FIRSTSET) != 0)? re->first_byte :
-    ((re->flags & PCRE_STARTLINE) != 0)? -1 : -2;
-  break;
-
-  /* Make sure we pass back the pointer to the bit vector in the external
-  block, not the internal copy (with flipped integer fields). */
-
-  case PCRE_INFO_FIRSTTABLE:
-  *((const uschar **)where) =
-    (study != NULL && (study->options & PCRE_STUDY_MAPPED) != 0)?
-      ((const pcre_study_data *)extra_data->study_data)->start_bits : NULL;
-  break;
-
-  case PCRE_INFO_LASTLITERAL:
-  *((int *)where) =
-    ((re->flags & PCRE_REQCHSET) != 0)? re->req_byte : -1;
-  break;
-
-  case PCRE_INFO_NAMEENTRYSIZE:
-  *((int *)where) = re->name_entry_size;
-  break;
-
-  case PCRE_INFO_NAMECOUNT:
-  *((int *)where) = re->name_count;
-  break;
-
-  case PCRE_INFO_NAMETABLE:
-  *((const uschar **)where) = (const uschar *)re + re->name_table_offset;
-  break;
-
-  case PCRE_INFO_DEFAULT_TABLES:
-  *((const uschar **)where) = (const uschar *)(_pcre_default_tables);
-  break;
-
-  case PCRE_INFO_OKPARTIAL:
-  *((int *)where) = (re->flags & PCRE_NOPARTIAL) == 0;
-  break;
-
-  case PCRE_INFO_JCHANGED:
-  *((int *)where) = (re->flags & PCRE_JCHANGED) != 0;
-  break;
-
-  case PCRE_INFO_HASCRORLF:
-  *((int *)where) = (re->flags & PCRE_HASCRORLF) != 0;
-  break;
-
-  default: return PCRE_ERROR_BADOPTION;
-  }
-
-return 0;
-}
-
-/* End of pcre_fullinfo.c */
-#endif /* ME_COM_PCRE */
-
-
-
-/********* Start of file src/pcre_globals.c ************/
-
-
-/*************************************************
-*      Perl-Compatible Regular Expressions       *
-*************************************************/
-
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
-
-                       Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
-
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
-*/
-
-
-/* This module contains global variables that are exported by the PCRE library.
-PCRE is thread-clean and doesn't use any global variables in the normal sense.
-However, it calls memory allocation and freeing functions via the four
-indirections below, and it can optionally do callouts, using the fifth
-indirection. These values can be changed by the caller, but are shared between
-all threads. However, when compiling for Virtual Pascal, things are done
-differently, and global variables are not used (see pcre.in). */
-
-#include "me.h"
-
-
-#if ME_COM_PCRE
-
-
-#ifndef VPCOMPAT
-PCRE_EXP_DATA_DEFN void *(*pcre_malloc)(size_t) = malloc;
-PCRE_EXP_DATA_DEFN void  (*pcre_free)(void *) = free;
-PCRE_EXP_DATA_DEFN void *(*pcre_stack_malloc)(size_t) = malloc;
-PCRE_EXP_DATA_DEFN void  (*pcre_stack_free)(void *) = free;
-PCRE_EXP_DATA_DEFN int   (*pcre_callout)(pcre_callout_block *) = NULL;
-#endif
-
-/* End of pcre_globals.c */
-#endif /* ME_COM_PCRE */
-
-
-
-/********* Start of file src/pcre_ord2utf8.c ************/
-
-
-/*************************************************
-*      Perl-Compatible Regular Expressions       *
-*************************************************/
-
-/* PCRE is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language.
-
-                       Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
-
------------------------------------------------------------------------------
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the University of Cambridge nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
------------------------------------------------------------------------------
-*/
-
-
-/* This file contains a private PCRE function that converts an ordinal
-character value into a UTF8 string. */
-
-#include "me.h"
-
-
-#if ME_COM_PCRE
-
-
-
-/*************************************************
-*       Convert character value to UTF-8         *
-*************************************************/
-
-/* This function takes an integer value in the range 0 - 0x7fffffff
-and encodes it as a UTF-8 character in 0 to 6 bytes.
-
-Arguments:
-  cvalue     the character value
-  buffer     pointer to buffer for result - at least 6 bytes long
-
-Returns:     number of characters placed in the buffer
+  c           the character value
+  type_ptr    the detailed character type is returned here
+  script_ptr  the script is returned here
+
+Returns:      the character type category
 */
 
 int
-_pcre_ord2utf8(int cvalue, uschar *buffer)
+_pcre_ucp_findprop(const unsigned int c, int *type_ptr, int *script_ptr)
 {
-#ifdef SUPPORT_UTF8
-register int i, j;
-for (i = 0; i < _pcre_utf8_table1_size; i++)
-  if (cvalue <= _pcre_utf8_table1[i]) break;
-buffer += i;
-for (j = i; j > 0; j--)
- {
- *buffer-- = 0x80 | (cvalue & 0x3f);
- cvalue >>= 6;
- }
-*buffer = _pcre_utf8_table2[i] | cvalue;
-return i + 1;
-#else
-return 0;   /* Keep compiler happy; this function won't ever be */
-#endif      /* called when SUPPORT_UTF8 is not defined. */
+int bot = 0;
+int top = sizeof(ucp_table)/sizeof(cnode);
+int mid;
+
+/* The table is searched using a binary chop. You might think that using
+intermediate variables to hold some of the common expressions would speed
+things up, but tests with gcc 3.4.4 on Linux showed that, on the contrary, it
+makes things a lot slower. */
+
+for (;;)
+  {
+  if (top <= bot)
+    {
+    *type_ptr = ucp_Cn;
+    *script_ptr = ucp_Common;
+    return ucp_C;
+    }
+  mid = (bot + top) >> 1;
+  if (c == (ucp_table[mid].f0 & f0_charmask)) break;
+  if (c < (ucp_table[mid].f0 & f0_charmask)) top = mid;
+  else
+    {
+    if ((ucp_table[mid].f0 & f0_rangeflag) != 0 &&
+        c <= (ucp_table[mid].f0 & f0_charmask) +
+             (ucp_table[mid].f1 & f1_rangemask)) break;
+    bot = mid + 1;
+    }
+  }
+
+/* Found an entry in the table. Set the script and detailed type values, and
+return the general type. */
+
+*script_ptr = (ucp_table[mid].f0 & f0_scriptmask) >> f0_scriptshift;
+*type_ptr = (ucp_table[mid].f1 & f1_typemask) >> f1_typeshift;
+
+return ucp_gentype[*type_ptr];
 }
 
-/* End of pcre_ord2utf8.c */
+
+
+/*************************************************
+*       Search table and return other case       *
+*************************************************/
+
+/* If the given character is a letter, and there is another case for the
+letter, return the other case. Otherwise, return -1.
+
+Arguments:
+  c           the character value
+
+Returns:      the other case or NOTACHAR if none
+*/
+
+unsigned int
+_pcre_ucp_othercase(const unsigned int c)
+{
+int bot = 0;
+int top = sizeof(ucp_table)/sizeof(cnode);
+int mid, offset;
+
+/* The table is searched using a binary chop. You might think that using
+intermediate variables to hold some of the common expressions would speed
+things up, but tests with gcc 3.4.4 on Linux showed that, on the contrary, it
+makes things a lot slower. */
+
+for (;;)
+  {
+  if (top <= bot) return -1;
+  mid = (bot + top) >> 1;
+  if (c == (ucp_table[mid].f0 & f0_charmask)) break;
+  if (c < (ucp_table[mid].f0 & f0_charmask)) top = mid;
+  else
+    {
+    if ((ucp_table[mid].f0 & f0_rangeflag) != 0 &&
+        c <= (ucp_table[mid].f0 & f0_charmask) +
+             (ucp_table[mid].f1 & f1_rangemask)) break;
+    bot = mid + 1;
+    }
+  }
+
+/* Found an entry in the table. Return NOTACHAR for a range entry. Otherwise
+return the other case if there is one, else NOTACHAR. */
+
+if ((ucp_table[mid].f0 & f0_rangeflag) != 0) return NOTACHAR;
+
+offset = ucp_table[mid].f1 & f1_casemask;
+if ((offset & f1_caseneg) != 0) offset |= f1_caseneg;
+return (offset == 0)? NOTACHAR : c + offset;
+}
+
+
+/* End of pcre_ucp_searchfuncs.c */
 #endif /* ME_COM_PCRE */
 
 
@@ -18224,30 +18275,53 @@ return -1;
 
 
 
-/********* Start of file src/pcre_chartables.c ************/
+/********* Start of file src/pcre_xclass.c ************/
 
 
 /*************************************************
 *      Perl-Compatible Regular Expressions       *
 *************************************************/
 
-/* This file contains character tables that are used when no external tables
-are passed to PCRE by the application that calls it. The tables are used only
-for characters whose code values are less than 256.
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
 
-This is a default version of the tables that assumes ASCII encoding. A program
-called dftables (which is distributed with PCRE) can be used to build
-alternative versions of this file. This is necessary if you are running in an
-EBCDIC environment, or if you want to default to a different encoding, for
-example ISO-8859-1. When dftables is run, it creates these tables in the
-current locale. If PCRE is configured with --enable-rebuild-chartables, this
-happens automatically.
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
 
-The following #includes are present because without the gcc 4.x may remove the
-array definition from the final binary if PCRE is built into a static library
-and dead code stripping is activated. This leads to link errors. Pulling in the
-header ensures that the array gets flagged as "someone outside this compilation
-unit might reference this" and so it will always be supplied to the linker. */
+-----------------------------------------------------------------------------
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------------
+*/
+
+
+/* This module contains an internal function that is used to match an extended
+class (one that contains characters whose values are > 255). It is used by both
+pcre_exec() and pcre_def_exec(). */
+
 
 #include "me.h"
 
@@ -18256,175 +18330,101 @@ unit might reference this" and so it will always be supplied to the linker. */
 
 
 
-const unsigned char _pcre_default_tables[] = {
+/*************************************************
+*       Match character against an XCLASS        *
+*************************************************/
 
-/* This table is a lower casing table. */
+/* This function is called to match a character against an extended class that
+might contain values > 255.
 
-    0,  1,  2,  3,  4,  5,  6,  7,
-    8,  9, 10, 11, 12, 13, 14, 15,
-   16, 17, 18, 19, 20, 21, 22, 23,
-   24, 25, 26, 27, 28, 29, 30, 31,
-   32, 33, 34, 35, 36, 37, 38, 39,
-   40, 41, 42, 43, 44, 45, 46, 47,
-   48, 49, 50, 51, 52, 53, 54, 55,
-   56, 57, 58, 59, 60, 61, 62, 63,
-   64, 97, 98, 99,100,101,102,103,
-  104,105,106,107,108,109,110,111,
-  112,113,114,115,116,117,118,119,
-  120,121,122, 91, 92, 93, 94, 95,
-   96, 97, 98, 99,100,101,102,103,
-  104,105,106,107,108,109,110,111,
-  112,113,114,115,116,117,118,119,
-  120,121,122,123,124,125,126,127,
-  128,129,130,131,132,133,134,135,
-  136,137,138,139,140,141,142,143,
-  144,145,146,147,148,149,150,151,
-  152,153,154,155,156,157,158,159,
-  160,161,162,163,164,165,166,167,
-  168,169,170,171,172,173,174,175,
-  176,177,178,179,180,181,182,183,
-  184,185,186,187,188,189,190,191,
-  192,193,194,195,196,197,198,199,
-  200,201,202,203,204,205,206,207,
-  208,209,210,211,212,213,214,215,
-  216,217,218,219,220,221,222,223,
-  224,225,226,227,228,229,230,231,
-  232,233,234,235,236,237,238,239,
-  240,241,242,243,244,245,246,247,
-  248,249,250,251,252,253,254,255,
+Arguments:
+  c           the character
+  data        points to the flag byte of the XCLASS data
 
-/* This table is a case flipping table. */
-
-    0,  1,  2,  3,  4,  5,  6,  7,
-    8,  9, 10, 11, 12, 13, 14, 15,
-   16, 17, 18, 19, 20, 21, 22, 23,
-   24, 25, 26, 27, 28, 29, 30, 31,
-   32, 33, 34, 35, 36, 37, 38, 39,
-   40, 41, 42, 43, 44, 45, 46, 47,
-   48, 49, 50, 51, 52, 53, 54, 55,
-   56, 57, 58, 59, 60, 61, 62, 63,
-   64, 97, 98, 99,100,101,102,103,
-  104,105,106,107,108,109,110,111,
-  112,113,114,115,116,117,118,119,
-  120,121,122, 91, 92, 93, 94, 95,
-   96, 65, 66, 67, 68, 69, 70, 71,
-   72, 73, 74, 75, 76, 77, 78, 79,
-   80, 81, 82, 83, 84, 85, 86, 87,
-   88, 89, 90,123,124,125,126,127,
-  128,129,130,131,132,133,134,135,
-  136,137,138,139,140,141,142,143,
-  144,145,146,147,148,149,150,151,
-  152,153,154,155,156,157,158,159,
-  160,161,162,163,164,165,166,167,
-  168,169,170,171,172,173,174,175,
-  176,177,178,179,180,181,182,183,
-  184,185,186,187,188,189,190,191,
-  192,193,194,195,196,197,198,199,
-  200,201,202,203,204,205,206,207,
-  208,209,210,211,212,213,214,215,
-  216,217,218,219,220,221,222,223,
-  224,225,226,227,228,229,230,231,
-  232,233,234,235,236,237,238,239,
-  240,241,242,243,244,245,246,247,
-  248,249,250,251,252,253,254,255,
-
-/* This table contains bit maps for various character classes. Each map is 32
-bytes long and the bits run from the least significant end of each byte. The
-classes that have their own maps are: space, xdigit, digit, upper, lower, word,
-graph, print, punct, and cntrl. Other classes are built from combinations. */
-
-  0x00,0x3e,0x00,0x00,0x01,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x03,
-  0x7e,0x00,0x00,0x00,0x7e,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x03,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0xfe,0xff,0xff,0x07,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0xfe,0xff,0xff,0x07,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x03,
-  0xfe,0xff,0xff,0x87,0xfe,0xff,0xff,0x07,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0xfe,0xff,0xff,0xff,
-  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x7f,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0xff,0xff,0xff,0xff,
-  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x7f,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0x00,0x00,0x00,0x00,0xfe,0xff,0x00,0xfc,
-  0x01,0x00,0x00,0xf8,0x01,0x00,0x00,0x78,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-  0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-
-/* This table identifies various classes of character by individual bits:
-  0x01   white space character
-  0x02   letter
-  0x04   decimal digit
-  0x08   hexadecimal digit
-  0x10   alphanumeric or '_'
-  0x80   regular expression metacharacter or binary zero
+Returns:      TRUE if character matches, else FALSE
 */
 
-  0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /*   0-  7 */
-  0x00,0x01,0x01,0x00,0x01,0x01,0x00,0x00, /*   8- 15 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /*  16- 23 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /*  24- 31 */
-  0x01,0x00,0x00,0x00,0x80,0x00,0x00,0x00, /*    - '  */
-  0x80,0x80,0x80,0x80,0x00,0x00,0x80,0x00, /*  ( - /  */
-  0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c, /*  0 - 7  */
-  0x1c,0x1c,0x00,0x00,0x00,0x00,0x00,0x80, /*  8 - ?  */
-  0x00,0x1a,0x1a,0x1a,0x1a,0x1a,0x1a,0x12, /*  @ - G  */
-  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  H - O  */
-  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  P - W  */
-  0x12,0x12,0x12,0x80,0x80,0x00,0x80,0x10, /*  X - _  */
-  0x00,0x1a,0x1a,0x1a,0x1a,0x1a,0x1a,0x12, /*  ` - g  */
-  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  h - o  */
-  0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12, /*  p - w  */
-  0x12,0x12,0x12,0x80,0x80,0x00,0x00,0x00, /*  x -127 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 128-135 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 136-143 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 144-151 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 152-159 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 160-167 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 168-175 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 176-183 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 184-191 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 192-199 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 200-207 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 208-215 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 216-223 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 224-231 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 232-239 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, /* 240-247 */
-  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};/* 248-255 */
+BOOL
+_pcre_xclass(int c, const uschar *data)
+{
+int t;
+BOOL negated = (*data & XCL_NOT) != 0;
 
-/* End of pcre_chartables.c */
+/* Character values < 256 are matched against a bitmap, if one is present. If
+not, we still carry on, because there may be ranges that start below 256 in the
+additional data. */
+
+if (c < 256)
+  {
+  if ((*data & XCL_MAP) != 0 && (data[1 + c/8] & (1 << (c&7))) != 0)
+    return !negated;   /* char found */
+  }
+
+/* First skip the bit map if present. Then match against the list of Unicode
+properties or large chars or ranges that end with a large char. We won't ever
+encounter XCL_PROP or XCL_NOTPROP when UCP support is not compiled. */
+
+if ((*data++ & XCL_MAP) != 0) data += 32;
+
+while ((t = *data++) != XCL_END)
+  {
+  int x, y;
+  if (t == XCL_SINGLE)
+    {
+    GETCHARINC(x, data);
+    if (c == x) return !negated;
+    }
+  else if (t == XCL_RANGE)
+    {
+    GETCHARINC(x, data);
+    GETCHARINC(y, data);
+    if (c >= x && c <= y) return !negated;
+    }
+
+#ifdef SUPPORT_UCP
+  else  /* XCL_PROP & XCL_NOTPROP */
+    {
+    int chartype, script;
+    int category = _pcre_ucp_findprop(c, &chartype, &script);
+
+    switch(*data)
+      {
+      case PT_ANY:
+      if (t == XCL_PROP) return !negated;
+      break;
+
+      case PT_LAMP:
+      if ((chartype == ucp_Lu || chartype == ucp_Ll || chartype == ucp_Lt) ==
+          (t == XCL_PROP)) return !negated;
+      break;
+
+      case PT_GC:
+      if ((data[1] == category) == (t == XCL_PROP)) return !negated;
+      break;
+
+      case PT_PC:
+      if ((data[1] == chartype) == (t == XCL_PROP)) return !negated;
+      break;
+
+      case PT_SC:
+      if ((data[1] == script) == (t == XCL_PROP)) return !negated;
+      break;
+
+      /* This should never occur, but compilers may mutter if there is no
+      default. */
+
+      default:
+      return FALSE;
+      }
+
+    data += 2;
+    }
+#endif  /* SUPPORT_UCP */
+  }
+
+return negated;   /* char did not match */
+}
+
+/* End of pcre_xclass.c */
 #endif /* ME_COM_PCRE */
 
