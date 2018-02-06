@@ -112,7 +112,7 @@
     #define ME_TUNE "speed"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.1"
+    #define ME_VERSION "7.0.2"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "espman"
@@ -135,7 +135,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/esp"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/esp/7.0.1"
+    #define ME_VAPP_PREFIX "/usr/local/lib/esp/7.0.2"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -168,7 +168,7 @@
     #define ME_CACHE_PREFIX "/var/spool/esp/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "esp-7.0.1"
+    #define ME_SRC_PREFIX "esp-7.0.2"
 #endif
 
 /* Suffixes */
@@ -210,10 +210,10 @@
     #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 1
+    #define ME_PATCH_VERSION 2
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000001
+    #define ME_VNUM 700000002
 #endif
 
 /* Components */
