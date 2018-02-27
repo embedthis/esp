@@ -16,7 +16,7 @@ To build:
 
 To run:
 ---
-    esp run
+    esp -4
 
 or 
     expansive

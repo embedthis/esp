@@ -14408,7 +14408,7 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
     }
     EV_SET(&ev, 0, EVFILT_USER, EV_ADD | EV_CLEAR, 0, 0, NULL);
     if (kevent(ws->kq, &ev, 1, NULL, 0, NULL) < 0) {
-        mprLog("critical mpr event", 0, "Cannot issue notifier wakeup event, errno=%d", errno);
+        mprLog("critical mpr event", 4, "Cannot issue notifier wakeup event, errno=%d", errno);
         return MPR_ERR_CANT_INITIALIZE;
     }
     if ((ws->handlerMap = mprCreateList(MPR_FD_MIN, 0)) == 0) {

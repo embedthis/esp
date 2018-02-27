@@ -5,5 +5,5 @@
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
     <@ renderStyles() @>
 
-    <link rel="stylesheet" href="@~css/all.css" type="text/css" />
+    <link rel="stylesheet" href="@~/css/all.css" type="text/css" />
 

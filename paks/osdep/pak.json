@@ -1,7 +1,7 @@
 {
     "name": "osdep",
     "description": "O/S Dependent Layer",
-    "version": "0.9.3",
+    "version": "0.9.4",
     "keywords": [
         "osdep",
         "me"
@@ -34,7 +34,5 @@
     "devDependencies": {
         "pak": ">=0.11.3"
     },
-    "pak": {
-        "origin": "embedthis/osdep"
-    }
+    "origin": "embedthis/osdep"
 }

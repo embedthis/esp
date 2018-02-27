@@ -1242,8 +1242,10 @@ static cchar *formatOutput(HttpConn *conn, cchar *buf, ssize *count)
 
 static void trace(HttpConn *conn, cchar *url, int fetchCount, cchar *method, int status, MprOff contentLen)
 {
-    if (sncaselesscmp(url, "http://", 7) != 0) {
+    if (sncaselesscmp(url, "http://", 7) == 0) {
         url += 7;
+    } else if (sncaselesscmp(url, "https://", 8) == 0) {
+        url += 8;
     }
     if ((fetchCount % 200) == 1) {
         if (fetchCount == 1 || (fetchCount % 5000) == 1) {

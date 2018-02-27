@@ -1,7 +1,7 @@
 /*
    esp.json - ESP Application configuration file
 
-   See https://github.com/embedthis/esp/tree/dev/samples/config for a commented sample.
+   See https://github.com/embedthis/esp/samples/config for a commented sample.
  */
 {
     name: "layout",
@@ -10,6 +10,9 @@
     version: "1.0.0",
 
     http: {
+        pipeline: {
+            handlers: "espHandler"
+        },
         server: {
             listen: [
                 "http://127.0.0.1:4000"

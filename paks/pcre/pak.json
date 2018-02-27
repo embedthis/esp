@@ -2,7 +2,7 @@
     "name": "pcre",
     "description": "PCRE Library",
     "title": "PCRE Library",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "keywords": [
         "pcre",
         "me"
@@ -26,7 +26,5 @@
     "devDependencies": {
         "pak": ">=0.11.3"
     },
-    "pak": {
-        "origin": "embedthis/pcre"
-    }
+    "origin": "embedthis/pcre"
 }

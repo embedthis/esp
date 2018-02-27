@@ -18,7 +18,6 @@ The server listens on port 4000. Browse to:
 Code:
 ---
 * [index.esp](index.esp) - ESP test page using sessions
-* [start.me](start.me) - MakeMe build instructions
 
 Documentation:
 ---

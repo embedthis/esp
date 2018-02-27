@@ -702,7 +702,7 @@ static void initialize(int argc, char **argv)
     if (mprPathExists(path, R_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
         app->migDir = path;
         httpSetDir(route, "MIGRATIONS", path);
-    } else 
+    } else
 #endif
     {
         app->migDir = httpGetDir(route, "MIGRATIONS");
@@ -1429,32 +1429,32 @@ static MprList *getRoutes()
      */
     for (prev = -1; (route = mprGetPrevItem(app->host->routes, &prev)) != 0; ) {
         if ((eroute = route->eroute) == 0) {
-            mprLog("", 6, "Skip route name %s - no esp configuration", route->pattern);
+            mprLog("", 6, "Skip route name \"%s\" - no esp configuration", route->pattern);
             continue;
         }
 #if UNUSED
         app->require = REQ_SERVE;
         if (!eroute->compileCmd) {
             /* No ESP configuration for compiling */
-            mprLog("", 6, "Skip route name %s - no esp configuration", route->pattern);
+            mprLog("", 6, "Skip route name \"%s\" - no esp configuration", route->pattern);
             continue;
         }
 #endif
         if (filterRoutePattern) {
-            mprLog("", 6, "Check route name %s, prefix %s with %s", route->pattern, route->startWith, filterRoutePattern);
+            mprLog("", 6, "Check route name \"%s\", prefix \"%s\" with \"%s\"", route->pattern, route->startWith, filterRoutePattern);
             if (!smatch(filterRoutePattern, route->pattern)) {
                 continue;
             }
         } else if (filterRoutePrefix) {
-            mprLog("", 6, "Check route name %s, prefix %s with %s", route->pattern, route->startWith, filterRoutePrefix);
+            mprLog("", 6, "Check route name \"%s\", prefix \"%s\" with \"%s\"", route->pattern, route->startWith, filterRoutePrefix);
             if (!smatch(filterRoutePrefix, route->prefix) && !smatch(filterRoutePrefix, route->startWith)) {
                 continue;
             }
         } else {
-            mprLog("", 6, "Check route name %s, prefix %s", route->pattern, route->startWith);
+            mprLog("", 6, "Check route name \"%s\", prefix \"%s\"", route->pattern, route->startWith);
         }
         if (!requiredRoute(route)) {
-            mprLog("", 6, "Skip route %s not required for selected targets", route->pattern);
+            mprLog("", 6, "Skip route \"%s\" not required for selected targets", route->pattern);
             continue;
         }
         /*
@@ -1463,7 +1463,7 @@ static MprList *getRoutes()
         rp = 0;
         for (ITERATE_ITEMS(routes, rp, nextRoute)) {
             if (similarRoute(route, rp)) {
-                mprLog("", 6, "Skip route %s because of prior similar route", route->pattern);
+                mprLog("", 6, "Skip route \"%s\" because of prior similar route", route->pattern);
                 route = 0;
                 break;
             }
@@ -1481,20 +1481,20 @@ static MprList *getRoutes()
             continue;
         }
         if (route && mprLookupItem(routes, route) < 0) {
-            mprLog("", 6, "Using route name: %s documents:%s prefix: %s", route->pattern, route->documents,
+            mprLog("", 6, "Using route name: \"%s\" documents:\"%s\" prefix: \"%s\"", route->pattern, route->documents,
                 route->startWith);
             mprAddItem(routes, route);
         }
     }
     if (mprGetListLength(routes) == 0) {
         if (filterRoutePattern) {
-            fail("Cannot find usable ESP configuration for route %s", filterRoutePattern);
+            fail("Cannot find usable ESP configuration for route \"%s\"", filterRoutePattern);
         } else if (filterRoutePrefix) {
-            fail("Cannot find usable ESP configuration for route prefix %s", filterRoutePrefix);
+            fail("Cannot find usable ESP configuration for route prefix \"%s\"", filterRoutePrefix);
         } else {
             kp = mprGetFirstKey(app->targets);
             if (kp) {
-                fail("Cannot find usable ESP configuration for %s", kp->key);
+                fail("Cannot find usable ESP configuration for \"%s\"", kp->key);
             } else {
                 fail("Cannot find usable ESP configuration");
             }
@@ -1506,7 +1506,7 @@ static MprList *getRoutes()
      */
     for (ITERATE_KEYS(app->targets, kp)) {
         if (!kp->type) {
-            fail("Cannot find a usable route for %s", kp->key);
+            fail("Cannot find a usable route for \"%s\"", kp->key);
             return 0;
         }
     }

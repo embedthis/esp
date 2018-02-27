@@ -2,7 +2,7 @@
     "name": "certs",
     "title": "Test Certificates",
     "description": "Test Certificates",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "keywords": [
         "me",
         "ssl",
@@ -39,13 +39,11 @@
         "samples/**",
         "!start.me"
     ],
-    "pak": {
-        "export": [
-            "certs.me",
-            "*.ans",
-            "*.conf",
-            "samples/**"
-        ],
-        "origin": "embedthis/certs"
-    }
+    "export": [
+        "certs.me",
+        "*.ans",
+        "*.conf",
+        "samples/**"
+    ],
+    "origin": "embedthis/certs"
 }

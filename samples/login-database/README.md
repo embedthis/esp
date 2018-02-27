@@ -32,7 +32,7 @@ Requirements
 
 To run:
 ---
-    esp run
+    esp
 
 The server listens on port 4000 for HTTP traffic and 4443 for SSL. Browse to: 
  

@@ -19,12 +19,11 @@ Requirements
 
 To run:
 ---
-    esp run
+    esp
 
 The server listens on port 4000. Browse to: 
  
      http://localhost:4000/index.esp
-     http://localhost:4000/
 
 Code:
 ---

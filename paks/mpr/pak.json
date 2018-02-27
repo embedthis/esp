@@ -1,23 +1,23 @@
 {
-    "name": "watchdog",
-    "description": "Embedthis Watchdog",
-    "title": "Embedthis Watchdog",
-    "version": "0.2.1",
+    "name": "mpr",
+    "description": "Embedthis Multithreaded Portable Runtime",
+    "title": "Embedthis MPR",
+    "version": "7.0.1",
     "keywords": [
-        "watchdog",
-        "mpr"
+        "mpr",
+        "runtime"
     ],
     "author": {
         "name": "Embedthis Software",
         "email": "dev@embedthis.com",
         "url": "https://embedthis.com"
     },
-    "bugs": {
-        "url": "http://github.com/embedthis/watchdog/issues"
-    },
     "repository": {
         "type": "git",
-        "url": "git://github.com/embedthis/watchdog.git"
+        "url": "git://github.com/embedthis/mpr.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/mpr/issues"
     },
     "licenses": [
         {
@@ -30,18 +30,22 @@
         }
     ],
     "dependencies": {
-        "mpr": "~7"
+        "osdep": "~0.9"
+    },
+    "optionalDependencies": {
+        "certs": "~0.1",
+        "ssl": "~0.9",
+        "mpr-openssl": "~0.5",
+        "mpr-mbedtls": "~0.5"
     },
     "devDependencies": {
         "makeme": ">=0.9.0",
         "pak": ">=0.11.0"
     },
     "files": [
-        "dist/**",
-        "doc/"
+        "dist/",
+        "doc/api/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/watchdog"
-    }
+    "import": true,
+    "origin": "embedthis/mpr"
 }

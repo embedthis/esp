@@ -5,8 +5,8 @@
     ],
 }
         <h1>Deploying ESP Applications</h1>
-        <p>When your ESP application has been built, you can select just the files and directories that are 
-        required for deployment to the live site. For security, it is recommended that you <em>not</em> 
+        <p>When your ESP application has been built, you can select just the files and directories that are
+        required for deployment to the live site. For security, it is recommended that you <em>not</em>
         copy the entire ESP application tree. Rather select only the files and directories that are actually
         required for the production application.</p>
 
@@ -48,8 +48,8 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>package.json</td>
-                    <td>The <em>package.json</em> file defines the ESP application name and version.
+                    <td>pak.json</td>
+                    <td>The <em>pak.json</em> file defines the ESP application name and version.
                     </td>
                 </tr>
             </tbody>
@@ -69,7 +69,7 @@
                 "cache/*.dll",
                 "cache/*.lib",
                 "esp.json",
-                "package.json"
+                "pak.json"
             ],
             to: "deploy",
             clean: true,
@@ -85,7 +85,7 @@
             </thead>
             <tbody>
                 <tr><td>from</td><td>Array of source files. May contain wild-cards. Defaults to:
-                    <em>['dist/**', 'cache/*', 'package.json', 'esp.json']</em>.</td></tr>
+                    <em>['dist/**', 'cache/*', 'pak.json', 'esp.json']</em>.</td></tr>
                 <tr><td>flatten</td><td>Do not preserve source directory structure. Defaults to <em>false</em>.</td></tr>
                 <tr><td>to</td><td>Destination directory. Defaults to <em>./deploy</em>.</td></tr>
                 <tr><td>clean</td><td>Remove the prior contents of the destination directory.</td></tr>
@@ -117,5 +117,5 @@
 
         <h2>Deploying to different Architectures</h2>
         <p>If you are deploying to a different machine architecture, you will need to either cross-compile
-        for that target or compile the ESP application on the target. 
-        See <a href="building.html#target">Building for Target Systems</a> for more details.</p> 
+        for that target or compile the ESP application on the target.
+        See <a href="building.html#target">Building for Target Systems</a> for more details.</p>

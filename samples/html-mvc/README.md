@@ -31,7 +31,7 @@ To build:
 
 To run:
 ---
-    esp run
+    esp 
 
 or
     expansive

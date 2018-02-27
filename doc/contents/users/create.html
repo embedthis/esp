@@ -6,18 +6,18 @@
 }
             <h1>Creating ESP Applications</h1>
             <a id="creating"></a>
-            <p>To start a new ESP web application or web site, first create a new directory named for the 
+            <p>To start a new ESP web application or web site, first create a new directory named for the
             application, then run <em>esp init</em>.</p>
             <code class="inverted">$ mkdir demo
 $ cd demo
 $ <b>esp init</b></code>
-            <p>This will prepare your application to run ESP by generating two configuration files and 
+            <p>This will prepare your application to run ESP by generating two configuration files and
             creating a <em>dist</em> directory to hold your rendered application.</p>
             <ul>
-                <li>The <em>package.json</em> file to describe the name and version of your application 
+                <li>The <em>pak.json</em> file to describe the name and version of your application
                     with any installed packages.</li>
                 <li>The <em>esp.json</em> file to configure ESP and HTTP.</li>
-                <li>The <em>dist</em> directory is the final distribution directory for web content 
+                <li>The <em>dist</em> directory is the final distribution directory for web content
                     after rendering.</li>
             </ul>
 
@@ -31,7 +31,7 @@ $ <b>esp init</b></code>
 
             <p>If a directory named <em>dist</em> is not present, <em>esp</em> will serve web content from the
             current directory. It is more secure to have only the public web documents being visible in a
-            <em>dist</em> directory.</p> 
+            <em>dist</em> directory.</p>
 
             <a id="running"></a>
             <h2>Running</h2>
@@ -45,17 +45,17 @@ $ <b>esp init</b></code>
 
             <p>You can now browse to <em>http://localhost:4000/index.esp</em> to see the new page.
             The first time, there will be a brief pause as the page is compiled and saved in the
-            <em>cache</em> directory. Next time, the page will be served from memory. 
+            <em>cache</em> directory. Next time, the page will be served from memory.
             If you modify the page, it will be transparently re-compiled. If you restart <em>esp</em> the cached
             module will be loaded and the page will not be re-compiled.</p>
 
             <h2>Skeletons</h2>
-            <p>There is another way to create ESP applications and that is by installing ESP <em>skeletons</em>. 
-            Skeletons are integrated starter packages for ESP applications. Skeletons typically include default 
-            web pages, layouts, partial pages, stylesheets, scripts and required dependent packages for an easy, 
+            <p>There is another way to create ESP applications and that is by installing ESP <em>skeletons</em>.
+            Skeletons are integrated starter packages for ESP applications. Skeletons typically include default
+            web pages, layouts, partial pages, stylesheets, scripts and required dependent packages for an easy,
             one-step launch of your web application.</p>
 
-            <p>Installing skeletons is easy via the <a href="https://embedthis.com/pak/">Pak</a> utility. For example, 
+            <p>Installing skeletons is easy via the <a href="https://embedthis.com/pak/">Pak</a> utility. For example,
             to install <em>esp-html-skeleton</em>.</p>
 
             <code class="inverted">$ pak install esp-html-skeleton
@@ -69,29 +69,29 @@ $ <b>esp init</b></code>
             <p>This installs the <em>esp-html-skeleton</em> and all dependent packages. The skeleton includes:</p>
             <ul>
                 <li>A default layout page <em>layouts/default.html.exp</em></li>
-                <li>Partial pages for page headers, footers and navigation: <em>partials/header.html.exp</em>, 
+                <li>Partial pages for page headers, footers and navigation: <em>partials/header.html.exp</em>,
                     <em>partials/footer.html.exp</em> and <em>partials/nav.html.exp</em></li>
                 <li>Less stylesheet <em>contents/css/app.less</em></li>
-                <li><a href="https://embedthis.com/expansive/">Expansive</a> plugin packages to manage 
+                <li><a href="https://embedthis.com/expansive/">Expansive</a> plugin packages to manage
                     scripts, Less and CSS stylesheets.</li>
-                <li>The <em>exp-esp</em> plugin package to compile ESP pages and run ESP applications.</li> 
+                <li>The <em>exp-esp</em> plugin package to compile ESP pages and run ESP applications.</li>
             </ul>
 
-            <p>Files with a <em>.html.exp</em> extension are files that may contain server-side Javascript that 
+            <p>Files with a <em>.html.exp</em> extension are files that may contain server-side Javascript that
             Expansive will run at development render-time. To render and server pages, run <em>expansive</em>.</p>
             <pre class="code">$ expansive</pre>
 
             <p>Read more about skeletons in <a href="skeletons.html">Application Skeletons</a>.</p>
 
             <h2>Configuration Files</h2>
-            <p>The three configuration files <em>esp.json</em>, <em>package.json</em> and 
-            <em>expansive.json</em> play a central role in configuring and managing the evolution of your 
+            <p>The three configuration files <em>esp.json</em>, <em>pak.json</em> and 
+            <em>expansive.json</em> play a central role in configuring and managing the evolution of your
             application. Read more about these files in <a href="config.html">Configuring ESP</a>.</p>
 
             <h2>Directories</h2>
             <p>The <em>esp init</em> and <em>pak</em> commands will make directories when creating
             an application or installing packages and generating components.</p>
-            
+
             <table class="ui table" title="Directories">
                 <thead>
                     <tr>
@@ -111,8 +111,8 @@ $ <b>esp init</b></code>
                     </tr>
                     <tr>
                         <td>dist</td>
-                        <td>Directory of web content to serve to browser clients. Files outside the 
-                        <em>dist</em> directory are not visible to the client. If a <em>dist</em> directory 
+                        <td>Directory of web content to serve to browser clients. Files outside the
+                        <em>dist</em> directory are not visible to the client. If a <em>dist</em> directory
                         does not exist, files in the current directory will be served.</td>
                     </tr>
                     <tr>
@@ -143,7 +143,7 @@ $ <b>esp init</b></code>
                     <tr>
                         <td>lib</td>
                         <td>Library content for installed packages. These files are copied from the <em>paks</em>
-                        directory for scripts, stylesheets, fonts and resources that should be rendered to the 
+                        directory for scripts, stylesheets, fonts and resources that should be rendered to the
                         <em>dist</em> directory.</td>
                     </tr>
                     <tr>
@@ -152,7 +152,7 @@ $ <b>esp init</b></code>
                     </tr>
                     <tr>
                         <td>paks</td>
-                        <td>Installed packages. This is the location of the package's raw content. Required files are 
+                        <td>Installed packages. This is the location of the package's raw content. Required files are
                         exported into the <em>lib</em> directory and ultimately into the <em>dist</em> directory when
                         the site is rendered by <a href="https://embedthis.com/expansive/">Expansive.</a><td>
                     </tr>

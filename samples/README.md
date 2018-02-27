@@ -2,13 +2,6 @@ Embedthis ESP Samples
 ===
 
 These samples are configured to use a locally installed ESP.
-To build the samples, you will need to install Appweb and the MakeMe build tool from:
-
-* MakeMe - [https://embedthis.com/makeme/download.html](https://embedthis.com/makeme/download.html)
-
-The Pak tool may also be helpful to manage imported packages:
-
-* Pak - [https://embedthis.com/pak/download.html](https://embedthis.com/pak/download.html)
 
 The following samples are available:
 
@@ -24,14 +17,9 @@ The following samples are available:
 * [session](session/README.md)               Using ESP session state storage.
 * [upload](upload/README.md)                 ESP file upload.
 
-The "crt" directory contains scripts to create test certificate.
-
 ### Building
 
 To build the samples, see the per-sample README instructions.
-To build all, use:
-
-    me --file samples.me samples
 
 ### Documentation
 

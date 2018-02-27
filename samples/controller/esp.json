@@ -6,9 +6,13 @@
         "controllers": ".",
     },
     "http": {
+        "pipeline": {
+            "handlers": "espHandler"
+        },
         "routes": [{
+            "handler": "espHandler",
             "pattern": "^/test/{action}$",
-            "source": "service.c",
+            "source": "./service.c",
             "target": "$1",
         }]
     }

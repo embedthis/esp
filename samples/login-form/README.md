@@ -1,7 +1,7 @@
 login-form Sample
 ===
 
-This sample shows how to configure a simple form-based login using ESP. 
+This sample shows how to configure a simple form-based login using ESP.
 This sample uses the a web form for entering username and password credentials.
 
 This sample uses:
@@ -16,11 +16,11 @@ This sample uses:
 * Blowfish encryption for secure password hashing
 
 Notes:
-* This sample keeps the passwords in the package.json. The test password was created via:
+* This sample keeps the passwords in the pak.json. The test password was created via:
 
     esp user add joshua pass1
 
-* The sample is setup to use the "config" auth store which keeps the passwords in the package.json file.
+* The sample is setup to use the "config" auth store which keeps the passwords in the pak.json file.
     Set this to "system" if you wish to use passwords in the system password database (linux or macosx only).
 
 * Session cookies are created to manage server-side session state storage and to optimize authentication.
@@ -35,10 +35,10 @@ Requirements
 
 To run:
 ---
-    esp run
+    esp
 
-The server listens on port 4000 for HTTP traffic and 4443 for SSL. Browse to: 
- 
+The server listens on port 4000 for HTTP traffic and 4443 for SSL. Browse to:
+
      http://localhost:4000/
 
 This will redirect to SSL (you will get a warning due to the self-signed certificate).

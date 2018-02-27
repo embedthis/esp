@@ -3,10 +3,8 @@ ESP Upload Sample
 
 This sample shows how to configure ESP for file upload.
 
-The sample includes an upload web form: web/upload/upload-form.html. This form will
-post the uploaded file to the web/upload/upload.esp page.
-
-For security, file upload is restricted to URIs starting with /upload.
+The sample includes an upload web form: web/upload-form.html. This form will
+post the uploaded file to the web/upload.esp page.
 
 Requirements
 ---
@@ -18,7 +16,7 @@ To run:
 
 The server listens on port 4000. Browse to: 
  
-     http://localhost:4000/upload/upload-form.html
+     http://localhost:4000/upload-form.html
 
 Code:
 ---

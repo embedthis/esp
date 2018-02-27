@@ -5397,6 +5397,12 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseWebSocketsProtocol(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    route->webSocketsProtocol = sclone(prop->value);
+}
+
+
 static void parseXsrf(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetRouteXsrf(route, (prop->type & MPR_JSON_TRUE) ? 1 : 0);
@@ -5590,6 +5596,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
     httpAddConfig("http.timeouts.session", parseTimeoutsSession);
     httpAddConfig("http.trace", parseTrace);
+    httpAddConfig("http.websockets.protocol", parseWebSocketsProtocol);
     httpAddConfig("http.xsrf", parseXsrf);
 
 #if DEPRECATE
@@ -11926,7 +11933,9 @@ PUBLIC void httpServiceQueue(HttpQueue *q)
         }
         if (!(q->flags & HTTP_QUEUE_SUSPENDED)) {
             q->servicing = 1;
-            q->service(q);
+            if (q->service) {
+                q->service(q);
+            }
             if (q->flags & HTTP_QUEUE_RESERVICE) {
                 q->flags &= ~HTTP_QUEUE_RESERVICE;
                 httpScheduleQueue(q);
@@ -22869,7 +22878,7 @@ static int matchWebSock(HttpConn *conn, HttpRoute *route, int dir)
             /* ws:// URI. Client web sockets */
             if ((ws = mprAllocObj(HttpWebSocket, manageWebSocket)) == 0) {
                 httpMemoryError(conn);
-                return HTTP_ROUTE_OK;
+                return HTTP_ROUTE_OMIT_FILTER;
             }
             rx->webSocket = ws;
             ws->state = WS_STATE_CONNECTING;
@@ -22893,18 +22902,18 @@ static int matchWebSock(HttpConn *conn, HttpRoute *route, int dir)
     if (version < WS_VERSION) {
         httpSetHeader(conn, "Sec-WebSocket-Version", "%d", WS_VERSION);
         httpError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Unsupported Sec-WebSocket-Version");
-        return HTTP_ROUTE_OK;
+        return HTTP_ROUTE_OMIT_FILTER;
     }
     if ((key = httpGetHeader(conn, "sec-websocket-key")) == 0) {
         httpError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Bad Sec-WebSocket-Key");
-        return HTTP_ROUTE_OK;
+        return HTTP_ROUTE_OMIT_FILTER;
     }
     protocols = httpGetHeader(conn, "sec-websocket-protocol");
 
     if (dir & HTTP_STAGE_RX) {
         if ((ws = mprAllocObj(HttpWebSocket, manageWebSocket)) == 0) {
             httpMemoryError(conn);
-            return HTTP_ROUTE_OK;
+            return HTTP_ROUTE_OMIT_FILTER;
         }
         rx->webSocket = ws;
         ws->state = WS_STATE_OPEN;
@@ -22919,7 +22928,7 @@ static int matchWebSock(HttpConn *conn, HttpRoute *route, int dir)
             }
             if (!kind) {
                 httpError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Unsupported Sec-WebSocket-Protocol");
-                return HTTP_ROUTE_OK;
+                return HTTP_ROUTE_OMIT_FILTER;
             }
             ws->subProtocol = sclone(kind);
         } else {
