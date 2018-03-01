@@ -14472,7 +14472,7 @@ PUBLIC int mprNotifyOn(MprWaitHandler *wp, int mask)
                 if (rc == 1 && interest[0].flags & EV_ERROR && interest[0].data == EPIPE) {
                     /* Broken PIPE - just ignore */
                 } else {
-                    mprLog("error mpr event", 0, "Cannot issue notifier wakeup event, errno=%d", errno);
+                    mprLog("error mpr event", 4, "Cannot issue notifier wakeup event, errno=%d", errno);
                 }
             }
         }
@@ -14649,7 +14649,7 @@ PUBLIC void mprWakeNotifier()
         ws->wakeRequested = 1;
         EV_SET(&ev, 0, EVFILT_USER, 0, NOTE_TRIGGER, 0, NULL);
         if (kevent(ws->kq, &ev, 1, NULL, 0, NULL) < 0) {
-            mprLog("error mpr event", 0, "Cannot issue notifier wakeup event, errno=%d", errno);
+            mprLog("error mpr event", 4, "Cannot issue notifier wakeup event, errno=%d", errno);
         }
     }
 }

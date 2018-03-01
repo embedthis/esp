@@ -4542,9 +4542,9 @@ static void parseMethods(HttpRoute *route, cchar *key, MprJson *prop)
 
 
 /*
-    Note: this typically comes from package.json
+    Note: this typically comes from pak.json
  */
-static void parseMode(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseProfile(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->mode = prop->value;
 }
@@ -5547,7 +5547,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.webSocketsFrame", parseLimitsWebSocketsFrame);
     httpAddConfig("http.limits.workers", parseLimitsWorkers);
     httpAddConfig("http.methods", parseMethods);
-    httpAddConfig("http.mode", parseMode);
+    httpAddConfig("http.mode", parseProfile);
     httpAddConfig("http.name", parseName);
     httpAddConfig("http.params", parseParams);
     httpAddConfig("http.pattern", parsePattern);
@@ -5556,6 +5556,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.pipeline.handler", parsePipelineHandler);
     httpAddConfig("http.pipeline.handlers", parsePipelineHandlers);
     httpAddConfig("http.prefix", parsePrefix);
+    httpAddConfig("http.profile", parseProfile);
     httpAddConfig("http.redirect", parseRedirect);
     httpAddConfig("http.renameUploads", parseRenameUploads);
     httpAddConfig("http.routes", parseRoutes);

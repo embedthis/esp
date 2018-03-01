@@ -4431,7 +4431,7 @@ static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
 #if !ME_STATIC
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, 
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg,
     bool *loaded);
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
 static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cacheName);
@@ -4454,8 +4454,8 @@ PUBLIC int espOpen(MprModule *module)
     handler->close = closeEsp;
     handler->start = startEsp;
 
-    /* 
-        Using the standard 'incoming' callback that simply transfers input to the queue head 
+    /*
+        Using the standard 'incoming' callback that simply transfers input to the queue head
         Applications should read by defining a notifier for READABLE events and then calling httpGetPacket
         on the read queue.
      */
@@ -5047,7 +5047,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
 
 /************************************ Support *********************************/
 /*
-    Create a per user session database clone. 
+    Create a per user session database clone.
     Used for demos so one users updates to not change anothers view of the database.
  */
 static void pruneDatabases(Esp *esp)
@@ -5172,7 +5172,7 @@ static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target)
 /*
     WARNING: GC yield
  */
-static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, 
+static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg,
     bool *loaded)
 {
     EspRoute    *eroute;
@@ -5496,10 +5496,9 @@ static void manageEsp(Esp *esp, int flags)
     }
 }
 
-
 /*********************************** Directives *******************************/
 /*
-    Load the ESP configuration file esp.json (eroute->configFile) and an optional package.json file
+    Load the ESP configuration file esp.json (eroute->configFile) and an optional pak.json file
     WARNING: may yield
  */
 PUBLIC int espLoadConfig(HttpRoute *route)
@@ -5517,7 +5516,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         return 0;
     }
     home = eroute->configFile ? mprGetPathDir(eroute->configFile) : route->home;
-    package = mprJoinPath(home, "package.json");
+    package = mprJoinPath(home, "pak.json");
     modified = 0;
     ifConfigModified(route, eroute->configFile, &modified);
     ifConfigModified(route, package, &modified);
@@ -5712,7 +5711,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     documents = mprJoinPath(route->home, "dist");
 #if DEPRECATED || 1
     /*
-        Consider keeping documents, web and public 
+        Consider keeping documents, web and public
      */
     if (!mprPathExists(documents, X_OK)) {
         documents = mprJoinPath(route->home, "documents");
@@ -5725,9 +5724,9 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
                     if (!mprPathExists(documents, X_OK)) {
 #if ME_APPWEB_PRODUCT
                         if (!esp->hostedDocuments && mprPathExists("install.conf", R_OK)) {
-                            /* 
-                                This returns the documents directory of the default route of the default host 
-                                When Appweb switches to appweb.json, then just it should be loaded with package.json
+                            /*
+                                This returns the documents directory of the default route of the default host
+                                When Appweb switches to appweb.json, then just it should be loaded with pak.json
                              */
                             char *output;
                             bool yielding = mprSetThreadYield(NULL, 0);
@@ -5737,7 +5736,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
                                 documents = route->home;
                             }
                             mprSetThreadYield(NULL, yielding);
-                        } else 
+                        } else
 #endif
                         {
                             documents = route->home;
@@ -5748,7 +5747,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
         }
     }
 #endif
-    
+
     /*
         Detect if a controllers directory exists. Set controllers to "." if absent.
      */
