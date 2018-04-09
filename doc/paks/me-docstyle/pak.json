@@ -37,20 +37,18 @@
         "jquery": "~2",
         "semantic-ui": "~2"
     },
-    "pak": {
-        "export": [
-            {
-                "from": [
-                    "contents/",
-                    "layouts/",
-                    "partials/"
-                ],
-                "to": "${TOP}/"
-            }
-        ],
-        "manage": [
-            "expansive.json"
-        ],
-        "origin": "embedthis/me-docstyle"
-    }
+    "export": [
+        {
+            "from": [
+                "contents/",
+                "layouts/",
+                "partials/"
+            ],
+            "to": "${TOP}/"
+        }
+    ],
+    "manage": [
+        "expansive.json"
+    ],
+    "origin": "embedthis/me-docstyle"
 }

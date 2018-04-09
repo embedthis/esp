@@ -1713,6 +1713,9 @@ PUBLIC bool httpLogin(HttpConn *conn, cchar *username, cchar *password)
         /* If using auto-login, replace the username */
         username = auth->username;
         password = 0;
+
+    } else if (!username || !password) {
+        return 0;
     }
     if (!(verifyUser)(conn, username, password)) {
         return 0;
@@ -2074,6 +2077,13 @@ PUBLIC int formParse(HttpConn *conn, cchar **username, cchar **password)
 {
     *username = httpGetParam(conn, "username", 0);
     *password = httpGetParam(conn, "password", 0);
+
+    if (username && *username == 0) {
+        return MPR_ERR_BAD_FORMAT;
+    }
+    if (password && *password == 0) {
+        return MPR_ERR_BAD_FORMAT;
+    }
     return 0;
 }
 
@@ -2135,6 +2145,12 @@ PUBLIC int httpBasicParse(HttpConn *conn, cchar **username, cchar **password)
     }
     if (password) {
         *password = sclone(cp);
+    }
+    if (username && *username == 0) {
+        return MPR_ERR_BAD_FORMAT;
+    }
+    if (password && *password == 0) {
+        return MPR_ERR_BAD_FORMAT;
     }
     return 0;
 }
@@ -14582,16 +14598,17 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
         return HTTP_ROUTE_OK;
     }
     if (!httpIsAuthenticated(conn)) {
-        httpGetCredentials(conn, &username, &password);
-        if (!httpLogin(conn, username, password)) {
+        if (!httpGetCredentials(conn, &username, &password) || !httpLogin(conn, username, password)) {
             if (!conn->tx->finalized) {
                 if (auth && auth->type) {
                     (auth->type->askLogin)(conn);
                 } else {
                     httpError(conn, HTTP_CODE_UNAUTHORIZED, "Access Denied, login required");
                 }
-                /* Request has been denied and a response generated. So OK to accept this route. */
             }
+            /* 
+                Request has been denied and a response generated. So OK to accept this route. 
+             */
             return HTTP_ROUTE_OK;
         }
     }
@@ -14602,7 +14619,9 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
             /* Request has been denied and a response generated. So OK to accept this route. */
         }
     }
-    /* OK to accept route. This does not mean the request was authenticated - an error may have been already generated */
+    /* 
+        OK to accept route. This does not mean the request was authenticated - an error may have been already generated 
+     */
     return HTTP_ROUTE_OK;
 }
 
@@ -14622,8 +14641,7 @@ static int unauthorizedCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *
     if (httpIsAuthenticated(conn)) {
         return HTTP_ROUTE_REJECT;
     }
-    httpGetCredentials(conn, &username, &password);
-    if (httpLogin(conn, username, password)) {
+    if (httpGetCredentials(conn, &username, &password) && httpLogin(conn, username, password)) {
         return HTTP_ROUTE_REJECT;
     }
     return HTTP_ROUTE_OK;

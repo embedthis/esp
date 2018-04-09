@@ -1,7 +1,7 @@
 /*
     expansive.es - Configuration for exp-css
 
-    Transform by prefixing and minifying. Uses autoprefixer and less.
+    Transform by prefixing and minifying. Uses postcss and less.
  */
 Expansive.load({
 
@@ -34,8 +34,9 @@ Expansive.load({
                     if (!(service.files is Array)) {
                         service.files = [ service.files ]
                     }
-                    expansive.control.collections.styles =
-                        (expansive.control.collections.styles + service.files).unique()
+                    if (expansive.control.collections.styles.length == 0) {
+                        expansive.control.collections.styles = service.files
+                    }
                 }
                 if (!service.minify) {
                     expansive.transforms['css-minify'].enable = false
@@ -72,7 +73,7 @@ Expansive.load({
                     let minified = vfile.replaceExt('min.css')
                     /*
                         Use this source file if forced+miify, or a suitable minfied version does not exist or !usemin
-                     */                           
+                     */
                     if ((service.minify && service.force) ||
                         !(minified.exists && service.usemin && (!service.usemap || vfile.replaceExt('css.map').exists))) {
                         if (service.minify && service.dotmin) {
@@ -88,11 +89,11 @@ Expansive.load({
             name:       'prefix',
             mappings:   'css',
             render:     function(contents) {
-                let autoprefixer = Cmd.locate('autoprefixer')
-                if (autoprefixer) {
-                    contents = expansive.run(autoprefixer, contents)
+                let postcss = Cmd.locate('postcss')
+                if (postcss) {
+                    contents = expansive.run(postcss + ' --use autoprefixer', contents)
                 } else {
-                    trace('Warn', 'Cannot find autoprefixer')
+                    trace('Warn', 'Cannot find postcss')
                 }
                 return contents
             }
@@ -110,7 +111,7 @@ Expansive.load({
                 }
                 return contents
             }
-       
+
         }, {
             name:     'render',
             mappings: {
@@ -122,8 +123,7 @@ Expansive.load({
                 service.hash = {}
 
                 /*
-                    Render styles is based on 'collections.styles' which defaults to '**.css' and is modified
-                    via expansive.json and addItems.
+                    Render styles is based on 'collections.styles' which defaults to '**.css' and is modified via expansive.json and addItems.
                  */
                 global.renderStyles = function(filter = null, extras = []) {
                     let collections = expansive.collections
@@ -141,7 +141,7 @@ Expansive.load({
                             let vfile = directories.contents.join(style)
                             let base = vfile.trimEnd('.min.css').trimEnd('.css')
 
-                            let map = base.joinExt('min.map', true).exists || base.joinExt('css.map', true).exists || 
+                            let map = base.joinExt('min.map', true).exists || base.joinExt('css.map', true).exists ||
                                 base.joinExt('.min.css.map', true).exists
                             if (vfile.endsWith('min.css')) {
                                 if (service.usemin && (!service.usemap || map)) {
@@ -149,7 +149,7 @@ Expansive.load({
                                 }
                             } else {
                                 let minified = vfile.replaceExt('min.css').exists
-                                let map = vfile.replaceExt('min.map').exists || vfile.replaceExt('css.map').exists || 
+                                let map = vfile.replaceExt('min.map').exists || vfile.replaceExt('css.map').exists ||
                                     vfile.replaceExt('.min.css.map').exists
                                 if ((service.minify && service.force) || !minified || !(service.usemap && map)) {
                                     if (service.minify && service.dotmin) {
@@ -169,13 +169,16 @@ Expansive.load({
                         This is hased and saved.
                      */
                     if (!service.hash[collections.styles]) {
-                        let files = directories.contents.files(collections.styles, 
+                        let files = directories.contents.files(collections.styles,
                             { contents: true, directories: false, relative: true})
+                        if (expansive.control.filters) {
+                            files = files.filter(function(e) { return e.glob(expansive.control.filters) })
+                        }
                         files = expansive.orderFiles(files, "css")
                         service.hash[collections.styles] = buildStyleList(files).unique()
                     }
                     for each (style in service.hash[collections.styles]) {
-                        if (filter && !Path(script).glob(filter)) {
+                        if (filter && !Path(style).glob(filter)) {
                             continue
                         }
                         let uri = meta.top.join(style).trimStart('./')
@@ -247,7 +250,7 @@ Expansive.load({
                 }
 
                 /*
-                    Local function to handle style attributes 
+                    Local function to handle style attributes
                 */
                 function handleStyleAttributes(contents, meta, state, transform): String {
                     let result = ''
@@ -329,7 +332,7 @@ Expansive.load({
                         for (let [key,value] in state.elements) {
                             value = value.trim().split('\n').transform(function (e) e.trim()).join('\n    ')
                             //  Match {
-                            value = value.replace('    }', '}') 
+                            value = value.replace('    }', '}')
                             state.elements[key] = value
                         }
                         styles += state.elements.join('\n\n') + '\n\n'

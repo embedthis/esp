@@ -7,15 +7,15 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="The amazing C web framework" />
+    <meta name="description" content="Configuring ESP" />
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
         rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
     <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -165,23 +165,23 @@
 
             <code class="inverted">$ <b>esp serve</b></code>
 
-            <p>However, larger ESP applications are configured via the 
-            <em>esp.json</em>, <em>package.json</em> and <em>expansive.json</em>
+            <p>However, larger ESP applications are configured via the
+            <em>esp.json</em>, <em>pak.json</em> and <em>expansive.json</em>
             files that permits fine-grained control over how the application will run </p>
 
-            <p>The <em>package.json</em> file manages:</p>
+            <p>The <em>pak.json</em> file manages:</p>
             <ul>
                 <li>Application name, title and description</li>
                 <li>Application version</li>
                 <li>Directory locations</li>
-                <li>Application execution mode</li>
+                <li>Application execution profile</li>
                 <li>Extension package dependencies</li>
             </ul>
 
             <p>The <em>esp.json</em> file manages:</p>
             <ul>
                 <li>Client-side scripts</li>
-                <li>Per-mode (debug or release) configuration</li>
+                <li>Per-profile (debug or release) configuration</li>
                 <li>Response Caching</li>
                 <li>Request timeouts</li>
                 <li>Error handling</li>
@@ -196,16 +196,16 @@
                 <li>Expansive plugins for processing content</li>
             </ul>
 
-            <p>This document will cover the various <em>esp.json</em> properties and the steps to configure ESP 
+            <p>This document will cover the various <em>esp.json</em> properties and the steps to configure ESP
             applications. See the <a href="https://embedthis.com/expansive/doc/">Expansive Documentation</a>
             for details about the <em>expansive.json</em>.</p>
-            <p>If you are hosting your application in Appweb you will need to specify additional 
+            <p>If you are hosting your application in Appweb you will need to specify additional
             configuration in the <em>appweb.conf</em> configuration file. For details, see
                 the <a href="hosting.html">Hosting in Appweb</a>.</p>
 
-            <h2>package.json</h2>
-            <p>The <em>package.json</em> file contains your application name, description, version and 
-            specifies any required packages that your application depends upon. The format is a JSON literal. 
+            <h2>pak.json</h2>
+            <p>The <em>pak.json</em> file contains your application name, description, version and
+            specifies any required packages that your application depends upon. The format is a JSON literal.
             For example:</p>
 <code class="inverted">{
     "name": "blog",
@@ -217,10 +217,10 @@
     }
 }</code>
             <h3>Name and Description</h3>
-            <p>All ESP applications have name, title, description and version properties that uniquely identify 
-            the application. The application name is used in C function entry points, so it is important that 
-            it only contain valid C identifer characters. The title provides a multi-word title suitable 
-            for display to the user. The description is used should you publish your application in a package 
+            <p>All ESP applications have name, title, description and version properties that uniquely identify
+            the application. The application name is used in C function entry points, so it is important that
+            it only contain valid C identifer characters. The title provides a multi-word title suitable
+            for display to the user. The description is used should you publish your application in a package
             catalog.</p>
 
             <h3>Dependencies</h3>
@@ -228,13 +228,13 @@
             Entries will be added as packages are installed via <em>pak install</em>. For example:</p>
             <code class="inverted">$ pak install jquery</code>
             <p>ESP relies heavily on the <a href="https://embedthis.com/pak/">Pak</a> package manager to install
-            and manage extension packages. There are many thousands to choose from the 
+            and manage extension packages. There are many thousands to choose from the
             <a href="https://embedthis.com/pak/">Pak</a> and NPM package catalogs.</p>
 
             <h2>esp.json</h2>
             <p>The <em>esp.json</em> file provides configuration for ESP and how HTTP requests will be served.
-            The format is an enhanced JSON literal that supports property names without quotes, multi-line 
-            literals and commas on trailing properties. Here is the initial generated contents of the 
+            The format is an enhanced JSON literal that supports property names without quotes, multi-line
+            literals and commas on trailing properties. Here is the initial generated contents of the
             <em>esp.json</em></p>
             <code>{
     esp: {
@@ -254,35 +254,35 @@
 }</code>
 
             <h2>Creating Configuration Files</h2>
-            <p>To create an <em>esp.json</em> and <em>package.json</em>, run the following in an empty directory.</p>
+            <p>To create an <em>esp.json</em> and <em>pak.json</em>, run the following in an empty directory.</p>
             <code class="inverted"><b>esp init</b></code>
 
-            <p>Alternatively, or if you install an ESP skeleton, then the <em>esp.json</em> and <em>package.json</em> 
+            <p>Alternatively, or if you install an ESP skeleton, then the <em>esp.json</em> and <em>pak.json</em>
             files will be created for you. For example:</p>
 
             <code class="inverted"><b>pak install esp-html-skeleton</b></code>
 
-            <a id="mode"></a>
+            <a id="profile"></a>
             <h2>Configuration Mode</h2>
             <p>ESP provides a convenient way to select a set of properties that correspond to a desired execution
-            mode such as: <em>debug</em>, <em>test</em> or <em>release</em> modes. In each mode, different 
+            profile such as: <em>debug</em>, <em>test</em> or <em>release</em> profiles. In each profile, different
             configuration may be defined.</p>
 
-            <p>The selected mode is specified by the <em>mode</em> property in the <em>package.json</em> file.
-            This then selects a collection of properties of that same name that will be copied to the 
-            top-level before the application runs. By modifying the <em>mode</em> setting, an entirely 
+            <p>The selected profile is specified by the <em>profile</em> property in the <em>pak.json</em> file.
+            This then selects a collection of properties of that same name that will be copied to the
+            top-level before the application runs. By modifying the <em>profile</em> setting, an entirely
             different execution configuration may be selected. ESP makes this easy via the command:</p>
 
-            <code class="inverted">$ esp mode debug</code>
+            <code class="inverted">$ esp profile debug</code>
 
-            <p>This will set the <em>pak.mode</em> property to <em>debug</em> in the <em>package.json</em> file
+            <p>This will set the <em>pak profile</em> property to <em>debug</em> in the <em>pak.json</em> file
             and select the <em>debug</em> collection of properties in the <em>esp.json</em> file.
-            The <em>mode</em> property is centralized in the <em>package.json</em> file because the 
-            <a href="https://embedthis.com/pak/">Pak</a> and <a href="https://embedthis.com/expansive/">Expansive</a> 
-            utilities follow a similar scheme and having one single <em>mode</em> property is
-            desirable over each utility replicating the mode definition.</p>
+            The <em>profile</em> property is centralized in the <em>pak.json</em> file because the
+            <a href="https://embedthis.com/pak/">Pak</a> and <a href="https://embedthis.com/expansive/">Expansive</a>
+            utilities follow a similar scheme and having one single <em>profile</em> property is
+            desirable over each utility replicating the profile definition.</p>
 
-            <h2>Package.json Properties</h2>
+            <h2>pak.json Properties</h2>
             <table title="top-level collections" class="ui table segment">
                 <thead>
                     <tr><th>Name</th><th>Description</th></tr>
@@ -294,8 +294,8 @@
                     </tr>
                     <tr>
                         <td>dependencies</td>
-                        <td>Extension packages used by the ESP application. The key is the pak name and the value is a 
-                        <a href="http://semver.org">SemVer</a> version expression. 
+                        <td>Extension packages used by the ESP application. The key is the pak name and the value is a
+                        <a href="http://semver.org">SemVer</a> version expression.
                         See <a href="https://embedthis.com/pak/doc/index.html">Pak</a> Documentation for details.</td>
                     </tr>
                     <tr>
@@ -312,9 +312,9 @@
                             in controller and application function entry point names.</td>
                     </tr>
                     <tr>
-                        <td>pak.mode</td>
-                        <td>Configuration mode for the application that selects a property collection of the 
-                        same name from the <em>modes</em> collection in the <em>package.json</em> and 
+                        <td>profile</td>
+                        <td>Configuration profile for the application that selects a property collection of the
+                        same name from the <em>profiles</em> collection in the <em>pak.json</em> and
                         <em>esp.json</em> files. Those properties are copied up to the top level.</td>
                     </tr>
                     <tr>
@@ -330,7 +330,7 @@
 
             <a name="dependencies"></a>
             <h3>Dependency Expressions</h3>
-            <p>Dependent extension packages may be specified in the <em>dependencies</em> property. This is an object 
+            <p>Dependent extension packages may be specified in the <em>dependencies</em> property. This is an object
             collection of paks with version expressions. When Pak installs a package, an entry for the new pak
             will be added to the dependency collection. For example:</p>
 
@@ -342,7 +342,7 @@
             <h4>Dependency Versions</h4>
             <p>ESP versions comply with the <a href="http://semver.org">SemVer</a> version specification.
             Briefly, this means versions are expressed :</p>
-            <code class="inverted">MAJOR.MINOR.PATCH-PRERELEASE</code> 
+            <code class="inverted">MAJOR.MINOR.PATCH-PRERELEASE</code>
             <p>Dependency versions may also include expressions that describe a range of acceptable pak versions.</p>
             <ul>
                 <li>version &mdash; (allows pre-releases)</li>
@@ -394,7 +394,7 @@
                     </tr>
                     <tr>
                         <td>layouts</td>
-                        <td>Directory for <a href="https://embedthis.com/expansive/">Expansive</a> layout pages. 
+                        <td>Directory for <a href="https://embedthis.com/expansive/">Expansive</a> layout pages.
                         Defaults to "<em>layouts</em>".</td>
                     </tr>
                     <tr>
@@ -407,7 +407,7 @@
                     </tr>
                     <tr>
                         <td>partials</td>
-                        <td>Directory for <a href="https://embedthis.com/expansive/">Expansive</a> partial pages. 
+                        <td>Directory for <a href="https://embedthis.com/expansive/">Expansive</a> partial pages.
                         Defaults to "<em>partials</em>".</td>
                     </tr>
                     <tr>
@@ -447,8 +447,8 @@
                     </tr>
 
                     <tr>
-                        <td>modes</td>
-                        <td>Collection of mode specific configuration. Typically there will be collections for
+                        <td>profiles</td>
+                        <td>Collection of profile specific configuration. Typically there will be collections for
                         <em>debug</em> or <em>release</em> but can be any identifier word. </td>
                     </tr>
                 </tbody>
@@ -463,7 +463,7 @@
                 <tbody>
                     <tr>
                         <td>mappings</td>
-                        <td><p>Set of property keys that map server-side properties to client-side properties to send to the client. 
+                        <td><p>Set of property keys that map server-side properties to client-side properties to send to the client.
                         Mappings select a subset of properties so the entire JSON configuration is not sent to the client.
                         For example: </p>
 <code class="inverted">
@@ -479,10 +479,10 @@ mappings: {
                     <tr>
 <!--  MOB - move -->
                         <td>render</td>
-                        <td><p>Ordered set of scripts to send to the client when parsing the ESP <em>scripts()</em> 
-                            API. This may include the "*" wildcard to match any file or "**" to match any file in 
+                        <td><p>Ordered set of scripts to send to the client when parsing the ESP <em>scripts()</em>
+                            API. This may include the "*" wildcard to match any file or "**" to match any file in
                             any directory. For example:</p>
-                  <code class="inverted">render: {                    
+                  <code class="inverted">render: {
     js: [
         'lib/angular/angular.js',
         'lib/angular/angular-animate.js',
@@ -506,11 +506,11 @@ mappings: {
                         <td>app</td>
                         <td><p>Define whether the directory contains an ESP application or stand-alone ESP pages.
                         For example:<code class="inverted">app: true</code></p>
-                        <p>An ESP application follows an MVC design pattern and provides controllers to respond to 
-                        client requests and views to render responses. An ESP application differs from stand-alone 
-                        ESP pages in that it pre-configures ESP for the MVC pattern. This includes defining the 
-                        standard directories: <em>cache</em>, 
-                        <em>controllers</em>, <em>contents</em>, <em>db</em>, <em>layouts</em>, 
+                        <p>An ESP application follows an MVC design pattern and provides controllers to respond to
+                        client requests and views to render responses. An ESP application differs from stand-alone
+                        ESP pages in that it pre-configures ESP for the MVC pattern. This includes defining the
+                        standard directories: <em>cache</em>,
+                        <em>controllers</em>, <em>contents</em>, <em>db</em>, <em>layouts</em>,
                         <em>migrations</em>, <em>paks</em> and <em>partials</em>.</p>
                         </td>
                     </tr>
@@ -519,19 +519,19 @@ mappings: {
                         <td><p>Define external ESP applications to load. ESP can host multiple applications by defining
                             the URI prefix and ESP configuration file for each application. This directive takes three
                             forms. The first is just a simple string with the path to the configuration file for a single
-                            application. The URI prefix is determined by the last path segment before the 
+                            application. The URI prefix is determined by the last path segment before the
                             <em>esp.json</em> filename.</p>
                             <p>The second form takes an array of esp configuration file names. Both these forms may use
-                            wild-cards in the filename. The last form is an array of URI prefix and config file 
+                            wild-cards in the filename. The last form is an array of URI prefix and config file
                             properties for each application.</p>
 
                         <p>Examples: <code class="inverted">
 apps: 'blog/esp.json',
 apps: [ 'apps/*/esp.json', 'test/*/esp.json' ],
-apps: [ 
-    { 
-        prefix: '/blog', 
-        config: 'apps/blog/esp.json' 
+apps: [
+    {
+        prefix: '/blog',
+        config: 'apps/blog/esp.json'
     }
 ]
 </code></p></td>
@@ -542,8 +542,8 @@ apps: [
                     </tr>
                     <tr>
                         <td>combine</td>
-                        <td>Define whether to combine the entire ESP application into a single output source 
-                            file and library. This is typically enabled for release mode. Defaults to false.</td>
+                        <td>Define whether to combine the entire ESP application into a single output source
+                            file and library. This is typically enabled for release profile. Defaults to false.</td>
                     </tr>
                     <tr>
                         <td>compile</td>
@@ -562,7 +562,7 @@ apps: [
                     <tr>
                         <td>keep</td>
                         <td>Preserve intermediate source code in the cache directory for debugging. Defaults to false
-                            unless the package.json pak.mode is set to "debug".</td>
+                            unless the pak.json profile is set to "debug".</td>
                     </tr>
                     <tr>
                         <td>preload</td>
@@ -571,13 +571,13 @@ apps: [
                     </tr>
                     <tr>
                         <td>rules</td>
-                        <td>Path to the JSON file containing the compilation rules. Defaults to 
-                            <em>esp-compile.json</em> in the ESP installation directory. If you want to modify 
+                        <td>Path to the JSON file containing the compilation rules. Defaults to
+                            <em>esp-compile.json</em> in the ESP installation directory. If you want to modify
                             this file, take a copy and then set the <em>compile</em> property to point to it.</td>
                     </tr>
                     <tr>
                         <td>update</td>
-                        <td>Determine if updating of responding applications and pages is enabled. 
+                        <td>Determine if updating of responding applications and pages is enabled.
                             Some web frameworks will automatically rebuild or reload applications if the source is modified.</td>
                     </tr>
                 </tbody>
@@ -585,7 +585,7 @@ apps: [
 
             <a name="http"></a>
             <h3>Http Configuration &mdash; http.*</h3>
-            <p>All properties in the <em>http</em> collection with the exception of the <em>http.server</em> 
+            <p>All properties in the <em>http</em> collection with the exception of the <em>http.server</em>
             collection apply per-route. This means these properties they may be nested in routes defined under
             <em>http.routes</em>. The <em>http.server</em> collection is ignored if ESP is hosted in a web server
             such as Appweb.</p>
@@ -646,7 +646,7 @@ conditions: {
     missing: 'true'
     directory: '${request:filename}
     exists: '! exists ${request:filename}
-    match: '${header:User-Agent} (Chrome|Safari) 
+    match: '${header:User-Agent} (Chrome|Safari)
 </pre>
                         </td>
                     </tr>
@@ -660,7 +660,7 @@ conditions: {
   or
 compress: [ 'html', 'js', 'css' ]
 </code>
-                            <p>If the Expansive exp-gzip extension is installed, suitable static content will be 
+                            <p>If the Expansive exp-gzip extension is installed, suitable static content will be
                                 automatically gzipped.</p>
                             </td>
                     </tr>
@@ -679,7 +679,7 @@ compress: [ 'html', 'js', 'css' ]
                     </tr>
                     <tr>
                         <td>domain</td>
-                        <td>Matching domain for virtual hosting. 
+                        <td>Matching domain for virtual hosting.
                         For example: <code class="inverted">domain: '*embedthis',</code></td>
                     </tr>
                     <tr>
@@ -694,7 +694,7 @@ compress: [ 'html', 'js', 'css' ]
                         <td>formats</td>
                         <td>Collection default data formats for various data types. The <em>response</em> property specifies
                         the default client-server interchange format. It can be set to "html" or "json".
-                        For dates, the property specifies an 
+                        For dates, the property specifies an
                         <a href="https://docs.angularjs.org/api/ng/filter/date">Angular</a> style date format. For
                         floats, it specifies the default number of decimal places.
                         For example:
@@ -707,8 +707,8 @@ compress: [ 'html', 'js', 'css' ]
 -->
                     <tr>
                         <td>headers</td>
-                        <td>Collection response header directives. This includes sub-collections for headers to 
-                            "<em>add</em>", "<em>remove</em>"" and "<em>set</em>". The "<em>remove</em>"" collection is a list, whereas 
+                        <td>Collection response header directives. This includes sub-collections for headers to
+                            "<em>add</em>", "<em>remove</em>"" and "<em>set</em>". The "<em>remove</em>"" collection is a list, whereas
                             "<em>add</em>" and "<em>set</em>" are collections.
                             For example:
 <code class="inverted">headers: {
@@ -725,7 +725,7 @@ compress: [ 'html', 'js', 'css' ]
 
                     <tr>
                         <td>hosts</td>
-                        <td><p>A single server may support multiple virtual hosts on a shared IP address endpoint. 
+                        <td><p>A single server may support multiple virtual hosts on a shared IP address endpoint.
                         The client HTTP request includes a <em>Host</em> header that specifies the desired hostname.
                         The supported virtual hosts are configured via the <em>hosts</em> directive which specifies one
                         more more virtual host configurations.</p>
@@ -749,7 +749,7 @@ hosts: [ {
 }]
 </pre>
                            </td>
-                    </tr>                   
+                    </tr>
                     <tr>
                         <td>indexes</td>
                         <td>Ordered list of index documents to serve for directory level requests. For example:
@@ -776,8 +776,8 @@ hosts: [ {
                         <td>
                         <a name="limits"></a>
                         Resource limits to "<em>sandbox</em>" the server.
-                        Note that values may either be numbers or strings using natural language suffixes like 
-                        <em>MB</em> or <em>GB</em>. The <em>rxBody</em>, <em>rxForm</em>, <em>txBody</em> and 
+                        Note that values may either be numbers or strings using natural language suffixes like
+                        <em>MB</em> or <em>GB</em>. The <em>rxBody</em>, <em>rxForm</em>, <em>txBody</em> and
                         <em>upload</em> properties may be set to <em>unlimited</em> to disable the limit checking.
                         For example:
 <code class="inverted">limits: {
@@ -814,7 +814,7 @@ methods: [
     'get',
     'post',
 ],</code>
-                        Can also set "*" for all possible methods. 
+                        Can also set "*" for all possible methods.
                         The default set of methods is: "DELETE, GET, OPTIONS, POST, PUT".
                         </td>
                     </tr>
@@ -836,18 +836,18 @@ params: [
                     <tr>
                         <td>pattern</td>
                         <td><p>Matching URI regular expression for requests to be served by the current route.
-                        The route pattern is an enhanced JavaScript-compatibile regular expression. It is enhanced by 
-                        optionally embedding braced tokens "{name}" in the pattern. During request URI matching, 
-                        these tokens are extracted and defined in the request params and are available to the request 
+                        The route pattern is an enhanced JavaScript-compatibile regular expression. It is enhanced by
+                        optionally embedding braced tokens "{name}" in the pattern. During request URI matching,
+                        these tokens are extracted and defined in the request params and are available to the request
                         and to route targets. To use the standard regular expression repeat syntax <em>{}</em>, quote
                         the braces with back quote <em>\</em>.</p>
-                        <p>Sub-expressions and token expressions are also available in route targets as numbered 
+                        <p>Sub-expressions and token expressions are also available in route targets as numbered
                         tokens <em>$N</em>. For example:</p>
                         <code class="inverted">pattern: '^/app/(.*)(\.html)$',</code>
 
                         <p>This will enable the target <em>$1.${request.Language=fr}.$2</em>.</p>
                         <p>Use <em>^</em> to anchor to the start of the URI and $ for the end of the URI.
-                        If the pattern does not start with <em>^</em>, the route pattern will have its parent 
+                        If the pattern does not start with <em>^</em>, the route pattern will have its parent
                         route prefix prepended to the pattern.</p>
                         </td>
                     </tr>
@@ -885,9 +885,9 @@ pipeline: {
         from: '/pressRelease',
         status: 301,
         to: 'https://${request:serverName}/fixedPressRelease.html'
-    } 
+    }
 ]</code>
-                    <p>Alternatively, a rule may be just the string "https://" in which case all HTTP content 
+                    <p>Alternatively, a rule may be just the string "https://" in which case all HTTP content
                     will be redirected over HTTPS.</p></td>
                     </tr>
                     <tr>
@@ -900,9 +900,9 @@ pipeline: {
                     </tr>
                     <tr>
                         <td>resources</td>
-                        <td><p>Create routes sets for the requested resources. Route sets select 
+                        <td><p>Create routes sets for the requested resources. Route sets select
                         pre-defined route sets. Some of the available sets are: 'esp-server' and 'esp-restful'.
-                        Resource groups create RESTful routes for a resource that has multiple 
+                        Resource groups create RESTful routes for a resource that has multiple
                         instances. Singletons create RESTful routes for singleton resources.</p>
 <code class="inverted">
 resources: {
@@ -914,7 +914,7 @@ resources: {
                     </tr>
                     <tr>
                         <td>routes</td>
-                        <td>Ordered list of routes. This may be a pre-defined route set name or it may be an 
+                        <td>Ordered list of routes. This may be a pre-defined route set name or it may be an
                         array of routes. Examples:
                             <code class="inverted">
 routes: 'esp-restful',
@@ -945,7 +945,7 @@ routes [ {
                         <td>showErrors</td>
                         <td>Controls if application errors should be displayed in the browser.
                             Set to true to display errors in the browser. Defaults to true if the source is compiled in
-                            for debug and false if compiled in release mode.</td>
+                            for debug and false if compiled in release profile.</td>
                     </tr>
                     <tr>
                         <td>source</td>
@@ -962,10 +962,10 @@ routes [ {
                     <tr>
                         <td>stream</td>
                         <td>Define whether the request body data should be buffered or stream. This property should be an array of objects with "mime", "uri" and "stream" properties. For example: <code class="inverted">stream: [
-    { 
-        mime: 'application/custom-mime', 
-        stream: false, 
-        uri: '/some-uri' 
+    {
+        mime: 'application/custom-mime',
+        stream: false,
+        uri: '/some-uri'
     },
 ],</code></td>
                     <tr>
@@ -1013,8 +1013,8 @@ routes [ {
                         <td>xsrf</td>
                         <td>Control if an XSRF anti-forgery token should be checked for POST forms.
                             If enabled, server side ESP form pages should use the following to
-                            generate a hidden input field that contains the XSRF token. 
-                            <code class="inverted">&lt;% inputSecurityToken(); %&gt;</code> 
+                            generate a hidden input field that contains the XSRF token.
+                            <code class="inverted">&lt;% inputSecurityToken(); %&gt;</code>
                             Ajax requests should use the following to add the security token to the Ajax request payload.
                             Both mechanisms will add an XSRF HTTP header named <em>X-XSRF-TOKEN</em> to the response.
                             For example, this code generates the token on the server and utilizes its value in
@@ -1060,8 +1060,8 @@ server: {
                     </tr>
                     <tr>
                         <td>defenses</td>
-                        <td>Set of defense rules that can be utilized by <em>monitors</em>. 
-                            
+                        <td>Set of defense rules that can be utilized by <em>monitors</em>.
+
                             <code class="inverted">defenses: {
     block: {
         args: {
@@ -1130,9 +1130,9 @@ server: {
                 <tbody>
                     <tr>
                         <td>auto</td>
-                        <td>Collection of automatic login related properties. The <em>auto.name</em> property defines an 
+                        <td>Collection of automatic login related properties. The <em>auto.name</em> property defines an
                         account name that the application will automatically login. This is useful during development to bypass the
-                        login step. The <em>auto.roles</em> property defines the roles for which the user will be 
+                        login step. The <em>auto.roles</em> property defines the roles for which the user will be
                         authorized. The <em>url</em> property defines the URI for the login dialog.</td>
                     </tr>
                     <tr>
@@ -1153,8 +1153,8 @@ server: {
     users: [ 'julie' ]
 }, </code>
                         If <em>users</em> is defined, then a user must login before using the application. The
-                        <em>users</em> property may be set to a list of users, a string with a single 
-                        user name or <em>true</em> to imply any authenticated user. Note: it is 
+                        <em>users</em> property may be set to a list of users, a string with a single
+                        user name or <em>true</em> to imply any authenticated user. Note: it is
                         application dependent how the required login feature is implemented.</td>
                         </tr>
                         <tr>
@@ -1174,11 +1174,11 @@ server: {
                     </tr>
                     <tr>
                         <td>session</td>
-                        <td><p>Configure the user session details. 
+                        <td><p>Configure the user session details.
                             The <em>cookie</em> property can define a unique prefix to use for the session cookie.
-                            The default session cookie prefix is: "-http-session-". If set to 'none', then no cookie is 
+                            The default session cookie prefix is: "-http-session-". If set to 'none', then no cookie is
                             emitted. The <em>visible</em>property specifies whether the cookie is readable by scripts in the browser.
-                            By default, the session cookie is not visible to Javascript. It is desirable to keep the 
+                            By default, the session cookie is not visible to Javascript. It is desirable to keep the
                             session cookie invisible to minimize XSS security vulnerabilities.</p>
                             <p>ESP implements this by adding the <em>httpOnly</em> option on the <em>Set-Cookie</em>
                             response header.</p>
@@ -1310,12 +1310,12 @@ session: {
                     <tr>
                         <td>ciphers</td>
                         <td>List of acceptable ciphers to use. These names are dependant on the SSL provider selected
-                        The format of this directive varies depending on the SSL protocol stack. 
-                        The OpenSSL stack uses its own proprietary 
-                        cipher naming. If using OpenSSL, please consult the 
-                        <a href="http://www.openssl.org/docs/apps/ciphers.html">OpenSSL</a> documentation for how to format 
-                        the ciphers.  Other stack use the standard 
-                        <a href="http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-3">IANA Cipher Suite Registry</a>a names. 
+                        The format of this directive varies depending on the SSL protocol stack.
+                        The OpenSSL stack uses its own proprietary
+                        cipher naming. If using OpenSSL, please consult the
+                        <a href="http://www.openssl.org/docs/apps/ciphers.html">OpenSSL</a> documentation for how to format
+                        the ciphers.  Other stack use the standard
+                        <a href="http://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-3">IANA Cipher Suite Registry</a>a names.
                         </td>
                     </tr>
                     <tr>
@@ -1324,8 +1324,8 @@ session: {
                     </tr>
                     <tr>
                         <td>verify</td>
-                        <td>Control whether client certificates are required and verified. If 
-                        <em>verify.client</em> is true, the client must provide a valid certificate. If 
+                        <td>Control whether client certificates are required and verified. If
+                        <em>verify.client</em> is true, the client must provide a valid certificate. If
                         <em>verify.issuer</em> is true, the client's certificate must be verifiable by the
                         specified <em>authority</em> certificate.</td>
                     </tr>
@@ -1372,8 +1372,8 @@ session: {
     </div>
 
     <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/semantic-ui/semantic.min.js"></script>
-    <script src="../scripts/sidebar.min.js"></script>
+    <script src="../lib/semantic-ui/semantic.js"></script>
+    <script src="../scripts/sidebar.js"></script>
      
 
     

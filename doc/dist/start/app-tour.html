@@ -7,15 +7,15 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="The amazing C web framework" />
+    <meta name="description" content="ESP Applications Tour" />
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
         rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
     <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.min.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="../css/all.css" rel="stylesheet" type="text/css" />
+    <link href="../css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -162,12 +162,12 @@
             <h1>ESP Applications Tour</h1>
             <p>This tour provides an overview of creating ESP applications and the ESP MVC Framework.</p>
 
-            <p>To create more complex ESP applications than a simple hello-world, we will typically 
-            want a bit more structure and content. The ESP MVC framework provides this structure 
+            <p>To create more complex ESP applications than a simple hello-world, we will typically
+            want a bit more structure and content. The ESP MVC framework provides this structure
             and with sensible defaults, it greatly minimizes your workload.</p>
 
             <h2>Essential Tools</h2>
-            <p>So you can work along as the tour progresses, install the following products and tools. 
+            <p>So you can work along as the tour progresses, install the following products and tools.
                 ESP applications and this tour makes good use of the
                 <a href="https://embedthis.com/pak/">Pak</a> and
                 <a href="https://embedthis.com/expansive/">Expansive</a> tools from Embedthis.
@@ -180,9 +180,9 @@
             </ul>
 
             <p>Before starting, first make sure you have read the <a href="quick.html">Quick Start</a>,
-            and the <a href="tour.html">ESP Tour</a> and that you have ESP, Pak and Expansive installed on your 
+            and the <a href="tour.html">ESP Tour</a> and that you have ESP, Pak and Expansive installed on your
             system so you can type along as you go.</p>
-            
+
             <p>
                 <a class="ui labeled small icon blue button" href="https://embedthis.com/esp/download.html">
                     <i class="download cloud icon"></i>
@@ -200,13 +200,13 @@
             <a id="blog"></a>
             <h2>Creating a New Application</h2>
             <p>ESP provides skeletons to get you started quickly. These skeletons packages provide
-            the core structure of your application and include pages, templates, stylesheets and scaffolds 
+            the core structure of your application and include pages, templates, stylesheets and scaffolds
             that are used to generate models, views and controllers as your application grows. </p>
 
             <p>To create a new ESP application, we will use the <a href="https://embedthis.com/pak/">Pak</a>
             package manager to install the <em>esp-html-skeleton</em> application skeleton. The <em>esp-html-skeleton</em>
-            is a starter package for ESP HTML MVC applications with server-side views. Other skeletons 
-            include the <em>esp-angular-skeleton</em> for ESP Angular applications with client-side views.</p> 
+            is a starter package for ESP HTML MVC applications with server-side views. Other skeletons
+            include the <em>esp-angular-skeleton</em> for ESP Angular applications with client-side views.</p>
 
             <h3>Install the Skeleton</h3>
             <p>First make a directory named <em>blog</em> and then install the <em>esp-html-skeleton</em> package.</p>
@@ -228,7 +228,7 @@ $ pak install esp-html-skeleton</b>
                 <li><p>Installed the <em>esp-html-skeleton</em>, <em>esp-mvc</em>,
                     <em>exp-js</em>, <em>exp-less</em>, <em>exp-css</em>,
                     and exp-esp packages. You can see these via the <em>pak list</em> command.</p>
-                <li>Created <em>esp.json</em> and <em>package.json</em> files that configures and control 
+                <li>Created <em>esp.json</em> and <em>pak.json</em> files that configures and control
                     how your application will run.</li>
             </ul>
 
@@ -252,7 +252,7 @@ $ pak install esp-html-skeleton</b>
                         <td>Primary ESP configuration file</td>
                     </tr>
                     <tr>
-                        <td>package.json</td>
+                        <td>pak.json</td>
                         <td>This file specifies the application name, version and dependent packages.</td>
                     </tr>
                     <tr>
@@ -269,7 +269,7 @@ $ pak install esp-html-skeleton</b>
                     </tr>
                     <tr>
                         <td>dist</td>
-                        <td>Distribution directory for browser visible web content including scripts, 
+                        <td>Distribution directory for browser visible web content including scripts,
                             pages and style-sheets. This is created from <em>contents</em>, <em>layouts</em>,
                             <em>lib</em> and <em>partials</em>.</td>
                     </tr>
@@ -295,17 +295,17 @@ $ pak install esp-html-skeleton</b>
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="run"></a>
             <h2>Access your Application</h2>
-            <p>To access your application enter <em>http://localhost:4000</em> in your browser. 
+            <p>To access your application enter <em>http://localhost:4000</em> in your browser.
             You should see your first application home page.</p>
-            <img src="../images/esp/app-tour/home.png" alt="home" class="bare-screen" /> 
- 
+            <img src="../images/esp/app-tour/home.png" alt="home" class="bare-screen" />
+
             <a id="scaffolds"></a>
             <h2>Scaffolds</h2>
-            <p>Scaffolding is a quick way to generate pieces of your application. Scaffolds are stub MVC resource 
-            managers that provide basic Create-Read-Update-Delete (CRUD) for a resource or group of resources. 
+            <p>Scaffolding is a quick way to generate pieces of your application. Scaffolds are stub MVC resource
+            managers that provide basic Create-Read-Update-Delete (CRUD) for a resource or group of resources.
             ESP scaffolds include:</p>
 
             <ul>
@@ -340,24 +340,24 @@ $ <b>esp generate scaffold post title:string body:text</b>
 
             <ul>
                 <li>A server-side post Controller <em>controllers/post.c</em></li>
-                <li>Server-side HTML views for listing posts <em>contents/post/list.esp</em> and editing posts 
+                <li>Server-side HTML views for listing posts <em>contents/post/list.esp</em> and editing posts
                     <em>contents/post/edit.esp</em>.</li>
                 <li>A database migration to create the post database table.</li>
             </ul>
 
             <p>The command also ran the migration to create the database and table.</p>
             <p>Now if you set your browser to the home page, you will now see an empty listing of blog posts.
-            <img src="../images/esp/app-tour/post-list.png" alt="postList" class="bare-screen" /> 
-            
+            <img src="../images/esp/app-tour/post-list.png" alt="postList" class="bare-screen" />
+
             <a id="newPosts"></a></p>
             <h2>Create New Posts</h2>
             <p>The New Post button directs your browser to the <em>/post/</em> URL. This form is being
-            rendered on the client from the <em>contents/post/edit.esp</em> template. Behind the scenes, the 
-            browser asks for the <em>/post/init</em> URL to determine what are the required input fields 
+            rendered on the client from the <em>contents/post/edit.esp</em> template. Behind the scenes, the
+            browser asks for the <em>/post/init</em> URL to determine what are the required input fields
             for a post.</p>
             <img src= "../images/esp/app-tour/create.png" alt="createPost" class="bare-screen" />
             <p>Fill in the input fields and click OK to add the new blog post.</p>
-            
+
             <img src= "../images/esp/app-tour/post-list-2.png" alt="postList" class="bare-screen" />
             <p>The home page is now updated with the first post.  You can click on the post title or body
             to edit its contents. This will run the same post-edit.html template that was used to create the post.</p>
@@ -365,11 +365,11 @@ $ <b>esp generate scaffold post title:string body:text</b>
             <h2 class=section>On the Server</h2>
             <p>When <em>OK</em> button is clicked to create a post, the browser invokes the
             <em>/post/</em> URL with the HTTP <em>POST</em> method to create the blog post. Esp
-            parses this URL and and selects the appropriate request route and handler for the request. It 
+            parses this URL and and selects the appropriate request route and handler for the request. It
             then identifies <em>post</em> as the name of the server-side controller invokes the <em>createPost</em>
             action routine to service the request. The controller is automatically compiled and loaded if required.
             <p>A controller file typically defines many such C functions called actions, that are bound to specific URLs
-            via ESP routes. Actions are defined using the <em>espDefineAction</em> API in the initialization 
+            via ESP routes. Actions are defined using the <em>espDefineAction</em> API in the initialization
             function of the controller.</p>
             <p>A minimal post controller file looks like this:</p>
             <pre class="code">
@@ -383,7 +383,7 @@ static void createPost() {
         renderView("post/edit");
     }
 }
-ESP_EXPORT int esp_controller_blog_post(EspRoute *eroute) 
+ESP_EXPORT int esp_controller_blog_post(EspRoute *eroute)
 {
     espDefineAction(route, "post/create", createPost);
     return 0;
@@ -393,19 +393,19 @@ ESP_EXPORT int esp_controller_blog_post(EspRoute *eroute)
             <p>The job of the action is to respond to the request and generate the response via views for the
             client. Here is the <em>listPost</em> action in the generated <em>post</em> controller.</p>
             <pre class="code">
-static void listPost() { 
+static void listPost() {
     renderView("post/list");
 }
 </pre>
             <p>The <em>listPost</em> action simply renders the <em>post/list.esp</em> view page.</p>
 
             <h2>Code Errors</h2>
-            <p>What happens if you make a mistake entering the embedded "C" code in your controller or in an ESP web page. 
+            <p>What happens if you make a mistake entering the embedded "C" code in your controller or in an ESP web page.
             Say you forgot the semicolon in the last example. You will see an error like this in your browser:</p>
-            <img src="../images/esp/app-tour/error.png" alt="homeLink" class="bare-screen" /> 
+            <img src="../images/esp/app-tour/error.png" alt="homeLink" class="bare-screen" />
             <p>If you look at the esp console output, you also see full details about the request that failed.</p>
             <pre class="code">
-14:10:20 1-0-1-1 request.error msg='Cannot run command: clang -c -DME_DEBUG -g -Wall -DPIC -fPIC -arch x86_64 -I. -Isrc -I/usr/local/lib/esp/5.4.0/inc controllers/post.c -o cache/controller_c1a25719dee243438859faa7d60c148d.o 
+14:10:20 1-0-1-1 request.error msg='Cannot run command: clang -c -DME_DEBUG -g -Wall -DPIC -fPIC -arch x86_64 -I. -Isrc -I/usr/local/lib/esp/5.4.0/inc controllers/post.c -o cache/controller_c1a25719dee243438859faa7d60c148d.o
 
 controllers/post.c=46:28: error: expected ';' after expression
     renderView("post/list")
@@ -413,19 +413,19 @@ controllers/post.c=46:28: error: expected ';' after expression
                            ;
 1 error generated.
 </pre>
-            
+
             <a id="validations"></a>
             <h2>Validations</h2>
-            <p>Complete validation of all user entered data is essential for a robust and secure application. Some 
-            validation may be performed at the client, but full validation must always be fully implemented on 
-            the server incase the client or network connection is compromised. ESP provides flexible validation 
+            <p>Complete validation of all user entered data is essential for a robust and secure application. Some
+            validation may be performed at the client, but full validation must always be fully implemented on
+            the server incase the client or network connection is compromised. ESP provides flexible validation
             methods to help ensure the data you save at the server is correct.</p>
 
             <p>You can add calls to validate record data before it is saved to the database. To do this, edit the
-            <em>controllers/post.c</em> file and add calls to <a 
+            <em>controllers/post.c</em> file and add calls to <a
             href="../ref/api/edi.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944">ediAddValidation</a>.</p>
             <pre class="code">
-ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module) 
+ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
 {
     <b>Edi *edi;</b>
     /* Existing code */
@@ -438,17 +438,17 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
 </pre>
             <p>This will cause the database to automatically ensure that the <em>title</em> and <em>body</em> fields are
             not blank and that the <em>title</em> is unique in the post database table.</p>
-           
+
             <p>If you click OK in the Post <em>edit</em> web page without entering any data
             you will see the following:</p>
-            
+
             <img src="../images/esp/app-tour/validate.png" alt="validate" class="bare-screen" />
             <p>This automatically identified the input fields in error and generated a summary of the errors above the
             form. Of course, this default error highlighting behavior can be overridden if desired by modifying the
             application style sheets.<p>
-           
-            <p>Other validation types include: <em>checkNumber</em>, <em>checkBoolean</em>, <em>checkDate</em> 
-            and <em>checkFormat</em>. You can also define new validation types by calling 
+
+            <p>Other validation types include: <em>checkNumber</em>, <em>checkBoolean</em>, <em>checkDate</em>
+            and <em>checkFormat</em>. You can also define new validation types by calling
             <a href="../ref/api/edi.html#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46">ediDefineValidation</a>.
 
             <a id="hosting"></a>
@@ -458,10 +458,10 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
 
             <pre class="code">esp generate appweb</pre>
 
-            <p>This will generate a stand-alone appweb.conf that includes the required 
+            <p>This will generate a stand-alone appweb.conf that includes the required
                 EspApp directive to define your application. </p>
             <pre class="code">EspApp prefix="/demo" config="/path/to/esp.json</pre>
-            
+
 
             <a id="learn"></a>
             <h2>Learn More ...</h2>
@@ -478,8 +478,8 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
     </div>
 
     <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/semantic-ui/semantic.min.js"></script>
-    <script src="../scripts/sidebar.min.js"></script>
+    <script src="../lib/semantic-ui/semantic.js"></script>
+    <script src="../scripts/sidebar.js"></script>
      
 
     

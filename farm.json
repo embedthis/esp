@@ -21,11 +21,6 @@
             bucket: 'embedthis.apt',
             sign: 'B3C7BC73',
             keys: ['aws-embedthis-ops', 'gpg'],
-            profiles: {
-                prod: {
-                    primary: true,
-                },
-            }
         },
     },
 }

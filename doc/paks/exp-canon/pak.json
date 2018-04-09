@@ -1,7 +1,7 @@
 {
     "name": "exp-canon",
     "description": "Canonicalize index pages for search engines",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "keywords": [
         "expansive-plugin",
         "canon"
@@ -15,7 +15,5 @@
         "expansive": ">=0.7.0",
         "pak": ">=0.11.3"
     },
-    "pak": {
-        "origin": "embedthis/exp-canon"
-    }
+    "origin": "embedthis/exp-canon"
 }

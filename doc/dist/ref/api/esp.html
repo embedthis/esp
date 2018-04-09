@@ -7,15 +7,15 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="The amazing C web framework" />
+    <meta name="description" content="Esp API" />
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
         rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
     <link href="../../images/favicon.ico" rel="shortcut icon" />
-    <link href="../../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/api.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="../../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="../../css/all.css" rel="stylesheet" type="text/css" />
+    <link href="../../css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -194,7 +194,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gaae88740666af5ee9b21ad39648857db8" class="nameRef">espAddHeader</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a header to the transmission using a format string.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gad772b64162b7f4eb80ef1a3a1795175d" class="nameRef">espAddHeaderString</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a header to the transmission.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gaa6e0943224a139d93f465b7ff2060c36" class="nameRef">espAddHomeRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a route for the home page.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gae90883055ee760dca316820bf3d81f96" class="nameRef">espAddPak</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *version)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add the specified pak to the package.json packs list.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gae90883055ee760dca316820bf3d81f96" class="nameRef">espAddPak</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *version)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add the specified pak to the pak.json packs list.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga9e1210b2a79fcbf13a85d2f78ccdb0bd" class="nameRef">espAddParam</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a request parameter value if it is not already defined.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gab12f7c6108ac1d0a972fc837e9b9dec8" class="nameRef">espAddRouteSet</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *set)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a route set.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gaa50588be6fe69e04738fc0276d7afbbb" class="nameRef">espAppendHeader</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Append a transmission header.</td></tr>
@@ -216,7 +216,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gac142434246bc5558dfe73a78ded7a7f0" class="nameRef">espFinalize</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Indicate the request is finalized.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gadf50b51bf7ab10d828e85be140c005c5" class="nameRef">espFlush</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_req_1ga71e492b0a2ad58a5eb75616556da4f92" class="nameRef">espGetAuth</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current route HttpAuth object.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_route_1ga97b13560e8c066d70810b2df3e8d7f78" class="nameRef">espGetConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *defaultValue)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a configuration value from the ESP package.json.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_route_1ga97b13560e8c066d70810b2df3e8d7f78" class="nameRef">espGetConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *defaultValue)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a configuration value from the ESP pak.json.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_conn" class="ref">HttpConn*</a></td><td><a href="#group___esp_req_1ga41a42035766ff5d2fd0fd74588e167ea" class="nameRef">espGetConn</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current request connection.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a></td><td><a href="#group___esp_req_1ga3cb308121f5659d48f58c217959c3800" class="nameRef">espGetContentLength</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content length.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1gadf281290e500c98b3c7214c410b32599" class="nameRef">espGetContentType</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content type.</td></tr>
@@ -281,12 +281,12 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gad0c3cc923d09313ed81476b74c32ab00" class="nameRef">espRenderVar</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the value of a request variable to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gaef2c8a287bbbd155ceeb919f281e8e5b" class="nameRef">espRenderView</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *view, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an ESP view page to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#group___esp_route_1ga1f27d029ea92c75a16d2c67d31f64141" class="nameRef">espRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Return the corresponding EspRoute for the given Route.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gacd7c962cf79038c3d7604c72dc43bbdb" class="nameRef">espSaveConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Save the in-memory ESP package.json configuration to the default location for the ESP application defined by the specified route.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gacd7c962cf79038c3d7604c72dc43bbdb" class="nameRef">espSaveConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Save the in-memory ESP pak.json configuration to the default location for the ESP application defined by the specified route.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gaed0422d33553efa73195661fd80efaee" class="nameRef">espSendGrid</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a database grid as a JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1ga1ba6eef08895cd89005dd96262d1cd53" class="nameRef">espSendRec</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a database record as a JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gabc11971fcd5d12fe7a9907b2c564781b" class="nameRef">espSendResult</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> success)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a JSON response result.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga54f5ce21966922b0883d1942ccbeae8d" class="nameRef">espSetAutoFinalizing</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> on)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Enable auto-finalizing for this request.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gada3b399d10e3f1eaee004cde256e379f" class="nameRef">espSetConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a configuration value to the ESP package.json.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gada3b399d10e3f1eaee004cde256e379f" class="nameRef">espSetConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a configuration value to the ESP pak.json.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga6ea189a01c1c680e3f5d77396b3bd3a8" class="nameRef">espSetConn</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the current request connection.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gae9b3e3ddb3bf784d77cba59045dfeb81" class="nameRef">espSetContentLength</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a> length)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a content length header in the transmission.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga7bb7c062a2fb64c1756c93dc79481c2c" class="nameRef">espSetContentType</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *mimeType)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the transmission (response) content mime type.</td></tr>
@@ -305,7 +305,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga3151f73107b752661efecbacf9011894" class="nameRef">espSetStatus</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, int status)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a Http response status.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga4ed2f95cccb206fc9069c0a77c5c1e62" class="nameRef">espShowRequest</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Show request details.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#esp_8h_1a2b6ab1f6cf9333533ece4ed0f871e0a6" class="nameRef">espStaticInitialize</a>(<a href="#group___esp_route_1ga8de65adb179b1ab04bf7c1d621ffff9c" class="ref">EspModuleEntry</a> entry, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *appName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *routeName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Initialize a static library ESP module.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_route_1ga115c8f838daf7b187cb8a07787734f37" class="nameRef">espTestConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *desired)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a configuration property from the ESP package.json has a desired value.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_route_1ga115c8f838daf7b187cb8a07787734f37" class="nameRef">espTestConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *desired)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a configuration property from the ESP pak.json has a desired value.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga2d10fdd68ab00d306d344c815f7655e7" class="nameRef">espUpdateCache</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *uri, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *data, int lifesecs)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Update the cached content for a request.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga585c648e2d4b3b6183bf22cc976b7d4b" class="nameRef">espUpdateRec</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a record to the database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga47475da9d7a9da33d0d07cd2a8211b8d" class="nameRef">espUri</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI.</td></tr>
@@ -314,7 +314,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gadac116554b543b7c4228c018a85882f5" class="nameRef">flush</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_abbrev_1ga35c88eaa69d732f54eb5829a85dffcce" class="nameRef">getAuth</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the auth object for the current route.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___esp_abbrev_1ga4ab3c77c072c0e1b7a21439a85240d7e" class="nameRef">getColumns</a>(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a list of column names.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga9647d3deb6392c55c9c1a144da45f797" class="nameRef">getConfig</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a field from the application package.json configuration.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga9647d3deb6392c55c9c1a144da45f797" class="nameRef">getConfig</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a field from the application pak.json configuration.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_conn" class="ref">HttpConn*</a></td><td><a href="#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3" class="nameRef">getConn</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the connection object.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a></td><td><a href="#group___esp_abbrev_1gad6c78e62403541ae5c8695a126fa73d2" class="nameRef">getContentLength</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content length.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga0c4e333f8e42f16b3d071f10de8f823c" class="nameRef">getContentType</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content type.</td></tr>
@@ -370,7 +370,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga7a4f867b83fd68a2f888fe2850572d6e" class="nameRef">removeSessionVar</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a session state variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593" class="nameRef">render</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a formatted string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1gaa3ab885ce858d809f47571c64681b96d" class="nameRef">renderCached</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render cached content.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1ga680e8d96388553f684b29b6007e2411a" class="nameRef">renderConfig</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the package.json.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1ga680e8d96388553f684b29b6007e2411a" class="nameRef">renderConfig</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the pak.json.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga5c6a2717cd75e9e0069b206507e5207e" class="nameRef">renderError</a>(int status, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an error message back to the client and finalize the request.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gacf71df9dabcd97ec88211ef4561c5033" class="nameRef">renderFeedback</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *types)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render feedback messages.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1gaa1e37f244a0e0796df494dfb756472a8" class="nameRef">renderFile</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a file back to the client.</td></tr>
@@ -730,10 +730,10 @@
 (<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)
   </div>
   <div class="apiDetail">
-<p>Get a field from the application package.json configuration.</p>
+<p>Get a field from the application pak.json configuration.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param">field</td><td>Property field name in package.json. May contain dots.</td>
+    <tr><td class="param">field</td><td>Property field name in pak.json. May contain dots.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The field value. Returns &quot;&quot; if the field is not found.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
@@ -1349,7 +1349,7 @@ This is a smart input control that will call the appropriate input control based
   </div>
   <div class="apiDetail">
 <p>Test the the application mode.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This is typically set to &quot;debug&quot; or &quot;release&quot;. The mode is defined by the &quot;mode&quot; property in the package.json.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This is typically set to &quot;debug&quot; or &quot;release&quot;. The mode is defined by the &quot;profile&quot; property in the pak.json.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">check</td><td>Mode to compare with the current application mode.</td>
@@ -1676,7 +1676,7 @@ This is a smart input control that will call the appropriate input control based
 ()
   </div>
   <div class="apiDetail">
-<p>Render the package.json.</p>
+<p>Render the pak.json.</p>
     <dl><dt>Returns:</dt><dd>A count of the bytes actually written.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -4455,7 +4455,7 @@ Windows SDK.
 (<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *version)
   </div>
   <div class="apiDetail">
-<p>Add the specified pak to the package.json packs list.</p>
+<p>Add the specified pak to the pak.json packs list.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>HttpRoute defining the ESP application.</td>
@@ -4688,7 +4688,7 @@ Windows SDK.
 (<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *defaultValue)
   </div>
   <div class="apiDetail">
-<p>Get a configuration value from the ESP package.json.</p>
+<p>Get a configuration value from the ESP pak.json.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>HttpRoute defining the ESP application.</td>
@@ -4771,7 +4771,7 @@ Windows SDK.
   </div>
   <div class="apiDetail">
 <p>Configure an ESP application.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Load the esp.json and package.json configuration files.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Load the esp.json and pak.json configuration files.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>
@@ -4814,7 +4814,7 @@ Windows SDK.
 (<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)
   </div>
   <div class="apiDetail">
-<p>Save the in-memory ESP package.json configuration to the default location for the ESP application defined by the specified route.</p>
+<p>Save the in-memory ESP pak.json configuration to the default location for the ESP application defined by the specified route.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>HttpRoute defining the ESP application.</td>
@@ -4833,8 +4833,8 @@ Windows SDK.
 (<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)
   </div>
   <div class="apiDetail">
-<p>Set a configuration value to the ESP package.json.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This updates the in-memory copy of the package.json only.</dd></dl>
+<p>Set a configuration value to the ESP pak.json.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This updates the in-memory copy of the pak.json only.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>HttpRoute defining the ESP application.</td>
@@ -4855,7 +4855,7 @@ Windows SDK.
 (<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *desired)
   </div>
   <div class="apiDetail">
-<p>Test if a configuration property from the ESP package.json has a desired value.</p>
+<p>Test if a configuration property from the ESP pak.json has a desired value.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>HttpRoute defining the ESP application.</td>
@@ -5114,8 +5114,8 @@ Visual Studio environment.
     </div>
 
     <script src="../../lib/jquery/jquery.min.js"></script>
-    <script src="../../lib/semantic-ui/semantic.min.js"></script>
-    <script src="../../scripts/sidebar.min.js"></script>
+    <script src="../../lib/semantic-ui/semantic.js"></script>
+    <script src="../../scripts/sidebar.js"></script>
      
 
     

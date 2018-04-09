@@ -12,26 +12,24 @@
         "url": "git://github.com/embedthis/exp-reload.git"
     },
     "dependencies": {
-        "jquery": "~2"
+        "jquery": "~3"
     },
     "devDependencies": {
         "expansive": ">=0.7.0",
         "pak": ">=0.11.3"
     },
-    "pak": {
-        "export": [
-            {
-                "from": [
-                    "partials/**",
-                    "contents/**"
-                ],
-                "to": "${TOP}"
-            },
-            {
-                "from": "*.js.exp",
-                "to": "exp-reload"
-            }
-        ],
-        "origin": "embedthis/exp-reload"
-    }
+    "export": [
+        {
+            "from": [
+                "partials/**",
+                "contents/**"
+            ],
+            "to": "${CONTENTS}/.."
+        },
+        {
+            "from": "*.js.exp",
+            "to": "exp-reload"
+        }
+    ],
+    "origin": "embedthis/exp-reload"
 }
