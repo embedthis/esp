@@ -401,7 +401,6 @@
 #if ME_UNIX_LIKE
     #include    <sys/ioctl.h>
     #include    <sys/mman.h>
-    #include    <sys/poll.h>
     #include    <sys/resource.h>
     #include    <sys/select.h>
     #include    <sys/time.h>
@@ -409,6 +408,7 @@
     #include    <sys/utsname.h>
     #include    <sys/uio.h>
     #include    <sys/wait.h>
+    #include    <poll.h>
     #include    <unistd.h>
 #endif
     #include    <time.h>
@@ -1257,8 +1257,9 @@ extern "C" {
 #endif
 
 #if LINUX
-    extern int pthread_mutexattr_gettype (__const pthread_mutexattr_t *__restrict __attr, int *__restrict __kind) __THROW;
-    extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind) __THROW;
+    // __THROW;
+    extern int pthread_mutexattr_gettype (__const pthread_mutexattr_t *__restrict __attr, int *__restrict __kind);
+    extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind);
     extern char **environ;
 #endif
 
