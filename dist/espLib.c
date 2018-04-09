@@ -5212,7 +5212,7 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
     }
     if (mprLookupModule(source) == 0) {
         if (!mprPathExists(module, R_OK)) {
-            *errMsg = "Module does not exist";
+            *errMsg = sfmt("Module does not exist: %s", module);
             unlock(esp);
             return MPR_ERR_CANT_FIND;
         }
@@ -5223,7 +5223,7 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             return MPR_ERR_MEMORY;
         }
         if (mprLoadModule(mp) < 0) {
-            *errMsg = "Cannot load compiled esp module";
+            *errMsg = sfmt("Cannot load compiled esp module: %s", module);
             unlock(esp);
             return MPR_ERR_CANT_READ;
         }
