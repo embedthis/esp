@@ -5,9 +5,8 @@
     "version": "1.0.0",
     "license": "GPL",
     "dependencies": {
-        "esp-html-skeleton": "~5.3"
+        "exp-css": "~0.3",
+        "exp-js": "~0.3"
     },
-    "pak": {
-        "mode": "debug"
-    }
+    "profile": "debug"
 }

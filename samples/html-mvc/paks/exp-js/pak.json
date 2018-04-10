@@ -1,0 +1,24 @@
+{
+    "name": "exp-js",
+    "description": "Js Plugin for Expansive",
+    "version": "0.3.2",
+    "keywords": [
+        "expansive-plugin",
+        "js"
+    ],
+    "licenses": "GPL",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/exp-js.git"
+    },
+    "devDependencies": {
+        "expansive": ">=0.7.0",
+        "pak": ">=0.11.3"
+    },
+    "scripts": {
+        "postcache": {
+            "script": "if (!Cmd.locate('uglifyjs')) { if (!Cmd.locate('npm')) { throw 'Cannot locate the \"npm\" utility.' } else { run('npm install -g uglify-js')}}"
+        }
+    },
+    "origin": "embedthis/exp-js"
+}
