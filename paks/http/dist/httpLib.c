@@ -3733,8 +3733,8 @@ PUBLIC void httpInitConfig(HttpRoute *route)
 
 PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
 {
-    MprJson     *config, *obj, *modeObj;
-    cchar       *data, *errorMsg, *mode;
+    MprJson     *config, *obj, *profiles;
+    cchar       *data, *errorMsg, *profile;
 
     if (!path) {
         return 0;
@@ -3755,27 +3755,16 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
     if ((obj = mprGetJsonObj(config, "include")) != 0) {
         parseInclude(route, config, obj);
     }
-#if DEPRECATE
-{
-    MprJson *obj;
-    if ((obj = mprGetJsonObj(config, "app.http")) != 0) {
-        mprRemoveJson(config, "app.http");
-        mprSetJsonObj(config, "http", obj);
-    }
-    if ((obj = mprGetJsonObj(config, "app.esp")) != 0) {
-        mprRemoveJson(config, "app.esp");
-        mprSetJsonObj(config, "esp", obj);
-    }
-}
-#endif
-
     if (!route->mode) {
-        mode = mprGetJson(route->config, "pak.mode");
-        if (!mode) {
-            mode = mprGetJson(config, "pak.mode");
+        if ((profile = mprGetJson(route->config, "profile")) == 0) {
+            if ((profile = mprGetJson(route->config, "pak.mode")) == 0) {
+                if ((profile = mprGetJson(config, "profile")) == 0) {
+                    profile = mprGetJson(config, "pak.mode");
+                }
+            }
         }
-        route->mode = mode;
-        route->debug = smatch(route->mode, "debug");
+        route->mode = profile;
+        route->debug = smatch(route->mode, "debug") || smatch(route->mode, "dev");
     }
     if (route->config) {
         mprBlendJson(route->config, config, MPR_JSON_COMBINE);
@@ -3788,12 +3777,14 @@ PUBLIC int httpLoadConfig(HttpRoute *route, cchar *path)
         /*
             Http uses top level modes, Pak uses top level pak.modes.
          */
-        if ((modeObj = mprGetJsonObj(config, sfmt("modes.%s", route->mode))) == 0) {
-            modeObj = mprGetJsonObj(config, sfmt("pak.modes.%s", route->mode));
+        if ((profiles = mprGetJsonObj(config, sfmt("profiles.%s", route->mode))) == 0) {
+            if ((profiles = mprGetJsonObj(config, sfmt("modes.%s", route->mode))) == 0) {
+                profiles = mprGetJsonObj(config, sfmt("pak.modes.%s", route->mode));
+            }
         }
-        if (modeObj) {
-            mprBlendJson(route->config, modeObj, MPR_JSON_OVERWRITE);
-            httpParseAll(route, 0, modeObj);
+        if (profiles) {
+            mprBlendJson(route->config, profiles, MPR_JSON_OVERWRITE);
+            httpParseAll(route, 0, profiles);
         }
     }
     httpParseAll(route, 0, config);
