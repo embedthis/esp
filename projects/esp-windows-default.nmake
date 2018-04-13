@@ -223,11 +223,17 @@ clean:
 	if exist "build\$(CONFIG)\bin\espman.exp" del /Q "build\$(CONFIG)\bin\espman.exp"
 
 #
+#   config.h
+#
+
+build\$(CONFIG)\inc\config.h: $(DEPS_1)
+
+#
 #   edi.h
 #
-DEPS_1 = $(DEPS_1) src\edi.h
+DEPS_2 = $(DEPS_2) src\edi.h
 
-build\$(CONFIG)\inc\edi.h: $(DEPS_1)
+build\$(CONFIG)\inc\edi.h: $(DEPS_2)
 	@echo ..... [Copy] build\$(CONFIG)\inc\edi.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\edi.h+modified build\$(CONFIG)\inc\edi.h $(LOG)
@@ -235,9 +241,9 @@ build\$(CONFIG)\inc\edi.h: $(DEPS_1)
 #
 #   embedtls.h
 #
-DEPS_2 = $(DEPS_2) src\mbedtls\embedtls.h
+DEPS_3 = $(DEPS_3) src\mbedtls\embedtls.h
 
-build\$(CONFIG)\inc\embedtls.h: $(DEPS_2)
+build\$(CONFIG)\inc\embedtls.h: $(DEPS_3)
 	@echo ..... [Copy] build\$(CONFIG)\inc\embedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\embedtls.h+modified build\$(CONFIG)\inc\embedtls.h $(LOG)
@@ -245,9 +251,9 @@ build\$(CONFIG)\inc\embedtls.h: $(DEPS_2)
 #
 #   esp.h
 #
-DEPS_3 = $(DEPS_3) src\esp.h
+DEPS_4 = $(DEPS_4) src\esp.h
 
-build\$(CONFIG)\inc\esp.h: $(DEPS_3)
+build\$(CONFIG)\inc\esp.h: $(DEPS_4)
 	@echo ..... [Copy] build\$(CONFIG)\inc\esp.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\esp.h+modified build\$(CONFIG)\inc\esp.h $(LOG)
@@ -256,15 +262,15 @@ build\$(CONFIG)\inc\esp.h: $(DEPS_3)
 #   me.h
 #
 
-build\$(CONFIG)\inc\me.h: $(DEPS_4)
+build\$(CONFIG)\inc\me.h: $(DEPS_5)
 
 #
 #   osdep.h
 #
-DEPS_5 = $(DEPS_5) src\osdep\osdep.h
-DEPS_5 = $(DEPS_5) build\$(CONFIG)\inc\me.h
+DEPS_6 = $(DEPS_6) src\osdep\osdep.h
+DEPS_6 = $(DEPS_6) build\$(CONFIG)\inc\me.h
 
-build\$(CONFIG)\inc\osdep.h: $(DEPS_5)
+build\$(CONFIG)\inc\osdep.h: $(DEPS_6)
 	@echo ..... [Copy] build\$(CONFIG)\inc\osdep.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\osdep\osdep.h+modified build\$(CONFIG)\inc\osdep.h $(LOG)
@@ -272,11 +278,11 @@ build\$(CONFIG)\inc\osdep.h: $(DEPS_5)
 #
 #   mpr.h
 #
-DEPS_6 = $(DEPS_6) src\mpr\mpr.h
-DEPS_6 = $(DEPS_6) build\$(CONFIG)\inc\me.h
-DEPS_6 = $(DEPS_6) build\$(CONFIG)\inc\osdep.h
+DEPS_7 = $(DEPS_7) src\mpr\mpr.h
+DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\me.h
+DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\osdep.h
 
-build\$(CONFIG)\inc\mpr.h: $(DEPS_6)
+build\$(CONFIG)\inc\mpr.h: $(DEPS_7)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mpr.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mpr\mpr.h+modified build\$(CONFIG)\inc\mpr.h $(LOG)
@@ -284,10 +290,10 @@ build\$(CONFIG)\inc\mpr.h: $(DEPS_6)
 #
 #   http.h
 #
-DEPS_7 = $(DEPS_7) src\http\http.h
-DEPS_7 = $(DEPS_7) build\$(CONFIG)\inc\mpr.h
+DEPS_8 = $(DEPS_8) src\http\http.h
+DEPS_8 = $(DEPS_8) build\$(CONFIG)\inc\mpr.h
 
-build\$(CONFIG)\inc\http.h: $(DEPS_7)
+build\$(CONFIG)\inc\http.h: $(DEPS_8)
 	@echo ..... [Copy] build\$(CONFIG)\inc\http.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\http\http.h+modified build\$(CONFIG)\inc\http.h $(LOG)
@@ -295,9 +301,9 @@ build\$(CONFIG)\inc\http.h: $(DEPS_7)
 #
 #   mbedtls-config.h
 #
-DEPS_8 = $(DEPS_8) src\mbedtls\mbedtls-config.h
+DEPS_9 = $(DEPS_9) src\mbedtls\mbedtls-config.h
 
-build\$(CONFIG)\inc\mbedtls-config.h: $(DEPS_8)
+build\$(CONFIG)\inc\mbedtls-config.h: $(DEPS_9)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mbedtls-config.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\mbedtls-config.h+modified build\$(CONFIG)\inc\mbedtls-config.h $(LOG)
@@ -305,9 +311,9 @@ build\$(CONFIG)\inc\mbedtls-config.h: $(DEPS_8)
 #
 #   mbedtls.h
 #
-DEPS_9 = $(DEPS_9) src\mbedtls\mbedtls.h
+DEPS_10 = $(DEPS_10) src\mbedtls\mbedtls.h
 
-build\$(CONFIG)\inc\mbedtls.h: $(DEPS_9)
+build\$(CONFIG)\inc\mbedtls.h: $(DEPS_10)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mbedtls.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mbedtls\mbedtls.h+modified build\$(CONFIG)\inc\mbedtls.h $(LOG)
@@ -315,9 +321,9 @@ build\$(CONFIG)\inc\mbedtls.h: $(DEPS_9)
 #
 #   mdb.h
 #
-DEPS_10 = $(DEPS_10) src\mdb.h
+DEPS_11 = $(DEPS_11) src\mdb.h
 
-build\$(CONFIG)\inc\mdb.h: $(DEPS_10)
+build\$(CONFIG)\inc\mdb.h: $(DEPS_11)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mdb.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mdb.h+modified build\$(CONFIG)\inc\mdb.h $(LOG)
@@ -325,10 +331,10 @@ build\$(CONFIG)\inc\mdb.h: $(DEPS_10)
 #
 #   mpr-version.h
 #
-DEPS_11 = $(DEPS_11) src\mpr-version\mpr-version.h
-DEPS_11 = $(DEPS_11) build\$(CONFIG)\inc\mpr.h
+DEPS_12 = $(DEPS_12) src\mpr-version\mpr-version.h
+DEPS_12 = $(DEPS_12) build\$(CONFIG)\inc\mpr.h
 
-build\$(CONFIG)\inc\mpr-version.h: $(DEPS_11)
+build\$(CONFIG)\inc\mpr-version.h: $(DEPS_12)
 	@echo ..... [Copy] build\$(CONFIG)\inc\mpr-version.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\mpr-version\mpr-version.h+modified build\$(CONFIG)\inc\mpr-version.h $(LOG)
@@ -336,9 +342,9 @@ build\$(CONFIG)\inc\mpr-version.h: $(DEPS_11)
 #
 #   pcre.h
 #
-DEPS_12 = $(DEPS_12) src\pcre\pcre.h
+DEPS_13 = $(DEPS_13) src\pcre\pcre.h
 
-build\$(CONFIG)\inc\pcre.h: $(DEPS_12)
+build\$(CONFIG)\inc\pcre.h: $(DEPS_13)
 	@echo ..... [Copy] build\$(CONFIG)\inc\pcre.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\pcre\pcre.h+modified build\$(CONFIG)\inc\pcre.h $(LOG)
@@ -346,27 +352,39 @@ build\$(CONFIG)\inc\pcre.h: $(DEPS_12)
 #
 #   sqlite3.h
 #
-DEPS_13 = $(DEPS_13) src\sqlite\sqlite3.h
+DEPS_14 = $(DEPS_14) src\sqlite\sqlite3.h
 
-build\$(CONFIG)\inc\sqlite3.h: $(DEPS_13)
+build\$(CONFIG)\inc\sqlite3.h: $(DEPS_14)
 	@echo ..... [Copy] build\$(CONFIG)\inc\sqlite3.h
 	if not exist "build\$(CONFIG)\inc" md "build\$(CONFIG)\inc"
 	copy /Y /B src\sqlite\sqlite3.h+modified build\$(CONFIG)\inc\sqlite3.h $(LOG)
 
 #
+#   sqlite3rtree.h
+#
+
+build\$(CONFIG)\inc\sqlite3rtree.h: $(DEPS_15)
+
+#
+#   windows.h
+#
+
+build\$(CONFIG)\inc\windows.h: $(DEPS_16)
+
+#
 #   edi.h
 #
 
-src\edi.h: $(DEPS_14)
+src\edi.h: $(DEPS_17)
 
 #
 #   edi.obj
 #
-DEPS_15 = $(DEPS_15) src\edi.h
-DEPS_15 = $(DEPS_15) build\$(CONFIG)\inc\pcre.h
+DEPS_18 = $(DEPS_18) src\edi.h
+DEPS_18 = $(DEPS_18) build\$(CONFIG)\inc\pcre.h
 
 build\$(CONFIG)\obj\edi.obj: \
-    src\edi.c $(DEPS_15)
+    src\edi.c $(DEPS_18)
 	@echo .. [Compile] build\$(CONFIG)\obj\edi.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\edi.obj -Fd$(BUILD)\obj\edi.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\edi.c $(LOG)
 
@@ -374,77 +392,77 @@ build\$(CONFIG)\obj\edi.obj: \
 #   esp.h
 #
 
-src\esp.h: $(DEPS_16)
+src\esp.h: $(DEPS_19)
 
 #
 #   esp.obj
 #
-DEPS_17 = $(DEPS_17) src\esp.h
-DEPS_17 = $(DEPS_17) build\$(CONFIG)\inc\mpr-version.h
+DEPS_20 = $(DEPS_20) src\esp.h
+DEPS_20 = $(DEPS_20) build\$(CONFIG)\inc\mpr-version.h
 
 build\$(CONFIG)\obj\esp.obj: \
-    src\esp.c $(DEPS_17)
+    src\esp.c $(DEPS_20)
 	@echo .. [Compile] build\$(CONFIG)\obj\esp.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\esp.c $(LOG)
 
 #
 #   espAbbrev.obj
 #
-DEPS_18 = $(DEPS_18) src\esp.h
+DEPS_21 = $(DEPS_21) src\esp.h
 
 build\$(CONFIG)\obj\espAbbrev.obj: \
-    src\espAbbrev.c $(DEPS_18)
+    src\espAbbrev.c $(DEPS_21)
 	@echo .. [Compile] build\$(CONFIG)\obj\espAbbrev.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\espAbbrev.obj -Fd$(BUILD)\obj\espAbbrev.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espAbbrev.c $(LOG)
 
 #
 #   espConfig.obj
 #
-DEPS_19 = $(DEPS_19) src\esp.h
+DEPS_22 = $(DEPS_22) src\esp.h
 
 build\$(CONFIG)\obj\espConfig.obj: \
-    src\espConfig.c $(DEPS_19)
+    src\espConfig.c $(DEPS_22)
 	@echo .. [Compile] build\$(CONFIG)\obj\espConfig.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\espConfig.obj -Fd$(BUILD)\obj\espConfig.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espConfig.c $(LOG)
 
 #
 #   espFramework.obj
 #
-DEPS_20 = $(DEPS_20) src\esp.h
+DEPS_23 = $(DEPS_23) src\esp.h
 
 build\$(CONFIG)\obj\espFramework.obj: \
-    src\espFramework.c $(DEPS_20)
+    src\espFramework.c $(DEPS_23)
 	@echo .. [Compile] build\$(CONFIG)\obj\espFramework.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\espFramework.obj -Fd$(BUILD)\obj\espFramework.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espFramework.c $(LOG)
 
 #
 #   espHtml.obj
 #
-DEPS_21 = $(DEPS_21) src\esp.h
-DEPS_21 = $(DEPS_21) src\edi.h
+DEPS_24 = $(DEPS_24) src\esp.h
+DEPS_24 = $(DEPS_24) src\edi.h
 
 build\$(CONFIG)\obj\espHtml.obj: \
-    src\espHtml.c $(DEPS_21)
+    src\espHtml.c $(DEPS_24)
 	@echo .. [Compile] build\$(CONFIG)\obj\espHtml.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\espHtml.obj -Fd$(BUILD)\obj\espHtml.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espHtml.c $(LOG)
 
 #
 #   espRequest.obj
 #
-DEPS_22 = $(DEPS_22) src\esp.h
+DEPS_25 = $(DEPS_25) src\esp.h
 
 build\$(CONFIG)\obj\espRequest.obj: \
-    src\espRequest.c $(DEPS_22)
+    src\espRequest.c $(DEPS_25)
 	@echo .. [Compile] build\$(CONFIG)\obj\espRequest.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\espRequest.obj -Fd$(BUILD)\obj\espRequest.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espRequest.c $(LOG)
 
 #
 #   espTemplate.obj
 #
-DEPS_23 = $(DEPS_23) src\esp.h
+DEPS_26 = $(DEPS_26) src\esp.h
 
 build\$(CONFIG)\obj\espTemplate.obj: \
-    src\espTemplate.c $(DEPS_23)
+    src\espTemplate.c $(DEPS_26)
 	@echo .. [Compile] build\$(CONFIG)\obj\espTemplate.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\espTemplate.obj -Fd$(BUILD)\obj\espTemplate.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espTemplate.c $(LOG)
 
@@ -452,26 +470,26 @@ build\$(CONFIG)\obj\espTemplate.obj: \
 #   http.h
 #
 
-src\http\http.h: $(DEPS_24)
+src\http\http.h: $(DEPS_27)
 
 #
 #   http.obj
 #
-DEPS_25 = $(DEPS_25) src\http\http.h
+DEPS_28 = $(DEPS_28) src\http\http.h
 
 build\$(CONFIG)\obj\http.obj: \
-    src\http\http.c $(DEPS_25)
+    src\http\http.c $(DEPS_28)
 	@echo .. [Compile] build\$(CONFIG)\obj\http.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\http.obj -Fd$(BUILD)\obj\http.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\http\http.c $(LOG)
 
 #
 #   httpLib.obj
 #
-DEPS_26 = $(DEPS_26) src\http\http.h
-DEPS_26 = $(DEPS_26) build\$(CONFIG)\inc\pcre.h
+DEPS_29 = $(DEPS_29) src\http\http.h
+DEPS_29 = $(DEPS_29) build\$(CONFIG)\inc\pcre.h
 
 build\$(CONFIG)\obj\httpLib.obj: \
-    src\http\httpLib.c $(DEPS_26)
+    src\http\httpLib.c $(DEPS_29)
 	@echo .. [Compile] build\$(CONFIG)\obj\httpLib.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\http\httpLib.c $(LOG)
 
@@ -479,15 +497,15 @@ build\$(CONFIG)\obj\httpLib.obj: \
 #   mbedtls.h
 #
 
-src\mbedtls\mbedtls.h: $(DEPS_27)
+src\mbedtls\mbedtls.h: $(DEPS_30)
 
 #
 #   mbedtls.obj
 #
-DEPS_28 = $(DEPS_28) src\mbedtls\mbedtls.h
+DEPS_31 = $(DEPS_31) src\mbedtls\mbedtls.h
 
 build\$(CONFIG)\obj\mbedtls.obj: \
-    src\mbedtls\mbedtls.c $(DEPS_28)
+    src\mbedtls\mbedtls.c $(DEPS_31)
 	@echo .. [Compile] build\$(CONFIG)\obj\mbedtls.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\mbedtls.obj -Fd$(BUILD)\obj\mbedtls.pdb -nologo -GR- -Zi -Od -MDd $(DFLAGS) -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mbedtls\mbedtls.c $(LOG)
 
@@ -495,38 +513,38 @@ build\$(CONFIG)\obj\mbedtls.obj: \
 #   mdb.h
 #
 
-src\mdb.h: $(DEPS_29)
+src\mdb.h: $(DEPS_32)
 
 #
 #   mdb.obj
 #
-DEPS_30 = $(DEPS_30) build\$(CONFIG)\inc\http.h
-DEPS_30 = $(DEPS_30) src\edi.h
-DEPS_30 = $(DEPS_30) src\mdb.h
-DEPS_30 = $(DEPS_30) build\$(CONFIG)\inc\pcre.h
+DEPS_33 = $(DEPS_33) build\$(CONFIG)\inc\http.h
+DEPS_33 = $(DEPS_33) src\edi.h
+DEPS_33 = $(DEPS_33) src\mdb.h
+DEPS_33 = $(DEPS_33) build\$(CONFIG)\inc\pcre.h
 
 build\$(CONFIG)\obj\mdb.obj: \
-    src\mdb.c $(DEPS_30)
+    src\mdb.c $(DEPS_33)
 	@echo .. [Compile] build\$(CONFIG)\obj\mdb.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\mdb.obj -Fd$(BUILD)\obj\mdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mdb.c $(LOG)
 
 #
 #   mpr-mbedtls.obj
 #
-DEPS_31 = $(DEPS_31) build\$(CONFIG)\inc\mpr.h
+DEPS_34 = $(DEPS_34) build\$(CONFIG)\inc\mpr.h
 
 build\$(CONFIG)\obj\mpr-mbedtls.obj: \
-    src\mpr-mbedtls\mpr-mbedtls.c $(DEPS_31)
+    src\mpr-mbedtls\mpr-mbedtls.c $(DEPS_34)
 	@echo .. [Compile] build\$(CONFIG)\obj\mpr-mbedtls.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\mpr-mbedtls.obj -Fd$(BUILD)\obj\mpr-mbedtls.pdb -nologo -GR- -Zi -Od -MDd $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mpr-mbedtls\mpr-mbedtls.c $(LOG)
 
 #
 #   mpr-openssl.obj
 #
-DEPS_32 = $(DEPS_32) build\$(CONFIG)\inc\mpr.h
+DEPS_35 = $(DEPS_35) build\$(CONFIG)\inc\mpr.h
 
 build\$(CONFIG)\obj\mpr-openssl.obj: \
-    src\mpr-openssl\mpr-openssl.c $(DEPS_32)
+    src\mpr-openssl\mpr-openssl.c $(DEPS_35)
 	@echo .. [Compile] build\$(CONFIG)\obj\mpr-openssl.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\mpr-openssl.obj -Fd$(BUILD)\obj\mpr-openssl.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\mpr-openssl\mpr-openssl.c $(LOG)
 
@@ -534,16 +552,16 @@ build\$(CONFIG)\obj\mpr-openssl.obj: \
 #   mpr-version.h
 #
 
-src\mpr-version\mpr-version.h: $(DEPS_33)
+src\mpr-version\mpr-version.h: $(DEPS_36)
 
 #
 #   mpr-version.obj
 #
-DEPS_34 = $(DEPS_34) src\mpr-version\mpr-version.h
-DEPS_34 = $(DEPS_34) build\$(CONFIG)\inc\pcre.h
+DEPS_37 = $(DEPS_37) src\mpr-version\mpr-version.h
+DEPS_37 = $(DEPS_37) build\$(CONFIG)\inc\pcre.h
 
 build\$(CONFIG)\obj\mpr-version.obj: \
-    src\mpr-version\mpr-version.c $(DEPS_34)
+    src\mpr-version\mpr-version.c $(DEPS_37)
 	@echo .. [Compile] build\$(CONFIG)\obj\mpr-version.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\mpr-version.obj -Fd$(BUILD)\obj\mpr-version.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\mpr-version\mpr-version.c $(LOG)
 
@@ -551,15 +569,15 @@ build\$(CONFIG)\obj\mpr-version.obj: \
 #   mpr.h
 #
 
-src\mpr\mpr.h: $(DEPS_35)
+src\mpr\mpr.h: $(DEPS_38)
 
 #
 #   mprLib.obj
 #
-DEPS_36 = $(DEPS_36) src\mpr\mpr.h
+DEPS_39 = $(DEPS_39) src\mpr\mpr.h
 
 build\$(CONFIG)\obj\mprLib.obj: \
-    src\mpr\mprLib.c $(DEPS_36)
+    src\mpr\mprLib.c $(DEPS_39)
 	@echo .. [Compile] build\$(CONFIG)\obj\mprLib.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mpr\mprLib.c $(LOG)
 
@@ -567,27 +585,27 @@ build\$(CONFIG)\obj\mprLib.obj: \
 #   pcre.h
 #
 
-src\pcre\pcre.h: $(DEPS_37)
+src\pcre\pcre.h: $(DEPS_40)
 
 #
 #   pcre.obj
 #
-DEPS_38 = $(DEPS_38) build\$(CONFIG)\inc\me.h
-DEPS_38 = $(DEPS_38) src\pcre\pcre.h
+DEPS_41 = $(DEPS_41) build\$(CONFIG)\inc\me.h
+DEPS_41 = $(DEPS_41) src\pcre\pcre.h
 
 build\$(CONFIG)\obj\pcre.obj: \
-    src\pcre\pcre.c $(DEPS_38)
+    src\pcre\pcre.c $(DEPS_41)
 	@echo .. [Compile] build\$(CONFIG)\obj\pcre.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\pcre.obj -Fd$(BUILD)\obj\pcre.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\pcre\pcre.c $(LOG)
 
 #
 #   sdb.obj
 #
-DEPS_39 = $(DEPS_39) build\$(CONFIG)\inc\http.h
-DEPS_39 = $(DEPS_39) src\edi.h
+DEPS_42 = $(DEPS_42) build\$(CONFIG)\inc\http.h
+DEPS_42 = $(DEPS_42) src\edi.h
 
 build\$(CONFIG)\obj\sdb.obj: \
-    src\sdb.c $(DEPS_39)
+    src\sdb.c $(DEPS_42)
 	@echo .. [Compile] build\$(CONFIG)\obj\sdb.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\sdb.obj -Fd$(BUILD)\obj\sdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\sdb.c $(LOG)
 
@@ -595,37 +613,41 @@ build\$(CONFIG)\obj\sdb.obj: \
 #   sqlite3.h
 #
 
-src\sqlite\sqlite3.h: $(DEPS_40)
+src\sqlite\sqlite3.h: $(DEPS_43)
 
 #
 #   sqlite.obj
 #
-DEPS_41 = $(DEPS_41) build\$(CONFIG)\inc\me.h
-DEPS_41 = $(DEPS_41) src\sqlite\sqlite3.h
+DEPS_44 = $(DEPS_44) build\$(CONFIG)\inc\me.h
+DEPS_44 = $(DEPS_44) src\sqlite\sqlite3.h
+DEPS_44 = $(DEPS_44) build\$(CONFIG)\inc\windows.h
 
 build\$(CONFIG)\obj\sqlite.obj: \
-    src\sqlite\sqlite.c $(DEPS_41)
+    src\sqlite\sqlite.c $(DEPS_44)
 	@echo .. [Compile] build\$(CONFIG)\obj\sqlite.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\sqlite.obj -Fd$(BUILD)\obj\sqlite.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\sqlite\sqlite.c $(LOG)
 
 #
 #   sqlite3.obj
 #
-DEPS_42 = $(DEPS_42) build\$(CONFIG)\inc\me.h
-DEPS_42 = $(DEPS_42) src\sqlite\sqlite3.h
+DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\me.h
+DEPS_45 = $(DEPS_45) src\sqlite\sqlite3.h
+DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\config.h
+DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\windows.h
+DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\sqlite3rtree.h
 
 build\$(CONFIG)\obj\sqlite3.obj: \
-    src\sqlite\sqlite3.c $(DEPS_42)
+    src\sqlite\sqlite3.c $(DEPS_45)
 	@echo .. [Compile] build\$(CONFIG)\obj\sqlite3.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\sqlite3.obj -Fd$(BUILD)\obj\sqlite3.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\sqlite\sqlite3.c $(LOG)
 
 #
 #   watchdog.obj
 #
-DEPS_43 = $(DEPS_43) build\$(CONFIG)\inc\mpr.h
+DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\mpr.h
 
 build\$(CONFIG)\obj\watchdog.obj: \
-    src\watchdog\watchdog.c $(DEPS_43)
+    src\watchdog\watchdog.c $(DEPS_46)
 	@echo .. [Compile] build\$(CONFIG)\obj\watchdog.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\watchdog\watchdog.c $(LOG)
 
@@ -633,10 +655,10 @@ build\$(CONFIG)\obj\watchdog.obj: \
 #
 #   libsql
 #
-DEPS_44 = $(DEPS_44) build\$(CONFIG)\inc\sqlite3.h
-DEPS_44 = $(DEPS_44) build\$(CONFIG)\obj\sqlite3.obj
+DEPS_47 = $(DEPS_47) build\$(CONFIG)\inc\sqlite3.h
+DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\sqlite3.obj
 
-build\$(CONFIG)\bin\libsql.dll: $(DEPS_44)
+build\$(CONFIG)\bin\libsql.dll: $(DEPS_47)
 	@echo ..... [Link] build\$(CONFIG)\bin\libsql.dll
 	"$(LD)" -dll -out:$(BUILD)\bin\libsql.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\sqlite3.obj" $(LIBS)  $(LOG)
 !ENDIF
@@ -645,13 +667,13 @@ build\$(CONFIG)\bin\libsql.dll: $(DEPS_44)
 #
 #   libmbedtls
 #
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\osdep.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\embedtls.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\mbedtls-config.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\mbedtls.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\obj\mbedtls.obj
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\osdep.h
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\embedtls.h
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\mbedtls-config.h
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\mbedtls.h
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\mbedtls.obj
 
-build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_45)
+build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_48)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmbedtls.lib
 	"lib.exe" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
 !ENDIF
@@ -660,10 +682,10 @@ build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_45)
 #
 #   libmpr-mbedtls
 #
-DEPS_46 = $(DEPS_46) build\$(CONFIG)\bin\libmbedtls.lib
-DEPS_46 = $(DEPS_46) build\$(CONFIG)\obj\mpr-mbedtls.obj
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\bin\libmbedtls.lib
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\mpr-mbedtls.obj
 
-build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_46)
+build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_49)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-mbedtls.lib
 	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
 !ENDIF
@@ -672,9 +694,9 @@ build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_46)
 #
 #   libmpr-openssl
 #
-DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\mpr-openssl.obj
+DEPS_50 = $(DEPS_50) build\$(CONFIG)\obj\mpr-openssl.obj
 
-build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_47)
+build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_50)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-openssl.lib
 	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
 !ENDIF
@@ -682,47 +704,47 @@ build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_47)
 #
 #   libmpr
 #
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\osdep.h
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\inc\osdep.h
 !IF "$(ME_COM_MBEDTLS)" == "1"
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\bin\libmpr-mbedtls.lib
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\bin\libmbedtls.lib
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\bin\libmpr-openssl.lib
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmpr-openssl.lib
 !ENDIF
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\mpr.h
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\mprLib.obj
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\inc\mpr.h
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\obj\mprLib.obj
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_48 = $(LIBS_48) libmbedtls.lib
+LIBS_51 = $(LIBS_51) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_48 = $(LIBS_48) libmpr-mbedtls.lib
+LIBS_51 = $(LIBS_51) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_48 = $(LIBS_48) libmbedtls.lib
+LIBS_51 = $(LIBS_51) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_48 = $(LIBS_48) libmpr-openssl.lib
+LIBS_51 = $(LIBS_51) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_48 = $(LIBS_48) libmpr-mbedtls.lib
+LIBS_51 = $(LIBS_51) libmpr-mbedtls.lib
 !ENDIF
 
-build\$(CONFIG)\bin\libmpr.dll: $(DEPS_48)
+build\$(CONFIG)\bin\libmpr.dll: $(DEPS_51)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_48) $(LIBS_48) $(LIBS_48) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS_51) $(LIBS)  $(LOG)
 
 !IF "$(ME_COM_PCRE)" == "1"
 #
 #   libpcre
 #
-DEPS_49 = $(DEPS_49) build\$(CONFIG)\inc\pcre.h
-DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\pcre.obj
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\pcre.h
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\pcre.obj
 
-build\$(CONFIG)\bin\libpcre.dll: $(DEPS_49)
+build\$(CONFIG)\bin\libpcre.dll: $(DEPS_52)
 	@echo ..... [Link] build\$(CONFIG)\bin\libpcre.dll
 	"$(LD)" -dll -out:$(BUILD)\bin\libpcre.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\pcre.obj" $(LIBS)  $(LOG)
 !ENDIF
@@ -731,129 +753,13 @@ build\$(CONFIG)\bin\libpcre.dll: $(DEPS_49)
 #
 #   libhttp
 #
-DEPS_50 = $(DEPS_50) build\$(CONFIG)\bin\libmpr.dll
+DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libmpr.dll
 !IF "$(ME_COM_PCRE)" == "1"
-DEPS_50 = $(DEPS_50) build\$(CONFIG)\bin\libpcre.dll
+DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libpcre.dll
 !ENDIF
-DEPS_50 = $(DEPS_50) build\$(CONFIG)\inc\http.h
-DEPS_50 = $(DEPS_50) build\$(CONFIG)\obj\httpLib.obj
+DEPS_53 = $(DEPS_53) build\$(CONFIG)\inc\http.h
+DEPS_53 = $(DEPS_53) build\$(CONFIG)\obj\httpLib.obj
 
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_50 = $(LIBS_50) libmbedtls.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_50 = $(LIBS_50) libmpr-mbedtls.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_50 = $(LIBS_50) libmbedtls.lib
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_50 = $(LIBS_50) libmpr-openssl.lib
-!ENDIF
-LIBS_50 = $(LIBS_50) libmpr.lib
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_50 = $(LIBS_50) libmpr-mbedtls.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_50 = $(LIBS_50) libpcre.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_50 = $(LIBS_50) libpcre.lib
-!ENDIF
-LIBS_50 = $(LIBS_50) libmpr.lib
-
-build\$(CONFIG)\bin\libhttp.dll: $(DEPS_50)
-	@echo ..... [Link] build\$(CONFIG)\bin\libhttp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_50) $(LIBS_50) $(LIBS_50) $(LIBS)  $(LOG)
-!ENDIF
-
-#
-#   libmpr-version
-#
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\inc\mpr-version.h
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\obj\mpr-version.obj
-
-build\$(CONFIG)\bin\libmpr-version.lib: $(DEPS_51)
-	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-version.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
-
-#
-#   libesp
-#
-!IF "$(ME_COM_SQLITE)" == "1"
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\bin\libsql.dll
-!ENDIF
-!IF "$(ME_COM_HTTP)" == "1"
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\bin\libhttp.dll
-!ENDIF
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\bin\libmpr-version.lib
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\edi.h
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\esp.h
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\mdb.h
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\edi.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espAbbrev.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espConfig.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espFramework.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espHtml.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espRequest.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\espTemplate.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\mdb.obj
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\sdb.obj
-
-!IF "$(ME_COM_SQLITE)" == "1"
-LIBS_52 = $(LIBS_52) libsql.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_52 = $(LIBS_52) libmbedtls.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_52 = $(LIBS_52) libmpr-mbedtls.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_52 = $(LIBS_52) libmbedtls.lib
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_52 = $(LIBS_52) libmpr-openssl.lib
-!ENDIF
-LIBS_52 = $(LIBS_52) libmpr.lib
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_52 = $(LIBS_52) libmpr-mbedtls.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_52 = $(LIBS_52) libpcre.lib
-!ENDIF
-!IF "$(ME_COM_HTTP)" == "1"
-LIBS_52 = $(LIBS_52) libhttp.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_52 = $(LIBS_52) libpcre.lib
-!ENDIF
-LIBS_52 = $(LIBS_52) libmpr.lib
-LIBS_52 = $(LIBS_52) libmpr-version.lib
-LIBS_52 = $(LIBS_52) libmpr-version.lib
-!IF "$(ME_COM_HTTP)" == "1"
-LIBS_52 = $(LIBS_52) libhttp.lib
-!ENDIF
-!IF "$(ME_COM_SQLITE)" == "1"
-LIBS_52 = $(LIBS_52) libsql.lib
-!ENDIF
-
-build\$(CONFIG)\bin\libesp.dll: $(DEPS_52)
-	@echo ..... [Link] build\$(CONFIG)\bin\libesp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\edi.obj" "$(BUILD)\obj\espAbbrev.obj" "$(BUILD)\obj\espConfig.obj" "$(BUILD)\obj\espFramework.obj" "$(BUILD)\obj\espHtml.obj" "$(BUILD)\obj\espRequest.obj" "$(BUILD)\obj\espTemplate.obj" "$(BUILD)\obj\mdb.obj" "$(BUILD)\obj\sdb.obj" $(LIBPATHS_52) $(LIBS_52) $(LIBS_52) $(LIBS)  $(LOG)
-
-#
-#   espcmd
-#
-!IF "$(ME_COM_SQLITE)" == "1"
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libsql.dll
-!ENDIF
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libesp.dll
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\obj\esp.obj
-
-!IF "$(ME_COM_SQLITE)" == "1"
-LIBS_53 = $(LIBS_53) libsql.lib
-!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_53 = $(LIBS_53) libmbedtls.lib
 !ENDIF
@@ -873,47 +779,52 @@ LIBS_53 = $(LIBS_53) libmpr-mbedtls.lib
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_53 = $(LIBS_53) libpcre.lib
 !ENDIF
-!IF "$(ME_COM_HTTP)" == "1"
-LIBS_53 = $(LIBS_53) libhttp.lib
-!ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_53 = $(LIBS_53) libpcre.lib
 !ENDIF
 LIBS_53 = $(LIBS_53) libmpr.lib
-LIBS_53 = $(LIBS_53) libmpr-version.lib
-LIBS_53 = $(LIBS_53) libesp.lib
-LIBS_53 = $(LIBS_53) libmpr-version.lib
-!IF "$(ME_COM_HTTP)" == "1"
-LIBS_53 = $(LIBS_53) libhttp.lib
+
+build\$(CONFIG)\bin\libhttp.dll: $(DEPS_53)
+	@echo ..... [Link] build\$(CONFIG)\bin\libhttp.dll
+	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS_53) $(LIBS)  $(LOG)
 !ENDIF
+
+#
+#   libmpr-version
+#
+DEPS_54 = $(DEPS_54) build\$(CONFIG)\inc\mpr-version.h
+DEPS_54 = $(DEPS_54) build\$(CONFIG)\obj\mpr-version.obj
+
+build\$(CONFIG)\bin\libmpr-version.lib: $(DEPS_54)
+	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-version.lib
+	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
+
+#
+#   libesp
+#
 !IF "$(ME_COM_SQLITE)" == "1"
-LIBS_53 = $(LIBS_53) libsql.lib
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\bin\libsql.dll
 !ENDIF
-
-build\$(CONFIG)\bin\esp.exe: $(DEPS_53)
-	@echo ..... [Link] build\$(CONFIG)\bin\esp.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\esp.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS_53) $(LIBS)  $(LOG)
-
-#
-#   extras
-#
-DEPS_54 = $(DEPS_54) src\esp-compile.json
-DEPS_54 = $(DEPS_54) src\vcvars.bat
-
-build\$(CONFIG)\.extras-modified: $(DEPS_54)
-	@echo ..... [Copy] build\$(CONFIG)\bin
-	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
-	copy /Y /B src\esp-compile.json+modified build\$(CONFIG)\bin\esp-compile.json $(LOG)
-	copy /Y /B src\vcvars.bat+modified build\$(CONFIG)\bin\vcvars.bat $(LOG)
-	copy /Y /B nul+modified build\$(CONFIG)\.extras-modified $(LOG)
-
 !IF "$(ME_COM_HTTP)" == "1"
-#
-#   httpcmd
-#
 DEPS_55 = $(DEPS_55) build\$(CONFIG)\bin\libhttp.dll
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\http.obj
+!ENDIF
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\bin\libmpr-version.lib
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\edi.h
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\esp.h
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\mdb.h
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\edi.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espAbbrev.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espConfig.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espFramework.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espHtml.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espRequest.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espTemplate.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\mdb.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\sdb.obj
 
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_55 = $(LIBS_55) libsql.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_55 = $(LIBS_55) libmbedtls.lib
 !ENDIF
@@ -933,31 +844,142 @@ LIBS_55 = $(LIBS_55) libmpr-mbedtls.lib
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_55 = $(LIBS_55) libpcre.lib
 !ENDIF
+!IF "$(ME_COM_HTTP)" == "1"
 LIBS_55 = $(LIBS_55) libhttp.lib
+!ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
 LIBS_55 = $(LIBS_55) libpcre.lib
 !ENDIF
 LIBS_55 = $(LIBS_55) libmpr.lib
+LIBS_55 = $(LIBS_55) libmpr-version.lib
+LIBS_55 = $(LIBS_55) libmpr-version.lib
+!IF "$(ME_COM_HTTP)" == "1"
+LIBS_55 = $(LIBS_55) libhttp.lib
+!ENDIF
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_55 = $(LIBS_55) libsql.lib
+!ENDIF
 
-build\$(CONFIG)\bin\http.exe: $(DEPS_55)
+build\$(CONFIG)\bin\libesp.dll: $(DEPS_55)
+	@echo ..... [Link] build\$(CONFIG)\bin\libesp.dll
+	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\edi.obj" "$(BUILD)\obj\espAbbrev.obj" "$(BUILD)\obj\espConfig.obj" "$(BUILD)\obj\espFramework.obj" "$(BUILD)\obj\espHtml.obj" "$(BUILD)\obj\espRequest.obj" "$(BUILD)\obj\espTemplate.obj" "$(BUILD)\obj\mdb.obj" "$(BUILD)\obj\sdb.obj" $(LIBPATHS_55) $(LIBS_55) $(LIBS_55) $(LIBS)  $(LOG)
+
+#
+#   espcmd
+#
+!IF "$(ME_COM_SQLITE)" == "1"
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\bin\libsql.dll
+!ENDIF
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\bin\libesp.dll
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\esp.obj
+
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_56 = $(LIBS_56) libsql.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_56 = $(LIBS_56) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_56 = $(LIBS_56) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_56 = $(LIBS_56) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_56 = $(LIBS_56) libmpr-openssl.lib
+!ENDIF
+LIBS_56 = $(LIBS_56) libmpr.lib
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_56 = $(LIBS_56) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_56 = $(LIBS_56) libpcre.lib
+!ENDIF
+!IF "$(ME_COM_HTTP)" == "1"
+LIBS_56 = $(LIBS_56) libhttp.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_56 = $(LIBS_56) libpcre.lib
+!ENDIF
+LIBS_56 = $(LIBS_56) libmpr.lib
+LIBS_56 = $(LIBS_56) libmpr-version.lib
+LIBS_56 = $(LIBS_56) libesp.lib
+LIBS_56 = $(LIBS_56) libmpr-version.lib
+!IF "$(ME_COM_HTTP)" == "1"
+LIBS_56 = $(LIBS_56) libhttp.lib
+!ENDIF
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_56 = $(LIBS_56) libsql.lib
+!ENDIF
+
+build\$(CONFIG)\bin\esp.exe: $(DEPS_56)
+	@echo ..... [Link] build\$(CONFIG)\bin\esp.exe
+	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\esp.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS_56) $(LIBS)  $(LOG)
+
+#
+#   extras
+#
+DEPS_57 = $(DEPS_57) src\esp-compile.json
+DEPS_57 = $(DEPS_57) src\vcvars.bat
+
+build\$(CONFIG)\.extras-modified: $(DEPS_57)
+	@echo ..... [Copy] build\$(CONFIG)\bin
+	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
+	copy /Y /B src\esp-compile.json+modified build\$(CONFIG)\bin\esp-compile.json $(LOG)
+	copy /Y /B src\vcvars.bat+modified build\$(CONFIG)\bin\vcvars.bat $(LOG)
+	copy /Y /B nul+modified build\$(CONFIG)\.extras-modified $(LOG)
+
+!IF "$(ME_COM_HTTP)" == "1"
+#
+#   httpcmd
+#
+DEPS_58 = $(DEPS_58) build\$(CONFIG)\bin\libhttp.dll
+DEPS_58 = $(DEPS_58) build\$(CONFIG)\obj\http.obj
+
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_58 = $(LIBS_58) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_58 = $(LIBS_58) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_58 = $(LIBS_58) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_58 = $(LIBS_58) libmpr-openssl.lib
+!ENDIF
+LIBS_58 = $(LIBS_58) libmpr.lib
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_58 = $(LIBS_58) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_58 = $(LIBS_58) libpcre.lib
+!ENDIF
+LIBS_58 = $(LIBS_58) libhttp.lib
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_58 = $(LIBS_58) libpcre.lib
+!ENDIF
+LIBS_58 = $(LIBS_58) libmpr.lib
+
+build\$(CONFIG)\bin\http.exe: $(DEPS_58)
 	@echo ..... [Link] build\$(CONFIG)\bin\http.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_55) $(LIBS_55) $(LIBS_55) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_58) $(LIBS_58) $(LIBS_58) $(LIBS)  $(LOG)
 !ENDIF
 
 #
 #   install-certs
 #
-DEPS_56 = $(DEPS_56) src\certs\samples\ca.crt
-DEPS_56 = $(DEPS_56) src\certs\samples\ca.key
-DEPS_56 = $(DEPS_56) src\certs\samples\ec.crt
-DEPS_56 = $(DEPS_56) src\certs\samples\ec.key
-DEPS_56 = $(DEPS_56) src\certs\samples\roots.crt
-DEPS_56 = $(DEPS_56) src\certs\samples\self.crt
-DEPS_56 = $(DEPS_56) src\certs\samples\self.key
-DEPS_56 = $(DEPS_56) src\certs\samples\test.crt
-DEPS_56 = $(DEPS_56) src\certs\samples\test.key
+DEPS_59 = $(DEPS_59) src\certs\samples\ca.crt
+DEPS_59 = $(DEPS_59) src\certs\samples\ca.key
+DEPS_59 = $(DEPS_59) src\certs\samples\ec.crt
+DEPS_59 = $(DEPS_59) src\certs\samples\ec.key
+DEPS_59 = $(DEPS_59) src\certs\samples\roots.crt
+DEPS_59 = $(DEPS_59) src\certs\samples\self.crt
+DEPS_59 = $(DEPS_59) src\certs\samples\self.key
+DEPS_59 = $(DEPS_59) src\certs\samples\test.crt
+DEPS_59 = $(DEPS_59) src\certs\samples\test.key
 
-build\$(CONFIG)\.install-certs-modified: $(DEPS_56)
+build\$(CONFIG)\.install-certs-modified: $(DEPS_59)
 	@echo ..... [Copy] build\$(CONFIG)\bin
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
 	copy /Y /B src\certs\samples\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
@@ -974,35 +996,35 @@ build\$(CONFIG)\.install-certs-modified: $(DEPS_56)
 #
 #   watchdog
 #
-DEPS_57 = $(DEPS_57) build\$(CONFIG)\bin\libmpr.dll
-DEPS_57 = $(DEPS_57) build\$(CONFIG)\obj\watchdog.obj
+DEPS_60 = $(DEPS_60) build\$(CONFIG)\bin\libmpr.dll
+DEPS_60 = $(DEPS_60) build\$(CONFIG)\obj\watchdog.obj
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_57 = $(LIBS_57) libmbedtls.lib
+LIBS_60 = $(LIBS_60) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_57 = $(LIBS_57) libmpr-mbedtls.lib
+LIBS_60 = $(LIBS_60) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_57 = $(LIBS_57) libmbedtls.lib
+LIBS_60 = $(LIBS_60) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_57 = $(LIBS_57) libmpr-openssl.lib
+LIBS_60 = $(LIBS_60) libmpr-openssl.lib
 !ENDIF
-LIBS_57 = $(LIBS_57) libmpr.lib
+LIBS_60 = $(LIBS_60) libmpr.lib
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_57 = $(LIBS_57) libmpr-mbedtls.lib
+LIBS_60 = $(LIBS_60) libmpr-mbedtls.lib
 !ENDIF
 
-build\$(CONFIG)\bin\espman.exe: $(DEPS_57)
+build\$(CONFIG)\bin\espman.exe: $(DEPS_60)
 	@echo ..... [Link] build\$(CONFIG)\bin\espman.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_57) $(LIBS_57) $(LIBS_57) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_60) $(LIBS_60) $(LIBS_60) $(LIBS)  $(LOG)
 
 #
 #   installPrep
 #
 
-installPrep: $(DEPS_58)
+installPrep: $(DEPS_61)
 	if [ "`id -u`" != 0 ]
 	then echo "Must run as root. Rerun with sudo."
 	exit 255
@@ -1012,14 +1034,14 @@ installPrep: $(DEPS_58)
 #   stop
 #
 
-stop: $(DEPS_59)
+stop: $(DEPS_62)
 #  Omit build script stop
 
 #
 #   installBinary
 #
 
-installBinary: $(DEPS_60)
+installBinary: $(DEPS_63)
 	if not exist "$(ME_VAPP_PREFIX)\man\man1" md "$(ME_VAPP_PREFIX)\man\man1"
 	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
 	copy /Y /B build\$(CONFIG)\bin\esp.exe+modified "$(ME_VAPP_PREFIX)\bin\esp.exe" $(LOG)
@@ -1057,33 +1079,33 @@ installBinary: $(DEPS_60)
 #   start
 #
 
-start: $(DEPS_61)
+start: $(DEPS_64)
 #  Omit build script start
 
 #
 #   install
 #
-DEPS_62 = $(DEPS_62) installPrep
-DEPS_62 = $(DEPS_62) stop
-DEPS_62 = $(DEPS_62) installBinary
-DEPS_62 = $(DEPS_62) start
+DEPS_65 = $(DEPS_65) installPrep
+DEPS_65 = $(DEPS_65) stop
+DEPS_65 = $(DEPS_65) installBinary
+DEPS_65 = $(DEPS_65) start
 
-install: $(DEPS_62)
+install: $(DEPS_65)
 #  Omit build script install
 
 #
 #   uninstall
 #
-DEPS_63 = $(DEPS_63) stop
+DEPS_66 = $(DEPS_66) stop
 
-uninstall: $(DEPS_63)
+uninstall: $(DEPS_66)
 #  Omit build script uninstall
 
 #
 #   uninstallBinary
 #
 
-uninstallBinary: $(DEPS_64)
+uninstallBinary: $(DEPS_67)
 	if exist "$(ME_VAPP_PREFIX)" rd /Q /S "$(ME_VAPP_PREFIX)"
 	if exist "$(ME_VAPP_PREFIX)\bin" rd /Q "$(ME_VAPP_PREFIX)\bin"
 	if exist "$(ME_VAPP_PREFIX)\inc" rd /Q "$(ME_VAPP_PREFIX)\inc"
@@ -1094,6 +1116,6 @@ uninstallBinary: $(DEPS_64)
 #   version
 #
 
-version: $(DEPS_65)
+version: $(DEPS_68)
 	echo $(VERSION)
 

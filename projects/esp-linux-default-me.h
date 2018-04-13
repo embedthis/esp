@@ -93,6 +93,9 @@
 #ifndef ME_MANIFEST
     #define ME_MANIFEST "installs/manifest.me"
 #endif
+#ifndef ME_MBEDTLS_COMPACT
+    #define ME_MBEDTLS_COMPACT 1
+#endif
 #ifndef ME_MPR_LOGGING
     #define ME_MPR_LOGGING 1
 #endif
