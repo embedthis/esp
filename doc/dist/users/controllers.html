@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>ESP Controllers</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="ESP Controllers" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="ESP web framework">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.css" rel="stylesheet" type="text/css" />
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="/lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -225,20 +224,20 @@ http://example.com/APP/CONTROLLER/ACTION/ID
         <p>ESP will create a initial set of Restful routes depending on the <em>esp.server.routes</em> configuration.</p>
 <table class="ui table" title="routes">
     <thead>
-<tr><th>Description</th><th>Method</th><th>Pattern</th><th>Action</th></tr>
+<tr><th>Description<th>Method<th>Pattern<th>Action</tr>
     </thead>
     <tbody>
-<tr><td>controller</td><td>GET</td><td>/controller$</td><td>${controller}</td></tr>
-<tr><td>delete</td><td>POST</td><td>/controller/{id=[0-9]+}/delete$</td><td>delete</td></tr>
-<tr><td>create</td><td>POST</td><td>/controller(/)*$</td><td>create</td></tr>
-<tr><td>edit</td><td>GET</td><td>/controller/{id=[0-9]+}/edit$</td><td>edit</td></tr>
-<tr><td>get</td><td>GET</td><td>/controller/{id=[0-9]+}$</td><td>get</td></tr>
-<tr><td>init</td><td>GET</td><td>/controller/init$</td><td>init</td></tr>
-<tr><td>list</td><td>GET</td><td>/controller/list$</td><td>list</td></tr>
-<tr><td>stream</td><td>GET</td><td>/controller/stream$</td><td>stream</td></tr>
-<tr><td>remove</td><td>DELETE</td><td>/controller/{id=[0-9]+}$</td><td>remove</td></tr>
-<tr><td>update</td><td>PUT</td><td>/controller/{id=[0-9]+}/{action}(/)*$</td><td>update</td></tr>
-<tr><td>action</td><td>GET,POST</td><td>/controller//{id=[0-9]+}{action}$</td><td>${controller}/${action}</td></tr>
+<tr><td>controller<td>GET<td>/controller$<td>${controller}</tr>
+<tr><td>delete<td>POST<td>/controller/{id=[0-9]+}/delete$<td>delete</tr>
+<tr><td>create<td>POST<td>/controller(/)*$<td>create</tr>
+<tr><td>edit<td>GET<td>/controller/{id=[0-9]+}/edit$<td>edit</tr>
+<tr><td>get<td>GET<td>/controller/{id=[0-9]+}$<td>get</tr>
+<tr><td>init<td>GET<td>/controller/init$<td>init</tr>
+<tr><td>list<td>GET<td>/controller/list$<td>list</tr>
+<tr><td>stream<td>GET<td>/controller/stream$<td>stream</tr>
+<tr><td>remove<td>DELETE<td>/controller/{id=[0-9]+}$<td>remove</tr>
+<tr><td>update<td>PUT<td>/controller/{id=[0-9]+}/{action}(/)*$<td>update</tr>
+<tr><td>action<td>GET,POST<td>/controller//{id=[0-9]+}{action}$<td>${controller}/${action}</tr>
     </tbody>
 </table>
     <p>The delete route is a POST method variant of remove. The stream route is for WebSockets streaming of
@@ -368,8 +367,7 @@ static void first() {
 <pre class="code">static void ACTION(HttpConn *conn) {
     /* Use the conn reference here */
 }</pre> 
-            <p>Alternatively, the connection object can can be retrieved using the <a
-                href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">
+            <p>Alternatively, the connection object can can be retrieved using the <a href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">
                 getConn</a> API.</p>
             <h3>Navigating the Connection Object</h3>
             <p>The <a href="../ref/api/http.html#group___http_conn">HttpConn</a> object represents the current
@@ -378,17 +376,17 @@ static void first() {
             navigated.</p> 
             <table class="table ui" title="properties">
                 <thead>
-                    <tr><th>HttpConn Property</th><th>Purpose</th></tr>
+                    <tr><th>HttpConn Property<th>Purpose</tr>
                 </thead>
                 <tbody>
-                    <tr><td>rx</td><td>Reference to the HttpRx receive object</td></tr>
-                    <tr><td>tx</td><td>Reference to the HttpTx transmit object</td></tr>
-                    <tr><td>host</td><td>Reference to the HttpHost object</td></tr>
-                    <tr><td>http</td><td>Reference to the Http object</td></tr>
-                    <tr><td>endpoint</td><td>Reference to the HttpEndpoint transmit object</td></tr>
-                    <tr><td>limits</td><td>Reference to the HttpLimits object</td></tr>
-                    <tr><td>ip</td><td>Remote client IP address</td></tr>
-                    <tr><td>port</td><td>Remote client port</td></tr>
+                    <tr><td>rx<td>Reference to the HttpRx receive object</tr>
+                    <tr><td>tx<td>Reference to the HttpTx transmit object</tr>
+                    <tr><td>host<td>Reference to the HttpHost object</tr>
+                    <tr><td>http<td>Reference to the Http object</tr>
+                    <tr><td>endpoint<td>Reference to the HttpEndpoint transmit object</tr>
+                    <tr><td>limits<td>Reference to the HttpLimits object</tr>
+                    <tr><td>ip<td>Remote client IP address</tr>
+                    <tr><td>port<td>Remote client port</tr>
                 </tbody>
             </table>
             <h3>Navigating the Receive Object</h3>
@@ -397,17 +395,17 @@ static void first() {
             object are public and can be accessed and navigated.</p> 
             <table class="table ui" title="fields">
                 <thead>
-                    <tr><th>HttpRx Property</th><th>Purpose</th></tr>
+                    <tr><th>HttpRx Property<th>Purpose</tr>
                 </thead>
                 <tbody>
-                    <tr><td>method</td><td>HTTP request method</td></tr>
-                    <tr><td>uri</td><td>Current URI (may be rewritten)</td></tr>
-                    <tr><td>pathInfo</td><td>Path portion of the URI after the scriptName</td></tr>
-                    <tr><td>scriptName</td><td>ScriptName portion of the URI</td></tr>
-                    <tr><td>length</td><td>Content length</td></tr>
-                    <tr><td>route</td><td>Reference to current HttpRoute object</td></tr>
-                    <tr><td>params</td><td>Request params (query, form and route parameters)</td></tr>
-                    <tr><td>files</td><td>Uploaded files</td></tr>
+                    <tr><td>method<td>HTTP request method</tr>
+                    <tr><td>uri<td>Current URI (may be rewritten)</tr>
+                    <tr><td>pathInfo<td>Path portion of the URI after the scriptName</tr>
+                    <tr><td>scriptName<td>ScriptName portion of the URI</tr>
+                    <tr><td>length<td>Content length</tr>
+                    <tr><td>route<td>Reference to current HttpRoute object</tr>
+                    <tr><td>params<td>Request params (query, form and route parameters)</tr>
+                    <tr><td>files<td>Uploaded files</tr>
                 </tbody>
             </table>
             <h3>Navigating the Tx Object</h3>
@@ -416,15 +414,15 @@ static void first() {
             object are public and can be accessed and navigated.</p> 
             <table class="table ui" title="state">
                 <thead>
-                    <tr><th>HttpTx Property</th><th>Purpose</th></tr>
+                    <tr><th>HttpTx Property<th>Purpose</tr>
                 </thead>
                 <tbody>
-                    <tr><td>filename</td><td>Name of the real file being served</td></tr>
-                    <tr><td>ext</td><td>Filename extension</td></tr>
-                    <tr><td>handler</td><td>Request handler object</td></tr>
-                    <tr><td>length</td><td>Response content length</td></tr>
-                    <tr><td>status</td><td>Response HTTP status</td></tr>
-                    <tr><td>headers</td><td>Response HTTP headers</td></tr>
+                    <tr><td>filename<td>Name of the real file being served</tr>
+                    <tr><td>ext<td>Filename extension</tr>
+                    <tr><td>handler<td>Request handler object</tr>
+                    <tr><td>length<td>Response content length</tr>
+                    <tr><td>status<td>Response HTTP status</tr>
+                    <tr><td>headers<td>Response HTTP headers</tr>
                 </tbody>
             </table>
             
@@ -579,15 +577,17 @@ ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route)
 
     </div>
     <div class="terms ui basic center aligned segment">
-        <p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p>
+        <p>&copy; Embedthis Software. All rights reserved.</p>
     </div>
 
-    <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/semantic-ui/semantic.js"></script>
-    <script src="../scripts/sidebar.js"></script>
+    <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="/lib/jquery/pak.min.js"></script>
+    <script src="/lib/semantic-ui/semantic.min.js"></script>
+    <script src="/scripts/sidebar.min.js"></script>
      
 
     
 
-</body>
-</html>
+
+
+

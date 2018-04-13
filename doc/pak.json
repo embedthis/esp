@@ -1,6 +1,17 @@
 {
     "name": "esp-doc",
-    "version": undefined,
-    "repository": undefined,
-    "pak": "debug"
+    "title": "Embedthis ESP Documentation",
+    "description": "ESP web framework",
+    "dependencies": {
+        "me-docstyle": "~0.9"
+    },
+    "devDependencies": {
+        "expansive": ">=0.6.0"
+    },
+    "directories": {
+        "contents": "contents",
+        "export": "contents/lib"
+    },
+    "import": true,
+    "profile": "debug"
 }

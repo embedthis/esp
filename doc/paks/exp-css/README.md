@@ -68,7 +68,7 @@ To support Content Security Policy headers, the css.extract service extracts inl
 
 ## Example
 
-The `debug` collection will be selected if the package.json `pak.mode` is set to debug. Similarly for the `release` collection.
+The `debug` collection will be selected if the pak.json `profile` is set to debug. Similarly for the `release` collection.
 
 ```
 debug: {

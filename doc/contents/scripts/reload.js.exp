@@ -1,6 +1,7 @@
 <@
     let reload = expansive.services.reload
-    if (reload && reload.enable && expansive.package.pak.mode == 'debug') {
+    let profile = expansive.package.profile
+    if (reload && reload.enable && (profile == 'debug' || profile == 'dev')) {
  @>
     $(document).ready(function() {
         (function() {

@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <title>ESP Pages</title>
-    <!-- Copyright Embedthis Software. All Rights Reserved. -->
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="description" content="ESP Pages" />
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
-        rel='stylesheet' type='text/css'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="ESP web framework">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon" />
-    <link href="../lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
-    <link href="../css/all.css" rel="stylesheet" type="text/css" />
-    <link href="../css/api.css" rel="stylesheet" type="text/css" />
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="/lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/api.min.css" rel="stylesheet" type="text/css">
     
 
 </head>
@@ -188,7 +187,7 @@
             code without any access to the original ESP page. If the system is rebooted, the on-disk cached module 
             will be loaded without recompilation.</p>
             
-            <img class="ui centered image" src="../images/esp/template/compile.jpg" alt="compile" />
+            <img class="ui centered image" src="../images/esp/template/compile.jpg" alt="compile">
             <p>The compilation of ESP pages happens automatically and quickly in the background when in development mode. 
             If the original web page is modified, the page is transparently recompiled and re-cached. For production, 
             pages can be pre-compiled, and locked-down without recompiling in the field. This updating behavior can 
@@ -312,7 +311,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <h3>&lt;&#37; statements &#37;&gt;</h3>
             <p>Use this directive to run <em>C</em> code statements. No value is substituted back into the page in
             place of the directive. If you need to write data inside a statement block, use the 
-            <!--TODO-->
+            
             render API.</p>
 
             <pre class="code">
@@ -322,7 +321,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
     }
 &#37;&gt;
 </pre>
-            <!-- TODO links -->
+            
             <p><em>Security Note</em>: you should never use <em>render</em> to write back user data that has not been
             validated. If you 
             must render user input data, use <em>renderSafe</em> which will escape any HTML sequences. This is essential
@@ -396,25 +395,25 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             Here is a collection of especially useful context items:</p>
             <table class="ui table" title="items">
                 <thead>
-                    <tr><th>Item</th><th>Description</th></tr>
+                    <tr><th>Item<th>Description</tr>
                 </thead>
                 <tbody>
-                <tr><td>getConn()</td><td>Get the current HttpConn object. Can be used inside controllers and 
-                    template web pages</td></tr>
-                <tr><td>conn-&gt;rx</td><td>Request object</td>
-                <tr><td>conn-&gt;tx</td><td>Transmit object</td>
-                <tr><td>conn-&gt;host</td><td>Host object</td>
-                <tr><td>conn-&gt;rx-&gt;route</td><td>Route object</td>
-                <tr><td class="nowrap">conn-&gt;rx-&gt;route-&gt;eroute</td><td>ESP Extended Route object</td>
-                <tr><td>rx-&gt;method</td><td>HTTP method string</td>
-                <tr><td>rx-&gt;uri</td><td>Request URI</td>
-                <tr><td>rx-&gt;pathInfo</td><td>Request path information after the scriptName</td>
-                <tr><td class="nowrap">rx-&gt;scriptName</td><td>Script name portion of the request URI</td>
-                <tr><td>tx-&gt;filename</td><td>Resource filename being served</td>
-                <tr><td>tx-&gt;ext</td><td>Resource filename extension</td>
-                <tr><td>tx-&gt;finalized</td><td>Set if response output has been completed</td>
-                <tr><td>route-&gt;documents</td><td>Document root directory for the route</td>
-                <tr><td>route-&gt;home</td><td>Route home directory</td>
+                <tr><td>getConn()<td>Get the current HttpConn object. Can be used inside controllers and 
+                    template web pages</tr>
+                <tr><td>conn-&gt;rx<td>Request object</td>
+                <tr><td>conn-&gt;tx<td>Transmit object</td>
+                <tr><td>conn-&gt;host<td>Host object</td>
+                <tr><td>conn-&gt;rx-&gt;route<td>Route object</td>
+                <tr><td class="nowrap">conn-&gt;rx-&gt;route-&gt;eroute<td>ESP Extended Route object</td>
+                <tr><td>rx-&gt;method<td>HTTP method string</td>
+                <tr><td>rx-&gt;uri<td>Request URI</td>
+                <tr><td>rx-&gt;pathInfo<td>Request path information after the scriptName</td>
+                <tr><td class="nowrap">rx-&gt;scriptName<td>Script name portion of the request URI</td>
+                <tr><td>tx-&gt;filename<td>Resource filename being served</td>
+                <tr><td>tx-&gt;ext<td>Resource filename extension</td>
+                <tr><td>tx-&gt;finalized<td>Set if response output has been completed</td>
+                <tr><td>route-&gt;documents<td>Document root directory for the route</td>
+                <tr><td>route-&gt;home<td>Route home directory</td>
                 </tbody>
             </table>
             <p>See the <a href="../ref/native.html">Native APIs</a> document for more details about the available
@@ -481,15 +480,17 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 
     </div>
     <div class="terms ui basic center aligned segment">
-        <p>&copy; Embedthis Software, 2003-2015. All rights reserved.</p>
+        <p>&copy; Embedthis Software. All rights reserved.</p>
     </div>
 
-    <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/semantic-ui/semantic.js"></script>
-    <script src="../scripts/sidebar.js"></script>
+    <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="/lib/jquery/pak.min.js"></script>
+    <script src="/lib/semantic-ui/semantic.min.js"></script>
+    <script src="/scripts/sidebar.min.js"></script>
      
 
     
 
-</body>
-</html>
+
+
+

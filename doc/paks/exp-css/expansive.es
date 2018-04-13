@@ -181,8 +181,11 @@ Expansive.load({
                         if (filter && !Path(style).glob(filter)) {
                             continue
                         }
-                        let uri = meta.top.join(style).trimStart('./')
-                        write('<link href="' + uri + '" rel="stylesheet" type="text/css" />\n    ')
+                        // let uri = meta.top.join(style).trimStart('./')
+                        if (!style.startsWith('http') && !style.startsWith('..')) {
+                            style = '/' + style
+                        }
+                        write('<link href="' + style + '" rel="stylesheet" type="text/css" />\n    ')
                     }
                     if (extras && extras is String) {
                         extras = [extras]
@@ -195,8 +198,11 @@ Expansive.load({
                         }
                     }
                     for each (style in extras) {
-                        let uri = meta.top.join(style).trimStart('./')
-                        write('<link href="' + uri + '" rel="stylesheet" type="text/css" />\n    ')
+                        // let uri = meta.top.join(style).trimStart('./')
+                        if (!style.startsWith('http') && !style.startsWith('..')) {
+                            style = '/' + style
+                        }
+                        write('<link href="' + style + '" rel="stylesheet" type="text/css" />\n    ')
                     }
                     if (expansive.collections['inline-styles']) {
                         write('<style>')
@@ -331,7 +337,7 @@ Expansive.load({
                     if (state.elements) {
                         for (let [key,value] in state.elements) {
                             value = value.trim().split('\n').transform(function (e) e.trim()).join('\n    ')
-                            //  Match {
+                            //  Match {{
                             value = value.replace('    }', '}')
                             state.elements[key] = value
                         }

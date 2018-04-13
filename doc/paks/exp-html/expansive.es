@@ -5,7 +5,7 @@ Expansive.load({
         options:    '--remove-comments --collapse-whitespace --prevent-attributes-escaping --remove-empty-attributes --remove-optional-tags'
 
         transforms: {
-            mappings:   'html',
+            mappings:   ['html'],
 
             init: function(transform) {
                 transform.htmlmin = Cmd.locate('html-minifier')

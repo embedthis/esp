@@ -192,8 +192,11 @@ Expansive.load({
                             continue
                         }
                         script = Path(script).portable
-                        let uri = meta.top.join(script).trimStart('./')
-                        write('<script src="' + uri + '"></script>\n    ')
+                        // let uri = meta.top.join(script).trimStart('./')
+                        if (!script.startsWith('http') && !script.startsWith('..')) {
+                            script = '/' + script
+                        }
+                        write('<script src="' + script + '"></script>\n    ')
                     }
                     if (extras && extras is String) {
                         extras = [extras]
@@ -214,9 +217,12 @@ Expansive.load({
                             async = 'async '
                             script = script.split('async ')[1]
                         }
-                        let uri = meta.top.join(script).trimStart('./')
-                        script = Path(script).portable
-                        write('<script ' + async + 'src="' + uri + '"></script>\n    ')
+                        // let uri = meta.top.join(script).trimStart('./')
+                        // script = Path(script).portable
+                        if (!script.startsWith('http') && !script.startsWith('..')) {
+                            script = '/' + script
+                        }
+                        write('<script ' + async + 'src="' + script + '"></script>\n    ')
                     }
                 }
             },
