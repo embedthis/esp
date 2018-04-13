@@ -254,6 +254,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
     }
     mbedtls_ssl_conf_rng(mconf, mbedtls_ctr_drbg_random, &mbedGlobal->ctr);
 
+#if DEPRECATED
     /*
         Configure larger DH parameters
      */
@@ -261,7 +262,7 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
         merror(rc, "Cannot set DH params");
         return MPR_ERR_CANT_INITIALIZE;
     }
-
+#endif
     if (flags & MPR_SOCKET_SERVER) {
 #if ME_MPR_SSL_TICKET
         /*

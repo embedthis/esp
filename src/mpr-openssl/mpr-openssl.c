@@ -233,11 +233,13 @@ static ssize    readOss(MprSocket *sp, void *buf, ssize len);
 static void     setSecured(MprSocket *sp);
 static int      setCertFile(SSL_CTX *ctx, cchar *certFile);
 static int      setKeyFile(SSL_CTX *ctx, cchar *keyFile);
+#if UNUSED
 static DynLock  *sslCreateDynLock(cchar *file, int line);
 static void     sslDynLock(int mode, DynLock *dl, cchar *file, int line);
 static void     sslDestroyDynLock(DynLock *dl, cchar *file, int line);
 static void     sslStaticLock(int mode, int n, cchar *file, int line);
 static ulong    sslThreadId(void);
+#endif
 static int      sniHostname(SSL *ssl, int *al, void *arg);
 static int      upgradeOss(MprSocket *sp, MprSsl *ssl, cchar *requiredPeerName);
 static int      verifyPeerCertificate(int ok, X509_STORE_CTX *xctx);
@@ -286,12 +288,15 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
         for (i = 0; i < numLocks; i++) {
             olocks[i] = mprCreateLock();
         }
+
+#if UNUSED
         CRYPTO_set_id_callback(sslThreadId);
         CRYPTO_set_locking_callback(sslStaticLock);
-
         CRYPTO_set_dynlock_create_callback(sslCreateDynLock);
         CRYPTO_set_dynlock_destroy_callback(sslDestroyDynLock);
         CRYPTO_set_dynlock_lock_callback(sslDynLock);
+#endif
+
 #if !ME_WIN_LIKE
         OpenSSL_add_all_algorithms();
 #endif
@@ -881,18 +886,21 @@ static char *getOssSession(MprSocket *sp)
     SSL_SESSION     *sess;
     OpenSocket      *osp;
     MprBuf          *buf;
+    cuchar          *id;
+    uint            len;
     int             i;
 
     osp = sp->sslSocket;
 
     if ((sess = SSL_get0_session(osp->handle)) != 0) {
-        if (sess->session_id_length == 0 && osp->handle->tlsext_ticket_expected) {
+        id = SSL_SESSION_get_id(sess, &len);
+        if (len == 0) {
             return sclone("ticket");
         }
-        buf = mprCreateBuf((sess->session_id_length * 2) + 1, 0);
+        buf = mprCreateBuf((len * 2) + 1, 0);
         assert(buf->start);
-        for (i = 0; i < (int) sess->session_id_length; i++) {
-            mprPutToBuf(buf, "%02X", (uchar) sess->session_id[i]);
+        for (i = 0; i < (int) len ; i++) {
+            mprPutToBuf(buf, "%02X", (uchar) id[i]);
         }
         return mprBufToString(buf);
     }
@@ -1284,6 +1292,7 @@ static void setSecured(MprSocket *sp)
 }
 
 
+#if UNUSED
 static ulong sslThreadId()
 {
     return (long) mprGetCurrentOsThread();
@@ -1332,6 +1341,7 @@ static void sslDynLock(int mode, DynLock *dl, cchar *file, int line)
         mprUnlock(dl->mutex);
     }
 }
+#endif
 
 
 static char *getOssError(MprSocket *sp)
@@ -1402,13 +1412,16 @@ static DH *getDhKey()
         0x02,
     };
     DH      *dh;
+    BIGNUM  *p, *g;
 
     if ((dh = DH_new()) == 0) {
         return 0;
     }
-    dh->p = BN_bin2bn(dh2048_p, sizeof(dh2048_p), NULL);
-    dh->g = BN_bin2bn(dh2048_g, sizeof(dh2048_g), NULL);
-    if ((dh->p == 0) || (dh->g == 0)) {
+    p = BN_bin2bn(dh2048_p, sizeof(dh2048_p), NULL);
+    g = BN_bin2bn(dh2048_g, sizeof(dh2048_g), NULL);
+    if (!DH_set0_pqg(dh, p, NULL, g)) {
+        BN_free(p);
+        BN_free(g);
         DH_free(dh);
         return 0;
     }

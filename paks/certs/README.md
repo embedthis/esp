@@ -1,6 +1,8 @@
 certs
 ===
 
+On macosx, use brew install openssl and set PATH to reference the brew openssl.
+
 Test certificates.
 
 ## Installation

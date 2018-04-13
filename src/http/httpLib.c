@@ -5,9 +5,7 @@
 #include "http.h"
 
 
-
 /********* Start of file src/service.c ************/
-
 
 /*
     service.c -- Http service. Includes timer for expired requests.
@@ -1303,9 +1301,7 @@ PUBLIC int httpSetPlatformDir(cchar *path)
  */
 
 
-
 /********* Start of file src/actionHandler.c ************/
-
 
 /*
     actionHandler.c -- Action handler
@@ -1378,9 +1374,7 @@ PUBLIC int httpOpenActionHandler()
  */
 
 
-
 /********* Start of file src/auth.c ************/
-
 
 /*
 
@@ -2100,9 +2094,7 @@ PUBLIC int formParse(HttpConn *conn, cchar **username, cchar **password)
  */
 
 
-
 /********* Start of file src/basic.c ************/
-
 
 /*
     basic.c - Basic Authorization
@@ -2196,9 +2188,7 @@ PUBLIC bool httpBasicSetHeaders(HttpConn *conn, cchar *username, cchar *password
  */
 
 
-
 /********* Start of file src/cache.c ************/
-
 
 /*
     cache.c -- Http request route caching
@@ -2755,9 +2745,7 @@ static cchar *setHeadersFromCache(HttpConn *conn, cchar *content)
  */
 
 
-
 /********* Start of file src/chunkFilter.c ************/
-
 
 /*
     chunkFilter.c - Transfer chunk endociding filter.
@@ -3012,9 +3000,7 @@ static void setChunkPrefix(HttpQueue *q, HttpPacket *packet)
  */
 
 
-
 /********* Start of file src/client.c ************/
-
 
 /*
     client.c -- Client side specific support.
@@ -3590,9 +3576,7 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
  */
 
 
-
 /********* Start of file src/config.c ************/
-
 
 /*
     config.c -- Http JSON Configuration File Parsing
@@ -5641,9 +5625,7 @@ PUBLIC int httpInitParser()
  */
 
 
-
 /********* Start of file src/conn.c ************/
-
 
 /*
     conn.c -- Connection module to handle individual HTTP connections.
@@ -6637,9 +6619,7 @@ PUBLIC void httpSetConnReqData(HttpConn *conn, void *data)
  */
 
 
-
 /********* Start of file src/digest.c ************/
-
 
 /*
     digest.c - Digest Authorization
@@ -7046,9 +7026,7 @@ static char *calcDigest(HttpConn *conn, HttpDigest *dp, cchar *username)
  */
 
 
-
 /********* Start of file src/dirHandler.c ************/
-
 
 /*
     dirHandler.c - Directory listing handler
@@ -7687,9 +7665,7 @@ PUBLIC int httpOpenDirHandler()
  */
 
 
-
 /********* Start of file src/endpoint.c ************/
-
 
 /*
     endpoint.c -- Create and manage listening endpoints.
@@ -8113,9 +8089,7 @@ PUBLIC void httpSetInfoLevel(int level)
  */
 
 
-
 /********* Start of file src/error.c ************/
-
 
 /*
     error.c -- Http error handling
@@ -8330,9 +8304,7 @@ PUBLIC void httpMemoryError(HttpConn *conn)
  */
 
 
-
 /********* Start of file src/fileHandler.c ************/
-
 
 /*
     fileHandler.c -- Static file content handler
@@ -8864,9 +8836,7 @@ PUBLIC int httpOpenFileHandler()
  */
 
 
-
 /********* Start of file src/host.c ************/
-
 
 /*
     host.c -- Host class for all HTTP hosts
@@ -9318,9 +9288,7 @@ PUBLIC void httpSetStreaming(HttpHost *host, cchar *mime, cchar *uri, bool enabl
  */
 
 
-
 /********* Start of file src/monitor.c ************/
-
 
 /*
     monitor.c -- Monitor and defensive management.
@@ -10017,9 +9985,7 @@ PUBLIC int httpAddRemedies()
  */
 
 
-
 /********* Start of file src/netConnector.c ************/
-
 
 /*
     netConnector.c -- General network connector.
@@ -10340,9 +10306,7 @@ static void adjustNetVec(HttpQueue *q, ssize written)
  */
 
 
-
 /********* Start of file src/packet.c ************/
-
 
 /*
     packet.c -- Queue support routines. Queues are the bi-directional data flow channels for the pipeline.
@@ -10855,9 +10819,7 @@ bool httpIsLastPacket(HttpPacket *packet)
  */
 
 
-
 /********* Start of file src/pam.c ************/
-
 
 /*
     authPam.c - Authorization using PAM (Pluggable Authorization Module)
@@ -11005,9 +10967,7 @@ static int pamChat(int msgCount, const struct pam_message **msg, struct pam_resp
  */
 
 
-
 /********* Start of file src/passHandler.c ************/
-
 
 /*
     passHandler.c -- Pass through handler
@@ -11118,9 +11078,7 @@ PUBLIC int httpOpenPassHandler()
  */
 
 
-
 /********* Start of file src/pipeline.c ************/
-
 
 /*
     pipeline.c -- HTTP pipeline processing.
@@ -11568,9 +11526,7 @@ static bool matchFilter(HttpConn *conn, HttpStage *filter, HttpRoute *route, int
  */
 
 
-
 /********* Start of file src/queue.c ************/
-
 
 /*
     queue.c -- Queue support routines. Queues are the bi-directional data flow channels for the pipeline.
@@ -12068,9 +12024,7 @@ PUBLIC bool httpVerifyQueue(HttpQueue *q)
  */
 
 
-
 /********* Start of file src/rangeFilter.c ************/
-
 
 /*
     rangeFilter.c - Ranged request filter.
@@ -12397,9 +12351,7 @@ static bool fixRangeLength(HttpConn *conn, HttpQueue *q)
  */
 
 
-
 /********* Start of file src/route.c ************/
-
 
 /*
     route.c -- Http request routing
@@ -15804,9 +15756,7 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits)
  */
 
 
-
 /********* Start of file src/rx.c ************/
-
 
 /*
     rx.c -- Http receiver. Parses http requests and client responses.
@@ -17787,9 +17737,7 @@ static int sendContinue(HttpConn *conn)
  */
 
 
-
 /********* Start of file src/sendConnector.c ************/
-
 
 /*
     sendConnector.c -- Send file connector.
@@ -18132,9 +18080,7 @@ PUBLIC void httpSendOutgoingService(HttpQueue *q) {}
  */
 
 
-
 /********* Start of file src/session.c ************/
-
 
 /**
     session.c - Session data storage
@@ -18552,9 +18498,7 @@ PUBLIC bool httpCheckSecurityToken(HttpConn *conn)
  */
 
 
-
 /********* Start of file src/stage.c ************/
-
 
 /*
     stage.c -- Stages are the building blocks of the Http request pipeline.
@@ -18715,9 +18659,7 @@ PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module)
  */
 
 
-
 /********* Start of file src/trace.c ************/
-
 
 /*
     trace.c -- Trace data
@@ -19421,9 +19363,7 @@ PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *ty
  */
 
 
-
 /********* Start of file src/tx.c ************/
-
 
 /*
     tx.c - Http transmitter for server responses and client requests.
@@ -20457,9 +20397,7 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...)
  */
 
 
-
 /********* Start of file src/uploadFilter.c ************/
-
 
 /*
     uploadFilter.c - Upload file filter.
@@ -21149,9 +21087,7 @@ static void cleanUploadedFiles(HttpConn *conn)
  */
 
 
-
 /********* Start of file src/uri.c ************/
-
 
 /*
     uri.c - URI manipulation routines
@@ -22151,9 +22087,7 @@ static char *actionRoute(HttpRoute *route, cchar *controller, cchar *action)
  */
 
 
-
 /********* Start of file src/user.c ************/
-
 
 /*
     user.c - User and Role management
@@ -22382,9 +22316,7 @@ PUBLIC void httpSetConnUser(HttpConn *conn, HttpUser *user)
  */
 
 
-
 /********* Start of file src/var.c ************/
-
 
 /*
     var.c -- Manage the request variables
@@ -22717,9 +22649,7 @@ PUBLIC bool httpMatchParam(HttpConn *conn, cchar *var, cchar *value)
  */
 
 
-
 /********* Start of file src/webSockFilter.c ************/
-
 
 /*
     webSockFilter.c - WebSockets filter support

@@ -40,10 +40,10 @@
     "optionalDependencies": {
         "certs": "~0.1",
         "mpr-matrixssl": "~0.3",
-        "mpr-mbedtls": "~0.5",
+        "mpr-mbedtls": "~2",
         "mpr-nanossl": "~0.3",
         "mpr-openssl": "~0.5",
-        "sqlite": "~1.0",
+        "sqlite": "~3",
         "ssl": "~0.9",
         "watchdog": "~0.2"
     },

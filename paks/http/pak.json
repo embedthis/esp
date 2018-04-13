@@ -32,7 +32,7 @@
     "dependencies": {
         "certs": "~0.1",
         "mpr": "~7",
-        "mpr-mbedtls": "~0.5",
+        "mpr-mbedtls": "~2",
         "osdep": "~0.9",
         "pcre": "~1.0",
         "ssl": "~0.9"

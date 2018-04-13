@@ -3,7 +3,6 @@ patch-mbedtls
 
 A patch for MbedTLS to create an amalgamated release for use by Pak
 
-
 ### Prerequisites:
 
     Pak (https://embedthis.com/pak/) to install.

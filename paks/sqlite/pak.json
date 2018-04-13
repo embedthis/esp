@@ -2,7 +2,7 @@
     "name": "sqlite",
     "description": "SQLite Library",
     "title": "SQLite Library",
-    "version": "1.0.5",
+    "version": "3.23.1",
     "keywords": [
         "sqlite",
         "me"
