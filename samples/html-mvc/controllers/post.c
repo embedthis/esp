@@ -8,10 +8,10 @@
  */ 
 static void createPost() { 
     if (updateRec(createRec("post", params()))) {
-        flash("info", "New post Created");
+        feedback("info", "New post Created");
         renderView("post/list");
     } else {
-        flash("error", "Cannot Create Post");
+        feedback("error", "Cannot Create Post");
         renderView("post/edit");
     }
 }
@@ -51,7 +51,7 @@ static void listPost() {
  */
 static void removePost() { 
     if (removeRec("post", param("id"))) {
-        flash("info", "Post Removed");
+        feedback("info", "Post Removed");
     }
     redirect(".");
 }
@@ -66,10 +66,10 @@ static void updatePost() {
         removePost();
     } else {
         if (updateFields("post", params())) {
-            flash("info", "Post Updated Successfully");
+            feedback("info", "Post Updated Successfully");
             redirect(".");
         } else {
-            flash("error", "Cannot Update Post");
+            feedback("error", "Cannot Update Post");
             renderView("post/edit");
         }
     }
@@ -82,14 +82,14 @@ static void redirectPost() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void common(HttpConn *conn) {
+static void commonPost(HttpConn *conn) {
 }
 
 /*
     Dynamic module initialization
  */
 ESP_EXPORT int esp_controller_blog_post(HttpRoute *route, MprModule *module) {
-    espDefineBase(route, common);
+    espDefineBase(route, commonPost);
     espDefineAction(route, "post/create", createPost);
     espDefineAction(route, "post/remove", removePost);
     espDefineAction(route, "post/edit", editPost);

@@ -1,12 +1,15 @@
 {
     "name": "blog",
     "title": "Blog Application",
-    "description": "Blog Application",
     "version": "1.0.0",
-    "license": "GPL",
-    "dependencies": {
-        "exp-css": "~0.3",
-        "exp-js": "~0.3"
+    "import": true,
+    "profile": "debug",
+    "devDependencies": {
+        "esp": ">=7.0"
     },
-    "profile": "debug"
+    "directories": {
+        "dist": "dist",
+        "controllers": "controllers",
+        "export": "contents/lib"
+    }
 }

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <@ partial('header') @>
+</head>
+<body>
+    <@ partial('nav') @>
+    <main class="container">
+        <@ content @>
+    </main>
+    <@ partial('footer') @>
+</body>
+</html>

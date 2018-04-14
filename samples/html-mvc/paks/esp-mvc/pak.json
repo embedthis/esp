@@ -1,0 +1,64 @@
+{
+    "name": "esp-mvc",
+    "description": "ESP Server-Side HTML",
+    "version": "5.5.2",
+    "keywords": [
+        "esp"
+    ],
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
+    "dependencies": {
+        "exp-js": "~0.3",
+        "exp-less": "~0.3",
+        "exp-css": "~0.3",
+        "exp-esp": "~0.3",
+        "exp-html": "~0.2",
+        "exp-canon": "~0.1"
+    },
+    "devDependencies": {
+        "expansive": ">=0.7.0",
+        "pak": ">=0.11.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/esp-mvc.git"
+    },
+    "ignore": [
+        "test**"
+    ],
+    "blend": {
+        "directories": {
+            "?dist": "dist",
+            "?controllers": "controllers"
+        },
+        "?profile": "debug",
+        "?import": true
+    },
+    "export": {
+        "from": [
+            "contents/**",
+            "layouts/**",
+            "partials/**"
+        ],
+        "to": "${TOP}",
+        "overwrite": false
+    },
+    "manage": [
+        "esp.json",
+        "expansive.json"
+    ],
+    "scripts": {
+        "install": {
+            "script": "mkdir('contents'); mkdir('layouts'); mkdir('partials')"
+        }
+    },
+    "origin": "embedthis/esp-mvc"
+}

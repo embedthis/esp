@@ -1,0 +1,12 @@
+{
+    "esp": {
+        "generate": {
+            "-controller": "esp-mvc/generate/controller.c",
+
+            "?clientList": "esp-html-skeleton/generate/list.esp",
+            "?clientEdit": "esp-html-skeleton/generate/edit.esp",
+            "?controller": "esp-html-skeleton/generate/controller.c",
+            "?controllerSingleton": "esp-html-skeleton/generate/controllerSingleton.c"
+        }
+    }
+}
