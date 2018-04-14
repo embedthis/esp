@@ -1,6 +1,16 @@
 {
     "name": "layout",
+    "title": "Layout Application",
     "version": "1.0.0",
     "import": true,
-    "profile": "debug"
+    "profile": "debug",
+    "devDependencies": {
+        "esp": ">=7.0"
+    },
+    "directories": {
+        "dist": "dist"
+    },
+    "dependencies": {
+        "exp-esp": "~0.3"
+    }
 }
