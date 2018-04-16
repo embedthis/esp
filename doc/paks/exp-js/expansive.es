@@ -10,7 +10,7 @@ Expansive.load({
         compress:   true,
         dotmin:     true,
         extract:    false,
-        files:      [ 'lib/**.js*', '!lib**.map' ],
+        files:      [ 'lib/**.js*', '!lib/**.json', '!lib**.map' ],
         minify:     false,
         options:    '--mangle --compress dead_code=true,conditionals=true,booleans=true,unused=true,if_return=true,join_vars=true,drop_console=true'
         usemap:     true,
@@ -192,9 +192,12 @@ Expansive.load({
                             continue
                         }
                         script = Path(script).portable
-                        // let uri = meta.top.join(script).trimStart('./')
-                        if (!script.startsWith('http') && !script.startsWith('..')) {
-                            script = '/' + script
+                        if (service.absolute) {
+                            if (!script.startsWith('http') && !script.startsWith('..')) {
+                                script = '/' + script
+                            }
+                        } else {
+                            script = meta.top.join(script).trimStart('./')
                         }
                         write('<script src="' + script + '"></script>\n    ')
                     }
@@ -217,10 +220,13 @@ Expansive.load({
                             async = 'async '
                             script = script.split('async ')[1]
                         }
-                        // let uri = meta.top.join(script).trimStart('./')
-                        // script = Path(script).portable
-                        if (!script.startsWith('http') && !script.startsWith('..')) {
-                            script = '/' + script
+                        if (service.absolute) {
+                            if (!script.startsWith('http') && !script.startsWith('..')) {
+                                script = '/' + script
+                            }
+                        } else {
+                            script = meta.top.join(script).trimStart('./')
+                            // script = Path(script).portable
                         }
                         write('<script ' + async + 'src="' + script + '"></script>\n    ')
                     }

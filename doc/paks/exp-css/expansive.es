@@ -181,9 +181,12 @@ Expansive.load({
                         if (filter && !Path(style).glob(filter)) {
                             continue
                         }
-                        // let uri = meta.top.join(style).trimStart('./')
-                        if (!style.startsWith('http') && !style.startsWith('..')) {
-                            style = '/' + style
+                        if (service.absolute) {
+                            if (!style.startsWith('http') && !style.startsWith('..')) {
+                                style = '/' + style
+                            }
+                        } else {
+                            style = meta.top.join(style).trimStart('./')
                         }
                         write('<link href="' + style + '" rel="stylesheet" type="text/css" />\n    ')
                     }
@@ -198,9 +201,12 @@ Expansive.load({
                         }
                     }
                     for each (style in extras) {
-                        // let uri = meta.top.join(style).trimStart('./')
-                        if (!style.startsWith('http') && !style.startsWith('..')) {
-                            style = '/' + style
+                        if (service.absolute) {
+                            if (!style.startsWith('http') && !style.startsWith('..')) {
+                                style = '/' + style
+                            }
+                        } else {
+                            style = meta.top.join(style).trimStart('./')
                         }
                         write('<link href="' + style + '" rel="stylesheet" type="text/css" />\n    ')
                     }
