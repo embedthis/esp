@@ -1909,18 +1909,18 @@ static void compileItems(HttpRoute *route)
         }
     }
     if (!route->sourceName) {
-    app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
-    for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
-        path = dp->name;
-        if (selectView(route, path)) {
-            compileFile(route, path, ESP_PAGE);
+        app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
+        for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
+            path = dp->name;
+            if (selectView(route, path)) {
+                compileFile(route, path, ESP_PAGE);
+            }
+            found++;
         }
-        found++;
-    }
     } else {
-    /*
-        Stand-alone controllers
-     */
+        /*
+            Stand-alone controllers
+         */
         path = mprJoinPath(route->home, route->sourceName);
         if (mprPathExists(path, R_OK)) {
             compileFile(route, path, ESP_CONTROlLER);

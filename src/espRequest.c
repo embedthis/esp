@@ -114,6 +114,8 @@ static int openEsp(HttpQueue *q)
     HttpRoute   *rp, *route;
     EspRoute    *eroute;
     EspReq      *req;
+    char        *cookie;
+    int         next;
 
     conn = q->conn;
     rx = conn->rx;
@@ -158,8 +160,11 @@ static int openEsp(HttpQueue *q)
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
-    if (!route->cookie) {
-        httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
+    cookie = sfmt("esp-%s", eroute->appName);
+    for (ITERATE_ITEMS(route->host->routes, rp, next)) {
+        if (!rp->cookie) {
+            httpSetRouteCookie(rp, cookie);
+        }
     }
     return 0;
 }
@@ -1106,7 +1111,9 @@ static void manageEsp(Esp *esp, int flags)
 PUBLIC int espLoadConfig(HttpRoute *route)
 {
     EspRoute    *eroute;
-    cchar       *home, *name, *package;
+    HttpRoute   *rp;
+    cchar       *cookie, *home, *name, *package;
+    int         next;
     bool        modified;
 
     eroute = route->eroute;
@@ -1138,6 +1145,12 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         }
         if ((name = espGetConfig(route, "name", 0)) != 0) {
             eroute->appName = name;
+        }
+        cookie = sfmt("esp-%s", eroute->appName);
+        for (ITERATE_ITEMS(route->host->routes, rp, next)) {
+            if (!rp->cookie) {
+                httpSetRouteCookie(rp, cookie);
+            }
         }
         unlock(esp);
     }
