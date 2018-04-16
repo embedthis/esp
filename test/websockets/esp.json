@@ -27,9 +27,6 @@
             "location": "trace.log",
             "level": 4
         },
-        pipeline: {
-            handlers: 'espHandler'
-        },
         routes: [ 
             {
                 pattern: '^/websockets/{controller}/{action}$',

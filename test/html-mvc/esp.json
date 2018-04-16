@@ -1,8 +1,6 @@
 {
     "esp": {
-    esp: {
-        app: true
-    },
+        "app": true,
         "generate": {
             "controllerSingleton": "esp-mvc/generate/controller.c",
             "migration": "esp-mvc/generate/migration.c",
@@ -17,9 +15,6 @@
         "database": "default",
         "auth": {
             "store": "app"
-        },
-        "pipeline": {
-            "handlers": 'espHandler'
         },
         "server": {
             listen: [

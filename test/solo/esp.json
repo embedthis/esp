@@ -21,18 +21,12 @@
             "location": "trace.log",
             "level": 4
         },
-        pipeline: {
-            handlers: 'espHandler'
-        },
         routes: [
             {
                 pattern: '^/solo/{action}$',
                 methods: [ 'GET', 'POST' ],
                 source: 'solo.c',
                 target: 'solo/$1',
-                pipeline: {
-                    handlers: 'espHandler',
-                },
                 limits: {
                     rxBody: 'unlimited',
                 }
