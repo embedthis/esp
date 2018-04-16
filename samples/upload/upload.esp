@@ -3,7 +3,6 @@
     <pre><% {
         HttpConn        *conn;
         HttpUploadFile  *file;
-        MprKey          *kp;
         int             index;
 
         /*

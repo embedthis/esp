@@ -32,7 +32,7 @@ static void commonController(HttpConn *conn)
 {
     cchar   *uri;
 
-    if (!httpLoggedIn(conn)) {
+    if (!httpIsAuthenticated(conn)) {
         uri = getUri();
         if (sstarts(uri, "/public/") || smatch(uri, "/user/login") || smatch(uri, "/user/logout")) {
             return;

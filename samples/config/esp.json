@@ -14,6 +14,11 @@
      */
     esp: {
         /*
+            Enable ESP MVC application with default directories for MVC and default espHandler
+         */
+        app: true,
+
+        /*
             Load external esp applications. Can also use string or [prefix+config] property form.
                 apps: 'myapp/esp.json',
                 apps: [
@@ -50,7 +55,12 @@
         },
 
         http: {
-            pipeline: "espHandler"
+            pipeline: {
+                handlers: {
+                    espHandler:  [ "esp" ],
+                    fileHandler: [ "" ],
+                }
+            }
         },
 
         /*

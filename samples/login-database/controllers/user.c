@@ -8,8 +8,7 @@
  */
 static void loginUser() {
     if (httpLogin(getConn(), param("username"), param("password"))) {
-        /* Redirect back to HTTP */
-        redirect("http:///index.esp");
+        redirect("/index.esp");
     } else {
         feedback("error", "Invalid Login");
         redirect("/public/login.esp");
@@ -33,7 +32,7 @@ static void commonController(HttpConn *conn)
 {
     cchar   *uri;
 
-    if (!httpLoggedIn(conn)) {
+    if (!httpIsAuthenticated(conn)) {
         uri = getUri();
         if (sstarts(uri, "/public/") || smatch(uri, "/user/login") || smatch(uri, "/user/logout")) {
             return;
@@ -84,7 +83,7 @@ static bool verifyUser(HttpConn *conn, cchar *username, cchar *password)
 ESP_EXPORT int esp_controller_login_custom_user(HttpRoute *route) 
 {
     /*
-        Define a custom authentication verification callback
+        Define a custom authentication verification callback for the "app" auth store
      */
     httpSetAuthVerify(route->auth, verifyUser);
 

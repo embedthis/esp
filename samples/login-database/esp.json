@@ -2,10 +2,14 @@
     "name": "login-custom",
     "description": "login-custom",
     "version": "1.0.0",
+    "esp": {
+        "app": true,
+    },
     "http": {
         "auth": {
             "store": "app",
-            "realm": "example.com",
+            "type": "form",
+            "login": "https:///public/login.esp"
         },
         "database": "mdb://login.mdb",
         "server": {
@@ -13,10 +17,10 @@
                 "http://127.0.0.1:4000",
                 "https://127.0.0.1:4443"
             ],
-            "ssl": {
-                "certificate": "../../src/certs/self.crt",
-                "key": "../../src/certs/self.key"
-            }
+        },
+        "ssl": {
+            "certificate": "../../src/certs/samples/self.crt",
+            "key": "../../src/certs/samples/self.key"
         },
         "routes": [
             {
@@ -24,18 +28,10 @@
                 "redirect": "secure",
                 "source": "user.c",
                 "target": "user/${action}",
-                "handler": "espHandler"
-            },
-            {
+                "auth": "none"
+            }, {
                 "pattern": "/public",
-                "prefix":  "/public",
-                "documents": "documents/public"
-            },
-            {
-                "auth": {
-                    "type": "form",
-                    "login": "https:///public/login.esp"
-                }
+                "auth": "none",
             }
         ],
         "timeouts": {

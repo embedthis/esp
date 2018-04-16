@@ -2,10 +2,14 @@
     "name": "login-form",
     "description": "login-form",
     "version": "1.0.0",
+    "esp": {
+        "app": true
+    },
     "http": {
         "auth": {
-            "store": "config",
+            "login": "https:///public/login.esp",
             "realm": "example.com",
+            "store": "config",
             "type": "form",
             "users": {
                 "joshua": {
@@ -18,35 +22,24 @@
                 "http://127.0.0.1:4000",
                 "https://127.0.0.1:4443"
             ],
-            "ssl": {
-                "certificate": "../../src/certs/self.crt",
-                "key": "../../src/certs/self.key"
-            }
+        },
+        "ssl": {
+            "certificate": "../../src/certs/samples/self.crt",
+            "key": "../../src/certs/samples/self.key"
         },
         "routes": [
-            {
-                "auth": {
-                    "type": "form",
-                    "login": "https:///public/login.esp"
-                }
-            },
             {
                 "pattern": "/user/{action}",
                 "redirect": "secure",
                 "source": "user.c",
                 "target": "user/${action}",
                 "handler": "espHandler",
-                "auth": {
-                    "type": "none",
-                }
-            },
-            {
+                "auth": "none",
+            }, {
                 "prefix": "/public",
                 "pattern": "/public",
                 "documents": "documents/public",
-                "auth": {
-                    "type": "none",
-                }
+                "auth": "none",
             },
         ],
         "timeouts": {

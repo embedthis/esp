@@ -2,9 +2,12 @@
     "name": "login-form",
     "description": "login-form",
     "version": "1.0.0",
+    "esp": {
+        "app": true,
+    },
     "http": {
         "auth": {
-            "store": "config",
+            "login": "https:///public/login.esp",
             "realm": "example.com",
             "roles": {
                 "user": [
@@ -15,18 +18,16 @@
                     "edit"
                 ]
             },
+            "store": "config",
+            "type": "form",
             "users": {
                 "joshua": {
                     "password": "BF1:00128:5RdIPYT33dz2Mq7D:0YQi7BNN2ZdEHQPYS4ZPtQIfnIZxEQ00",
-                    "roles": [
-                        "user", "administrator",
-                    ]
+                    "roles": [ "user", "administrator" ]
                 },
                 "mary": {
                     "password": "BF1:00128:oju2hEWmhzLV9Di5:y9khsIrgr2kLfhNMUB//pN0UYcC4nzIX",
-                    "roles": [
-                        "user"
-                    ]
+                    "roles": [ "user" ]
                 }
             }
         },
@@ -35,39 +36,30 @@
                 "http://127.0.0.1:4000",
                 "https://127.0.0.1:4443"
             ],
-            "ssl": {
-                "certificate": "../../src/certs/self.crt",
-                "key": "../../src/certs/self.key"
-            }
+        },
+        "ssl": {
+            "certificate": "../../src/certs/samples/self.crt",
+            "key": "../../src/certs/samples/self.key"
         },
         "routes": [
-            {
-                "auth": {
-                    "type": "form",
-                    "login": "https:///public/login.esp"
-                }
-            },
             {
                 "pattern": "/user/{action}",
                 "redirect": "secure",
                 "source": "user.c",
                 "target": "user/${action}",
-                "handler": "espHandler",
-                "auth": { type: "none" },
+                "auth": "none",
             },
             {
                 "pattern": "/public",
                 "prefix": "/public",
                 "documents": "documents/public",
-                "auth": { type: "none" },
+                "auth": "none",
             },
             {
                 "pattern": "/admin",
                 "auth": {
                     "require": {
-                        "roles": [
-                            "administrator"
-                        ]
+                        "roles": [ "administrator" ]
                     }
                 }
             },

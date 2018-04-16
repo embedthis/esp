@@ -16,7 +16,7 @@ The app contains:
 
 This app was generated with these commands:
 
-    pak --name blog install esp-html-skeleton
+    pak --init --name blog install esp-html-skeleton
     esp generate scaffold post title:string body:text
 
 Requirements
