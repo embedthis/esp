@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <title>Database Migrations</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="ESP web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="ESP web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="/lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="/css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="/lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="/css/all.css" rel="stylesheet" type="text/css" />
+    <link href="/css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -159,7 +160,7 @@
     <div class="content">
 
             <h1>Database Migrations</h1>
-           
+
             <a id="migrations"></a>
             <p>Database migrations are mini programs that modify the database schema or content. You can create database
             migrations via the <em>esp generate migration</em> command. This command generates a migration for a
@@ -168,27 +169,22 @@
             <code class="inverted">$ <b>esp generate migration description table [field:type ...]</b></code>
 
             <p>This will create a migration script under the <em>migrations</em> directory. Migration script filenames are
-            time stamped and use the supplied description argument as part of the filename for the migration script 
+            time stamped and use the supplied description argument as part of the filename for the migration script
             (so keep it short and sweet and don't use spaces!).</p>
 
             <p>For each specified <em>field:type</em> pair, <em>esp</em> will generate code to add a column in the migration
-            script. If the --reverse switch is specified, then code to remove a column will be generated. To change the 
+            script. If the --reverse switch is specified, then code to remove a column will be generated. To change the
             type or name of a column, remove then re-add the column. </p>
-            
+
             <a id="runMigrations"></a>
             <h2>Running Migrations</h2>
-            <p>Migration scripts can be run via the <em>esp migrate</em> command. Without other parameters, the
-            command will run all migrations that have not yet been applied to the database. You can also use
-            <em>esp migrate forward</em> to apply the next unapplied migration. Similarly, <em>esp migrate
-            backward</em> will reverse the last applied migration. You can also use <em>esp migrate NNN</em> to
-            migrate forward or backward to a specific migration. NNN is the migration sequence number which is the
-            number at the start of the migration script file name.</p>
+            <p>Migration scripts can be run via the <em>esp migrate</em> command. Without other parameters, the command will run all migrations that have not yet been applied to the database. </p>
 
-            <p>Migrations are often under-used. They are much more important than most people realize. Being able
-            to effectively create and manage database test data greatly simplifies this aspect of 
-            development and testing.</p>
-            
-            
+            <code class="inverted">$ <b>esp migrate</b></code>
+
+            <p>You can also use <em>esp migrate forward</em> to apply the next unapplied migration. Similarly, <em>esp migrate backward</em> will reverse the last applied migration. You can also use <em>esp migrate NNN</em> to migrate forward or backward to a specific migration. NNN is the migration sequence number which is the number at the start of the migration script file name.</p>
+
+            <p>Migrations are often under-used. They are much more important than most people realize. Being able to effectively create and manage database test data greatly simplifies this aspect of development and testing.</p>
 
     </div>
     <div class="terms ui basic center aligned segment">
@@ -196,13 +192,12 @@
     </div>
 
     <script src="/lib/jquery/jquery.min.js"></script>
-    <script src="/lib/jquery/pak.min.js"></script>
-    <script src="/lib/semantic-ui/semantic.min.js"></script>
-    <script src="/scripts/sidebar.min.js"></script>
+    <script src="/lib/jquery/pak.json"></script>
+    <script src="/lib/semantic-ui/semantic.js"></script>
+    <script src="/scripts/sidebar.js"></script>
      
 
     
 
-
-
-
+</body>
+</html>

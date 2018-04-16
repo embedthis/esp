@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <title>ESP Applications Tour</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="ESP web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="ESP web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="/lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="/css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="/lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="/css/all.css" rel="stylesheet" type="text/css" />
+    <link href="/css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -213,14 +214,16 @@
 $ cd blog
 $ pak init
 $ pak install esp-html-skeleton</b>
-   [Install] exp-js 0.2.0
-   [Install] exp-less 0.2.0
-   [Install] exp-css 0.2.0
-   [Install] exp-esp 0.1.0
-   [Install] esp-mvc 5.4.0
-   [Install] esp-html-skeleton 5.4.0
+   [Install] exp-js 0.3.2
+   [Install] exp-less 0.3.0
+   [Install] exp-css 0.3.1
+   [Install] exp-esp 0.3.1
+   [Install] exp-html 0.2.0
+   [Install] exp-canon 0.1.0
+   [Install] esp-mvc 5.5.2
+   [Install] esp-html-skeleton 5.5.1
 </pre>
-            <p>This simple command accomplished quite a bit, including:
+            <p>This simple command sequence accomplished quite a bit, including:</p>
             <ul>
                 <li>Create a core structure with directories for various parts of the application. Initially, some of
                     these directories are empty, but they will be used as your application grows.</li>
@@ -229,14 +232,35 @@ $ pak install esp-html-skeleton</b>
                     and exp-esp packages. You can see these via the <em>pak list</em> command.</p>
                 <li>Created <em>esp.json</em> and <em>pak.json</em> files that configures and control
                     how your application will run.</li>
+                <li>Generated
             </ul>
 
+            <h3>Render the Skeleton</h3>
+            <p>Next, run the <b>expansive</b> command to render the skeleton web pages.</p>
+            <pre class="code"><b>$ expansive render
+      [Info] Using profile: debug
+    [Render] css/all.css
+    [Render] index.esp
+      [Post] esp
+       [Run] esp compile dist/index.esp
+</b></pre>
+            <p>This will render the web site including:</p>
+            <ul>
+                <li>Create the style sheets from the Less contents/css/*.less sheets</li>
+                <li>Create the home page: index.esp from the master layouts/default.html.exp and the
+                    reusable partial pages under the "partials" directory.</li>
+                <li>Compile the ESP pages into loadable libraries under the "cache" directory.</li>
+            </ul>
+
+            <a id="run"></a>
+            <h2>Access your Application</h2>
+            <p>To access your application enter <em>http://localhost:4000</em> in your browser.
+            You should see your first application home page.</p>
+            <img src="../images/esp/app-tour/home.png" alt="home" class="bare-screen" />
+
             <h2>Conventions</h2>
-            <p>The ESP web framework follows the <em>convention over
-            configuration</em> philosophy popularized by <a href="http://www.rubyonrails.org">Ruby on Rails</a>. This
-            means that ESP adopts certain conventions about where files and directories should be placed and about
-            how names are used. If you work with these conventions, then you need to do little or no configuration.
-            Things will just work.</p>
+            <p>The ESP web framework follows the <em>convention over configuration</em> philosophy popularized by <a href="http://www.rubyonrails.org">Ruby on Rails</a>. This means that ESP adopts certain conventions about where files and directories should be placed and about how names are used. If you work with these conventions, then you need to do little or no configuration. Things will just work.</p>
+
             <p>Here are the most important files and directories:</p>
             <table title="directories" class="ui table segment">
                 <thead>
@@ -295,12 +319,6 @@ $ pak install esp-html-skeleton</b>
                 </tbody>
             </table>
 
-            <a id="run"></a>
-            <h2>Access your Application</h2>
-            <p>To access your application enter <em>http://localhost:4000</em> in your browser.
-            You should see your first application home page.</p>
-            <img src="../images/esp/app-tour/home.png" alt="home" class="bare-screen">
-
             <a id="scaffolds"></a>
             <h2>Scaffolds</h2>
             <p>Scaffolding is a quick way to generate pieces of your application. Scaffolds are stub MVC resource
@@ -334,9 +352,19 @@ $ <b>esp generate scaffold post title:string body:text</b>
    [Migrate] Apply 201503311340450_create_scaffold_post.c
    [Migrate] All migrations applied
   [Generate] Complete
+       [Run] expansive render
+      [Info] Using profile: debug
+    [Render] css/all.css
+    [Render] index.esp
+    [Render] post/edit.esp
+    [Render] post/list.esp
+      [Post] esp
+       [Run] esp compile dist/index.esp
+       [Run] esp compile dist/post/edit.esp
+       [Run] esp compile dist/post/list.esp
+      [Info] Rendered 4 files to "dist". Elapsed time 0.94 secs.
 </pre>
             <p>This command created:</p>
-
             <ul>
                 <li>A server-side post Controller <em>controllers/post.c</em></li>
                 <li>Server-side HTML views for listing posts <em>contents/post/list.esp</em> and editing posts
@@ -345,19 +373,21 @@ $ <b>esp generate scaffold post title:string body:text</b>
             </ul>
 
             <p>The command also ran the migration to create the database and table.</p>
-            <p>Now if you set your browser to the home page, you will now see an empty listing of blog posts.
-            <img src="../images/esp/app-tour/post-list.png" alt="postList" class="bare-screen">
+            <p>Now if you set your browser to the home page, you will now see an empty listing of blog posts.</p>
+            <p>
+                <img src="../images/esp/app-tour/post-list.png" alt="postList" class="bare-screen" />
+                <a id="newPosts"></a>
+            </p>
 
-            <a id="newPosts"></a></p>
             <h2>Create New Posts</h2>
             <p>The New Post button directs your browser to the <em>/post/</em> URL. This form is being
             rendered on the client from the <em>contents/post/edit.esp</em> template. Behind the scenes, the
             browser asks for the <em>/post/init</em> URL to determine what are the required input fields
             for a post.</p>
-            <img src="../images/esp/app-tour/create.png" alt="createPost" class="bare-screen">
+            <img src= "../images/esp/app-tour/create.png" alt="createPost" class="bare-screen" />
             <p>Fill in the input fields and click OK to add the new blog post.</p>
 
-            <img src="../images/esp/app-tour/post-list-2.png" alt="postList" class="bare-screen">
+            <img src= "../images/esp/app-tour/post-list-2.png" alt="postList" class="bare-screen" />
             <p>The home page is now updated with the first post.  You can click on the post title or body
             to edit its contents. This will run the same post-edit.html template that was used to create the post.</p>
 
@@ -401,7 +431,7 @@ static void listPost() {
             <h2>Code Errors</h2>
             <p>What happens if you make a mistake entering the embedded "C" code in your controller or in an ESP web page.
             Say you forgot the semicolon in the last example. You will see an error like this in your browser:</p>
-            <img src="../images/esp/app-tour/error.png" alt="homeLink" class="bare-screen">
+            <img src="../images/esp/app-tour/error.png" alt="homeLink" class="bare-screen" />
             <p>If you look at the esp console output, you also see full details about the request that failed.</p>
             <pre class="code">
 14:10:20 1-0-1-1 request.error msg='Cannot run command: clang -c -DME_DEBUG -g -Wall -DPIC -fPIC -arch x86_64 -I. -Isrc -I/usr/local/lib/esp/5.4.0/inc controllers/post.c -o cache/controller_c1a25719dee243438859faa7d60c148d.o
@@ -421,7 +451,8 @@ controllers/post.c=46:28: error: expected ';' after expression
             methods to help ensure the data you save at the server is correct.</p>
 
             <p>You can add calls to validate record data before it is saved to the database. To do this, edit the
-            <em>controllers/post.c</em> file and add calls to <a href="../ref/api/edi.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944">ediAddValidation</a>.</p>
+            <em>controllers/post.c</em> file and add calls to <a
+            href="../ref/api/edi.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944">ediAddValidation</a>.</p>
             <pre class="code">
 ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
 {
@@ -440,7 +471,7 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
             <p>If you click OK in the Post <em>edit</em> web page without entering any data
             you will see the following:</p>
 
-            <img src="../images/esp/app-tour/validate.png" alt="validate" class="bare-screen">
+            <img src="../images/esp/app-tour/validate.png" alt="validate" class="bare-screen" />
             <p>This automatically identified the input fields in error and generated a summary of the errors above the
             form. Of course, this default error highlighting behavior can be overridden if desired by modifying the
             application style sheets.<p>
@@ -476,13 +507,12 @@ ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
     </div>
 
     <script src="/lib/jquery/jquery.min.js"></script>
-    <script src="/lib/jquery/pak.min.js"></script>
-    <script src="/lib/semantic-ui/semantic.min.js"></script>
-    <script src="/scripts/sidebar.min.js"></script>
+    <script src="/lib/jquery/pak.json"></script>
+    <script src="/lib/semantic-ui/semantic.js"></script>
+    <script src="/scripts/sidebar.js"></script>
      
 
     
 
-
-
-
+</body>
+</html>

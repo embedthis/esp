@@ -5,15 +5,15 @@
     ],
 }
             <h1>Session Storage</h1>
-            <p>Session storage is a limited, server-side, semi-permanent store for keeping state information across 
-            web requests. The HTTP protocol by design, encourages stateless implementations and so session state 
+            <p>Session storage is a limited, server-side, semi-permanent store for keeping state information across
+            web requests. The HTTP protocol by design, encourages stateless implementations and so session state
             storage provides an essential context for a series of requests by a specific client.</p>
 
             <p>ESP provides a high performance, in-process session state store. The store is managed in that ESP
-            imposes a session timeout on information and will automatically prune stale information. It uses the 
+            imposes a session timeout on information and will automatically prune stale information. It uses the
             memory limit configured by the <a href="config.html#limits">http.limits</a> directive
             to restrict the amount of memory that is devoted to session state.</p>
-            
+
             <a id="sample"></a>
             <h2>Sample Code</h2>
             <pre class="code">
@@ -21,7 +21,7 @@ if (!(id = <b>getSessionVar</b>("user-id")) != 0) {
     redirect("/login");
 }
 </pre>
-            <p>You can also use the abbreviated API form: 
+            <p>You can also use the abbreviated API form:
                 <a href="../ref/api/esp.html#group___esp_abbrev_1ga45c8bf65c9eacac2512533dbc006db2b">session()</a></p>
             <pre class="code">
 if (!(id = <b>session</b>("user-id")) != 0) {
@@ -51,7 +51,7 @@ setSessionVar("Name", "John");
             <a id="feedback"></a>
             <h2>Client Feedback</h2>
             <p>Controllers often need to provide out-of-band feedback to the client. This may be a simple notification that
-            a record has been updated or deleted. Or it may be details of an error condition. ESP provides a simple 
+            a record has been updated or deleted. Or it may be details of an error condition. ESP provides a simple
             feedback API to send such messages to the client.</p>
             <h3>Feedback Types</h3>
             <p>Feedback messages are divided into different types:</p>
@@ -74,28 +74,29 @@ feedback("warn", "Session is about to expire in %d seconds", seconds);
 feedback("error", "Could not save document");
 feedback("custom", "Error code %d", code);
 </pre>
-            <p>To read a feedback message, use 
+            <p>To read a feedback message, use
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaaef4ca7c60c2fd04b5c34fdc72f047d3">getFlash</a>:</p>
             <pre class="code">char *msg = getFeedback("inform");</pre>
-            
+
             <p>If you need to pass a message from the controller into the next controller, use the flash message
             facility below.</p>
             <h3>Displaying Feedback Messages</h3>
-            <p>To display feedback messages in a web page, use the 
+            <p>To display feedback messages in a web page, use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga8953966bf16fa8134e011a2b60bd0f4b">renderFeedback</a> API.
 <pre class="code">
 &lt;% renderFeedback("all"); %&gt;
 </pre>
             <p>This will display all feedback messages.</p>
-            
+
+<!--
             <a id="flash"></a>
             <h2>Flash Storage</h2>
             <p>ESP also provides a layer over session storage called "flash" storage that is useful for passing
-            information into the next controller and request action. Thereafter, the flash information is 
-            automatically removed. Using bare session state for this is problematic as the message can easily 
-            propagate to subsequent requests other than the immediate next request. Flash messages will be 
+            information into the next controller and request action. Thereafter, the flash information is
+            automatically removed. Using bare session state for this is problematic as the message can easily
+            propagate to subsequent requests other than the immediate next request. Flash messages will be
             automatically removed message after the next request. Flash messages can thus be used to pass feedback
-            messages into the next request, even the current request issues a redirection response to the current 
+            messages into the next request, even the current request issues a redirection response to the current
             request.</p>
             <h3>Defining Flash Messages</h3>
             <p>To issue a flash message for the next web page, use the
@@ -103,25 +104,26 @@ feedback("custom", "Error code %d", code);
             API.</p>
 <pre class="code">
 flash("inform", Document saved");
-falsh("warn", "Session is about to expire in %d seconds", seconds);
+flash("warn", "Session is about to expire in %d seconds", seconds);
 flash("error", "Could not save document");
 flash("custom", "Error code %d", code);
 </pre>
-            <p>To read a flash message, use 
+            <p>To read a flash message, use
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga99b145381ebe019cea05e3405d51c684">getFlash</a>:</p>
             <pre class="code">char *msg = getFlash("inform");</pre>
-            
+
             <p>If you only need to pass a message from the controller into the view page, then feedback messages above
             are a better choice.</p>
-            
+-->
+
             <a id="configuring"></a>
             <h2>Configuring Session</h2>
             <p>Session data has a lifespan defined by the <a
-                href="config.html#timeouts">http.timeouts</a> 
-               configuration directive. When this timeout expires, ESP will prune the data from the session 
+                href="config.html#timeouts">http.timeouts</a>
+               configuration directive. When this timeout expires, ESP will prune the data from the session
                 store.</p>
-            <p>If there is a low memory condition, ESP may prune session data prematurely to free up memory. 
-            The maximum memory limit may be configured by the 
+            <p>If there is a low memory condition, ESP may prune session data prematurely to free up memory.
+            The maximum memory limit may be configured by the
             <a href="config.html#limits">http.limits</a> configuration directive.</p>
             <a id="performance"></a>
             <h2>Performance Considerations</h2>
@@ -130,11 +132,11 @@ flash("custom", "Error code %d", code);
             state store. Session data is copied to and from the store. Unnecessary copies will slow your
             application.</p>
             <h3>Minimize Session Data Reads and Writes</h3>
-            <p>It is important not to read from the session store repeatedly. During one request, try to read 
+            <p>It is important not to read from the session store repeatedly. During one request, try to read
             session data once and keep a reference to the data for the duration of that request.</p>
             <h3>Session Expiry Callbacks</h3>
             <p>Because session data may be stored remotely, ESP does not offer a callback when session state expires.
-            Rather, you can test if session state has expired by calling 
+            Rather, you can test if session state has expired by calling
             <a href="../ref/api/esp.html#group___esp_req_1ga63a13780299e2781dca728d4087165bb">espGetSessionID</a>.</p>
-            <p>The best design is to run a client-side session expiry inactivity timer which warns the user 
+            <p>The best design is to run a client-side session expiry inactivity timer which warns the user
             when the session is about to expire.</p>

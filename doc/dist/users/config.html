@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <title>Configuring ESP</title>
-    
+    <!-- Copyright Embedthis Software. All Rights Reserved. -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <meta name="description" content="ESP web framework">
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="ESP web framework" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700'
+        rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
     
-    <link href="../images/favicon.ico" rel="shortcut icon">
-    <link href="/lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
-    <link href="/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="/css/api.min.css" rel="stylesheet" type="text/css">
+    <link href="../images/favicon.ico" rel="shortcut icon" />
+    <link href="/lib/semantic-ui/semantic.css" rel="stylesheet" type="text/css" />
+    <link href="/css/all.css" rel="stylesheet" type="text/css" />
+    <link href="/css/api.css" rel="stylesheet" type="text/css" />
     
 
 </head>
@@ -284,7 +285,7 @@
             <h2>pak.json Properties</h2>
             <table title="top-level collections" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -365,7 +366,7 @@
             <h3>Directory Configuration &mdash; directories.*</h3>
             <table title="directory" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -433,7 +434,7 @@
             <a name="top"></a>
             <table title="top" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -457,7 +458,7 @@
             <h3>Client Configuration &mdash; http.client.*</h3>
             <table title="client" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -476,7 +477,6 @@ mappings: {
                             </td>
                         </tr>
                     <tr>
-
                         <td>render</td>
                         <td><p>Ordered set of scripts to send to the client when parsing the ESP <em>scripts()</em>
                             API. This may include the "*" wildcard to match any file or "**" to match any file in
@@ -498,7 +498,7 @@ mappings: {
             <h3>ESP Collection &mdash; esp.*</h3>
             <table title="esp" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -533,7 +533,7 @@ apps: [
         config: 'apps/blog/esp.json'
     }
 ]
-</code></td>
+</code></p></td>
                     </tr>
                     <tr>
                         <td>build</td>
@@ -590,7 +590,7 @@ apps: [
             such as Appweb.</p>
             <table title="http" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -618,7 +618,38 @@ apps: [
                         <td><a href="#cache">cache</a></td>
                         <td>List of cache directives.</td>
                     </tr>
-                    
+                    <!--
+                    <tr>
+                        <td><a href="#condition">condition</a></td>
+                        <td><p>Define a pre-condition that must be true for the route to be selected.
+                        <p>The Condition directive supports four rule varieties: </p>
+                        <ul>
+                            <li>missing &mdash; True if the default request filename is missing.</li>
+                            <li>directory &mdash; True the if rule argument evaluates to a directory</li>
+                            <li>exists &mdash; True if the rule argument evaluates to an existing file</li>
+                            <li>match &mdash; True if the regular expression pattern matches the string argument</li>
+                        </ul>
+
+                        <p>The rule result can be negated by prefixing with "<em>!</em>".</p>
+                        <p>The condition property supports the following forms:</p>
+                        <ul>
+                            <li>Condition [!] rule details ...</li>
+                            <li>Condition [!] missing</li>
+                            <li>Condition [!] directory string</li>
+                            <li>Condition [!] exists string</li>
+                            <li>Condition [!] match string regular-expression-pattern</li>
+                        </ul>
+                        <p>For example:</p>
+                        <pre class="code">
+conditions: {
+    missing: 'true'
+    directory: '${request:filename}
+    exists: '! exists ${request:filename}
+    match: '${header:User-Agent} (Chrome|Safari)
+</pre>
+                        </td>
+                    </tr>
+                        -->
                     <tr>
                         <td>compress</td>
                         <td><p>Enable serving of compressed content. ESP can serve files compressed with gzip and with an
@@ -657,7 +688,22 @@ compress: [ 'html', 'js', 'css' ]
     '404': '/notFound.html,
 },</code></td>
                     </tr>
-
+<!--
+                    <tr>
+                        <td>formats</td>
+                        <td>Collection default data formats for various data types. The <em>response</em> property specifies
+                        the default client-server interchange format. It can be set to "html" or "json".
+                        For dates, the property specifies an
+                        <a href="https://docs.angularjs.org/api/ng/filter/date">Angular</a> style date format. For
+                        floats, it specifies the default number of decimal places.
+                        For example:
+                        <code class="inverted">formats': {
+    response: 'json',
+    date: 'yyyy-MM-dd',
+    float: 2,
+},</code></td>
+                    </tr>
+-->
                     <tr>
                         <td>headers</td>
                         <td>Collection response header directives. This includes sub-collections for headers to
@@ -841,7 +887,7 @@ pipeline: {
     }
 ]</code>
                     <p>Alternatively, a rule may be just the string "https://" in which case all HTTP content
-                    will be redirected over HTTPS.</td>
+                    will be redirected over HTTPS.</p></td>
                     </tr>
                     <tr>
                         <td>renameUploads</td>
@@ -993,7 +1039,7 @@ routes [ {
 
             <table title="server" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -1078,7 +1124,7 @@ server: {
             <h3>Authentication Configuration &mdash; http.auth.*</h3>
             <table title="auth" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -1184,7 +1230,7 @@ session: {
 
             <table title="cache" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -1247,7 +1293,7 @@ session: {
 },</code>
             <table title="ssl" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -1290,7 +1336,7 @@ session: {
                 Timeouts are expressed as strings with natural language suffixes like: "30mins".</p>
             <table title="ssl" class="ui table segment">
                 <thead>
-                    <tr><th>Name<th>Description</tr>
+                    <tr><th>Name</th><th>Description</th></tr>
                 </thead>
                 <tbody>
                     <tr>
@@ -1325,13 +1371,12 @@ session: {
     </div>
 
     <script src="/lib/jquery/jquery.min.js"></script>
-    <script src="/lib/jquery/pak.min.js"></script>
-    <script src="/lib/semantic-ui/semantic.min.js"></script>
-    <script src="/scripts/sidebar.min.js"></script>
+    <script src="/lib/jquery/pak.json"></script>
+    <script src="/lib/semantic-ui/semantic.js"></script>
+    <script src="/scripts/sidebar.js"></script>
      
 
     
 
-
-
-
+</body>
+</html>
