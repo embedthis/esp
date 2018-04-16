@@ -267,9 +267,6 @@ static void manageApp(App *app, int flags)
         mprMark(app->platform);
         mprMark(app->route);
         mprMark(app->routes);
-#if DEPRECATED
-        mprMark(app->slink);
-#endif
         mprMark(app->table);
         mprMark(app->targets);
         mprMark(app->title);
@@ -2014,11 +2011,6 @@ static void compileCombined(HttpRoute *route)
             }
             compileFile(route, kp->key, kind);
         }
-#if DEPRECATE
-        if (app->slink) {
-            mprAddItem(app->slink, route);
-        }
-#endif
         mprWriteFileFmt(app->combineFile,
             "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {

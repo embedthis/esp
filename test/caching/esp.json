@@ -76,7 +76,7 @@
             prefix: '/types',
             cache: [ {
                 server: '1day',
-                extensions: [ 'application/x-MOB' ],
+                extensions: [ 'application/x-yyy' ],
             } ],
         }, {
             pattern: '^/methods',

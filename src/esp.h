@@ -171,7 +171,7 @@ PUBLIC int espInitParser();
     @see Esp
  */
 typedef struct EspRoute {
-    cchar           *appName;               /**< App module name when compiled in combine mode */
+    cchar           *appName;               /**< App module name */
     struct EspRoute *top;                   /**< Top-level route for this application */
     HttpRoute       *route;                 /**< Back link to route */
     EspProc         commonController;       /**< Common code for all controllers */
@@ -496,21 +496,6 @@ PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
     @internal
  */
 PUBLIC int espLoadCompilerRules(HttpRoute *route);
-
-#if UNUSED
-/**
-    Load an ESP module
-    @param route Parent route from which to inherit configuration.
-    @param dispatcher Dispatcher to use when waiting for compilation commands
-    @param kind Type of module. Set to "view" or "controller" or "app".
-    @param source Path to source code for the module
-    @param errMsg Output string reference to receive any error messages.
-    @returns Zero if successful, otherwise a negative MPR error code.
-    @ingroup EspRoute
-    @stability Internal
- */
-PUBLIC int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg);
-#endif
 
 #if DEPRECATED || 1
 /**
@@ -2970,9 +2955,6 @@ PUBLIC cchar *absuri(cchar *target, ...);
 
 PUBLIC void espSetFlash(HttpConn *conn, cchar *type, cchar *fmt, ...);
 PUBLIC void flash(cchar *type, cchar *fmt, ...);
-
-#else
-#define
 #endif /* DEPRECATED */
 
 #ifdef __cplusplus

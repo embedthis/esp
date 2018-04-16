@@ -1311,7 +1311,6 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     cchar   *controllers, *documents, *path, *migrations;
 
     documents = mprJoinPath(route->home, "dist");
-#if DEPRECATED || 1
     /*
         Consider keeping documents, web and public
      */
@@ -1348,7 +1347,6 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
             }
         }
     }
-#endif
 
     /*
         Detect if a controllers directory exists. Set controllers to "." if absent.
@@ -1359,16 +1357,11 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
         controllers = ".";
     }
 
-#if DEPRECATED || 1
     migrations = "db/migrations";
     path = mprJoinPath(route->home, migrations);
     if (!mprPathExists(path, X_OK)) {
         migrations = "migrations";
     }
-#else
-    migrations = "migrations";
-#endif
-
     setDir(route, "CACHE", 0, app);
     setDir(route, "CONTROLLERS", controllers, app);
     setDir(route, "CONTENTS", 0, app);
