@@ -2608,7 +2608,7 @@ static void loadApp(HttpRoute *parent, MprJson *prop)
     int         next;
 
     if (prop->type & MPR_JSON_OBJ) {
-        prefix = mprGetJson(prop, "prefix"); 
+        prefix = mprGetJson(prop, "prefix");
         config = mprGetJson(prop, "config");
         route = httpCreateInheritedRoute(parent);
         if (espInit(route, prefix, config) < 0) {
@@ -2629,7 +2629,7 @@ static void loadApp(HttpRoute *parent, MprJson *prop)
             httpFinalizeRoute(route);
         }
     }
-}       
+}
 
 
 static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
@@ -2640,11 +2640,6 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
 
     if (smatch(mprGetJson(prop, "app"), "true")) {
         eroute->app = 1;
-#if DEPRECATE || 1
-    } else if (mprGetJson(prop, "server.listen") || mprGetJson(prop, "generate")) {
-        eroute->app = 1;
-        /* Here for legacy apps without esp.app */
-#endif
     }
     if (eroute->app) {
         /*
@@ -2696,7 +2691,7 @@ static void parseApps(HttpRoute *route, cchar *key, MprJson *prop)
 
     } else if (prop->type & MPR_JSON_OBJ) {
         loadApp(route, prop);
-        
+
     } else if (prop->type & MPR_JSON_ARRAY) {
         for (ITERATE_CONFIG(route, prop, child, ji)) {
             loadApp(route, child);
@@ -2761,7 +2756,7 @@ PUBLIC int getVisualStudioEnv(Esp *esp)
 
     /*
         Get the real system architecture, not whether this app is 32 or 64 bit.
-        On native 64 bit systems, PA is amd64 for 64 bit apps and is PAW6432 is amd64 for 32 bit apps 
+        On native 64 bit systems, PA is amd64 for 64 bit apps and is PAW6432 is amd64 for 32 bit apps
      */
     if (smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432")) {
         cpu = "x64";
@@ -2962,7 +2957,7 @@ static void legacyRouteSet(HttpRoute *route, cchar *set)
 #endif
 
 
-PUBLIC int espInitParser() 
+PUBLIC int espInitParser()
 {
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
@@ -2979,7 +2974,7 @@ PUBLIC int espInitParser()
     httpAddConfig("esp.optimize", parseOptimize);
     httpAddConfig("esp.update", parseUpdate);
     return 0;
-} 
+}
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -4512,6 +4507,8 @@ static int openEsp(HttpQueue *q)
     HttpRoute   *rp, *route;
     EspRoute    *eroute;
     EspReq      *req;
+    char        *cookie;
+    int         next;
 
     conn = q->conn;
     rx = conn->rx;
@@ -4556,8 +4553,11 @@ static int openEsp(HttpQueue *q)
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
-    if (!route->cookie) {
-        httpSetRouteCookie(route, sfmt("esp-%s", eroute->appName));
+    cookie = sfmt("esp-%s", eroute->appName);
+    for (ITERATE_ITEMS(route->host->routes, rp, next)) {
+        if (!rp->cookie) {
+            httpSetRouteCookie(rp, cookie);
+        }
     }
     return 0;
 }
@@ -5504,7 +5504,9 @@ static void manageEsp(Esp *esp, int flags)
 PUBLIC int espLoadConfig(HttpRoute *route)
 {
     EspRoute    *eroute;
-    cchar       *home, *name, *package;
+    HttpRoute   *rp;
+    cchar       *cookie, *home, *name, *package;
+    int         next;
     bool        modified;
 
     eroute = route->eroute;
@@ -5536,6 +5538,12 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         }
         if ((name = espGetConfig(route, "name", 0)) != 0) {
             eroute->appName = name;
+        }
+        cookie = sfmt("esp-%s", eroute->appName);
+        for (ITERATE_ITEMS(route->host->routes, rp, next)) {
+            if (!rp->cookie) {
+                httpSetRouteCookie(rp, cookie);
+            }
         }
         unlock(esp);
     }
@@ -5709,7 +5717,6 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     cchar   *controllers, *documents, *path, *migrations;
 
     documents = mprJoinPath(route->home, "dist");
-#if DEPRECATED || 1
     /*
         Consider keeping documents, web and public
      */
@@ -5746,7 +5753,6 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
             }
         }
     }
-#endif
 
     /*
         Detect if a controllers directory exists. Set controllers to "." if absent.
@@ -5757,16 +5763,11 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
         controllers = ".";
     }
 
-#if DEPRECATED || 1
     migrations = "db/migrations";
     path = mprJoinPath(route->home, migrations);
     if (!mprPathExists(path, X_OK)) {
         migrations = "migrations";
     }
-#else
-    migrations = "migrations";
-#endif
-
     setDir(route, "CACHE", 0, app);
     setDir(route, "CONTROLLERS", controllers, app);
     setDir(route, "CONTENTS", 0, app);
