@@ -158,6 +158,7 @@ static void parseCommand(int argc, char **argv);
 static void process(int argc, char **argv);
 static MprJson *readConfig();
 static cchar *readTemplate(cchar *path, MprHash *tokens, ssize *len);
+static void renderGenerated();
 static bool requiredRoute(HttpRoute *route);
 static int reverseSortFiles(MprDirEntry **d1, MprDirEntry **d2);
 static void role(int argc, char **argv);
@@ -166,7 +167,7 @@ static void saveConfig(MprJson *config, cchar *path, int flags);
 static bool selectResource(cchar *path, cchar *kind);
 static bool selectView(HttpRoute *route, cchar *path);
 static void setConfigValue(MprJson *config, cchar *key, cchar *value);
-static void setMode(cchar *mode);
+static void setProfile(cchar *mode);
 static int sortFiles(MprDirEntry **d1, MprDirEntry **d2);
 static void qtrace(cchar *tag, cchar *fmt, ...);
 static void trace(cchar *tag, cchar *fmt, ...);
@@ -753,7 +754,7 @@ static void process(int argc, char **argv)
         if (argc < 2) {
             printf("%s\n", getJson(app->package, "profile", "undefined"));
         } else {
-            setMode(argv[1]);
+            setProfile(argv[1]);
         }
 
     } else if (smatch(cmd, "role")) {
@@ -849,6 +850,30 @@ static void generate(int argc, char **argv)
     }
     if (!app->error) {
         qtrace("Generate", "Complete");
+    }
+    renderGenerated();
+}
+
+
+static void renderGenerated() {
+    MprCmd      *cmd;
+    char        *err, *out;
+
+    if (!mprPathExists("expansive.json", R_OK)) {
+        return;
+    }
+    /*  WARNING: GC will run here */
+    cmd = mprCreateCmd(0);
+    trace("Run", "expansive render");
+    if (mprRunCmd(cmd, "expansive render", NULL, NULL, &out, &err, -1, 0) != 0) {
+        if (err == 0 || *err == '\0') {
+            /* Windows puts errors to stdout Ugh! */
+            err = out;
+        }
+        fail("Cannot run \"expansive render\"\nError: %s", err);
+        mprDestroyCmd(cmd);
+    } else {
+        print("%s", err);
     }
 }
 
@@ -1202,11 +1227,11 @@ static void role(int argc, char **argv)
 }
 
 
-static void setMode(cchar *mode)
+static void setProfile(cchar *mode)
 {
     int     quiet;
 
-    setConfigValue(app->package, "pak.mode", mode);
+    setConfigValue(app->package, "profile", mode);
     saveConfig(app->package, "pak.json", MPR_JSON_QUOTES);
     quiet = app->quiet;
     app->quiet = 1;
@@ -1397,10 +1422,8 @@ static bool similarRoute(HttpRoute *r1, HttpRoute *r2)
     if (r1->vars != r2->vars) {
         return 0;
     }
-    if (scontains(r1->sourceName, "${") == 0 && scontains(r2->sourceName, "${") == 0) {
-        if (r1->sourceName || r2->sourceName) {
-            return smatch(r1->sourceName, r2->sourceName);
-        }
+    if (r1->sourceName || r2->sourceName) {
+        return smatch(r1->sourceName, r2->sourceName);
     }
     return 1;
 }
@@ -1927,9 +1950,11 @@ static void compileItems(HttpRoute *route)
             found++;
         }
     }
+#if UNUSED
     if (!found) {
         trace("Info", "No files to compile for route \"%s\"", route->pattern);
     }
+#endif
 }
 
 
