@@ -47,8 +47,22 @@
 /*
     Default ciphers from Mozilla (https://wiki.mozilla.org/Security/Server_Side_TLS) without SSLv3 ciphers.
     TLSv1 and TLSv2 only. Recommended RSA and DH parameter size: 2048 bits.
+
+    See cipher mappings at: https://wiki.mozilla.org/Security/Server_Side_TLS#Cipher_names_correspondence_table
+
+    Rationale:
+
+    * AES256-GCM is prioritized above its 128 bits variant, and ChaCha20 because we assume that most modern
+      devices support AESNI instructions and thus benefit from fast and constant time AES.
+    * We recommend ECDSA certificates with P256 as other curves may not be supported everywhere. RSA signatures
+      on ECDSA certificates are permitted because very few CAs sign with ECDSA at the moment.
+    * DHE is removed entirely because it is slow in comparison with ECDHE, and all modern clients support
+      elliptic curve key exchanges.
+    * SHA1 signature algorithm is removed in favor of SHA384 for AES256 and SHA256 for AES128.
  */
-#define OPENSSL_DEFAULT_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
+#define OPENSSL_DEFAULT_CIPHERS "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+
+#define OLD_OPENSSL_DEFAULT_CIPHERS "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4:!SSLv3"
 
 /*
     Map Iana names to OpenSSL names
@@ -385,7 +399,7 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         mprLog("error openssl", 0, "Unable to create SSL context");
         return MPR_ERR_CANT_INITIALIZE;
     }
-    SSL_CTX_set_app_data(ctx, (void*) ssl);
+    SSL_CTX_set_ex_data(ctx, 0, (void*) ssl);
 
     if (ssl->verifyPeer && !(ssl->caFile || ssl->caPath)) {
         *errorMsg = sfmt("Cannot verify peer due to undefined CA certificates");
@@ -458,15 +472,16 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
             SSL_CTX_free(ctx);
             return MPR_ERR_CANT_INITIALIZE;
         }
+        X509_STORE_set_ex_data(store, 0, (void*) ssl);
         if (flags & MPR_SOCKET_SERVER) {
             SSL_CTX_set_verify_depth(ctx, ssl->verifyDepth);
         }
+        SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
     }
 
     /*
         Define callbacks
      */
-    SSL_CTX_set_verify(ctx, verifyMode, verifyPeerCertificate);
     if (flags & MPR_SOCKET_SERVER) {
         SSL_CTX_set_tlsext_servername_callback(ctx, sniHostname);
     }
@@ -1086,7 +1101,7 @@ static int setCertFile(SSL_CTX *ctx, cchar *certFile)
 
     } else if (SSL_CTX_use_certificate(ctx, cert) != 1) {
         mprLog("error openssl", 0, "Unable to use certificate %s", certFile);
-        
+
     } else {
         rc = 0;
     }
@@ -1154,8 +1169,7 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
     int             error, depth;
 
     subject[0] = issuer[0] = '\0';
-
-    handle = (SSL*) X509_STORE_CTX_get_app_data(xctx);
+    handle = (SSL*) X509_STORE_CTX_get_ex_data(xctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     osp = (OpenSocket*) SSL_get_app_data(handle);
     sp = osp->sock;
     ssl = sp->ssl;
@@ -1216,7 +1230,7 @@ static int verifyPeerCertificate(int ok, X509_STORE_CTX *xctx)
         sp->errorMsg = sfmt("Certificate has expired");
         ok = 0;
         break;
-            
+
 #ifdef X509_V_ERR_HOSTNAME_MISMATCH
     case X509_V_ERR_HOSTNAME_MISMATCH:
         sp->errorMsg = sfmt("Certificate hostname mismatch. Expecting %s got %s", osp->requiredPeerName, peerName);

@@ -193,6 +193,8 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
 {
     MbedConfig          *cfg;
     mbedtls_ssl_config  *mconf;
+    cuchar              dhm_p[] = MBEDTLS_DHM_RFC3526_MODP_2048_P_BIN;
+    cuchar              dhm_g[] = MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
     int                 rc;
 
     if (ssl->config && !ssl->changed) {
@@ -254,15 +256,14 @@ static int configMbed(MprSsl *ssl, int flags, char **errorMsg)
     }
     mbedtls_ssl_conf_rng(mconf, mbedtls_ctr_drbg_random, &mbedGlobal->ctr);
 
-#if DEPRECATED
     /*
         Configure larger DH parameters
      */
-    if ((rc = mbedtls_ssl_conf_dh_param(mconf, MBEDTLS_DHM_RFC5114_MODP_2048_P, MBEDTLS_DHM_RFC5114_MODP_2048_G)) < 0) {
+    if ((rc = mbedtls_ssl_conf_dh_param_bin(mconf, dhm_p, sizeof(dhm_g), dhm_g, sizeof(dhm_g))) < 0) {
         merror(rc, "Cannot set DH params");
         return MPR_ERR_CANT_INITIALIZE;
     }
-#endif
+
     if (flags & MPR_SOCKET_SERVER) {
 #if ME_MPR_SSL_TICKET
         /*
