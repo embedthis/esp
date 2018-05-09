@@ -4709,7 +4709,9 @@ static void parseRedirect(HttpRoute *route, cchar *key, MprJson *prop)
     cchar       *from, *status, *to;
     int         ji;
 
-    if (prop->type & MPR_JSON_STRING) {
+    if (prop->type & MPR_JSON_FALSE) {
+        /* skip */
+    } else if (prop->type & MPR_JSON_STRING) {
         if (smatch(prop->value, "secure") ||smatch(prop->value, "https://")) {
             httpAddRouteCondition(route, "secure", "https://", HTTP_ROUTE_REDIRECT);
         } else {
