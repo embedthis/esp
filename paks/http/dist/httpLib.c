@@ -106,11 +106,10 @@ PUBLIC Http *httpCreate(int flags)
     }
     MPR->httpService = HTTP = http;
     http->software = sclone(ME_HTTP_SOFTWARE);
-    http->protocol = sclone("HTTP/1.1");
     http->mutex = mprCreateLock();
     http->stages = mprCreateHash(-1, MPR_HASH_STABLE);
     http->hosts = mprCreateList(-1, MPR_LIST_STABLE);
-    http->connections = mprCreateList(-1, MPR_LIST_STATIC_VALUES);
+    http->networks = mprCreateList(-1, MPR_LIST_STATIC_VALUES);
     http->authTypes = mprCreateHash(-1, MPR_HASH_CASELESS | MPR_HASH_UNIQUE | MPR_HASH_STABLE);
     http->authStores = mprCreateHash(-1, MPR_HASH_CASELESS | MPR_HASH_UNIQUE | MPR_HASH_STABLE);
     http->routeSets = mprCreateHash(-1, MPR_HASH_STATIC_VALUES | MPR_HASH_STABLE);
@@ -132,10 +131,14 @@ PUBLIC Http *httpCreate(int flags)
     httpGetUserGroup();
     httpInitParser();
     httpInitAuth();
+#if ME_HTTP_HTTP2
+    httpOpenHttp2Filter();
+#endif
+    httpOpenHttp1Filter();
     httpOpenNetConnector();
-    httpOpenSendConnector();
     httpOpenRangeFilter();
     httpOpenChunkFilter();
+    httpOpenTailFilter();
 #if ME_HTTP_WEB_SOCKETS
     httpOpenWebSockFilter();
 #endif
@@ -179,7 +182,7 @@ PUBLIC Http *httpCreate(int flags)
 
 static void manageHttp(Http *http, int flags)
 {
-    HttpConn    *conn;
+    HttpNet     *net;
     int         next;
 
     if (flags & MPR_MANAGE_MARK) {
@@ -189,7 +192,7 @@ static void manageHttp(Http *http, int flags)
         mprMark(http->clientHandler);
         mprMark(http->clientLimits);
         mprMark(http->clientRoute);
-        mprMark(http->connections);
+        mprMark(http->networks);
         mprMark(http->context);
         mprMark(http->counters);
         mprMark(http->currentDate);
@@ -206,7 +209,6 @@ static void manageHttp(Http *http, int flags)
         mprMark(http->parsers);
         mprMark(http->platform);
         mprMark(http->platformDir);
-        mprMark(http->protocol);
         mprMark(http->proxyHost);
         mprMark(http->remedies);
         mprMark(http->routeConditions);
@@ -218,6 +220,7 @@ static void manageHttp(Http *http, int flags)
         mprMark(http->sessionCache);
         mprMark(http->software);
         mprMark(http->stages);
+        mprMark(http->staticHeaders);
         mprMark(http->statusCodes);
         mprMark(http->timer);
         mprMark(http->timestamp);
@@ -225,15 +228,14 @@ static void manageHttp(Http *http, int flags)
         mprMark(http->user);
 
         /*
-            Endpoints keep connections alive until a timeout. Keep marking even if no other references.
+            Server endpoints keep network connections alive until a timeout.
+            Keep marking even if no other references.
          */
-        lock(http->connections);
-        for (next = 0; (conn = mprGetNextItem(http->connections, &next)) != 0; ) {
-            if (httpServerConn(conn)) {
-                mprMark(conn);
+        for (ITERATE_ITEMS(http->networks, net, next)) {
+            if (httpIsServer(net)) {
+                mprMark(net);
             }
         }
-        unlock(http->connections);
     }
 }
 
@@ -274,33 +276,33 @@ PUBLIC void httpStopEndpoints()
     if ((http = HTTP) == 0) {
         return;
     }
-    lock(http->connections);
+    lock(http->networks);
     for (next = 0; (endpoint = mprGetNextItem(http->endpoints, &next)) != 0; ) {
         httpStopEndpoint(endpoint);
     }
-    unlock(http->connections);
+    unlock(http->networks);
 }
 
 
 /*
-    Called to close all connections owned by a service (e.g. ejs)
+    Called to close all networks owned by a service (e.g. ejs)
  */
-PUBLIC void httpStopConnections(void *data)
+PUBLIC void httpStopNetworks(void *data)
 {
     Http        *http;
-    HttpConn    *conn;
+    HttpNet     *net;
     int         next;
 
     if ((http = HTTP) == 0) {
         return;
     }
-    lock(http->connections);
-    for (next = 0; (conn = mprGetNextItem(http->connections, &next)) != 0; ) {
-        if (data == 0 || conn->data == data) {
-            httpDestroyConn(conn);
+    lock(http->networks);
+    for (ITERATE_ITEMS(http->networks, net, next)) {
+        if (data == 0 || net->data == data) {
+            httpDestroyNet(net);
         }
     }
-    unlock(http->connections);
+    unlock(http->networks);
 }
 
 
@@ -315,7 +317,7 @@ PUBLIC void httpDestroy()
     if ((http = HTTP) == 0) {
         return;
     }
-    httpStopConnections(0);
+    httpStopNetworks(0);
     httpStopEndpoints();
     httpSetDefaultHost(0);
 
@@ -350,29 +352,32 @@ static void terminateHttp(int state, int how, int status)
  */
 static bool isIdle(bool traceRequests)
 {
-    HttpConn        *conn;
     Http            *http;
+    HttpNet         *net;
+    HttpConn        *conn;
     MprTicks        now;
-    int             next;
     static MprTicks lastTrace = 0;
+    int             next, nextConn;
 
     if ((http = MPR->httpService) != 0) {
         now = http->now;
-        lock(http->connections);
-        for (next = 0; (conn = mprGetNextItem(http->connections, &next)) != 0; ) {
-            if (conn->state != HTTP_STATE_BEGIN && conn->state != HTTP_STATE_COMPLETE) {
-                if (traceRequests && lastTrace < now) {
-                    if (conn->rx) {
-                        mprLog("info http", 2, "Request for \"%s\" is still active",
-                            conn->rx->uri ? conn->rx->uri : conn->rx->pathInfo);
+        lock(http->networks);
+        for (ITERATE_ITEMS(http->networks, net, next)) {
+            for (ITERATE_ITEMS(net->connections, conn, nextConn)) {
+                if (conn->state != HTTP_STATE_BEGIN && conn->state != HTTP_STATE_COMPLETE) {
+                    if (traceRequests && lastTrace < now) {
+                        if (conn->rx) {
+                            mprLog("info http", 2, "Request for \"%s\" is still active",
+                                conn->rx->uri ? conn->rx->uri : conn->rx->pathInfo);
+                        }
+                        lastTrace = now;
                     }
-                    lastTrace = now;
+                    unlock(http->networks);
+                    return 0;
                 }
-                unlock(http->connections);
-                return 0;
             }
         }
-        unlock(http->connections);
+        unlock(http->networks);
     } else {
         now = mprGetTicks();
     }
@@ -455,7 +460,7 @@ PUBLIC HttpHost *httpLookupHost(cchar *name)
 PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
 {
     memset(limits, 0, sizeof(HttpLimits));
-    limits->bufferSize = ME_MAX_QBUFFER;
+    limits->bufferSize = ME_PACKET_SIZE;
     limits->cacheItemSize = ME_MAX_CACHE_ITEM;
     limits->chunkSize = ME_MAX_CHUNK;
     limits->clientMax = ME_MAX_CLIENTS;
@@ -473,11 +478,22 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->requestParseTimeout = ME_MAX_PARSE_DURATION;
     limits->sessionTimeout = ME_MAX_SESSION_DURATION;
 
+#if ME_HTTP_WEB_SOCKETS
     limits->webSocketsMax = ME_MAX_WSS_SOCKETS;
     limits->webSocketsMessageSize = ME_MAX_WSS_MESSAGE;
     limits->webSocketsFrameSize = ME_MAX_WSS_FRAME;
     limits->webSocketsPacketSize = ME_MAX_WSS_PACKET;
     limits->webSocketsPing = ME_MAX_PING_DURATION;
+#endif
+
+#if ME_HTTP_HTTP2
+    /*
+        HTTP/2 parameters. Default frameSize must be 16K and windowSize 65535 by spec. Do not change.
+     */
+    limits->frameSize = HTTP2_DEFAULT_FRAME_SIZE;
+    limits->streamsMax = ME_MAX_STREAMS;
+    limits->windowSize = HTTP2_DEFAULT_WINDOW;
+#endif
 
     if (serverSide) {
         limits->rxFormSize = ME_MAX_RX_FORM;
@@ -601,46 +617,53 @@ PUBLIC void httpSetListenCallback(HttpListenCallback fn)
  */
 static void httpTimer(Http *http, MprEvent *event)
 {
+    HttpNet     *net;
     HttpConn    *conn;
     HttpStage   *stage;
     HttpLimits  *limits;
     MprModule   *module;
-    int         next, active, abort;
+    int         next, active, abort, nextConn;
 
     updateCurrentDate();
 
-    /*
-       Check for any inactive connections or expired requests (inactivityTimeout and requestTimeout)
-       OPT - could check for expired connections every 10 seconds.
-     */
-    lock(http->connections);
-    for (active = 0, next = 0; (conn = mprGetNextItem(http->connections, &next)) != 0; active++) {
-        limits = conn->limits;
-        if (!conn->timeoutEvent) {
-            abort = mprIsStopping();
-            if (httpServerConn(conn) && (HTTP_STATE_CONNECTED < conn->state && conn->state < HTTP_STATE_PARSED) &&
-                    (http->now - conn->started) > limits->requestParseTimeout) {
-                conn->timeout = HTTP_PARSE_TIMEOUT;
-                abort = 1;
-            } else if ((http->now - conn->lastActivity) > limits->inactivityTimeout) {
-                conn->timeout = HTTP_INACTIVITY_TIMEOUT;
-                abort = 1;
-            } else if ((http->now - conn->started) > limits->requestTimeout) {
-                conn->timeout = HTTP_REQUEST_TIMEOUT;
-                abort = 1;
-            } else if (!event) {
-                /* Called directly from httpStop to stop connections */
-                if (MPR->exitTimeout > 0) {
-                    if (conn->state == HTTP_STATE_COMPLETE ||
-                        (HTTP_STATE_CONNECTED < conn->state && conn->state < HTTP_STATE_PARSED)) {
+    lock(http->networks);
+
+    if (!mprGetDebugMode()) {
+        for (next = 0; (net = mprGetNextItem(http->networks, &next)) != 0; active++) {
+            /*
+               Check for any inactive connections or expired requests (inactivityTimeout and requestTimeout)
+             */
+            for (active = 0, nextConn = 0; (conn = mprGetNextItem(net->connections, &nextConn)) != 0; active++) {
+                limits = conn->limits;
+                abort = mprIsStopping();
+                if (httpServerConn(conn) && (HTTP_STATE_CONNECTED < conn->state && conn->state < HTTP_STATE_PARSED) &&
+                        (http->now - conn->started) > limits->requestParseTimeout) {
+                    conn->timeout = HTTP_PARSE_TIMEOUT;
+                    abort = 1;
+                } else if ((http->now - conn->lastActivity) > limits->inactivityTimeout) {
+                    conn->timeout = HTTP_INACTIVITY_TIMEOUT;
+                    abort = 1;
+                } else if ((http->now - conn->started) > limits->requestTimeout) {
+                    conn->timeout = HTTP_REQUEST_TIMEOUT;
+                    abort = 1;
+                } else if (!event) {
+                    /* Called directly from httpStop to stop connections */
+                    if (MPR->exitTimeout > 0) {
+                        if (conn->state == HTTP_STATE_COMPLETE ||
+                            (HTTP_STATE_CONNECTED < conn->state && conn->state < HTTP_STATE_PARSED)) {
+                            abort = 1;
+                        }
+                    } else {
                         abort = 1;
                     }
-                } else {
-                    abort = 1;
+                }
+                if (abort) {
+                    httpConnTimeout(conn);
                 }
             }
-            if (abort && !mprGetDebugMode()) {
-                httpScheduleConnTimeout(conn);
+            if ((http->now - net->lastActivity) > net->limits->inactivityTimeout) {
+                net->timeout = HTTP_INACTIVITY_TIMEOUT;
+                httpNetTimeout(net);
             }
         }
     }
@@ -649,7 +672,7 @@ static void httpTimer(Http *http, MprEvent *event)
         Check for unloadable modules
         OPT - could check for modules every minute
      */
-    if (mprGetListLength(http->connections) == 0) {
+    if (mprGetListLength(http->networks) == 0) {
         for (next = 0; (module = mprGetNextItem(MPR->moduleService->modules, &next)) != 0; ) {
             if (module->timeout) {
                 if (module->lastActivity + module->timeout < http->now) {
@@ -683,7 +706,7 @@ static void httpTimer(Http *http, MprEvent *event)
     } else {
         mprGC(MPR_GC_NO_BLOCK);
     }
-    unlock(http->connections);
+    unlock(http->networks);
 }
 
 
@@ -711,35 +734,28 @@ PUBLIC void httpSetTimestamp(MprTicks period)
 }
 
 
-PUBLIC void httpAddConn(HttpConn *conn)
+PUBLIC void httpAddNet(HttpNet *net)
 {
     Http    *http;
 
-    http = HTTP;
+    http = net->http;
+
+    mprAddItem(http->networks, net);
     http->now = mprGetTicks();
-    assert(http->now >= 0);
-    conn->started = http->now;
-    mprAddItem(http->connections, conn);
     updateCurrentDate();
 
     lock(http);
-    conn->seqno = (int) ++http->totalConnections;
-    if (!http->timer) {
-#if ME_DEBUG
-        if (!mprGetDebugMode())
-#endif
-        {
-            http->timer = mprCreateTimerEvent(NULL, "httpTimer", HTTP_TIMER_PERIOD, httpTimer, http,
-                MPR_EVENT_CONTINUOUS | MPR_EVENT_QUICK);
-        }
+    if (!http->timer && (!ME_DEBUG || !mprGetDebugMode())) {
+        http->timer = mprCreateTimerEvent(NULL, "httpTimer", HTTP_TIMER_PERIOD, httpTimer, http,
+            MPR_EVENT_CONTINUOUS | MPR_EVENT_QUICK);
     }
     unlock(http);
 }
 
 
-PUBLIC void httpRemoveConn(HttpConn *conn)
+PUBLIC void httpRemoveNet(HttpNet *net)
 {
-    mprRemoveItem(HTTP->connections, conn);
+    mprRemoveItem(net->http->networks, net);
 }
 
 
@@ -855,7 +871,7 @@ PUBLIC void httpGetStats(HttpStats *sp)
     sp->workersYielded = wstats.yielded;
     sp->workersMax = wstats.max;
 
-    sp->activeConnections = mprGetListLength(http->connections);
+    sp->activeConnections = mprGetListLength(http->networks);
     sp->activeProcesses = http->activeProcesses;
 
     mprGetCacheStats(http->sessionCache, &sp->activeSessions, &memSessions);
@@ -942,14 +958,14 @@ PUBLIC bool httpConfigure(HttpConfigureProc proc, void *data, MprTicks timeout)
         timeout = MAXINT;
     }
     do {
-        lock(http->connections);
+        lock(http->networks);
         /* Own request will count as 1 */
-        if (mprGetListLength(http->connections) == 0) {
+        if (mprGetListLength(http->networks) == 0) {
             (proc)(data);
-            unlock(http->connections);
+            unlock(http->networks);
             return 1;
         }
-        unlock(http->connections);
+        unlock(http->networks);
         mprSleep(10);
         /* Defaults to 10 secs */
     } while (mprGetRemainingTicks(mark, timeout) > 0);
@@ -1259,7 +1275,7 @@ PUBLIC int httpSetPlatform(cchar *platform)
         return MPR_ERR_BAD_ARGS;
     }
     http->platform = platform ? sclone(platform) : http->localPlatform;
-    mprLog("info http", 2, "Using platform %s", http->platform);
+    mprLog("info http", 4, "Using platform %s", http->platform);
     return 0;
 }
 
@@ -1320,7 +1336,7 @@ PUBLIC int httpSetPlatformDir(cchar *path)
 static void startAction(HttpQueue *q)
 {
     HttpConn    *conn;
-    HttpAction     action;
+    HttpAction  action;
     cchar       *name;
 
     conn = q->conn;
@@ -1409,28 +1425,20 @@ static bool configVerifyUser(HttpConn *conn, cchar *username, cchar *password);
 PUBLIC void httpInitAuth()
 {
     /*
-        Auth protocol types: basic, digest, form
-        These are typically not used for web frameworks like ESP or PHP
+        Auth protocol types: basic, digest, form, app
      */
     httpCreateAuthType("basic", httpBasicLogin, httpBasicParse, httpBasicSetHeaders);
     httpCreateAuthType("digest", httpDigestLogin, httpDigestParse, httpDigestSetHeaders);
     httpCreateAuthType("form", formLogin, formParse, NULL);
+    httpCreateAuthType("app", NULL, NULL, NULL);
 
     /*
-        Stores: app, config, system
+        Stores: app (custom in user app), config (config file directives), system (PAM / native O/S)
      */
     httpCreateAuthStore("app", NULL);
     httpCreateAuthStore("config", configVerifyUser);
 #if ME_COMPILER_HAS_PAM && ME_HTTP_PAM
     httpCreateAuthStore("system", httpPamVerifyUser);
-#endif
-
-#if DEPRECATE
-    httpCreateAuthStore("file", configVerifyUser);
-    httpCreateAuthStore("internal", configVerifyUser);
-#if ME_COMPILER_HAS_PAM && ME_HTTP_PAM
-    httpCreateAuthStore("pam", httpPamVerifyUser);
-#endif
 #endif
 }
 
@@ -1544,7 +1552,7 @@ PUBLIC bool httpAuthenticate(HttpConn *conn)
                 return 0;
             }
         }
-        httpTrace(conn, "auth.login.authenticated", "context",
+        httpTrace(conn->trace, "auth.login.authenticated", "context",
             "msg: 'Using cached authentication data', username:'%s'", username);
         conn->username = username;
         rx->authenticated = 1;
@@ -1611,7 +1619,6 @@ PUBLIC HttpAuthStore *httpCreateAuthStore(cchar *name, HttpVerifyUser verifyUser
 }
 
 
-
 PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth parseAuth, HttpSetAuth setAuth)
 {
     HttpAuthType    *type;
@@ -1623,7 +1630,9 @@ PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth 
     type->askLogin = askLogin;
     type->parseAuth = parseAuth;
     type->setAuth = setAuth;
-
+    if (!smatch(name, "app")) {
+        type->flags = HTTP_AUTH_TYPE_CONDITION;
+    }
     if (mprAddKey(HTTP->authTypes, name, type) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
@@ -1632,30 +1641,30 @@ PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth 
 
 
 /*
-    Get the username and password credentials. If using an in-protocol auth scheme like basic|digest, the
-    rx->authDetails will contain the credentials and the parseAuth callback will be invoked to parse.
-    Otherwise, it is expected that "username" and "password" fields are present in the request parameters.
-
-    This is called by authCondition which thereafter calls httpLogin
+    Get the username and password credentials. Called by authCondition which thereafter calls httpLogin.
+    If using an in-protocol auth scheme like basic|digest, the rx->authDetails will contain the credentials
+    and the parseAuth callback will be invoked to parse. Otherwise, it is expected that "username" and
+    "password" fields are present in the request parameters.
  */
 PUBLIC bool httpGetCredentials(HttpConn *conn, cchar **username, cchar **password)
 {
     HttpAuth    *auth;
+    HttpRx      *rx;
 
     assert(username);
     assert(password);
+
+    rx = conn->rx;
+
     *username = *password = NULL;
 
-    auth = conn->rx->route->auth;
-    if (!auth || !auth->type) {
+    auth = rx->route->auth;
+    if (!auth || !auth->type || !(auth->type->flags & HTTP_AUTH_TYPE_CONDITION)) {
         return 0;
     }
     if (auth->type) {
-        if (conn->authType && !smatch(conn->authType, auth->type->name)) {
-            if (!(smatch(auth->type->name, "form") && conn->rx->flags & HTTP_POST)) {
-                /* If a posted form authentication, ignore any basic|digest details in request */
-                return 0;
-            }
+        if (rx->authType && !smatch(rx->authType, auth->type->name)) {
+            return 0;
         }
         if (auth->type->parseAuth && (auth->type->parseAuth)(conn, username, password) < 0) {
             return 0;
@@ -1687,7 +1696,7 @@ PUBLIC bool httpLogin(HttpConn *conn, cchar *username, cchar *password)
     rx = conn->rx;
     auth = rx->route->auth;
     if (!username || !*username) {
-        httpTrace(conn, "auth.login.error", "error", "msg:'missing username'");
+        httpTrace(conn->trace, "auth.login.error", "error", "msg:'missing username'");
         return 0;
     }
     if (!auth->store) {
@@ -1946,6 +1955,12 @@ PUBLIC void httpSetAuthStoreSessions(HttpAuthStore *store, bool noSession)
 }
 
 
+PUBLIC void httpSetAuthStoreVerify(HttpAuthStore *store, HttpVerifyUser verifyUser)
+{
+    store->verifyUser = verifyUser;
+}
+
+
 PUBLIC void httpSetAuthSession(HttpAuth *auth, bool enable)
 {
     auth->flags &= ~HTTP_AUTH_NO_SESSION;
@@ -1957,6 +1972,10 @@ PUBLIC void httpSetAuthSession(HttpAuth *auth, bool enable)
 
 PUBLIC int httpSetAuthStore(HttpAuth *auth, cchar *store)
 {
+    if (store == 0 || *store == '\0' || smatch(store, "none")) {
+        auth->store = 0;
+        return 0;
+    }
     if ((auth->store = mprLookupKey(HTTP->authStores, store)) == 0) {
         return MPR_ERR_CANT_FIND;
     }
@@ -2017,12 +2036,12 @@ static bool configVerifyUser(HttpConn *conn, cchar *username, cchar *password)
     HttpRx      *rx;
     HttpAuth    *auth;
     bool        success;
-    char        *requiredPassword;
+    cchar       *requiredPassword;
 
     rx = conn->rx;
     auth = rx->route->auth;
     if (!conn->user && (conn->user = mprLookupKey(auth->userCache, username)) == 0) {
-        httpTrace(conn, "auth.login.error", "error", "msg: 'Unknown user', username:'%s'", username);
+        httpTrace(conn->trace, "auth.login.error", "error", "msg: 'Unknown user', username:'%s'", username);
         return 0;
     }
     if (password) {
@@ -2043,9 +2062,9 @@ static bool configVerifyUser(HttpConn *conn, cchar *username, cchar *password)
             success = smatch(password, requiredPassword);
         }
         if (success) {
-            httpTrace(conn, "auth.login.authenticated", "context", "msg:'User authenticated', username:'%s'", username);
+            httpTrace(conn->trace, "auth.login.authenticated", "context", "msg:'User authenticated', username:'%s'", username);
         } else {
-            httpTrace(conn, "auth.login.error", "error", "msg:'Password failed to authenticate', username:'%s'", username);
+            httpTrace(conn->trace, "auth.login.error", "error", "msg:'Password failed to authenticate', username:'%s'", username);
         }
         return success;
     }
@@ -2071,7 +2090,6 @@ PUBLIC int formParse(HttpConn *conn, cchar **username, cchar **password)
 {
     *username = httpGetParam(conn, "username", 0);
     *password = httpGetParam(conn, "password", 0);
-
     if (username && *username == 0) {
         return MPR_ERR_BAD_FORMAT;
     }
@@ -2132,17 +2150,17 @@ PUBLIC int httpBasicParse(HttpConn *conn, cchar **username, cchar **password)
         *cp++ = '\0';
     }
     conn->encoded = 0;
+    if (decoded && *decoded == '\0') {
+        return MPR_ERR_BAD_FORMAT;
+    }
     if (username) {
         *username = sclone(decoded);
     }
+    if (cp && *cp == '\0') {
+        return MPR_ERR_BAD_FORMAT;
+    }
     if (password) {
         *password = sclone(cp);
-    }
-    if (username && *username == 0) {
-        return MPR_ERR_BAD_FORMAT;
-    }
-    if (password && *password == 0) {
-        return MPR_ERR_BAD_FORMAT;
     }
     return 0;
 }
@@ -2162,7 +2180,7 @@ PUBLIC void httpBasicLogin(HttpConn *conn)
     } else {
         httpSetHeader(conn, "WWW-Authenticate", "Basic realm=\"%s\"", auth->realm);
         httpError(conn, HTTP_CODE_UNAUTHORIZED, "Access Denied. Login required");
-        httpTrace(conn, "auth.basic.error", "error", "msg:'Access denied, Login required'");
+        httpTrace(conn->trace, "auth.basic.error", "error", "msg:'Access denied, Login required'");
     }
 }
 
@@ -2354,11 +2372,9 @@ static void outgoingCacheFilterService(HttpQueue *q)
     MprKey      *kp;
     cchar       *cachedData;
     ssize       size;
-    int         foundDataPacket;
 
     conn = q->conn;
     tx = conn->tx;
-    foundDataPacket = 0;
     cachedData = 0;
 
     if (tx->status < 200 || tx->status > 299) {
@@ -2371,7 +2387,7 @@ static void outgoingCacheFilterService(HttpQueue *q)
      */
     if (mprLookupKey(conn->tx->headers, "X-SendCache") != 0) {
         if (fetchCachedResponse(conn)) {
-            httpTrace(conn, "cache.sendcache", "context", "msg:'Using cached content'");
+            httpTrace(conn->trace, "cache.sendcache", "context", "msg:'Using cached content'");
             cachedData = setHeadersFromCache(conn, tx->cachedContent);
             tx->length = slen(cachedData);
         }
@@ -2381,44 +2397,40 @@ static void outgoingCacheFilterService(HttpQueue *q)
             httpPutBackPacket(q, packet);
             return;
         }
-        if (packet->flags & HTTP_PACKET_HEADER) {
-            if (!cachedData && tx->cacheBuffer) {
-                /*
-                    Add defined headers to the start of the cache buffer. Separate with a double newline.
-                 */
-                mprPutToBuf(tx->cacheBuffer, "X-Status: %d\n", tx->status);
-                for (kp = 0; (kp = mprGetNextKey(tx->headers, kp)) != 0; ) {
-                    mprPutToBuf(tx->cacheBuffer, "%s: %s\n", kp->key, (char*) kp->data);
-                }
-                mprPutCharToBuf(tx->cacheBuffer, '\n');
-            }
-
-        } else if (packet->flags & HTTP_PACKET_DATA) {
+        if (packet->flags & HTTP_PACKET_DATA) {
             if (cachedData) {
                 /*
-                    Using X-SendCache. Replace the data with the cached response.
+                    Using X-SendCache. Discard the packet.
                  */
-                mprFlushBuf(packet->content);
-                mprPutBlockToBuf(packet->content, cachedData, (ssize) tx->length);
-
+                continue;
+                
             } else if (tx->cacheBuffer) {
                 /*
                     Save the response packet to the cache buffer. Will write below in saveCachedResponse.
                  */
+                if (mprGetBufLength(tx->cacheBuffer) == 0) {
+                    /*
+                        Add defined headers to the start of the cache buffer. Separate with a double newline.
+                     */
+                    mprPutToBuf(tx->cacheBuffer, "X-Status: %d\n", tx->status);
+                    for (kp = 0; (kp = mprGetNextKey(tx->headers, kp)) != 0; ) {
+                        mprPutToBuf(tx->cacheBuffer, "%s: %s\n", kp->key, (char*) kp->data);
+                    }
+                    mprPutCharToBuf(tx->cacheBuffer, '\n');
+                }
                 size = mprGetBufLength(packet->content);
                 if ((tx->cacheBufferLength + size) < conn->limits->cacheItemSize) {
                     mprPutBlockToBuf(tx->cacheBuffer, mprGetBufStart(packet->content), mprGetBufLength(packet->content));
                     tx->cacheBufferLength += size;
                 } else {
                     tx->cacheBuffer = 0;
-                    httpTrace(conn, "cache.big", "context", "msg:'Item too big to cache',size:%zu,limit:%zu",
+                    httpTrace(conn->trace, "cache.big", "context", "msg:'Item too big to cache',size:%zu,limit:%u",
                         tx->cacheBufferLength + size, conn->limits->cacheItemSize);
                 }
             }
-            foundDataPacket = 1;
 
         } else if (packet->flags & HTTP_PACKET_END) {
-            if (cachedData && !foundDataPacket) {
+            if (cachedData) {
                 /*
                     Using X-SendCache but there was no data packet to replace. So do the write here.
                  */
@@ -2486,7 +2498,7 @@ static bool fetchCachedResponse(HttpConn *conn)
     key = makeCacheKey(conn);
     if ((value = httpGetHeader(conn, "Cache-Control")) != 0 &&
             (scontains(value, "max-age=0") == 0 || scontains(value, "no-cache") == 0)) {
-        httpTrace(conn, "cache.reload", "context", "msg:'Client reload'");
+        httpTrace(conn->trace, "cache.reload", "context", "msg:'Client reload'");
 
     } else if ((tx->cachedContent = mprReadCache(conn->host->responseCache, key, &modified, 0)) != 0) {
         /*
@@ -2513,14 +2525,14 @@ static bool fetchCachedResponse(HttpConn *conn)
             }
         }
         status = (canUseClientCache && cacheOk) ? HTTP_CODE_NOT_MODIFIED : HTTP_CODE_OK;
-        httpTrace(conn, "cache.cached", "context", "msg:'Use cached content',key:'%s',status:%d", key, status);
+        httpTrace(conn->trace, "cache.cached", "context", "msg:'Use cached content',key:'%s',status:%d", key, status);
         httpSetStatus(conn, status);
         httpSetHeaderString(conn, "Etag", mprGetMD5(key));
         httpSetHeaderString(conn, "Last-Modified", mprFormatUniversalTime(MPR_HTTP_DATE, modified));
         httpRemoveHeader(conn, "Content-Encoding");
         return 1;
     }
-    httpTrace(conn, "cache.none", "context", "msg:'No cached content',key:'%s'", key);
+    httpTrace(conn->trace, "cache.none", "context", "msg:'No cached content',key:'%s'", key);
     return 0;
 }
 
@@ -2555,10 +2567,10 @@ PUBLIC ssize httpWriteCached(HttpConn *conn)
     }
     cacheKey = makeCacheKey(conn);
     if ((content = mprReadCache(conn->host->responseCache, cacheKey, &modified, 0)) == 0) {
-        httpTrace(conn, "cache.none", "context", "msg:'No response data in cache',key:'%s'", cacheKey);
+        httpTrace(conn->trace, "cache.none", "context", "msg:'No response data in cache', key:'%s'", cacheKey);
         return 0;
     }
-    httpTrace(conn, "cache.cached", "context", "msg:'Used cached response',key:'%s'", cacheKey);
+    httpTrace(conn->trace, "cache.cached", "context", "msg:'Used cached response', key:'%s'", cacheKey);
     data = setHeadersFromCache(conn, content);
     httpSetHeaderString(conn, "Etag", mprGetMD5(cacheKey));
     httpSetHeaderString(conn, "Last-Modified", mprFormatUniversalTime(MPR_HTTP_DATE, modified));
@@ -2750,6 +2762,10 @@ static cchar *setHeadersFromCache(HttpConn *conn, cchar *content)
 /*
     chunkFilter.c - Transfer chunk endociding filter.
 
+    This is an output only filter to chunk encode output before writing to the client.
+    Input chunking is handled in httpProcess()/processContent(). In the future, it would
+    be nice to move that functionality here as an input filter.
+
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
 
@@ -2759,8 +2775,8 @@ static cchar *setHeadersFromCache(HttpConn *conn, cchar *content)
 
 /********************************** Forwards **********************************/
 
-static int matchChunk(HttpConn *conn, HttpRoute *route, int dir);
-static int openChunk(HttpQueue *q);
+static void incomingChunk(HttpQueue *q, HttpPacket *packet);
+static bool needChunking(HttpQueue *q);
 static void outgoingChunkService(HttpQueue *q);
 static void setChunkPrefix(HttpQueue *q, HttpPacket *packet);
 
@@ -2776,49 +2792,33 @@ PUBLIC int httpOpenChunkFilter()
         return MPR_ERR_CANT_CREATE;
     }
     HTTP->chunkFilter = filter;
-    filter->match = matchChunk;
-    filter->open = openChunk;
+    filter->flags |= HTTP_STAGE_INTERNAL;
+    filter->incoming = incomingChunk;
     filter->outgoingService = outgoingChunkService;
     return 0;
 }
 
 
-/*
-    This is called twice: once for TX and once for RX
- */
-static int matchChunk(HttpConn *conn, HttpRoute *route, int dir)
+PUBLIC void httpInitChunking(HttpConn *conn)
 {
-    HttpTx  *tx;
+    HttpRx      *rx;
 
-    tx = conn->tx;
+    rx = conn->rx;
 
-    if (conn->upgraded || (httpClientConn(conn) && tx->parsedUri && tx->parsedUri->webSockets)) {
-        return HTTP_ROUTE_OMIT_FILTER;
-    }
-    if (dir & HTTP_STAGE_TX) {
-        /*
-            If content length is defined, don't need chunking - but only if chunking not explicitly asked for.
-            Disable chunking if explicitly turned off via the X_APPWEB_CHUNK_SIZE header which may set the
-            chunk size to zero.
-         */
-        if ((tx->length >= 0 && tx->chunkSize < 0) || tx->chunkSize == 0) {
-            return HTTP_ROUTE_OMIT_FILTER;
-        }
-    }
-    return HTTP_ROUTE_OK;
-}
-
-
-static int openChunk(HttpQueue *q)
-{
-    q->packetSize = min(q->conn->limits->bufferSize, q->max);
-    return 0;
+    /*
+        remainingContent will be revised by the chunk filter as chunks are processed and will
+        be set to zero when the last chunk has been received.
+     */
+    rx->flags |= HTTP_CHUNKED;
+    rx->chunkState = HTTP_CHUNK_START;
+    rx->remainingContent = HTTP_UNLIMITED;
+    rx->needInputPipeline = 1;
 }
 
 
 /*
     Filter chunk headers and leave behind pure data. This is called for chunked and unchunked data.
-    Chunked data format is:
+    Unchunked data is simply passed upstream. Chunked data format is:
         Chunk spec <CRLF>
         Data <CRLF>
         Chunk spec (size == 0) <CRLF>
@@ -2830,84 +2830,136 @@ static int openChunk(HttpQueue *q)
     Return number of bytes available to read.
     NOTE: may set rx->eof and return 0 bytes on EOF.
  */
-PUBLIC ssize httpFilterChunkData(HttpQueue *q, HttpPacket *packet)
+
+static void incomingChunk(HttpQueue *q, HttpPacket *packet)
 {
+    HttpNet     *net;
     HttpConn    *conn;
+    HttpPacket  *tail;
     HttpRx      *rx;
     MprBuf      *buf;
-    ssize       chunkSize;
+    ssize       chunkSize, len, nbytes;
     char        *start, *cp;
     int         bad;
 
-    if (!packet) {
-        return 0;
-    }
     conn = q->conn;
+    net = q->net;
     rx = conn->rx;
-    buf = packet->content;
-    assert(buf);
 
-    switch (rx->chunkState) {
-    case HTTP_CHUNK_UNCHUNKED:
-        assert(0);
-        return 0;
-
-    case HTTP_CHUNK_DATA:
-        if (rx->remainingContent > 0) {
-            return (ssize) min(rx->remainingContent, mprGetBufLength(buf));
-        }
-        /* End of chunk - prep for the next chunk */
-        rx->remainingContent = ME_MAX_BUFFER;
-        rx->chunkState = HTTP_CHUNK_START;
-        /* Fall through */
-
-    case HTTP_CHUNK_START:
-        /*
-            Validate:  "\r\nSIZE.*\r\n"
-         */
-        if (mprGetBufLength(buf) < 5) {
-            return 0;
-        }
-        start = mprGetBufStart(buf);
-        bad = (start[0] != '\r' || start[1] != '\n');
-        for (cp = &start[2]; cp < buf->end && *cp != '\n'; cp++) {}
-        if (cp >= buf->end || (*cp != '\n' && (cp - start) < 80)) {
-            return 0;
-        }
-        bad += (cp[-1] != '\r' || cp[0] != '\n');
-        if (bad) {
-            httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk specification");
-            return 0;
-        }
-        chunkSize = (int) stoiradix(&start[2], 16, NULL);
-        if (!isxdigit((uchar) start[2]) || chunkSize < 0) {
-            httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk specification");
-            return 0;
-        }
-        if (chunkSize == 0) {
-            /*
-                Last chunk. Consume the final "\r\n".
-             */
-            if ((cp + 2) >= buf->end) {
-                return 0;
+    if (rx->chunkState == HTTP_CHUNK_UNCHUNKED) {
+        len = httpGetPacketLength(packet);
+        nbytes = min(rx->remainingContent, httpGetPacketLength(packet));
+        rx->remainingContent -= nbytes;
+        if (rx->remainingContent <= 0) {
+            httpSetEof(conn);
+#if KEEP
+            /* HTTP/1.1 pipelining is not implemented reliably by modern browsers */
+            if (nbytes < len && (tail = httpSplitPacket(packet, nbytes)) != 0) {
+                httpPutPacket(conn->inputq, tail);
             }
-            cp += 2;
-            bad += (cp[-1] != '\r' || cp[0] != '\n');
-            if (bad) {
-                httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad final chunk specification");
-                return 0;
-            }
+#endif
         }
-        mprAdjustBufStart(buf, (cp - start + 1));
-        /* Remaining content is set to the next chunk size */
-        rx->remainingContent = chunkSize;
-        rx->chunkState = (chunkSize == 0) ? HTTP_CHUNK_EOF : HTTP_CHUNK_DATA;
-        return min(chunkSize, mprGetBufLength(buf));
-
-    default:
-        httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk state %d", rx->chunkState);
+        httpPutPacketToNext(q, packet);
+        return;
     }
-    return 0;
+    httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+    for (packet = httpGetPacket(q); packet && !conn->error && !rx->eof; packet = httpGetPacket(q)) {
+        while (packet && !conn->error && !rx->eof) {
+            switch (rx->chunkState) {
+            case HTTP_CHUNK_UNCHUNKED:
+                httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk state");
+                return;
+
+            case HTTP_CHUNK_DATA:
+                len = httpGetPacketLength(packet);
+                nbytes = min(rx->remainingContent, len);
+                rx->remainingContent -= nbytes;
+                if (nbytes < len && (tail = httpSplitPacket(packet, nbytes)) != 0) {
+                    httpPutPacketToNext(q, packet);
+                    packet = tail;
+                } else if (len > 0) {
+                    httpPutPacketToNext(q, packet);
+                    packet = 0;
+                }
+                if (rx->remainingContent <= 0) {
+                    /* End of chunk - prep for the next chunk */
+                    rx->remainingContent = ME_BUFSIZE;
+                    rx->chunkState = HTTP_CHUNK_START;
+                }
+                if (!packet) {
+                    break;
+                }
+                /* Fall through */
+
+            case HTTP_CHUNK_START:
+                /*
+                    Validate:  "\r\nSIZE.*\r\n"
+                 */
+                buf = packet->content;
+                if (mprGetBufLength(buf) < 5) {
+                    httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+                    return;
+                }
+                start = mprGetBufStart(buf);
+                bad = (start[0] != '\r' || start[1] != '\n');
+                for (cp = &start[2]; cp < buf->end && *cp != '\n'; cp++) {}
+                if (cp >= buf->end || (*cp != '\n' && (cp - start) < 80)) {
+                    httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+                    return;
+                }
+                bad += (cp[-1] != '\r' || cp[0] != '\n');
+                if (bad) {
+                    httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk specification");
+                    return;
+                }
+                chunkSize = (int) stoiradix(&start[2], 16, NULL);
+                if (!isxdigit((uchar) start[2]) || chunkSize < 0) {
+                    httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk specification");
+                    return;
+                }
+                if (chunkSize == 0) {
+                    /*
+                        Last chunk. Consume the final "\r\n".
+                     */
+                    if ((cp + 2) >= buf->end) {
+                        return;
+                    }
+                    cp += 2;
+                    bad += (cp[-1] != '\r' || cp[0] != '\n');
+                    if (bad) {
+                        httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad final chunk specification");
+                        return;
+                    }
+                }
+                mprAdjustBufStart(buf, (cp - start + 1));
+                /* Remaining content is set to the next chunk size */
+                rx->remainingContent = chunkSize;
+                if (chunkSize == 0) {
+                    rx->chunkState = HTTP_CHUNK_EOF;
+                    httpSetEof(conn);
+                } else if (rx->eof) {
+                    rx->chunkState = HTTP_CHUNK_EOF;
+                } else {
+                    rx->chunkState = HTTP_CHUNK_DATA;
+                }
+                break;
+
+            default:
+                httpError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad chunk state %d", rx->chunkState);
+                return;
+            }
+        }
+#if KEEP
+        /* HTTP/1.1 pipelining is not implemented reliably by modern browsers */
+        if (packet && httpGetPacketLength(packet)) {
+            httpPutPacket(conn->inputq, tail);
+        }
+#endif
+    }
+    if (packet) {
+        /* Transfer END packet */
+        httpPutPacketToNext(q, packet);
+    }
 }
 
 
@@ -2916,60 +2968,76 @@ static void outgoingChunkService(HttpQueue *q)
     HttpConn    *conn;
     HttpPacket  *packet, *finalChunk;
     HttpTx      *tx;
-    cchar       *value;
 
     conn = q->conn;
     tx = conn->tx;
 
     if (!(q->flags & HTTP_QUEUE_SERVICED)) {
-        /*
-            If we don't know the content length yet (tx->length < 0) and if the last packet is the end packet. Then
-            we have all the data. Thus we can determine the actual content length and can bypass the chunk handler.
-         */
-        if (tx->length < 0 && (value = mprLookupKey(tx->headers, "Content-Length")) != 0) {
-            tx->length = stoi(value);
-        }
-        if (tx->length < 0 && tx->chunkSize < 0) {
-            if (q->last->flags & HTTP_PACKET_END) {
-                if (q->count > 0) {
-                    tx->length = q->count;
-                }
-            } else {
-                tx->chunkSize = min(conn->limits->chunkSize, q->max);
-            }
-        }
-        if (tx->flags & HTTP_TX_USE_OWN_HEADERS || conn->http10) {
-            tx->chunkSize = -1;
-        }
+        tx->needChunking = needChunking(q);
     }
-    if (tx->chunkSize <= 0 || conn->upgraded) {
+    if (!tx->needChunking) {
         httpDefaultOutgoingServiceStage(q);
-    } else {
-        for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-            if (packet->flags & HTTP_PACKET_DATA) {
-                httpPutBackPacket(q, packet);
-                httpJoinPackets(q, tx->chunkSize);
-                packet = httpGetPacket(q);
-                if (httpGetPacketLength(packet) > tx->chunkSize) {
-                    httpResizePacket(q, packet, tx->chunkSize);
-                }
+        return;
+    }
+    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        if (packet->flags & HTTP_PACKET_DATA) {
+            httpPutBackPacket(q, packet);
+            httpJoinPackets(q, tx->chunkSize);
+            packet = httpGetPacket(q);
+            if (httpGetPacketLength(packet) > tx->chunkSize) {
+                httpResizePacket(q, packet, tx->chunkSize);
             }
-            if (!httpWillNextQueueAcceptPacket(q, packet)) {
-                httpPutBackPacket(q, packet);
-                return;
-            }
-            if (packet->flags & HTTP_PACKET_DATA) {
-                setChunkPrefix(q, packet);
+        }
+        if (!httpWillNextQueueAcceptPacket(q, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        if (packet->flags & HTTP_PACKET_DATA) {
+            setChunkPrefix(q, packet);
 
-            } else if (packet->flags & HTTP_PACKET_END) {
-                /* Insert a packet for the final chunk */
-                finalChunk = httpCreateDataPacket(0);
-                setChunkPrefix(q, finalChunk);
-                httpPutPacketToNext(q, finalChunk);
+        } else if (packet->flags & HTTP_PACKET_END) {
+            /* Insert a packet for the final chunk */
+            finalChunk = httpCreateDataPacket(0);
+            setChunkPrefix(q, finalChunk);
+            httpPutPacketToNext(q, finalChunk);
+        }
+        httpPutPacketToNext(q, packet);
+    }
+}
+
+
+static bool needChunking(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpTx      *tx;
+    cchar       *value;
+
+    conn = q->conn;
+    tx = conn->tx;
+
+    if (conn->net->protocol >= 2 || conn->upgraded) {
+        return 0;
+    }
+    /*
+        If we don't know the content length yet (tx->length < 0) and if the last packet is the end packet. Then
+        we have all the data. Thus we can determine the actual content length and can bypass the chunk handler.
+     */
+    if (tx->length < 0 && (value = mprLookupKey(tx->headers, "Content-Length")) != 0) {
+        tx->length = stoi(value);
+    }
+    if (tx->length < 0 && tx->chunkSize < 0) {
+        if (q->last->flags & HTTP_PACKET_END) {
+            if (q->count > 0) {
+                tx->length = q->count;
             }
-            httpPutPacketToNext(q, packet);
+        } else {
+            tx->chunkSize = min(conn->limits->chunkSize, q->max);
         }
     }
+    if (tx->flags & HTTP_TX_USE_OWN_HEADERS || conn->net->protocol != 1) {
+        tx->chunkSize = -1;
+    }
+    return tx->chunkSize > 0;
 }
 
 
@@ -3015,90 +3083,131 @@ static void setChunkPrefix(HttpQueue *q, HttpPacket *packet)
 /********************************* Forwards ***********************************/
 
 static void setDefaultHeaders(HttpConn *conn);
+static int clientRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *data, int protocol, char **err);
 
 /*********************************** Code *************************************/
-
-static HttpConn *openConnection(HttpConn *conn, MprSsl *ssl)
+/*
+    Get the IP:PORT for a request URI
+ */
+PUBLIC void httpGetUriAddress(HttpUri *uri, cchar **ip, int *port)
 {
-    Http        *http;
-    HttpUri     *uri;
-    MprSocket   *sp;
-    char        *ip;
-    int         port, rc;
+    Http    *http;
 
-    assert(conn);
-
-    http = conn->http;
-    uri = conn->tx->parsedUri;
+    http = HTTP;
 
     if (!uri->host) {
-        ip = (http->proxyHost) ? http->proxyHost : http->defaultClientHost;
-        port = (http->proxyHost) ? http->proxyPort : http->defaultClientPort;
+        *ip = (http->proxyHost) ? http->proxyHost : http->defaultClientHost;
+        *port = (http->proxyHost) ? http->proxyPort : uri->port;
     } else {
-        ip = (http->proxyHost) ? http->proxyHost : uri->host;
-        port = (http->proxyHost) ? http->proxyPort : uri->port;
+        *ip = (http->proxyHost) ? http->proxyHost : uri->host;
+        *port = (http->proxyHost) ? http->proxyPort : uri->port;
     }
-    if (port == 0) {
-        port = (uri->secure) ? 443 : 80;
+    if (*port == 0) {
+        *port = (uri->secure) ? 443 : http->defaultClientPort;
     }
-    if (conn && conn->sock) {
-        if (conn->keepAliveCount-- <= 0 || port != conn->port || strcmp(ip, conn->ip) != 0 ||
-                uri->secure != (conn->sock->ssl != 0) || conn->sock->ssl != ssl) {
-            /*
-                Cannot reuse current socket. Close and open a new one below.
-             */
-            mprCloseSocket(conn->sock, 0);
-            conn->sock = 0;
+}
+
+
+/*
+    Determine if the current network connection can handle the current URI without redirection
+ */
+static bool canUse(HttpNet *net, HttpConn *conn, HttpUri *uri, MprSsl *ssl, cchar *ip, int port)
+{
+    MprSocket   *sock;
+
+    assert(net);
+
+    if ((sock = net->sock) == 0) {
+        return 0;
+    }
+    if (port != net->port || !smatch(ip, net->ip) || uri->secure != (sock->ssl != 0) || sock->ssl != ssl) {
+        return 0;
+    }
+    if (net->protocol < 2 && conn->keepAliveCount <= 1) {
+        return 0;
+    }
+    return 1;
+}
+
+
+PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *url, MprSsl *ssl)
+{
+    HttpNet     *net;
+    HttpTx      *tx;
+    HttpUri     *uri;
+    cchar       *ip, *protocol;
+    int         port;
+
+    assert(conn);
+    assert(method && *method);
+    assert(url && *url);
+
+    net = conn->net;
+    if (httpServerConn(conn)) {
+        mprLog("client error", 0, "Cannot call httpConnect() in a server");
+        return MPR_ERR_BAD_STATE;
+    }
+    if (net->protocol <= 0) {
+        mprLog("client error", 0, "HTTP protocol to use has not been defined");
+        return MPR_ERR_BAD_STATE;
+    }
+    if (conn->tx == 0 || conn->state != HTTP_STATE_BEGIN) {
+        httpResetClientConn(conn, 0);
+    }
+    tx = conn->tx;
+    tx->method = supper(method);
+    conn->authRequested = 0;
+    conn->startMark = mprGetHiResTicks();
+
+    if ((uri = tx->parsedUri = httpCreateUri(url, HTTP_COMPLETE_URI_PATH)) == 0) {
+        return MPR_ERR_BAD_ARGS;
+    }
+    ssl = uri->secure ? (ssl ? ssl : mprCreateSsl(0)) : 0;
+    httpGetUriAddress(uri, &ip, &port);
+
+    if (net->sock) {
+        if (net->error) {
+            mprCloseSocket(net->sock, 0);
+            net->sock = 0;
+
+        } else if (canUse(net, conn, uri, ssl, ip, port)) {
+            httpTrace(net->trace, "client.connection.reuse", "context", "reuse:%d", conn->keepAliveCount);
+
         } else {
-            httpTrace(conn, "connection.reuse", "context", "keepAlive:%d", conn->keepAliveCount);
+            if (net->protocol >= 2) {
+                if (mprGetListLength(net->connections) > 1) {
+                    httpError(conn, HTTP_CODE_COMMS_ERROR, "Cannot use network for %s due to other existing requests", ip);
+                    return MPR_ERR_CANT_FIND;
+                }
+            } else {
+                mprCloseSocket(net->sock, 0);
+                net->sock = 0;
+            }
         }
     }
-    if (conn->sock) {
-        return conn;
-    }
+    if (!net->sock) {
+        if (httpConnectNet(net, ip, port, ssl) < 0) {
+            return MPR_ERR_CANT_CONNECT;
+        }
+        conn->net = net;
+        conn->sock = net->sock;
+        conn->ip = net->ip;
+        conn->port = net->port;
+        conn->keepAliveCount = (net->protocol >= 2) ? 0 : conn->limits->keepAliveMax;
 
-    /*
-        New socket
-     */
-    if ((sp = mprCreateSocket()) == 0) {
-        httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Cannot create socket for %s", httpUriToString(uri, 0));
-        return 0;
-    }
-    if ((rc = mprConnectSocket(sp, ip, port, MPR_SOCKET_NODELAY)) < 0) {
-        httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Cannot open socket on %s:%d", ip, port);
-        return 0;
-    }
-    conn->sock = sp;
-    conn->ip = sclone(ip);
-    conn->port = port;
-    conn->keepAliveCount = (conn->limits->keepAliveMax) ? conn->limits->keepAliveMax : 0;
-
-#if ME_COM_SSL
-    /*
-        Must be done even if using keep alive for repeat SSL requests
-     */
-    if (uri->secure) {
-        if (mprUpgradeSocket(sp, ssl, uri->host) < 0) {
-            conn->errorMsg = sp->errorMsg;
-            httpTrace(conn, "connection.upgrade.error", "error", "msg:'Cannot perform SSL upgrade. %s'", conn->errorMsg);
+#if ME_HTTP_WEB_SOCKETS
+        if (net->protocol == 1 && uri->webSockets && httpUpgradeWebSocket(conn) < 0) {
+            conn->errorMsg = net->errorMsg = net->sock->errorMsg;
             return 0;
         }
-        if (sp->peerCert) {
-            httpTrace(conn, "context", "connection.ssl",
-                "msg:'Connection secured with peer certificate', " \
-                "secure:true,cipher:'%s',peerName:'%s',subject:'%s',issuer:'%s'",
-                sp->cipher, sp->peerName, sp->peerCert, sp->peerCertIssuer);
-        }
-    }
 #endif
-#if ME_HTTP_WEB_SOCKETS
-    if (uri->webSockets && httpUpgradeWebSocket(conn) < 0) {
-        conn->errorMsg = sp->errorMsg;
-        return 0;
     }
-#endif
-    httpTrace(conn, "connection.peer", "context", "peer:'%s:%d'", conn->ip, conn->port);
-    return conn;
+    httpCreatePipeline(conn);
+    setDefaultHeaders(conn);
+    httpSetState(conn, HTTP_STATE_CONNECTED);
+    protocol = net->protocol < 2 ? "HTTP/1.1" : "HTTP/2";
+    httpTrace(net->trace, "client.request", "request", "method='%s', url='%s', protocol='%s'", tx->method, url, protocol);
+    return 0;
 }
 
 
@@ -3108,82 +3217,35 @@ static void setDefaultHeaders(HttpConn *conn)
 
     assert(conn);
 
-    if (smatch(conn->protocol, "HTTP/1.0")) {
-        conn->http10 = 1;
+    if (conn->username && conn->authType && ((ap = httpLookupAuthType(conn->authType)) != 0)) {
+        if ((ap->setAuth)(conn, conn->username, conn->password)) {
+            conn->authRequested = 1;
+        }
     }
-    if (conn->username && conn->authType) {
-        if ((ap = httpLookupAuthType(conn->authType)) != 0) {
-            if ((ap->setAuth)(conn, conn->username, conn->password)) {
-                conn->authRequested = 1;
+    if (conn->net->protocol < 2) {
+        if (conn->port != 80 && conn->port != 443) {
+            if (schr(conn->ip, ':')) {
+                httpAddHeader(conn, "Host", "[%s]:%d", conn->ip, conn->port);
+            } else {
+                httpAddHeader(conn, "Host", "%s:%d", conn->ip, conn->port);
             }
-        }
-    }
-    if (conn->port != 80 && conn->port != 443) {
-        if (schr(conn->ip, ':')) {
-            httpAddHeader(conn, "Host", "[%s]:%d", conn->ip, conn->port);
         } else {
-            httpAddHeader(conn, "Host", "%s:%d", conn->ip, conn->port);
+            httpAddHeaderString(conn, "Host", conn->ip);
         }
-    } else {
-        httpAddHeaderString(conn, "Host", conn->ip);
+        if (conn->keepAliveCount > 0) {
+            httpSetHeaderString(conn, "Connection", "Keep-Alive");
+        } else {
+            httpSetHeaderString(conn, "Connection", "close");
+        }
     }
     httpAddHeaderString(conn, "Accept", "*/*");
-    if (conn->keepAliveCount > 0) {
-        httpSetHeaderString(conn, "Connection", "Keep-Alive");
-    } else {
-        httpSetHeaderString(conn, "Connection", "close");
-    }
-}
-
-
-PUBLIC int httpConnect(HttpConn *conn, cchar *method, cchar *uri, struct MprSsl *ssl)
-{
-    HttpTx  *tx;
-
-    assert(conn);
-    assert(method && *method);
-    assert(uri && *uri);
-
-    if (httpServerConn(conn)) {
-        httpError(conn, HTTP_CODE_BAD_GATEWAY, "Cannot call connect in a server");
-        return MPR_ERR_BAD_STATE;
-    }
-    if (conn->tx == 0 || conn->state != HTTP_STATE_BEGIN) {
-        /* WARNING: this will erase headers */
-        httpPrepClientConn(conn, 0);
-    }
-    tx = conn->tx;
-    assert(conn->state == HTTP_STATE_BEGIN);
-
-    /*
-        Do not test if the URI is valid. Some test clients need the ability to create invalid URIs
-     */
-    if ((tx->parsedUri = httpCreateUri(uri, HTTP_COMPLETE_URI_PATH)) == 0) {
-        return MPR_ERR_BAD_ARGS;
-    }
-    if (tx->parsedUri->secure && !ssl) {
-        ssl = mprCreateSsl(0);
-    }
-    if (openConnection(conn, ssl) == 0) {
-        return MPR_ERR_CANT_OPEN;
-    }
-    conn->authRequested = 0;
-    tx->method = supper(method);
-    conn->startMark = mprGetHiResTicks();
-    /*
-        The receive pipeline is created when parsing the response in parseIncoming()
-     */
-    httpCreateTxPipeline(conn, conn->http->clientRoute);
-    httpSetState(conn, HTTP_STATE_CONNECTED);
-    setDefaultHeaders(conn);
-    return 0;
 }
 
 
 /*
     Check the response for authentication failures and redirections. Return true if a retry is requried.
  */
-PUBLIC bool httpNeedRetry(HttpConn *conn, char **url)
+PUBLIC bool httpNeedRetry(HttpConn *conn, cchar **url)
 {
     HttpRx          *rx;
     HttpTx          *tx;
@@ -3195,15 +3257,16 @@ PUBLIC bool httpNeedRetry(HttpConn *conn, char **url)
     rx = conn->rx;
     tx = conn->tx;
 
-    if (conn->state < HTTP_STATE_FIRST) {
+    if (conn->error || conn->state < HTTP_STATE_FIRST) {
         return 0;
     }
     if (rx->status == HTTP_CODE_UNAUTHORIZED) {
         if (conn->username == 0 || conn->authType == 0) {
             httpError(conn, rx->status, "Authentication required");
 
-        } else if (conn->authRequested && smatch(conn->authType, tx->authType)) {
-            httpError(conn, rx->status, "Authentication failed");
+        } else if (conn->authRequested && smatch(conn->authType, rx->authType)) {
+            httpError(conn, rx->status, "Authentication failed, wrong authentication type");
+
         } else {
             assert(httpClientConn(conn));
             if (conn->authType && (authType = httpLookupAuthType(conn->authType)) != 0) {
@@ -3211,8 +3274,8 @@ PUBLIC bool httpNeedRetry(HttpConn *conn, char **url)
             }
             return 1;
         }
-    } else if (HTTP_CODE_MOVED_PERMANENTLY <= rx->status && rx->status <= HTTP_CODE_MOVED_TEMPORARILY &&
-            conn->followRedirects) {
+
+    } else if (HTTP_CODE_MOVED_PERMANENTLY <= rx->status && rx->status <= HTTP_CODE_MOVED_TEMPORARILY && conn->followRedirects) {
         if (rx->redirect) {
             *url = rx->redirect;
             return 1;
@@ -3235,6 +3298,7 @@ PUBLIC void httpEnableUpload(HttpConn *conn)
 
 
 /*
+    TODO - need to test these
     Read data. If sync mode, this will block. If async, will never block.
     Will return what data is available up to the requested size.
     Timeout in milliseconds to wait. Set to -1 to use the default inactivity timeout. Set to zero to wait forever.
@@ -3256,7 +3320,7 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
     limits = conn->limits;
 
     if (flags == 0) {
-        flags = conn->async ? HTTP_NON_BLOCK : HTTP_BLOCK;
+        flags = conn->net->async ? HTTP_NON_BLOCK : HTTP_BLOCK;
     }
     if (timeout < 0) {
         timeout = limits->inactivityTimeout;
@@ -3271,7 +3335,8 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
                 break;
             }
             delay = min(limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
-            httpEnableConnEvents(conn);
+            //  TODO - review
+            httpEnableNetEvents(conn->net);
             mprWaitForEvent(conn->dispatcher, delay, dispatcherMark);
             if (mprGetRemainingTicks(start, timeout) <= 0) {
                 break;
@@ -3289,7 +3354,6 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
         assert(len <= q->count);
         if (len > 0) {
             len = mprGetBlockFromBuf(content, buf, len);
-            assert(len <= q->count);
         }
         buf += len;
         size -= len;
@@ -3298,6 +3362,7 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buf, ssize size, MprTicks timeo
         nbytes += len;
         if (mprGetBufLength(content) == 0) {
             httpGetPacket(q);
+
         }
         if (flags & HTTP_NON_BLOCK) {
             break;
@@ -3333,7 +3398,7 @@ PUBLIC char *httpReadString(HttpConn *conn)
     if (rx->length < 0) {
         return 0;
     }
-    remaining = (rx->length > MAXSSIZE) ? MAXSIZE: rx->length;
+    remaining = (ssize) min(MAXSSIZE, rx->length);
 
     if (remaining > 0) {
         if ((content = mprAlloc(remaining + 1)) == 0) {
@@ -3352,10 +3417,10 @@ PUBLIC char *httpReadString(HttpConn *conn)
         content = NULL;
         sofar = 0;
         while (1) {
-            if ((content = mprRealloc(content, sofar + ME_MAX_BUFFER)) == 0) {
+            if ((content = mprRealloc(content, sofar + ME_BUFSIZE)) == 0) {
                 return 0;
             }
-            nbytes = httpRead(conn, &content[sofar], ME_MAX_BUFFER);
+            nbytes = httpRead(conn, &content[sofar], ME_BUFSIZE);
             if (nbytes < 0) {
                 return 0;
             } else if (nbytes == 0) {
@@ -3373,44 +3438,23 @@ PUBLIC char *httpReadString(HttpConn *conn)
     Convenience method to issue a client http request.
     Assumes the Mpr and Http services are created and initialized.
  */
-PUBLIC HttpConn *httpRequest(cchar *method, cchar *uri, cchar *data, char **err)
+PUBLIC HttpConn *httpRequest(cchar *method, cchar *uri, cchar *data, int protocol, char **err)
 {
+    HttpNet         *net;
     HttpConn        *conn;
     MprDispatcher   *dispatcher;
-    ssize           len;
 
-    if (err) {
-        *err = 0;
-    }
+    assert(err);
     dispatcher = mprCreateDispatcher("httpRequest", MPR_DISPATCHER_AUTO);
     mprStartDispatcher(dispatcher);
 
-    conn = httpCreateConn(NULL, dispatcher);
+    net = httpCreateNet(dispatcher, NULL, protocol, 0);
+    conn = httpCreateConn(net);
     mprAddRoot(conn);
 
-    /*
-       Open a connection to issue the request. Then finalize the request output - this forces the request out.
-     */
-    if (httpConnect(conn, method, uri, NULL) < 0) {
+    if (clientRequest(conn, method, uri, data, protocol, err) < 0) {
         mprRemoveRoot(conn);
-        httpDestroyConn(conn);
-        *err = sfmt("Cannot connect to %s", uri);
-        return 0;
-    }
-    if (data) {
-        len = slen(data);
-        if (httpWriteBlock(conn->writeq, data, len, HTTP_BLOCK) != len) {
-            mprRemoveRoot(conn);
-            httpDestroyConn(conn);
-            *err = sclone("Cannot write request body data");
-            return 0;
-        }
-    }
-    httpFinalizeOutput(conn);
-    if (httpWait(conn, HTTP_STATE_CONTENT, MPR_MAX_TIMEOUT) < 0) {
-        mprRemoveRoot(conn);
-        httpDestroyConn(conn);
-        *err = sclone("No response");
+        httpDestroyNet(net);
         return 0;
     }
     mprRemoveRoot(conn);
@@ -3418,10 +3462,38 @@ PUBLIC HttpConn *httpRequest(cchar *method, cchar *uri, cchar *data, char **err)
 }
 
 
+static int clientRequest(HttpConn *conn, cchar *method, cchar *uri, cchar *data, int protocol, char **err)
+{
+    ssize   len;
+
+    /*
+       Open a connection to issue the request. Then finalize the request output - this forces the request out.
+     */
+    *err = 0;
+    if (httpConnect(conn, method, uri, NULL) < 0) {
+        *err = sfmt("Cannot connect to %s", uri);
+        return MPR_ERR_CANT_CONNECT;
+    }
+    if (data) {
+        len = slen(data);
+        if (httpWriteBlock(conn->writeq, data, len, HTTP_BLOCK) != len) {
+            *err = sclone("Cannot write request body data");
+            return MPR_ERR_CANT_WRITE;
+        }
+    }
+    httpFinalizeOutput(conn);
+    if (httpWait(conn, HTTP_STATE_CONTENT, MPR_MAX_TIMEOUT) < 0) {
+        *err = sclone("No response");
+        return MPR_ERR_BAD_STATE;
+    }
+    return 0;
+}
+
+
 static int blockingFileCopy(HttpConn *conn, cchar *path)
 {
     MprFile     *file;
-    char        buf[ME_MAX_BUFFER];
+    char        buf[ME_BUFSIZE];
     ssize       bytes, nbytes, offset;
 
     file = mprOpenFile(path, O_RDONLY | O_BINARY, 0);
@@ -3452,6 +3524,7 @@ static int blockingFileCopy(HttpConn *conn, cchar *path)
 
 /*
     Write upload data. This routine blocks. If you need non-blocking ... cut and paste.
+    TODO - what about non-blocking upload
  */
 PUBLIC ssize httpWriteUploadData(HttpConn *conn, MprList *fileData, MprList *formData)
 {
@@ -3507,8 +3580,7 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
     int         justOne;
 
     limits = conn->limits;
-    if (conn->endpoint) {
-        assert(!conn->endpoint);
+    if (httpServerConn(conn)) {
         return MPR_ERR_BAD_STATE;
     }
     if (conn->state <= HTTP_STATE_BEGIN) {
@@ -3537,11 +3609,14 @@ PUBLIC int httpWait(HttpConn *conn, int state, MprTicks timeout)
     }
     start = conn->http->now;
     dispatcherMark = mprGetEventMark(conn->dispatcher);
+
+    //  TODO - how does this work with http2?
     while (conn->state < state && !conn->error && !mprIsSocketEof(conn->sock)) {
         if (httpRequestExpired(conn, -1)) {
             return MPR_ERR_TIMEOUT;
         }
-        httpEnableConnEvents(conn);
+        //  TODO - review
+        httpEnableNetEvents(conn->net);
         delay = min(limits->inactivityTimeout, mprGetRemainingTicks(start, timeout));
         delay = max(delay, 0);
         mprWaitForEvent(conn->dispatcher, delay, dispatcherMark);
@@ -3804,14 +3879,6 @@ PUBLIC void httpParseAll(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-#if DEPRECATE
-static void parseApp(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    httpParseAll(route, 0, prop);
-}
-#endif
-
-
 static void parseDirectories(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprJson     *child;
@@ -3871,7 +3938,7 @@ static void parseAttach(HttpRoute *route, cchar *key, MprJson *prop)
 {
     HttpEndpoint    *endpoint;
     MprJson         *child;
-    char            *ip;
+    cchar           *ip;
     int             ji, port;
 
     if (prop->type & MPR_JSON_VALUE) {
@@ -3900,15 +3967,14 @@ static void parseAttach(HttpRoute *route, cchar *key, MprJson *prop)
     }
 }
 
+
 static void parseAuth(HttpRoute *route, cchar *key, MprJson *prop)
 {
     if (prop->type & MPR_JSON_STRING) {
-        /* Permits auth: "app" to set the store and "none" to set no auth */
+        /* Permits auth: "app" to set the store */
         if (smatch(prop->value, "none")) {
-            httpSetAuthType(route->auth, "none", 0);
-            httpAddRouteCondition(route, "auth", 0, 0);
-        } else {
-            parseAuthStore(route, key, prop);
+            httpSetAuthStore(route->auth, NULL);
+            httpSetAuthType(route->auth, NULL, 0);
         }
     } else if (prop->type == MPR_JSON_OBJ) {
         httpParseAll(route, key, prop);
@@ -4054,7 +4120,7 @@ static void parseAuthType(HttpRoute *route, cchar *key, MprJson *prop)
     if (httpSetAuthType(auth, type, 0) < 0) {
         httpParseError(route, "The %s AuthType is not available on this platform", type);
     }
-    if (type && !smatch(type, "none")) {
+    if (type && !smatch(type, "none") && !smatch(type, "app")) {
         httpAddRouteCondition(route, "auth", 0, 0);
     }
     if (smatch(type, "basic") || smatch(type, "digest")) {
@@ -4109,13 +4175,6 @@ static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
             }
             methods = getList(mprReadJsonObj(child, "methods"));
             urls = getList(mprReadJsonObj(child, "urls"));
-#if DEPRECATE
-            if (urls == 0) {
-                if ((urls = getList(mprReadJsonObj(child, "urls"))) != 0) {
-                    mprLog("error http config", 0, "Using deprecated property \"uris\", use \"urls\" instead");
-                }
-            }
-#endif
             mimeTypes = getList(mprReadJsonObj(child, "mime"));
             extensions = getList(mprReadJsonObj(child, "extensions"));
             if (smatch(mprReadJson(child, "unique"), "true")) {
@@ -4407,12 +4466,6 @@ static void parseLimitsConnections(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseLimitsFiles(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    mprSetFilesLimit(httpGetInt(prop->value));
-}
-
-
 static void parseLimitsDepletion(HttpRoute *route, cchar *key, MprJson *prop)
 {
     cchar   *policy;
@@ -4436,6 +4489,27 @@ static void parseLimitsDepletion(HttpRoute *route, cchar *key, MprJson *prop)
     }
     mprSetMemPolicy(flags);
 }
+
+
+static void parseLimitsFiles(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    mprSetFilesLimit(httpGetInt(prop->value));
+}
+
+
+#if ME_HTTP_HTTP2
+static void parseLimitsFrameSize(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    int     size;
+
+    size = httpGetInt(prop->value);
+    if (size < HTTP2_DEFAULT_FRAME_SIZE) {
+        size = HTTP2_DEFAULT_FRAME_SIZE;
+    }
+    route->limits->frameSize = size;
+}
+#endif
+
 
 static void parseLimitsKeepAlive(HttpRoute *route, cchar *key, MprJson *prop)
 {
@@ -4482,6 +4556,20 @@ static void parseLimitsRxHeader(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+#if ME_HTTP_HTTP2
+static void parseLimitsStreams(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    int     size;
+
+    size = httpGetInt(prop->value);
+    if (size < 1) {
+        size = 1;
+    }
+    route->limits->streamsMax = size;
+}
+#endif
+
+
 static void parseLimitsTxBody(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->limits->txBodySize = httpGetNumber(prop->value);
@@ -4506,6 +4594,7 @@ static void parseLimitsUpload(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+#if ME_HTTP_WEB_SOCKETS
 static void parseLimitsWebSockets(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->limits->webSocketsMax = httpGetInt(prop->value);
@@ -4528,6 +4617,7 @@ static void parseLimitsWebSocketsPacket(HttpRoute *route, cchar *key, MprJson *p
 {
     route->limits->webSocketsPacketSize = httpGetInt(prop->value);
 }
+#endif
 
 
 static void parseLimitsWorkers(HttpRoute *route, cchar *key, MprJson *prop)
@@ -4540,6 +4630,20 @@ static void parseLimitsWorkers(HttpRoute *route, cchar *key, MprJson *prop)
     }
     mprSetMaxWorkers(count);
 }
+
+
+#if ME_HTTP_HTTP2
+static void parseLimitsWindow(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    int     size;
+
+    size = httpGetInt(prop->value);
+    if (size < HTTP2_DEFAULT_WINDOW) {
+        size = HTTP2_DEFAULT_WINDOW;
+    }
+    route->limits->windowSize = size;
+}
+#endif
 
 
 static void parseMethods(HttpRoute *route, cchar *key, MprJson *prop)
@@ -4624,7 +4728,7 @@ static void parsePipelineFilters(HttpRoute *route, cchar *key, MprJson *prop)
 
 /*
     pipeline: {
-        handlers: 'espHandler',                     //  For all extensions
+        handler: 'espHandler',                     //  For all extensions
     },
  */
 static void parsePipelineHandler(HttpRoute *route, cchar *key, MprJson *prop)
@@ -4906,7 +5010,7 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
     MprJson         *child;
-    char            *ip;
+    cchar           *ip;
     int             ji, port, secure;
 
     if (route->flags & (HTTP_ROUTE_HOSTED | HTTP_ROUTE_OWN_LISTEN)) {
@@ -4964,7 +5068,7 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
         timestamp: '1hr',
     }
  */
-static void parseServerLog(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseLog(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprTicks    timestamp;
     cchar       *location;
@@ -5043,12 +5147,6 @@ static void parseServerModules(HttpRoute *route, cchar *key, MprJson *prop)
         module = mprCreateModule(name, path, entry, HTTP);
 
         if (mprLoadModule(module) < 0) {
-#if DEPRECATE
-            module->entry = sfmt("ma%sInit", stitle(name));
-            if (mprLoadModule(module) < 0) {
-                httpParseError(route, "Cannot load module: %s", path);
-            }
-#endif
             break;
         }
     }
@@ -5079,14 +5177,6 @@ static void parseServerMonitors(HttpRoute *route, cchar *key, MprJson *prop)
         }
     }
 }
-
-
-#if DEPRECATE
-static void parseServerPrefix(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    httpSetRouteServerPrefix(route, prop->value);
-}
-#endif
 
 
 static void parseShowErrors(HttpRoute *route, cchar *key, MprJson *prop)
@@ -5137,23 +5227,6 @@ static void parseSslAuthorityFile(HttpRoute *route, cchar *key, MprJson *prop)
         }
     }
 }
-
-
-#if DEPRECATE
-static void parseSslAuthorityDirectory(HttpRoute *route, cchar *key, MprJson *prop)
-{
-    cchar   *path;
-
-    path = httpExpandRouteVars(route, prop->value);
-    if (path && *path) {
-        if (!mprPathExists(path, R_OK)) {
-            httpParseError(route, "Cannot find ssl.authority.directory %s", path);
-        } else {
-            mprSetSslCaPath(route->ssl, path);
-        }
-    }
-}
-#endif
 
 
 static void parseSslCertificate(HttpRoute *route, cchar *key, MprJson *prop)
@@ -5363,7 +5436,7 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
     int         anew, backup, ji;
 
     if (route->trace && route->trace->flags & MPR_LOG_CMDLINE) {
-        mprLog("info http config", 4, "Already tracing. Ignoring trace configuration");
+        mprLog("info http config", 0, "Already tracing. Ignoring trace configuration in config file.");
         return;
     }
     logSize = (ssize) httpGetNumber(mprReadJson(prop, "size"));
@@ -5555,11 +5628,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.txBody", parseLimitsTxBody);
     httpAddConfig("http.limits.upload", parseLimitsUpload);
     httpAddConfig("http.limits.uri", parseLimitsUri);
-    httpAddConfig("http.limits.webSockets", parseLimitsWebSockets);
-    httpAddConfig("http.limits.webSocketsMessage", parseLimitsWebSocketsMessage);
-    httpAddConfig("http.limits.webSocketsPacket", parseLimitsWebSocketsPacket);
-    httpAddConfig("http.limits.webSocketsFrame", parseLimitsWebSocketsFrame);
     httpAddConfig("http.limits.workers", parseLimitsWorkers);
+    httpAddConfig("http.log", parseLog);
     httpAddConfig("http.methods", parseMethods);
     httpAddConfig("http.mode", parseProfile);
     httpAddConfig("http.name", parseName);
@@ -5569,8 +5639,8 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.pipeline.filters", parsePipelineFilters);
     httpAddConfig("http.pipeline.handler", parsePipelineHandler);
     httpAddConfig("http.pipeline.handlers", parsePipelineHandlers);
-    httpAddConfig("http.prefix", parsePrefix);
     httpAddConfig("http.profile", parseProfile);
+    httpAddConfig("http.prefix", parsePrefix);
     httpAddConfig("http.redirect", parseRedirect);
     httpAddConfig("http.renameUploads", parseRenameUploads);
     httpAddConfig("http.routes", parseRoutes);
@@ -5580,7 +5650,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.server.account", parseServerAccount);
     httpAddConfig("http.server.defenses", parseServerDefenses);
     httpAddConfig("http.server.listen", parseServerListen);
-    httpAddConfig("http.server.log", parseServerLog);
     httpAddConfig("http.server.modules", parseServerModules);
     httpAddConfig("http.server.monitors", parseServerMonitors);
     httpAddConfig("http.showErrors", parseShowErrors);
@@ -5588,9 +5657,6 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.ssl", parseSsl);
     httpAddConfig("http.ssl.authority", httpParseAll);
     httpAddConfig("http.ssl.authority.file", parseSslAuthorityFile);
-#if DEPRECATE
-    httpAddConfig("http.ssl.authority.directory", parseSslAuthorityDirectory);
-#endif
     httpAddConfig("http.ssl.certificate", parseSslCertificate);
     httpAddConfig("http.ssl.ciphers", parseSslCiphers);
     httpAddConfig("http.ssl.key", parseSslKey);
@@ -5614,25 +5680,21 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.websockets.protocol", parseWebSocketsProtocol);
     httpAddConfig("http.xsrf", parseXsrf);
 
-#if DEPRECATE
-    httpAddConfig("app", parseApp);
-    httpAddConfig("http.domain", parseName);
-    httpAddConfig("http.limits.requestBody", parseLimitsRxBody);
-    httpAddConfig("http.limits.responseBody", parseLimitsTxBody);
-    httpAddConfig("http.limits.requestForm", parseLimitsRxForm);
-    httpAddConfig("http.limits.requestHeader", parseLimitsRxHeader);
-    httpAddConfig("http.serverPrefix", parseServerPrefix);
-    httpAddConfig("http.server.ssl", parseSsl);
-    httpAddConfig("http.server.ssl.authority", httpParseAll);
-    httpAddConfig("http.server.ssl.authority.file", parseSslAuthorityFile);
-    httpAddConfig("http.server.ssl.authority.directory", parseSslAuthorityDirectory);
-    httpAddConfig("http.server.ssl.certificate", parseSslCertificate);
-    httpAddConfig("http.server.ssl.ciphers", parseSslCiphers);
-    httpAddConfig("http.server.ssl.key", parseSslKey);
-    httpAddConfig("http.server.ssl.protocols", parseSslProtocols);
-    httpAddConfig("http.server.ssl.verify", httpParseAll);
-    httpAddConfig("http.server.ssl.verify.client", parseSslVerifyClient);
-    httpAddConfig("http.server.ssl.verify.issuer", parseSslVerifyIssuer);
+#if ME_HTTP_HTTP2
+    httpAddConfig("http.limits.frameSize", parseLimitsFrameSize);
+    httpAddConfig("http.limits.streams", parseLimitsStreams);
+    httpAddConfig("http.limits.window", parseLimitsWindow);
+#endif
+
+#if ME_HTTP_WEB_SOCKETS
+    httpAddConfig("http.limits.webSockets", parseLimitsWebSockets);
+    httpAddConfig("http.limits.webSocketsMessage", parseLimitsWebSocketsMessage);
+    httpAddConfig("http.limits.webSocketsPacket", parseLimitsWebSocketsPacket);
+    httpAddConfig("http.limits.webSocketsFrame", parseLimitsWebSocketsFrame);
+#endif
+
+#if DEPRECATE || 1
+    httpAddConfig("http.server.log", parseLog);
 #endif
     return 0;
 }
@@ -5653,66 +5715,100 @@ PUBLIC int httpInitParser()
     conn.c -- Connection module to handle individual HTTP connections.
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
-
 /********************************* Includes ***********************************/
 
 
 
 /***************************** Forward Declarations ***************************/
 
-static HttpPacket *getPacket(HttpConn *conn, ssize *bytesToRead);
+static void pickStreamNumber(HttpConn *conn);
+static void commonPrep(HttpConn *conn);
 static void manageConn(HttpConn *conn, int flags);
-static bool prepForNext(HttpConn *conn);
 
 /*********************************** Code *************************************/
 /*
-    Create a new connection object
+    Create a new connection object. These are multiplexed onto network objects.
+
+    Use httpCreateNet() to create a network object.
  */
-PUBLIC HttpConn *httpCreateConn(HttpEndpoint *endpoint, MprDispatcher *dispatcher)
+
+PUBLIC HttpConn *httpCreateConn(HttpNet *net)
 {
+    Http        *http;
+    HttpQueue   *q;
     HttpConn    *conn;
+    HttpLimits  *limits;
     HttpHost    *host;
     HttpRoute   *route;
 
+    assert(net);
+
+    http = HTTP;
     if ((conn = mprAllocObj(HttpConn, manageConn)) == 0) {
         return 0;
     }
-    conn->protocol = HTTP->protocol;
-    conn->http = HTTP;
+    conn->http = http;
     conn->port = -1;
-    conn->retries = HTTP_RETRIES;
-    conn->endpoint = endpoint;
-    conn->lastActivity = HTTP->now;
-    conn->ioCallback = httpIOEvent;
+    conn->started = http->now;
+    conn->lastActivity = http->now;
+    conn->net = net;
+    conn->endpoint = net->endpoint;
+    conn->notifier = net->notifier;
+    conn->sock = net->sock;
+    conn->port = net->port;
+    conn->ip = net->ip;
+    conn->secure = net->secure;
+    pickStreamNumber(conn);
 
-    if (endpoint) {
-        conn->notifier = endpoint->notifier;
-        host = mprGetFirstItem(endpoint->hosts);
+    if (net->endpoint) {
+        host = mprGetFirstItem(net->endpoint->hosts);
         if (host && (route = host->defaultRoute) != 0) {
             conn->limits = route->limits;
             conn->trace = route->trace;
         } else {
-            conn->limits = HTTP->serverLimits;
-            conn->trace = HTTP->trace;
+            conn->limits = http->serverLimits;
+            conn->trace = http->trace;
         }
     } else {
-        conn->limits = HTTP->clientLimits;
-        conn->trace = HTTP->trace;
+        conn->limits = http->clientLimits;
+        conn->trace = http->trace;
     }
-    conn->keepAliveCount = conn->limits->keepAliveMax;
-    conn->serviceq = httpCreateQueueHead(conn, "serviceq");
+    limits = conn->limits;
+    conn->keepAliveCount = (net->protocol >= 2) ? 0 : conn->limits->keepAliveMax;
+    conn->dispatcher = net->dispatcher;
 
-    if (dispatcher) {
-        conn->dispatcher = dispatcher;
-    } else if (endpoint) {
-        conn->dispatcher = endpoint->dispatcher;
-    } else {
-        conn->dispatcher = mprGetDispatcher();
-    }
     conn->rx = httpCreateRx(conn);
     conn->tx = httpCreateTx(conn, NULL);
+
+    q = conn->rxHead = httpCreateQueueHead(net, conn, "RxHead", HTTP_QUEUE_RX);
+    q = httpCreateQueue(net, conn, http->tailFilter, HTTP_QUEUE_RX, q);
+    if (net->protocol < 2) {
+        q = httpCreateQueue(net, conn, http->chunkFilter, HTTP_QUEUE_RX, q);
+    }
+    if (httpIsServer(net)) {
+        q = httpCreateQueue(net, conn, http->uploadFilter, HTTP_QUEUE_RX, q);
+    }
+    conn->inputq = conn->rxHead->nextQ;
+    conn->readq = conn->rxHead;
+
+    q = conn->txHead = httpCreateQueueHead(net, conn, "TxHead", HTTP_QUEUE_TX);
+    if (net->protocol < 2) {
+        q = httpCreateQueue(net, conn, http->chunkFilter, HTTP_QUEUE_TX, q);
+        q = httpCreateQueue(net, conn, http->tailFilter, HTTP_QUEUE_TX, q);
+    } else {
+        q = httpCreateQueue(net, conn, http->tailFilter, HTTP_QUEUE_TX, q);
+    }
+    conn->outputq = q;
+    conn->writeq = conn->txHead->nextQ;
+    httpTraceQueues(conn);
+    httpOpenQueues(conn);
+
+#if ME_HTTP_HTTP2
+    httpSetQueueLimits(conn->inputq, limits->frameSize, -1, net->inputq->max);
+    httpSetQueueLimits(conn->outputq, limits->frameSize, -1, net->inputq->max);
+#endif
     httpSetState(conn, HTTP_STATE_BEGIN);
-    httpAddConn(conn);
+    httpAddConn(net, conn);
     return conn;
 }
 
@@ -5722,26 +5818,17 @@ PUBLIC HttpConn *httpCreateConn(HttpEndpoint *endpoint, MprDispatcher *dispatche
  */
 PUBLIC void httpDestroyConn(HttpConn *conn)
 {
-    if (!conn->destroyed && !conn->borrowed) {
+    if (!conn->destroyed && !conn->net->borrowed) {
         HTTP_NOTIFY(conn, HTTP_EVENT_DESTROY, 0);
-        if (httpServerConn(conn)) {
-            httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
-            if (conn->activeRequest) {
-                httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
-                conn->activeRequest = 0;
-            }
-        }
-        httpRemoveConn(conn);
-        conn->input = 0;
         if (conn->tx) {
             httpClosePipeline(conn);
         }
-        if (conn->sock) {
-            mprCloseSocket(conn->sock, 0);
+        if (conn->activeRequest) {
+            httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
+            conn->activeRequest = 0;
         }
-        if (conn->dispatcher && conn->dispatcher->flags & MPR_DISPATCHER_AUTO) {
-            mprDestroyDispatcher(conn->dispatcher);
-        }
+        httpDisconnectConn(conn);
+        httpRemoveConn(conn->net, conn);
         conn->destroyed = 1;
     }
 }
@@ -5752,68 +5839,183 @@ static void manageConn(HttpConn *conn, int flags)
     assert(conn);
 
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(conn->rx);
-        mprMark(conn->tx);
-        mprMark(conn->readq);
-        mprMark(conn->writeq);
-        mprMark(conn->sock);
-        mprMark(conn->limits);
-        mprMark(conn->http);
-        mprMark(conn->dispatcher);
-        mprMark(conn->newDispatcher);
-        mprMark(conn->oldDispatcher);
-        mprMark(conn->address);
-        mprMark(conn->serviceq);
-        mprMark(conn->currentq);
-        mprMark(conn->endpoint);
-        mprMark(conn->host);
-        mprMark(conn->input);
-        mprMark(conn->connectorq);
-        mprMark(conn->timeoutEvent);
-        mprMark(conn->workerEvent);
-        mprMark(conn->context);
-        mprMark(conn->ejs);
-        mprMark(conn->pool);
-        mprMark(conn->mark);
-        mprMark(conn->reqData);
-        mprMark(conn->data);
-        mprMark(conn->grid);
-        mprMark(conn->record);
-        mprMark(conn->boundary);
-        mprMark(conn->errorMsg);
-        mprMark(conn->ip);
-        mprMark(conn->protocol);
-        mprMark(conn->protocols);
-        mprMark(conn->trace);
         mprMark(conn->authType);
         mprMark(conn->authData);
-        mprMark(conn->username);
-        mprMark(conn->password);
-        mprMark(conn->user);
+        mprMark(conn->boundary);
+        mprMark(conn->context);
+        mprMark(conn->data);
+        mprMark(conn->dispatcher);
+        mprMark(conn->ejs);
+        mprMark(conn->endpoint);
+        mprMark(conn->errorMsg);
+        mprMark(conn->grid);
         mprMark(conn->headersCallbackArg);
+        mprMark(conn->http);
+        mprMark(conn->host);
+        mprMark(conn->inputq);
+        mprMark(conn->ip);
+        mprMark(conn->limits);
+        mprMark(conn->mark);
+        mprMark(conn->net);
+        mprMark(conn->outputq);
+        mprMark(conn->password);
+        mprMark(conn->pool);
+        mprMark(conn->protocols);
+        mprMark(conn->readq);
+        mprMark(conn->record);
+        mprMark(conn->reqData);
+        mprMark(conn->rx);
+        mprMark(conn->rxHead);
+        mprMark(conn->sock);
+        mprMark(conn->timeoutEvent);
+        mprMark(conn->trace);
+        mprMark(conn->tx);
+        mprMark(conn->txHead);
+        mprMark(conn->user);
+        mprMark(conn->username);
+        mprMark(conn->writeq);
     }
 }
 
+/*
+    Prepare for another request for server
+    Return true if there is another request ready for serving
+ */
+PUBLIC void httpResetServerConn(HttpConn *conn)
+{
+    assert(httpServerConn(conn));
+    assert(conn->state == HTTP_STATE_COMPLETE);
 
-PUBLIC void httpDisconnect(HttpConn *conn)
+    if (conn->net->borrowed) {
+        return;
+    }
+    if (conn->keepAliveCount <= 0) {
+        conn->state = HTTP_STATE_BEGIN;
+        return;
+    }
+    if (conn->tx) {
+        conn->tx->conn = 0;
+    }
+    if (conn->rx) {
+        conn->rx->conn = 0;
+    }
+    conn->authType = 0;
+    conn->username = 0;
+    conn->password = 0;
+    conn->user = 0;
+    conn->authData = 0;
+    conn->encoded = 0;
+    conn->rx = httpCreateRx(conn);
+    conn->tx = httpCreateTx(conn, NULL);
+    commonPrep(conn);
+    assert(conn->state == HTTP_STATE_BEGIN);
+}
+
+
+PUBLIC void httpResetClientConn(HttpConn *conn, bool keepHeaders)
+{
+    MprHash     *headers;
+
+    assert(conn);
+
+    if (conn->net->protocol < 2) {
+        if (conn->state > HTTP_STATE_BEGIN && conn->keepAliveCount > 0 && conn->sock && !httpIsEof(conn)) {
+            /* Residual data from past request, cannot continue on this socket */
+            conn->sock = 0;
+        }
+    }
+    if (conn->tx) {
+        conn->tx->conn = 0;
+    }
+    if (conn->rx) {
+        conn->rx->conn = 0;
+    }
+    headers = (keepHeaders && conn->tx) ? conn->tx->headers: NULL;
+    conn->tx = httpCreateTx(conn, headers);
+    conn->rx = httpCreateRx(conn);
+    commonPrep(conn);
+}
+
+
+static void commonPrep(HttpConn *conn)
+{
+    HttpQueue   *q, *next;
+
+    if (conn->timeoutEvent) {
+        mprRemoveEvent(conn->timeoutEvent);
+        conn->timeoutEvent = 0;
+    }
+    conn->lastActivity = conn->http->now;
+    conn->error = 0;
+    conn->errorMsg = 0;
+    conn->state = 0;
+    conn->authRequested = 0;
+    conn->complete = 0;
+
+    httpTraceQueues(conn);
+    for (q = conn->txHead->nextQ; q != conn->txHead; q = next) {
+        next = q->nextQ;
+        if (q->flags & HTTP_QUEUE_REQUEST) {
+            httpRemoveQueue(q);
+        } else {
+            q->flags &= (HTTP_QUEUE_OPENED | HTTP_QUEUE_OUTGOING);
+        }
+    }
+    conn->writeq = conn->txHead->nextQ;
+
+    for (q = conn->rxHead->nextQ; q != conn->rxHead; q = next) {
+        next = q->nextQ;
+        if (q->flags & HTTP_QUEUE_REQUEST) {
+            httpRemoveQueue(q);
+        } else {
+            q->flags &= (HTTP_QUEUE_OPENED);
+        }
+    }
+    conn->readq = conn->rxHead;
+    httpTraceQueues(conn);
+
+    httpDiscardData(conn, HTTP_QUEUE_TX);
+    httpDiscardData(conn, HTTP_QUEUE_RX);
+
+    httpSetState(conn, HTTP_STATE_BEGIN);
+    pickStreamNumber(conn);
+}
+
+
+static void pickStreamNumber(HttpConn *conn)
+{
+#if ME_HTTP_HTTP2
+    HttpNet     *net;
+
+    net = conn->net;
+    if (net->protocol >= 2 && !httpIsServer(net)) {
+        conn->stream = net->nextStream;
+        net->nextStream += 2;
+        if (conn->stream >= HTTP2_MAX_STREAM) {
+            //TODO - must recreate connection. Cannot use this connection any more.
+        }
+    }
+#endif
+}
+
+
+PUBLIC void httpDisconnectConn(HttpConn *conn)
 {
     HttpTx      *tx;
 
     tx = conn->tx;
-    if (conn->sock) {
-        mprDisconnectSocket(conn->sock);
-    }
-    conn->connError++;
     conn->error++;
-    conn->keepAliveCount = 0;
     if (tx) {
+        tx->responded = 1;
         tx->finalized = 1;
         tx->finalizedOutput = 1;
         tx->finalizedConnector = 1;
-        tx->responded = 1;
     }
     if (conn->rx) {
         httpSetEof(conn);
+    }
+    if (conn->net->protocol < 2) {
+        mprDisconnectSocket(conn->sock);
     }
 }
 
@@ -5837,41 +6039,35 @@ static void connTimeout(HttpConn *conn, MprEvent *mprEvent)
     if (conn->timeoutCallback) {
         (conn->timeoutCallback)(conn);
     }
-    if (!conn->connError) {
-        prefix = (conn->state == HTTP_STATE_BEGIN) ? "Idle connection" : "Request";
-        if (conn->timeout == HTTP_PARSE_TIMEOUT) {
-            msg = sfmt("%s exceeded parse headers timeout of %lld sec", prefix, limits->requestParseTimeout  / 1000);
-            event = "timeout.parse";
+    prefix = (conn->state == HTTP_STATE_BEGIN) ? "Idle connection" : "Request";
+    if (conn->timeout == HTTP_PARSE_TIMEOUT) {
+        msg = sfmt("%s exceeded parse headers timeout of %lld sec", prefix, limits->requestParseTimeout  / 1000);
+        event = "timeout.parse";
 
-#if KEEP
-        } else if (conn->timeout == HTTP_INACTIVITY_TIMEOUT) {
-            /* Too noisy */
+    } else if (conn->timeout == HTTP_INACTIVITY_TIMEOUT) {
+        if (httpClientConn(conn)) {
             msg = sfmt("%s exceeded inactivity timeout of %lld sec", prefix, limits->inactivityTimeout / 1000);
             event = "timeout.inactivity";
-#endif
+        }
 
-        } else if (conn->timeout == HTTP_REQUEST_TIMEOUT) {
-            msg = sfmt("%s exceeded timeout %lld sec", prefix, limits->requestTimeout / 1000);
-            event = "timeout.duration";
-        }
-        if (conn->state < HTTP_STATE_FIRST) {
-            httpDisconnect(conn);
-            if (msg) {
-                httpTrace(conn, event, "error", "msg:'%s'", msg);
-            }
-        } else {
-            httpError(conn, HTTP_CODE_REQUEST_TIMEOUT, "%s", msg);
-        }
+    } else if (conn->timeout == HTTP_REQUEST_TIMEOUT) {
+        msg = sfmt("%s exceeded timeout %lld sec", prefix, limits->requestTimeout / 1000);
+        event = "timeout.duration";
     }
-    if (httpClientConn(conn)) {
-        httpDestroyConn(conn);
+    if (conn->state < HTTP_STATE_FIRST) {
+        if (msg) {
+            httpTrace(conn->trace, event, "error", "msg:'%s'", msg);
+            conn->errorMsg = msg;
+        }
+        httpDisconnectConn(conn);
+
     } else {
-        httpEnableConnEvents(conn);
+        httpError(conn, HTTP_CODE_REQUEST_TIMEOUT, "%s", msg);
     }
 }
 
 
-PUBLIC void httpScheduleConnTimeout(HttpConn *conn)
+PUBLIC void httpConnTimeout(HttpConn *conn)
 {
     if (!conn->timeoutEvent && !conn->destroyed) {
         /*
@@ -5882,511 +6078,9 @@ PUBLIC void httpScheduleConnTimeout(HttpConn *conn)
 }
 
 
-static void commonPrep(HttpConn *conn)
-{
-    if (conn->timeoutEvent) {
-        mprRemoveEvent(conn->timeoutEvent);
-        conn->timeoutEvent = 0;
-    }
-    conn->lastActivity = conn->http->now;
-    conn->error = 0;
-    conn->errorMsg = 0;
-    conn->state = 0;
-    conn->authRequested = 0;
-    httpSetState(conn, HTTP_STATE_BEGIN);
-    httpInitSchedulerQueue(conn->serviceq);
-}
-
-
-/*
-    Prepare for another request
-    Return true if there is another request ready for serving
- */
-static bool prepForNext(HttpConn *conn)
-{
-    assert(conn->endpoint);
-    assert(conn->state == HTTP_STATE_COMPLETE);
-
-    if (conn->borrowed) {
-        return 0;
-    }
-    if (conn->keepAliveCount <= 0) {
-        conn->state = HTTP_STATE_BEGIN;
-        return 0;
-    }
-    if (conn->tx) {
-        assert(conn->tx->finalized && conn->tx->finalizedConnector && conn->tx->finalizedOutput);
-        conn->tx->conn = 0;
-    }
-    if (conn->rx) {
-        conn->rx->conn = 0;
-    }
-    conn->authType = 0;
-    conn->username = 0;
-    conn->password = 0;
-    conn->user = 0;
-    conn->authData = 0;
-    conn->encoded = 0;
-    conn->rx = httpCreateRx(conn);
-    conn->tx = httpCreateTx(conn, NULL);
-    commonPrep(conn);
-    assert(conn->state == HTTP_STATE_BEGIN);
-    return conn->input && (httpGetPacketLength(conn->input) > 0) && !conn->connError;
-}
-
-
-#if KEEP
-/*
-    Eat remaining input incase last request did not consume all data
- */
-static void consumeLastRequest(HttpConn *conn)
-{
-    char    junk[4096];
-
-    if (conn->state >= HTTP_STATE_FIRST) {
-        while (!httpIsEof(conn) && !httpRequestExpired(conn, 0)) {
-            if (httpRead(conn, junk, sizeof(junk)) <= 0) {
-                break;
-            }
-        }
-    }
-    if (HTTP_STATE_CONNECTED <= conn->state && conn->state < HTTP_STATE_COMPLETE) {
-        conn->keepAliveCount = 0;
-    }
-}
-#endif
-
-
-PUBLIC void httpPrepClientConn(HttpConn *conn, bool keepHeaders)
-{
-    MprHash     *headers;
-
-    assert(conn);
-    if (conn->keepAliveCount > 0 && conn->sock) {
-        if (!httpIsEof(conn)) {
-            conn->sock = 0;
-        }
-    } else {
-        conn->input = 0;
-    }
-    conn->connError = 0;
-    if (conn->tx) {
-        conn->tx->conn = 0;
-    }
-    if (conn->rx) {
-        conn->rx->conn = 0;
-    }
-    headers = (keepHeaders && conn->tx) ? conn->tx->headers: NULL;
-    conn->tx = httpCreateTx(conn, headers);
-    conn->rx = httpCreateRx(conn);
-    commonPrep(conn);
-}
-
-
-/*
-    Accept a new client connection on a new socket.
-    This will come in on a worker thread with a new dispatcher dedicated to this connection.
- */
-PUBLIC HttpConn *httpAcceptConn(HttpEndpoint *endpoint, MprEvent *event)
-{
-    Http        *http;
-    HttpConn    *conn;
-    HttpAddress *address;
-    MprSocket   *sock;
-    int64       value;
-
-    assert(event);
-    assert(event->dispatcher);
-    assert(endpoint);
-
-    sock = event->sock;
-    http = endpoint->http;
-
-    if (mprShouldDenyNewRequests()) {
-        mprCloseSocket(sock, 0);
-        return 0;
-    }
-    if ((conn = httpCreateConn(endpoint, event->dispatcher)) == 0) {
-        mprCloseSocket(sock, 0);
-        return 0;
-    }
-    sock->data = conn;
-    conn->notifier = endpoint->notifier;
-    conn->async = endpoint->async;
-    conn->endpoint = endpoint;
-    conn->sock = sock;
-    conn->port = sock->port;
-    conn->ip = sclone(sock->ip);
-
-    if ((value = httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > conn->limits->connectionsMax) {
-        httpTrace(conn, "connection.accept.error", "error", "msg:'Too many concurrent connections',active:%d,max:%d",
-            (int) value, conn->limits->connectionsMax);
-        httpDestroyConn(conn);
-        return 0;
-    }
-    if (mprGetHashLength(http->addresses) > conn->limits->clientMax) {
-        httpTrace(conn, "connection.accept.error", "error", "msg:'Too many concurrent clients',active:%d,max:%d",
-            mprGetHashLength(http->addresses), conn->limits->clientMax);
-        httpDestroyConn(conn);
-        return 0;
-    }
-    address = conn->address;
-    if (address && address->banUntil) {
-        if (address->banUntil < http->now) {
-            httpTrace(conn, "monitor.ban.stop", "context", "client:'%s'", conn->ip);
-            address->banUntil = 0;
-        } else {
-            if (address->banStatus) {
-                httpError(conn, HTTP_CLOSE | address->banStatus,
-                    "Connection refused, client banned: %s", address->banMsg ? address->banMsg : "");
-            } else {
-                httpDestroyConn(conn);
-                return 0;
-            }
-        }
-    }
-    if (endpoint->ssl) {
-        if (mprUpgradeSocket(sock, endpoint->ssl, 0) < 0) {
-            httpDisconnect(conn);
-            httpTrace(conn, "connection.upgrade.error", "error", "msg:'Cannot upgrade socket. %s'", sock->errorMsg);
-            httpMonitorEvent(conn, HTTP_COUNTER_SSL_ERRORS, 1);
-            httpDestroyConn(conn);
-            return 0;
-        }
-    }
-    assert(conn->state == HTTP_STATE_BEGIN);
-    httpSetState(conn, HTTP_STATE_CONNECTED);
-
-    httpTrace(conn, "connection.accept.new", "context", "peer:'%s',endpoint:'%s:%d'",
-        conn->ip, sock->acceptIp, sock->acceptPort);
-
-    event->mask = MPR_READABLE;
-    event->timestamp = conn->http->now;
-    (conn->ioCallback)(conn, event);
-    return conn;
-}
-
-
-/*
-    Read data from the peer. This will use the existing conn->input packet or allocate a new packet if required to
-    hold the data. The number of bytes read is stored in conn->lastRead. SSL connections are traced.
-    Socket error messages are stored in conn->errorMsg.
- */
-static void readPeerData(HttpConn *conn)
-{
-    HttpPacket  *packet;
-    ssize       size;
-
-    if ((packet = getPacket(conn, &size)) != 0) {
-        conn->lastRead = mprReadSocket(conn->sock, mprGetBufEnd(packet->content), size);
-        if (conn->lastRead > 0) {
-            mprAdjustBufEnd(packet->content, conn->lastRead);
-        } else if (conn->lastRead < 0 && mprIsSocketEof(conn->sock)) {
-            if (conn->state < HTTP_STATE_PARSED) {
-                conn->error = 1;
-                conn->rx->eof = 1;
-            }
-            conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Connection reset");
-            conn->keepAliveCount = 0;
-            conn->lastRead = 0;
-        }
-    }
-}
-
-
-/*
-    Handle IO on the connection. Initially the conn->dispatcher will be set to the server->dispatcher and the first
-    I/O event will be handled on the server thread (or main thread). A request handler may create a new
-    conn->dispatcher and transfer execution to a worker thread if required.
- */
-PUBLIC void httpIO(HttpConn *conn, int eventMask)
-{
-    MprSocket   *sp;
-
-    sp = conn->sock;
-    if (conn->destroyed) {
-        /* Connection has been destroyed */
-        return;
-    }
-    if (conn->state < HTTP_STATE_PARSED && mprShouldDenyNewRequests()) {
-        httpDestroyConn(conn);
-        return;
-    }
-    assert(conn->tx);
-    assert(conn->rx);
-
-#if DEPRECATE
-    /* Just IO state asserting */
-    if (conn->io) {
-        assert(!conn->io);
-        return;
-    }
-    conn->io = 1;
-#endif
-
-    if ((eventMask & MPR_WRITABLE) && conn->connectorq) {
-        httpResumeQueue(conn->connectorq);
-    }
-    if (eventMask & MPR_READABLE) {
-        readPeerData(conn);
-    }
-    if (sp->secured && !conn->secure) {
-        conn->secure = 1;
-        if (sp->peerCert) {
-            httpTrace(conn, "connection.ssl", "context", "msg:'Connection secured with peer certificate'," \
-                "secure:true,cipher:'%s',peerName:'%s',subject:'%s',issuer:'%s',session:'%s'",
-                sp->cipher, sp->peerName, sp->peerCert, sp->peerCertIssuer, sp->session);
-        } else {
-            httpTrace(conn, "connection.ssl", "context",
-                "msg:'Connection secured without peer certificate',secure:true,cipher:'%s',session:'%s'",
-                sp->cipher, sp->session);
-        }
-        if (mprGetLogLevel() >= 5) {
-            mprLog("info http ssl", 5, "SSL State: %s", mprGetSocketState(sp));
-        }
-    }
-    /*
-        Process one or more complete requests in the packet
-     */
-    do {
-        /* This is and must be the only place httpProtocol is ever called */
-        httpProtocol(conn);
-    } while (conn->endpoint && conn->state == HTTP_STATE_COMPLETE && prepForNext(conn));
-
-    /*
-        When a request completes, prepForNext will reset the state to HTTP_STATE_BEGIN
-        Errors will set keepAliveCount to zero.
-     */
-    if (conn->state < HTTP_STATE_PARSED && conn->endpoint && (mprIsSocketEof(conn->sock) || (conn->keepAliveCount <= 0))) {
-        if (!conn->errorMsg) {
-            conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Server close");
-        }
-        httpTrace(conn, "connection.close", "context", "msg:'%s'", conn->errorMsg);
-        httpDestroyConn(conn);
-    } else if (!mprIsSocketEof(conn->sock) && conn->async && !conn->delay) {
-        httpEnableConnEvents(conn);
-    }
-#if DEPRECATE
-    conn->io = 0;
-#endif
-}
-
-
-/*
-    Handle an IO event on the connection. This is invoked by the wait subsystem in response to I/O events.
-    It is also invoked via relay when an accept event is received by the server.
-*/
-PUBLIC void httpIOEvent(HttpConn *conn, MprEvent *event)
-{
-    httpIO(conn, event->mask);
-}
-
-
-PUBLIC int httpGetConnEventMask(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpQueue   *q;
-    MprSocket   *sp;
-    int         eventMask;
-
-    sp = conn->sock;
-    rx = conn->rx;
-    tx = conn->tx;
-
-    eventMask = 0;
-    if (rx) {
-        if (conn->connError || (tx->writeBlocked) ||
-           (conn->connectorq && (conn->connectorq->count > 0 || conn->connectorq->ioCount > 0)) ||
-           (httpQueuesNeedService(conn)) ||
-           (mprSocketHasBufferedWrite(sp)) ||
-           (rx->eof && tx->finalized && conn->state < HTTP_STATE_FINALIZED)) {
-            if (!mprSocketHandshaking(sp)) {
-                /* Must not pollute the data stream if the SSL stack is still doing manual handshaking */
-                eventMask |= MPR_WRITABLE;
-            }
-        }
-        q = conn->readq;
-        if (!rx->eof && (q->count < q->max || rx->form || mprSocketHasBufferedRead(sp))) {
-            eventMask |= MPR_READABLE;
-        }
-    } else {
-        eventMask |= MPR_READABLE;
-    }
-    return eventMask;
-}
-
-
-PUBLIC void httpEnableConnEvents(HttpConn *conn)
-{
-    if (mprShouldAbortRequests() || conn->borrowed) {
-        return;
-    }
-    /*
-        Used by ejs
-     */
-    if (conn->workerEvent) {
-        MprEvent *event = conn->workerEvent;
-        conn->workerEvent = 0;
-        mprQueueEvent(conn->dispatcher, event);
-        return;
-    }
-    httpSetupWaitHandler(conn, httpGetConnEventMask(conn));
-}
-
-
-/*
-    Used by ejs
- */
-PUBLIC void httpUseWorker(HttpConn *conn, MprDispatcher *dispatcher, MprEvent *event)
-{
-    lock(conn->http);
-    conn->oldDispatcher = conn->dispatcher;
-    conn->dispatcher = dispatcher;
-    conn->worker = 1;
-    assert(!conn->workerEvent);
-    conn->workerEvent = event;
-    unlock(conn->http);
-}
-
-
-PUBLIC void httpUsePrimary(HttpConn *conn)
-{
-    lock(conn->http);
-    assert(conn->worker);
-    assert(conn->state == HTTP_STATE_BEGIN);
-    assert(conn->oldDispatcher && conn->dispatcher != conn->oldDispatcher);
-    conn->dispatcher = conn->oldDispatcher;
-    conn->oldDispatcher = 0;
-    conn->worker = 0;
-    unlock(conn->http);
-}
-
-
-PUBLIC void httpBorrowConn(HttpConn *conn)
-{
-    assert(!conn->borrowed);
-    if (!conn->borrowed) {
-        mprAddRoot(conn);
-        conn->borrowed = 1;
-    }
-}
-
-
-PUBLIC void httpReturnConn(HttpConn *conn)
-{
-    assert(conn->borrowed);
-    if (conn->borrowed) {
-        conn->borrowed = 0;
-        mprRemoveRoot(conn);
-        httpEnableConnEvents(conn);
-    }
-}
-
-
-/*
-    Steal the socket object from a connection. This disconnects the socket from management by the Http service.
-    It is the callers responsibility to call mprCloseSocket when required.
-    Harder than it looks. We clone the socket, steal the socket handle and set the connection socket handle to invalid.
-    This preserves the HttpConn.sock object for the connection and returns a new MprSocket for the caller.
- */
-PUBLIC MprSocket *httpStealSocket(HttpConn *conn)
-{
-    MprSocket   *sock;
-
-    assert(conn->sock);
-    assert(!conn->destroyed);
-
-    if (!conn->destroyed && !conn->borrowed) {
-        lock(conn->http);
-        sock = mprCloneSocket(conn->sock);
-        (void) mprStealSocketHandle(conn->sock);
-        mprRemoveSocketHandler(conn->sock);
-        httpRemoveConn(conn);
-        httpDiscardData(conn, HTTP_QUEUE_TX);
-        httpDiscardData(conn, HTTP_QUEUE_RX);
-        httpSetState(conn, HTTP_STATE_COMPLETE);
-        /* This will cause httpIOEvent to regard this as a client connection and not destroy this connection */
-        conn->endpoint = 0;
-        conn->async = 0;
-        unlock(conn->http);
-        return sock;
-    }
-    return 0;
-}
-
-
-/*
-    Steal the O/S socket handle a connection's socket. This disconnects the socket handle from management by the connection.
-    It is the callers responsibility to call close() on the Socket when required.
-    Note: this does not change the state of the connection.
- */
-PUBLIC Socket httpStealSocketHandle(HttpConn *conn)
-{
-    return mprStealSocketHandle(conn->sock);
-}
-
-
-PUBLIC void httpSetupWaitHandler(HttpConn *conn, int eventMask)
-{
-    MprSocket   *sp;
-
-    sp = conn->sock;
-    if (eventMask) {
-        if (sp->handler == 0) {
-            mprAddSocketHandler(sp, eventMask, conn->dispatcher, conn->ioCallback, conn, 0);
-        } else {
-            mprSetSocketDispatcher(sp, conn->dispatcher);
-            mprEnableSocketEvents(sp, eventMask);
-        }
-        if (sp->flags & (MPR_SOCKET_BUFFERED_READ | MPR_SOCKET_BUFFERED_WRITE)) {
-            mprRecallWaitHandler(sp->handler);
-        }
-    } else if (sp->handler) {
-        mprWaitOn(sp->handler, eventMask);
-    }
-}
-
-
 PUBLIC void httpFollowRedirects(HttpConn *conn, bool follow)
 {
     conn->followRedirects = follow;
-}
-
-
-/*
-    Get the packet into which to read data. Return in *size the length of data to attempt to read.
- */
-static HttpPacket *getPacket(HttpConn *conn, ssize *size)
-{
-    HttpPacket  *packet;
-    MprBuf      *content;
-    ssize       psize;
-
-    if ((packet = conn->input) == NULL) {
-        /*
-            Boost the size of the packet if we have already read a largish amount of data
-         */
-        psize = (conn->rx && conn->rx->bytesRead > ME_MAX_BUFFER) ? ME_MAX_BUFFER * 8 : ME_MAX_BUFFER;
-        conn->input = packet = httpCreateDataPacket(psize);
-    } else {
-        content = packet->content;
-        mprResetBufIfEmpty(content);
-        if (mprGetBufSpace(content) < ME_MAX_BUFFER && mprGrowBuf(content, ME_MAX_BUFFER) < 0) {
-            conn->keepAliveCount = 0;
-            conn->state = HTTP_STATE_BEGIN;
-            return 0;
-        }
-    }
-    *size = mprGetBufSpace(packet->content);
-    assert(*size > 0);
-    return packet;
-}
-
-
-PUBLIC int httpGetAsync(HttpConn *conn)
-{
-    return conn->async;
 }
 
 
@@ -6426,24 +6120,20 @@ PUBLIC void httpResetCredentials(HttpConn *conn)
 }
 
 
-PUBLIC void httpSetAsync(HttpConn *conn, int enable)
-{
-    conn->async = (enable) ? 1 : 0;
-}
-
-
 PUBLIC void httpSetConnNotifier(HttpConn *conn, HttpNotifier notifier)
 {
     conn->notifier = notifier;
-    if (conn->readq->first) {
-        /* Test first rather than count because we want a readable event for the end packet */
+    /*
+        Only issue a readable event if streaming or already routed
+     */
+    if (conn->readq->first && conn->rx->route) {
         HTTP_NOTIFY(conn, HTTP_EVENT_READABLE, 0);
     }
 }
 
 
 /*
-    password and authType can be null
+    Password and authType can be null
     User may be a combined user:password
  */
 PUBLIC void httpSetCredentials(HttpConn *conn, cchar *username, cchar *password, cchar *authType)
@@ -6485,12 +6175,6 @@ PUBLIC void httpSetHeadersCallback(HttpConn *conn, HttpHeadersCallback fn, void 
 }
 
 
-PUBLIC void httpSetIOCallback(HttpConn *conn, HttpIOCallback fn)
-{
-    conn->ioCallback = fn;
-}
-
-
 PUBLIC void httpSetConnContext(HttpConn *conn, void *context)
 {
     conn->context = context;
@@ -6500,23 +6184,6 @@ PUBLIC void httpSetConnContext(HttpConn *conn, void *context)
 PUBLIC void httpSetConnHost(HttpConn *conn, void *host)
 {
     conn->host = host;
-}
-
-
-/*
-    Set the protocol to use for outbound requests
- */
-PUBLIC void httpSetProtocol(HttpConn *conn, cchar *protocol)
-{
-    if (conn->state < HTTP_STATE_CONNECTED) {
-        conn->protocol = sclone(protocol);
-    }
-}
-
-
-PUBLIC void httpSetRetries(HttpConn *conn, int count)
-{
-    conn->retries = count;
 }
 
 
@@ -6561,8 +6228,12 @@ PUBLIC void httpSetTimeout(HttpConn *conn, MprTicks requestTimeout, MprTicks ina
     if (inactivityTimeout >= 0) {
         if (inactivityTimeout == 0) {
             conn->limits->inactivityTimeout = HTTP_UNLIMITED;
+            // TODO - need separate timeouts for net
+            conn->net->limits->inactivityTimeout = HTTP_UNLIMITED;
         } else {
             conn->limits->inactivityTimeout = inactivityTimeout;
+            // TODO - need separate timeouts for net
+            conn->net->limits->inactivityTimeout = inactivityTimeout;
         }
     }
 }
@@ -6595,23 +6266,26 @@ PUBLIC bool httpRequestExpired(HttpConn *conn, MprTicks timeout)
     limits = conn->limits;
     if (mprGetDebugMode() || timeout == 0) {
         inactivityTimeout = requestTimeout = MPR_MAX_TIMEOUT;
+
     } else if (timeout < 0) {
         inactivityTimeout = limits->inactivityTimeout;
         requestTimeout = limits->requestTimeout;
+
     } else {
         inactivityTimeout = min(limits->inactivityTimeout, timeout);
         requestTimeout = min(limits->requestTimeout, timeout);
     }
+
     if (mprGetRemainingTicks(conn->started, requestTimeout) < 0) {
         if (requestTimeout != timeout) {
-            httpTrace(conn, "timeout.duration", "error",
+            httpTrace(conn->trace, "timeout.duration", "error",
                 "msg:'Request cancelled exceeded max duration',timeout:%lld", requestTimeout / 1000);
         }
         return 1;
     }
     if (mprGetRemainingTicks(conn->lastActivity, inactivityTimeout) < 0) {
         if (inactivityTimeout != timeout) {
-            httpTrace(conn, "timeout.inactivity", "error",
+            httpTrace(conn->trace, "timeout.inactivity", "error",
                 "msg:'Request cancelled due to inactivity',timeout:%lld", inactivityTimeout / 1000);
         }
         return 1;
@@ -6629,6 +6303,35 @@ PUBLIC void httpSetConnData(HttpConn *conn, void *data)
 PUBLIC void httpSetConnReqData(HttpConn *conn, void *data)
 {
     conn->reqData = data;
+}
+
+
+PUBLIC void httpTraceQueues(HttpConn *conn)
+{
+#if DEBUG
+    HttpQueue   *q;
+
+    print("");
+    if (conn->inputq) {
+        printf("%s ", conn->rxHead->name);
+        for (q = conn->rxHead->prevQ; q != conn->rxHead; q = q->prevQ) {
+            printf("%s ", q->name);
+        }
+        printf(" <- INPUT\n");
+    }
+    if (conn->outputq) {
+        printf("%s ", conn->txHead->name);
+        for (q = conn->txHead->nextQ; q != conn->txHead; q = q->nextQ) {
+            printf("%s ", q->name);
+        }
+        printf("-> OUTPUT\n");
+    }
+    print("");
+    printf("READ   %s\n", conn->readq->name);
+    printf("WRITE  %s\n", conn->writeq->name);
+    printf("INPUT  %s\n", conn->inputq->name);
+    printf("OUTPUT %s\n", conn->outputq->name);
+#endif
 }
 
 /*
@@ -6855,19 +6558,19 @@ PUBLIC int httpDigestParse(HttpConn *conn, cchar **username, cchar **password)
         when = 0;
         parseDigestNonce(dp->nonce, &secret, &realm, &when);
         if (!smatch(conn->http->secret, secret)) {
-            httpTrace(conn, "auth.digest.error", "error", "msg:'Access denied, Nonce mismatch'");
+            httpTrace(conn->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce mismatch'");
             return MPR_ERR_BAD_STATE;
 
         } else if (!smatch(realm, rx->route->auth->realm)) {
-            httpTrace(conn, "auth.digest.error", "error", "msg:'Access denied, Realm mismatch'");
+            httpTrace(conn->trace, "auth.digest.error", "error", "msg:'Access denied, Realm mismatch'");
             return MPR_ERR_BAD_STATE;
 
         } else if (dp->qop && !smatch(dp->qop, "auth")) {
-            httpTrace(conn, "auth.digest.error", "error", "msg:'Access denied, Bad qop'");
+            httpTrace(conn->trace, "auth.digest.error", "error", "msg:'Access denied, Bad qop'");
             return MPR_ERR_BAD_STATE;
 
         } else if ((when + (5 * 60)) < time(0)) {
-            httpTrace(conn, "auth.digest.error", "error", "msg:'Access denied, Nonce is stale'");
+            httpTrace(conn->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce is stale'");
             return MPR_ERR_BAD_STATE;
         }
         rx->passwordDigest = calcDigest(conn, dp, *username);
@@ -7072,14 +6775,37 @@ static char *calcDigest(HttpConn *conn, HttpDigest *dp, cchar *username)
 /****************************** Forward Declarations **************************/
 
 static void filterDirList(HttpConn *conn, MprList *list);
+static void manageDir(HttpDir *dir, int flags);
 static int  matchDirPattern(cchar *pattern, cchar *file);
 static void outputFooter(HttpQueue *q);
 static void outputHeader(HttpQueue *q, cchar *dir, int nameSize);
 static void outputLine(HttpQueue *q, MprDirEntry *ep, cchar *dir, int nameSize);
 static void parseQuery(HttpConn *conn);
 static void sortList(HttpConn *conn, MprList *list);
+static void startDir(HttpQueue *q);
 
 /************************************* Code ***********************************/
+/*
+    Loadable module initialization
+ */
+PUBLIC int httpOpenDirHandler()
+{
+    HttpStage   *handler;
+    HttpDir     *dir;
+
+    if ((handler = httpCreateHandler("dirHandler", NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    if ((handler->stageData = dir = mprAllocObj(HttpDir, manageDir)) == 0) {
+        return MPR_ERR_MEMORY;
+    }
+    HTTP->dirHandler = handler;
+    handler->flags |= HTTP_STAGE_INTERNAL;
+    handler->start = startDir;
+    dir->sortOrder = 1;
+    return 0;
+}
+
 /*
     Test if this request is for a directory listing. This routine is called directly by the
     fileHandler. Directory listings are enabled in a route via "Options Indexes".
@@ -7656,28 +7382,6 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route)
 
 
 /*
-    Loadable module initialization
- */
-PUBLIC int httpOpenDirHandler()
-{
-    HttpStage   *handler;
-    HttpDir     *dir;
-
-    if ((handler = httpCreateHandler("dirHandler", NULL)) == 0) {
-        return MPR_ERR_CANT_CREATE;
-    }
-    if ((handler->stageData = dir = mprAllocObj(HttpDir, manageDir)) == 0) {
-        return MPR_ERR_MEMORY;
-    }
-    handler->flags |= HTTP_STAGE_INTERNAL;
-    handler->start = startDir;
-    HTTP->dirHandler = handler;
-    dir->sortOrder = 1;
-    return 0;
-}
-
-
-/*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
@@ -7701,7 +7405,7 @@ PUBLIC int httpOpenDirHandler()
 
 /********************************** Forwards **********************************/
 
-static void acceptConn(HttpEndpoint *endpoint);
+static void acceptNet(HttpEndpoint *endpoint);
 static int manageEndpoint(HttpEndpoint *endpoint, int flags);
 
 /************************************ Code ************************************/
@@ -7858,7 +7562,7 @@ PUBLIC int httpStartEndpoint(HttpEndpoint *endpoint)
         return MPR_ERR_CANT_OPEN;
     }
     if (endpoint->async && !endpoint->sock->handler) {
-        mprAddSocketHandler(endpoint->sock, MPR_SOCKET_READABLE, endpoint->dispatcher, acceptConn, endpoint,
+        mprAddSocketHandler(endpoint->sock, MPR_SOCKET_READABLE, endpoint->dispatcher, acceptNet, endpoint,
             (endpoint->dispatcher ? 0 : MPR_WAIT_NEW_DISPATCHER) | MPR_WAIT_IMMEDIATE);
     } else {
         mprSetSocketBlockingMode(endpoint->sock, 1);
@@ -7894,7 +7598,7 @@ PUBLIC void httpStopEndpoint(HttpEndpoint *endpoint)
     manage the connection. When it returns, it immediately can listen for new connections without having to modify the
     event listen masks.
  */
-static void acceptConn(HttpEndpoint *endpoint)
+static void acceptNet(HttpEndpoint *endpoint)
 {
     MprDispatcher   *dispatcher;
     MprEvent        *event;
@@ -7902,6 +7606,10 @@ static void acceptConn(HttpEndpoint *endpoint)
     MprWaitHandler  *wp;
 
     if ((sock = mprAcceptSocket(endpoint->sock)) == 0) {
+        return;
+    }
+    if (mprShouldDenyNewRequests()) {
+        mprCloseSocket(sock, 0);
         return;
     }
     wp = endpoint->sock->handler;
@@ -7912,7 +7620,7 @@ static void acceptConn(HttpEndpoint *endpoint)
     } else {
         dispatcher = mprGetDispatcher();
     }
-    event = mprCreateEvent(dispatcher, "AcceptConn", 0, httpAcceptConn, endpoint, MPR_EVENT_DONT_QUEUE);
+    event = mprCreateEvent(dispatcher, "AcceptNet", 0, httpAccept, endpoint, MPR_EVENT_DONT_QUEUE);
     event->mask = wp->presentMask;
     event->sock = sock;
     event->handler = wp;
@@ -7925,21 +7633,21 @@ static void acceptConn(HttpEndpoint *endpoint)
 }
 
 
-PUBLIC HttpHost *httpMatchHost(HttpConn *conn, cchar *hostname)
+PUBLIC HttpHost *httpMatchHost(HttpNet *net, cchar *hostname)
 {
-    return httpLookupHostOnEndpoint(conn->endpoint, hostname);
+    return httpLookupHostOnEndpoint(net->endpoint, hostname);
 }
 
 
 PUBLIC MprSsl *httpMatchSsl(MprSocket *sp, cchar *hostname)
 {
-    HttpConn        *conn;
-    HttpHost        *host;
+    HttpNet     *net;
+    HttpHost    *host;
 
     assert(sp && sp->data);
-    conn = sp->data;
+    net = sp->data;
 
-    if ((host = httpMatchHost(conn, hostname)) == 0) {
+    if ((host = httpMatchHost(net, hostname)) == 0) {
         return 0;
     }
     return host->defaultRoute->ssl;
@@ -8019,6 +7727,9 @@ PUBLIC int httpSecureEndpoint(HttpEndpoint *endpoint, struct MprSsl *ssl)
 #if ME_COM_SSL
     endpoint->ssl = ssl;
     mprSetSslMatch(ssl, httpMatchSsl);
+#if ME_HTTP_HTTP2
+    mprSetSslAlpn(ssl, "h2 http/1.1");
+#endif
     return 0;
 #else
     mprLog("error http", 0, "Configuration lacks SSL support");
@@ -8030,7 +7741,7 @@ PUBLIC int httpSecureEndpoint(HttpEndpoint *endpoint, struct MprSsl *ssl)
 PUBLIC int httpSecureEndpointByName(cchar *name, struct MprSsl *ssl)
 {
     HttpEndpoint    *endpoint;
-    char            *ip;
+    cchar           *ip;
     int             port, next, count;
 
     if (mprParseSocketAddress(name, &ip, &port, NULL, -1) < 0) {
@@ -8070,6 +7781,9 @@ PUBLIC HttpHost *httpLookupHostOnEndpoint(HttpEndpoint *endpoint, cchar *name)
     HttpHost    *host;
     int         matches[ME_MAX_ROUTE_MATCHES * 2], next;
 
+    if (!endpoint) {
+        return 0;
+    }
     for (next = 0; (host = mprGetNextItem(endpoint->hosts, &next)) != 0; ) {
         if (host->hostname == 0 || *host->hostname == 0 || name == 0 || *name == 0) {
             return host;
@@ -8125,9 +7839,39 @@ PUBLIC void httpSetInfoLevel(int level)
 /********************************** Forwards **********************************/
 
 static void errorv(HttpConn *conn, int flags, cchar *fmt, va_list args);
-static char *formatErrorv(HttpConn *conn, int status, cchar *fmt, va_list args);
+static cchar *formatErrorv(HttpConn *conn, int status, cchar *fmt, va_list args);
 
 /*********************************** Code *************************************/
+
+PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
+{
+    va_list     args;
+    HttpConn    *conn;
+    cchar       *msg;
+    int         next;
+
+    if (net == 0 || fmt == 0) {
+        return;
+    }
+    va_start(args, fmt);
+    if (!net->error) {
+        net->error = 1;
+        net->errorMsg = msg = sfmtv(fmt, args);
+#if ME_HTTP_HTTP2
+        if (net->protocol >= 2 && !net->eof) {
+            httpSendGoAway(net, HTTP2_INTERNAL_ERROR, "5s", msg);
+        }
+#endif
+        if (httpIsServer(net)) {
+            for (ITERATE_ITEMS(net->connections, conn, next)) {
+                httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "%s", msg);
+            }
+            // TODO httpMonitorNetEvent(net, HTTP_COUNTER_BAD_REQUEST_ERRORS, 1);
+        }
+    }
+    va_end(args);
+}
+
 
 PUBLIC void httpBadRequestError(HttpConn *conn, int flags, cchar *fmt, ...)
 {
@@ -8236,14 +7980,11 @@ static void errorv(HttpConn *conn, int flags, cchar *fmt, va_list args)
     if (flags & (HTTP_ABORT | HTTP_CLOSE)) {
         conn->keepAliveCount = 0;
     }
-    if (flags & HTTP_ABORT) {
-        conn->connError++;
-    }
     if (!conn->error) {
-        conn->error++;
+        conn->error = 1;
         httpOmitBody(conn);
         conn->errorMsg = formatErrorv(conn, status, fmt, args);
-        httpTrace(conn, "request.error", "error", "msg:'%s'", conn->errorMsg);
+        httpTrace(conn->trace, "error", "error", "msg:'%s'", conn->errorMsg);
         HTTP_NOTIFY(conn, HTTP_EVENT_ERROR, 0);
         if (httpServerConn(conn)) {
             if (status == HTTP_CODE_NOT_FOUND) {
@@ -8267,10 +8008,13 @@ static void errorv(HttpConn *conn, int flags, cchar *fmt, va_list args)
                 }
             }
         }
+        if (flags & HTTP_ABORT) {
+            conn->disconnect = 1;
+        }
         httpFinalize(conn);
     }
-    if (flags & HTTP_ABORT) {
-        httpDisconnect(conn);
+    if (conn->disconnect && conn->net->protocol < 2) {
+        httpDisconnectConn(conn);
     }
 }
 
@@ -8279,7 +8023,7 @@ static void errorv(HttpConn *conn, int flags, cchar *fmt, va_list args)
     Just format conn->errorMsg and set status - nothing more
     NOTE: this is an internal API. Users should use httpError()
  */
-static char *formatErrorv(HttpConn *conn, int status, cchar *fmt, va_list args)
+static cchar *formatErrorv(HttpConn *conn, int status, cchar *fmt, va_list args)
 {
     if (conn->errorMsg == 0) {
         conn->errorMsg = sfmtv(fmt, args);
@@ -8346,11 +8090,42 @@ PUBLIC void httpMemoryError(HttpConn *conn)
 
 /***************************** Forward Declarations ***************************/
 
+static void closeFileHandler(HttpQueue *q);
 static void handleDeleteRequest(HttpQueue *q);
 static void handlePutRequest(HttpQueue *q);
+static void incomingFile(HttpQueue *q, HttpPacket *packet);
+static int openFileHandler(HttpQueue *q);
+static void outgoingFileService(HttpQueue *q);
 static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize size);
+static void readyFileHandler(HttpQueue *q);
+static int rewriteFileHandler(HttpConn *conn);
+static void startFileHandler(HttpQueue *q);
 
 /*********************************** Code *************************************/
+/*
+    Loadable module initialization
+ */
+PUBLIC int httpOpenFileHandler()
+{
+    HttpStage     *handler;
+
+    /*
+        This handler serves requests without using thread workers.
+     */
+    if ((handler = httpCreateHandler("fileHandler", NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    handler->rewrite = rewriteFileHandler;
+    handler->open = openFileHandler;
+    handler->close = closeFileHandler;
+    handler->start = startFileHandler;
+    handler->ready = readyFileHandler;
+    handler->outgoingService = outgoingFileService;
+    handler->incoming = incomingFile;
+    HTTP->fileHandler = handler;
+    return 0;
+}
+
 /*
     Rewrite the request for directories, indexes and compressed content.
  */
@@ -8384,7 +8159,9 @@ static int rewriteFileHandler(HttpConn *conn)
 }
 
 
-
+/*
+    This is called after the headers are parsed
+ */
 static int openFileHandler(HttpQueue *q)
 {
     HttpRx      *rx;
@@ -8428,7 +8205,7 @@ static int openFileHandler(HttpQueue *q)
             httpOmitBody(conn);
         }
         if (!tx->fileInfo.isReg && !tx->fileInfo.isLink) {
-            httpTrace(conn, "request.document.error", "error", "msg:'Document is not a regular file',filename:'%s'",
+            httpTrace(conn->trace, "fileHandler.error", "error", "msg:'Document is not a regular file',filename:'%s'",
                 tx->filename);
             httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot serve document");
 
@@ -8437,7 +8214,7 @@ static int openFileHandler(HttpQueue *q)
             httpError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Http transmission aborted. File size exceeds max body of %lld bytes", conn->limits->txBodySize);
 
-        } else if (!(tx->connector == conn->http->sendConnector)) {
+        } else {
             /*
                 If using the net connector, open the file if a body must be sent with the response. The file will be
                 automatically closed when the request completes.
@@ -8446,19 +8223,24 @@ static int openFileHandler(HttpQueue *q)
                 tx->file = mprOpenFile(tx->filename, O_RDONLY | O_BINARY, 0);
                 if (tx->file == 0) {
                     if (rx->referrer && *rx->referrer) {
-                        httpTrace(conn, "request.document.error", "error",
-                            "msg:'Cannot open document',filename:'%s',referrer:'%s'",
+                        httpTrace(conn->trace, "fileHandler.error", "error", "msg:'Cannot open document',filename:'%s',referrer:'%s'",
                             tx->filename, rx->referrer);
                     } else {
-                        httpTrace(conn, "request.document.error", "error",
-                            "msg:'Cannot open document',filename:'%s'", tx->filename);
+                        httpTrace(conn->trace, "fileHandler.error", "error", "msg:'Cannot open document',filename:'%s'", tx->filename);
                     }
                     httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot open document");
                 }
             }
         }
-    } else if (rx->flags & (HTTP_DELETE | HTTP_OPTIONS | HTTP_PUT)) {
-        ;
+    } else if (rx->flags & HTTP_DELETE) {
+        handleDeleteRequest(q);
+
+    } else if (rx->flags & HTTP_OPTIONS) {
+        httpHandleOptions(q->conn);
+
+    } else if (rx->flags & HTTP_PUT) {
+        handlePutRequest(q);
+
     } else {
         httpError(conn, HTTP_CODE_BAD_METHOD, "Unsupported method");
     }
@@ -8466,6 +8248,9 @@ static int openFileHandler(HttpQueue *q)
 }
 
 
+/*
+    Called when the request is complete
+ */
 static void closeFileHandler(HttpQueue *q)
 {
     HttpTx  *tx;
@@ -8478,53 +8263,56 @@ static void closeFileHandler(HttpQueue *q)
 }
 
 
+/*
+    Called when all the body content has been received, but may not have yet been processed by our incoming()
+ */
 static void startFileHandler(HttpQueue *q)
 {
     HttpConn    *conn;
-    HttpRx      *rx;
     HttpTx      *tx;
     HttpPacket  *packet;
 
     conn = q->conn;
-    rx = conn->rx;
     tx = conn->tx;
 
-    if (tx->finalized || conn->error) {
-        return;
+    if (conn->rx->flags & HTTP_HEAD) {
+        tx->length = tx->entityLength;
+        httpFinalizeOutput(conn);
 
-    } else if (rx->flags & HTTP_PUT) {
-        handlePutRequest(q);
+    } else if (conn->rx->flags & HTTP_PUT) {
+        /*
+            Delay finalizing output until all input data is received incase the socket is disconnected
+            httpFinalizeOutput(conn);
+         */
 
-    } else if (rx->flags & HTTP_DELETE) {
-        handleDeleteRequest(q);
-
-    } else if (rx->flags & HTTP_OPTIONS) {
-        httpHandleOptions(q->conn);
-
-    } else if (!(tx->flags & HTTP_TX_NO_BODY)) {
-        if (tx->entityLength >= 0) {
+    } else if (conn->rx->flags & (HTTP_GET | HTTP_POST)) {
+        if ((!(tx->flags & HTTP_TX_NO_BODY)) && (tx->entityLength >= 0 && !conn->error)) {
             /*
                 Create a single data packet based on the actual entity (file) length
              */
             packet = httpCreateEntityPacket(0, tx->entityLength, readFileData);
+
+            /*
+                Set the content length if not chunking and not using ranges
+             */
             if (!tx->outputRanges && tx->chunkSize < 0) {
                 tx->length = tx->entityLength;
             }
-            httpPutForService(q, packet, 0);
+            httpPutPacket(q, packet);
         }
+    } else {
+        httpFinalizeOutput(conn);
     }
 }
 
 
 /*
-    The ready callback is invoked when all body data has been received
+    The ready callback is invoked when all the input body data has been received
+    The queue already contains a single data packet representing all the output data.
  */
 static void readyFileHandler(HttpQueue *q)
 {
-    /*
-        The queue already contains a single data packet representing all the output data.
-     */
-    httpFinalize(q->conn);
+    httpScheduleQueue(q);
 }
 
 
@@ -8540,8 +8328,8 @@ static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize si
     conn = q->conn;
     tx = conn->tx;
 
-    if (packet->content == 0 && (packet->content = mprCreateBuf(size, -1)) == 0) {
-        return MPR_ERR_MEMORY;
+    if (size <= 0) {
+        return 0;
     }
     if (mprGetBufSpace(packet->content) < size) {
         size = mprGetBufSpace(packet->content);
@@ -8558,49 +8346,7 @@ static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize si
         return MPR_ERR_CANT_READ;
     }
     mprAdjustBufEnd(packet->content, nbytes);
-    packet->esize -= nbytes;
-    assert(packet->esize == 0);
     return nbytes;
-}
-
-
-/*
-    Prepare a data packet for sending downstream. This involves reading file data into a suitably sized packet. Return
-    the 1 if the packet was sent entirely, return zero if the packet could not be completely sent. Return a negative
-    error code for write errors. This may split the packet if it exceeds the downstreams maximum packet size.
- */
-static int prepPacket(HttpQueue *q, HttpPacket *packet)
-{
-    HttpQueue   *nextQ;
-    ssize       size, nbytes;
-
-    if (mprNeedYield()) {
-        httpScheduleQueue(q);
-        return 0;
-    }
-    nextQ = q->nextQ;
-    if (packet->esize > nextQ->packetSize) {
-        httpPutBackPacket(q, httpSplitPacket(packet, nextQ->packetSize));
-        size = nextQ->packetSize;
-    } else {
-        size = (ssize) packet->esize;
-    }
-    if ((size + nextQ->count) > nextQ->max) {
-        /*
-            The downstream queue is full, so disable the queue and service downstream queue.
-            Will re-enable via a writable event on the connection.
-         */
-        httpSuspendQueue(q);
-        if (!(nextQ->flags & HTTP_QUEUE_SUSPENDED)) {
-            httpScheduleQueue(nextQ);
-        }
-        return 0;
-    }
-    if ((nbytes = readFileData(q, packet, q->ioPos, size)) < 0) {
-        return MPR_ERR_CANT_READ;
-    }
-    q->ioPos += nbytes;
-    return 1;
 }
 
 
@@ -8613,25 +8359,95 @@ static int prepPacket(HttpQueue *q, HttpPacket *packet)
 static void outgoingFileService(HttpQueue *q)
 {
     HttpConn    *conn;
-    HttpTx      *tx;
-    HttpPacket  *packet;
-    bool        usingSend;
-    int         rc;
+    HttpPacket  *data, *packet;
+    ssize       size, nbytes;
 
     conn = q->conn;
-    tx = conn->tx;
-    usingSend = (tx->connector == conn->http->sendConnector);
+
+#if 0
+    /*
+        There will be only one entity data packet. PrepPacket will read data into the packet and then
+        put the remaining entity packet on the queue where it will be examined again until the down stream queue is full.
+     */
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        if (!usingSend && !tx->outputRanges && packet->esize) {
-            if ((rc = prepPacket(q, packet)) < 0) {
-                return;
-            } else if (rc == 0) {
-                httpPutBackPacket(q, packet);
-                return;
+        if (packet->fill) {
+            size = min(packet->esize, q->packetSize);
+            size = min(size, q->nextQ->packetSize);
+            if (size > 0) {
+                data = httpCreateDataPacket(size);
+                if ((nbytes = readFileData(q, data, q->ioPos, size)) < 0) {
+                    httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot read document");
+                    return;
+                }
+                q->ioPos += nbytes;
+                packet->epos += nbytes;
+                packet->esize -= nbytes;
+                if (packet->esize > 0) {
+                    httpPutBackPacket(q, packet);
+                }
+                /*
+                    This may split the packet and put back the tail portion ahead of the just putback entity packet.
+                 */
+                if (!httpWillNextQueueAcceptPacket(q, data)) {
+                    httpPutBackPacket(q, data);
+                    if (packet->esize == 0) {
+                        httpFinalizeOutput(conn);
+                    }
+                    break;
+                }
+                httpPutPacketToNext(q, data);
             }
+            if (packet->esize == 0) {
+                httpFinalizeOutput(conn);
+            }
+        } else {
+            /* Don't flow control as the packet is already consuming memory */
+            httpPutPacketToNext(q, packet);
         }
-        httpPutPacketToNext(q, packet);
     }
+#else
+    /*
+        The queue will contain an entity packet which holds the position from which to read in the file.
+        If the downstream queue is full, the data packet will be put onto the queue ahead of the entity packet.
+        When EOF, and END packet will be added to the queue via httpFinalizeOutput which will then be sent.
+     */
+    for (packet = q->first; packet; packet = q->first) {
+        if (packet->fill) {
+            size = min(packet->esize, q->packetSize);
+            size = min(size, q->nextQ->packetSize);
+            if (size > 0) {
+                data = httpCreateDataPacket(size);
+                if ((nbytes = readFileData(q, data, q->ioPos, size)) < 0) {
+                    httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot read document");
+                    return;
+                }
+                q->ioPos += nbytes;
+                packet->epos += nbytes;
+                packet->esize -= nbytes;
+                if (packet->esize == 0) {
+                    httpGetPacket(q);
+                }
+                /*
+                    This may split the packet and put back the tail portion ahead of the just putback entity packet.
+                 */
+                if (!httpWillNextQueueAcceptPacket(q, data)) {
+                    httpPutBackPacket(q, data);
+                    return;
+                }
+                httpPutPacketToNext(q, data);
+            } else {
+                httpGetPacket(q);
+            }
+        } else {
+            /* Don't flow control as the packet is already consuming memory */
+            packet = httpGetPacket(q);
+            httpPutPacketToNext(q, packet);
+        }
+        if (!conn->tx->finalizedOutput && !q->first) {
+            httpFinalizeOutput(conn);
+        }
+    }
+#endif
 }
 
 
@@ -8653,11 +8469,7 @@ static void incomingFile(HttpQueue *q, HttpPacket *packet)
     rx = conn->rx;
     file = (MprFile*) q->queueData;
 
-    if (file == 0) {
-        /*  Not a PUT so just ignore the incoming data.  */
-        return;
-    }
-    if (httpGetPacketLength(packet) == 0) {
+    if (packet->flags & HTTP_PACKET_END) {
         /* End of input */
         if (file) {
             mprCloseFile(file);
@@ -8668,18 +8480,23 @@ static void incomingFile(HttpQueue *q, HttpPacket *packet)
             mprGetPathInfo(tx->filename, &tx->fileInfo);
             tx->etag = itos(tx->fileInfo.inode + tx->fileInfo.size + tx->fileInfo.mtime);
         }
-        return;
-    }
-    buf = packet->content;
-    len = mprGetBufLength(buf);
-    assert(len > 0);
+        httpFinalizeInput(conn);
+        if (rx->flags & HTTP_PUT) {
+            httpFinalizeOutput(conn);
+        }
 
-    range = rx->inputRange;
-    if (range && mprSeekFile(file, SEEK_SET, range->start) != range->start) {
-        httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot seek to range start to %lld", range->start);
+    } else if (file) {
+        buf = packet->content;
+        len = mprGetBufLength(buf);
+        if (len > 0) {
+            range = rx->inputRange;
+            if (range && mprSeekFile(file, SEEK_SET, range->start) != range->start) {
+                httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot seek to range start to %lld", range->start);
 
-    } else if (mprWriteFile(file, mprGetBufStart(buf), len) != len) {
-        httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot PUT to %s", tx->filename);
+            } else if (mprWriteFile(file, mprGetBufStart(buf), len) != len) {
+                httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot PUT to %s", tx->filename);
+            }
+        }
     }
 }
 
@@ -8723,6 +8540,9 @@ static void handlePutRequest(HttpQueue *q)
     if (!tx->fileInfo.isReg) {
         httpSetHeaderString(conn, "Location", conn->rx->uri);
     }
+    /*
+        These are both success returns. 204 means already existed.
+     */
     httpSetStatus(conn, tx->fileInfo.isReg ? HTTP_CODE_NO_CONTENT : HTTP_CODE_CREATED);
     q->pair->queueData = (void*) file;
 }
@@ -8747,6 +8567,7 @@ static void handleDeleteRequest(HttpQueue *q)
         return;
     }
     httpSetStatus(conn, HTTP_CODE_NO_CONTENT);
+    httpFinalize(conn);
 }
 
 
@@ -8824,31 +8645,6 @@ PUBLIC int httpHandleDirectory(HttpConn *conn)
 
 
 /*
-    Loadable module initialization
- */
-PUBLIC int httpOpenFileHandler()
-{
-    HttpStage     *handler;
-
-    /*
-        This handler serves requests without using thread workers.
-     */
-    if ((handler = httpCreateHandler("fileHandler", NULL)) == 0) {
-        return MPR_ERR_CANT_CREATE;
-    }
-    handler->rewrite = rewriteFileHandler;
-    handler->open = openFileHandler;
-    handler->close = closeFileHandler;
-    handler->start = startFileHandler;
-    handler->ready = readyFileHandler;
-    handler->outgoingService = outgoingFileService;
-    handler->incoming = incomingFile;
-    HTTP->fileHandler = handler;
-    return 0;
-}
-
-
-/*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
     You may use the Embedthis Open Source license or you may acquire a
@@ -8902,6 +8698,7 @@ PUBLIC HttpHost *httpCreateHost()
     httpSetStreaming(host, "application/x-www-form-urlencoded", NULL, 0);
     httpSetStreaming(host, "application/json", NULL, 0);
     httpSetStreaming(host, "application/csp-report", NULL, 0);
+    httpSetStreaming(host, "multipart/form-data", NULL, 0);
     httpAddHost(host);
     return host;
 }
@@ -8939,6 +8736,7 @@ static void manageHost(HttpHost *host, int flags)
         mprMark(host->defaultEndpoint);
         mprMark(host->secureEndpoint);
         mprMark(host->streams);
+
     } else if (flags & MPR_MANAGE_FREE) {
         if (host->nameCompiled) {
             free(host->nameCompiled);
@@ -9267,6 +9065,9 @@ PUBLIC HttpRoute *httpGetDefaultRoute(HttpHost *host)
 }
 
 
+/*
+    Determine if input body content should be streamed or buffered for requests with content of a given mime type.
+ */
 PUBLIC bool httpGetStreaming(HttpHost *host, cchar *mime, cchar *uri)
 {
     MprKey      *kp;
@@ -9310,6 +9111,4072 @@ PUBLIC void httpSetStreaming(HttpHost *host, cchar *mime, cchar *uri, bool enabl
  */
 
 
+/********* Start of file src/hpack.c ************/
+
+/*
+    hpack.c - Http/2 header packing.
+
+    Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+#if ME_HTTP_HTTP2
+/*********************************** Code *************************************/
+
+static cchar *staticStrings[] = {
+    ":authority", NULL,
+    ":method", "GET",
+    ":method", "POST",
+    ":path", "/",
+    ":path", "/index.html",
+    ":scheme", "http",
+    ":scheme", "https",
+    ":status", "200",
+    ":status", "204",
+    ":status", "206",
+    ":status", "304",
+    ":status", "400",
+    ":status", "404",
+    ":status", "500",
+    "accept-charset", NULL,
+    "accept-encoding", "gzip, deflate",
+    "accept-language", NULL,
+    "accept-ranges", NULL,
+    "accept", NULL,
+    "access-control-allow-origin", NULL,
+    "age", NULL,
+    "allow", NULL,
+    "authorization", NULL,
+    "cache-control", NULL,
+    "content-disposition", NULL,
+    "content-encoding", NULL,
+    "content-language", NULL,
+    "content-length", NULL,
+    "content-location", NULL,
+    "content-range", NULL,
+    "content-type", NULL,
+    "cookie", NULL,
+    "date", NULL,
+    "etag", NULL,
+    "expect", NULL,
+    "expires", NULL,
+    "from", NULL,
+    "host", NULL,
+    "if-match", NULL,
+    "if-modified-since", NULL,
+    "if-none-match", NULL,
+    "if-range", NULL,
+    "if-unmodified-since", NULL,
+    "last-modified", NULL,
+    "link", NULL,
+    "location", NULL,
+    "max-forwards", NULL,
+    "proxy-authenticate", NULL,
+    "proxy-authorization", NULL,
+    "range", NULL,
+    "referer", NULL,
+    "refresh", NULL,
+    "retry-after", NULL,
+    "server", NULL,
+    "set-cookie", NULL,
+    "strict-transport-security", NULL,
+    "transfer-encoding", NULL,
+    "user-agent", NULL,
+    "vary", NULL,
+    "via", NULL,
+    "www-authenticate", NULL,
+    NULL, NULL
+};
+
+#define HTTP2_STATIC_TABLE_ENTRIES ((sizeof(staticStrings) / sizeof(char*) / 2) - 1)
+
+/*********************************** Code *************************************/
+
+PUBLIC void httpCreatePackedHeaders()
+{
+    cchar   **cp;
+
+    /*
+        Create the static table of common headers
+     */
+    HTTP->staticHeaders = mprCreateList(HTTP2_STATIC_TABLE_ENTRIES, 0);
+    for (cp = staticStrings; *cp; cp += 2) {
+        mprAddItem(HTTP->staticHeaders, mprCreateKeyPair(cp[0], cp[1], 0));
+    }
+}
+
+
+/*
+    Lookup a key/value in the HPACK header table.
+    Look in the dynamic list first as it will contain most of the headers with values.
+    Set *withValue if the value matches as well as the name.
+    The dynamic table uses indexes after the static table.
+ */
+PUBLIC int httpLookupPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *value, bool *withValue)
+{
+    MprKeyValue     *kp;
+    int             next, onext;
+
+    assert(headers);
+    assert(key && *key);
+    assert(value && *value);
+
+    *withValue = 0;
+
+    /*
+        Prefer dynamic table as we can encode more values
+     */
+    for (ITERATE_ITEMS(headers->list, kp, next)) {
+        if (strcmp(key, kp->key) == 0) {
+            onext = next;
+            do {
+                if (smatch(kp->value, value) && smatch(kp->key, key)) {
+                    *withValue = 1;
+                    return next + HTTP2_STATIC_TABLE_ENTRIES;
+                }
+            } while ((kp = mprGetNextItem(headers->list, &next)) != 0);
+            return onext + HTTP2_STATIC_TABLE_ENTRIES;
+        }
+    }
+
+    for (ITERATE_ITEMS(HTTP->staticHeaders, kp, next)) {
+        if (smatch(key, kp->key)) {
+            if (value && kp->value) {
+                onext = next;
+                do {
+                    if (smatch(kp->value, value) && smatch(kp->key, key)) {
+                        *withValue = 1;
+                        return next;
+                    }
+                } while ((kp = mprGetNextItem(HTTP->staticHeaders, &next)) != 0);
+                return onext;
+            } else {
+                return next;
+            }
+        }
+    }
+    return 0;
+}
+
+
+/*
+    Add a header to the dynamic table.
+ */
+PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *value)
+{
+    MprKeyValue     *kp;
+    ssize           len;
+    int             index;
+
+    /*
+        Make room for the new entry if required. Evict the oldest entries first.
+     */
+    len = slen(key) + slen(value) + HTTP2_HEADER_OVERHEAD;
+    while ((headers->size + len) >= headers->max) {
+        kp = mprPopItem(headers->list);
+        headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
+    }
+    /*
+        New entries are inserted at the start of the table and all existing entries shuffle down
+     */
+    if ((index = mprInsertItemAtPos(headers->list, 0, mprCreateKeyPair(key, value, 0))) < 0) {
+        return MPR_ERR_MEMORY;
+    }
+    index += 1 + HTTP2_STATIC_TABLE_ENTRIES;
+    headers->size += len;
+    return index;
+}
+
+
+/*
+    Get a header at a specific index.
+ */
+PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
+{
+    if (index <= 0 || index > (1 + HTTP2_STATIC_TABLE_ENTRIES + mprGetListLength(headers->list))) {
+        return 0;
+    }
+    if (--index < HTTP2_STATIC_TABLE_ENTRIES) {
+        return mprGetItem(HTTP->staticHeaders, index);
+    }
+    index = index - HTTP2_STATIC_TABLE_ENTRIES;
+    if (index >= mprGetListLength(headers->list)) {
+        assert(index < mprGetListLength(headers->list));
+        return 0;
+    }
+    return mprGetItem(headers->list, index);
+}
+
+
+/*
+    Set a new maximum header table size. Evict oldest entries if currently over budget.
+ */
+PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int max)
+{
+    MprKeyValue     *kp;
+
+    if (max < 0) {
+        return MPR_ERR_BAD_ARGS;
+    }
+    if (max >= headers->max) {
+        headers->max = max;
+        return 0;
+    }
+    headers->max = max;
+    while (headers->size >= max) {
+        kp = mprPopItem(headers->list);
+        headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
+    }
+    return 0;
+}
+#endif /* ME_HTTP_HTTP2 */
+
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
+/********* Start of file src/http1Filter.c ************/
+
+/*
+    http1Filter.c - HTTP/1 protocol handling.
+
+    Copyright (c) All Rights Reserved. See details at the end of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+/********************************** Forwards **********************************/
+
+static HttpConn *findConn(HttpQueue *q);
+static char *getToken(HttpPacket *packet, cchar *delim);
+static bool gotHeaders(HttpQueue *q, HttpPacket *packet);
+static void incomingHttp1(HttpQueue *q, HttpPacket *packet);
+static bool monitorActiveRequests(HttpConn *conn);
+static void outgoingHttp1(HttpQueue *q, HttpPacket *packet);
+static void outgoingHttp1Service(HttpQueue *q);
+static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet);
+static HttpPacket *parseHeaders(HttpQueue *q, HttpPacket *packet);
+static void parseRequestLine(HttpQueue *q, HttpPacket *packet);
+static void parseResponseLine(HttpQueue *q, HttpPacket *packet);
+static void tracePacket(HttpQueue *q, HttpPacket *packet);
+
+/*********************************** Code *************************************/
+/*
+   Loadable module initialization
+ */
+PUBLIC int httpOpenHttp1Filter()
+{
+    HttpStage     *filter;
+
+    if ((filter = httpCreateConnector("Http1Filter", NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    HTTP->http1Filter = filter;
+    filter->incoming = incomingHttp1;
+    filter->outgoing = outgoingHttp1;
+    filter->outgoingService = outgoingHttp1Service;
+    return 0;
+}
+
+
+/*
+    The queue is the net->inputq == netHttp-rx
+ */
+static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+
+    conn = findConn(q);
+
+    /*
+        There will typically be no packets on the queue, so this will be fast
+     */
+    httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+
+    for (packet = httpGetPacket(q); packet && !conn->error; packet = httpGetPacket(q)) {
+        if (httpTracing(q->net)) {
+            httpTracePacket(q->net->trace, "http1.rx", "packet", 0, packet, NULL);
+        }
+        if (conn->state < HTTP_STATE_PARSED) {
+            if ((packet = parseHeaders(q, packet)) != 0) {
+                if (conn->state < HTTP_STATE_PARSED) {
+                    httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+                    break;
+                }
+            }
+            httpProcess(conn->inputq);
+        }
+        if (packet) {
+            httpPutPacket(conn->inputq, packet);
+        }
+        httpProcess(conn->inputq);
+    }
+}
+
+
+static void outgoingHttp1(HttpQueue *q, HttpPacket *packet)
+{
+    httpPutForService(q, packet, 1);
+}
+
+
+static void outgoingHttp1Service(HttpQueue *q)
+{
+    HttpPacket  *packet;
+
+    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        tracePacket(q, packet);
+        httpPutPacket(q->net->socketq, packet);
+    }
+}
+
+
+static void tracePacket(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    cchar       *type;
+
+
+    net = q->net;
+    type = (packet->type & HTTP_PACKET_HEADER) ? "headers" : "data";
+    if (httpTracing(net) && !net->skipTrace) {
+        if (net->bytesWritten >= net->trace->maxContent) {
+            httpTrace(net->trace, "http1.tx", "packet", "msg: 'Abbreviating packet trace'");
+            net->skipTrace = 1;
+        } else {
+            httpTracePacket(net->trace, "http1.tx", "packet", HTTP_TRACE_HEX, packet, "type=%s, length=%zd,", type, httpGetPacketLength(packet));
+        }
+    } else {
+        httpTrace(net->trace, "http1.tx", "packet", "type=%s, length=%zd,", type, httpGetPacketLength(packet));
+    }
+}
+
+
+static HttpPacket *parseHeaders(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpLimits  *limits;
+
+    conn = q->conn;
+    net = conn->net;
+    assert(conn->rx);
+    assert(conn->tx);
+    rx = conn->rx;
+    limits = conn->limits;
+
+    if (!monitorActiveRequests(conn)) {
+        return 0;
+    }
+    if (!gotHeaders(q, packet)) {
+        /* Don't yet have a complete header */
+        return packet;
+    }
+    rx->headerPacket = packet;
+
+    if (httpServerConn(conn)) {
+        parseRequestLine(q, packet);
+    } else {
+        parseResponseLine(q, packet);
+    }
+    return parseFields(q, packet);
+}
+
+
+static bool monitorActiveRequests(HttpConn *conn)
+{
+    HttpLimits  *limits;
+    int64       value;
+
+    limits = conn->limits;
+
+    //  TODO - find a better place for this?  Where does http2 do this
+    if (httpServerConn(conn) && !conn->activeRequest) {
+        /*
+            ErrorDocuments may come through here twice so test activeRequest to keep counters valid.
+         */
+        conn->activeRequest = 1;
+        if ((value = httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) >= limits->requestsPerClientMax) {
+            httpError(conn, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
+                "Too many concurrent requests for client: %s %d/%d", conn->ip, (int) value, limits->requestsPerClientMax);
+            return 0;
+        }
+        httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
+    }
+    return 1;
+}
+
+
+static cchar *eatBlankLines(HttpPacket *packet)
+{
+    cchar   *start;
+
+    start = mprGetBufStart(packet->content);
+    while (*start == '\r' || *start == '\n') {
+        if (mprGetCharFromBuf(packet->content) < 0) {
+            break;
+        }
+        start = mprGetBufStart(packet->content);
+    }
+    return start;
+}
+
+
+static bool gotHeaders(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+    HttpLimits  *limits;
+    cchar       *end, *start;
+    ssize       len;
+
+    conn = q->conn;
+    limits = conn->limits;
+    start = eatBlankLines(packet);
+    len = httpGetPacketLength(packet);
+
+    if ((end = sncontains(start, "\r\n\r\n", len)) != 0 || (end = sncontains(start, "\n\n", len)) != 0) {
+        len = end - start;
+    }
+    if (len >= limits->headerSize || len >= q->max) {
+        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
+            "Header too big. Length %zd vs limit %d", len, limits->headerSize);
+        return 0;
+    }
+    if (!end) {
+        return 0;
+    }
+    return 1;
+}
+
+
+/*
+    Parse the first line of a http request. Return true if the first line parsed. This is only called once all the headers
+    have been read and buffered. Requests look like: METHOD URL HTTP/1.X.
+ */
+static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpLimits  *limits;
+    MprBuf      *content;
+    char        *method, *uri, *protocol, *start;
+    ssize       len;
+
+    conn = q->conn;
+    rx = conn->rx;
+    limits = conn->limits;
+
+    content = packet->content;
+    start = content->start;
+
+    method = getToken(packet, NULL);
+    rx->originalMethod = rx->method = supper(method);
+    httpParseMethod(conn);
+
+    uri = getToken(packet, NULL);
+    len = slen(uri);
+    if (*uri == '\0') {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty URI");
+        return;
+    } else if (len >= limits->uriSize) {
+        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_URL_TOO_LARGE,
+            "Bad request. URI too long. Length %zd vs limit %d", len, limits->uriSize);
+        return;
+    }
+    rx->uri = sclone(uri);
+    if (!rx->originalUri) {
+        rx->originalUri = rx->uri;
+    }
+    protocol = getToken(packet, "\r\n");
+    protocol = supper(protocol);
+    if (smatch(protocol, "HTTP/1.0") || *protocol == 0) {
+        if (rx->flags & (HTTP_POST|HTTP_PUT)) {
+            rx->remainingContent = HTTP_UNLIMITED;
+            rx->needInputPipeline = 1;
+        }
+        conn->net->protocol = 0;
+    } else if (strcmp(protocol, "HTTP/1.1") != 0) {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
+        return;
+    } else {
+        conn->net->protocol = 1;
+    }
+    httpSetState(conn, HTTP_STATE_FIRST);
+}
+
+
+/*
+    Parse the first line of a http response. Return true if the first line parsed. This is only called once all the headers
+    have been read and buffered. Response status lines look like: HTTP/1.X CODE Message
+ */
+static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    char        *protocol, *status;
+    ssize       len;
+
+    net = q->net;
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    protocol = supper(getToken(packet, NULL));
+    if (strcmp(protocol, "HTTP/1.0") == 0) {
+        net->protocol = 0;
+        if (!scaselessmatch(tx->method, "HEAD")) {
+            rx->remainingContent = HTTP_UNLIMITED;
+        }
+    } else if (strcmp(protocol, "HTTP/1.1") != 0) {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
+        return;
+    }
+    status = getToken(packet, NULL);
+    if (*status == '\0') {
+        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status code");
+        return;
+    }
+    rx->status = atoi(status);
+    rx->statusMessage = sclone(getToken(packet, "\r\n"));
+
+    len = slen(rx->statusMessage);
+    if (len >= conn->limits->uriSize) {
+        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_URL_TOO_LARGE,
+            "Bad response. Status message too long. Length %zd vs limit %d", len, conn->limits->uriSize);
+        return;
+    }
+    if (rx->status == HTTP_CODE_CONTINUE) {
+        /* Eat the blank line and wait for the real response */
+        mprAdjustBufStart(packet->content, 2);
+        return;
+    }
+}
+
+
+/*
+    Parse the header fields and return a following body packet if present.
+    Return zero on errors.
+ */
+static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    HttpLimits  *limits;
+    char        *key, *value;
+    int         count, keepAliveHeader;
+
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    limits = conn->limits;
+    keepAliveHeader = 0;
+
+    for (count = 0; packet->content->start[0] != '\r' && !conn->error; count++) {
+        if (count >= limits->headerMax) {
+            httpLimitError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Too many headers");
+            return 0;
+        }
+        if ((key = getToken(packet, ":")) == 0 || *key == '\0') {
+            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
+            return 0;
+        }
+        value = getToken(packet, "\r\n");
+        while (isspace((uchar) *value)) {
+            value++;
+        }
+        if (strspn(key, "%<>/\\") > 0) {
+            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header key value");
+            return 0;
+        }
+        if (scaselessmatch(key, "set-cookie")) {
+            mprAddDuplicateKey(rx->headers, key, sclone(value));
+        } else {
+            mprAddKey(rx->headers, key, sclone(value));
+        }
+    }
+    /*
+        Split the headers and retain the data for later. Step over "\r\n" after headers except if chunked
+        so chunking can parse a single chunk delimiter of "\r\nSIZE ...\r\n"
+     */
+    if (smatch(httpGetHeader(conn, "transfer-encoding"), "chunked")) {
+        httpInitChunking(conn);
+    } else {
+        mprAdjustBufStart(packet->content, 2);
+    }
+    httpSetState(conn, HTTP_STATE_PARSED);
+    /*
+        If data remaining, it is body post data
+     */
+    return httpGetPacketLength(packet) ? packet : 0;
+}
+
+
+/*
+    Get the next input token. The content buffer is advanced to the next token. This routine always returns a
+    non-null token. The empty string means the delimiter was not found. The delimiter is a string to match and not
+    a set of characters. If null, it means use white space (space or tab) as a delimiter.
+ */
+static char *getToken(HttpPacket *packet, cchar *delim)
+{
+    MprBuf  *buf;
+    char    *token, *endToken, *nextToken;
+
+    buf = packet->content;
+    nextToken = mprGetBufEnd(buf);
+
+    for (token = mprGetBufStart(buf); (*token == ' ' || *token == '\t') && token < nextToken; token++) {}
+    if (token >= nextToken) {
+        return "";
+    }
+    if (delim == 0) {
+        delim = " \t";
+        if ((endToken = strpbrk(token, delim)) != 0) {
+            nextToken = endToken + strspn(endToken, delim);
+            *endToken = '\0';
+        }
+    } else {
+        if ((endToken = strstr(token, delim)) != 0) {
+            *endToken = '\0';
+            /* Only eat one occurence of the delimiter */
+            nextToken = endToken + strlen(delim);
+        }
+    }
+    buf->start = nextToken;
+    return token;
+}
+
+
+PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
+{
+    Http        *http;
+    HttpConn    *conn;
+    HttpTx      *tx;
+    HttpUri     *parsedUri;
+    MprKey      *kp;
+    MprBuf      *buf;
+
+    conn = q->conn;
+    http = conn->http;
+    tx = conn->tx;
+    buf = packet->content;
+
+    tx->responded = 1;
+
+    if (tx->chunkSize <= 0 && q->count > 0 && tx->length < 0) {
+        /* No content length and there appears to be output data -- must close connection to signify EOF */
+        conn->keepAliveCount = 0;
+    }
+    if ((tx->flags & HTTP_TX_USE_OWN_HEADERS) && !conn->error) {
+        /* Cannot count on content length */
+        conn->keepAliveCount = 0;
+        return;
+    }
+    httpPrepareHeaders(conn);
+
+    if (httpServerConn(conn)) {
+        mprPutStringToBuf(buf, httpGetProtocol(conn->net));
+        mprPutCharToBuf(buf, ' ');
+        mprPutIntToBuf(buf, tx->status);
+        mprPutCharToBuf(buf, ' ');
+        mprPutStringToBuf(buf, httpLookupStatus(tx->status));
+        /* Server tracing of status happens in the "complete" event */
+
+    } else {
+        mprPutStringToBuf(buf, tx->method);
+        mprPutCharToBuf(buf, ' ');
+        parsedUri = tx->parsedUri;
+        if (http->proxyHost && *http->proxyHost) {
+            if (parsedUri->query && *parsedUri->query) {
+                mprPutToBuf(buf, "http://%s:%d%s?%s %s", http->proxyHost, http->proxyPort,
+                    parsedUri->path, parsedUri->query, httpGetProtocol(conn->net));
+            } else {
+                mprPutToBuf(buf, "http://%s:%d%s %s", http->proxyHost, http->proxyPort, parsedUri->path,
+                    httpGetProtocol(conn->net));
+            }
+        } else {
+            if (parsedUri->query && *parsedUri->query) {
+                mprPutToBuf(buf, "%s?%s %s", parsedUri->path, parsedUri->query, httpGetProtocol(conn->net));
+            } else {
+                mprPutStringToBuf(buf, parsedUri->path);
+                mprPutCharToBuf(buf, ' ');
+                mprPutStringToBuf(buf, httpGetProtocol(conn->net));
+            }
+        }
+    }
+    mprPutStringToBuf(buf, "\r\n");
+
+    /*
+        Output headers
+     */
+    kp = mprGetFirstKey(conn->tx->headers);
+    while (kp) {
+        mprPutStringToBuf(packet->content, kp->key);
+        mprPutStringToBuf(packet->content, ": ");
+        if (kp->data) {
+            mprPutStringToBuf(packet->content, kp->data);
+        }
+        mprPutStringToBuf(packet->content, "\r\n");
+        kp = mprGetNextKey(conn->tx->headers, kp);
+    }
+    /*
+        By omitting the "\r\n" delimiter after the headers, chunks can emit "\r\nSize\r\n" as a single chunk delimiter
+     */
+    if (tx->chunkSize <= 0) {
+        mprPutStringToBuf(buf, "\r\n");
+    }
+    tx->headerSize = mprGetBufLength(buf);
+    tx->flags |= HTTP_TX_HEADERS_CREATED;
+}
+
+
+static HttpConn *findConn(HttpQueue *q)
+{
+    HttpConn    *conn;
+
+    if (!q->conn) {
+        if ((conn = httpCreateConn(q->net)) == 0) {
+            /* Memory error - centrally reported */
+            return 0;
+        }
+        q->conn = conn;
+    } else {
+        conn = q->conn;
+    }
+    return conn;
+}
+
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
+/********* Start of file src/http2Filter.c ************/
+
+/*
+    http2Filter.c - HTTP/2 protocol handling.
+
+    HTTP/2 protocol filter for HTTP/2 frame processing.
+
+    For historical reasons, the HttpConn object is used to implement HTTP2 streams and HttpNet is
+    used to implement HTTP2 network connections.
+
+    Copyright (c) All Rights Reserved. See details at the end of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+#if ME_HTTP_HTTP2
+/********************************** Locals ************************************/
+
+#define httpGetPrefixMask(bits) ((1 << (bits)) - 1)
+#define httpSetPrefix(bits)     (1 << (bits))
+
+typedef void (*FrameHandler)(HttpQueue *q, HttpPacket *packet);
+
+/************************************ Forwards ********************************/
+
+static void addHeader(HttpConn *conn, cchar *key, cchar *value);
+static void checkSendSettings(HttpQueue *q);
+static void closeNetworkWhenDone(HttpQueue *q);
+static int decodeInt(HttpPacket *packet, uint prefix);
+static HttpPacket *defineFrame(HttpQueue *q, HttpPacket *packet, int type, uchar flags, int stream);
+static void definePseudoHeaders(HttpConn *conn, HttpPacket *packet);
+static void encodeHeader(HttpConn *conn, HttpPacket *packet, cchar *key, cchar *value);
+static void encodeInt(HttpPacket *packet, uint prefix, uint bits, uint value);
+static void encodeString(HttpPacket *packet, cchar *src, uint lower);
+static HttpConn *findStream(HttpNet *net, int stream);
+static int getFrameFlags(HttpQueue *q, HttpPacket *packet);
+static HttpConn *getStream(HttpQueue *q, HttpPacket *packet);
+static void incomingHttp2(HttpQueue *q, HttpPacket *packet);
+static void outgoingHttp2(HttpQueue *q, HttpPacket *packet);
+static void outgoingHttp2Service(HttpQueue *q);
+static void manageFrame(HttpFrame *frame, int flags);
+static void parseDataFrame(HttpQueue *q, HttpPacket *packet);
+static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet);
+static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet);
+static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet);
+static cchar *parseHeaderField(HttpQueue *q, HttpConn *conn, HttpPacket *packet);
+static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet);
+static void parseHeaderFrames(HttpQueue *q, HttpConn *conn);
+static void parsePriorityFrame(HttpQueue *q, HttpPacket *packet);
+static void parsePushFrame(HttpQueue *q, HttpPacket *packet);
+static void parsePingFrame(HttpQueue *q, HttpPacket *packet);
+static void parseResetFrame(HttpQueue *q, HttpPacket *packet);
+static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet);
+static void parseWindowFrame(HttpQueue *q, HttpPacket *packet);
+static void processDataFrame(HttpQueue *q, HttpPacket *packet);
+static void resetConn(HttpConn *conn, cchar *msg, int error);
+static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet, bool *done);
+static void sendFrame(HttpQueue *q, HttpPacket *packet);
+static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...);
+static void sendPreface(HttpQueue *q);
+static void sendReset(HttpQueue *q, HttpConn *conn, int status, cchar *fmt, ...);
+static void sendSettings(HttpQueue *q);
+static void sendWindowFrame(HttpQueue *q, int stream, ssize size);
+static bool validateHeader(cchar *key, cchar *value);
+
+/*
+    Frame callback handlers (order matters)
+ */
+static FrameHandler frameHandlers[] = {
+    parseDataFrame,
+    parseHeaderFrame,
+    parsePriorityFrame,
+    parseResetFrame,
+    parseSettingsFrame,
+    parsePushFrame,
+    parsePingFrame,
+    parseGoAwayFrame,
+    parseWindowFrame,
+    /* ContinuationFrame */ parseHeaderFrame,
+};
+
+/*
+    Just for debug
+ */
+static char *packetTypes[] = {
+    "DATA",
+    "HEADERS",
+    "PRIORITY",
+    "RESET",
+    "SETTINGS",
+    "PUSH",
+    "PING",
+    "GOAWAY",
+    "WINDOW",
+    "CONTINUE",
+};
+
+/*********************************** Code *************************************/
+/*
+    Loadable module initialization
+ */
+PUBLIC int httpOpenHttp2Filter()
+{
+    HttpStage     *filter;
+
+    if ((filter = httpCreateConnector("Http2Filter", NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    HTTP->http2Filter = filter;
+    filter->incoming = incomingHttp2;
+    filter->outgoing = outgoingHttp2;
+    filter->outgoingService = outgoingHttp2Service;
+    httpCreatePackedHeaders();
+    return 0;
+}
+
+
+/*
+    Receive and process incoming HTTP/2 packets.
+ */
+static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpFrame   *frame;
+
+    net = q->net;
+
+    /*
+        Join packets into a single packet for processing. Typically will be only one packet and do nothing.
+     */
+    httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+    checkSendSettings(q);
+
+    /*
+        Process frames until can process no more. Initially will be only one packet, but the frame handlers
+        may split packets as required and put back the tail for processing here.
+     */
+    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        if ((frame = parseFrame(q, packet)) != 0) {
+            if (net->goaway && conn && (net->lastStream && conn->stream >= net->lastStream)) {
+                /* Network is being closed. Continue to process existing streams but accept no new streams */
+                continue;
+            }
+            net->frame = frame;
+            frameHandlers[frame->type](q, packet);
+            net->frame = 0;
+            conn = frame->conn;
+            if (conn && conn->disconnect && !conn->destroyed) {
+                sendReset(q, conn, HTTP2_INTERNAL_ERROR, "Stream request error %s", conn->errorMsg);
+            }
+
+        } else {
+            break;
+        }
+    }
+    closeNetworkWhenDone(q);
+}
+
+
+/*
+    Accept packet for sending
+ */
+static void outgoingHttp2(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+
+    net = q->net;
+    conn = packet->conn;
+    checkSendSettings(q);
+
+#if UNUSED
+    int         enable;
+    //  TODO - is this needed now?
+    enable = !(q->stage->flags & HTTP_STAGE_HANDLER) || (q->conn->state >= HTTP_STATE_READY) ? 1 : 0;
+#endif
+    /*
+        Determine the HTTP/2 frame type and add to the service queue
+     */
+    if (packet->flags & HTTP_PACKET_HEADER) {
+        if (conn->seenHeader) {
+            packet->type = HTTP2_CONT_FRAME;
+            conn->seenHeader = 1;
+        } else {
+            packet->type = HTTP2_HEADERS_FRAME;
+        }
+    } else if (packet->flags & HTTP_PACKET_DATA) {
+        packet->type = HTTP2_DATA_FRAME;
+    }
+    httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
+}
+
+
+/*
+    Service the outgoing queue of packets
+ */
+static void outgoingHttp2Service(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpPacket  *packet;
+    HttpTx      *tx;
+    ssize       len;
+    bool        done;
+
+    net = q->net;
+    done = 0;
+
+    for (packet = httpGetPacket(q); packet && !net->error && !done; packet = httpGetPacket(q)) {
+        net->lastActivity = net->http->now;
+        if (net->outputq->max <= 0) {
+            /*
+                The output queue has depleted the HTTP/2 transmit window. Flow control and wait for
+                a window update message from the peer.
+             */
+            httpSuspendQueue(q);
+            break;
+        }
+        /*
+            Resize data packets to not exceed the remaining HTTP/2 window flow control credits.
+         */
+        len = httpGetPacketLength(packet);
+        if (packet->flags & HTTP_PACKET_DATA) {
+            len = resizePacket(net->outputq, net->outputq->max, packet, &done);
+            net->outputq->max -= len;
+        }
+        conn = packet->conn;
+        if (conn && !conn->destroyed) {
+            if (conn->streamReset) {
+                /* Must not send any more frames on this stream */
+                continue;
+            }
+            if (net->goaway && (net->lastStream && conn->stream >= net->lastStream)) {
+                /* Network is being closed. Continue to process existing streams but accept no new streams */
+                continue;
+            }
+            if (conn->disconnect) {
+                sendReset(q, conn, HTTP2_INTERNAL_ERROR, "Stream request error %s", conn->errorMsg);
+                continue;
+            }
+            conn->lastActivity = conn->http->now;
+            tx = conn->tx;
+
+            if (packet->flags & HTTP_PACKET_DATA) {
+#if UNUSED
+                len = resizePacket(net->outputq, conn->outputq->max, packet, &done);
+#endif
+                conn->outputq->max -= len;
+                if (conn->outputq->max < 0) {
+                    sendReset(q, conn, HTTP2_FLOW_CONTROL_ERROR, "Internal flow control error");
+                    return;
+                }
+            } else if (packet->flags & HTTP_PACKET_END && tx->endData) {
+                httpPutPacket(q->net->socketq, packet);
+                break;
+            }
+            /*
+                Create and send a HTTP/2 frame
+             */
+            sendFrame(q, defineFrame(q, packet, packet->type, getFrameFlags(q, packet), conn->stream));
+
+            /*
+                Resume upstream if there is now room
+             */
+            if (q->count <= q->low && (conn->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
+                httpResumeQueue(conn->outputq);
+            }
+        }
+    }
+    closeNetworkWhenDone(q);
+}
+
+
+/*
+    Get the HTTP/2 frame flags for this packet
+ */
+static int getFrameFlags(HttpQueue *q, HttpPacket *packet)
+{
+    HttpPacket  *first;
+    HttpConn    *conn;
+    HttpTx      *tx;
+    int         flags;
+
+    conn = packet->conn;
+    tx = conn->tx;
+    flags = 0;
+    first = q->first;
+
+    if (packet->flags & HTTP_PACKET_HEADER && !tx->endHeaders) {
+        if (!(first && first->flags & HTTP_PACKET_HEADER)) {
+            flags |= HTTP2_END_HEADERS_FLAG;
+            tx->endHeaders = 1;
+        }
+        if (first && (first->flags & HTTP_PACKET_END)) {
+            tx->endData = 1;
+            flags |= HTTP2_END_STREAM_FLAG;
+        }
+    } else if (packet->flags & HTTP_PACKET_DATA && !tx->endData) {
+        if (first && (first->flags & HTTP_PACKET_END)) {
+            tx->endData = 1;
+            flags |= HTTP2_END_STREAM_FLAG;
+        }
+    } else if (packet->flags & HTTP_PACKET_END && !tx->endData) {
+        /*
+            Convert the packet end to a data frame to signify end of stream
+         */
+        packet->type = HTTP2_DATA_FRAME;
+        tx->endData = 1;
+        flags |= HTTP2_END_STREAM_FLAG;
+    }
+    return flags;
+}
+
+
+/*
+    Resize a packet to utilize the remaining HTTP/2 window credits. Must not exceed the remaining window size.
+ */
+static ssize resizePacket(HttpQueue *q, ssize max, HttpPacket *packet, bool *done)
+{
+    HttpPacket  *tail;
+    ssize       len;
+
+    len = httpGetPacketLength(packet);
+    if (len > max) {
+        if ((tail = httpSplitPacket(packet, max)) == 0) {
+            /* Memory error - centrally reported */
+            return len;
+        }
+        httpPutBackPacket(q, tail);
+        len = httpGetPacketLength(packet);
+        *done = 1;
+    }
+    return len;
+}
+
+
+/*
+    Close the network connection on errors of if instructed to go away.
+ */
+static void closeNetworkWhenDone(HttpQueue *q)
+{
+    HttpNet     *net;
+
+    net = q->net;
+    if (net->error) {
+        if (!net->goaway) {
+            sendGoAway(net->socketq, HTTP2_PROTOCOL_ERROR, "Closing network");
+        }
+    }
+    if (net->goaway) {
+        if (mprGetListLength(net->connections) == 0) {
+            /* This ensures a recall on the netConnector IOEvent handler */
+            mprDisconnectSocket(net->sock);
+        }
+    }
+}
+
+
+/*
+    Parse an incoming HTTP/2 frame. Return true to keep going with this or subsequent request, zero means
+    insufficient data to proceed.
+ */
+static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpPacket  *tail;
+    HttpFrame   *frame;
+    MprBuf      *buf;
+    ssize       frameLength, len, size;
+    uint32      lenType;
+    cchar       *typeStr;
+    int         type;
+
+    net = q->net;
+    buf = packet->content;
+
+    if (httpGetPacketLength(packet) < sizeof(HTTP2_FRAME_OVERHEAD)) {
+        /* Insufficient data */
+        httpPutBackPacket(q, packet);
+        return 0;
+    }
+    /*
+        Peek at the frame length and type and validate.
+     */
+    lenType = mprPeekUint32FromBuf(buf);
+    len = lenType >> 8;
+    if (len > q->packetSize || len > HTTP2_MAX_FRAME_SIZE) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad frame size %d vs %d", len, q->packetSize);
+        return 0;
+    }
+    frameLength = len + HTTP2_FRAME_OVERHEAD;
+    size = httpGetPacketLength(packet);
+
+    /*
+        Split data for a following frame and put back on the queue for later servicing.
+     */
+    if (frameLength < size) {
+        if ((tail = httpSplitPacket(packet, frameLength)) == 0) {
+            /* Memory error - centrally reported */
+            return 0;
+        }
+        httpPutBackPacket(q, tail);
+        buf = packet->content;
+
+    } else if (frameLength > size) {
+        httpPutBackPacket(q, packet);
+        return 0;
+    }
+    mprAdjustBufStart(packet->content, sizeof(uint32));
+
+    /*
+        Parse the various HTTP/2 frame fields and store in a local HttpFrame object.
+     */
+    if ((frame = mprAllocObj(HttpFrame, manageFrame)) == NULL) {
+        /* Memory error - centrally reported */
+        return 0;
+    }
+    packet->data = frame;
+
+    type = lenType & 0xFF;
+    frame->type = type;
+    frame->flags = mprGetCharFromBuf(buf);
+    frame->stream = mprGetUint32FromBuf(buf) & HTTP_STREAM_MASK;
+    frame->conn = findStream(net, frame->stream);
+
+    if (httpTracing(q->net)) {
+        typeStr = (type < HTTP2_MAX_FRAME) ? packetTypes[type] : "unknown";
+        mprAdjustBufStart(packet->content, -HTTP2_FRAME_OVERHEAD);
+        httpTracePacket(q->net->trace, "http2.rx", "packet", HTTP_TRACE_HEX, packet,
+            "frame=%s flags=%x stream=%d length=%zd", typeStr, frame->flags, frame->stream, httpGetPacketLength(packet));
+        mprAdjustBufStart(packet->content, HTTP2_FRAME_OVERHEAD);
+    }
+    if (frame->stream && !frame->conn) {
+#if KEEP
+        if (frame->stream < net->lastStream) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Closed stream being reused");
+            return 0;
+        }
+#endif
+        if (frame->type == HTTP2_DATA_FRAME) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid frame without a stream type %d, stream %d", frame->type, frame->stream);
+            return 0;
+        }
+        if (frame->type == HTTP2_RESET_FRAME) {
+            /* Just ignore, may get a peer reset after we have already reset */
+            return 0;
+        }
+    }
+    if (frame->type < 0 || frame->type >= HTTP2_MAX_FRAME) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid frame type %d", frame->type);
+        return 0;
+    }
+    return frame;
+}
+
+
+/*
+    Always get a settings frame at the start of any network connection
+ */
+static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpFrame   *frame;
+    MprBuf      *buf;
+    uint        field, value;
+
+    net = q->net;
+    buf = packet->content;
+    frame = packet->data;
+
+    if (frame->flags & HTTP2_ACK_FLAG) {
+        /* Nothing to do */
+        return;
+    }
+    while (httpGetPacketLength(packet) >= HTTP2_SETTINGS_SIZE) {
+        field = mprGetUint16FromBuf(buf);
+        value = mprGetUint32FromBuf(buf);
+
+        switch (field) {
+        case HTTP2_HEADER_TABLE_SIZE_SETTING:
+            httpSetPackedHeadersMax(net->txHeaders, value);
+            break;
+
+        case HTTP2_ENABLE_PUSH_SETTING:
+            if (value != 0 && value != 1) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid push value");
+                return;
+            }
+            /* Push is not yet supported, we just store the value but do nothing */
+            net->push = value;
+            break;
+
+        case HTTP2_MAX_STREAMS_SETTING:
+            net->limits->streamsMax = min((int) value, net->limits->streamsMax);
+            break;
+
+        case HTTP2_INIT_WINDOW_SIZE_SETTING:
+            if (value > HTTP2_MAX_WINDOW) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid window size setting %x max %x", value, HTTP2_MAX_WINDOW);
+                return;
+            }
+            httpSetQueueLimits(net->outputq, -1, -1, value);
+            break;
+
+        case HTTP2_MAX_FRAME_SIZE_SETTING:
+            if (value > 0 && value < net->outputq->packetSize) {
+                net->outputq->packetSize = value;
+                #if TODO && TBD
+                httpResizePackets(net->outputq);
+                #endif
+            }
+            break;
+
+        case HTTP2_MAX_HEADER_SIZE_SETTING:
+            if ((int) value < net->limits->headerSize) {
+                net->limits->headerSize = value;
+            }
+            break;
+
+        default:
+            /* Ignore unknown settings values (per spec) */
+            break;
+        }
+    }
+    if (httpGetPacketLength(packet) > 0) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid setting packet length");
+        return;
+    }
+    sendFrame(q, defineFrame(q, packet, HTTP2_SETTINGS_FRAME, HTTP2_ACK_FLAG, 0));
+}
+
+
+/*
+    Parse a HTTP header or HTTP header continuation frame
+ */
+static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpFrame   *frame;
+    MprBuf      *buf;
+    bool        padded, priority;
+    ssize       size, frameLen;
+    int         depend, dword, excl, weight, padLen;
+
+    net = q->net;
+    buf = packet->content;
+    frame = packet->data;
+    padded = frame->flags & HTTP2_PADDED_FLAG;
+    priority = frame->flags & HTTP2_PRIORITY_FLAG;
+
+    size = 0;
+    if (padded) {
+        size++;
+    }
+    if (priority) {
+        /* dependency + weight are ignored */
+        size += sizeof(uint32) + 1;
+    }
+    frameLen = mprGetBufLength(buf);
+    if (frameLen <= size) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Incorrect header length");
+        return;
+    }
+    if (padded) {
+        padLen = (int) mprGetCharFromBuf(buf);
+        if (padLen >= frameLen) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Incorrect padding length");
+            return;
+        }
+        mprAdjustBufEnd(buf, -padLen);
+    }
+    /*
+        Dependencies, weights and priorities are parsed, but ignored
+     */
+    depend = 0;
+    weight = HTTP2_DEFAULT_WEIGHT;
+    if (priority) {
+        dword = mprGetUint32FromBuf(buf);
+        depend = dword & 0x7fffffff;
+        excl = dword >> 31;
+        weight = mprGetCharFromBuf(buf) + 1;
+    }
+    if ((frame->stream % 2) != 1 || (net->lastStream && frame->stream <= net->lastStream)) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad sesssion");
+        return;
+    }
+    if ((conn = getStream(q, packet)) != 0) {
+         if (frame->flags & HTTP2_END_HEADERS_FLAG) {
+            parseHeaderFrames(q, conn);
+        }
+        /*
+            Must only update for a successfully received frame
+         */
+        if (!net->error && frame->type == HTTP2_HEADERS_FRAME) {
+            net->lastStream = frame->stream;
+        }
+    }
+}
+
+
+/*
+    Get or create a stream connection
+ */
+static HttpConn *getStream(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpFrame   *frame;
+
+    net = q->net;
+    frame = packet->data;
+    conn = frame->conn;
+    frame = packet->data;
+    assert(frame->stream);
+
+    if (!conn && httpIsServer(net)) {
+        if ((conn = httpCreateConn(net)) == 0) {
+            /* Memory error - centrally reported */
+            return 0;
+        }
+        /*
+            Servers create a new connection stream. Note: HttpConn is used for HTTP/2 streams (legacy).
+         */
+        if (mprGetListLength(net->connections) >= net->limits->requestsPerClientMax) {
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams: %s %d/%d", net->ip,
+                (int) mprGetListLength(net->connections), net->limits->requestsPerClientMax);
+            return 0;
+        }
+        ///TODO httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
+        if (mprGetListLength(net->connections) >= net->limits->streamsMax) {
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams: %s %d/%d", net->ip,
+                (int) mprGetListLength(net->connections), net->limits->streamsMax);
+            return 0;
+        }
+        frame->conn = conn;
+        conn->stream = frame->stream;
+    }
+    if (net->goaway) {
+        /* Ignore new streams as the network is going away */
+        sendReset(q, conn, HTTP2_REFUSED_STREAM, "Network is going away");
+        return 0;
+    }
+#if FUTURE
+    if (depend == frame->stream) {
+        sendReset(q, conn, HTTP2_PROTOCOL_ERROR, "Bad stream dependency");
+        return 0;
+    }
+#endif
+    if (frame->type == HTTP2_CONT_FRAME && (!conn->rx || !conn->rx->headerPacket)) {
+        if (!frame->conn) {
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Invalid continuation frame");
+            return 0;
+        }
+    }
+    rx = conn->rx;
+    if (frame->flags & HTTP2_END_STREAM_FLAG) {
+        rx->eof = 1;
+    }
+    if (rx->headerPacket) {
+        httpJoinPacket(rx->headerPacket, packet);
+    } else {
+        rx->headerPacket = packet;
+    }
+    packet->conn = conn;
+
+    if (httpGetPacketLength(rx->headerPacket) > conn->limits->headerSize) {
+        sendReset(q, conn, HTTP2_REFUSED_STREAM, "Header too big, length %ld, limit %ld",
+            httpGetPacketLength(rx->headerPacket), conn->limits->headerSize);
+        return 0;
+    }
+    return conn;
+}
+
+
+/*
+    Priority frames are not yet implemented. They are parsed but not validated or implemented.
+ */
+static void parsePriorityFrame(HttpQueue *q, HttpPacket *packet)
+{
+    MprBuf  *buf;
+    int     dep, exclusive, weight;
+
+    buf = packet->content;
+    dep = mprGetUint32FromBuf(buf);
+    exclusive = dep & (1 << 31);
+    dep &= (1U << 31) - 1;
+    weight = mprGetCharFromBuf(buf);
+}
+
+
+/*
+    Push frames are not yet implemented: TODO
+ */
+static void parsePushFrame(HttpQueue *q, HttpPacket *packet)
+{
+}
+
+
+/*
+    Receive a ping frame
+ */
+static void parsePingFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpFrame   *frame;
+
+    frame = packet->data;
+    if (frame->conn) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad stream in ping frame");
+        return;
+    }
+    if (!(frame->flags & HTTP2_ACK_FLAG)) {
+        sendFrame(q, defineFrame(q, packet, HTTP2_PING_FRAME, HTTP2_ACK_FLAG, 0));
+    }
+}
+
+
+/*
+    Peer is instructing the stream to be closed.
+ */
+static void parseResetFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpFrame   *frame;
+    uint32      error;
+
+    if (httpGetPacketLength(packet) != sizeof(uint32)) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad reset frame");
+        return;
+    }
+    frame = packet->data;
+    if (!frame->conn) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad stream in reset frame");
+        return;
+    }
+    frame->conn->streamReset = 1;
+    error = mprGetUint32FromBuf(packet->content) & HTTP_STREAM_MASK;
+    resetConn(frame->conn, "Stream reset by peer", error);
+}
+
+
+/*
+    Receive a GoAway which informs us that this network should not be used anymore.
+ */
+static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+    MprBuf      *buf;
+    cchar       *msg;
+    ssize       len;
+    int         error, lastStream, next;
+
+    buf = packet->content;
+    lastStream = mprGetUint32FromBuf(buf) & HTTP_STREAM_MASK;
+    error = mprGetUint32FromBuf(buf);
+    len = mprGetBufLength(buf);
+    msg = len ? snclone(buf->start, len) : "";
+    httpTrace(q->net->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d lastStream=%d", msg, error, lastStream);
+
+    for (ITERATE_ITEMS(q->net->connections, conn, next)) {
+        if (conn->stream > lastStream) {
+            resetConn(conn, "Stream reset by peer", HTTP2_REFUSED_STREAM);
+        }
+    }
+    q->net->goaway = 1;
+}
+
+
+/*
+    Receive a window update frame that increases the window size of permissible data to send.
+    This is a credit based system for flow control of both the network and the stream.
+ */
+static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpFrame   *frame;
+    int         increment;
+
+    net = q->net;
+    frame = packet->data;
+    increment = mprGetUint32FromBuf(packet->content);
+    if (frame->stream) {
+        if ((conn = frame->conn) != 0) {
+            if (increment > (HTTP2_MAX_WINDOW - conn->outputq->max)) {
+                sendReset(q, conn, HTTP2_FLOW_CONTROL_ERROR, "Invalid window update for stream %d", conn->stream);
+            } else {
+                conn->outputq->max += increment;
+                httpResumeQueue(conn->outputq);
+            }
+        }
+    } else {
+        if (increment > (HTTP2_MAX_WINDOW + 1 - net->outputq->max)) {
+            sendGoAway(q, HTTP2_FLOW_CONTROL_ERROR, "Invalid window update for network");
+        } else {
+            net->outputq->max += increment;
+            httpResumeQueue(net->outputq);
+        }
+    }
+}
+
+
+/*
+    Once the hader and all continuation frames are received, they are joined into a single rx->headerPacket.
+ */
+static void parseHeaderFrames(HttpQueue *q, HttpConn *conn)
+{
+    HttpPacket  *packet;
+    HttpRx      *rx;
+
+    rx = conn->rx;
+    packet = rx->headerPacket;
+    while (httpGetPacketLength(packet) > 0 && !conn->error && !conn->net->error) {
+        parseHeader(q, conn, packet);
+    }
+    if (!q->net->goaway) {
+        if (!conn->error) {
+            conn->state = HTTP_STATE_PARSED;
+        }
+        httpProcess(conn->inputq);
+    }
+}
+
+
+/*
+    Parse the next header item in the packet of headers
+ */
+static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
+{
+    HttpNet     *net;
+    MprBuf      *buf;
+    MprKeyValue *kp;
+    cchar       *name, *value;
+    uchar       ch;
+    int         index, max;
+
+    net = conn->net;
+    buf = packet->content;
+
+    /*
+        Decode the type of header record. It can be:
+        1. Fully indexed header field.
+        2. Literal header that should be added to the header table.
+        3. Literal header without updating the header table.
+     */
+    ch = mprLookAtNextCharInBuf(buf);
+    if ((ch >> 7) == 1) {
+        /*
+            Fully indexed header field
+         */
+        index = decodeInt(packet, 7);
+        if ((kp = httpGetPackedHeader(net->rxHeaders, index)) == 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
+            return;
+        }
+        addHeader(conn, kp->key, kp->value);
+
+    } else if ((ch >> 6) == 1) {
+        /*
+            Literal header and add to index
+         */
+        if ((index = decodeInt(packet, 6)) < 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
+            return;
+        } else if (index > 0) {
+            if ((kp = httpGetPackedHeader(net->rxHeaders, index)) == 0) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Unknown header index");
+                return;
+            }
+            name = kp->key;
+        } else {
+            name = parseHeaderField(q, conn, packet);
+        }
+        value = parseHeaderField(q, conn, packet);
+        if (!name || !value) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header name/value");
+            return;
+        }
+        addHeader(conn, name, value);
+        httpAddPackedHeader(net->rxHeaders, name, value);
+
+    } else if ((ch >> 5) == 1) {
+        /* Dynamic table max size update */
+        max = decodeInt(packet, 5);
+        if (httpSetPackedHeadersMax(net->rxHeaders, max) < 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Cannot add indexed header");
+            return;
+        }
+
+    } else /* if ((ch >> 4) == 1 || (ch >> 4) == 0)) */ {
+        /* Literal header field without indexing */
+        if ((index = decodeInt(packet, 4)) < 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
+            return;
+        } else if (index > 0) {
+            if ((kp = httpGetPackedHeader(net->rxHeaders, index)) == 0) {
+                sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Unknown header index");
+                return;
+            }
+            name = kp->key;
+        } else {
+            name = parseHeaderField(q, conn, packet);
+        }
+        value = parseHeaderField(q, conn, packet);
+        if (!name || !value) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header name/value");
+            return;
+        }
+        addHeader(conn, name, value);
+    }
+}
+
+
+/*
+    Parse a single header field
+ */
+static cchar *parseHeaderField(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpFrame   *frame;
+    MprBuf      *buf;
+    cchar       *value;
+    int         huff, len;
+
+    net = conn->net;
+    frame = packet->data;
+    buf = packet->content;
+
+    huff = ((uchar) mprLookAtNextCharInBuf(buf)) >> 7;
+    len = decodeInt(packet, 7);
+    if (len < 0 || len > mprGetBufLength(buf)) {
+        sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header field length");
+        return 0;
+    }
+    if (huff) {
+        /*
+            Huffman encoded
+         */
+        if ((value = httpHuffDecode((uchar*) mprGetBufStart(buf), len)) == 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid encoded header field");
+            return 0;
+        }
+    } else {
+        /* Literal */
+        value = snclone(buf->start, len);
+    }
+    mprAdjustBufStart(buf, len);
+    return value;
+}
+
+
+/*
+    Add a header key/value pair to the set of headers for the stream (conn)
+ */
+static void addHeader(HttpConn *conn, cchar *key, cchar *value)
+{
+    HttpRx      *rx;
+    HttpLimits  *limits;
+    ssize       len;
+
+    rx = conn->rx;
+    limits = conn->limits;
+
+    if (!validateHeader(key, value)) {
+        return;
+    }
+    if (key[0] == ':') {
+        if (key[1] == 'a' && smatch(key, ":authority")) {
+            mprAddKey(conn->rx->headers, "host", value);
+
+        } else if (key[1] == 'm' && smatch(key, ":method")) {
+            rx->originalMethod = rx->method = supper(value);
+            httpParseMethod(conn);
+
+        } else if (key[1] == 'p' && smatch(key, ":path")) {
+            len = slen(value);
+            if (*value == '\0') {
+                httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty URI");
+                return;
+            } else if (len >= limits->uriSize) {
+                httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_URL_TOO_LARGE,
+                    "Bad request. URI too long. Length %zd vs limit %d", len, limits->uriSize);
+                return;
+            }
+            rx->uri = sclone(value);
+            if (!rx->originalUri) {
+                rx->originalUri = rx->uri;
+            }
+        } else if (key[1] == 's') {
+            if (smatch(key, ":status")) {
+                rx->status = atoi(value);
+
+            } else if (smatch(key, ":scheme")) {
+                ;
+            }
+        }
+    } else {
+        if (scaselessmatch(key, "set-cookie")) {
+            mprAddDuplicateKey(rx->headers, key, value);
+        } else {
+            mprAddKey(rx->headers, key, value);
+        }
+    }
+}
+
+
+/*
+    Briefly, do some validation
+ */
+static bool validateHeader(cchar *key, cchar *value)
+{
+    uchar   *cp, c;
+
+    if (!key || *key == 0 || !value || !value) {
+        return 0;
+    }
+    if (*key == ':') {
+        key++;
+    }
+    for (cp = (uchar*) key; *cp; cp++) {
+        c = *cp;
+        if (('a' <= c && c <= 'z') || c == '-' || c == '_' || ('0' <= c && c <= '9')) {
+            continue;
+        }
+        if (c == '\0' || c == '\n' || c == '\r' || c == ':' || ('A' <= c && c <= 'Z')) {
+            mprLog("info http", 5, "Invalid header name %s", key);
+            return 0;
+        }
+    }
+    for (cp = (uchar*) value; *cp; cp++) {
+        c = *cp;
+        if (c == '\0' || c == '\n' || c == '\r') {
+            mprLog("info http", 5, "Invalid header value %s", value);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+
+/*
+    Receive an application data frame
+ */
+static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpFrame   *frame;
+    HttpConn    *conn;
+    HttpLimits  *limits;
+    MprBuf      *buf;
+    ssize       len, padLen, frameLen;
+    int         padded;
+
+    net = q->net;
+    limits = net->limits;
+    buf = packet->content;
+    frame = packet->data;
+    len = httpGetPacketLength(packet);
+    conn = frame->conn;
+    assert(conn);
+
+    if (conn->streamReset) {
+        sendReset(q, conn, HTTP2_STREAM_CLOSED, "Received data on closed stream %d", conn->stream);
+        return;
+    }
+    padded = frame->flags & HTTP2_PADDED_FLAG;
+    if (padded) {
+        frameLen = mprGetBufLength(buf);
+        padLen = (int) mprGetCharFromBuf(buf);
+        if (padLen >= frameLen) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Incorrect padding length");
+            return;
+        }
+        mprAdjustBufEnd(buf, -padLen);
+    }
+
+    /*
+        Network flow control
+     */
+    if (len > net->inputq->max) {
+        sendGoAway(q, HTTP2_FLOW_CONTROL_ERROR, "Peer exceeded flow control window");
+        return;
+    }
+    net->inputq->max -= len;
+    if (net->inputq->max <= net->inputq->packetSize) {
+        /*
+            Update the remote window size for network flow control
+         */
+        sendWindowFrame(q, 0, limits->windowSize - net->inputq->max);
+        httpSetQueueLimits(net->inputq, -1, -1, limits->windowSize);
+    }
+
+    /*
+        Stream flow control
+     */
+    if (len > conn->inputq->max) {
+        sendReset(q, conn, HTTP2_FLOW_CONTROL_ERROR, "Receive data exceeds window for stream");
+        return;
+    }
+    conn->inputq->max -= len;
+    if (conn->inputq->max <= net->inputq->packetSize) {
+        /*
+            Update the remote window size for stream flow control
+         */
+        sendWindowFrame(q, conn->stream, limits->windowSize - conn->inputq->max);
+        httpSetQueueLimits(conn->inputq, -1, -1, limits->windowSize);
+    }
+    processDataFrame(q, packet);
+}
+
+
+/*
+    Process the frame and add to the stream input queue
+ */
+static void processDataFrame(HttpQueue *q, HttpPacket *packet)
+{
+    HttpFrame   *frame;
+    HttpConn    *conn;
+
+    frame = packet->data;
+    conn = frame->conn;
+
+    if (frame->flags & HTTP2_END_STREAM_FLAG) {
+        conn->rx->eof = 1;
+    }
+    if (httpGetPacketLength(packet) > 0) {
+        httpPutPacket(conn->inputq, packet);
+    }
+    httpProcess(conn->inputq);
+}
+
+
+/*
+    Shutdown a network. This is not necessarily an error. Peer should open a new network.
+    Continue processing current streams, but stop processing any new streams.
+ */
+static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
+{
+    HttpNet     *net;
+    HttpPacket  *packet;
+    HttpConn    *conn;
+    MprBuf      *buf;
+    va_list     ap;
+    cchar       *msg;
+    int         next;
+
+    net = q->net;
+    if (net->goaway) {
+        return;
+    }
+    if ((packet = httpCreatePacket(HTTP2_GOAWAY_SIZE)) == 0) {
+        return;
+    }
+    va_start(ap, fmt);
+    msg = sfmtv(fmt, ap);
+    mprLog("info http2", 3, "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStream, status, msg);
+    va_end(ap);
+
+    buf = packet->content;
+    mprPutUint32ToBuf(buf, status);
+    mprPutUint32ToBuf(buf, net->lastStream);
+    mprPutStringToBuf(buf, msg);
+    sendFrame(q, defineFrame(q, packet, HTTP2_GOAWAY_FRAME, 0, 0));
+
+    for (ITERATE_ITEMS(q->net->connections, conn, next)) {
+        if (conn->stream > net->lastStream) {
+            resetConn(conn, "Stream terminated", HTTP2_REFUSED_STREAM);
+        }
+    }
+    net->goaway = 1;
+}
+
+
+/*
+    Public API to terminate a network connection
+ */
+PUBLIC void httpSendGoAway(HttpNet *net, int status, cchar *fmt, ...)
+{
+    va_list     ap;
+    cchar       *msg;
+
+    va_start(ap, fmt);
+    msg = sfmtv(fmt, ap);
+    va_end(ap);
+    sendGoAway(net->outputq, status, "%s", msg);
+}
+
+
+/*
+    Send a ping packet. Some intermediaries or peers may use pings to keep a connection alive.
+ */
+PUBLIC bool sendPing(HttpQueue *q, uchar *data)
+{
+    HttpPacket  *packet;
+
+    if ((packet = httpCreatePacket(HTTP2_WINDOW_SIZE)) == 0) {
+        return 0;
+    }
+    mprPutBlockToBuf(packet->content, (char*) data, 64);
+    sendFrame(q, defineFrame(q, packet, HTTP2_PING_FRAME, 0, 0));
+    return 1;
+}
+
+
+/*
+    Immediately close a stream. The peer is informed and the stream is disconnected.
+ */
+static void sendReset(HttpQueue *q, HttpConn *conn, int status, cchar *fmt, ...)
+{
+    HttpPacket  *packet;
+    va_list     ap;
+    char        *msg;
+
+    assert(conn);
+
+    if (conn->streamReset || conn->destroyed) {
+        return;
+    }
+    if ((packet = httpCreatePacket(HTTP2_RESET_SIZE)) == 0) {
+        return;
+    }
+    va_start(ap, fmt);
+    msg = sfmtv(fmt, ap);
+    va_end(ap);
+
+    mprPutUint32ToBuf(packet->content, status);
+    mprLog("info http2", 3, "Send stream reset, stream=%d, status=%d, msg='%s'", conn->stream, status, msg);
+    sendFrame(q, defineFrame(q, packet, HTTP2_RESET_FRAME, 0, conn->stream));
+
+    conn->streamReset = 1;
+    resetConn(conn, msg, 0);
+}
+
+
+/*
+    Mark a stream as being reset (terminated)
+ */
+static void resetConn(HttpConn *conn, cchar *msg, int error)
+{
+    httpTrace(conn->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d", msg, error);
+    if (error) {
+        httpError(conn, HTTP_CODE_COMMS_ERROR, "%s", msg);
+    }
+    httpProcess(conn->inputq);
+}
+
+
+/*
+    A stream must exchange settings before it is used
+ */
+static void checkSendSettings(HttpQueue *q)
+{
+    HttpNet     *net;
+
+    net = q->net;
+
+    if (!net->init) {
+        sendSettings(q);
+        net->init = 1;
+    }
+}
+
+
+/*
+    Clients must send a preface before settings
+ */
+static void sendPreface(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpPacket  *packet;
+
+    net = q->net;
+    if ((packet = httpCreatePacket(HTTP2_PREFACE_SIZE)) == 0) {
+        return;
+    }
+    packet->flags = 0;
+    mprPutBlockToBuf(packet->content, HTTP2_PREFACE, HTTP2_PREFACE_SIZE);
+    httpPutPacket(q->net->socketq, packet);
+}
+
+
+/*
+    Send a settings packet before using the stream
+ */
+static void sendSettings(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpPacket  *packet;
+
+    net = q->net;
+    if (!net->init && httpIsClient(net)) {
+        sendPreface(q);
+    }
+    //  TODO - set to the number of settings
+    if ((packet = httpCreatePacket(HTTP2_SETTINGS_SIZE * 3)) == 0) {
+        return;
+    }
+
+    mprPutUint16ToBuf(packet->content, HTTP2_MAX_STREAMS_SETTING);
+    mprPutUint32ToBuf(packet->content, net->limits->streamsMax);
+
+    mprPutUint16ToBuf(packet->content, HTTP2_INIT_WINDOW_SIZE_SETTING);
+    mprPutUint32ToBuf(packet->content, (uint32) net->inputq->max);
+
+    mprPutUint16ToBuf(packet->content, HTTP2_MAX_FRAME_SIZE_SETTING);
+    mprPutUint32ToBuf(packet->content, (uint32) net->inputq->packetSize);
+
+#if FUTURE
+    mprPutUint16ToBuf(packet->content, HTTP2_HEADER_TABLE_SIZE_SETTING);
+    mprPutUint32ToBuf(packet->content, HTTP2_TABLE_SIZE);
+    mprPutUint16ToBuf(packet->content, HTTP2_MAX_HEADER_SIZE_SETTING);
+    mprPutUint32ToBuf(packet->content, (uint32) net->limits->headerSize);
+    mprPutUint16ToBuf(packet->content, HTTP2_ENABLE_PUSH_SETTING);
+    mprPutUint32ToBuf(packet->content, 0);
+#endif
+
+    sendFrame(q, defineFrame(q, packet, HTTP2_SETTINGS_FRAME, 0, 0));
+}
+
+
+static void sendWindowFrame(HttpQueue *q, int stream, ssize inc)
+{
+    HttpPacket  *packet;
+
+    if ((packet = httpCreatePacket(HTTP2_WINDOW_SIZE)) == 0) {
+        return;
+    }
+    mprPutUint32ToBuf(packet->content, (uint32) inc);
+    sendFrame(q, defineFrame(q, packet, HTTP2_WINDOW_FRAME, 0, stream));
+}
+
+
+/*
+    Populate the HTTP headers as a HTTP/2 header packet in the given packet
+    This is called from the tailFilter and the packet is then split into packetSize chunks and passed to outgoingHttp2.
+    There, the relevant HTTP/2 packet type is assigned HTTP2_HEADERS_FRAME or HTTP2_CONT_FRAME.
+ */
+PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+    HttpTx      *tx;
+    MprKey      *kp;
+
+    assert(packet->flags == HTTP_PACKET_HEADER);
+
+    conn = packet->conn;
+    tx = conn->tx;
+    if (tx->flags & HTTP_TX_HEADERS_CREATED) {
+        return;
+    }
+    tx->responded = 1;
+
+    httpPrepareHeaders(conn);
+    definePseudoHeaders(conn, packet);
+    if (httpTracing(q->net)) {
+        httpTrace(conn->trace, "http2.tx", "headers", "\n%s", httpTraceHeaders(q, conn->tx->headers));
+    }
+
+    /*
+        Not emitting any padding, dependencies or weights.
+     */
+    for (ITERATE_KEYS(tx->headers, kp)) {
+        if (kp->key[0] == ':') {
+            if (smatch(kp->key, ":status")) {
+                switch (tx->status) {
+                case 200:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_200); break;
+                case 204:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_204); break;
+                case 206:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_206); break;
+                case 304:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_304); break;
+                case 400:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_400); break;
+                case 404:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_404); break;
+                case 500:
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_STATUS_500); break;
+                default:
+                    encodeHeader(conn, packet, kp->key, kp->data);
+                }
+            } else if (smatch(kp->key, ":method")){
+                if (smatch(kp->data, "GET")) {
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_METHOD_GET);
+                } else if (smatch(kp->data, "POST")) {
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_METHOD_POST);
+                } else {
+                    encodeHeader(conn, packet, kp->key, kp->data);
+                }
+            } else if (smatch(kp->key, ":path")) {
+                if (smatch(kp->data, "/")) {
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_PATH_ROOT);
+                } else if (smatch(kp->data, "/index.html")) {
+                    encodeInt(packet, httpSetPrefix(7), 7, HTTP2_PATH_INDEX);
+                } else {
+                    encodeHeader(conn, packet, kp->key, kp->data);
+                }
+            } else {
+                encodeHeader(conn, packet, kp->key, kp->data);
+            }
+        }
+    }
+    for (ITERATE_KEYS(tx->headers, kp)) {
+        if (kp->key[0] != ':') {
+            encodeHeader(conn, packet, kp->key, kp->data);
+        }
+    }
+}
+
+
+/*
+    Define the pseudo headers for status, method, scheme and authority.
+ */
+static void definePseudoHeaders(HttpConn *conn, HttpPacket *packet)
+{
+    HttpUri     *parsedUri;
+    HttpTx      *tx;
+    Http        *http;
+    cchar       *authority, *path;
+
+    http = conn->http;
+    tx = conn->tx;
+
+    if (httpServerConn(conn)) {
+        httpAddHeaderString(conn, ":status", itos(tx->status));
+
+    } else {
+        authority = conn->rx->hostHeader ? conn->rx->hostHeader : conn->ip;
+        httpAddHeaderString(conn, ":method", tx->method);
+        httpAddHeaderString(conn, ":scheme", conn->secure ? "https" : "http");
+        httpAddHeaderString(conn, ":authority", authority);
+
+        parsedUri = tx->parsedUri;
+        if (http->proxyHost && *http->proxyHost) {
+            if (parsedUri->query && *parsedUri->query) {
+                path = sfmt("http://%s:%d%s?%s", http->proxyHost, http->proxyPort, parsedUri->path, parsedUri->query);
+            } else {
+                path = sfmt("http://%s:%d%s", http->proxyHost, http->proxyPort, parsedUri->path);
+            }
+        } else {
+            if (parsedUri->query && *parsedUri->query) {
+                path = sfmt("%s?%s", parsedUri->path, parsedUri->query);
+            } else {
+                path = parsedUri->path;
+            }
+        }
+        httpAddHeaderString(conn, ":path", path);
+    }
+}
+
+
+/*
+    Encode headers using the HPACK and huffman encoding.
+ */
+static void encodeHeader(HttpConn *conn, HttpPacket *packet, cchar *key, cchar *value)
+{
+    HttpNet     *net;
+    int         index;
+    bool        indexedValue;
+
+    net = conn->net;
+    conn->tx->headerSize = 0;
+
+    if ((index = httpLookupPackedHeader(net->txHeaders, key, value, &indexedValue)) > 0) {
+        if (indexedValue) {
+            /* Fully indexed header key and value */
+            encodeInt(packet, httpSetPrefix(7), 7, index);
+        } else {
+            encodeInt(packet, httpSetPrefix(6), 6, index);
+            index = httpAddPackedHeader(net->txHeaders, key, value);
+            encodeString(packet, value, 0);
+        }
+    } else {
+        index = httpAddPackedHeader(net->txHeaders, key, value);
+        encodeInt(packet, httpSetPrefix(6), 6, 0);
+        encodeString(packet, key, 1);
+        encodeString(packet, value, 0);
+#if FUTURE
+        //  no indexing
+        encodeInt(packet, 0, 4, 0);
+        encodeString(packet, key, 1);
+        encodeString(packet, value, 0);
+#endif
+    }
+}
+
+
+/*
+    Decode a HPACK encoded integer
+ */
+static int decodeInt(HttpPacket *packet, uint bits)
+{
+    MprBuf      *buf;
+    uchar       *bp, *end, *start;
+    uint        mask, shift, value;
+    int         done;
+
+    assert(0 < bits && bits <= 8);
+    assert(packet && httpGetPacketLength(packet) > 0);
+
+    buf = packet->content;
+    bp = start = (uchar*) mprGetBufStart(buf);
+    end = (uchar*) mprGetBufEnd(buf);
+
+    mask = httpGetPrefixMask(bits);
+    value = *bp++ & mask;
+    if (value == mask) {
+        value = 0;
+        shift = 0;
+        do {
+            if (bp >= end) {
+                return MPR_ERR_BAD_STATE;
+            }
+            done = (*bp & 0x80) != 0x80;
+            value += (*bp++ & 0x7f) << shift;
+            shift += 7;
+        } while (!done);
+        value += mask;
+    }
+    mprAdjustBufStart(buf, bp - start);
+    return value;
+}
+
+
+/*
+    Encode an integer using HPACK.
+ */
+static void encodeInt(HttpPacket *packet, uint flags, uint bits, uint value)
+{
+    MprBuf      *buf;
+    uint        mask;
+
+    buf = packet->content;
+    mask = (1 << bits) - 1;
+
+    if (value < mask) {
+        mprPutCharToBuf(buf, flags | value);
+    } else {
+        mprPutCharToBuf(buf, flags | mask);
+        value -= mask;
+        while (value >= 128) {
+            mprPutCharToBuf(buf, value % 128 + 128);
+            value /= 128;
+        }
+        mprPutCharToBuf(buf, (uchar) value);
+    }
+}
+
+
+/*
+    Encode a string using HPACK.
+ */
+static void encodeString(HttpPacket *packet, cchar *src, uint lower)
+{
+    MprBuf      *buf;
+    cchar       *cp;
+    char        *dp, *encoded;
+    ssize       len, hlen, extra;
+
+    buf = packet->content;
+    len = slen(src);
+
+    /*
+        Encode the string in the buffer. Allow some extra space incase the huff encoding is bigger then src and
+        some room after the end of the buffer for an encoded integer length.
+     */
+    extra = 16;
+    if (mprGetBufSpace(buf) < (len + extra)) {
+        mprGrowBuf(buf, (len + extra) - mprGetBufSpace(buf));
+    }
+    /*
+        Leave room at the end of the buffer for an encoded integer.
+     */
+    encoded = mprGetBufEnd(buf) + (extra / 2);
+    hlen = httpHuffEncode(src, slen(src), encoded, lower);
+    assert((encoded + hlen) < buf->endbuf);
+    assert(hlen < len);
+
+    if (hlen > 0) {
+        encodeInt(packet, HTTP2_ENCODE_HUFF, 7, (uint) hlen);
+        memmove(mprGetBufEnd(buf), encoded, hlen);
+        mprAdjustBufEnd(buf, hlen);
+    } else {
+        encodeInt(packet, 0, 7, (uint) len);
+        if (lower) {
+            for (cp = src, dp = mprGetBufEnd(buf); cp < &src[len]; cp++) {
+                *dp++ = tolower(*cp);
+            }
+            assert(dp < buf->endbuf);
+        } else {
+            memmove(mprGetBufEnd(buf), src, len);
+        }
+        mprAdjustBufEnd(buf, len);
+    }
+    assert(buf->end < buf->endbuf);
+}
+
+
+/*
+    Define a frame in the given packet. If null, allocate a packet.
+ */
+static HttpPacket *defineFrame(HttpQueue *q, HttpPacket *packet, int type, uchar flags, int stream)
+{
+    HttpNet     *net;
+    MprBuf      *buf;
+    ssize       length;
+    cchar       *typeStr;
+
+    net = q->net;
+    if (!packet) {
+        packet = httpCreatePacket(0);
+    }
+    packet->type = type;
+    if ((buf = packet->prefix) == 0) {
+        buf = packet->prefix = mprCreateBuf(HTTP2_FRAME_OVERHEAD, HTTP2_FRAME_OVERHEAD);
+    }
+    length = httpGetPacketLength(packet);
+
+    /*
+        Not yet supporting priority or weight
+     */
+    mprPutUint32ToBuf(buf, (((uint32) length) << 8 | type));
+    mprPutCharToBuf(buf, flags);
+    mprPutUint32ToBuf(buf, stream);
+
+    typeStr = (type < HTTP2_MAX_FRAME) ? packetTypes[type] : "unknown";
+    if (httpTracing(net) && !net->skipTrace) {
+        if (net->bytesWritten >= net->trace->maxContent) {
+            httpTrace(net->trace, "http2.tx", "packet", "msg: 'Abbreviating packet trace'");
+            net->skipTrace = 1;
+        } else {
+            httpTracePacket(net->trace, "http2.tx", "packet", HTTP_TRACE_HEX, packet,
+                "frame=%s, flags=%x, stream=%d, length=%zd,", typeStr, flags, stream, length);
+        }
+    } else {
+        httpTrace(net->trace, "http2.tx", "packet", "frame=%s, flags=%x, stream=%d, length=%zd,", typeStr, flags, stream, length);
+    }
+    return packet;
+}
+
+
+/*
+    Send a HTTP/2 packet downstream to the network
+ */
+static void sendFrame(HttpQueue *q, HttpPacket *packet)
+{
+    if (packet) {
+        httpPutPacket(q->net->socketq, packet);
+    }
+}
+
+
+/*
+    Find a HttpConn stream using the HTTP/2 stream ID
+ */
+static HttpConn *findStream(HttpNet *net, int stream)
+{
+    HttpConn    *conn;
+    int         next;
+
+    for (ITERATE_ITEMS(net->connections, conn, next)) {
+        if (conn->stream == stream) {
+            return conn;
+        }
+    }
+    return 0;
+}
+
+
+/*
+    Garbage collector callback.
+ */
+static void manageFrame(HttpFrame *frame, int flags)
+{
+    assert(frame);
+
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(frame->conn);
+    }
+}
+
+#endif /* ME_HTTP_HTTP2 */
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
+/********* Start of file src/huff.c ************/
+
+/*
+    huff.c - Process HTTP request/response.
+
+    Copyright (c) All Rights Reserved. See details at the end of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+#if ME_HTTP_HTTP2
+/********************************** Forwards **********************************/
+
+#define align(d, a) (((d) + (a - 1)) & ~(a - 1))
+
+static int decodeBits(uchar *state, uchar *ending, uint bits, uchar **dstp);
+static int decodeHuff(uchar *state, uchar *src, int len, uchar *dst, uint last);
+
+/*********************************** Code *************************************/
+
+#if KEEP
+#if ME_64
+    #if (ME_ENDIAN == ME_LITTLE_ENDIAN)
+        #define encodeBuf(dst, buf) \
+            ((dst)[0] = (uchar) ((buf) >> 56), \
+            (dst)[1] = (uchar) ((buf) >> 48),  \
+            (dst)[2] = (uchar) ((buf) >> 40),  \
+            (dst)[3] = (uchar) ((buf) >> 32),  \
+            (dst)[4] = (uchar) ((buf) >> 24),  \
+            (dst)[5] = (uchar) ((buf) >> 16),  \
+            (dst)[6] = (uchar) ((buf) >> 8),   \
+            (dst)[7] = (uchar)  (buf))
+    #else /* BIG_ENDIAN */
+        #define encodeBuf(dst, buf) (*(uint64 *) (dst) = (buf))
+    #endif
+#else /* 32 bit */
+    #define encodeBuf(dst, buf) (*(uint *) (dst) = htonl(buf))
+#endif
+#endif
+
+#define encodeBuf(dst, buf) (*(uint *) (dst) = htonl(buf))
+
+typedef struct Decodes {
+    uchar  next;
+    uchar  emit;
+    uchar  sym;
+    uchar  ending;
+} Decodes;
+
+static Decodes decodes[256][16] = {
+    {
+        {0x04, 0x00, 0x00, 0x00}, {0x05, 0x00, 0x00, 0x00}, {0x07, 0x00, 0x00, 0x00}, {0x08, 0x00, 0x00, 0x00},
+        {0x0b, 0x00, 0x00, 0x00}, {0x0c, 0x00, 0x00, 0x00}, {0x10, 0x00, 0x00, 0x00}, {0x13, 0x00, 0x00, 0x00},
+        {0x19, 0x00, 0x00, 0x00}, {0x1c, 0x00, 0x00, 0x00}, {0x20, 0x00, 0x00, 0x00}, {0x23, 0x00, 0x00, 0x00},
+        {0x2a, 0x00, 0x00, 0x00}, {0x31, 0x00, 0x00, 0x00}, {0x39, 0x00, 0x00, 0x00}, {0x40, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0x30, 0x01}, {0x00, 0x01, 0x31, 0x01}, {0x00, 0x01, 0x32, 0x01}, {0x00, 0x01, 0x61, 0x01},
+        {0x00, 0x01, 0x63, 0x01}, {0x00, 0x01, 0x65, 0x01}, {0x00, 0x01, 0x69, 0x01}, {0x00, 0x01, 0x6f, 0x01},
+        {0x00, 0x01, 0x73, 0x01}, {0x00, 0x01, 0x74, 0x01}, {0x0d, 0x00, 0x00, 0x00}, {0x0e, 0x00, 0x00, 0x00},
+        {0x11, 0x00, 0x00, 0x00}, {0x12, 0x00, 0x00, 0x00}, {0x14, 0x00, 0x00, 0x00}, {0x15, 0x00, 0x00, 0x00}
+    }, {
+        {0x01, 0x01, 0x30, 0x00}, {0x16, 0x01, 0x30, 0x01}, {0x01, 0x01, 0x31, 0x00}, {0x16, 0x01, 0x31, 0x01},
+        {0x01, 0x01, 0x32, 0x00}, {0x16, 0x01, 0x32, 0x01}, {0x01, 0x01, 0x61, 0x00}, {0x16, 0x01, 0x61, 0x01},
+        {0x01, 0x01, 0x63, 0x00}, {0x16, 0x01, 0x63, 0x01}, {0x01, 0x01, 0x65, 0x00}, {0x16, 0x01, 0x65, 0x01},
+        {0x01, 0x01, 0x69, 0x00}, {0x16, 0x01, 0x69, 0x01}, {0x01, 0x01, 0x6f, 0x00}, {0x16, 0x01, 0x6f, 0x01}
+    }, {
+        {0x02, 0x01, 0x30, 0x00}, {0x09, 0x01, 0x30, 0x00}, {0x17, 0x01, 0x30, 0x00}, {0x28, 0x01, 0x30, 0x01},
+        {0x02, 0x01, 0x31, 0x00}, {0x09, 0x01, 0x31, 0x00}, {0x17, 0x01, 0x31, 0x00}, {0x28, 0x01, 0x31, 0x01},
+        {0x02, 0x01, 0x32, 0x00}, {0x09, 0x01, 0x32, 0x00}, {0x17, 0x01, 0x32, 0x00}, {0x28, 0x01, 0x32, 0x01},
+        {0x02, 0x01, 0x61, 0x00}, {0x09, 0x01, 0x61, 0x00}, {0x17, 0x01, 0x61, 0x00}, {0x28, 0x01, 0x61, 0x01}
+    }, {
+        {0x03, 0x01, 0x30, 0x00}, {0x06, 0x01, 0x30, 0x00}, {0x0a, 0x01, 0x30, 0x00}, {0x0f, 0x01, 0x30, 0x00},
+        {0x18, 0x01, 0x30, 0x00}, {0x1f, 0x01, 0x30, 0x00}, {0x29, 0x01, 0x30, 0x00}, {0x38, 0x01, 0x30, 0x01},
+        {0x03, 0x01, 0x31, 0x00}, {0x06, 0x01, 0x31, 0x00}, {0x0a, 0x01, 0x31, 0x00}, {0x0f, 0x01, 0x31, 0x00},
+        {0x18, 0x01, 0x31, 0x00}, {0x1f, 0x01, 0x31, 0x00}, {0x29, 0x01, 0x31, 0x00}, {0x38, 0x01, 0x31, 0x01}
+    }, {
+        {0x03, 0x01, 0x32, 0x00}, {0x06, 0x01, 0x32, 0x00}, {0x0a, 0x01, 0x32, 0x00}, {0x0f, 0x01, 0x32, 0x00},
+        {0x18, 0x01, 0x32, 0x00}, {0x1f, 0x01, 0x32, 0x00}, {0x29, 0x01, 0x32, 0x00}, {0x38, 0x01, 0x32, 0x01},
+        {0x03, 0x01, 0x61, 0x00}, {0x06, 0x01, 0x61, 0x00}, {0x0a, 0x01, 0x61, 0x00}, {0x0f, 0x01, 0x61, 0x00},
+        {0x18, 0x01, 0x61, 0x00}, {0x1f, 0x01, 0x61, 0x00}, {0x29, 0x01, 0x61, 0x00}, {0x38, 0x01, 0x61, 0x01}
+    }, {
+        {0x02, 0x01, 0x63, 0x00}, {0x09, 0x01, 0x63, 0x00}, {0x17, 0x01, 0x63, 0x00}, {0x28, 0x01, 0x63, 0x01},
+        {0x02, 0x01, 0x65, 0x00}, {0x09, 0x01, 0x65, 0x00}, {0x17, 0x01, 0x65, 0x00}, {0x28, 0x01, 0x65, 0x01},
+        {0x02, 0x01, 0x69, 0x00}, {0x09, 0x01, 0x69, 0x00}, {0x17, 0x01, 0x69, 0x00}, {0x28, 0x01, 0x69, 0x01},
+        {0x02, 0x01, 0x6f, 0x00}, {0x09, 0x01, 0x6f, 0x00}, {0x17, 0x01, 0x6f, 0x00}, {0x28, 0x01, 0x6f, 0x01}
+    }, {
+        {0x03, 0x01, 0x63, 0x00}, {0x06, 0x01, 0x63, 0x00}, {0x0a, 0x01, 0x63, 0x00}, {0x0f, 0x01, 0x63, 0x00},
+        {0x18, 0x01, 0x63, 0x00}, {0x1f, 0x01, 0x63, 0x00}, {0x29, 0x01, 0x63, 0x00}, {0x38, 0x01, 0x63, 0x01},
+        {0x03, 0x01, 0x65, 0x00}, {0x06, 0x01, 0x65, 0x00}, {0x0a, 0x01, 0x65, 0x00}, {0x0f, 0x01, 0x65, 0x00},
+        {0x18, 0x01, 0x65, 0x00}, {0x1f, 0x01, 0x65, 0x00}, {0x29, 0x01, 0x65, 0x00}, {0x38, 0x01, 0x65, 0x01}
+    }, {
+        {0x03, 0x01, 0x69, 0x00}, {0x06, 0x01, 0x69, 0x00}, {0x0a, 0x01, 0x69, 0x00}, {0x0f, 0x01, 0x69, 0x00},
+        {0x18, 0x01, 0x69, 0x00}, {0x1f, 0x01, 0x69, 0x00}, {0x29, 0x01, 0x69, 0x00}, {0x38, 0x01, 0x69, 0x01},
+        {0x03, 0x01, 0x6f, 0x00}, {0x06, 0x01, 0x6f, 0x00}, {0x0a, 0x01, 0x6f, 0x00}, {0x0f, 0x01, 0x6f, 0x00},
+        {0x18, 0x01, 0x6f, 0x00}, {0x1f, 0x01, 0x6f, 0x00}, {0x29, 0x01, 0x6f, 0x00}, {0x38, 0x01, 0x6f, 0x01}
+    }, {
+        {0x01, 0x01, 0x73, 0x00}, {0x16, 0x01, 0x73, 0x01}, {0x01, 0x01, 0x74, 0x00}, {0x16, 0x01, 0x74, 0x01},
+        {0x00, 0x01, 0x20, 0x01}, {0x00, 0x01, 0x25, 0x01}, {0x00, 0x01, 0x2d, 0x01}, {0x00, 0x01, 0x2e, 0x01},
+        {0x00, 0x01, 0x2f, 0x01}, {0x00, 0x01, 0x33, 0x01}, {0x00, 0x01, 0x34, 0x01}, {0x00, 0x01, 0x35, 0x01},
+        {0x00, 0x01, 0x36, 0x01}, {0x00, 0x01, 0x37, 0x01}, {0x00, 0x01, 0x38, 0x01}, {0x00, 0x01, 0x39, 0x01}
+    }, {
+        {0x02, 0x01, 0x73, 0x00}, {0x09, 0x01, 0x73, 0x00}, {0x17, 0x01, 0x73, 0x00}, {0x28, 0x01, 0x73, 0x01},
+        {0x02, 0x01, 0x74, 0x00}, {0x09, 0x01, 0x74, 0x00}, {0x17, 0x01, 0x74, 0x00}, {0x28, 0x01, 0x74, 0x01},
+        {0x01, 0x01, 0x20, 0x00}, {0x16, 0x01, 0x20, 0x01}, {0x01, 0x01, 0x25, 0x00}, {0x16, 0x01, 0x25, 0x01},
+        {0x01, 0x01, 0x2d, 0x00}, {0x16, 0x01, 0x2d, 0x01}, {0x01, 0x01, 0x2e, 0x00}, {0x16, 0x01, 0x2e, 0x01}
+    }, {
+        {0x03, 0x01, 0x73, 0x00}, {0x06, 0x01, 0x73, 0x00}, {0x0a, 0x01, 0x73, 0x00}, {0x0f, 0x01, 0x73, 0x00},
+        {0x18, 0x01, 0x73, 0x00}, {0x1f, 0x01, 0x73, 0x00}, {0x29, 0x01, 0x73, 0x00}, {0x38, 0x01, 0x73, 0x01},
+        {0x03, 0x01, 0x74, 0x00}, {0x06, 0x01, 0x74, 0x00}, {0x0a, 0x01, 0x74, 0x00}, {0x0f, 0x01, 0x74, 0x00},
+        {0x18, 0x01, 0x74, 0x00}, {0x1f, 0x01, 0x74, 0x00}, {0x29, 0x01, 0x74, 0x00}, {0x38, 0x01, 0x74, 0x01}
+    }, {
+        {0x02, 0x01, 0x20, 0x00}, {0x09, 0x01, 0x20, 0x00}, {0x17, 0x01, 0x20, 0x00}, {0x28, 0x01, 0x20, 0x01},
+        {0x02, 0x01, 0x25, 0x00}, {0x09, 0x01, 0x25, 0x00}, {0x17, 0x01, 0x25, 0x00}, {0x28, 0x01, 0x25, 0x01},
+        {0x02, 0x01, 0x2d, 0x00}, {0x09, 0x01, 0x2d, 0x00}, {0x17, 0x01, 0x2d, 0x00}, {0x28, 0x01, 0x2d, 0x01},
+        {0x02, 0x01, 0x2e, 0x00}, {0x09, 0x01, 0x2e, 0x00}, {0x17, 0x01, 0x2e, 0x00}, {0x28, 0x01, 0x2e, 0x01}
+    }, {
+        {0x03, 0x01, 0x20, 0x00}, {0x06, 0x01, 0x20, 0x00}, {0x0a, 0x01, 0x20, 0x00}, {0x0f, 0x01, 0x20, 0x00},
+        {0x18, 0x01, 0x20, 0x00}, {0x1f, 0x01, 0x20, 0x00}, {0x29, 0x01, 0x20, 0x00}, {0x38, 0x01, 0x20, 0x01},
+        {0x03, 0x01, 0x25, 0x00}, {0x06, 0x01, 0x25, 0x00}, {0x0a, 0x01, 0x25, 0x00}, {0x0f, 0x01, 0x25, 0x00},
+        {0x18, 0x01, 0x25, 0x00}, {0x1f, 0x01, 0x25, 0x00}, {0x29, 0x01, 0x25, 0x00}, {0x38, 0x01, 0x25, 0x01}
+    }, {
+        {0x03, 0x01, 0x2d, 0x00}, {0x06, 0x01, 0x2d, 0x00}, {0x0a, 0x01, 0x2d, 0x00}, {0x0f, 0x01, 0x2d, 0x00},
+        {0x18, 0x01, 0x2d, 0x00}, {0x1f, 0x01, 0x2d, 0x00}, {0x29, 0x01, 0x2d, 0x00}, {0x38, 0x01, 0x2d, 0x01},
+        {0x03, 0x01, 0x2e, 0x00}, {0x06, 0x01, 0x2e, 0x00}, {0x0a, 0x01, 0x2e, 0x00}, {0x0f, 0x01, 0x2e, 0x00},
+        {0x18, 0x01, 0x2e, 0x00}, {0x1f, 0x01, 0x2e, 0x00}, {0x29, 0x01, 0x2e, 0x00}, {0x38, 0x01, 0x2e, 0x01}
+    }, {
+        {0x01, 0x01, 0x2f, 0x00}, {0x16, 0x01, 0x2f, 0x01}, {0x01, 0x01, 0x33, 0x00}, {0x16, 0x01, 0x33, 0x01},
+        {0x01, 0x01, 0x34, 0x00}, {0x16, 0x01, 0x34, 0x01}, {0x01, 0x01, 0x35, 0x00}, {0x16, 0x01, 0x35, 0x01},
+        {0x01, 0x01, 0x36, 0x00}, {0x16, 0x01, 0x36, 0x01}, {0x01, 0x01, 0x37, 0x00}, {0x16, 0x01, 0x37, 0x01},
+        {0x01, 0x01, 0x38, 0x00}, {0x16, 0x01, 0x38, 0x01}, {0x01, 0x01, 0x39, 0x00}, {0x16, 0x01, 0x39, 0x01}
+    }, {
+        {0x02, 0x01, 0x2f, 0x00}, {0x09, 0x01, 0x2f, 0x00}, {0x17, 0x01, 0x2f, 0x00}, {0x28, 0x01, 0x2f, 0x01},
+        {0x02, 0x01, 0x33, 0x00}, {0x09, 0x01, 0x33, 0x00}, {0x17, 0x01, 0x33, 0x00}, {0x28, 0x01, 0x33, 0x01},
+        {0x02, 0x01, 0x34, 0x00}, {0x09, 0x01, 0x34, 0x00}, {0x17, 0x01, 0x34, 0x00}, {0x28, 0x01, 0x34, 0x01},
+        {0x02, 0x01, 0x35, 0x00}, {0x09, 0x01, 0x35, 0x00}, {0x17, 0x01, 0x35, 0x00}, {0x28, 0x01, 0x35, 0x01}
+    }, {
+        {0x03, 0x01, 0x2f, 0x00}, {0x06, 0x01, 0x2f, 0x00}, {0x0a, 0x01, 0x2f, 0x00}, {0x0f, 0x01, 0x2f, 0x00},
+        {0x18, 0x01, 0x2f, 0x00}, {0x1f, 0x01, 0x2f, 0x00}, {0x29, 0x01, 0x2f, 0x00}, {0x38, 0x01, 0x2f, 0x01},
+        {0x03, 0x01, 0x33, 0x00}, {0x06, 0x01, 0x33, 0x00}, {0x0a, 0x01, 0x33, 0x00}, {0x0f, 0x01, 0x33, 0x00},
+        {0x18, 0x01, 0x33, 0x00}, {0x1f, 0x01, 0x33, 0x00}, {0x29, 0x01, 0x33, 0x00}, {0x38, 0x01, 0x33, 0x01}
+    }, {
+        {0x03, 0x01, 0x34, 0x00}, {0x06, 0x01, 0x34, 0x00}, {0x0a, 0x01, 0x34, 0x00}, {0x0f, 0x01, 0x34, 0x00},
+        {0x18, 0x01, 0x34, 0x00}, {0x1f, 0x01, 0x34, 0x00}, {0x29, 0x01, 0x34, 0x00}, {0x38, 0x01, 0x34, 0x01},
+        {0x03, 0x01, 0x35, 0x00}, {0x06, 0x01, 0x35, 0x00}, {0x0a, 0x01, 0x35, 0x00}, {0x0f, 0x01, 0x35, 0x00},
+        {0x18, 0x01, 0x35, 0x00}, {0x1f, 0x01, 0x35, 0x00}, {0x29, 0x01, 0x35, 0x00}, {0x38, 0x01, 0x35, 0x01}
+    }, {
+        {0x02, 0x01, 0x36, 0x00}, {0x09, 0x01, 0x36, 0x00}, {0x17, 0x01, 0x36, 0x00}, {0x28, 0x01, 0x36, 0x01},
+        {0x02, 0x01, 0x37, 0x00}, {0x09, 0x01, 0x37, 0x00}, {0x17, 0x01, 0x37, 0x00}, {0x28, 0x01, 0x37, 0x01},
+        {0x02, 0x01, 0x38, 0x00}, {0x09, 0x01, 0x38, 0x00}, {0x17, 0x01, 0x38, 0x00}, {0x28, 0x01, 0x38, 0x01},
+        {0x02, 0x01, 0x39, 0x00}, {0x09, 0x01, 0x39, 0x00}, {0x17, 0x01, 0x39, 0x00}, {0x28, 0x01, 0x39, 0x01}
+    }, {
+        {0x03, 0x01, 0x36, 0x00}, {0x06, 0x01, 0x36, 0x00}, {0x0a, 0x01, 0x36, 0x00}, {0x0f, 0x01, 0x36, 0x00},
+        {0x18, 0x01, 0x36, 0x00}, {0x1f, 0x01, 0x36, 0x00}, {0x29, 0x01, 0x36, 0x00}, {0x38, 0x01, 0x36, 0x01},
+        {0x03, 0x01, 0x37, 0x00}, {0x06, 0x01, 0x37, 0x00}, {0x0a, 0x01, 0x37, 0x00}, {0x0f, 0x01, 0x37, 0x00},
+        {0x18, 0x01, 0x37, 0x00}, {0x1f, 0x01, 0x37, 0x00}, {0x29, 0x01, 0x37, 0x00}, {0x38, 0x01, 0x37, 0x01}
+    }, {
+        {0x03, 0x01, 0x38, 0x00}, {0x06, 0x01, 0x38, 0x00}, {0x0a, 0x01, 0x38, 0x00}, {0x0f, 0x01, 0x38, 0x00},
+        {0x18, 0x01, 0x38, 0x00}, {0x1f, 0x01, 0x38, 0x00}, {0x29, 0x01, 0x38, 0x00}, {0x38, 0x01, 0x38, 0x01},
+        {0x03, 0x01, 0x39, 0x00}, {0x06, 0x01, 0x39, 0x00}, {0x0a, 0x01, 0x39, 0x00}, {0x0f, 0x01, 0x39, 0x00},
+        {0x18, 0x01, 0x39, 0x00}, {0x1f, 0x01, 0x39, 0x00}, {0x29, 0x01, 0x39, 0x00}, {0x38, 0x01, 0x39, 0x01}
+    }, {
+        {0x1a, 0x00, 0x00, 0x00}, {0x1b, 0x00, 0x00, 0x00}, {0x1d, 0x00, 0x00, 0x00}, {0x1e, 0x00, 0x00, 0x00},
+        {0x21, 0x00, 0x00, 0x00}, {0x22, 0x00, 0x00, 0x00}, {0x24, 0x00, 0x00, 0x00}, {0x25, 0x00, 0x00, 0x00},
+        {0x2b, 0x00, 0x00, 0x00}, {0x2e, 0x00, 0x00, 0x00}, {0x32, 0x00, 0x00, 0x00}, {0x35, 0x00, 0x00, 0x00},
+        {0x3a, 0x00, 0x00, 0x00}, {0x3d, 0x00, 0x00, 0x00}, {0x41, 0x00, 0x00, 0x00}, {0x44, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0x3d, 0x01}, {0x00, 0x01, 0x41, 0x01}, {0x00, 0x01, 0x5f, 0x01}, {0x00, 0x01, 0x62, 0x01},
+        {0x00, 0x01, 0x64, 0x01}, {0x00, 0x01, 0x66, 0x01}, {0x00, 0x01, 0x67, 0x01}, {0x00, 0x01, 0x68, 0x01},
+        {0x00, 0x01, 0x6c, 0x01}, {0x00, 0x01, 0x6d, 0x01}, {0x00, 0x01, 0x6e, 0x01}, {0x00, 0x01, 0x70, 0x01},
+        {0x00, 0x01, 0x72, 0x01}, {0x00, 0x01, 0x75, 0x01}, {0x26, 0x00, 0x00, 0x00}, {0x27, 0x00, 0x00, 0x00}
+    }, {
+        {0x01, 0x01, 0x3d, 0x00}, {0x16, 0x01, 0x3d, 0x01}, {0x01, 0x01, 0x41, 0x00}, {0x16, 0x01, 0x41, 0x01},
+        {0x01, 0x01, 0x5f, 0x00}, {0x16, 0x01, 0x5f, 0x01}, {0x01, 0x01, 0x62, 0x00}, {0x16, 0x01, 0x62, 0x01},
+        {0x01, 0x01, 0x64, 0x00}, {0x16, 0x01, 0x64, 0x01}, {0x01, 0x01, 0x66, 0x00}, {0x16, 0x01, 0x66, 0x01},
+        {0x01, 0x01, 0x67, 0x00}, {0x16, 0x01, 0x67, 0x01}, {0x01, 0x01, 0x68, 0x00}, {0x16, 0x01, 0x68, 0x01}
+    }, {
+        {0x02, 0x01, 0x3d, 0x00}, {0x09, 0x01, 0x3d, 0x00}, {0x17, 0x01, 0x3d, 0x00}, {0x28, 0x01, 0x3d, 0x01},
+        {0x02, 0x01, 0x41, 0x00}, {0x09, 0x01, 0x41, 0x00}, {0x17, 0x01, 0x41, 0x00}, {0x28, 0x01, 0x41, 0x01},
+        {0x02, 0x01, 0x5f, 0x00}, {0x09, 0x01, 0x5f, 0x00}, {0x17, 0x01, 0x5f, 0x00}, {0x28, 0x01, 0x5f, 0x01},
+        {0x02, 0x01, 0x62, 0x00}, {0x09, 0x01, 0x62, 0x00}, {0x17, 0x01, 0x62, 0x00}, {0x28, 0x01, 0x62, 0x01}
+    }, {
+        {0x03, 0x01, 0x3d, 0x00}, {0x06, 0x01, 0x3d, 0x00}, {0x0a, 0x01, 0x3d, 0x00}, {0x0f, 0x01, 0x3d, 0x00},
+        {0x18, 0x01, 0x3d, 0x00}, {0x1f, 0x01, 0x3d, 0x00}, {0x29, 0x01, 0x3d, 0x00}, {0x38, 0x01, 0x3d, 0x01},
+        {0x03, 0x01, 0x41, 0x00}, {0x06, 0x01, 0x41, 0x00}, {0x0a, 0x01, 0x41, 0x00}, {0x0f, 0x01, 0x41, 0x00},
+        {0x18, 0x01, 0x41, 0x00}, {0x1f, 0x01, 0x41, 0x00}, {0x29, 0x01, 0x41, 0x00}, {0x38, 0x01, 0x41, 0x01}
+    }, {
+        {0x03, 0x01, 0x5f, 0x00}, {0x06, 0x01, 0x5f, 0x00}, {0x0a, 0x01, 0x5f, 0x00}, {0x0f, 0x01, 0x5f, 0x00},
+        {0x18, 0x01, 0x5f, 0x00}, {0x1f, 0x01, 0x5f, 0x00}, {0x29, 0x01, 0x5f, 0x00}, {0x38, 0x01, 0x5f, 0x01},
+        {0x03, 0x01, 0x62, 0x00}, {0x06, 0x01, 0x62, 0x00}, {0x0a, 0x01, 0x62, 0x00}, {0x0f, 0x01, 0x62, 0x00},
+        {0x18, 0x01, 0x62, 0x00}, {0x1f, 0x01, 0x62, 0x00}, {0x29, 0x01, 0x62, 0x00}, {0x38, 0x01, 0x62, 0x01}
+    }, {
+        {0x02, 0x01, 0x64, 0x00}, {0x09, 0x01, 0x64, 0x00}, {0x17, 0x01, 0x64, 0x00}, {0x28, 0x01, 0x64, 0x01},
+        {0x02, 0x01, 0x66, 0x00}, {0x09, 0x01, 0x66, 0x00}, {0x17, 0x01, 0x66, 0x00}, {0x28, 0x01, 0x66, 0x01},
+        {0x02, 0x01, 0x67, 0x00}, {0x09, 0x01, 0x67, 0x00}, {0x17, 0x01, 0x67, 0x00}, {0x28, 0x01, 0x67, 0x01},
+        {0x02, 0x01, 0x68, 0x00}, {0x09, 0x01, 0x68, 0x00}, {0x17, 0x01, 0x68, 0x00}, {0x28, 0x01, 0x68, 0x01}
+    }, {
+        {0x03, 0x01, 0x64, 0x00}, {0x06, 0x01, 0x64, 0x00}, {0x0a, 0x01, 0x64, 0x00}, {0x0f, 0x01, 0x64, 0x00},
+        {0x18, 0x01, 0x64, 0x00}, {0x1f, 0x01, 0x64, 0x00}, {0x29, 0x01, 0x64, 0x00}, {0x38, 0x01, 0x64, 0x01},
+        {0x03, 0x01, 0x66, 0x00}, {0x06, 0x01, 0x66, 0x00}, {0x0a, 0x01, 0x66, 0x00}, {0x0f, 0x01, 0x66, 0x00},
+        {0x18, 0x01, 0x66, 0x00}, {0x1f, 0x01, 0x66, 0x00}, {0x29, 0x01, 0x66, 0x00}, {0x38, 0x01, 0x66, 0x01}
+    }, {
+        {0x03, 0x01, 0x67, 0x00}, {0x06, 0x01, 0x67, 0x00}, {0x0a, 0x01, 0x67, 0x00}, {0x0f, 0x01, 0x67, 0x00},
+        {0x18, 0x01, 0x67, 0x00}, {0x1f, 0x01, 0x67, 0x00}, {0x29, 0x01, 0x67, 0x00}, {0x38, 0x01, 0x67, 0x01},
+        {0x03, 0x01, 0x68, 0x00}, {0x06, 0x01, 0x68, 0x00}, {0x0a, 0x01, 0x68, 0x00}, {0x0f, 0x01, 0x68, 0x00},
+        {0x18, 0x01, 0x68, 0x00}, {0x1f, 0x01, 0x68, 0x00}, {0x29, 0x01, 0x68, 0x00}, {0x38, 0x01, 0x68, 0x01}
+    }, {
+        {0x01, 0x01, 0x6c, 0x00}, {0x16, 0x01, 0x6c, 0x01}, {0x01, 0x01, 0x6d, 0x00}, {0x16, 0x01, 0x6d, 0x01},
+        {0x01, 0x01, 0x6e, 0x00}, {0x16, 0x01, 0x6e, 0x01}, {0x01, 0x01, 0x70, 0x00}, {0x16, 0x01, 0x70, 0x01},
+        {0x01, 0x01, 0x72, 0x00}, {0x16, 0x01, 0x72, 0x01}, {0x01, 0x01, 0x75, 0x00}, {0x16, 0x01, 0x75, 0x01},
+        {0x00, 0x01, 0x3a, 0x01}, {0x00, 0x01, 0x42, 0x01}, {0x00, 0x01, 0x43, 0x01}, {0x00, 0x01, 0x44, 0x01}
+    }, {
+        {0x02, 0x01, 0x6c, 0x00}, {0x09, 0x01, 0x6c, 0x00}, {0x17, 0x01, 0x6c, 0x00}, {0x28, 0x01, 0x6c, 0x01},
+        {0x02, 0x01, 0x6d, 0x00}, {0x09, 0x01, 0x6d, 0x00}, {0x17, 0x01, 0x6d, 0x00}, {0x28, 0x01, 0x6d, 0x01},
+        {0x02, 0x01, 0x6e, 0x00}, {0x09, 0x01, 0x6e, 0x00}, {0x17, 0x01, 0x6e, 0x00}, {0x28, 0x01, 0x6e, 0x01},
+        {0x02, 0x01, 0x70, 0x00}, {0x09, 0x01, 0x70, 0x00}, {0x17, 0x01, 0x70, 0x00}, {0x28, 0x01, 0x70, 0x01}
+    }, {
+        {0x03, 0x01, 0x6c, 0x00}, {0x06, 0x01, 0x6c, 0x00}, {0x0a, 0x01, 0x6c, 0x00}, {0x0f, 0x01, 0x6c, 0x00},
+        {0x18, 0x01, 0x6c, 0x00}, {0x1f, 0x01, 0x6c, 0x00}, {0x29, 0x01, 0x6c, 0x00}, {0x38, 0x01, 0x6c, 0x01},
+        {0x03, 0x01, 0x6d, 0x00}, {0x06, 0x01, 0x6d, 0x00}, {0x0a, 0x01, 0x6d, 0x00}, {0x0f, 0x01, 0x6d, 0x00},
+        {0x18, 0x01, 0x6d, 0x00}, {0x1f, 0x01, 0x6d, 0x00}, {0x29, 0x01, 0x6d, 0x00}, {0x38, 0x01, 0x6d, 0x01}
+    }, {
+        {0x03, 0x01, 0x6e, 0x00}, {0x06, 0x01, 0x6e, 0x00}, {0x0a, 0x01, 0x6e, 0x00}, {0x0f, 0x01, 0x6e, 0x00},
+        {0x18, 0x01, 0x6e, 0x00}, {0x1f, 0x01, 0x6e, 0x00}, {0x29, 0x01, 0x6e, 0x00}, {0x38, 0x01, 0x6e, 0x01},
+        {0x03, 0x01, 0x70, 0x00}, {0x06, 0x01, 0x70, 0x00}, {0x0a, 0x01, 0x70, 0x00}, {0x0f, 0x01, 0x70, 0x00},
+        {0x18, 0x01, 0x70, 0x00}, {0x1f, 0x01, 0x70, 0x00}, {0x29, 0x01, 0x70, 0x00}, {0x38, 0x01, 0x70, 0x01}
+    }, {
+        {0x02, 0x01, 0x72, 0x00}, {0x09, 0x01, 0x72, 0x00}, {0x17, 0x01, 0x72, 0x00}, {0x28, 0x01, 0x72, 0x01},
+        {0x02, 0x01, 0x75, 0x00}, {0x09, 0x01, 0x75, 0x00}, {0x17, 0x01, 0x75, 0x00}, {0x28, 0x01, 0x75, 0x01},
+        {0x01, 0x01, 0x3a, 0x00}, {0x16, 0x01, 0x3a, 0x01}, {0x01, 0x01, 0x42, 0x00}, {0x16, 0x01, 0x42, 0x01},
+        {0x01, 0x01, 0x43, 0x00}, {0x16, 0x01, 0x43, 0x01}, {0x01, 0x01, 0x44, 0x00}, {0x16, 0x01, 0x44, 0x01}
+    }, {
+        {0x03, 0x01, 0x72, 0x00}, {0x06, 0x01, 0x72, 0x00}, {0x0a, 0x01, 0x72, 0x00}, {0x0f, 0x01, 0x72, 0x00},
+        {0x18, 0x01, 0x72, 0x00}, {0x1f, 0x01, 0x72, 0x00}, {0x29, 0x01, 0x72, 0x00}, {0x38, 0x01, 0x72, 0x01},
+        {0x03, 0x01, 0x75, 0x00}, {0x06, 0x01, 0x75, 0x00}, {0x0a, 0x01, 0x75, 0x00}, {0x0f, 0x01, 0x75, 0x00},
+        {0x18, 0x01, 0x75, 0x00}, {0x1f, 0x01, 0x75, 0x00}, {0x29, 0x01, 0x75, 0x00}, {0x38, 0x01, 0x75, 0x01}
+    }, {
+        {0x02, 0x01, 0x3a, 0x00}, {0x09, 0x01, 0x3a, 0x00}, {0x17, 0x01, 0x3a, 0x00}, {0x28, 0x01, 0x3a, 0x01},
+        {0x02, 0x01, 0x42, 0x00}, {0x09, 0x01, 0x42, 0x00}, {0x17, 0x01, 0x42, 0x00}, {0x28, 0x01, 0x42, 0x01},
+        {0x02, 0x01, 0x43, 0x00}, {0x09, 0x01, 0x43, 0x00}, {0x17, 0x01, 0x43, 0x00}, {0x28, 0x01, 0x43, 0x01},
+        {0x02, 0x01, 0x44, 0x00}, {0x09, 0x01, 0x44, 0x00}, {0x17, 0x01, 0x44, 0x00}, {0x28, 0x01, 0x44, 0x01}
+    }, {
+        {0x03, 0x01, 0x3a, 0x00}, {0x06, 0x01, 0x3a, 0x00}, {0x0a, 0x01, 0x3a, 0x00}, {0x0f, 0x01, 0x3a, 0x00},
+        {0x18, 0x01, 0x3a, 0x00}, {0x1f, 0x01, 0x3a, 0x00}, {0x29, 0x01, 0x3a, 0x00}, {0x38, 0x01, 0x3a, 0x01},
+        {0x03, 0x01, 0x42, 0x00}, {0x06, 0x01, 0x42, 0x00}, {0x0a, 0x01, 0x42, 0x00}, {0x0f, 0x01, 0x42, 0x00},
+        {0x18, 0x01, 0x42, 0x00}, {0x1f, 0x01, 0x42, 0x00}, {0x29, 0x01, 0x42, 0x00}, {0x38, 0x01, 0x42, 0x01}
+    }, {
+        {0x03, 0x01, 0x43, 0x00}, {0x06, 0x01, 0x43, 0x00}, {0x0a, 0x01, 0x43, 0x00}, {0x0f, 0x01, 0x43, 0x00},
+        {0x18, 0x01, 0x43, 0x00}, {0x1f, 0x01, 0x43, 0x00}, {0x29, 0x01, 0x43, 0x00}, {0x38, 0x01, 0x43, 0x01},
+        {0x03, 0x01, 0x44, 0x00}, {0x06, 0x01, 0x44, 0x00}, {0x0a, 0x01, 0x44, 0x00}, {0x0f, 0x01, 0x44, 0x00},
+        {0x18, 0x01, 0x44, 0x00}, {0x1f, 0x01, 0x44, 0x00}, {0x29, 0x01, 0x44, 0x00}, {0x38, 0x01, 0x44, 0x01}
+    }, {
+        {0x2c, 0x00, 0x00, 0x00}, {0x2d, 0x00, 0x00, 0x00}, {0x2f, 0x00, 0x00, 0x00}, {0x30, 0x00, 0x00, 0x00},
+        {0x33, 0x00, 0x00, 0x00}, {0x34, 0x00, 0x00, 0x00}, {0x36, 0x00, 0x00, 0x00}, {0x37, 0x00, 0x00, 0x00},
+        {0x3b, 0x00, 0x00, 0x00}, {0x3c, 0x00, 0x00, 0x00}, {0x3e, 0x00, 0x00, 0x00}, {0x3f, 0x00, 0x00, 0x00},
+        {0x42, 0x00, 0x00, 0x00}, {0x43, 0x00, 0x00, 0x00}, {0x45, 0x00, 0x00, 0x00}, {0x48, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0x45, 0x01}, {0x00, 0x01, 0x46, 0x01}, {0x00, 0x01, 0x47, 0x01}, {0x00, 0x01, 0x48, 0x01},
+        {0x00, 0x01, 0x49, 0x01}, {0x00, 0x01, 0x4a, 0x01}, {0x00, 0x01, 0x4b, 0x01}, {0x00, 0x01, 0x4c, 0x01},
+        {0x00, 0x01, 0x4d, 0x01}, {0x00, 0x01, 0x4e, 0x01}, {0x00, 0x01, 0x4f, 0x01}, {0x00, 0x01, 0x50, 0x01},
+        {0x00, 0x01, 0x51, 0x01}, {0x00, 0x01, 0x52, 0x01}, {0x00, 0x01, 0x53, 0x01}, {0x00, 0x01, 0x54, 0x01}
+    }, {
+        {0x01, 0x01, 0x45, 0x00}, {0x16, 0x01, 0x45, 0x01}, {0x01, 0x01, 0x46, 0x00}, {0x16, 0x01, 0x46, 0x01},
+        {0x01, 0x01, 0x47, 0x00}, {0x16, 0x01, 0x47, 0x01}, {0x01, 0x01, 0x48, 0x00}, {0x16, 0x01, 0x48, 0x01},
+        {0x01, 0x01, 0x49, 0x00}, {0x16, 0x01, 0x49, 0x01}, {0x01, 0x01, 0x4a, 0x00}, {0x16, 0x01, 0x4a, 0x01},
+        {0x01, 0x01, 0x4b, 0x00}, {0x16, 0x01, 0x4b, 0x01}, {0x01, 0x01, 0x4c, 0x00}, {0x16, 0x01, 0x4c, 0x01}
+    }, {
+        {0x02, 0x01, 0x45, 0x00}, {0x09, 0x01, 0x45, 0x00}, {0x17, 0x01, 0x45, 0x00}, {0x28, 0x01, 0x45, 0x01},
+        {0x02, 0x01, 0x46, 0x00}, {0x09, 0x01, 0x46, 0x00}, {0x17, 0x01, 0x46, 0x00}, {0x28, 0x01, 0x46, 0x01},
+        {0x02, 0x01, 0x47, 0x00}, {0x09, 0x01, 0x47, 0x00}, {0x17, 0x01, 0x47, 0x00}, {0x28, 0x01, 0x47, 0x01},
+        {0x02, 0x01, 0x48, 0x00}, {0x09, 0x01, 0x48, 0x00}, {0x17, 0x01, 0x48, 0x00}, {0x28, 0x01, 0x48, 0x01}
+    }, {
+        {0x03, 0x01, 0x45, 0x00}, {0x06, 0x01, 0x45, 0x00}, {0x0a, 0x01, 0x45, 0x00}, {0x0f, 0x01, 0x45, 0x00},
+        {0x18, 0x01, 0x45, 0x00}, {0x1f, 0x01, 0x45, 0x00}, {0x29, 0x01, 0x45, 0x00}, {0x38, 0x01, 0x45, 0x01},
+        {0x03, 0x01, 0x46, 0x00}, {0x06, 0x01, 0x46, 0x00}, {0x0a, 0x01, 0x46, 0x00}, {0x0f, 0x01, 0x46, 0x00},
+        {0x18, 0x01, 0x46, 0x00}, {0x1f, 0x01, 0x46, 0x00}, {0x29, 0x01, 0x46, 0x00}, {0x38, 0x01, 0x46, 0x01}
+    }, {
+        {0x03, 0x01, 0x47, 0x00}, {0x06, 0x01, 0x47, 0x00}, {0x0a, 0x01, 0x47, 0x00}, {0x0f, 0x01, 0x47, 0x00},
+        {0x18, 0x01, 0x47, 0x00}, {0x1f, 0x01, 0x47, 0x00}, {0x29, 0x01, 0x47, 0x00}, {0x38, 0x01, 0x47, 0x01},
+        {0x03, 0x01, 0x48, 0x00}, {0x06, 0x01, 0x48, 0x00}, {0x0a, 0x01, 0x48, 0x00}, {0x0f, 0x01, 0x48, 0x00},
+        {0x18, 0x01, 0x48, 0x00}, {0x1f, 0x01, 0x48, 0x00}, {0x29, 0x01, 0x48, 0x00}, {0x38, 0x01, 0x48, 0x01}
+    }, {
+        {0x02, 0x01, 0x49, 0x00}, {0x09, 0x01, 0x49, 0x00}, {0x17, 0x01, 0x49, 0x00}, {0x28, 0x01, 0x49, 0x01},
+        {0x02, 0x01, 0x4a, 0x00}, {0x09, 0x01, 0x4a, 0x00}, {0x17, 0x01, 0x4a, 0x00}, {0x28, 0x01, 0x4a, 0x01},
+        {0x02, 0x01, 0x4b, 0x00}, {0x09, 0x01, 0x4b, 0x00}, {0x17, 0x01, 0x4b, 0x00}, {0x28, 0x01, 0x4b, 0x01},
+        {0x02, 0x01, 0x4c, 0x00}, {0x09, 0x01, 0x4c, 0x00}, {0x17, 0x01, 0x4c, 0x00}, {0x28, 0x01, 0x4c, 0x01}
+    }, {
+        {0x03, 0x01, 0x49, 0x00}, {0x06, 0x01, 0x49, 0x00}, {0x0a, 0x01, 0x49, 0x00}, {0x0f, 0x01, 0x49, 0x00},
+        {0x18, 0x01, 0x49, 0x00}, {0x1f, 0x01, 0x49, 0x00}, {0x29, 0x01, 0x49, 0x00}, {0x38, 0x01, 0x49, 0x01},
+        {0x03, 0x01, 0x4a, 0x00}, {0x06, 0x01, 0x4a, 0x00}, {0x0a, 0x01, 0x4a, 0x00}, {0x0f, 0x01, 0x4a, 0x00},
+        {0x18, 0x01, 0x4a, 0x00}, {0x1f, 0x01, 0x4a, 0x00}, {0x29, 0x01, 0x4a, 0x00}, {0x38, 0x01, 0x4a, 0x01}
+    }, {
+        {0x03, 0x01, 0x4b, 0x00}, {0x06, 0x01, 0x4b, 0x00}, {0x0a, 0x01, 0x4b, 0x00}, {0x0f, 0x01, 0x4b, 0x00},
+        {0x18, 0x01, 0x4b, 0x00}, {0x1f, 0x01, 0x4b, 0x00}, {0x29, 0x01, 0x4b, 0x00}, {0x38, 0x01, 0x4b, 0x01},
+        {0x03, 0x01, 0x4c, 0x00}, {0x06, 0x01, 0x4c, 0x00}, {0x0a, 0x01, 0x4c, 0x00}, {0x0f, 0x01, 0x4c, 0x00},
+        {0x18, 0x01, 0x4c, 0x00}, {0x1f, 0x01, 0x4c, 0x00}, {0x29, 0x01, 0x4c, 0x00}, {0x38, 0x01, 0x4c, 0x01}
+    }, {
+        {0x01, 0x01, 0x4d, 0x00}, {0x16, 0x01, 0x4d, 0x01}, {0x01, 0x01, 0x4e, 0x00}, {0x16, 0x01, 0x4e, 0x01},
+        {0x01, 0x01, 0x4f, 0x00}, {0x16, 0x01, 0x4f, 0x01}, {0x01, 0x01, 0x50, 0x00}, {0x16, 0x01, 0x50, 0x01},
+        {0x01, 0x01, 0x51, 0x00}, {0x16, 0x01, 0x51, 0x01}, {0x01, 0x01, 0x52, 0x00}, {0x16, 0x01, 0x52, 0x01},
+        {0x01, 0x01, 0x53, 0x00}, {0x16, 0x01, 0x53, 0x01}, {0x01, 0x01, 0x54, 0x00}, {0x16, 0x01, 0x54, 0x01}
+    }, {
+        {0x02, 0x01, 0x4d, 0x00}, {0x09, 0x01, 0x4d, 0x00}, {0x17, 0x01, 0x4d, 0x00}, {0x28, 0x01, 0x4d, 0x01},
+        {0x02, 0x01, 0x4e, 0x00}, {0x09, 0x01, 0x4e, 0x00}, {0x17, 0x01, 0x4e, 0x00}, {0x28, 0x01, 0x4e, 0x01},
+        {0x02, 0x01, 0x4f, 0x00}, {0x09, 0x01, 0x4f, 0x00}, {0x17, 0x01, 0x4f, 0x00}, {0x28, 0x01, 0x4f, 0x01},
+        {0x02, 0x01, 0x50, 0x00}, {0x09, 0x01, 0x50, 0x00}, {0x17, 0x01, 0x50, 0x00}, {0x28, 0x01, 0x50, 0x01}
+    }, {
+        {0x03, 0x01, 0x4d, 0x00}, {0x06, 0x01, 0x4d, 0x00}, {0x0a, 0x01, 0x4d, 0x00}, {0x0f, 0x01, 0x4d, 0x00},
+        {0x18, 0x01, 0x4d, 0x00}, {0x1f, 0x01, 0x4d, 0x00}, {0x29, 0x01, 0x4d, 0x00}, {0x38, 0x01, 0x4d, 0x01},
+        {0x03, 0x01, 0x4e, 0x00}, {0x06, 0x01, 0x4e, 0x00}, {0x0a, 0x01, 0x4e, 0x00}, {0x0f, 0x01, 0x4e, 0x00},
+        {0x18, 0x01, 0x4e, 0x00}, {0x1f, 0x01, 0x4e, 0x00}, {0x29, 0x01, 0x4e, 0x00}, {0x38, 0x01, 0x4e, 0x01}
+    }, {
+        {0x03, 0x01, 0x4f, 0x00}, {0x06, 0x01, 0x4f, 0x00}, {0x0a, 0x01, 0x4f, 0x00}, {0x0f, 0x01, 0x4f, 0x00},
+        {0x18, 0x01, 0x4f, 0x00}, {0x1f, 0x01, 0x4f, 0x00}, {0x29, 0x01, 0x4f, 0x00}, {0x38, 0x01, 0x4f, 0x01},
+        {0x03, 0x01, 0x50, 0x00}, {0x06, 0x01, 0x50, 0x00}, {0x0a, 0x01, 0x50, 0x00}, {0x0f, 0x01, 0x50, 0x00},
+        {0x18, 0x01, 0x50, 0x00}, {0x1f, 0x01, 0x50, 0x00}, {0x29, 0x01, 0x50, 0x00}, {0x38, 0x01, 0x50, 0x01}
+    }, {
+        {0x02, 0x01, 0x51, 0x00}, {0x09, 0x01, 0x51, 0x00}, {0x17, 0x01, 0x51, 0x00}, {0x28, 0x01, 0x51, 0x01},
+        {0x02, 0x01, 0x52, 0x00}, {0x09, 0x01, 0x52, 0x00}, {0x17, 0x01, 0x52, 0x00}, {0x28, 0x01, 0x52, 0x01},
+        {0x02, 0x01, 0x53, 0x00}, {0x09, 0x01, 0x53, 0x00}, {0x17, 0x01, 0x53, 0x00}, {0x28, 0x01, 0x53, 0x01},
+        {0x02, 0x01, 0x54, 0x00}, {0x09, 0x01, 0x54, 0x00}, {0x17, 0x01, 0x54, 0x00}, {0x28, 0x01, 0x54, 0x01}
+    }, {
+        {0x03, 0x01, 0x51, 0x00}, {0x06, 0x01, 0x51, 0x00}, {0x0a, 0x01, 0x51, 0x00}, {0x0f, 0x01, 0x51, 0x00},
+        {0x18, 0x01, 0x51, 0x00}, {0x1f, 0x01, 0x51, 0x00}, {0x29, 0x01, 0x51, 0x00}, {0x38, 0x01, 0x51, 0x01},
+        {0x03, 0x01, 0x52, 0x00}, {0x06, 0x01, 0x52, 0x00}, {0x0a, 0x01, 0x52, 0x00}, {0x0f, 0x01, 0x52, 0x00},
+        {0x18, 0x01, 0x52, 0x00}, {0x1f, 0x01, 0x52, 0x00}, {0x29, 0x01, 0x52, 0x00}, {0x38, 0x01, 0x52, 0x01}
+    }, {
+        {0x03, 0x01, 0x53, 0x00}, {0x06, 0x01, 0x53, 0x00}, {0x0a, 0x01, 0x53, 0x00}, {0x0f, 0x01, 0x53, 0x00},
+        {0x18, 0x01, 0x53, 0x00}, {0x1f, 0x01, 0x53, 0x00}, {0x29, 0x01, 0x53, 0x00}, {0x38, 0x01, 0x53, 0x01},
+        {0x03, 0x01, 0x54, 0x00}, {0x06, 0x01, 0x54, 0x00}, {0x0a, 0x01, 0x54, 0x00}, {0x0f, 0x01, 0x54, 0x00},
+        {0x18, 0x01, 0x54, 0x00}, {0x1f, 0x01, 0x54, 0x00}, {0x29, 0x01, 0x54, 0x00}, {0x38, 0x01, 0x54, 0x01}
+    }, {
+        {0x00, 0x01, 0x55, 0x01}, {0x00, 0x01, 0x56, 0x01}, {0x00, 0x01, 0x57, 0x01}, {0x00, 0x01, 0x59, 0x01},
+        {0x00, 0x01, 0x6a, 0x01}, {0x00, 0x01, 0x6b, 0x01}, {0x00, 0x01, 0x71, 0x01}, {0x00, 0x01, 0x76, 0x01},
+        {0x00, 0x01, 0x77, 0x01}, {0x00, 0x01, 0x78, 0x01}, {0x00, 0x01, 0x79, 0x01}, {0x00, 0x01, 0x7a, 0x01},
+        {0x46, 0x00, 0x00, 0x00}, {0x47, 0x00, 0x00, 0x00}, {0x49, 0x00, 0x00, 0x00}, {0x4a, 0x00, 0x00, 0x01}
+    }, {
+        {0x01, 0x01, 0x55, 0x00}, {0x16, 0x01, 0x55, 0x01}, {0x01, 0x01, 0x56, 0x00}, {0x16, 0x01, 0x56, 0x01},
+        {0x01, 0x01, 0x57, 0x00}, {0x16, 0x01, 0x57, 0x01}, {0x01, 0x01, 0x59, 0x00}, {0x16, 0x01, 0x59, 0x01},
+        {0x01, 0x01, 0x6a, 0x00}, {0x16, 0x01, 0x6a, 0x01}, {0x01, 0x01, 0x6b, 0x00}, {0x16, 0x01, 0x6b, 0x01},
+        {0x01, 0x01, 0x71, 0x00}, {0x16, 0x01, 0x71, 0x01}, {0x01, 0x01, 0x76, 0x00}, {0x16, 0x01, 0x76, 0x01}
+    }, {
+        {0x02, 0x01, 0x55, 0x00}, {0x09, 0x01, 0x55, 0x00}, {0x17, 0x01, 0x55, 0x00}, {0x28, 0x01, 0x55, 0x01},
+        {0x02, 0x01, 0x56, 0x00}, {0x09, 0x01, 0x56, 0x00}, {0x17, 0x01, 0x56, 0x00}, {0x28, 0x01, 0x56, 0x01},
+        {0x02, 0x01, 0x57, 0x00}, {0x09, 0x01, 0x57, 0x00}, {0x17, 0x01, 0x57, 0x00}, {0x28, 0x01, 0x57, 0x01},
+        {0x02, 0x01, 0x59, 0x00}, {0x09, 0x01, 0x59, 0x00}, {0x17, 0x01, 0x59, 0x00}, {0x28, 0x01, 0x59, 0x01}
+    }, {
+        {0x03, 0x01, 0x55, 0x00}, {0x06, 0x01, 0x55, 0x00}, {0x0a, 0x01, 0x55, 0x00}, {0x0f, 0x01, 0x55, 0x00},
+        {0x18, 0x01, 0x55, 0x00}, {0x1f, 0x01, 0x55, 0x00}, {0x29, 0x01, 0x55, 0x00}, {0x38, 0x01, 0x55, 0x01},
+        {0x03, 0x01, 0x56, 0x00}, {0x06, 0x01, 0x56, 0x00}, {0x0a, 0x01, 0x56, 0x00}, {0x0f, 0x01, 0x56, 0x00},
+        {0x18, 0x01, 0x56, 0x00}, {0x1f, 0x01, 0x56, 0x00}, {0x29, 0x01, 0x56, 0x00}, {0x38, 0x01, 0x56, 0x01}
+    }, {
+        {0x03, 0x01, 0x57, 0x00}, {0x06, 0x01, 0x57, 0x00}, {0x0a, 0x01, 0x57, 0x00}, {0x0f, 0x01, 0x57, 0x00},
+        {0x18, 0x01, 0x57, 0x00}, {0x1f, 0x01, 0x57, 0x00}, {0x29, 0x01, 0x57, 0x00}, {0x38, 0x01, 0x57, 0x01},
+        {0x03, 0x01, 0x59, 0x00}, {0x06, 0x01, 0x59, 0x00}, {0x0a, 0x01, 0x59, 0x00}, {0x0f, 0x01, 0x59, 0x00},
+        {0x18, 0x01, 0x59, 0x00}, {0x1f, 0x01, 0x59, 0x00}, {0x29, 0x01, 0x59, 0x00}, {0x38, 0x01, 0x59, 0x01}
+    }, {
+        {0x02, 0x01, 0x6a, 0x00}, {0x09, 0x01, 0x6a, 0x00}, {0x17, 0x01, 0x6a, 0x00}, {0x28, 0x01, 0x6a, 0x01},
+        {0x02, 0x01, 0x6b, 0x00}, {0x09, 0x01, 0x6b, 0x00}, {0x17, 0x01, 0x6b, 0x00}, {0x28, 0x01, 0x6b, 0x01},
+        {0x02, 0x01, 0x71, 0x00}, {0x09, 0x01, 0x71, 0x00}, {0x17, 0x01, 0x71, 0x00}, {0x28, 0x01, 0x71, 0x01},
+        {0x02, 0x01, 0x76, 0x00}, {0x09, 0x01, 0x76, 0x00}, {0x17, 0x01, 0x76, 0x00}, {0x28, 0x01, 0x76, 0x01}
+    }, {
+        {0x03, 0x01, 0x6a, 0x00}, {0x06, 0x01, 0x6a, 0x00}, {0x0a, 0x01, 0x6a, 0x00}, {0x0f, 0x01, 0x6a, 0x00},
+        {0x18, 0x01, 0x6a, 0x00}, {0x1f, 0x01, 0x6a, 0x00}, {0x29, 0x01, 0x6a, 0x00}, {0x38, 0x01, 0x6a, 0x01},
+        {0x03, 0x01, 0x6b, 0x00}, {0x06, 0x01, 0x6b, 0x00}, {0x0a, 0x01, 0x6b, 0x00}, {0x0f, 0x01, 0x6b, 0x00},
+        {0x18, 0x01, 0x6b, 0x00}, {0x1f, 0x01, 0x6b, 0x00}, {0x29, 0x01, 0x6b, 0x00}, {0x38, 0x01, 0x6b, 0x01}
+    }, {
+        {0x03, 0x01, 0x71, 0x00}, {0x06, 0x01, 0x71, 0x00}, {0x0a, 0x01, 0x71, 0x00}, {0x0f, 0x01, 0x71, 0x00},
+        {0x18, 0x01, 0x71, 0x00}, {0x1f, 0x01, 0x71, 0x00}, {0x29, 0x01, 0x71, 0x00}, {0x38, 0x01, 0x71, 0x01},
+        {0x03, 0x01, 0x76, 0x00}, {0x06, 0x01, 0x76, 0x00}, {0x0a, 0x01, 0x76, 0x00}, {0x0f, 0x01, 0x76, 0x00},
+        {0x18, 0x01, 0x76, 0x00}, {0x1f, 0x01, 0x76, 0x00}, {0x29, 0x01, 0x76, 0x00}, {0x38, 0x01, 0x76, 0x01}
+    }, {
+        {0x01, 0x01, 0x77, 0x00}, {0x16, 0x01, 0x77, 0x01}, {0x01, 0x01, 0x78, 0x00}, {0x16, 0x01, 0x78, 0x01},
+        {0x01, 0x01, 0x79, 0x00}, {0x16, 0x01, 0x79, 0x01}, {0x01, 0x01, 0x7a, 0x00}, {0x16, 0x01, 0x7a, 0x01},
+        {0x00, 0x01, 0x26, 0x01}, {0x00, 0x01, 0x2a, 0x01}, {0x00, 0x01, 0x2c, 0x01}, {0x00, 0x01, 0x3b, 0x01},
+        {0x00, 0x01, 0x58, 0x01}, {0x00, 0x01, 0x5a, 0x01}, {0x4b, 0x00, 0x00, 0x00}, {0x4e, 0x00, 0x00, 0x01}
+    }, {
+        {0x02, 0x01, 0x77, 0x00}, {0x09, 0x01, 0x77, 0x00}, {0x17, 0x01, 0x77, 0x00}, {0x28, 0x01, 0x77, 0x01},
+        {0x02, 0x01, 0x78, 0x00}, {0x09, 0x01, 0x78, 0x00}, {0x17, 0x01, 0x78, 0x00}, {0x28, 0x01, 0x78, 0x01},
+        {0x02, 0x01, 0x79, 0x00}, {0x09, 0x01, 0x79, 0x00}, {0x17, 0x01, 0x79, 0x00}, {0x28, 0x01, 0x79, 0x01},
+        {0x02, 0x01, 0x7a, 0x00}, {0x09, 0x01, 0x7a, 0x00}, {0x17, 0x01, 0x7a, 0x00}, {0x28, 0x01, 0x7a, 0x01}
+    }, {
+        {0x03, 0x01, 0x77, 0x00}, {0x06, 0x01, 0x77, 0x00}, {0x0a, 0x01, 0x77, 0x00}, {0x0f, 0x01, 0x77, 0x00},
+        {0x18, 0x01, 0x77, 0x00}, {0x1f, 0x01, 0x77, 0x00}, {0x29, 0x01, 0x77, 0x00}, {0x38, 0x01, 0x77, 0x01},
+        {0x03, 0x01, 0x78, 0x00}, {0x06, 0x01, 0x78, 0x00}, {0x0a, 0x01, 0x78, 0x00}, {0x0f, 0x01, 0x78, 0x00},
+        {0x18, 0x01, 0x78, 0x00}, {0x1f, 0x01, 0x78, 0x00}, {0x29, 0x01, 0x78, 0x00}, {0x38, 0x01, 0x78, 0x01}
+    }, {
+        {0x03, 0x01, 0x79, 0x00}, {0x06, 0x01, 0x79, 0x00}, {0x0a, 0x01, 0x79, 0x00}, {0x0f, 0x01, 0x79, 0x00},
+        {0x18, 0x01, 0x79, 0x00}, {0x1f, 0x01, 0x79, 0x00}, {0x29, 0x01, 0x79, 0x00}, {0x38, 0x01, 0x79, 0x01},
+        {0x03, 0x01, 0x7a, 0x00}, {0x06, 0x01, 0x7a, 0x00}, {0x0a, 0x01, 0x7a, 0x00}, {0x0f, 0x01, 0x7a, 0x00},
+        {0x18, 0x01, 0x7a, 0x00}, {0x1f, 0x01, 0x7a, 0x00}, {0x29, 0x01, 0x7a, 0x00}, {0x38, 0x01, 0x7a, 0x01}
+    }, {
+        {0x01, 0x01, 0x26, 0x00}, {0x16, 0x01, 0x26, 0x01}, {0x01, 0x01, 0x2a, 0x00}, {0x16, 0x01, 0x2a, 0x01},
+        {0x01, 0x01, 0x2c, 0x00}, {0x16, 0x01, 0x2c, 0x01}, {0x01, 0x01, 0x3b, 0x00}, {0x16, 0x01, 0x3b, 0x01},
+        {0x01, 0x01, 0x58, 0x00}, {0x16, 0x01, 0x58, 0x01}, {0x01, 0x01, 0x5a, 0x00}, {0x16, 0x01, 0x5a, 0x01},
+        {0x4c, 0x00, 0x00, 0x00}, {0x4d, 0x00, 0x00, 0x00}, {0x4f, 0x00, 0x00, 0x00}, {0x51, 0x00, 0x00, 0x01}
+    }, {
+        {0x02, 0x01, 0x26, 0x00}, {0x09, 0x01, 0x26, 0x00}, {0x17, 0x01, 0x26, 0x00}, {0x28, 0x01, 0x26, 0x01},
+        {0x02, 0x01, 0x2a, 0x00}, {0x09, 0x01, 0x2a, 0x00}, {0x17, 0x01, 0x2a, 0x00}, {0x28, 0x01, 0x2a, 0x01},
+        {0x02, 0x01, 0x2c, 0x00}, {0x09, 0x01, 0x2c, 0x00}, {0x17, 0x01, 0x2c, 0x00}, {0x28, 0x01, 0x2c, 0x01},
+        {0x02, 0x01, 0x3b, 0x00}, {0x09, 0x01, 0x3b, 0x00}, {0x17, 0x01, 0x3b, 0x00}, {0x28, 0x01, 0x3b, 0x01}
+    }, {
+        {0x03, 0x01, 0x26, 0x00}, {0x06, 0x01, 0x26, 0x00}, {0x0a, 0x01, 0x26, 0x00}, {0x0f, 0x01, 0x26, 0x00},
+        {0x18, 0x01, 0x26, 0x00}, {0x1f, 0x01, 0x26, 0x00}, {0x29, 0x01, 0x26, 0x00}, {0x38, 0x01, 0x26, 0x01},
+        {0x03, 0x01, 0x2a, 0x00}, {0x06, 0x01, 0x2a, 0x00}, {0x0a, 0x01, 0x2a, 0x00}, {0x0f, 0x01, 0x2a, 0x00},
+        {0x18, 0x01, 0x2a, 0x00}, {0x1f, 0x01, 0x2a, 0x00}, {0x29, 0x01, 0x2a, 0x00}, {0x38, 0x01, 0x2a, 0x01}
+    }, {
+        {0x03, 0x01, 0x2c, 0x00}, {0x06, 0x01, 0x2c, 0x00}, {0x0a, 0x01, 0x2c, 0x00}, {0x0f, 0x01, 0x2c, 0x00},
+        {0x18, 0x01, 0x2c, 0x00}, {0x1f, 0x01, 0x2c, 0x00}, {0x29, 0x01, 0x2c, 0x00}, {0x38, 0x01, 0x2c, 0x01},
+        {0x03, 0x01, 0x3b, 0x00}, {0x06, 0x01, 0x3b, 0x00}, {0x0a, 0x01, 0x3b, 0x00}, {0x0f, 0x01, 0x3b, 0x00},
+        {0x18, 0x01, 0x3b, 0x00}, {0x1f, 0x01, 0x3b, 0x00}, {0x29, 0x01, 0x3b, 0x00}, {0x38, 0x01, 0x3b, 0x01}
+    }, {
+        {0x02, 0x01, 0x58, 0x00}, {0x09, 0x01, 0x58, 0x00}, {0x17, 0x01, 0x58, 0x00}, {0x28, 0x01, 0x58, 0x01},
+        {0x02, 0x01, 0x5a, 0x00}, {0x09, 0x01, 0x5a, 0x00}, {0x17, 0x01, 0x5a, 0x00}, {0x28, 0x01, 0x5a, 0x01},
+        {0x00, 0x01, 0x21, 0x01}, {0x00, 0x01, 0x22, 0x01}, {0x00, 0x01, 0x28, 0x01}, {0x00, 0x01, 0x29, 0x01},
+        {0x00, 0x01, 0x3f, 0x01}, {0x50, 0x00, 0x00, 0x00}, {0x52, 0x00, 0x00, 0x00}, {0x54, 0x00, 0x00, 0x01}
+    }, {
+        {0x03, 0x01, 0x58, 0x00}, {0x06, 0x01, 0x58, 0x00}, {0x0a, 0x01, 0x58, 0x00}, {0x0f, 0x01, 0x58, 0x00},
+        {0x18, 0x01, 0x58, 0x00}, {0x1f, 0x01, 0x58, 0x00}, {0x29, 0x01, 0x58, 0x00}, {0x38, 0x01, 0x58, 0x01},
+        {0x03, 0x01, 0x5a, 0x00}, {0x06, 0x01, 0x5a, 0x00}, {0x0a, 0x01, 0x5a, 0x00}, {0x0f, 0x01, 0x5a, 0x00},
+        {0x18, 0x01, 0x5a, 0x00}, {0x1f, 0x01, 0x5a, 0x00}, {0x29, 0x01, 0x5a, 0x00}, {0x38, 0x01, 0x5a, 0x01}
+    }, {
+        {0x01, 0x01, 0x21, 0x00}, {0x16, 0x01, 0x21, 0x01}, {0x01, 0x01, 0x22, 0x00}, {0x16, 0x01, 0x22, 0x01},
+        {0x01, 0x01, 0x28, 0x00}, {0x16, 0x01, 0x28, 0x01}, {0x01, 0x01, 0x29, 0x00}, {0x16, 0x01, 0x29, 0x01},
+        {0x01, 0x01, 0x3f, 0x00}, {0x16, 0x01, 0x3f, 0x01}, {0x00, 0x01, 0x27, 0x01}, {0x00, 0x01, 0x2b, 0x01},
+        {0x00, 0x01, 0x7c, 0x01}, {0x53, 0x00, 0x00, 0x00}, {0x55, 0x00, 0x00, 0x00}, {0x58, 0x00, 0x00, 0x01}
+    }, {
+        {0x02, 0x01, 0x21, 0x00}, {0x09, 0x01, 0x21, 0x00}, {0x17, 0x01, 0x21, 0x00}, {0x28, 0x01, 0x21, 0x01},
+        {0x02, 0x01, 0x22, 0x00}, {0x09, 0x01, 0x22, 0x00}, {0x17, 0x01, 0x22, 0x00}, {0x28, 0x01, 0x22, 0x01},
+        {0x02, 0x01, 0x28, 0x00}, {0x09, 0x01, 0x28, 0x00}, {0x17, 0x01, 0x28, 0x00}, {0x28, 0x01, 0x28, 0x01},
+        {0x02, 0x01, 0x29, 0x00}, {0x09, 0x01, 0x29, 0x00}, {0x17, 0x01, 0x29, 0x00}, {0x28, 0x01, 0x29, 0x01}
+    }, {
+        {0x03, 0x01, 0x21, 0x00}, {0x06, 0x01, 0x21, 0x00}, {0x0a, 0x01, 0x21, 0x00}, {0x0f, 0x01, 0x21, 0x00},
+        {0x18, 0x01, 0x21, 0x00}, {0x1f, 0x01, 0x21, 0x00}, {0x29, 0x01, 0x21, 0x00}, {0x38, 0x01, 0x21, 0x01},
+        {0x03, 0x01, 0x22, 0x00}, {0x06, 0x01, 0x22, 0x00}, {0x0a, 0x01, 0x22, 0x00}, {0x0f, 0x01, 0x22, 0x00},
+        {0x18, 0x01, 0x22, 0x00}, {0x1f, 0x01, 0x22, 0x00}, {0x29, 0x01, 0x22, 0x00}, {0x38, 0x01, 0x22, 0x01}
+    }, {
+        {0x03, 0x01, 0x28, 0x00}, {0x06, 0x01, 0x28, 0x00}, {0x0a, 0x01, 0x28, 0x00}, {0x0f, 0x01, 0x28, 0x00},
+        {0x18, 0x01, 0x28, 0x00}, {0x1f, 0x01, 0x28, 0x00}, {0x29, 0x01, 0x28, 0x00}, {0x38, 0x01, 0x28, 0x01},
+        {0x03, 0x01, 0x29, 0x00}, {0x06, 0x01, 0x29, 0x00}, {0x0a, 0x01, 0x29, 0x00}, {0x0f, 0x01, 0x29, 0x00},
+        {0x18, 0x01, 0x29, 0x00}, {0x1f, 0x01, 0x29, 0x00}, {0x29, 0x01, 0x29, 0x00}, {0x38, 0x01, 0x29, 0x01}
+    }, {
+        {0x02, 0x01, 0x3f, 0x00}, {0x09, 0x01, 0x3f, 0x00}, {0x17, 0x01, 0x3f, 0x00}, {0x28, 0x01, 0x3f, 0x01},
+        {0x01, 0x01, 0x27, 0x00}, {0x16, 0x01, 0x27, 0x01}, {0x01, 0x01, 0x2b, 0x00}, {0x16, 0x01, 0x2b, 0x01},
+        {0x01, 0x01, 0x7c, 0x00}, {0x16, 0x01, 0x7c, 0x01}, {0x00, 0x01, 0x23, 0x01}, {0x00, 0x01, 0x3e, 0x01},
+        {0x56, 0x00, 0x00, 0x00}, {0x57, 0x00, 0x00, 0x00}, {0x59, 0x00, 0x00, 0x00}, {0x5a, 0x00, 0x00, 0x01}
+    }, {
+        {0x03, 0x01, 0x3f, 0x00}, {0x06, 0x01, 0x3f, 0x00}, {0x0a, 0x01, 0x3f, 0x00}, {0x0f, 0x01, 0x3f, 0x00},
+        {0x18, 0x01, 0x3f, 0x00}, {0x1f, 0x01, 0x3f, 0x00}, {0x29, 0x01, 0x3f, 0x00}, {0x38, 0x01, 0x3f, 0x01},
+        {0x02, 0x01, 0x27, 0x00}, {0x09, 0x01, 0x27, 0x00}, {0x17, 0x01, 0x27, 0x00}, {0x28, 0x01, 0x27, 0x01},
+        {0x02, 0x01, 0x2b, 0x00}, {0x09, 0x01, 0x2b, 0x00}, {0x17, 0x01, 0x2b, 0x00}, {0x28, 0x01, 0x2b, 0x01}
+    }, {
+        {0x03, 0x01, 0x27, 0x00}, {0x06, 0x01, 0x27, 0x00}, {0x0a, 0x01, 0x27, 0x00}, {0x0f, 0x01, 0x27, 0x00},
+        {0x18, 0x01, 0x27, 0x00}, {0x1f, 0x01, 0x27, 0x00}, {0x29, 0x01, 0x27, 0x00}, {0x38, 0x01, 0x27, 0x01},
+        {0x03, 0x01, 0x2b, 0x00}, {0x06, 0x01, 0x2b, 0x00}, {0x0a, 0x01, 0x2b, 0x00}, {0x0f, 0x01, 0x2b, 0x00},
+        {0x18, 0x01, 0x2b, 0x00}, {0x1f, 0x01, 0x2b, 0x00}, {0x29, 0x01, 0x2b, 0x00}, {0x38, 0x01, 0x2b, 0x01}
+    }, {
+        {0x02, 0x01, 0x7c, 0x00}, {0x09, 0x01, 0x7c, 0x00}, {0x17, 0x01, 0x7c, 0x00}, {0x28, 0x01, 0x7c, 0x01},
+        {0x01, 0x01, 0x23, 0x00}, {0x16, 0x01, 0x23, 0x01}, {0x01, 0x01, 0x3e, 0x00}, {0x16, 0x01, 0x3e, 0x01},
+        {0x00, 0x01, 0x00, 0x01}, {0x00, 0x01, 0x24, 0x01}, {0x00, 0x01, 0x40, 0x01}, {0x00, 0x01, 0x5b, 0x01},
+        {0x00, 0x01, 0x5d, 0x01}, {0x00, 0x01, 0x7e, 0x01}, {0x5b, 0x00, 0x00, 0x00}, {0x5c, 0x00, 0x00, 0x01}
+    }, {
+        {0x03, 0x01, 0x7c, 0x00}, {0x06, 0x01, 0x7c, 0x00}, {0x0a, 0x01, 0x7c, 0x00}, {0x0f, 0x01, 0x7c, 0x00},
+        {0x18, 0x01, 0x7c, 0x00}, {0x1f, 0x01, 0x7c, 0x00}, {0x29, 0x01, 0x7c, 0x00}, {0x38, 0x01, 0x7c, 0x01},
+        {0x02, 0x01, 0x23, 0x00}, {0x09, 0x01, 0x23, 0x00}, {0x17, 0x01, 0x23, 0x00}, {0x28, 0x01, 0x23, 0x01},
+        {0x02, 0x01, 0x3e, 0x00}, {0x09, 0x01, 0x3e, 0x00}, {0x17, 0x01, 0x3e, 0x00}, {0x28, 0x01, 0x3e, 0x01}
+    }, {
+        {0x03, 0x01, 0x23, 0x00}, {0x06, 0x01, 0x23, 0x00}, {0x0a, 0x01, 0x23, 0x00}, {0x0f, 0x01, 0x23, 0x00},
+        {0x18, 0x01, 0x23, 0x00}, {0x1f, 0x01, 0x23, 0x00}, {0x29, 0x01, 0x23, 0x00}, {0x38, 0x01, 0x23, 0x01},
+        {0x03, 0x01, 0x3e, 0x00}, {0x06, 0x01, 0x3e, 0x00}, {0x0a, 0x01, 0x3e, 0x00}, {0x0f, 0x01, 0x3e, 0x00},
+        {0x18, 0x01, 0x3e, 0x00}, {0x1f, 0x01, 0x3e, 0x00}, {0x29, 0x01, 0x3e, 0x00}, {0x38, 0x01, 0x3e, 0x01}
+    }, {
+        {0x01, 0x01, 0x00, 0x00}, {0x16, 0x01, 0x00, 0x01}, {0x01, 0x01, 0x24, 0x00}, {0x16, 0x01, 0x24, 0x01},
+        {0x01, 0x01, 0x40, 0x00}, {0x16, 0x01, 0x40, 0x01}, {0x01, 0x01, 0x5b, 0x00}, {0x16, 0x01, 0x5b, 0x01},
+        {0x01, 0x01, 0x5d, 0x00}, {0x16, 0x01, 0x5d, 0x01}, {0x01, 0x01, 0x7e, 0x00}, {0x16, 0x01, 0x7e, 0x01},
+        {0x00, 0x01, 0x5e, 0x01}, {0x00, 0x01, 0x7d, 0x01}, {0x5d, 0x00, 0x00, 0x00}, {0x5e, 0x00, 0x00, 0x01}
+    }, {
+        {0x02, 0x01, 0x00, 0x00}, {0x09, 0x01, 0x00, 0x00}, {0x17, 0x01, 0x00, 0x00}, {0x28, 0x01, 0x00, 0x01},
+        {0x02, 0x01, 0x24, 0x00}, {0x09, 0x01, 0x24, 0x00}, {0x17, 0x01, 0x24, 0x00}, {0x28, 0x01, 0x24, 0x01},
+        {0x02, 0x01, 0x40, 0x00}, {0x09, 0x01, 0x40, 0x00}, {0x17, 0x01, 0x40, 0x00}, {0x28, 0x01, 0x40, 0x01},
+        {0x02, 0x01, 0x5b, 0x00}, {0x09, 0x01, 0x5b, 0x00}, {0x17, 0x01, 0x5b, 0x00}, {0x28, 0x01, 0x5b, 0x01}
+    }, {
+        {0x03, 0x01, 0x00, 0x00}, {0x06, 0x01, 0x00, 0x00}, {0x0a, 0x01, 0x00, 0x00}, {0x0f, 0x01, 0x00, 0x00},
+        {0x18, 0x01, 0x00, 0x00}, {0x1f, 0x01, 0x00, 0x00}, {0x29, 0x01, 0x00, 0x00}, {0x38, 0x01, 0x00, 0x01},
+        {0x03, 0x01, 0x24, 0x00}, {0x06, 0x01, 0x24, 0x00}, {0x0a, 0x01, 0x24, 0x00}, {0x0f, 0x01, 0x24, 0x00},
+        {0x18, 0x01, 0x24, 0x00}, {0x1f, 0x01, 0x24, 0x00}, {0x29, 0x01, 0x24, 0x00}, {0x38, 0x01, 0x24, 0x01}
+    }, {
+        {0x03, 0x01, 0x40, 0x00}, {0x06, 0x01, 0x40, 0x00}, {0x0a, 0x01, 0x40, 0x00}, {0x0f, 0x01, 0x40, 0x00},
+        {0x18, 0x01, 0x40, 0x00}, {0x1f, 0x01, 0x40, 0x00}, {0x29, 0x01, 0x40, 0x00}, {0x38, 0x01, 0x40, 0x01},
+        {0x03, 0x01, 0x5b, 0x00}, {0x06, 0x01, 0x5b, 0x00}, {0x0a, 0x01, 0x5b, 0x00}, {0x0f, 0x01, 0x5b, 0x00},
+        {0x18, 0x01, 0x5b, 0x00}, {0x1f, 0x01, 0x5b, 0x00}, {0x29, 0x01, 0x5b, 0x00}, {0x38, 0x01, 0x5b, 0x01}
+    }, {
+        {0x02, 0x01, 0x5d, 0x00}, {0x09, 0x01, 0x5d, 0x00}, {0x17, 0x01, 0x5d, 0x00}, {0x28, 0x01, 0x5d, 0x01},
+        {0x02, 0x01, 0x7e, 0x00}, {0x09, 0x01, 0x7e, 0x00}, {0x17, 0x01, 0x7e, 0x00}, {0x28, 0x01, 0x7e, 0x01},
+        {0x01, 0x01, 0x5e, 0x00}, {0x16, 0x01, 0x5e, 0x01}, {0x01, 0x01, 0x7d, 0x00}, {0x16, 0x01, 0x7d, 0x01},
+        {0x00, 0x01, 0x3c, 0x01}, {0x00, 0x01, 0x60, 0x01}, {0x00, 0x01, 0x7b, 0x01}, {0x5f, 0x00, 0x00, 0x01}
+    }, {
+        {0x03, 0x01, 0x5d, 0x00}, {0x06, 0x01, 0x5d, 0x00}, {0x0a, 0x01, 0x5d, 0x00}, {0x0f, 0x01, 0x5d, 0x00},
+        {0x18, 0x01, 0x5d, 0x00}, {0x1f, 0x01, 0x5d, 0x00}, {0x29, 0x01, 0x5d, 0x00}, {0x38, 0x01, 0x5d, 0x01},
+        {0x03, 0x01, 0x7e, 0x00}, {0x06, 0x01, 0x7e, 0x00}, {0x0a, 0x01, 0x7e, 0x00}, {0x0f, 0x01, 0x7e, 0x00},
+        {0x18, 0x01, 0x7e, 0x00}, {0x1f, 0x01, 0x7e, 0x00}, {0x29, 0x01, 0x7e, 0x00}, {0x38, 0x01, 0x7e, 0x01}
+    }, {
+        {0x02, 0x01, 0x5e, 0x00}, {0x09, 0x01, 0x5e, 0x00}, {0x17, 0x01, 0x5e, 0x00}, {0x28, 0x01, 0x5e, 0x01},
+        {0x02, 0x01, 0x7d, 0x00}, {0x09, 0x01, 0x7d, 0x00}, {0x17, 0x01, 0x7d, 0x00}, {0x28, 0x01, 0x7d, 0x01},
+        {0x01, 0x01, 0x3c, 0x00}, {0x16, 0x01, 0x3c, 0x01}, {0x01, 0x01, 0x60, 0x00}, {0x16, 0x01, 0x60, 0x01},
+        {0x01, 0x01, 0x7b, 0x00}, {0x16, 0x01, 0x7b, 0x01}, {0x60, 0x00, 0x00, 0x00}, {0x6e, 0x00, 0x00, 0x01}
+    }, {
+        {0x03, 0x01, 0x5e, 0x00}, {0x06, 0x01, 0x5e, 0x00}, {0x0a, 0x01, 0x5e, 0x00}, {0x0f, 0x01, 0x5e, 0x00},
+        {0x18, 0x01, 0x5e, 0x00}, {0x1f, 0x01, 0x5e, 0x00}, {0x29, 0x01, 0x5e, 0x00}, {0x38, 0x01, 0x5e, 0x01},
+        {0x03, 0x01, 0x7d, 0x00}, {0x06, 0x01, 0x7d, 0x00}, {0x0a, 0x01, 0x7d, 0x00}, {0x0f, 0x01, 0x7d, 0x00},
+        {0x18, 0x01, 0x7d, 0x00}, {0x1f, 0x01, 0x7d, 0x00}, {0x29, 0x01, 0x7d, 0x00}, {0x38, 0x01, 0x7d, 0x01}
+    }, {
+        {0x02, 0x01, 0x3c, 0x00}, {0x09, 0x01, 0x3c, 0x00}, {0x17, 0x01, 0x3c, 0x00}, {0x28, 0x01, 0x3c, 0x01},
+        {0x02, 0x01, 0x60, 0x00}, {0x09, 0x01, 0x60, 0x00}, {0x17, 0x01, 0x60, 0x00}, {0x28, 0x01, 0x60, 0x01},
+        {0x02, 0x01, 0x7b, 0x00}, {0x09, 0x01, 0x7b, 0x00}, {0x17, 0x01, 0x7b, 0x00}, {0x28, 0x01, 0x7b, 0x01},
+        {0x61, 0x00, 0x00, 0x00}, {0x65, 0x00, 0x00, 0x00}, {0x6f, 0x00, 0x00, 0x00}, {0x85, 0x00, 0x00, 0x01}
+    }, {
+        {0x03, 0x01, 0x3c, 0x00}, {0x06, 0x01, 0x3c, 0x00}, {0x0a, 0x01, 0x3c, 0x00}, {0x0f, 0x01, 0x3c, 0x00},
+        {0x18, 0x01, 0x3c, 0x00}, {0x1f, 0x01, 0x3c, 0x00}, {0x29, 0x01, 0x3c, 0x00}, {0x38, 0x01, 0x3c, 0x01},
+        {0x03, 0x01, 0x60, 0x00}, {0x06, 0x01, 0x60, 0x00}, {0x0a, 0x01, 0x60, 0x00}, {0x0f, 0x01, 0x60, 0x00},
+        {0x18, 0x01, 0x60, 0x00}, {0x1f, 0x01, 0x60, 0x00}, {0x29, 0x01, 0x60, 0x00}, {0x38, 0x01, 0x60, 0x01}
+    }, {
+        {0x03, 0x01, 0x7b, 0x00}, {0x06, 0x01, 0x7b, 0x00}, {0x0a, 0x01, 0x7b, 0x00}, {0x0f, 0x01, 0x7b, 0x00},
+        {0x18, 0x01, 0x7b, 0x00}, {0x1f, 0x01, 0x7b, 0x00}, {0x29, 0x01, 0x7b, 0x00}, {0x38, 0x01, 0x7b, 0x01},
+        {0x62, 0x00, 0x00, 0x00}, {0x63, 0x00, 0x00, 0x00}, {0x66, 0x00, 0x00, 0x00}, {0x69, 0x00, 0x00, 0x00},
+        {0x70, 0x00, 0x00, 0x00}, {0x77, 0x00, 0x00, 0x00}, {0x86, 0x00, 0x00, 0x00}, {0x99, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0x5c, 0x01}, {0x00, 0x01, 0xc3, 0x01}, {0x00, 0x01, 0xd0, 0x01}, {0x64, 0x00, 0x00, 0x00},
+        {0x67, 0x00, 0x00, 0x00}, {0x68, 0x00, 0x00, 0x00}, {0x6a, 0x00, 0x00, 0x00}, {0x6b, 0x00, 0x00, 0x00},
+        {0x71, 0x00, 0x00, 0x00}, {0x74, 0x00, 0x00, 0x00}, {0x78, 0x00, 0x00, 0x00}, {0x7e, 0x00, 0x00, 0x00},
+        {0x87, 0x00, 0x00, 0x00}, {0x8e, 0x00, 0x00, 0x00}, {0x9a, 0x00, 0x00, 0x00}, {0xa9, 0x00, 0x00, 0x01}
+    }, {
+        {0x01, 0x01, 0x5c, 0x00}, {0x16, 0x01, 0x5c, 0x01}, {0x01, 0x01, 0xc3, 0x00}, {0x16, 0x01, 0xc3, 0x01},
+        {0x01, 0x01, 0xd0, 0x00}, {0x16, 0x01, 0xd0, 0x01}, {0x00, 0x01, 0x80, 0x01}, {0x00, 0x01, 0x82, 0x01},
+        {0x00, 0x01, 0x83, 0x01}, {0x00, 0x01, 0xa2, 0x01}, {0x00, 0x01, 0xb8, 0x01}, {0x00, 0x01, 0xc2, 0x01},
+        {0x00, 0x01, 0xe0, 0x01}, {0x00, 0x01, 0xe2, 0x01}, {0x6c, 0x00, 0x00, 0x00}, {0x6d, 0x00, 0x00, 0x00}
+    }, {
+        {0x02, 0x01, 0x5c, 0x00}, {0x09, 0x01, 0x5c, 0x00}, {0x17, 0x01, 0x5c, 0x00}, {0x28, 0x01, 0x5c, 0x01},
+        {0x02, 0x01, 0xc3, 0x00}, {0x09, 0x01, 0xc3, 0x00}, {0x17, 0x01, 0xc3, 0x00}, {0x28, 0x01, 0xc3, 0x01},
+        {0x02, 0x01, 0xd0, 0x00}, {0x09, 0x01, 0xd0, 0x00}, {0x17, 0x01, 0xd0, 0x00}, {0x28, 0x01, 0xd0, 0x01},
+        {0x01, 0x01, 0x80, 0x00}, {0x16, 0x01, 0x80, 0x01}, {0x01, 0x01, 0x82, 0x00}, {0x16, 0x01, 0x82, 0x01}
+    }, {
+        {0x03, 0x01, 0x5c, 0x00}, {0x06, 0x01, 0x5c, 0x00}, {0x0a, 0x01, 0x5c, 0x00}, {0x0f, 0x01, 0x5c, 0x00},
+        {0x18, 0x01, 0x5c, 0x00}, {0x1f, 0x01, 0x5c, 0x00}, {0x29, 0x01, 0x5c, 0x00}, {0x38, 0x01, 0x5c, 0x01},
+        {0x03, 0x01, 0xc3, 0x00}, {0x06, 0x01, 0xc3, 0x00}, {0x0a, 0x01, 0xc3, 0x00}, {0x0f, 0x01, 0xc3, 0x00},
+        {0x18, 0x01, 0xc3, 0x00}, {0x1f, 0x01, 0xc3, 0x00}, {0x29, 0x01, 0xc3, 0x00}, {0x38, 0x01, 0xc3, 0x01}
+    }, {
+        {0x03, 0x01, 0xd0, 0x00}, {0x06, 0x01, 0xd0, 0x00}, {0x0a, 0x01, 0xd0, 0x00}, {0x0f, 0x01, 0xd0, 0x00},
+        {0x18, 0x01, 0xd0, 0x00}, {0x1f, 0x01, 0xd0, 0x00}, {0x29, 0x01, 0xd0, 0x00}, {0x38, 0x01, 0xd0, 0x01},
+        {0x02, 0x01, 0x80, 0x00}, {0x09, 0x01, 0x80, 0x00}, {0x17, 0x01, 0x80, 0x00}, {0x28, 0x01, 0x80, 0x01},
+        {0x02, 0x01, 0x82, 0x00}, {0x09, 0x01, 0x82, 0x00}, {0x17, 0x01, 0x82, 0x00}, {0x28, 0x01, 0x82, 0x01}
+    }, {
+        {0x03, 0x01, 0x80, 0x00}, {0x06, 0x01, 0x80, 0x00}, {0x0a, 0x01, 0x80, 0x00}, {0x0f, 0x01, 0x80, 0x00},
+        {0x18, 0x01, 0x80, 0x00}, {0x1f, 0x01, 0x80, 0x00}, {0x29, 0x01, 0x80, 0x00}, {0x38, 0x01, 0x80, 0x01},
+        {0x03, 0x01, 0x82, 0x00}, {0x06, 0x01, 0x82, 0x00}, {0x0a, 0x01, 0x82, 0x00}, {0x0f, 0x01, 0x82, 0x00},
+        {0x18, 0x01, 0x82, 0x00}, {0x1f, 0x01, 0x82, 0x00}, {0x29, 0x01, 0x82, 0x00}, {0x38, 0x01, 0x82, 0x01}
+    }, {
+        {0x01, 0x01, 0x83, 0x00}, {0x16, 0x01, 0x83, 0x01}, {0x01, 0x01, 0xa2, 0x00}, {0x16, 0x01, 0xa2, 0x01},
+        {0x01, 0x01, 0xb8, 0x00}, {0x16, 0x01, 0xb8, 0x01}, {0x01, 0x01, 0xc2, 0x00}, {0x16, 0x01, 0xc2, 0x01},
+        {0x01, 0x01, 0xe0, 0x00}, {0x16, 0x01, 0xe0, 0x01}, {0x01, 0x01, 0xe2, 0x00}, {0x16, 0x01, 0xe2, 0x01},
+        {0x00, 0x01, 0x99, 0x01}, {0x00, 0x01, 0xa1, 0x01}, {0x00, 0x01, 0xa7, 0x01}, {0x00, 0x01, 0xac, 0x01}
+    }, {
+        {0x02, 0x01, 0x83, 0x00}, {0x09, 0x01, 0x83, 0x00}, {0x17, 0x01, 0x83, 0x00}, {0x28, 0x01, 0x83, 0x01},
+        {0x02, 0x01, 0xa2, 0x00}, {0x09, 0x01, 0xa2, 0x00}, {0x17, 0x01, 0xa2, 0x00}, {0x28, 0x01, 0xa2, 0x01},
+        {0x02, 0x01, 0xb8, 0x00}, {0x09, 0x01, 0xb8, 0x00}, {0x17, 0x01, 0xb8, 0x00}, {0x28, 0x01, 0xb8, 0x01},
+        {0x02, 0x01, 0xc2, 0x00}, {0x09, 0x01, 0xc2, 0x00}, {0x17, 0x01, 0xc2, 0x00}, {0x28, 0x01, 0xc2, 0x01}
+    }, {
+        {0x03, 0x01, 0x83, 0x00}, {0x06, 0x01, 0x83, 0x00}, {0x0a, 0x01, 0x83, 0x00}, {0x0f, 0x01, 0x83, 0x00},
+        {0x18, 0x01, 0x83, 0x00}, {0x1f, 0x01, 0x83, 0x00}, {0x29, 0x01, 0x83, 0x00}, {0x38, 0x01, 0x83, 0x01},
+        {0x03, 0x01, 0xa2, 0x00}, {0x06, 0x01, 0xa2, 0x00}, {0x0a, 0x01, 0xa2, 0x00}, {0x0f, 0x01, 0xa2, 0x00},
+        {0x18, 0x01, 0xa2, 0x00}, {0x1f, 0x01, 0xa2, 0x00}, {0x29, 0x01, 0xa2, 0x00}, {0x38, 0x01, 0xa2, 0x01}
+    }, {
+        {0x03, 0x01, 0xb8, 0x00}, {0x06, 0x01, 0xb8, 0x00}, {0x0a, 0x01, 0xb8, 0x00}, {0x0f, 0x01, 0xb8, 0x00},
+        {0x18, 0x01, 0xb8, 0x00}, {0x1f, 0x01, 0xb8, 0x00}, {0x29, 0x01, 0xb8, 0x00}, {0x38, 0x01, 0xb8, 0x01},
+        {0x03, 0x01, 0xc2, 0x00}, {0x06, 0x01, 0xc2, 0x00}, {0x0a, 0x01, 0xc2, 0x00}, {0x0f, 0x01, 0xc2, 0x00},
+        {0x18, 0x01, 0xc2, 0x00}, {0x1f, 0x01, 0xc2, 0x00}, {0x29, 0x01, 0xc2, 0x00}, {0x38, 0x01, 0xc2, 0x01}
+    }, {
+        {0x02, 0x01, 0xe0, 0x00}, {0x09, 0x01, 0xe0, 0x00}, {0x17, 0x01, 0xe0, 0x00}, {0x28, 0x01, 0xe0, 0x01},
+        {0x02, 0x01, 0xe2, 0x00}, {0x09, 0x01, 0xe2, 0x00}, {0x17, 0x01, 0xe2, 0x00}, {0x28, 0x01, 0xe2, 0x01},
+        {0x01, 0x01, 0x99, 0x00}, {0x16, 0x01, 0x99, 0x01}, {0x01, 0x01, 0xa1, 0x00}, {0x16, 0x01, 0xa1, 0x01},
+        {0x01, 0x01, 0xa7, 0x00}, {0x16, 0x01, 0xa7, 0x01}, {0x01, 0x01, 0xac, 0x00}, {0x16, 0x01, 0xac, 0x01}
+    }, {
+        {0x03, 0x01, 0xe0, 0x00}, {0x06, 0x01, 0xe0, 0x00}, {0x0a, 0x01, 0xe0, 0x00}, {0x0f, 0x01, 0xe0, 0x00},
+        {0x18, 0x01, 0xe0, 0x00}, {0x1f, 0x01, 0xe0, 0x00}, {0x29, 0x01, 0xe0, 0x00}, {0x38, 0x01, 0xe0, 0x01},
+        {0x03, 0x01, 0xe2, 0x00}, {0x06, 0x01, 0xe2, 0x00}, {0x0a, 0x01, 0xe2, 0x00}, {0x0f, 0x01, 0xe2, 0x00},
+        {0x18, 0x01, 0xe2, 0x00}, {0x1f, 0x01, 0xe2, 0x00}, {0x29, 0x01, 0xe2, 0x00}, {0x38, 0x01, 0xe2, 0x01}
+    }, {
+        {0x02, 0x01, 0x99, 0x00}, {0x09, 0x01, 0x99, 0x00}, {0x17, 0x01, 0x99, 0x00}, {0x28, 0x01, 0x99, 0x01},
+        {0x02, 0x01, 0xa1, 0x00}, {0x09, 0x01, 0xa1, 0x00}, {0x17, 0x01, 0xa1, 0x00}, {0x28, 0x01, 0xa1, 0x01},
+        {0x02, 0x01, 0xa7, 0x00}, {0x09, 0x01, 0xa7, 0x00}, {0x17, 0x01, 0xa7, 0x00}, {0x28, 0x01, 0xa7, 0x01},
+        {0x02, 0x01, 0xac, 0x00}, {0x09, 0x01, 0xac, 0x00}, {0x17, 0x01, 0xac, 0x00}, {0x28, 0x01, 0xac, 0x01}
+    }, {
+        {0x03, 0x01, 0x99, 0x00}, {0x06, 0x01, 0x99, 0x00}, {0x0a, 0x01, 0x99, 0x00}, {0x0f, 0x01, 0x99, 0x00},
+        {0x18, 0x01, 0x99, 0x00}, {0x1f, 0x01, 0x99, 0x00}, {0x29, 0x01, 0x99, 0x00}, {0x38, 0x01, 0x99, 0x01},
+        {0x03, 0x01, 0xa1, 0x00}, {0x06, 0x01, 0xa1, 0x00}, {0x0a, 0x01, 0xa1, 0x00}, {0x0f, 0x01, 0xa1, 0x00},
+        {0x18, 0x01, 0xa1, 0x00}, {0x1f, 0x01, 0xa1, 0x00}, {0x29, 0x01, 0xa1, 0x00}, {0x38, 0x01, 0xa1, 0x01}
+    }, {
+        {0x03, 0x01, 0xa7, 0x00}, {0x06, 0x01, 0xa7, 0x00}, {0x0a, 0x01, 0xa7, 0x00}, {0x0f, 0x01, 0xa7, 0x00},
+        {0x18, 0x01, 0xa7, 0x00}, {0x1f, 0x01, 0xa7, 0x00}, {0x29, 0x01, 0xa7, 0x00}, {0x38, 0x01, 0xa7, 0x01},
+        {0x03, 0x01, 0xac, 0x00}, {0x06, 0x01, 0xac, 0x00}, {0x0a, 0x01, 0xac, 0x00}, {0x0f, 0x01, 0xac, 0x00},
+        {0x18, 0x01, 0xac, 0x00}, {0x1f, 0x01, 0xac, 0x00}, {0x29, 0x01, 0xac, 0x00}, {0x38, 0x01, 0xac, 0x01}
+    }, {
+        {0x72, 0x00, 0x00, 0x00}, {0x73, 0x00, 0x00, 0x00}, {0x75, 0x00, 0x00, 0x00}, {0x76, 0x00, 0x00, 0x00},
+        {0x79, 0x00, 0x00, 0x00}, {0x7b, 0x00, 0x00, 0x00}, {0x7f, 0x00, 0x00, 0x00}, {0x82, 0x00, 0x00, 0x00},
+        {0x88, 0x00, 0x00, 0x00}, {0x8b, 0x00, 0x00, 0x00}, {0x8f, 0x00, 0x00, 0x00}, {0x92, 0x00, 0x00, 0x00},
+        {0x9b, 0x00, 0x00, 0x00}, {0xa2, 0x00, 0x00, 0x00}, {0xaa, 0x00, 0x00, 0x00}, {0xb4, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0xb0, 0x01}, {0x00, 0x01, 0xb1, 0x01}, {0x00, 0x01, 0xb3, 0x01}, {0x00, 0x01, 0xd1, 0x01},
+        {0x00, 0x01, 0xd8, 0x01}, {0x00, 0x01, 0xd9, 0x01}, {0x00, 0x01, 0xe3, 0x01}, {0x00, 0x01, 0xe5, 0x01},
+        {0x00, 0x01, 0xe6, 0x01}, {0x7a, 0x00, 0x00, 0x00}, {0x7c, 0x00, 0x00, 0x00}, {0x7d, 0x00, 0x00, 0x00},
+        {0x80, 0x00, 0x00, 0x00}, {0x81, 0x00, 0x00, 0x00}, {0x83, 0x00, 0x00, 0x00}, {0x84, 0x00, 0x00, 0x00}
+    }, {
+        {0x01, 0x01, 0xb0, 0x00}, {0x16, 0x01, 0xb0, 0x01}, {0x01, 0x01, 0xb1, 0x00}, {0x16, 0x01, 0xb1, 0x01},
+        {0x01, 0x01, 0xb3, 0x00}, {0x16, 0x01, 0xb3, 0x01}, {0x01, 0x01, 0xd1, 0x00}, {0x16, 0x01, 0xd1, 0x01},
+        {0x01, 0x01, 0xd8, 0x00}, {0x16, 0x01, 0xd8, 0x01}, {0x01, 0x01, 0xd9, 0x00}, {0x16, 0x01, 0xd9, 0x01},
+        {0x01, 0x01, 0xe3, 0x00}, {0x16, 0x01, 0xe3, 0x01}, {0x01, 0x01, 0xe5, 0x00}, {0x16, 0x01, 0xe5, 0x01}
+    }, {
+        {0x02, 0x01, 0xb0, 0x00}, {0x09, 0x01, 0xb0, 0x00}, {0x17, 0x01, 0xb0, 0x00}, {0x28, 0x01, 0xb0, 0x01},
+        {0x02, 0x01, 0xb1, 0x00}, {0x09, 0x01, 0xb1, 0x00}, {0x17, 0x01, 0xb1, 0x00}, {0x28, 0x01, 0xb1, 0x01},
+        {0x02, 0x01, 0xb3, 0x00}, {0x09, 0x01, 0xb3, 0x00}, {0x17, 0x01, 0xb3, 0x00}, {0x28, 0x01, 0xb3, 0x01},
+        {0x02, 0x01, 0xd1, 0x00}, {0x09, 0x01, 0xd1, 0x00}, {0x17, 0x01, 0xd1, 0x00}, {0x28, 0x01, 0xd1, 0x01}
+    }, {
+        {0x03, 0x01, 0xb0, 0x00}, {0x06, 0x01, 0xb0, 0x00}, {0x0a, 0x01, 0xb0, 0x00}, {0x0f, 0x01, 0xb0, 0x00},
+        {0x18, 0x01, 0xb0, 0x00}, {0x1f, 0x01, 0xb0, 0x00}, {0x29, 0x01, 0xb0, 0x00}, {0x38, 0x01, 0xb0, 0x01},
+        {0x03, 0x01, 0xb1, 0x00}, {0x06, 0x01, 0xb1, 0x00}, {0x0a, 0x01, 0xb1, 0x00}, {0x0f, 0x01, 0xb1, 0x00},
+        {0x18, 0x01, 0xb1, 0x00}, {0x1f, 0x01, 0xb1, 0x00}, {0x29, 0x01, 0xb1, 0x00}, {0x38, 0x01, 0xb1, 0x01}
+    }, {
+        {0x03, 0x01, 0xb3, 0x00}, {0x06, 0x01, 0xb3, 0x00}, {0x0a, 0x01, 0xb3, 0x00}, {0x0f, 0x01, 0xb3, 0x00},
+        {0x18, 0x01, 0xb3, 0x00}, {0x1f, 0x01, 0xb3, 0x00}, {0x29, 0x01, 0xb3, 0x00}, {0x38, 0x01, 0xb3, 0x01},
+        {0x03, 0x01, 0xd1, 0x00}, {0x06, 0x01, 0xd1, 0x00}, {0x0a, 0x01, 0xd1, 0x00}, {0x0f, 0x01, 0xd1, 0x00},
+        {0x18, 0x01, 0xd1, 0x00}, {0x1f, 0x01, 0xd1, 0x00}, {0x29, 0x01, 0xd1, 0x00}, {0x38, 0x01, 0xd1, 0x01}
+    }, {
+        {0x02, 0x01, 0xd8, 0x00}, {0x09, 0x01, 0xd8, 0x00}, {0x17, 0x01, 0xd8, 0x00}, {0x28, 0x01, 0xd8, 0x01},
+        {0x02, 0x01, 0xd9, 0x00}, {0x09, 0x01, 0xd9, 0x00}, {0x17, 0x01, 0xd9, 0x00}, {0x28, 0x01, 0xd9, 0x01},
+        {0x02, 0x01, 0xe3, 0x00}, {0x09, 0x01, 0xe3, 0x00}, {0x17, 0x01, 0xe3, 0x00}, {0x28, 0x01, 0xe3, 0x01},
+        {0x02, 0x01, 0xe5, 0x00}, {0x09, 0x01, 0xe5, 0x00}, {0x17, 0x01, 0xe5, 0x00}, {0x28, 0x01, 0xe5, 0x01}
+    }, {
+        {0x03, 0x01, 0xd8, 0x00}, {0x06, 0x01, 0xd8, 0x00}, {0x0a, 0x01, 0xd8, 0x00}, {0x0f, 0x01, 0xd8, 0x00},
+        {0x18, 0x01, 0xd8, 0x00}, {0x1f, 0x01, 0xd8, 0x00}, {0x29, 0x01, 0xd8, 0x00}, {0x38, 0x01, 0xd8, 0x01},
+        {0x03, 0x01, 0xd9, 0x00}, {0x06, 0x01, 0xd9, 0x00}, {0x0a, 0x01, 0xd9, 0x00}, {0x0f, 0x01, 0xd9, 0x00},
+        {0x18, 0x01, 0xd9, 0x00}, {0x1f, 0x01, 0xd9, 0x00}, {0x29, 0x01, 0xd9, 0x00}, {0x38, 0x01, 0xd9, 0x01}
+    }, {
+        {0x03, 0x01, 0xe3, 0x00}, {0x06, 0x01, 0xe3, 0x00}, {0x0a, 0x01, 0xe3, 0x00}, {0x0f, 0x01, 0xe3, 0x00},
+        {0x18, 0x01, 0xe3, 0x00}, {0x1f, 0x01, 0xe3, 0x00}, {0x29, 0x01, 0xe3, 0x00}, {0x38, 0x01, 0xe3, 0x01},
+        {0x03, 0x01, 0xe5, 0x00}, {0x06, 0x01, 0xe5, 0x00}, {0x0a, 0x01, 0xe5, 0x00}, {0x0f, 0x01, 0xe5, 0x00},
+        {0x18, 0x01, 0xe5, 0x00}, {0x1f, 0x01, 0xe5, 0x00}, {0x29, 0x01, 0xe5, 0x00}, {0x38, 0x01, 0xe5, 0x01}
+    }, {
+        {0x01, 0x01, 0xe6, 0x00}, {0x16, 0x01, 0xe6, 0x01}, {0x00, 0x01, 0x81, 0x01}, {0x00, 0x01, 0x84, 0x01},
+        {0x00, 0x01, 0x85, 0x01}, {0x00, 0x01, 0x86, 0x01}, {0x00, 0x01, 0x88, 0x01}, {0x00, 0x01, 0x92, 0x01},
+        {0x00, 0x01, 0x9a, 0x01}, {0x00, 0x01, 0x9c, 0x01}, {0x00, 0x01, 0xa0, 0x01}, {0x00, 0x01, 0xa3, 0x01},
+        {0x00, 0x01, 0xa4, 0x01}, {0x00, 0x01, 0xa9, 0x01}, {0x00, 0x01, 0xaa, 0x01}, {0x00, 0x01, 0xad, 0x01}
+    }, {
+        {0x02, 0x01, 0xe6, 0x00}, {0x09, 0x01, 0xe6, 0x00}, {0x17, 0x01, 0xe6, 0x00}, {0x28, 0x01, 0xe6, 0x01},
+        {0x01, 0x01, 0x81, 0x00}, {0x16, 0x01, 0x81, 0x01}, {0x01, 0x01, 0x84, 0x00}, {0x16, 0x01, 0x84, 0x01},
+        {0x01, 0x01, 0x85, 0x00}, {0x16, 0x01, 0x85, 0x01}, {0x01, 0x01, 0x86, 0x00}, {0x16, 0x01, 0x86, 0x01},
+        {0x01, 0x01, 0x88, 0x00}, {0x16, 0x01, 0x88, 0x01}, {0x01, 0x01, 0x92, 0x00}, {0x16, 0x01, 0x92, 0x01}
+    }, {
+        {0x03, 0x01, 0xe6, 0x00}, {0x06, 0x01, 0xe6, 0x00}, {0x0a, 0x01, 0xe6, 0x00}, {0x0f, 0x01, 0xe6, 0x00},
+        {0x18, 0x01, 0xe6, 0x00}, {0x1f, 0x01, 0xe6, 0x00}, {0x29, 0x01, 0xe6, 0x00}, {0x38, 0x01, 0xe6, 0x01},
+        {0x02, 0x01, 0x81, 0x00}, {0x09, 0x01, 0x81, 0x00}, {0x17, 0x01, 0x81, 0x00}, {0x28, 0x01, 0x81, 0x01},
+        {0x02, 0x01, 0x84, 0x00}, {0x09, 0x01, 0x84, 0x00}, {0x17, 0x01, 0x84, 0x00}, {0x28, 0x01, 0x84, 0x01}
+    }, {
+        {0x03, 0x01, 0x81, 0x00}, {0x06, 0x01, 0x81, 0x00}, {0x0a, 0x01, 0x81, 0x00}, {0x0f, 0x01, 0x81, 0x00},
+        {0x18, 0x01, 0x81, 0x00}, {0x1f, 0x01, 0x81, 0x00}, {0x29, 0x01, 0x81, 0x00}, {0x38, 0x01, 0x81, 0x01},
+        {0x03, 0x01, 0x84, 0x00}, {0x06, 0x01, 0x84, 0x00}, {0x0a, 0x01, 0x84, 0x00}, {0x0f, 0x01, 0x84, 0x00},
+        {0x18, 0x01, 0x84, 0x00}, {0x1f, 0x01, 0x84, 0x00}, {0x29, 0x01, 0x84, 0x00}, {0x38, 0x01, 0x84, 0x01}
+    }, {
+        {0x02, 0x01, 0x85, 0x00}, {0x09, 0x01, 0x85, 0x00}, {0x17, 0x01, 0x85, 0x00}, {0x28, 0x01, 0x85, 0x01},
+        {0x02, 0x01, 0x86, 0x00}, {0x09, 0x01, 0x86, 0x00}, {0x17, 0x01, 0x86, 0x00}, {0x28, 0x01, 0x86, 0x01},
+        {0x02, 0x01, 0x88, 0x00}, {0x09, 0x01, 0x88, 0x00}, {0x17, 0x01, 0x88, 0x00}, {0x28, 0x01, 0x88, 0x01},
+        {0x02, 0x01, 0x92, 0x00}, {0x09, 0x01, 0x92, 0x00}, {0x17, 0x01, 0x92, 0x00}, {0x28, 0x01, 0x92, 0x01}
+    }, {
+        {0x03, 0x01, 0x85, 0x00}, {0x06, 0x01, 0x85, 0x00}, {0x0a, 0x01, 0x85, 0x00}, {0x0f, 0x01, 0x85, 0x00},
+        {0x18, 0x01, 0x85, 0x00}, {0x1f, 0x01, 0x85, 0x00}, {0x29, 0x01, 0x85, 0x00}, {0x38, 0x01, 0x85, 0x01},
+        {0x03, 0x01, 0x86, 0x00}, {0x06, 0x01, 0x86, 0x00}, {0x0a, 0x01, 0x86, 0x00}, {0x0f, 0x01, 0x86, 0x00},
+        {0x18, 0x01, 0x86, 0x00}, {0x1f, 0x01, 0x86, 0x00}, {0x29, 0x01, 0x86, 0x00}, {0x38, 0x01, 0x86, 0x01}
+    }, {
+        {0x03, 0x01, 0x88, 0x00}, {0x06, 0x01, 0x88, 0x00}, {0x0a, 0x01, 0x88, 0x00}, {0x0f, 0x01, 0x88, 0x00},
+        {0x18, 0x01, 0x88, 0x00}, {0x1f, 0x01, 0x88, 0x00}, {0x29, 0x01, 0x88, 0x00}, {0x38, 0x01, 0x88, 0x01},
+        {0x03, 0x01, 0x92, 0x00}, {0x06, 0x01, 0x92, 0x00}, {0x0a, 0x01, 0x92, 0x00}, {0x0f, 0x01, 0x92, 0x00},
+        {0x18, 0x01, 0x92, 0x00}, {0x1f, 0x01, 0x92, 0x00}, {0x29, 0x01, 0x92, 0x00}, {0x38, 0x01, 0x92, 0x01}
+    }, {
+        {0x01, 0x01, 0x9a, 0x00}, {0x16, 0x01, 0x9a, 0x01}, {0x01, 0x01, 0x9c, 0x00}, {0x16, 0x01, 0x9c, 0x01},
+        {0x01, 0x01, 0xa0, 0x00}, {0x16, 0x01, 0xa0, 0x01}, {0x01, 0x01, 0xa3, 0x00}, {0x16, 0x01, 0xa3, 0x01},
+        {0x01, 0x01, 0xa4, 0x00}, {0x16, 0x01, 0xa4, 0x01}, {0x01, 0x01, 0xa9, 0x00}, {0x16, 0x01, 0xa9, 0x01},
+        {0x01, 0x01, 0xaa, 0x00}, {0x16, 0x01, 0xaa, 0x01}, {0x01, 0x01, 0xad, 0x00}, {0x16, 0x01, 0xad, 0x01}
+    }, {
+        {0x02, 0x01, 0x9a, 0x00}, {0x09, 0x01, 0x9a, 0x00}, {0x17, 0x01, 0x9a, 0x00}, {0x28, 0x01, 0x9a, 0x01},
+        {0x02, 0x01, 0x9c, 0x00}, {0x09, 0x01, 0x9c, 0x00}, {0x17, 0x01, 0x9c, 0x00}, {0x28, 0x01, 0x9c, 0x01},
+        {0x02, 0x01, 0xa0, 0x00}, {0x09, 0x01, 0xa0, 0x00}, {0x17, 0x01, 0xa0, 0x00}, {0x28, 0x01, 0xa0, 0x01},
+        {0x02, 0x01, 0xa3, 0x00}, {0x09, 0x01, 0xa3, 0x00}, {0x17, 0x01, 0xa3, 0x00}, {0x28, 0x01, 0xa3, 0x01}
+    }, {
+        {0x03, 0x01, 0x9a, 0x00}, {0x06, 0x01, 0x9a, 0x00}, {0x0a, 0x01, 0x9a, 0x00}, {0x0f, 0x01, 0x9a, 0x00},
+        {0x18, 0x01, 0x9a, 0x00}, {0x1f, 0x01, 0x9a, 0x00}, {0x29, 0x01, 0x9a, 0x00}, {0x38, 0x01, 0x9a, 0x01},
+        {0x03, 0x01, 0x9c, 0x00}, {0x06, 0x01, 0x9c, 0x00}, {0x0a, 0x01, 0x9c, 0x00}, {0x0f, 0x01, 0x9c, 0x00},
+        {0x18, 0x01, 0x9c, 0x00}, {0x1f, 0x01, 0x9c, 0x00}, {0x29, 0x01, 0x9c, 0x00}, {0x38, 0x01, 0x9c, 0x01}
+    }, {
+        {0x03, 0x01, 0xa0, 0x00}, {0x06, 0x01, 0xa0, 0x00}, {0x0a, 0x01, 0xa0, 0x00}, {0x0f, 0x01, 0xa0, 0x00},
+        {0x18, 0x01, 0xa0, 0x00}, {0x1f, 0x01, 0xa0, 0x00}, {0x29, 0x01, 0xa0, 0x00}, {0x38, 0x01, 0xa0, 0x01},
+        {0x03, 0x01, 0xa3, 0x00}, {0x06, 0x01, 0xa3, 0x00}, {0x0a, 0x01, 0xa3, 0x00}, {0x0f, 0x01, 0xa3, 0x00},
+        {0x18, 0x01, 0xa3, 0x00}, {0x1f, 0x01, 0xa3, 0x00}, {0x29, 0x01, 0xa3, 0x00}, {0x38, 0x01, 0xa3, 0x01}
+    }, {
+        {0x02, 0x01, 0xa4, 0x00}, {0x09, 0x01, 0xa4, 0x00}, {0x17, 0x01, 0xa4, 0x00}, {0x28, 0x01, 0xa4, 0x01},
+        {0x02, 0x01, 0xa9, 0x00}, {0x09, 0x01, 0xa9, 0x00}, {0x17, 0x01, 0xa9, 0x00}, {0x28, 0x01, 0xa9, 0x01},
+        {0x02, 0x01, 0xaa, 0x00}, {0x09, 0x01, 0xaa, 0x00}, {0x17, 0x01, 0xaa, 0x00}, {0x28, 0x01, 0xaa, 0x01},
+        {0x02, 0x01, 0xad, 0x00}, {0x09, 0x01, 0xad, 0x00}, {0x17, 0x01, 0xad, 0x00}, {0x28, 0x01, 0xad, 0x01}
+    }, {
+        {0x03, 0x01, 0xa4, 0x00}, {0x06, 0x01, 0xa4, 0x00}, {0x0a, 0x01, 0xa4, 0x00}, {0x0f, 0x01, 0xa4, 0x00},
+        {0x18, 0x01, 0xa4, 0x00}, {0x1f, 0x01, 0xa4, 0x00}, {0x29, 0x01, 0xa4, 0x00}, {0x38, 0x01, 0xa4, 0x01},
+        {0x03, 0x01, 0xa9, 0x00}, {0x06, 0x01, 0xa9, 0x00}, {0x0a, 0x01, 0xa9, 0x00}, {0x0f, 0x01, 0xa9, 0x00},
+        {0x18, 0x01, 0xa9, 0x00}, {0x1f, 0x01, 0xa9, 0x00}, {0x29, 0x01, 0xa9, 0x00}, {0x38, 0x01, 0xa9, 0x01}
+    }, {
+        {0x03, 0x01, 0xaa, 0x00}, {0x06, 0x01, 0xaa, 0x00}, {0x0a, 0x01, 0xaa, 0x00}, {0x0f, 0x01, 0xaa, 0x00},
+        {0x18, 0x01, 0xaa, 0x00}, {0x1f, 0x01, 0xaa, 0x00}, {0x29, 0x01, 0xaa, 0x00}, {0x38, 0x01, 0xaa, 0x01},
+        {0x03, 0x01, 0xad, 0x00}, {0x06, 0x01, 0xad, 0x00}, {0x0a, 0x01, 0xad, 0x00}, {0x0f, 0x01, 0xad, 0x00},
+        {0x18, 0x01, 0xad, 0x00}, {0x1f, 0x01, 0xad, 0x00}, {0x29, 0x01, 0xad, 0x00}, {0x38, 0x01, 0xad, 0x01}
+    }, {
+        {0x89, 0x00, 0x00, 0x00}, {0x8a, 0x00, 0x00, 0x00}, {0x8c, 0x00, 0x00, 0x00}, {0x8d, 0x00, 0x00, 0x00},
+        {0x90, 0x00, 0x00, 0x00}, {0x91, 0x00, 0x00, 0x00}, {0x93, 0x00, 0x00, 0x00}, {0x96, 0x00, 0x00, 0x00},
+        {0x9c, 0x00, 0x00, 0x00}, {0x9f, 0x00, 0x00, 0x00}, {0xa3, 0x00, 0x00, 0x00}, {0xa6, 0x00, 0x00, 0x00},
+        {0xab, 0x00, 0x00, 0x00}, {0xae, 0x00, 0x00, 0x00}, {0xb5, 0x00, 0x00, 0x00}, {0xbe, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0xb2, 0x01}, {0x00, 0x01, 0xb5, 0x01}, {0x00, 0x01, 0xb9, 0x01}, {0x00, 0x01, 0xba, 0x01},
+        {0x00, 0x01, 0xbb, 0x01}, {0x00, 0x01, 0xbd, 0x01}, {0x00, 0x01, 0xbe, 0x01}, {0x00, 0x01, 0xc4, 0x01},
+        {0x00, 0x01, 0xc6, 0x01}, {0x00, 0x01, 0xe4, 0x01}, {0x00, 0x01, 0xe8, 0x01}, {0x00, 0x01, 0xe9, 0x01},
+        {0x94, 0x00, 0x00, 0x00}, {0x95, 0x00, 0x00, 0x00}, {0x97, 0x00, 0x00, 0x00}, {0x98, 0x00, 0x00, 0x00}
+    }, {
+        {0x01, 0x01, 0xb2, 0x00}, {0x16, 0x01, 0xb2, 0x01}, {0x01, 0x01, 0xb5, 0x00}, {0x16, 0x01, 0xb5, 0x01},
+        {0x01, 0x01, 0xb9, 0x00}, {0x16, 0x01, 0xb9, 0x01}, {0x01, 0x01, 0xba, 0x00}, {0x16, 0x01, 0xba, 0x01},
+        {0x01, 0x01, 0xbb, 0x00}, {0x16, 0x01, 0xbb, 0x01}, {0x01, 0x01, 0xbd, 0x00}, {0x16, 0x01, 0xbd, 0x01},
+        {0x01, 0x01, 0xbe, 0x00}, {0x16, 0x01, 0xbe, 0x01}, {0x01, 0x01, 0xc4, 0x00}, {0x16, 0x01, 0xc4, 0x01}
+    }, {
+        {0x02, 0x01, 0xb2, 0x00}, {0x09, 0x01, 0xb2, 0x00}, {0x17, 0x01, 0xb2, 0x00}, {0x28, 0x01, 0xb2, 0x01},
+        {0x02, 0x01, 0xb5, 0x00}, {0x09, 0x01, 0xb5, 0x00}, {0x17, 0x01, 0xb5, 0x00}, {0x28, 0x01, 0xb5, 0x01},
+        {0x02, 0x01, 0xb9, 0x00}, {0x09, 0x01, 0xb9, 0x00}, {0x17, 0x01, 0xb9, 0x00}, {0x28, 0x01, 0xb9, 0x01},
+        {0x02, 0x01, 0xba, 0x00}, {0x09, 0x01, 0xba, 0x00}, {0x17, 0x01, 0xba, 0x00}, {0x28, 0x01, 0xba, 0x01}
+    }, {
+        {0x03, 0x01, 0xb2, 0x00}, {0x06, 0x01, 0xb2, 0x00}, {0x0a, 0x01, 0xb2, 0x00}, {0x0f, 0x01, 0xb2, 0x00},
+        {0x18, 0x01, 0xb2, 0x00}, {0x1f, 0x01, 0xb2, 0x00}, {0x29, 0x01, 0xb2, 0x00}, {0x38, 0x01, 0xb2, 0x01},
+        {0x03, 0x01, 0xb5, 0x00}, {0x06, 0x01, 0xb5, 0x00}, {0x0a, 0x01, 0xb5, 0x00}, {0x0f, 0x01, 0xb5, 0x00},
+        {0x18, 0x01, 0xb5, 0x00}, {0x1f, 0x01, 0xb5, 0x00}, {0x29, 0x01, 0xb5, 0x00}, {0x38, 0x01, 0xb5, 0x01}
+    }, {
+        {0x03, 0x01, 0xb9, 0x00}, {0x06, 0x01, 0xb9, 0x00}, {0x0a, 0x01, 0xb9, 0x00}, {0x0f, 0x01, 0xb9, 0x00},
+        {0x18, 0x01, 0xb9, 0x00}, {0x1f, 0x01, 0xb9, 0x00}, {0x29, 0x01, 0xb9, 0x00}, {0x38, 0x01, 0xb9, 0x01},
+        {0x03, 0x01, 0xba, 0x00}, {0x06, 0x01, 0xba, 0x00}, {0x0a, 0x01, 0xba, 0x00}, {0x0f, 0x01, 0xba, 0x00},
+        {0x18, 0x01, 0xba, 0x00}, {0x1f, 0x01, 0xba, 0x00}, {0x29, 0x01, 0xba, 0x00}, {0x38, 0x01, 0xba, 0x01}
+    }, {
+        {0x02, 0x01, 0xbb, 0x00}, {0x09, 0x01, 0xbb, 0x00}, {0x17, 0x01, 0xbb, 0x00}, {0x28, 0x01, 0xbb, 0x01},
+        {0x02, 0x01, 0xbd, 0x00}, {0x09, 0x01, 0xbd, 0x00}, {0x17, 0x01, 0xbd, 0x00}, {0x28, 0x01, 0xbd, 0x01},
+        {0x02, 0x01, 0xbe, 0x00}, {0x09, 0x01, 0xbe, 0x00}, {0x17, 0x01, 0xbe, 0x00}, {0x28, 0x01, 0xbe, 0x01},
+        {0x02, 0x01, 0xc4, 0x00}, {0x09, 0x01, 0xc4, 0x00}, {0x17, 0x01, 0xc4, 0x00}, {0x28, 0x01, 0xc4, 0x01}
+    }, {
+        {0x03, 0x01, 0xbb, 0x00}, {0x06, 0x01, 0xbb, 0x00}, {0x0a, 0x01, 0xbb, 0x00}, {0x0f, 0x01, 0xbb, 0x00},
+        {0x18, 0x01, 0xbb, 0x00}, {0x1f, 0x01, 0xbb, 0x00}, {0x29, 0x01, 0xbb, 0x00}, {0x38, 0x01, 0xbb, 0x01},
+        {0x03, 0x01, 0xbd, 0x00}, {0x06, 0x01, 0xbd, 0x00}, {0x0a, 0x01, 0xbd, 0x00}, {0x0f, 0x01, 0xbd, 0x00},
+        {0x18, 0x01, 0xbd, 0x00}, {0x1f, 0x01, 0xbd, 0x00}, {0x29, 0x01, 0xbd, 0x00}, {0x38, 0x01, 0xbd, 0x01}
+    }, {
+        {0x03, 0x01, 0xbe, 0x00}, {0x06, 0x01, 0xbe, 0x00}, {0x0a, 0x01, 0xbe, 0x00}, {0x0f, 0x01, 0xbe, 0x00},
+        {0x18, 0x01, 0xbe, 0x00}, {0x1f, 0x01, 0xbe, 0x00}, {0x29, 0x01, 0xbe, 0x00}, {0x38, 0x01, 0xbe, 0x01},
+        {0x03, 0x01, 0xc4, 0x00}, {0x06, 0x01, 0xc4, 0x00}, {0x0a, 0x01, 0xc4, 0x00}, {0x0f, 0x01, 0xc4, 0x00},
+        {0x18, 0x01, 0xc4, 0x00}, {0x1f, 0x01, 0xc4, 0x00}, {0x29, 0x01, 0xc4, 0x00}, {0x38, 0x01, 0xc4, 0x01}
+    }, {
+        {0x01, 0x01, 0xc6, 0x00}, {0x16, 0x01, 0xc6, 0x01}, {0x01, 0x01, 0xe4, 0x00}, {0x16, 0x01, 0xe4, 0x01},
+        {0x01, 0x01, 0xe8, 0x00}, {0x16, 0x01, 0xe8, 0x01}, {0x01, 0x01, 0xe9, 0x00}, {0x16, 0x01, 0xe9, 0x01},
+        {0x00, 0x01, 0x01, 0x01}, {0x00, 0x01, 0x87, 0x01}, {0x00, 0x01, 0x89, 0x01}, {0x00, 0x01, 0x8a, 0x01},
+        {0x00, 0x01, 0x8b, 0x01}, {0x00, 0x01, 0x8c, 0x01}, {0x00, 0x01, 0x8d, 0x01}, {0x00, 0x01, 0x8f, 0x01}
+    }, {
+        {0x02, 0x01, 0xc6, 0x00}, {0x09, 0x01, 0xc6, 0x00}, {0x17, 0x01, 0xc6, 0x00}, {0x28, 0x01, 0xc6, 0x01},
+        {0x02, 0x01, 0xe4, 0x00}, {0x09, 0x01, 0xe4, 0x00}, {0x17, 0x01, 0xe4, 0x00}, {0x28, 0x01, 0xe4, 0x01},
+        {0x02, 0x01, 0xe8, 0x00}, {0x09, 0x01, 0xe8, 0x00}, {0x17, 0x01, 0xe8, 0x00}, {0x28, 0x01, 0xe8, 0x01},
+        {0x02, 0x01, 0xe9, 0x00}, {0x09, 0x01, 0xe9, 0x00}, {0x17, 0x01, 0xe9, 0x00}, {0x28, 0x01, 0xe9, 0x01}
+    }, {
+        {0x03, 0x01, 0xc6, 0x00}, {0x06, 0x01, 0xc6, 0x00}, {0x0a, 0x01, 0xc6, 0x00}, {0x0f, 0x01, 0xc6, 0x00},
+        {0x18, 0x01, 0xc6, 0x00}, {0x1f, 0x01, 0xc6, 0x00}, {0x29, 0x01, 0xc6, 0x00}, {0x38, 0x01, 0xc6, 0x01},
+        {0x03, 0x01, 0xe4, 0x00}, {0x06, 0x01, 0xe4, 0x00}, {0x0a, 0x01, 0xe4, 0x00}, {0x0f, 0x01, 0xe4, 0x00},
+        {0x18, 0x01, 0xe4, 0x00}, {0x1f, 0x01, 0xe4, 0x00}, {0x29, 0x01, 0xe4, 0x00}, {0x38, 0x01, 0xe4, 0x01}
+    }, {
+        {0x03, 0x01, 0xe8, 0x00}, {0x06, 0x01, 0xe8, 0x00}, {0x0a, 0x01, 0xe8, 0x00}, {0x0f, 0x01, 0xe8, 0x00},
+        {0x18, 0x01, 0xe8, 0x00}, {0x1f, 0x01, 0xe8, 0x00}, {0x29, 0x01, 0xe8, 0x00}, {0x38, 0x01, 0xe8, 0x01},
+        {0x03, 0x01, 0xe9, 0x00}, {0x06, 0x01, 0xe9, 0x00}, {0x0a, 0x01, 0xe9, 0x00}, {0x0f, 0x01, 0xe9, 0x00},
+        {0x18, 0x01, 0xe9, 0x00}, {0x1f, 0x01, 0xe9, 0x00}, {0x29, 0x01, 0xe9, 0x00}, {0x38, 0x01, 0xe9, 0x01}
+    }, {
+        {0x01, 0x01, 0x01, 0x00}, {0x16, 0x01, 0x01, 0x01}, {0x01, 0x01, 0x87, 0x00}, {0x16, 0x01, 0x87, 0x01},
+        {0x01, 0x01, 0x89, 0x00}, {0x16, 0x01, 0x89, 0x01}, {0x01, 0x01, 0x8a, 0x00}, {0x16, 0x01, 0x8a, 0x01},
+        {0x01, 0x01, 0x8b, 0x00}, {0x16, 0x01, 0x8b, 0x01}, {0x01, 0x01, 0x8c, 0x00}, {0x16, 0x01, 0x8c, 0x01},
+        {0x01, 0x01, 0x8d, 0x00}, {0x16, 0x01, 0x8d, 0x01}, {0x01, 0x01, 0x8f, 0x00}, {0x16, 0x01, 0x8f, 0x01}
+    }, {
+        {0x02, 0x01, 0x01, 0x00}, {0x09, 0x01, 0x01, 0x00}, {0x17, 0x01, 0x01, 0x00}, {0x28, 0x01, 0x01, 0x01},
+        {0x02, 0x01, 0x87, 0x00}, {0x09, 0x01, 0x87, 0x00}, {0x17, 0x01, 0x87, 0x00}, {0x28, 0x01, 0x87, 0x01},
+        {0x02, 0x01, 0x89, 0x00}, {0x09, 0x01, 0x89, 0x00}, {0x17, 0x01, 0x89, 0x00}, {0x28, 0x01, 0x89, 0x01},
+        {0x02, 0x01, 0x8a, 0x00}, {0x09, 0x01, 0x8a, 0x00}, {0x17, 0x01, 0x8a, 0x00}, {0x28, 0x01, 0x8a, 0x01}
+    }, {
+        {0x03, 0x01, 0x01, 0x00}, {0x06, 0x01, 0x01, 0x00}, {0x0a, 0x01, 0x01, 0x00}, {0x0f, 0x01, 0x01, 0x00},
+        {0x18, 0x01, 0x01, 0x00}, {0x1f, 0x01, 0x01, 0x00}, {0x29, 0x01, 0x01, 0x00}, {0x38, 0x01, 0x01, 0x01},
+        {0x03, 0x01, 0x87, 0x00}, {0x06, 0x01, 0x87, 0x00}, {0x0a, 0x01, 0x87, 0x00}, {0x0f, 0x01, 0x87, 0x00},
+        {0x18, 0x01, 0x87, 0x00}, {0x1f, 0x01, 0x87, 0x00}, {0x29, 0x01, 0x87, 0x00}, {0x38, 0x01, 0x87, 0x01}
+    }, {
+        {0x03, 0x01, 0x89, 0x00}, {0x06, 0x01, 0x89, 0x00}, {0x0a, 0x01, 0x89, 0x00}, {0x0f, 0x01, 0x89, 0x00},
+        {0x18, 0x01, 0x89, 0x00}, {0x1f, 0x01, 0x89, 0x00}, {0x29, 0x01, 0x89, 0x00}, {0x38, 0x01, 0x89, 0x01},
+        {0x03, 0x01, 0x8a, 0x00}, {0x06, 0x01, 0x8a, 0x00}, {0x0a, 0x01, 0x8a, 0x00}, {0x0f, 0x01, 0x8a, 0x00},
+        {0x18, 0x01, 0x8a, 0x00}, {0x1f, 0x01, 0x8a, 0x00}, {0x29, 0x01, 0x8a, 0x00}, {0x38, 0x01, 0x8a, 0x01}
+    }, {
+        {0x02, 0x01, 0x8b, 0x00}, {0x09, 0x01, 0x8b, 0x00}, {0x17, 0x01, 0x8b, 0x00}, {0x28, 0x01, 0x8b, 0x01},
+        {0x02, 0x01, 0x8c, 0x00}, {0x09, 0x01, 0x8c, 0x00}, {0x17, 0x01, 0x8c, 0x00}, {0x28, 0x01, 0x8c, 0x01},
+        {0x02, 0x01, 0x8d, 0x00}, {0x09, 0x01, 0x8d, 0x00}, {0x17, 0x01, 0x8d, 0x00}, {0x28, 0x01, 0x8d, 0x01},
+        {0x02, 0x01, 0x8f, 0x00}, {0x09, 0x01, 0x8f, 0x00}, {0x17, 0x01, 0x8f, 0x00}, {0x28, 0x01, 0x8f, 0x01}
+    }, {
+        {0x03, 0x01, 0x8b, 0x00}, {0x06, 0x01, 0x8b, 0x00}, {0x0a, 0x01, 0x8b, 0x00}, {0x0f, 0x01, 0x8b, 0x00},
+        {0x18, 0x01, 0x8b, 0x00}, {0x1f, 0x01, 0x8b, 0x00}, {0x29, 0x01, 0x8b, 0x00}, {0x38, 0x01, 0x8b, 0x01},
+        {0x03, 0x01, 0x8c, 0x00}, {0x06, 0x01, 0x8c, 0x00}, {0x0a, 0x01, 0x8c, 0x00}, {0x0f, 0x01, 0x8c, 0x00},
+        {0x18, 0x01, 0x8c, 0x00}, {0x1f, 0x01, 0x8c, 0x00}, {0x29, 0x01, 0x8c, 0x00}, {0x38, 0x01, 0x8c, 0x01}
+    }, {
+        {0x03, 0x01, 0x8d, 0x00}, {0x06, 0x01, 0x8d, 0x00}, {0x0a, 0x01, 0x8d, 0x00}, {0x0f, 0x01, 0x8d, 0x00},
+        {0x18, 0x01, 0x8d, 0x00}, {0x1f, 0x01, 0x8d, 0x00}, {0x29, 0x01, 0x8d, 0x00}, {0x38, 0x01, 0x8d, 0x01},
+        {0x03, 0x01, 0x8f, 0x00}, {0x06, 0x01, 0x8f, 0x00}, {0x0a, 0x01, 0x8f, 0x00}, {0x0f, 0x01, 0x8f, 0x00},
+        {0x18, 0x01, 0x8f, 0x00}, {0x1f, 0x01, 0x8f, 0x00}, {0x29, 0x01, 0x8f, 0x00}, {0x38, 0x01, 0x8f, 0x01}
+    }, {
+        {0x9d, 0x00, 0x00, 0x00}, {0x9e, 0x00, 0x00, 0x00}, {0xa0, 0x00, 0x00, 0x00}, {0xa1, 0x00, 0x00, 0x00},
+        {0xa4, 0x00, 0x00, 0x00}, {0xa5, 0x00, 0x00, 0x00}, {0xa7, 0x00, 0x00, 0x00}, {0xa8, 0x00, 0x00, 0x00},
+        {0xac, 0x00, 0x00, 0x00}, {0xad, 0x00, 0x00, 0x00}, {0xaf, 0x00, 0x00, 0x00}, {0xb1, 0x00, 0x00, 0x00},
+        {0xb6, 0x00, 0x00, 0x00}, {0xb9, 0x00, 0x00, 0x00}, {0xbf, 0x00, 0x00, 0x00}, {0xcf, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0x93, 0x01}, {0x00, 0x01, 0x95, 0x01}, {0x00, 0x01, 0x96, 0x01}, {0x00, 0x01, 0x97, 0x01},
+        {0x00, 0x01, 0x98, 0x01}, {0x00, 0x01, 0x9b, 0x01}, {0x00, 0x01, 0x9d, 0x01}, {0x00, 0x01, 0x9e, 0x01},
+        {0x00, 0x01, 0xa5, 0x01}, {0x00, 0x01, 0xa6, 0x01}, {0x00, 0x01, 0xa8, 0x01}, {0x00, 0x01, 0xae, 0x01},
+        {0x00, 0x01, 0xaf, 0x01}, {0x00, 0x01, 0xb4, 0x01}, {0x00, 0x01, 0xb6, 0x01}, {0x00, 0x01, 0xb7, 0x01}
+    }, {
+        {0x01, 0x01, 0x93, 0x00}, {0x16, 0x01, 0x93, 0x01}, {0x01, 0x01, 0x95, 0x00}, {0x16, 0x01, 0x95, 0x01},
+        {0x01, 0x01, 0x96, 0x00}, {0x16, 0x01, 0x96, 0x01}, {0x01, 0x01, 0x97, 0x00}, {0x16, 0x01, 0x97, 0x01},
+        {0x01, 0x01, 0x98, 0x00}, {0x16, 0x01, 0x98, 0x01}, {0x01, 0x01, 0x9b, 0x00}, {0x16, 0x01, 0x9b, 0x01},
+        {0x01, 0x01, 0x9d, 0x00}, {0x16, 0x01, 0x9d, 0x01}, {0x01, 0x01, 0x9e, 0x00}, {0x16, 0x01, 0x9e, 0x01}
+    }, {
+        {0x02, 0x01, 0x93, 0x00}, {0x09, 0x01, 0x93, 0x00}, {0x17, 0x01, 0x93, 0x00}, {0x28, 0x01, 0x93, 0x01},
+        {0x02, 0x01, 0x95, 0x00}, {0x09, 0x01, 0x95, 0x00}, {0x17, 0x01, 0x95, 0x00}, {0x28, 0x01, 0x95, 0x01},
+        {0x02, 0x01, 0x96, 0x00}, {0x09, 0x01, 0x96, 0x00}, {0x17, 0x01, 0x96, 0x00}, {0x28, 0x01, 0x96, 0x01},
+        {0x02, 0x01, 0x97, 0x00}, {0x09, 0x01, 0x97, 0x00}, {0x17, 0x01, 0x97, 0x00}, {0x28, 0x01, 0x97, 0x01}
+    }, {
+        {0x03, 0x01, 0x93, 0x00}, {0x06, 0x01, 0x93, 0x00}, {0x0a, 0x01, 0x93, 0x00}, {0x0f, 0x01, 0x93, 0x00},
+        {0x18, 0x01, 0x93, 0x00}, {0x1f, 0x01, 0x93, 0x00}, {0x29, 0x01, 0x93, 0x00}, {0x38, 0x01, 0x93, 0x01},
+        {0x03, 0x01, 0x95, 0x00}, {0x06, 0x01, 0x95, 0x00}, {0x0a, 0x01, 0x95, 0x00}, {0x0f, 0x01, 0x95, 0x00},
+        {0x18, 0x01, 0x95, 0x00}, {0x1f, 0x01, 0x95, 0x00}, {0x29, 0x01, 0x95, 0x00}, {0x38, 0x01, 0x95, 0x01}
+    }, {
+        {0x03, 0x01, 0x96, 0x00}, {0x06, 0x01, 0x96, 0x00}, {0x0a, 0x01, 0x96, 0x00}, {0x0f, 0x01, 0x96, 0x00},
+        {0x18, 0x01, 0x96, 0x00}, {0x1f, 0x01, 0x96, 0x00}, {0x29, 0x01, 0x96, 0x00}, {0x38, 0x01, 0x96, 0x01},
+        {0x03, 0x01, 0x97, 0x00}, {0x06, 0x01, 0x97, 0x00}, {0x0a, 0x01, 0x97, 0x00}, {0x0f, 0x01, 0x97, 0x00},
+        {0x18, 0x01, 0x97, 0x00}, {0x1f, 0x01, 0x97, 0x00}, {0x29, 0x01, 0x97, 0x00}, {0x38, 0x01, 0x97, 0x01}
+    }, {
+        {0x02, 0x01, 0x98, 0x00}, {0x09, 0x01, 0x98, 0x00}, {0x17, 0x01, 0x98, 0x00}, {0x28, 0x01, 0x98, 0x01},
+        {0x02, 0x01, 0x9b, 0x00}, {0x09, 0x01, 0x9b, 0x00}, {0x17, 0x01, 0x9b, 0x00}, {0x28, 0x01, 0x9b, 0x01},
+        {0x02, 0x01, 0x9d, 0x00}, {0x09, 0x01, 0x9d, 0x00}, {0x17, 0x01, 0x9d, 0x00}, {0x28, 0x01, 0x9d, 0x01},
+        {0x02, 0x01, 0x9e, 0x00}, {0x09, 0x01, 0x9e, 0x00}, {0x17, 0x01, 0x9e, 0x00}, {0x28, 0x01, 0x9e, 0x01}
+    }, {
+        {0x03, 0x01, 0x98, 0x00}, {0x06, 0x01, 0x98, 0x00}, {0x0a, 0x01, 0x98, 0x00}, {0x0f, 0x01, 0x98, 0x00},
+        {0x18, 0x01, 0x98, 0x00}, {0x1f, 0x01, 0x98, 0x00}, {0x29, 0x01, 0x98, 0x00}, {0x38, 0x01, 0x98, 0x01},
+        {0x03, 0x01, 0x9b, 0x00}, {0x06, 0x01, 0x9b, 0x00}, {0x0a, 0x01, 0x9b, 0x00}, {0x0f, 0x01, 0x9b, 0x00},
+        {0x18, 0x01, 0x9b, 0x00}, {0x1f, 0x01, 0x9b, 0x00}, {0x29, 0x01, 0x9b, 0x00}, {0x38, 0x01, 0x9b, 0x01}
+    }, {
+        {0x03, 0x01, 0x9d, 0x00}, {0x06, 0x01, 0x9d, 0x00}, {0x0a, 0x01, 0x9d, 0x00}, {0x0f, 0x01, 0x9d, 0x00},
+        {0x18, 0x01, 0x9d, 0x00}, {0x1f, 0x01, 0x9d, 0x00}, {0x29, 0x01, 0x9d, 0x00}, {0x38, 0x01, 0x9d, 0x01},
+        {0x03, 0x01, 0x9e, 0x00}, {0x06, 0x01, 0x9e, 0x00}, {0x0a, 0x01, 0x9e, 0x00}, {0x0f, 0x01, 0x9e, 0x00},
+        {0x18, 0x01, 0x9e, 0x00}, {0x1f, 0x01, 0x9e, 0x00}, {0x29, 0x01, 0x9e, 0x00}, {0x38, 0x01, 0x9e, 0x01}
+    }, {
+        {0x01, 0x01, 0xa5, 0x00}, {0x16, 0x01, 0xa5, 0x01}, {0x01, 0x01, 0xa6, 0x00}, {0x16, 0x01, 0xa6, 0x01},
+        {0x01, 0x01, 0xa8, 0x00}, {0x16, 0x01, 0xa8, 0x01}, {0x01, 0x01, 0xae, 0x00}, {0x16, 0x01, 0xae, 0x01},
+        {0x01, 0x01, 0xaf, 0x00}, {0x16, 0x01, 0xaf, 0x01}, {0x01, 0x01, 0xb4, 0x00}, {0x16, 0x01, 0xb4, 0x01},
+        {0x01, 0x01, 0xb6, 0x00}, {0x16, 0x01, 0xb6, 0x01}, {0x01, 0x01, 0xb7, 0x00}, {0x16, 0x01, 0xb7, 0x01}
+    }, {
+        {0x02, 0x01, 0xa5, 0x00}, {0x09, 0x01, 0xa5, 0x00}, {0x17, 0x01, 0xa5, 0x00}, {0x28, 0x01, 0xa5, 0x01},
+        {0x02, 0x01, 0xa6, 0x00}, {0x09, 0x01, 0xa6, 0x00}, {0x17, 0x01, 0xa6, 0x00}, {0x28, 0x01, 0xa6, 0x01},
+        {0x02, 0x01, 0xa8, 0x00}, {0x09, 0x01, 0xa8, 0x00}, {0x17, 0x01, 0xa8, 0x00}, {0x28, 0x01, 0xa8, 0x01},
+        {0x02, 0x01, 0xae, 0x00}, {0x09, 0x01, 0xae, 0x00}, {0x17, 0x01, 0xae, 0x00}, {0x28, 0x01, 0xae, 0x01}
+    }, {
+        {0x03, 0x01, 0xa5, 0x00}, {0x06, 0x01, 0xa5, 0x00}, {0x0a, 0x01, 0xa5, 0x00}, {0x0f, 0x01, 0xa5, 0x00},
+        {0x18, 0x01, 0xa5, 0x00}, {0x1f, 0x01, 0xa5, 0x00}, {0x29, 0x01, 0xa5, 0x00}, {0x38, 0x01, 0xa5, 0x01},
+        {0x03, 0x01, 0xa6, 0x00}, {0x06, 0x01, 0xa6, 0x00}, {0x0a, 0x01, 0xa6, 0x00}, {0x0f, 0x01, 0xa6, 0x00},
+        {0x18, 0x01, 0xa6, 0x00}, {0x1f, 0x01, 0xa6, 0x00}, {0x29, 0x01, 0xa6, 0x00}, {0x38, 0x01, 0xa6, 0x01}
+    }, {
+        {0x03, 0x01, 0xa8, 0x00}, {0x06, 0x01, 0xa8, 0x00}, {0x0a, 0x01, 0xa8, 0x00}, {0x0f, 0x01, 0xa8, 0x00},
+        {0x18, 0x01, 0xa8, 0x00}, {0x1f, 0x01, 0xa8, 0x00}, {0x29, 0x01, 0xa8, 0x00}, {0x38, 0x01, 0xa8, 0x01},
+        {0x03, 0x01, 0xae, 0x00}, {0x06, 0x01, 0xae, 0x00}, {0x0a, 0x01, 0xae, 0x00}, {0x0f, 0x01, 0xae, 0x00},
+        {0x18, 0x01, 0xae, 0x00}, {0x1f, 0x01, 0xae, 0x00}, {0x29, 0x01, 0xae, 0x00}, {0x38, 0x01, 0xae, 0x01}
+    }, {
+        {0x02, 0x01, 0xaf, 0x00}, {0x09, 0x01, 0xaf, 0x00}, {0x17, 0x01, 0xaf, 0x00}, {0x28, 0x01, 0xaf, 0x01},
+        {0x02, 0x01, 0xb4, 0x00}, {0x09, 0x01, 0xb4, 0x00}, {0x17, 0x01, 0xb4, 0x00}, {0x28, 0x01, 0xb4, 0x01},
+        {0x02, 0x01, 0xb6, 0x00}, {0x09, 0x01, 0xb6, 0x00}, {0x17, 0x01, 0xb6, 0x00}, {0x28, 0x01, 0xb6, 0x01},
+        {0x02, 0x01, 0xb7, 0x00}, {0x09, 0x01, 0xb7, 0x00}, {0x17, 0x01, 0xb7, 0x00}, {0x28, 0x01, 0xb7, 0x01}
+    }, {
+        {0x03, 0x01, 0xaf, 0x00}, {0x06, 0x01, 0xaf, 0x00}, {0x0a, 0x01, 0xaf, 0x00}, {0x0f, 0x01, 0xaf, 0x00},
+        {0x18, 0x01, 0xaf, 0x00}, {0x1f, 0x01, 0xaf, 0x00}, {0x29, 0x01, 0xaf, 0x00}, {0x38, 0x01, 0xaf, 0x01},
+        {0x03, 0x01, 0xb4, 0x00}, {0x06, 0x01, 0xb4, 0x00}, {0x0a, 0x01, 0xb4, 0x00}, {0x0f, 0x01, 0xb4, 0x00},
+        {0x18, 0x01, 0xb4, 0x00}, {0x1f, 0x01, 0xb4, 0x00}, {0x29, 0x01, 0xb4, 0x00}, {0x38, 0x01, 0xb4, 0x01}
+    }, {
+        {0x03, 0x01, 0xb6, 0x00}, {0x06, 0x01, 0xb6, 0x00}, {0x0a, 0x01, 0xb6, 0x00}, {0x0f, 0x01, 0xb6, 0x00},
+        {0x18, 0x01, 0xb6, 0x00}, {0x1f, 0x01, 0xb6, 0x00}, {0x29, 0x01, 0xb6, 0x00}, {0x38, 0x01, 0xb6, 0x01},
+        {0x03, 0x01, 0xb7, 0x00}, {0x06, 0x01, 0xb7, 0x00}, {0x0a, 0x01, 0xb7, 0x00}, {0x0f, 0x01, 0xb7, 0x00},
+        {0x18, 0x01, 0xb7, 0x00}, {0x1f, 0x01, 0xb7, 0x00}, {0x29, 0x01, 0xb7, 0x00}, {0x38, 0x01, 0xb7, 0x01}
+    }, {
+        {0x00, 0x01, 0xbc, 0x01}, {0x00, 0x01, 0xbf, 0x01}, {0x00, 0x01, 0xc5, 0x01}, {0x00, 0x01, 0xe7, 0x01},
+        {0x00, 0x01, 0xef, 0x01}, {0xb0, 0x00, 0x00, 0x00}, {0xb2, 0x00, 0x00, 0x00}, {0xb3, 0x00, 0x00, 0x00},
+        {0xb7, 0x00, 0x00, 0x00}, {0xb8, 0x00, 0x00, 0x00}, {0xba, 0x00, 0x00, 0x00}, {0xbb, 0x00, 0x00, 0x00},
+        {0xc0, 0x00, 0x00, 0x00}, {0xc7, 0x00, 0x00, 0x00}, {0xd0, 0x00, 0x00, 0x00}, {0xdf, 0x00, 0x00, 0x01}
+    }, {
+        {0x01, 0x01, 0xbc, 0x00}, {0x16, 0x01, 0xbc, 0x01}, {0x01, 0x01, 0xbf, 0x00}, {0x16, 0x01, 0xbf, 0x01},
+        {0x01, 0x01, 0xc5, 0x00}, {0x16, 0x01, 0xc5, 0x01}, {0x01, 0x01, 0xe7, 0x00}, {0x16, 0x01, 0xe7, 0x01},
+        {0x01, 0x01, 0xef, 0x00}, {0x16, 0x01, 0xef, 0x01}, {0x00, 0x01, 0x09, 0x01}, {0x00, 0x01, 0x8e, 0x01},
+        {0x00, 0x01, 0x90, 0x01}, {0x00, 0x01, 0x91, 0x01}, {0x00, 0x01, 0x94, 0x01}, {0x00, 0x01, 0x9f, 0x01}
+    }, {
+        {0x02, 0x01, 0xbc, 0x00}, {0x09, 0x01, 0xbc, 0x00}, {0x17, 0x01, 0xbc, 0x00}, {0x28, 0x01, 0xbc, 0x01},
+        {0x02, 0x01, 0xbf, 0x00}, {0x09, 0x01, 0xbf, 0x00}, {0x17, 0x01, 0xbf, 0x00}, {0x28, 0x01, 0xbf, 0x01},
+        {0x02, 0x01, 0xc5, 0x00}, {0x09, 0x01, 0xc5, 0x00}, {0x17, 0x01, 0xc5, 0x00}, {0x28, 0x01, 0xc5, 0x01},
+        {0x02, 0x01, 0xe7, 0x00}, {0x09, 0x01, 0xe7, 0x00}, {0x17, 0x01, 0xe7, 0x00}, {0x28, 0x01, 0xe7, 0x01}
+    }, {
+        {0x03, 0x01, 0xbc, 0x00}, {0x06, 0x01, 0xbc, 0x00}, {0x0a, 0x01, 0xbc, 0x00}, {0x0f, 0x01, 0xbc, 0x00},
+        {0x18, 0x01, 0xbc, 0x00}, {0x1f, 0x01, 0xbc, 0x00}, {0x29, 0x01, 0xbc, 0x00}, {0x38, 0x01, 0xbc, 0x01},
+        {0x03, 0x01, 0xbf, 0x00}, {0x06, 0x01, 0xbf, 0x00}, {0x0a, 0x01, 0xbf, 0x00}, {0x0f, 0x01, 0xbf, 0x00},
+        {0x18, 0x01, 0xbf, 0x00}, {0x1f, 0x01, 0xbf, 0x00}, {0x29, 0x01, 0xbf, 0x00}, {0x38, 0x01, 0xbf, 0x01}
+    }, {
+        {0x03, 0x01, 0xc5, 0x00}, {0x06, 0x01, 0xc5, 0x00}, {0x0a, 0x01, 0xc5, 0x00}, {0x0f, 0x01, 0xc5, 0x00},
+        {0x18, 0x01, 0xc5, 0x00}, {0x1f, 0x01, 0xc5, 0x00}, {0x29, 0x01, 0xc5, 0x00}, {0x38, 0x01, 0xc5, 0x01},
+        {0x03, 0x01, 0xe7, 0x00}, {0x06, 0x01, 0xe7, 0x00}, {0x0a, 0x01, 0xe7, 0x00}, {0x0f, 0x01, 0xe7, 0x00},
+        {0x18, 0x01, 0xe7, 0x00}, {0x1f, 0x01, 0xe7, 0x00}, {0x29, 0x01, 0xe7, 0x00}, {0x38, 0x01, 0xe7, 0x01}
+    }, {
+        {0x02, 0x01, 0xef, 0x00}, {0x09, 0x01, 0xef, 0x00}, {0x17, 0x01, 0xef, 0x00}, {0x28, 0x01, 0xef, 0x01},
+        {0x01, 0x01, 0x09, 0x00}, {0x16, 0x01, 0x09, 0x01}, {0x01, 0x01, 0x8e, 0x00}, {0x16, 0x01, 0x8e, 0x01},
+        {0x01, 0x01, 0x90, 0x00}, {0x16, 0x01, 0x90, 0x01}, {0x01, 0x01, 0x91, 0x00}, {0x16, 0x01, 0x91, 0x01},
+        {0x01, 0x01, 0x94, 0x00}, {0x16, 0x01, 0x94, 0x01}, {0x01, 0x01, 0x9f, 0x00}, {0x16, 0x01, 0x9f, 0x01}
+    }, {
+        {0x03, 0x01, 0xef, 0x00}, {0x06, 0x01, 0xef, 0x00}, {0x0a, 0x01, 0xef, 0x00}, {0x0f, 0x01, 0xef, 0x00},
+        {0x18, 0x01, 0xef, 0x00}, {0x1f, 0x01, 0xef, 0x00}, {0x29, 0x01, 0xef, 0x00}, {0x38, 0x01, 0xef, 0x01},
+        {0x02, 0x01, 0x09, 0x00}, {0x09, 0x01, 0x09, 0x00}, {0x17, 0x01, 0x09, 0x00}, {0x28, 0x01, 0x09, 0x01},
+        {0x02, 0x01, 0x8e, 0x00}, {0x09, 0x01, 0x8e, 0x00}, {0x17, 0x01, 0x8e, 0x00}, {0x28, 0x01, 0x8e, 0x01}
+    }, {
+        {0x03, 0x01, 0x09, 0x00}, {0x06, 0x01, 0x09, 0x00}, {0x0a, 0x01, 0x09, 0x00}, {0x0f, 0x01, 0x09, 0x00},
+        {0x18, 0x01, 0x09, 0x00}, {0x1f, 0x01, 0x09, 0x00}, {0x29, 0x01, 0x09, 0x00}, {0x38, 0x01, 0x09, 0x01},
+        {0x03, 0x01, 0x8e, 0x00}, {0x06, 0x01, 0x8e, 0x00}, {0x0a, 0x01, 0x8e, 0x00}, {0x0f, 0x01, 0x8e, 0x00},
+        {0x18, 0x01, 0x8e, 0x00}, {0x1f, 0x01, 0x8e, 0x00}, {0x29, 0x01, 0x8e, 0x00}, {0x38, 0x01, 0x8e, 0x01}
+    }, {
+        {0x02, 0x01, 0x90, 0x00}, {0x09, 0x01, 0x90, 0x00}, {0x17, 0x01, 0x90, 0x00}, {0x28, 0x01, 0x90, 0x01},
+        {0x02, 0x01, 0x91, 0x00}, {0x09, 0x01, 0x91, 0x00}, {0x17, 0x01, 0x91, 0x00}, {0x28, 0x01, 0x91, 0x01},
+        {0x02, 0x01, 0x94, 0x00}, {0x09, 0x01, 0x94, 0x00}, {0x17, 0x01, 0x94, 0x00}, {0x28, 0x01, 0x94, 0x01},
+        {0x02, 0x01, 0x9f, 0x00}, {0x09, 0x01, 0x9f, 0x00}, {0x17, 0x01, 0x9f, 0x00}, {0x28, 0x01, 0x9f, 0x01}
+    }, {
+        {0x03, 0x01, 0x90, 0x00}, {0x06, 0x01, 0x90, 0x00}, {0x0a, 0x01, 0x90, 0x00}, {0x0f, 0x01, 0x90, 0x00},
+        {0x18, 0x01, 0x90, 0x00}, {0x1f, 0x01, 0x90, 0x00}, {0x29, 0x01, 0x90, 0x00}, {0x38, 0x01, 0x90, 0x01},
+        {0x03, 0x01, 0x91, 0x00}, {0x06, 0x01, 0x91, 0x00}, {0x0a, 0x01, 0x91, 0x00}, {0x0f, 0x01, 0x91, 0x00},
+        {0x18, 0x01, 0x91, 0x00}, {0x1f, 0x01, 0x91, 0x00}, {0x29, 0x01, 0x91, 0x00}, {0x38, 0x01, 0x91, 0x01}
+    }, {
+        {0x03, 0x01, 0x94, 0x00}, {0x06, 0x01, 0x94, 0x00}, {0x0a, 0x01, 0x94, 0x00}, {0x0f, 0x01, 0x94, 0x00},
+        {0x18, 0x01, 0x94, 0x00}, {0x1f, 0x01, 0x94, 0x00}, {0x29, 0x01, 0x94, 0x00}, {0x38, 0x01, 0x94, 0x01},
+        {0x03, 0x01, 0x9f, 0x00}, {0x06, 0x01, 0x9f, 0x00}, {0x0a, 0x01, 0x9f, 0x00}, {0x0f, 0x01, 0x9f, 0x00},
+        {0x18, 0x01, 0x9f, 0x00}, {0x1f, 0x01, 0x9f, 0x00}, {0x29, 0x01, 0x9f, 0x00}, {0x38, 0x01, 0x9f, 0x01}
+    }, {
+        {0x00, 0x01, 0xab, 0x01}, {0x00, 0x01, 0xce, 0x01}, {0x00, 0x01, 0xd7, 0x01}, {0x00, 0x01, 0xe1, 0x01},
+        {0x00, 0x01, 0xec, 0x01}, {0x00, 0x01, 0xed, 0x01}, {0xbc, 0x00, 0x00, 0x00}, {0xbd, 0x00, 0x00, 0x00},
+        {0xc1, 0x00, 0x00, 0x00}, {0xc4, 0x00, 0x00, 0x00}, {0xc8, 0x00, 0x00, 0x00}, {0xcb, 0x00, 0x00, 0x00},
+        {0xd1, 0x00, 0x00, 0x00}, {0xd8, 0x00, 0x00, 0x00}, {0xe0, 0x00, 0x00, 0x00}, {0xee, 0x00, 0x00, 0x01}
+    }, {
+        {0x01, 0x01, 0xab, 0x00}, {0x16, 0x01, 0xab, 0x01}, {0x01, 0x01, 0xce, 0x00}, {0x16, 0x01, 0xce, 0x01},
+        {0x01, 0x01, 0xd7, 0x00}, {0x16, 0x01, 0xd7, 0x01}, {0x01, 0x01, 0xe1, 0x00}, {0x16, 0x01, 0xe1, 0x01},
+        {0x01, 0x01, 0xec, 0x00}, {0x16, 0x01, 0xec, 0x01}, {0x01, 0x01, 0xed, 0x00}, {0x16, 0x01, 0xed, 0x01},
+        {0x00, 0x01, 0xc7, 0x01}, {0x00, 0x01, 0xcf, 0x01}, {0x00, 0x01, 0xea, 0x01}, {0x00, 0x01, 0xeb, 0x01}
+    }, {
+        {0x02, 0x01, 0xab, 0x00}, {0x09, 0x01, 0xab, 0x00}, {0x17, 0x01, 0xab, 0x00}, {0x28, 0x01, 0xab, 0x01},
+        {0x02, 0x01, 0xce, 0x00}, {0x09, 0x01, 0xce, 0x00}, {0x17, 0x01, 0xce, 0x00}, {0x28, 0x01, 0xce, 0x01},
+        {0x02, 0x01, 0xd7, 0x00}, {0x09, 0x01, 0xd7, 0x00}, {0x17, 0x01, 0xd7, 0x00}, {0x28, 0x01, 0xd7, 0x01},
+        {0x02, 0x01, 0xe1, 0x00}, {0x09, 0x01, 0xe1, 0x00}, {0x17, 0x01, 0xe1, 0x00}, {0x28, 0x01, 0xe1, 0x01}
+    }, {
+        {0x03, 0x01, 0xab, 0x00}, {0x06, 0x01, 0xab, 0x00}, {0x0a, 0x01, 0xab, 0x00}, {0x0f, 0x01, 0xab, 0x00},
+        {0x18, 0x01, 0xab, 0x00}, {0x1f, 0x01, 0xab, 0x00}, {0x29, 0x01, 0xab, 0x00}, {0x38, 0x01, 0xab, 0x01},
+        {0x03, 0x01, 0xce, 0x00}, {0x06, 0x01, 0xce, 0x00}, {0x0a, 0x01, 0xce, 0x00}, {0x0f, 0x01, 0xce, 0x00},
+        {0x18, 0x01, 0xce, 0x00}, {0x1f, 0x01, 0xce, 0x00}, {0x29, 0x01, 0xce, 0x00}, {0x38, 0x01, 0xce, 0x01}
+    }, {
+        {0x03, 0x01, 0xd7, 0x00}, {0x06, 0x01, 0xd7, 0x00}, {0x0a, 0x01, 0xd7, 0x00}, {0x0f, 0x01, 0xd7, 0x00},
+        {0x18, 0x01, 0xd7, 0x00}, {0x1f, 0x01, 0xd7, 0x00}, {0x29, 0x01, 0xd7, 0x00}, {0x38, 0x01, 0xd7, 0x01},
+        {0x03, 0x01, 0xe1, 0x00}, {0x06, 0x01, 0xe1, 0x00}, {0x0a, 0x01, 0xe1, 0x00}, {0x0f, 0x01, 0xe1, 0x00},
+        {0x18, 0x01, 0xe1, 0x00}, {0x1f, 0x01, 0xe1, 0x00}, {0x29, 0x01, 0xe1, 0x00}, {0x38, 0x01, 0xe1, 0x01}
+    }, {
+        {0x02, 0x01, 0xec, 0x00}, {0x09, 0x01, 0xec, 0x00}, {0x17, 0x01, 0xec, 0x00}, {0x28, 0x01, 0xec, 0x01},
+        {0x02, 0x01, 0xed, 0x00}, {0x09, 0x01, 0xed, 0x00}, {0x17, 0x01, 0xed, 0x00}, {0x28, 0x01, 0xed, 0x01},
+        {0x01, 0x01, 0xc7, 0x00}, {0x16, 0x01, 0xc7, 0x01}, {0x01, 0x01, 0xcf, 0x00}, {0x16, 0x01, 0xcf, 0x01},
+        {0x01, 0x01, 0xea, 0x00}, {0x16, 0x01, 0xea, 0x01}, {0x01, 0x01, 0xeb, 0x00}, {0x16, 0x01, 0xeb, 0x01}
+    }, {
+        {0x03, 0x01, 0xec, 0x00}, {0x06, 0x01, 0xec, 0x00}, {0x0a, 0x01, 0xec, 0x00}, {0x0f, 0x01, 0xec, 0x00},
+        {0x18, 0x01, 0xec, 0x00}, {0x1f, 0x01, 0xec, 0x00}, {0x29, 0x01, 0xec, 0x00}, {0x38, 0x01, 0xec, 0x01},
+        {0x03, 0x01, 0xed, 0x00}, {0x06, 0x01, 0xed, 0x00}, {0x0a, 0x01, 0xed, 0x00}, {0x0f, 0x01, 0xed, 0x00},
+        {0x18, 0x01, 0xed, 0x00}, {0x1f, 0x01, 0xed, 0x00}, {0x29, 0x01, 0xed, 0x00}, {0x38, 0x01, 0xed, 0x01}
+    }, {
+        {0x02, 0x01, 0xc7, 0x00}, {0x09, 0x01, 0xc7, 0x00}, {0x17, 0x01, 0xc7, 0x00}, {0x28, 0x01, 0xc7, 0x01},
+        {0x02, 0x01, 0xcf, 0x00}, {0x09, 0x01, 0xcf, 0x00}, {0x17, 0x01, 0xcf, 0x00}, {0x28, 0x01, 0xcf, 0x01},
+        {0x02, 0x01, 0xea, 0x00}, {0x09, 0x01, 0xea, 0x00}, {0x17, 0x01, 0xea, 0x00}, {0x28, 0x01, 0xea, 0x01},
+        {0x02, 0x01, 0xeb, 0x00}, {0x09, 0x01, 0xeb, 0x00}, {0x17, 0x01, 0xeb, 0x00}, {0x28, 0x01, 0xeb, 0x01}
+    }, {
+        {0x03, 0x01, 0xc7, 0x00}, {0x06, 0x01, 0xc7, 0x00}, {0x0a, 0x01, 0xc7, 0x00}, {0x0f, 0x01, 0xc7, 0x00},
+        {0x18, 0x01, 0xc7, 0x00}, {0x1f, 0x01, 0xc7, 0x00}, {0x29, 0x01, 0xc7, 0x00}, {0x38, 0x01, 0xc7, 0x01},
+        {0x03, 0x01, 0xcf, 0x00}, {0x06, 0x01, 0xcf, 0x00}, {0x0a, 0x01, 0xcf, 0x00}, {0x0f, 0x01, 0xcf, 0x00},
+        {0x18, 0x01, 0xcf, 0x00}, {0x1f, 0x01, 0xcf, 0x00}, {0x29, 0x01, 0xcf, 0x00}, {0x38, 0x01, 0xcf, 0x01}
+    }, {
+        {0x03, 0x01, 0xea, 0x00}, {0x06, 0x01, 0xea, 0x00}, {0x0a, 0x01, 0xea, 0x00}, {0x0f, 0x01, 0xea, 0x00},
+        {0x18, 0x01, 0xea, 0x00}, {0x1f, 0x01, 0xea, 0x00}, {0x29, 0x01, 0xea, 0x00}, {0x38, 0x01, 0xea, 0x01},
+        {0x03, 0x01, 0xeb, 0x00}, {0x06, 0x01, 0xeb, 0x00}, {0x0a, 0x01, 0xeb, 0x00}, {0x0f, 0x01, 0xeb, 0x00},
+        {0x18, 0x01, 0xeb, 0x00}, {0x1f, 0x01, 0xeb, 0x00}, {0x29, 0x01, 0xeb, 0x00}, {0x38, 0x01, 0xeb, 0x01}
+    }, {
+        {0xc2, 0x00, 0x00, 0x00}, {0xc3, 0x00, 0x00, 0x00}, {0xc5, 0x00, 0x00, 0x00}, {0xc6, 0x00, 0x00, 0x00},
+        {0xc9, 0x00, 0x00, 0x00}, {0xca, 0x00, 0x00, 0x00}, {0xcc, 0x00, 0x00, 0x00}, {0xcd, 0x00, 0x00, 0x00},
+        {0xd2, 0x00, 0x00, 0x00}, {0xd5, 0x00, 0x00, 0x00}, {0xd9, 0x00, 0x00, 0x00}, {0xdc, 0x00, 0x00, 0x00},
+        {0xe1, 0x00, 0x00, 0x00}, {0xe7, 0x00, 0x00, 0x00}, {0xef, 0x00, 0x00, 0x00}, {0xf6, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0xc0, 0x01}, {0x00, 0x01, 0xc1, 0x01}, {0x00, 0x01, 0xc8, 0x01}, {0x00, 0x01, 0xc9, 0x01},
+        {0x00, 0x01, 0xca, 0x01}, {0x00, 0x01, 0xcd, 0x01}, {0x00, 0x01, 0xd2, 0x01}, {0x00, 0x01, 0xd5, 0x01},
+        {0x00, 0x01, 0xda, 0x01}, {0x00, 0x01, 0xdb, 0x01}, {0x00, 0x01, 0xee, 0x01}, {0x00, 0x01, 0xf0, 0x01},
+        {0x00, 0x01, 0xf2, 0x01}, {0x00, 0x01, 0xf3, 0x01}, {0x00, 0x01, 0xff, 0x01}, {0xce, 0x00, 0x00, 0x00}
+    }, {
+        {0x01, 0x01, 0xc0, 0x00}, {0x16, 0x01, 0xc0, 0x01}, {0x01, 0x01, 0xc1, 0x00}, {0x16, 0x01, 0xc1, 0x01},
+        {0x01, 0x01, 0xc8, 0x00}, {0x16, 0x01, 0xc8, 0x01}, {0x01, 0x01, 0xc9, 0x00}, {0x16, 0x01, 0xc9, 0x01},
+        {0x01, 0x01, 0xca, 0x00}, {0x16, 0x01, 0xca, 0x01}, {0x01, 0x01, 0xcd, 0x00}, {0x16, 0x01, 0xcd, 0x01},
+        {0x01, 0x01, 0xd2, 0x00}, {0x16, 0x01, 0xd2, 0x01}, {0x01, 0x01, 0xd5, 0x00}, {0x16, 0x01, 0xd5, 0x01}
+    }, {
+        {0x02, 0x01, 0xc0, 0x00}, {0x09, 0x01, 0xc0, 0x00}, {0x17, 0x01, 0xc0, 0x00}, {0x28, 0x01, 0xc0, 0x01},
+        {0x02, 0x01, 0xc1, 0x00}, {0x09, 0x01, 0xc1, 0x00}, {0x17, 0x01, 0xc1, 0x00}, {0x28, 0x01, 0xc1, 0x01},
+        {0x02, 0x01, 0xc8, 0x00}, {0x09, 0x01, 0xc8, 0x00}, {0x17, 0x01, 0xc8, 0x00}, {0x28, 0x01, 0xc8, 0x01},
+        {0x02, 0x01, 0xc9, 0x00}, {0x09, 0x01, 0xc9, 0x00}, {0x17, 0x01, 0xc9, 0x00}, {0x28, 0x01, 0xc9, 0x01}
+    }, {
+        {0x03, 0x01, 0xc0, 0x00}, {0x06, 0x01, 0xc0, 0x00}, {0x0a, 0x01, 0xc0, 0x00}, {0x0f, 0x01, 0xc0, 0x00},
+        {0x18, 0x01, 0xc0, 0x00}, {0x1f, 0x01, 0xc0, 0x00}, {0x29, 0x01, 0xc0, 0x00}, {0x38, 0x01, 0xc0, 0x01},
+        {0x03, 0x01, 0xc1, 0x00}, {0x06, 0x01, 0xc1, 0x00}, {0x0a, 0x01, 0xc1, 0x00}, {0x0f, 0x01, 0xc1, 0x00},
+        {0x18, 0x01, 0xc1, 0x00}, {0x1f, 0x01, 0xc1, 0x00}, {0x29, 0x01, 0xc1, 0x00}, {0x38, 0x01, 0xc1, 0x01}
+    }, {
+        {0x03, 0x01, 0xc8, 0x00}, {0x06, 0x01, 0xc8, 0x00}, {0x0a, 0x01, 0xc8, 0x00}, {0x0f, 0x01, 0xc8, 0x00},
+        {0x18, 0x01, 0xc8, 0x00}, {0x1f, 0x01, 0xc8, 0x00}, {0x29, 0x01, 0xc8, 0x00}, {0x38, 0x01, 0xc8, 0x01},
+        {0x03, 0x01, 0xc9, 0x00}, {0x06, 0x01, 0xc9, 0x00}, {0x0a, 0x01, 0xc9, 0x00}, {0x0f, 0x01, 0xc9, 0x00},
+        {0x18, 0x01, 0xc9, 0x00}, {0x1f, 0x01, 0xc9, 0x00}, {0x29, 0x01, 0xc9, 0x00}, {0x38, 0x01, 0xc9, 0x01}
+    }, {
+        {0x02, 0x01, 0xca, 0x00}, {0x09, 0x01, 0xca, 0x00}, {0x17, 0x01, 0xca, 0x00}, {0x28, 0x01, 0xca, 0x01},
+        {0x02, 0x01, 0xcd, 0x00}, {0x09, 0x01, 0xcd, 0x00}, {0x17, 0x01, 0xcd, 0x00}, {0x28, 0x01, 0xcd, 0x01},
+        {0x02, 0x01, 0xd2, 0x00}, {0x09, 0x01, 0xd2, 0x00}, {0x17, 0x01, 0xd2, 0x00}, {0x28, 0x01, 0xd2, 0x01},
+        {0x02, 0x01, 0xd5, 0x00}, {0x09, 0x01, 0xd5, 0x00}, {0x17, 0x01, 0xd5, 0x00}, {0x28, 0x01, 0xd5, 0x01}
+    }, {
+        {0x03, 0x01, 0xca, 0x00}, {0x06, 0x01, 0xca, 0x00}, {0x0a, 0x01, 0xca, 0x00}, {0x0f, 0x01, 0xca, 0x00},
+        {0x18, 0x01, 0xca, 0x00}, {0x1f, 0x01, 0xca, 0x00}, {0x29, 0x01, 0xca, 0x00}, {0x38, 0x01, 0xca, 0x01},
+        {0x03, 0x01, 0xcd, 0x00}, {0x06, 0x01, 0xcd, 0x00}, {0x0a, 0x01, 0xcd, 0x00}, {0x0f, 0x01, 0xcd, 0x00},
+        {0x18, 0x01, 0xcd, 0x00}, {0x1f, 0x01, 0xcd, 0x00}, {0x29, 0x01, 0xcd, 0x00}, {0x38, 0x01, 0xcd, 0x01}
+    }, {
+        {0x03, 0x01, 0xd2, 0x00}, {0x06, 0x01, 0xd2, 0x00}, {0x0a, 0x01, 0xd2, 0x00}, {0x0f, 0x01, 0xd2, 0x00},
+        {0x18, 0x01, 0xd2, 0x00}, {0x1f, 0x01, 0xd2, 0x00}, {0x29, 0x01, 0xd2, 0x00}, {0x38, 0x01, 0xd2, 0x01},
+        {0x03, 0x01, 0xd5, 0x00}, {0x06, 0x01, 0xd5, 0x00}, {0x0a, 0x01, 0xd5, 0x00}, {0x0f, 0x01, 0xd5, 0x00},
+        {0x18, 0x01, 0xd5, 0x00}, {0x1f, 0x01, 0xd5, 0x00}, {0x29, 0x01, 0xd5, 0x00}, {0x38, 0x01, 0xd5, 0x01}
+    }, {
+        {0x01, 0x01, 0xda, 0x00}, {0x16, 0x01, 0xda, 0x01}, {0x01, 0x01, 0xdb, 0x00}, {0x16, 0x01, 0xdb, 0x01},
+        {0x01, 0x01, 0xee, 0x00}, {0x16, 0x01, 0xee, 0x01}, {0x01, 0x01, 0xf0, 0x00}, {0x16, 0x01, 0xf0, 0x01},
+        {0x01, 0x01, 0xf2, 0x00}, {0x16, 0x01, 0xf2, 0x01}, {0x01, 0x01, 0xf3, 0x00}, {0x16, 0x01, 0xf3, 0x01},
+        {0x01, 0x01, 0xff, 0x00}, {0x16, 0x01, 0xff, 0x01}, {0x00, 0x01, 0xcb, 0x01}, {0x00, 0x01, 0xcc, 0x01}
+    }, {
+        {0x02, 0x01, 0xda, 0x00}, {0x09, 0x01, 0xda, 0x00}, {0x17, 0x01, 0xda, 0x00}, {0x28, 0x01, 0xda, 0x01},
+        {0x02, 0x01, 0xdb, 0x00}, {0x09, 0x01, 0xdb, 0x00}, {0x17, 0x01, 0xdb, 0x00}, {0x28, 0x01, 0xdb, 0x01},
+        {0x02, 0x01, 0xee, 0x00}, {0x09, 0x01, 0xee, 0x00}, {0x17, 0x01, 0xee, 0x00}, {0x28, 0x01, 0xee, 0x01},
+        {0x02, 0x01, 0xf0, 0x00}, {0x09, 0x01, 0xf0, 0x00}, {0x17, 0x01, 0xf0, 0x00}, {0x28, 0x01, 0xf0, 0x01}
+    }, {
+        {0x03, 0x01, 0xda, 0x00}, {0x06, 0x01, 0xda, 0x00}, {0x0a, 0x01, 0xda, 0x00}, {0x0f, 0x01, 0xda, 0x00},
+        {0x18, 0x01, 0xda, 0x00}, {0x1f, 0x01, 0xda, 0x00}, {0x29, 0x01, 0xda, 0x00}, {0x38, 0x01, 0xda, 0x01},
+        {0x03, 0x01, 0xdb, 0x00}, {0x06, 0x01, 0xdb, 0x00}, {0x0a, 0x01, 0xdb, 0x00}, {0x0f, 0x01, 0xdb, 0x00},
+        {0x18, 0x01, 0xdb, 0x00}, {0x1f, 0x01, 0xdb, 0x00}, {0x29, 0x01, 0xdb, 0x00}, {0x38, 0x01, 0xdb, 0x01}
+    }, {
+        {0x03, 0x01, 0xee, 0x00}, {0x06, 0x01, 0xee, 0x00}, {0x0a, 0x01, 0xee, 0x00}, {0x0f, 0x01, 0xee, 0x00},
+        {0x18, 0x01, 0xee, 0x00}, {0x1f, 0x01, 0xee, 0x00}, {0x29, 0x01, 0xee, 0x00}, {0x38, 0x01, 0xee, 0x01},
+        {0x03, 0x01, 0xf0, 0x00}, {0x06, 0x01, 0xf0, 0x00}, {0x0a, 0x01, 0xf0, 0x00}, {0x0f, 0x01, 0xf0, 0x00},
+        {0x18, 0x01, 0xf0, 0x00}, {0x1f, 0x01, 0xf0, 0x00}, {0x29, 0x01, 0xf0, 0x00}, {0x38, 0x01, 0xf0, 0x01}
+    }, {
+        {0x02, 0x01, 0xf2, 0x00}, {0x09, 0x01, 0xf2, 0x00}, {0x17, 0x01, 0xf2, 0x00}, {0x28, 0x01, 0xf2, 0x01},
+        {0x02, 0x01, 0xf3, 0x00}, {0x09, 0x01, 0xf3, 0x00}, {0x17, 0x01, 0xf3, 0x00}, {0x28, 0x01, 0xf3, 0x01},
+        {0x02, 0x01, 0xff, 0x00}, {0x09, 0x01, 0xff, 0x00}, {0x17, 0x01, 0xff, 0x00}, {0x28, 0x01, 0xff, 0x01},
+        {0x01, 0x01, 0xcb, 0x00}, {0x16, 0x01, 0xcb, 0x01}, {0x01, 0x01, 0xcc, 0x00}, {0x16, 0x01, 0xcc, 0x01}
+    }, {
+        {0x03, 0x01, 0xf2, 0x00}, {0x06, 0x01, 0xf2, 0x00}, {0x0a, 0x01, 0xf2, 0x00}, {0x0f, 0x01, 0xf2, 0x00},
+        {0x18, 0x01, 0xf2, 0x00}, {0x1f, 0x01, 0xf2, 0x00}, {0x29, 0x01, 0xf2, 0x00}, {0x38, 0x01, 0xf2, 0x01},
+        {0x03, 0x01, 0xf3, 0x00}, {0x06, 0x01, 0xf3, 0x00}, {0x0a, 0x01, 0xf3, 0x00}, {0x0f, 0x01, 0xf3, 0x00},
+        {0x18, 0x01, 0xf3, 0x00}, {0x1f, 0x01, 0xf3, 0x00}, {0x29, 0x01, 0xf3, 0x00}, {0x38, 0x01, 0xf3, 0x01}
+    }, {
+        {0x03, 0x01, 0xff, 0x00}, {0x06, 0x01, 0xff, 0x00}, {0x0a, 0x01, 0xff, 0x00}, {0x0f, 0x01, 0xff, 0x00},
+        {0x18, 0x01, 0xff, 0x00}, {0x1f, 0x01, 0xff, 0x00}, {0x29, 0x01, 0xff, 0x00}, {0x38, 0x01, 0xff, 0x01},
+        {0x02, 0x01, 0xcb, 0x00}, {0x09, 0x01, 0xcb, 0x00}, {0x17, 0x01, 0xcb, 0x00}, {0x28, 0x01, 0xcb, 0x01},
+        {0x02, 0x01, 0xcc, 0x00}, {0x09, 0x01, 0xcc, 0x00}, {0x17, 0x01, 0xcc, 0x00}, {0x28, 0x01, 0xcc, 0x01}
+    }, {
+        {0x03, 0x01, 0xcb, 0x00}, {0x06, 0x01, 0xcb, 0x00}, {0x0a, 0x01, 0xcb, 0x00}, {0x0f, 0x01, 0xcb, 0x00},
+        {0x18, 0x01, 0xcb, 0x00}, {0x1f, 0x01, 0xcb, 0x00}, {0x29, 0x01, 0xcb, 0x00}, {0x38, 0x01, 0xcb, 0x01},
+        {0x03, 0x01, 0xcc, 0x00}, {0x06, 0x01, 0xcc, 0x00}, {0x0a, 0x01, 0xcc, 0x00}, {0x0f, 0x01, 0xcc, 0x00},
+        {0x18, 0x01, 0xcc, 0x00}, {0x1f, 0x01, 0xcc, 0x00}, {0x29, 0x01, 0xcc, 0x00}, {0x38, 0x01, 0xcc, 0x01}
+    }, {
+        {0xd3, 0x00, 0x00, 0x00}, {0xd4, 0x00, 0x00, 0x00}, {0xd6, 0x00, 0x00, 0x00}, {0xd7, 0x00, 0x00, 0x00},
+        {0xda, 0x00, 0x00, 0x00}, {0xdb, 0x00, 0x00, 0x00}, {0xdd, 0x00, 0x00, 0x00}, {0xde, 0x00, 0x00, 0x00},
+        {0xe2, 0x00, 0x00, 0x00}, {0xe4, 0x00, 0x00, 0x00}, {0xe8, 0x00, 0x00, 0x00}, {0xeb, 0x00, 0x00, 0x00},
+        {0xf0, 0x00, 0x00, 0x00}, {0xf3, 0x00, 0x00, 0x00}, {0xf7, 0x00, 0x00, 0x00}, {0xfa, 0x00, 0x00, 0x01}
+    }, {
+        {0x00, 0x01, 0xd3, 0x01}, {0x00, 0x01, 0xd4, 0x01}, {0x00, 0x01, 0xd6, 0x01}, {0x00, 0x01, 0xdd, 0x01},
+        {0x00, 0x01, 0xde, 0x01}, {0x00, 0x01, 0xdf, 0x01}, {0x00, 0x01, 0xf1, 0x01}, {0x00, 0x01, 0xf4, 0x01},
+        {0x00, 0x01, 0xf5, 0x01}, {0x00, 0x01, 0xf6, 0x01}, {0x00, 0x01, 0xf7, 0x01}, {0x00, 0x01, 0xf8, 0x01},
+        {0x00, 0x01, 0xfa, 0x01}, {0x00, 0x01, 0xfb, 0x01}, {0x00, 0x01, 0xfc, 0x01}, {0x00, 0x01, 0xfd, 0x01}
+    }, {
+        {0x01, 0x01, 0xd3, 0x00}, {0x16, 0x01, 0xd3, 0x01}, {0x01, 0x01, 0xd4, 0x00}, {0x16, 0x01, 0xd4, 0x01},
+        {0x01, 0x01, 0xd6, 0x00}, {0x16, 0x01, 0xd6, 0x01}, {0x01, 0x01, 0xdd, 0x00}, {0x16, 0x01, 0xdd, 0x01},
+        {0x01, 0x01, 0xde, 0x00}, {0x16, 0x01, 0xde, 0x01}, {0x01, 0x01, 0xdf, 0x00}, {0x16, 0x01, 0xdf, 0x01},
+        {0x01, 0x01, 0xf1, 0x00}, {0x16, 0x01, 0xf1, 0x01}, {0x01, 0x01, 0xf4, 0x00}, {0x16, 0x01, 0xf4, 0x01}
+    }, {
+        {0x02, 0x01, 0xd3, 0x00}, {0x09, 0x01, 0xd3, 0x00}, {0x17, 0x01, 0xd3, 0x00}, {0x28, 0x01, 0xd3, 0x01},
+        {0x02, 0x01, 0xd4, 0x00}, {0x09, 0x01, 0xd4, 0x00}, {0x17, 0x01, 0xd4, 0x00}, {0x28, 0x01, 0xd4, 0x01},
+        {0x02, 0x01, 0xd6, 0x00}, {0x09, 0x01, 0xd6, 0x00}, {0x17, 0x01, 0xd6, 0x00}, {0x28, 0x01, 0xd6, 0x01},
+        {0x02, 0x01, 0xdd, 0x00}, {0x09, 0x01, 0xdd, 0x00}, {0x17, 0x01, 0xdd, 0x00}, {0x28, 0x01, 0xdd, 0x01}
+    }, {
+        {0x03, 0x01, 0xd3, 0x00}, {0x06, 0x01, 0xd3, 0x00}, {0x0a, 0x01, 0xd3, 0x00}, {0x0f, 0x01, 0xd3, 0x00},
+        {0x18, 0x01, 0xd3, 0x00}, {0x1f, 0x01, 0xd3, 0x00}, {0x29, 0x01, 0xd3, 0x00}, {0x38, 0x01, 0xd3, 0x01},
+        {0x03, 0x01, 0xd4, 0x00}, {0x06, 0x01, 0xd4, 0x00}, {0x0a, 0x01, 0xd4, 0x00}, {0x0f, 0x01, 0xd4, 0x00},
+        {0x18, 0x01, 0xd4, 0x00}, {0x1f, 0x01, 0xd4, 0x00}, {0x29, 0x01, 0xd4, 0x00}, {0x38, 0x01, 0xd4, 0x01}
+    }, {
+        {0x03, 0x01, 0xd6, 0x00}, {0x06, 0x01, 0xd6, 0x00}, {0x0a, 0x01, 0xd6, 0x00}, {0x0f, 0x01, 0xd6, 0x00},
+        {0x18, 0x01, 0xd6, 0x00}, {0x1f, 0x01, 0xd6, 0x00}, {0x29, 0x01, 0xd6, 0x00}, {0x38, 0x01, 0xd6, 0x01},
+        {0x03, 0x01, 0xdd, 0x00}, {0x06, 0x01, 0xdd, 0x00}, {0x0a, 0x01, 0xdd, 0x00}, {0x0f, 0x01, 0xdd, 0x00},
+        {0x18, 0x01, 0xdd, 0x00}, {0x1f, 0x01, 0xdd, 0x00}, {0x29, 0x01, 0xdd, 0x00}, {0x38, 0x01, 0xdd, 0x01}
+    }, {
+        {0x02, 0x01, 0xde, 0x00}, {0x09, 0x01, 0xde, 0x00}, {0x17, 0x01, 0xde, 0x00}, {0x28, 0x01, 0xde, 0x01},
+        {0x02, 0x01, 0xdf, 0x00}, {0x09, 0x01, 0xdf, 0x00}, {0x17, 0x01, 0xdf, 0x00}, {0x28, 0x01, 0xdf, 0x01},
+        {0x02, 0x01, 0xf1, 0x00}, {0x09, 0x01, 0xf1, 0x00}, {0x17, 0x01, 0xf1, 0x00}, {0x28, 0x01, 0xf1, 0x01},
+        {0x02, 0x01, 0xf4, 0x00}, {0x09, 0x01, 0xf4, 0x00}, {0x17, 0x01, 0xf4, 0x00}, {0x28, 0x01, 0xf4, 0x01}
+    }, {
+        {0x03, 0x01, 0xde, 0x00}, {0x06, 0x01, 0xde, 0x00}, {0x0a, 0x01, 0xde, 0x00}, {0x0f, 0x01, 0xde, 0x00},
+        {0x18, 0x01, 0xde, 0x00}, {0x1f, 0x01, 0xde, 0x00}, {0x29, 0x01, 0xde, 0x00}, {0x38, 0x01, 0xde, 0x01},
+        {0x03, 0x01, 0xdf, 0x00}, {0x06, 0x01, 0xdf, 0x00}, {0x0a, 0x01, 0xdf, 0x00}, {0x0f, 0x01, 0xdf, 0x00},
+        {0x18, 0x01, 0xdf, 0x00}, {0x1f, 0x01, 0xdf, 0x00}, {0x29, 0x01, 0xdf, 0x00}, {0x38, 0x01, 0xdf, 0x01}
+    }, {
+        {0x03, 0x01, 0xf1, 0x00}, {0x06, 0x01, 0xf1, 0x00}, {0x0a, 0x01, 0xf1, 0x00}, {0x0f, 0x01, 0xf1, 0x00},
+        {0x18, 0x01, 0xf1, 0x00}, {0x1f, 0x01, 0xf1, 0x00}, {0x29, 0x01, 0xf1, 0x00}, {0x38, 0x01, 0xf1, 0x01},
+        {0x03, 0x01, 0xf4, 0x00}, {0x06, 0x01, 0xf4, 0x00}, {0x0a, 0x01, 0xf4, 0x00}, {0x0f, 0x01, 0xf4, 0x00},
+        {0x18, 0x01, 0xf4, 0x00}, {0x1f, 0x01, 0xf4, 0x00}, {0x29, 0x01, 0xf4, 0x00}, {0x38, 0x01, 0xf4, 0x01}
+    }, {
+        {0x01, 0x01, 0xf5, 0x00}, {0x16, 0x01, 0xf5, 0x01}, {0x01, 0x01, 0xf6, 0x00}, {0x16, 0x01, 0xf6, 0x01},
+        {0x01, 0x01, 0xf7, 0x00}, {0x16, 0x01, 0xf7, 0x01}, {0x01, 0x01, 0xf8, 0x00}, {0x16, 0x01, 0xf8, 0x01},
+        {0x01, 0x01, 0xfa, 0x00}, {0x16, 0x01, 0xfa, 0x01}, {0x01, 0x01, 0xfb, 0x00}, {0x16, 0x01, 0xfb, 0x01},
+        {0x01, 0x01, 0xfc, 0x00}, {0x16, 0x01, 0xfc, 0x01}, {0x01, 0x01, 0xfd, 0x00}, {0x16, 0x01, 0xfd, 0x01}
+    }, {
+        {0x02, 0x01, 0xf5, 0x00}, {0x09, 0x01, 0xf5, 0x00}, {0x17, 0x01, 0xf5, 0x00}, {0x28, 0x01, 0xf5, 0x01},
+        {0x02, 0x01, 0xf6, 0x00}, {0x09, 0x01, 0xf6, 0x00}, {0x17, 0x01, 0xf6, 0x00}, {0x28, 0x01, 0xf6, 0x01},
+        {0x02, 0x01, 0xf7, 0x00}, {0x09, 0x01, 0xf7, 0x00}, {0x17, 0x01, 0xf7, 0x00}, {0x28, 0x01, 0xf7, 0x01},
+        {0x02, 0x01, 0xf8, 0x00}, {0x09, 0x01, 0xf8, 0x00}, {0x17, 0x01, 0xf8, 0x00}, {0x28, 0x01, 0xf8, 0x01}
+    }, {
+        {0x03, 0x01, 0xf5, 0x00}, {0x06, 0x01, 0xf5, 0x00}, {0x0a, 0x01, 0xf5, 0x00}, {0x0f, 0x01, 0xf5, 0x00},
+        {0x18, 0x01, 0xf5, 0x00}, {0x1f, 0x01, 0xf5, 0x00}, {0x29, 0x01, 0xf5, 0x00}, {0x38, 0x01, 0xf5, 0x01},
+        {0x03, 0x01, 0xf6, 0x00}, {0x06, 0x01, 0xf6, 0x00}, {0x0a, 0x01, 0xf6, 0x00}, {0x0f, 0x01, 0xf6, 0x00},
+        {0x18, 0x01, 0xf6, 0x00}, {0x1f, 0x01, 0xf6, 0x00}, {0x29, 0x01, 0xf6, 0x00}, {0x38, 0x01, 0xf6, 0x01}
+    }, {
+        {0x03, 0x01, 0xf7, 0x00}, {0x06, 0x01, 0xf7, 0x00}, {0x0a, 0x01, 0xf7, 0x00}, {0x0f, 0x01, 0xf7, 0x00},
+        {0x18, 0x01, 0xf7, 0x00}, {0x1f, 0x01, 0xf7, 0x00}, {0x29, 0x01, 0xf7, 0x00}, {0x38, 0x01, 0xf7, 0x01},
+        {0x03, 0x01, 0xf8, 0x00}, {0x06, 0x01, 0xf8, 0x00}, {0x0a, 0x01, 0xf8, 0x00}, {0x0f, 0x01, 0xf8, 0x00},
+        {0x18, 0x01, 0xf8, 0x00}, {0x1f, 0x01, 0xf8, 0x00}, {0x29, 0x01, 0xf8, 0x00}, {0x38, 0x01, 0xf8, 0x01}
+    }, {
+        {0x02, 0x01, 0xfa, 0x00}, {0x09, 0x01, 0xfa, 0x00}, {0x17, 0x01, 0xfa, 0x00}, {0x28, 0x01, 0xfa, 0x01},
+        {0x02, 0x01, 0xfb, 0x00}, {0x09, 0x01, 0xfb, 0x00}, {0x17, 0x01, 0xfb, 0x00}, {0x28, 0x01, 0xfb, 0x01},
+        {0x02, 0x01, 0xfc, 0x00}, {0x09, 0x01, 0xfc, 0x00}, {0x17, 0x01, 0xfc, 0x00}, {0x28, 0x01, 0xfc, 0x01},
+        {0x02, 0x01, 0xfd, 0x00}, {0x09, 0x01, 0xfd, 0x00}, {0x17, 0x01, 0xfd, 0x00}, {0x28, 0x01, 0xfd, 0x01}
+    }, {
+        {0x03, 0x01, 0xfa, 0x00}, {0x06, 0x01, 0xfa, 0x00}, {0x0a, 0x01, 0xfa, 0x00}, {0x0f, 0x01, 0xfa, 0x00},
+        {0x18, 0x01, 0xfa, 0x00}, {0x1f, 0x01, 0xfa, 0x00}, {0x29, 0x01, 0xfa, 0x00}, {0x38, 0x01, 0xfa, 0x01},
+        {0x03, 0x01, 0xfb, 0x00}, {0x06, 0x01, 0xfb, 0x00}, {0x0a, 0x01, 0xfb, 0x00}, {0x0f, 0x01, 0xfb, 0x00},
+        {0x18, 0x01, 0xfb, 0x00}, {0x1f, 0x01, 0xfb, 0x00}, {0x29, 0x01, 0xfb, 0x00}, {0x38, 0x01, 0xfb, 0x01}
+    }, {
+        {0x03, 0x01, 0xfc, 0x00}, {0x06, 0x01, 0xfc, 0x00}, {0x0a, 0x01, 0xfc, 0x00}, {0x0f, 0x01, 0xfc, 0x00},
+        {0x18, 0x01, 0xfc, 0x00}, {0x1f, 0x01, 0xfc, 0x00}, {0x29, 0x01, 0xfc, 0x00}, {0x38, 0x01, 0xfc, 0x01},
+        {0x03, 0x01, 0xfd, 0x00}, {0x06, 0x01, 0xfd, 0x00}, {0x0a, 0x01, 0xfd, 0x00}, {0x0f, 0x01, 0xfd, 0x00},
+        {0x18, 0x01, 0xfd, 0x00}, {0x1f, 0x01, 0xfd, 0x00}, {0x29, 0x01, 0xfd, 0x00}, {0x38, 0x01, 0xfd, 0x01}
+    }, {
+        {0x00, 0x01, 0xfe, 0x01}, {0xe3, 0x00, 0x00, 0x00}, {0xe5, 0x00, 0x00, 0x00}, {0xe6, 0x00, 0x00, 0x00},
+        {0xe9, 0x00, 0x00, 0x00}, {0xea, 0x00, 0x00, 0x00}, {0xec, 0x00, 0x00, 0x00}, {0xed, 0x00, 0x00, 0x00},
+        {0xf1, 0x00, 0x00, 0x00}, {0xf2, 0x00, 0x00, 0x00}, {0xf4, 0x00, 0x00, 0x00}, {0xf5, 0x00, 0x00, 0x00},
+        {0xf8, 0x00, 0x00, 0x00}, {0xf9, 0x00, 0x00, 0x00}, {0xfb, 0x00, 0x00, 0x00}, {0xfc, 0x00, 0x00, 0x01}
+    }, {
+        {0x01, 0x01, 0xfe, 0x00}, {0x16, 0x01, 0xfe, 0x01}, {0x00, 0x01, 0x02, 0x01}, {0x00, 0x01, 0x03, 0x01},
+        {0x00, 0x01, 0x04, 0x01}, {0x00, 0x01, 0x05, 0x01}, {0x00, 0x01, 0x06, 0x01}, {0x00, 0x01, 0x07, 0x01},
+        {0x00, 0x01, 0x08, 0x01}, {0x00, 0x01, 0x0b, 0x01}, {0x00, 0x01, 0x0c, 0x01}, {0x00, 0x01, 0x0e, 0x01},
+        {0x00, 0x01, 0x0f, 0x01}, {0x00, 0x01, 0x10, 0x01}, {0x00, 0x01, 0x11, 0x01}, {0x00, 0x01, 0x12, 0x01}
+    }, {
+        {0x02, 0x01, 0xfe, 0x00}, {0x09, 0x01, 0xfe, 0x00}, {0x17, 0x01, 0xfe, 0x00}, {0x28, 0x01, 0xfe, 0x01},
+        {0x01, 0x01, 0x02, 0x00}, {0x16, 0x01, 0x02, 0x01}, {0x01, 0x01, 0x03, 0x00}, {0x16, 0x01, 0x03, 0x01},
+        {0x01, 0x01, 0x04, 0x00}, {0x16, 0x01, 0x04, 0x01}, {0x01, 0x01, 0x05, 0x00}, {0x16, 0x01, 0x05, 0x01},
+        {0x01, 0x01, 0x06, 0x00}, {0x16, 0x01, 0x06, 0x01}, {0x01, 0x01, 0x07, 0x00}, {0x16, 0x01, 0x07, 0x01}
+    }, {
+        {0x03, 0x01, 0xfe, 0x00}, {0x06, 0x01, 0xfe, 0x00}, {0x0a, 0x01, 0xfe, 0x00}, {0x0f, 0x01, 0xfe, 0x00},
+        {0x18, 0x01, 0xfe, 0x00}, {0x1f, 0x01, 0xfe, 0x00}, {0x29, 0x01, 0xfe, 0x00}, {0x38, 0x01, 0xfe, 0x01},
+        {0x02, 0x01, 0x02, 0x00}, {0x09, 0x01, 0x02, 0x00}, {0x17, 0x01, 0x02, 0x00}, {0x28, 0x01, 0x02, 0x01},
+        {0x02, 0x01, 0x03, 0x00}, {0x09, 0x01, 0x03, 0x00}, {0x17, 0x01, 0x03, 0x00}, {0x28, 0x01, 0x03, 0x01}
+    }, {
+        {0x03, 0x01, 0x02, 0x00}, {0x06, 0x01, 0x02, 0x00}, {0x0a, 0x01, 0x02, 0x00}, {0x0f, 0x01, 0x02, 0x00},
+        {0x18, 0x01, 0x02, 0x00}, {0x1f, 0x01, 0x02, 0x00}, {0x29, 0x01, 0x02, 0x00}, {0x38, 0x01, 0x02, 0x01},
+        {0x03, 0x01, 0x03, 0x00}, {0x06, 0x01, 0x03, 0x00}, {0x0a, 0x01, 0x03, 0x00}, {0x0f, 0x01, 0x03, 0x00},
+        {0x18, 0x01, 0x03, 0x00}, {0x1f, 0x01, 0x03, 0x00}, {0x29, 0x01, 0x03, 0x00}, {0x38, 0x01, 0x03, 0x01}
+    }, {
+        {0x02, 0x01, 0x04, 0x00}, {0x09, 0x01, 0x04, 0x00}, {0x17, 0x01, 0x04, 0x00}, {0x28, 0x01, 0x04, 0x01},
+        {0x02, 0x01, 0x05, 0x00}, {0x09, 0x01, 0x05, 0x00}, {0x17, 0x01, 0x05, 0x00}, {0x28, 0x01, 0x05, 0x01},
+        {0x02, 0x01, 0x06, 0x00}, {0x09, 0x01, 0x06, 0x00}, {0x17, 0x01, 0x06, 0x00}, {0x28, 0x01, 0x06, 0x01},
+        {0x02, 0x01, 0x07, 0x00}, {0x09, 0x01, 0x07, 0x00}, {0x17, 0x01, 0x07, 0x00}, {0x28, 0x01, 0x07, 0x01}
+    }, {
+        {0x03, 0x01, 0x04, 0x00}, {0x06, 0x01, 0x04, 0x00}, {0x0a, 0x01, 0x04, 0x00}, {0x0f, 0x01, 0x04, 0x00},
+        {0x18, 0x01, 0x04, 0x00}, {0x1f, 0x01, 0x04, 0x00}, {0x29, 0x01, 0x04, 0x00}, {0x38, 0x01, 0x04, 0x01},
+        {0x03, 0x01, 0x05, 0x00}, {0x06, 0x01, 0x05, 0x00}, {0x0a, 0x01, 0x05, 0x00}, {0x0f, 0x01, 0x05, 0x00},
+        {0x18, 0x01, 0x05, 0x00}, {0x1f, 0x01, 0x05, 0x00}, {0x29, 0x01, 0x05, 0x00}, {0x38, 0x01, 0x05, 0x01}
+    }, {
+        {0x03, 0x01, 0x06, 0x00}, {0x06, 0x01, 0x06, 0x00}, {0x0a, 0x01, 0x06, 0x00}, {0x0f, 0x01, 0x06, 0x00},
+        {0x18, 0x01, 0x06, 0x00}, {0x1f, 0x01, 0x06, 0x00}, {0x29, 0x01, 0x06, 0x00}, {0x38, 0x01, 0x06, 0x01},
+        {0x03, 0x01, 0x07, 0x00}, {0x06, 0x01, 0x07, 0x00}, {0x0a, 0x01, 0x07, 0x00}, {0x0f, 0x01, 0x07, 0x00},
+        {0x18, 0x01, 0x07, 0x00}, {0x1f, 0x01, 0x07, 0x00}, {0x29, 0x01, 0x07, 0x00}, {0x38, 0x01, 0x07, 0x01}
+    }, {
+        {0x01, 0x01, 0x08, 0x00}, {0x16, 0x01, 0x08, 0x01}, {0x01, 0x01, 0x0b, 0x00}, {0x16, 0x01, 0x0b, 0x01},
+        {0x01, 0x01, 0x0c, 0x00}, {0x16, 0x01, 0x0c, 0x01}, {0x01, 0x01, 0x0e, 0x00}, {0x16, 0x01, 0x0e, 0x01},
+        {0x01, 0x01, 0x0f, 0x00}, {0x16, 0x01, 0x0f, 0x01}, {0x01, 0x01, 0x10, 0x00}, {0x16, 0x01, 0x10, 0x01},
+        {0x01, 0x01, 0x11, 0x00}, {0x16, 0x01, 0x11, 0x01}, {0x01, 0x01, 0x12, 0x00}, {0x16, 0x01, 0x12, 0x01}
+    }, {
+        {0x02, 0x01, 0x08, 0x00}, {0x09, 0x01, 0x08, 0x00}, {0x17, 0x01, 0x08, 0x00}, {0x28, 0x01, 0x08, 0x01},
+        {0x02, 0x01, 0x0b, 0x00}, {0x09, 0x01, 0x0b, 0x00}, {0x17, 0x01, 0x0b, 0x00}, {0x28, 0x01, 0x0b, 0x01},
+        {0x02, 0x01, 0x0c, 0x00}, {0x09, 0x01, 0x0c, 0x00}, {0x17, 0x01, 0x0c, 0x00}, {0x28, 0x01, 0x0c, 0x01},
+        {0x02, 0x01, 0x0e, 0x00}, {0x09, 0x01, 0x0e, 0x00}, {0x17, 0x01, 0x0e, 0x00}, {0x28, 0x01, 0x0e, 0x01}
+    }, {
+        {0x03, 0x01, 0x08, 0x00}, {0x06, 0x01, 0x08, 0x00}, {0x0a, 0x01, 0x08, 0x00}, {0x0f, 0x01, 0x08, 0x00},
+        {0x18, 0x01, 0x08, 0x00}, {0x1f, 0x01, 0x08, 0x00}, {0x29, 0x01, 0x08, 0x00}, {0x38, 0x01, 0x08, 0x01},
+        {0x03, 0x01, 0x0b, 0x00}, {0x06, 0x01, 0x0b, 0x00}, {0x0a, 0x01, 0x0b, 0x00}, {0x0f, 0x01, 0x0b, 0x00},
+        {0x18, 0x01, 0x0b, 0x00}, {0x1f, 0x01, 0x0b, 0x00}, {0x29, 0x01, 0x0b, 0x00}, {0x38, 0x01, 0x0b, 0x01}
+    }, {
+        {0x03, 0x01, 0x0c, 0x00}, {0x06, 0x01, 0x0c, 0x00}, {0x0a, 0x01, 0x0c, 0x00}, {0x0f, 0x01, 0x0c, 0x00},
+        {0x18, 0x01, 0x0c, 0x00}, {0x1f, 0x01, 0x0c, 0x00}, {0x29, 0x01, 0x0c, 0x00}, {0x38, 0x01, 0x0c, 0x01},
+        {0x03, 0x01, 0x0e, 0x00}, {0x06, 0x01, 0x0e, 0x00}, {0x0a, 0x01, 0x0e, 0x00}, {0x0f, 0x01, 0x0e, 0x00},
+        {0x18, 0x01, 0x0e, 0x00}, {0x1f, 0x01, 0x0e, 0x00}, {0x29, 0x01, 0x0e, 0x00}, {0x38, 0x01, 0x0e, 0x01}
+    }, {
+        {0x02, 0x01, 0x0f, 0x00}, {0x09, 0x01, 0x0f, 0x00}, {0x17, 0x01, 0x0f, 0x00}, {0x28, 0x01, 0x0f, 0x01},
+        {0x02, 0x01, 0x10, 0x00}, {0x09, 0x01, 0x10, 0x00}, {0x17, 0x01, 0x10, 0x00}, {0x28, 0x01, 0x10, 0x01},
+        {0x02, 0x01, 0x11, 0x00}, {0x09, 0x01, 0x11, 0x00}, {0x17, 0x01, 0x11, 0x00}, {0x28, 0x01, 0x11, 0x01},
+        {0x02, 0x01, 0x12, 0x00}, {0x09, 0x01, 0x12, 0x00}, {0x17, 0x01, 0x12, 0x00}, {0x28, 0x01, 0x12, 0x01}
+    }, {
+        {0x03, 0x01, 0x0f, 0x00}, {0x06, 0x01, 0x0f, 0x00}, {0x0a, 0x01, 0x0f, 0x00}, {0x0f, 0x01, 0x0f, 0x00},
+        {0x18, 0x01, 0x0f, 0x00}, {0x1f, 0x01, 0x0f, 0x00}, {0x29, 0x01, 0x0f, 0x00}, {0x38, 0x01, 0x0f, 0x01},
+        {0x03, 0x01, 0x10, 0x00}, {0x06, 0x01, 0x10, 0x00}, {0x0a, 0x01, 0x10, 0x00}, {0x0f, 0x01, 0x10, 0x00},
+        {0x18, 0x01, 0x10, 0x00}, {0x1f, 0x01, 0x10, 0x00}, {0x29, 0x01, 0x10, 0x00}, {0x38, 0x01, 0x10, 0x01}
+    }, {
+        {0x03, 0x01, 0x11, 0x00}, {0x06, 0x01, 0x11, 0x00}, {0x0a, 0x01, 0x11, 0x00}, {0x0f, 0x01, 0x11, 0x00},
+        {0x18, 0x01, 0x11, 0x00}, {0x1f, 0x01, 0x11, 0x00}, {0x29, 0x01, 0x11, 0x00}, {0x38, 0x01, 0x11, 0x01},
+        {0x03, 0x01, 0x12, 0x00}, {0x06, 0x01, 0x12, 0x00}, {0x0a, 0x01, 0x12, 0x00}, {0x0f, 0x01, 0x12, 0x00},
+        {0x18, 0x01, 0x12, 0x00}, {0x1f, 0x01, 0x12, 0x00}, {0x29, 0x01, 0x12, 0x00}, {0x38, 0x01, 0x12, 0x01}
+    }, {
+        {0x00, 0x01, 0x13, 0x01}, {0x00, 0x01, 0x14, 0x01}, {0x00, 0x01, 0x15, 0x01}, {0x00, 0x01, 0x17, 0x01},
+        {0x00, 0x01, 0x18, 0x01}, {0x00, 0x01, 0x19, 0x01}, {0x00, 0x01, 0x1a, 0x01}, {0x00, 0x01, 0x1b, 0x01},
+        {0x00, 0x01, 0x1c, 0x01}, {0x00, 0x01, 0x1d, 0x01}, {0x00, 0x01, 0x1e, 0x01}, {0x00, 0x01, 0x1f, 0x01},
+        {0x00, 0x01, 0x7f, 0x01}, {0x00, 0x01, 0xdc, 0x01}, {0x00, 0x01, 0xf9, 0x01}, {0xfd, 0x00, 0x00, 0x01}
+    }, {
+        {0x01, 0x01, 0x13, 0x00}, {0x16, 0x01, 0x13, 0x01}, {0x01, 0x01, 0x14, 0x00}, {0x16, 0x01, 0x14, 0x01},
+        {0x01, 0x01, 0x15, 0x00}, {0x16, 0x01, 0x15, 0x01}, {0x01, 0x01, 0x17, 0x00}, {0x16, 0x01, 0x17, 0x01},
+        {0x01, 0x01, 0x18, 0x00}, {0x16, 0x01, 0x18, 0x01}, {0x01, 0x01, 0x19, 0x00}, {0x16, 0x01, 0x19, 0x01},
+        {0x01, 0x01, 0x1a, 0x00}, {0x16, 0x01, 0x1a, 0x01}, {0x01, 0x01, 0x1b, 0x00}, {0x16, 0x01, 0x1b, 0x01}
+    }, {
+        {0x02, 0x01, 0x13, 0x00}, {0x09, 0x01, 0x13, 0x00}, {0x17, 0x01, 0x13, 0x00}, {0x28, 0x01, 0x13, 0x01},
+        {0x02, 0x01, 0x14, 0x00}, {0x09, 0x01, 0x14, 0x00}, {0x17, 0x01, 0x14, 0x00}, {0x28, 0x01, 0x14, 0x01},
+        {0x02, 0x01, 0x15, 0x00}, {0x09, 0x01, 0x15, 0x00}, {0x17, 0x01, 0x15, 0x00}, {0x28, 0x01, 0x15, 0x01},
+        {0x02, 0x01, 0x17, 0x00}, {0x09, 0x01, 0x17, 0x00}, {0x17, 0x01, 0x17, 0x00}, {0x28, 0x01, 0x17, 0x01}
+    }, {
+        {0x03, 0x01, 0x13, 0x00}, {0x06, 0x01, 0x13, 0x00}, {0x0a, 0x01, 0x13, 0x00}, {0x0f, 0x01, 0x13, 0x00},
+        {0x18, 0x01, 0x13, 0x00}, {0x1f, 0x01, 0x13, 0x00}, {0x29, 0x01, 0x13, 0x00}, {0x38, 0x01, 0x13, 0x01},
+        {0x03, 0x01, 0x14, 0x00}, {0x06, 0x01, 0x14, 0x00}, {0x0a, 0x01, 0x14, 0x00}, {0x0f, 0x01, 0x14, 0x00},
+        {0x18, 0x01, 0x14, 0x00}, {0x1f, 0x01, 0x14, 0x00}, {0x29, 0x01, 0x14, 0x00}, {0x38, 0x01, 0x14, 0x01}
+    }, {
+        {0x03, 0x01, 0x15, 0x00}, {0x06, 0x01, 0x15, 0x00}, {0x0a, 0x01, 0x15, 0x00}, {0x0f, 0x01, 0x15, 0x00},
+        {0x18, 0x01, 0x15, 0x00}, {0x1f, 0x01, 0x15, 0x00}, {0x29, 0x01, 0x15, 0x00}, {0x38, 0x01, 0x15, 0x01},
+        {0x03, 0x01, 0x17, 0x00}, {0x06, 0x01, 0x17, 0x00}, {0x0a, 0x01, 0x17, 0x00}, {0x0f, 0x01, 0x17, 0x00},
+        {0x18, 0x01, 0x17, 0x00}, {0x1f, 0x01, 0x17, 0x00}, {0x29, 0x01, 0x17, 0x00}, {0x38, 0x01, 0x17, 0x01}
+    }, {
+        {0x02, 0x01, 0x18, 0x00}, {0x09, 0x01, 0x18, 0x00}, {0x17, 0x01, 0x18, 0x00}, {0x28, 0x01, 0x18, 0x01},
+        {0x02, 0x01, 0x19, 0x00}, {0x09, 0x01, 0x19, 0x00}, {0x17, 0x01, 0x19, 0x00}, {0x28, 0x01, 0x19, 0x01},
+        {0x02, 0x01, 0x1a, 0x00}, {0x09, 0x01, 0x1a, 0x00}, {0x17, 0x01, 0x1a, 0x00}, {0x28, 0x01, 0x1a, 0x01},
+        {0x02, 0x01, 0x1b, 0x00}, {0x09, 0x01, 0x1b, 0x00}, {0x17, 0x01, 0x1b, 0x00}, {0x28, 0x01, 0x1b, 0x01}
+    }, {
+        {0x03, 0x01, 0x18, 0x00}, {0x06, 0x01, 0x18, 0x00}, {0x0a, 0x01, 0x18, 0x00}, {0x0f, 0x01, 0x18, 0x00},
+        {0x18, 0x01, 0x18, 0x00}, {0x1f, 0x01, 0x18, 0x00}, {0x29, 0x01, 0x18, 0x00}, {0x38, 0x01, 0x18, 0x01},
+        {0x03, 0x01, 0x19, 0x00}, {0x06, 0x01, 0x19, 0x00}, {0x0a, 0x01, 0x19, 0x00}, {0x0f, 0x01, 0x19, 0x00},
+        {0x18, 0x01, 0x19, 0x00}, {0x1f, 0x01, 0x19, 0x00}, {0x29, 0x01, 0x19, 0x00}, {0x38, 0x01, 0x19, 0x01}
+    }, {
+        {0x03, 0x01, 0x1a, 0x00}, {0x06, 0x01, 0x1a, 0x00}, {0x0a, 0x01, 0x1a, 0x00}, {0x0f, 0x01, 0x1a, 0x00},
+        {0x18, 0x01, 0x1a, 0x00}, {0x1f, 0x01, 0x1a, 0x00}, {0x29, 0x01, 0x1a, 0x00}, {0x38, 0x01, 0x1a, 0x01},
+        {0x03, 0x01, 0x1b, 0x00}, {0x06, 0x01, 0x1b, 0x00}, {0x0a, 0x01, 0x1b, 0x00}, {0x0f, 0x01, 0x1b, 0x00},
+        {0x18, 0x01, 0x1b, 0x00}, {0x1f, 0x01, 0x1b, 0x00}, {0x29, 0x01, 0x1b, 0x00}, {0x38, 0x01, 0x1b, 0x01}
+    }, {
+        {0x01, 0x01, 0x1c, 0x00}, {0x16, 0x01, 0x1c, 0x01}, {0x01, 0x01, 0x1d, 0x00}, {0x16, 0x01, 0x1d, 0x01},
+        {0x01, 0x01, 0x1e, 0x00}, {0x16, 0x01, 0x1e, 0x01}, {0x01, 0x01, 0x1f, 0x00}, {0x16, 0x01, 0x1f, 0x01},
+        {0x01, 0x01, 0x7f, 0x00}, {0x16, 0x01, 0x7f, 0x01}, {0x01, 0x01, 0xdc, 0x00}, {0x16, 0x01, 0xdc, 0x01},
+        {0x01, 0x01, 0xf9, 0x00}, {0x16, 0x01, 0xf9, 0x01}, {0xfe, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x01}
+    }, {
+        {0x02, 0x01, 0x1c, 0x00}, {0x09, 0x01, 0x1c, 0x00}, {0x17, 0x01, 0x1c, 0x00}, {0x28, 0x01, 0x1c, 0x01},
+        {0x02, 0x01, 0x1d, 0x00}, {0x09, 0x01, 0x1d, 0x00}, {0x17, 0x01, 0x1d, 0x00}, {0x28, 0x01, 0x1d, 0x01},
+        {0x02, 0x01, 0x1e, 0x00}, {0x09, 0x01, 0x1e, 0x00}, {0x17, 0x01, 0x1e, 0x00}, {0x28, 0x01, 0x1e, 0x01},
+        {0x02, 0x01, 0x1f, 0x00}, {0x09, 0x01, 0x1f, 0x00}, {0x17, 0x01, 0x1f, 0x00}, {0x28, 0x01, 0x1f, 0x01}
+    }, {
+        {0x03, 0x01, 0x1c, 0x00}, {0x06, 0x01, 0x1c, 0x00}, {0x0a, 0x01, 0x1c, 0x00}, {0x0f, 0x01, 0x1c, 0x00},
+        {0x18, 0x01, 0x1c, 0x00}, {0x1f, 0x01, 0x1c, 0x00}, {0x29, 0x01, 0x1c, 0x00}, {0x38, 0x01, 0x1c, 0x01},
+        {0x03, 0x01, 0x1d, 0x00}, {0x06, 0x01, 0x1d, 0x00}, {0x0a, 0x01, 0x1d, 0x00}, {0x0f, 0x01, 0x1d, 0x00},
+        {0x18, 0x01, 0x1d, 0x00}, {0x1f, 0x01, 0x1d, 0x00}, {0x29, 0x01, 0x1d, 0x00}, {0x38, 0x01, 0x1d, 0x01}
+    }, {
+        {0x03, 0x01, 0x1e, 0x00}, {0x06, 0x01, 0x1e, 0x00}, {0x0a, 0x01, 0x1e, 0x00}, {0x0f, 0x01, 0x1e, 0x00},
+        {0x18, 0x01, 0x1e, 0x00}, {0x1f, 0x01, 0x1e, 0x00}, {0x29, 0x01, 0x1e, 0x00}, {0x38, 0x01, 0x1e, 0x01},
+        {0x03, 0x01, 0x1f, 0x00}, {0x06, 0x01, 0x1f, 0x00}, {0x0a, 0x01, 0x1f, 0x00}, {0x0f, 0x01, 0x1f, 0x00},
+        {0x18, 0x01, 0x1f, 0x00}, {0x1f, 0x01, 0x1f, 0x00}, {0x29, 0x01, 0x1f, 0x00}, {0x38, 0x01, 0x1f, 0x01}
+    }, {
+        {0x02, 0x01, 0x7f, 0x00}, {0x09, 0x01, 0x7f, 0x00}, {0x17, 0x01, 0x7f, 0x00}, {0x28, 0x01, 0x7f, 0x01},
+        {0x02, 0x01, 0xdc, 0x00}, {0x09, 0x01, 0xdc, 0x00}, {0x17, 0x01, 0xdc, 0x00}, {0x28, 0x01, 0xdc, 0x01},
+        {0x02, 0x01, 0xf9, 0x00}, {0x09, 0x01, 0xf9, 0x00}, {0x17, 0x01, 0xf9, 0x00}, {0x28, 0x01, 0xf9, 0x01},
+        {0x00, 0x01, 0x0a, 0x01}, {0x00, 0x01, 0x0d, 0x01}, {0x00, 0x01, 0x16, 0x01}, {0xfa, 0x00, 0x00, 0x00}
+    }, {
+        {0x03, 0x01, 0x7f, 0x00}, {0x06, 0x01, 0x7f, 0x00}, {0x0a, 0x01, 0x7f, 0x00}, {0x0f, 0x01, 0x7f, 0x00},
+        {0x18, 0x01, 0x7f, 0x00}, {0x1f, 0x01, 0x7f, 0x00}, {0x29, 0x01, 0x7f, 0x00}, {0x38, 0x01, 0x7f, 0x01},
+        {0x03, 0x01, 0xdc, 0x00}, {0x06, 0x01, 0xdc, 0x00}, {0x0a, 0x01, 0xdc, 0x00}, {0x0f, 0x01, 0xdc, 0x00},
+        {0x18, 0x01, 0xdc, 0x00}, {0x1f, 0x01, 0xdc, 0x00}, {0x29, 0x01, 0xdc, 0x00}, {0x38, 0x01, 0xdc, 0x01}
+    }, {
+        {0x03, 0x01, 0xf9, 0x00}, {0x06, 0x01, 0xf9, 0x00}, {0x0a, 0x01, 0xf9, 0x00}, {0x0f, 0x01, 0xf9, 0x00},
+        {0x18, 0x01, 0xf9, 0x00}, {0x1f, 0x01, 0xf9, 0x00}, {0x29, 0x01, 0xf9, 0x00}, {0x38, 0x01, 0xf9, 0x01},
+        {0x01, 0x01, 0x0a, 0x00}, {0x16, 0x01, 0x0a, 0x01}, {0x01, 0x01, 0x0d, 0x00}, {0x16, 0x01, 0x0d, 0x01},
+        {0x01, 0x01, 0x16, 0x00}, {0x16, 0x01, 0x16, 0x01}, {0xfc, 0x00, 0x00, 0x00}, {0xfc, 0x00, 0x00, 0x00}
+    }, {
+        {0x02, 0x01, 0x0a, 0x00}, {0x09, 0x01, 0x0a, 0x00}, {0x17, 0x01, 0x0a, 0x00}, {0x28, 0x01, 0x0a, 0x01},
+        {0x02, 0x01, 0x0d, 0x00}, {0x09, 0x01, 0x0d, 0x00}, {0x17, 0x01, 0x0d, 0x00}, {0x28, 0x01, 0x0d, 0x01},
+        {0x02, 0x01, 0x16, 0x00}, {0x09, 0x01, 0x16, 0x00}, {0x17, 0x01, 0x16, 0x00}, {0x28, 0x01, 0x16, 0x01},
+        {0xfd, 0x00, 0x00, 0x00}, {0xfd, 0x00, 0x00, 0x00}, {0xfd, 0x00, 0x00, 0x00}, {0xfd, 0x00, 0x00, 0x00}
+    }, {
+        {0x03, 0x01, 0x0a, 0x00}, {0x06, 0x01, 0x0a, 0x00}, {0x0a, 0x01, 0x0a, 0x00}, {0x0f, 0x01, 0x0a, 0x00},
+        {0x18, 0x01, 0x0a, 0x00}, {0x1f, 0x01, 0x0a, 0x00}, {0x29, 0x01, 0x0a, 0x00}, {0x38, 0x01, 0x0a, 0x01},
+        {0x03, 0x01, 0x0d, 0x00}, {0x06, 0x01, 0x0d, 0x00}, {0x0a, 0x01, 0x0d, 0x00}, {0x0f, 0x01, 0x0d, 0x00},
+        {0x18, 0x01, 0x0d, 0x00}, {0x1f, 0x01, 0x0d, 0x00}, {0x29, 0x01, 0x0d, 0x00}, {0x38, 0x01, 0x0d, 0x01}
+    }, {
+        {0x03, 0x01, 0x16, 0x00}, {0x06, 0x01, 0x16, 0x00}, {0x0a, 0x01, 0x16, 0x00}, {0x0f, 0x01, 0x16, 0x00},
+        {0x18, 0x01, 0x16, 0x00}, {0x1f, 0x01, 0x16, 0x00}, {0x29, 0x01, 0x16, 0x00}, {0x38, 0x01, 0x16, 0x01},
+        {0xff, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x00},
+        {0xff, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x00}, {0xff, 0x00, 0x00, 0x00}
+    }
+};
+
+typedef struct Encodes {
+    uint  code;
+    uint  len;
+} Encodes;
+
+static Encodes  encodes[256] = {
+    {0x00001ff8, 13}, {0x007fffd8, 23}, {0x0fffffe2, 28}, {0x0fffffe3, 28},
+    {0x0fffffe4, 28}, {0x0fffffe5, 28}, {0x0fffffe6, 28}, {0x0fffffe7, 28},
+    {0x0fffffe8, 28}, {0x00ffffea, 24}, {0x3ffffffc, 30}, {0x0fffffe9, 28},
+    {0x0fffffea, 28}, {0x3ffffffd, 30}, {0x0fffffeb, 28}, {0x0fffffec, 28},
+    {0x0fffffed, 28}, {0x0fffffee, 28}, {0x0fffffef, 28}, {0x0ffffff0, 28},
+    {0x0ffffff1, 28}, {0x0ffffff2, 28}, {0x3ffffffe, 30}, {0x0ffffff3, 28},
+    {0x0ffffff4, 28}, {0x0ffffff5, 28}, {0x0ffffff6, 28}, {0x0ffffff7, 28},
+    {0x0ffffff8, 28}, {0x0ffffff9, 28}, {0x0ffffffa, 28}, {0x0ffffffb, 28},
+    {0x00000014,  6}, {0x000003f8, 10}, {0x000003f9, 10}, {0x00000ffa, 12},
+    {0x00001ff9, 13}, {0x00000015,  6}, {0x000000f8,  8}, {0x000007fa, 11},
+    {0x000003fa, 10}, {0x000003fb, 10}, {0x000000f9,  8}, {0x000007fb, 11},
+    {0x000000fa,  8}, {0x00000016,  6}, {0x00000017,  6}, {0x00000018,  6},
+    {0x00000000,  5}, {0x00000001,  5}, {0x00000002,  5}, {0x00000019,  6},
+    {0x0000001a,  6}, {0x0000001b,  6}, {0x0000001c,  6}, {0x0000001d,  6},
+    {0x0000001e,  6}, {0x0000001f,  6}, {0x0000005c,  7}, {0x000000fb,  8},
+    {0x00007ffc, 15}, {0x00000020,  6}, {0x00000ffb, 12}, {0x000003fc, 10},
+    {0x00001ffa, 13}, {0x00000021,  6}, {0x0000005d,  7}, {0x0000005e,  7},
+    {0x0000005f,  7}, {0x00000060,  7}, {0x00000061,  7}, {0x00000062,  7},
+    {0x00000063,  7}, {0x00000064,  7}, {0x00000065,  7}, {0x00000066,  7},
+    {0x00000067,  7}, {0x00000068,  7}, {0x00000069,  7}, {0x0000006a,  7},
+    {0x0000006b,  7}, {0x0000006c,  7}, {0x0000006d,  7}, {0x0000006e,  7},
+    {0x0000006f,  7}, {0x00000070,  7}, {0x00000071,  7}, {0x00000072,  7},
+    {0x000000fc,  8}, {0x00000073,  7}, {0x000000fd,  8}, {0x00001ffb, 13},
+    {0x0007fff0, 19}, {0x00001ffc, 13}, {0x00003ffc, 14}, {0x00000022,  6},
+    {0x00007ffd, 15}, {0x00000003,  5}, {0x00000023,  6}, {0x00000004,  5},
+    {0x00000024,  6}, {0x00000005,  5}, {0x00000025,  6}, {0x00000026,  6},
+    {0x00000027,  6}, {0x00000006,  5}, {0x00000074,  7}, {0x00000075,  7},
+    {0x00000028,  6}, {0x00000029,  6}, {0x0000002a,  6}, {0x00000007,  5},
+    {0x0000002b,  6}, {0x00000076,  7}, {0x0000002c,  6}, {0x00000008,  5},
+    {0x00000009,  5}, {0x0000002d,  6}, {0x00000077,  7}, {0x00000078,  7},
+    {0x00000079,  7}, {0x0000007a,  7}, {0x0000007b,  7}, {0x00007ffe, 15},
+    {0x000007fc, 11}, {0x00003ffd, 14}, {0x00001ffd, 13}, {0x0ffffffc, 28},
+    {0x000fffe6, 20}, {0x003fffd2, 22}, {0x000fffe7, 20}, {0x000fffe8, 20},
+    {0x003fffd3, 22}, {0x003fffd4, 22}, {0x003fffd5, 22}, {0x007fffd9, 23},
+    {0x003fffd6, 22}, {0x007fffda, 23}, {0x007fffdb, 23}, {0x007fffdc, 23},
+    {0x007fffdd, 23}, {0x007fffde, 23}, {0x00ffffeb, 24}, {0x007fffdf, 23},
+    {0x00ffffec, 24}, {0x00ffffed, 24}, {0x003fffd7, 22}, {0x007fffe0, 23},
+    {0x00ffffee, 24}, {0x007fffe1, 23}, {0x007fffe2, 23}, {0x007fffe3, 23},
+    {0x007fffe4, 23}, {0x001fffdc, 21}, {0x003fffd8, 22}, {0x007fffe5, 23},
+    {0x003fffd9, 22}, {0x007fffe6, 23}, {0x007fffe7, 23}, {0x00ffffef, 24},
+    {0x003fffda, 22}, {0x001fffdd, 21}, {0x000fffe9, 20}, {0x003fffdb, 22},
+    {0x003fffdc, 22}, {0x007fffe8, 23}, {0x007fffe9, 23}, {0x001fffde, 21},
+    {0x007fffea, 23}, {0x003fffdd, 22}, {0x003fffde, 22}, {0x00fffff0, 24},
+    {0x001fffdf, 21}, {0x003fffdf, 22}, {0x007fffeb, 23}, {0x007fffec, 23},
+    {0x001fffe0, 21}, {0x001fffe1, 21}, {0x003fffe0, 22}, {0x001fffe2, 21},
+    {0x007fffed, 23}, {0x003fffe1, 22}, {0x007fffee, 23}, {0x007fffef, 23},
+    {0x000fffea, 20}, {0x003fffe2, 22}, {0x003fffe3, 22}, {0x003fffe4, 22},
+    {0x007ffff0, 23}, {0x003fffe5, 22}, {0x003fffe6, 22}, {0x007ffff1, 23},
+    {0x03ffffe0, 26}, {0x03ffffe1, 26}, {0x000fffeb, 20}, {0x0007fff1, 19},
+    {0x003fffe7, 22}, {0x007ffff2, 23}, {0x003fffe8, 22}, {0x01ffffec, 25},
+    {0x03ffffe2, 26}, {0x03ffffe3, 26}, {0x03ffffe4, 26}, {0x07ffffde, 27},
+    {0x07ffffdf, 27}, {0x03ffffe5, 26}, {0x00fffff1, 24}, {0x01ffffed, 25},
+    {0x0007fff2, 19}, {0x001fffe3, 21}, {0x03ffffe6, 26}, {0x07ffffe0, 27},
+    {0x07ffffe1, 27}, {0x03ffffe7, 26}, {0x07ffffe2, 27}, {0x00fffff2, 24},
+    {0x001fffe4, 21}, {0x001fffe5, 21}, {0x03ffffe8, 26}, {0x03ffffe9, 26},
+    {0x0ffffffd, 28}, {0x07ffffe3, 27}, {0x07ffffe4, 27}, {0x07ffffe5, 27},
+    {0x000fffec, 20}, {0x00fffff3, 24}, {0x000fffed, 20}, {0x001fffe6, 21},
+    {0x003fffe9, 22}, {0x001fffe7, 21}, {0x001fffe8, 21}, {0x007ffff3, 23},
+    {0x003fffea, 22}, {0x003fffeb, 22}, {0x01ffffee, 25}, {0x01ffffef, 25},
+    {0x00fffff4, 24}, {0x00fffff5, 24}, {0x03ffffea, 26}, {0x007ffff4, 23},
+    {0x03ffffeb, 26}, {0x07ffffe6, 27}, {0x03ffffec, 26}, {0x03ffffed, 26},
+    {0x07ffffe7, 27}, {0x07ffffe8, 27}, {0x07ffffe9, 27}, {0x07ffffea, 27},
+    {0x07ffffeb, 27}, {0x0ffffffe, 28}, {0x07ffffec, 27}, {0x07ffffed, 27},
+    {0x07ffffee, 27}, {0x07ffffef, 27}, {0x07fffff0, 27}, {0x03ffffee, 26}
+};
+
+static Encodes  encodesLower[256] =
+{
+    {0x00001ff8, 13}, {0x007fffd8, 23}, {0x0fffffe2, 28}, {0x0fffffe3, 28},
+    {0x0fffffe4, 28}, {0x0fffffe5, 28}, {0x0fffffe6, 28}, {0x0fffffe7, 28},
+    {0x0fffffe8, 28}, {0x00ffffea, 24}, {0x3ffffffc, 30}, {0x0fffffe9, 28},
+    {0x0fffffea, 28}, {0x3ffffffd, 30}, {0x0fffffeb, 28}, {0x0fffffec, 28},
+    {0x0fffffed, 28}, {0x0fffffee, 28}, {0x0fffffef, 28}, {0x0ffffff0, 28},
+    {0x0ffffff1, 28}, {0x0ffffff2, 28}, {0x3ffffffe, 30}, {0x0ffffff3, 28},
+    {0x0ffffff4, 28}, {0x0ffffff5, 28}, {0x0ffffff6, 28}, {0x0ffffff7, 28},
+    {0x0ffffff8, 28}, {0x0ffffff9, 28}, {0x0ffffffa, 28}, {0x0ffffffb, 28},
+    {0x00000014,  6}, {0x000003f8, 10}, {0x000003f9, 10}, {0x00000ffa, 12},
+    {0x00001ff9, 13}, {0x00000015,  6}, {0x000000f8,  8}, {0x000007fa, 11},
+    {0x000003fa, 10}, {0x000003fb, 10}, {0x000000f9,  8}, {0x000007fb, 11},
+    {0x000000fa,  8}, {0x00000016,  6}, {0x00000017,  6}, {0x00000018,  6},
+    {0x00000000,  5}, {0x00000001,  5}, {0x00000002,  5}, {0x00000019,  6},
+    {0x0000001a,  6}, {0x0000001b,  6}, {0x0000001c,  6}, {0x0000001d,  6},
+    {0x0000001e,  6}, {0x0000001f,  6}, {0x0000005c,  7}, {0x000000fb,  8},
+    {0x00007ffc, 15}, {0x00000020,  6}, {0x00000ffb, 12}, {0x000003fc, 10},
+    {0x00001ffa, 13}, {0x00000003,  5}, {0x00000023,  6}, {0x00000004,  5},
+    {0x00000024,  6}, {0x00000005,  5}, {0x00000025,  6}, {0x00000026,  6},
+    {0x00000027,  6}, {0x00000006,  5}, {0x00000074,  7}, {0x00000075,  7},
+    {0x00000028,  6}, {0x00000029,  6}, {0x0000002a,  6}, {0x00000007,  5},
+    {0x0000002b,  6}, {0x00000076,  7}, {0x0000002c,  6}, {0x00000008,  5},
+    {0x00000009,  5}, {0x0000002d,  6}, {0x00000077,  7}, {0x00000078,  7},
+    {0x00000079,  7}, {0x0000007a,  7}, {0x0000007b,  7}, {0x00001ffb, 13},
+    {0x0007fff0, 19}, {0x00001ffc, 13}, {0x00003ffc, 14}, {0x00000022,  6},
+    {0x00007ffd, 15}, {0x00000003,  5}, {0x00000023,  6}, {0x00000004,  5},
+    {0x00000024,  6}, {0x00000005,  5}, {0x00000025,  6}, {0x00000026,  6},
+    {0x00000027,  6}, {0x00000006,  5}, {0x00000074,  7}, {0x00000075,  7},
+    {0x00000028,  6}, {0x00000029,  6}, {0x0000002a,  6}, {0x00000007,  5},
+    {0x0000002b,  6}, {0x00000076,  7}, {0x0000002c,  6}, {0x00000008,  5},
+    {0x00000009,  5}, {0x0000002d,  6}, {0x00000077,  7}, {0x00000078,  7},
+    {0x00000079,  7}, {0x0000007a,  7}, {0x0000007b,  7}, {0x00007ffe, 15},
+    {0x000007fc, 11}, {0x00003ffd, 14}, {0x00001ffd, 13}, {0x0ffffffc, 28},
+    {0x000fffe6, 20}, {0x003fffd2, 22}, {0x000fffe7, 20}, {0x000fffe8, 20},
+    {0x003fffd3, 22}, {0x003fffd4, 22}, {0x003fffd5, 22}, {0x007fffd9, 23},
+    {0x003fffd6, 22}, {0x007fffda, 23}, {0x007fffdb, 23}, {0x007fffdc, 23},
+    {0x007fffdd, 23}, {0x007fffde, 23}, {0x00ffffeb, 24}, {0x007fffdf, 23},
+    {0x00ffffec, 24}, {0x00ffffed, 24}, {0x003fffd7, 22}, {0x007fffe0, 23},
+    {0x00ffffee, 24}, {0x007fffe1, 23}, {0x007fffe2, 23}, {0x007fffe3, 23},
+    {0x007fffe4, 23}, {0x001fffdc, 21}, {0x003fffd8, 22}, {0x007fffe5, 23},
+    {0x003fffd9, 22}, {0x007fffe6, 23}, {0x007fffe7, 23}, {0x00ffffef, 24},
+    {0x003fffda, 22}, {0x001fffdd, 21}, {0x000fffe9, 20}, {0x003fffdb, 22},
+    {0x003fffdc, 22}, {0x007fffe8, 23}, {0x007fffe9, 23}, {0x001fffde, 21},
+    {0x007fffea, 23}, {0x003fffdd, 22}, {0x003fffde, 22}, {0x00fffff0, 24},
+    {0x001fffdf, 21}, {0x003fffdf, 22}, {0x007fffeb, 23}, {0x007fffec, 23},
+    {0x001fffe0, 21}, {0x001fffe1, 21}, {0x003fffe0, 22}, {0x001fffe2, 21},
+    {0x007fffed, 23}, {0x003fffe1, 22}, {0x007fffee, 23}, {0x007fffef, 23},
+    {0x000fffea, 20}, {0x003fffe2, 22}, {0x003fffe3, 22}, {0x003fffe4, 22},
+    {0x007ffff0, 23}, {0x003fffe5, 22}, {0x003fffe6, 22}, {0x007ffff1, 23},
+    {0x03ffffe0, 26}, {0x03ffffe1, 26}, {0x000fffeb, 20}, {0x0007fff1, 19},
+    {0x003fffe7, 22}, {0x007ffff2, 23}, {0x003fffe8, 22}, {0x01ffffec, 25},
+    {0x03ffffe2, 26}, {0x03ffffe3, 26}, {0x03ffffe4, 26}, {0x07ffffde, 27},
+    {0x07ffffdf, 27}, {0x03ffffe5, 26}, {0x00fffff1, 24}, {0x01ffffed, 25},
+    {0x0007fff2, 19}, {0x001fffe3, 21}, {0x03ffffe6, 26}, {0x07ffffe0, 27},
+    {0x07ffffe1, 27}, {0x03ffffe7, 26}, {0x07ffffe2, 27}, {0x00fffff2, 24},
+    {0x001fffe4, 21}, {0x001fffe5, 21}, {0x03ffffe8, 26}, {0x03ffffe9, 26},
+    {0x0ffffffd, 28}, {0x07ffffe3, 27}, {0x07ffffe4, 27}, {0x07ffffe5, 27},
+    {0x000fffec, 20}, {0x00fffff3, 24}, {0x000fffed, 20}, {0x001fffe6, 21},
+    {0x003fffe9, 22}, {0x001fffe7, 21}, {0x001fffe8, 21}, {0x007ffff3, 23},
+    {0x003fffea, 22}, {0x003fffeb, 22}, {0x01ffffee, 25}, {0x01ffffef, 25},
+    {0x00fffff4, 24}, {0x00fffff5, 24}, {0x03ffffea, 26}, {0x007ffff4, 23},
+    {0x03ffffeb, 26}, {0x07ffffe6, 27}, {0x03ffffec, 26}, {0x03ffffed, 26},
+    {0x07ffffe7, 27}, {0x07ffffe8, 27}, {0x07ffffe9, 27}, {0x07ffffea, 27},
+    {0x07ffffeb, 27}, {0x0ffffffe, 28}, {0x07ffffec, 27}, {0x07ffffed, 27},
+    {0x07ffffee, 27}, {0x07ffffef, 27}, {0x07fffff0, 27}, {0x03ffffee, 26}
+};
+
+
+/*
+    Return the size of the decoded string.
+    TODO - not a good api -- can overflow dst. dst should provide a size that must not be overflowed
+ */
+static int decodeHuff(uchar *state, uchar *src, int len, uchar *dst, uint last)
+{
+    uchar  *end, *dstp, ch, ending;
+
+    ch = 0;
+    ending = 1;
+    end = src + len;
+    dstp = dst;
+
+    while (src != end) {
+        ch = *src++;
+        if (decodeBits(state, &ending, ch >> 4, &dstp) < 0) {
+            return MPR_ERR_BAD_STATE;
+        }
+        if (decodeBits(state, &ending, ch & 0xf, &dstp) < 0) {
+            return MPR_ERR_BAD_STATE;
+        }
+    }
+    if (last) {
+        if (!ending) {
+            return MPR_ERR_BAD_STATE;
+        }
+        *state = 0;
+        *dstp = '\0';
+    }
+    return (int) (dstp - dst);
+}
+
+
+static int decodeBits(uchar *state, uchar *ending, uint bits, uchar **dstp)
+{
+    Decodes     code;
+
+    code = decodes[*state][bits];
+    if (code.next == *state) {
+        return MPR_ERR_BAD_STATE;
+    }
+    if (code.emit) {
+        *(*dstp)++ = code.sym;
+    }
+    *ending = code.ending;
+    *state = code.next;
+    return 0;
+}
+
+
+PUBLIC cchar *httpHuffDecode(uchar *src, int len)
+{
+    uchar   *value;
+    uchar   state;
+    ssize   alen, size;
+
+    alen = len * 2 + 1;
+    value = mprAlloc(alen);
+    state = 0;
+    if ((size = decodeHuff(&state, src, len, value, 1)) < 0) {
+        //  TODO - what do do here?
+        return 0;
+    }
+    assert(size < alen);
+    return (cchar*) value;
+}
+
+
+static uint encodeHuff(cchar *src, ssize len, uchar *dst, uint lower)
+{
+    cchar       *end;
+    uint        hlen;
+    uint        buf, pending, code;
+    Encodes     *table, *next;
+
+    table = lower ? encodesLower : encodes;
+    hlen = 0;
+    buf = 0;
+    pending = 0;
+
+    end = src + len;
+
+    while (src != end) {
+        next = &table[*src++ & 0xFF];
+        code = next->code;
+        pending += next->len;
+        if (pending < sizeof(buf) * 8) {
+            buf |= code << (sizeof(buf) * 8 - pending);
+            continue;
+        }
+        if ((hlen + sizeof(buf)) >= (uint) len) {
+            return 0;
+        }
+        pending -= sizeof(buf) * 8;
+        buf |= code >> pending;
+
+        encodeBuf(&dst[hlen], buf);
+        hlen += sizeof(buf);
+        buf = pending ? code << (sizeof(buf) * 8 - pending) : 0;
+    }
+    if (pending == 0) {
+        return hlen;
+    }
+    buf |= (uint) -1 >> pending;
+    pending = align(pending, 8);
+    if (hlen + pending / 8 >= len) {
+        return 0;
+    }
+    buf >>= sizeof(buf) * 8 - pending;
+    do {
+        pending -= 8;
+        dst[hlen++] = (uchar) (buf >> pending);
+    } while (pending);
+    return hlen;
+}
+
+
+PUBLIC ssize httpHuffEncode(cchar *src, ssize size, char *dst, uint lower)
+{
+    return encodeHuff(src, size, (uchar*) dst, lower);
+}
+
+#endif /* ME_HTTP_HTTP2 */
+
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
 /********* Start of file src/monitor.c ************/
 
 /*
@@ -9327,6 +13194,7 @@ PUBLIC void httpSetStreaming(HttpHost *host, cchar *mime, cchar *uri, bool enabl
 
 /********************************** Forwards **********************************/
 
+static HttpAddress *growAddresses(HttpNet *net, HttpAddress *address, int counterIndex);
 static MprTicks lookupTicks(MprHash *args, cchar *key, MprTicks defaultValue);
 static void stopMonitors();
 
@@ -9402,7 +13270,7 @@ static void invokeDefenses(HttpMonitor *monitor, MprHash *args)
                 sd->suppressUntil = http->now + defense->suppressPeriod;
             }
         }
-        httpTrace(0, "monitor.defense.invoke", "context", "defense:'%s',remedy:'%s'", defense->name, defense->remedy);
+        httpTrace(http->trace, "monitor.defense.invoke", "context", "defense:'%s', remedy:'%s'", defense->name, defense->remedy);
 
         /*  WARNING: yields */
         remedyProc(args);
@@ -9439,7 +13307,7 @@ static void checkCounter(HttpMonitor *monitor, HttpCounter *counter, cchar *ip)
         period = monitor->period / 1000;
         address = ip ? sfmt(" %s", ip) : "";
         msg = sfmt(fmt, address, monitor->counterName, counter->value, period, monitor->limit);
-        httpTrace(0, "monitor.check", "context", "msg:'%s'", msg);
+        httpTrace(HTTP->trace, "monitor.check", "context", "msg:'%s'", msg);
 
         subject = sfmt("Monitor %s Alert", monitor->counterName);
         args = mprDeserialize(
@@ -9466,7 +13334,7 @@ PUBLIC void httpPruneMonitors()
     lock(http->addresses);
     for (ITERATE_KEY_DATA(http->addresses, kp, address)) {
         if (address->banUntil && address->banUntil < http->now) {
-            httpTrace(0, "monitor.ban.stop", "context", "client:'%s'", kp->key);
+            httpTrace(http->trace, "monitor.ban.stop", "context", "client:'%s'", kp->key);
             address->banUntil = 0;
         }
         if ((address->updated + period) < http->now && address->banUntil == 0) {
@@ -9646,56 +13514,84 @@ static void stopMonitors()
 }
 
 
-/*
-    Register a monitor event
-    This code is very carefully coded for maximum speed to minimize locks for keep-alive requests.
-    There are some tolerated race conditions.
- */
-PUBLIC int64 httpMonitorEvent(HttpConn *conn, int counterIndex, int64 adj)
+PUBLIC HttpAddress *httpMonitorAddress(HttpNet *net, int counterIndex)
 {
     Http            *http;
     HttpAddress     *address;
-    HttpCounter     *counter;
+    int             count;
     static int      seqno = 0;
-    int             ncounters;
 
-    http = conn->http;
-    address = conn->address;
-
-    if (!address) {
-        lock(http->addresses);
-        address = mprLookupKey(http->addresses, conn->ip);
-        if (!address || address->ncounters <= counterIndex) {
-            ncounters = ((counterIndex + 0xF) & ~0xF);
-            if (address) {
-                address = mprRealloc(address, sizeof(HttpAddress) * ncounters * sizeof(HttpCounter));
-                memset(&address[address->ncounters], 0, (ncounters - address->ncounters) * sizeof(HttpCounter));
-            } else {
-                address = mprAllocBlock(sizeof(HttpAddress) * ncounters * sizeof(HttpCounter),
-                    MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO);
-                mprSetManager(address, (MprManager) manageAddress);
-            }
-            if (!address) {
-                unlock(http->addresses);
-                return 0;
-            }
-            address->ncounters = ncounters;
-            address->seqno = ++seqno;
-            mprAddKey(http->addresses, conn->ip, address);
-        }
-        conn->address = address;
-        if (!http->monitorsStarted) {
-            startMonitors();
-        }
+    address = net->address;
+    if (address) {
+        return address;
+    }
+    http = net->http;
+    count = mprGetHashLength(http->addresses);
+    if (count > net->limits->clientMax) {
+        mprLog("net erro", 0, "Too many concurrent clients, active: %d, max:%d", count, net->limits->clientMax);
+        return 0;
+    }
+    if (counterIndex <= 0) {
+        counterIndex = HTTP_COUNTER_MAX;
+    }
+    lock(http->addresses);
+    address = mprLookupKey(http->addresses, net->ip);
+    if ((address = growAddresses(net, address, counterIndex)) == 0) {
         unlock(http->addresses);
+        return 0;
+    }
+    address->seqno = ++seqno;
+    mprAddKey(http->addresses, net->ip, address);
+
+    net->address = address;
+    if (!http->monitorsStarted) {
+        startMonitors();
+    }
+    unlock(http->addresses);
+    return address;
+}
+
+
+static HttpAddress *growAddresses(HttpNet *net, HttpAddress *address, int counterIndex)
+{
+    int     ncounters;
+
+    if (!address || address->ncounters <= counterIndex) {
+        ncounters = ((counterIndex + 0xF) & ~0xF);
+        if (address) {
+            address = mprRealloc(address, sizeof(HttpAddress) * ncounters * sizeof(HttpCounter));
+            memset(&address[address->ncounters], 0, (ncounters - address->ncounters) * sizeof(HttpCounter));
+        } else {
+            address = mprAllocBlock(sizeof(HttpAddress) * ncounters * sizeof(HttpCounter), MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO);
+            mprSetManager(address, (MprManager) manageAddress);
+        }
+        address->ncounters = ncounters;
+    }
+    return address;
+}
+
+
+PUBLIC int64 httpMonitorNetEvent(HttpNet *net, int counterIndex, int64 adj)
+{
+    HttpAddress     *address;
+    HttpCounter     *counter;
+
+    if ((address = httpMonitorAddress(net, counterIndex)) == 0) {
+        return 0;
     }
     counter = &address->counters[counterIndex];
     mprAtomicAdd64((int64*) &counter->value, adj);
     /*
         Tolerated race with "updated" and the return value
      */
-    address->updated = http->now;
+    address->updated = net->http->now;
     return counter->value;
+}
+
+
+PUBLIC int64 httpMonitorEvent(HttpConn *conn, int counterIndex, int64 adj)
+{
+    return httpMonitorNetEvent(conn->net, counterIndex, adj);
 }
 
 
@@ -9821,7 +13717,7 @@ PUBLIC int httpBanClient(cchar *ip, MprTicks period, int status, cchar *msg)
         return MPR_ERR_CANT_FIND;
     }
     if (address->banUntil < http->now) {
-        httpTrace(NULL, "monitor.ban.start", "error", "client:'%s',duration:%lld", ip, period / 1000);
+        httpTrace(http->trace, "monitor.ban.start", "error", "client:'%s', duration:%lld", ip, period / 1000);
     }
     banUntil = http->now + period;
     address->banUntil = max(banUntil, address->banUntil);
@@ -9880,17 +13776,17 @@ static void cmdRemedy(MprHash *args)
         command = strim(command, "&", MPR_TRIM_END);
     }
     argc = mprMakeArgv(command, &argv, 0);
-    cmd->stdoutBuf = mprCreateBuf(ME_MAX_BUFFER, -1);
-    cmd->stderrBuf = mprCreateBuf(ME_MAX_BUFFER, -1);
+    cmd->stdoutBuf = mprCreateBuf(ME_BUFSIZE, -1);
+    cmd->stderrBuf = mprCreateBuf(ME_BUFSIZE, -1);
 
-    httpTrace(0, "monitor.remedy.cmd", "context", "remedy:'%s'", command);
+    httpTrace(HTTP->trace, "monitor.remedy.cmd", "context", "remedy:'%s'", command);
     if (mprStartCmd(cmd, argc, argv, NULL, MPR_CMD_DETACH | MPR_CMD_IN) < 0) {
-        httpTrace(0, "monitor.rememdy.cmd.error", "error", "msg:'Cannot start command. %s", command);
+        httpTrace(HTTP->trace, "monitor.rememdy.cmd.error", "error", "msg:'Cannot start command. %s'", command);
         return;
     }
     if (data) {
         if (mprWriteCmdBlock(cmd, MPR_CMD_STDIN, data, -1) < 0) {
-            httpTrace(0, "monitor.remedy.cmd.error", "error", "msg:'Cannot write to command. %s'", command);
+            httpTrace(HTTP->trace, "monitor.remedy.cmd.error", "error", "msg:'Cannot write to command. %s'", command);
             return;
         }
     }
@@ -9899,7 +13795,7 @@ static void cmdRemedy(MprHash *args)
         rc = mprWaitForCmd(cmd, ME_HTTP_REMEDY_TIMEOUT);
         status = mprGetCmdExitStatus(cmd);
         if (rc < 0 || status != 0) {
-            httpTrace(0, "monitor.remedy.cmd.error", "error", "msg:'Remedy failed. %s. %s', command: '%s'",
+            httpTrace(HTTP->trace, "monitor.remedy.cmd.error", "error", "msg:'Remedy failed. %s. %s', command: '%s'",
                 mprGetBufStart(cmd->stderrBuf), mprGetBufStart(cmd->stdoutBuf), command);
             return;
         }
@@ -9923,7 +13819,7 @@ static void delayRemedy(MprHash *args)
             address->delayUntil = max(delayUntil, address->delayUntil);
             delay = (int) lookupTicks(args, "DELAY", ME_HTTP_DELAY);
             address->delay = max(delay, address->delay);
-            httpTrace(0, "monitor.delay.start", "context", "client:'%s',delay:%d", ip, address->delay);
+            httpTrace(http->trace, "monitor.delay.start", "context", "client:'%s', delay:%d", ip, address->delay);
         }
     }
 }
@@ -9951,13 +13847,13 @@ static void httpRemedy(MprHash *args)
         method = "POST";
     }
     msg = smatch(method, "POST") ? mprLookupKey(args, "MESSAGE") : 0;
-    if ((conn = httpRequest(method, uri, msg, &err)) == 0) {
-        httpTrace(0, "monitor.remedy.http.error", "error", "msg:'%s'", err);
+    if ((conn = httpRequest(method, uri, msg, HTTP_1_1, &err)) == 0) {
+        httpTrace(HTTP->trace, "monitor.remedy.http.error", "error", "msg:'%s'", err);
         return;
     }
     status = httpGetStatus(conn);
     if (status != HTTP_CODE_OK) {
-        httpTrace(0, "monitor.remedy.http.error", "error", "status:%d,uri:'%s'", status, uri);
+        httpTrace(HTTP->trace, "monitor.remedy.http.error", "error", "status:%d, uri:'%s'", status, uri);
     }
 }
 
@@ -10007,12 +13903,501 @@ PUBLIC int httpAddRemedies()
  */
 
 
+/********* Start of file src/net.c ************/
+
+/*
+    net.c -- Network I/O.
+
+    Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+/***************************** Forward Declarations ***************************/
+
+static void manageNet(HttpNet *net, int flags);
+static void netTimeout(HttpNet *net, MprEvent *mprEvent);
+static void secureNet(HttpNet *net, MprSsl *ssl, cchar *peerName);
+
+#if ME_HTTP_HTTP2
+static HttpHeaderTable *createHeaderTable();
+static void manageHeaderTable(HttpHeaderTable *table, int flags);
+#endif
+
+/*********************************** Code *************************************/
+
+PUBLIC HttpNet *httpCreateNet(MprDispatcher *dispatcher, HttpEndpoint *endpoint, int protocol, int flags)
+{
+    Http        *http;
+    HttpNet     *net;
+    HttpHost    *host;
+    HttpRoute   *route;
+
+    http = HTTP;
+
+    if ((net = mprAllocObj(HttpNet, manageNet)) == 0) {
+        return 0;
+    }
+    net->http = http;
+    net->endpoint = endpoint;
+    net->lastActivity = http->now;
+    net->ioCallback = httpIOEvent;
+
+    if (endpoint) {
+        net->async = endpoint->async;
+        net->notifier = endpoint->notifier;
+        net->endpoint = endpoint;
+        host = mprGetFirstItem(endpoint->hosts);
+        if (host && (route = host->defaultRoute) != 0) {
+            net->trace = route->trace;
+            net->limits = route->limits;
+        } else {
+            net->limits = http->serverLimits;
+            net->trace = http->trace;
+        }
+    } else {
+        net->limits = http->clientLimits;
+        net->trace = http->trace;
+        net->nextStream = 1;
+    }
+    net->port = -1;
+    net->async = (flags & HTTP_NET_ASYNC) ? 1 : 0;
+
+
+    net->socketq = httpCreateQueue(net, NULL, http->netConnector, HTTP_QUEUE_TX, NULL);
+    net->socketq->name = sclone("socket-tx");
+
+#if ME_HTTP_HTTP2
+    /*
+        The socket queue will typically send and accept packets of HTTP2_DEFAULT_FRAME_SIZE plus the frame size overhead.
+        Set the max to fit four packets. Note that HTTP/2 flow control happens on the http filters and not on the socketq.
+        Other queues created in netConnector after the protocol is known.
+     */
+    httpSetQueueLimits(net->socketq, HTTP2_DEFAULT_FRAME_SIZE + HTTP2_FRAME_OVERHEAD, -1, HTTP2_DEFAULT_FRAME_SIZE * 4);
+    net->rxHeaders = createHeaderTable(HTTP2_TABLE_SIZE);
+    net->txHeaders = createHeaderTable(HTTP2_TABLE_SIZE);
+#endif
+
+    /*
+        Create queue of queues that require servicing
+     */
+    net->serviceq = httpCreateQueueHead(net, NULL, "serviceq", 0);
+    httpInitSchedulerQueue(net->serviceq);
+
+    if (dispatcher) {
+        net->dispatcher = dispatcher;
+    } else if (endpoint) {
+        net->dispatcher = endpoint->dispatcher;
+    } else {
+        net->dispatcher = mprGetDispatcher();
+    }
+    net->connections = mprCreateList(0, 0);
+
+    if (protocol >= 0) {
+        httpSetNetProtocol(net, protocol);
+    }
+
+    lock(http);
+    net->seqno = (int) ++http->totalConnections;
+    unlock(http);
+    httpAddNet(net);
+    return net;
+}
+
+
+/*
+    Destroy a network. This removes the network from the list of networks.
+ */
+PUBLIC void httpDestroyNet(HttpNet *net)
+{
+    HttpConn    *conn;
+    int         next;
+
+    if (!net->destroyed && !net->borrowed) {
+        if (httpIsServer(net)) {
+            for (ITERATE_ITEMS(net->connections, conn, next)) {
+                mprRemoveItem(net->connections, conn);
+                httpDestroyConn(conn);
+                next--;
+            }
+            httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
+        }
+        httpRemoveNet(net);
+        if (net->sock) {
+            mprCloseSocket(net->sock, 0);
+            /* Don't zero just incase another thread (in error) uses net->sock */
+        }
+        if (net->dispatcher && net->dispatcher->flags & MPR_DISPATCHER_AUTO) {
+            mprDestroyDispatcher(net->dispatcher);
+            /* Don't zero just incase another thread (in error) uses net->dispatcher */
+        }
+        net->destroyed = 1;
+    }
+}
+
+
+static void manageNet(HttpNet *net, int flags)
+{
+    assert(net);
+
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(net->address);
+        mprMark(net->connections);
+        mprMark(net->context);
+        mprMark(net->data);
+        mprMark(net->dispatcher);
+        mprMark(net->ejs);
+        mprMark(net->endpoint);
+        mprMark(net->errorMsg);
+        mprMark(net->holdq);
+        mprMark(net->http);
+        mprMark(net->inputq);
+        mprMark(net->ip);
+        mprMark(net->limits);
+        mprMark(net->newDispatcher);
+        mprMark(net->oldDispatcher);
+        mprMark(net->outputq);
+        mprMark(net->pool);
+        mprMark(net->serviceq);
+        mprMark(net->sock);
+        mprMark(net->socketq);
+        mprMark(net->trace);
+        mprMark(net->timeoutEvent);
+        mprMark(net->workerEvent);
+
+#if ME_HTTP_HTTP2
+        mprMark(net->frame);
+        mprMark(net->rxHeaders);
+        mprMark(net->txHeaders);
+#endif
+    }
+}
+
+
+PUBLIC void httpBindSocket(HttpNet *net, MprSocket *sock)
+{
+    assert(net);
+    if (sock) {
+        sock->data = net;
+        net->sock = sock;
+        net->port = sock->port;
+        net->ip = sclone(sock->ip);
+    }
+}
+
+
+/*
+    Client connect the network to a new peer.
+    Existing connections are closed
+ */
+PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl)
+{
+    MprSocket   *sp;
+
+    assert(net);
+
+    if (net->sock) {
+        mprCloseSocket(net->sock, 0);
+        net->sock = 0;
+    }
+    if ((sp = mprCreateSocket()) == 0) {
+        httpNetError(net, "Cannot create socket");
+        return MPR_ERR_CANT_ALLOCATE;
+    }
+    net->error = 0;
+    if (mprConnectSocket(sp, ip, port, MPR_SOCKET_NODELAY) < 0) {
+        httpNetError(net, "Cannot open socket on %s:%d", ip, port);
+        return MPR_ERR_CANT_CONNECT;
+    }
+    net->sock = sp;
+    net->ip = sclone(ip);
+    net->port = port;
+
+    if (ssl) {
+        secureNet(net, ssl, ip);
+    }
+    httpTrace(net->trace, "net.peer", "context", "peer:'%s:%d'", net->ip, net->port);
+    return 0;
+}
+
+
+static void secureNet(HttpNet *net, MprSsl *ssl, cchar *peerName)
+{
+#if ME_COM_SSL
+    MprSocket   *sock;
+
+    sock = net->sock;
+    if (mprUpgradeSocket(sock, ssl, peerName) < 0) {
+        httpNetError(net, "Cannot perform SSL upgrade. %s", sock->errorMsg);
+
+    } else if (sock->peerCert) {
+        httpTrace(net->trace, "net.ssl", "context",
+            "msg:'Connection secured with peer certificate', " \
+            "secure:true,cipher:'%s',peerName:'%s',subject:'%s',issuer:'%s'",
+            sock->cipher, sock->peerName, sock->peerCert, sock->peerCertIssuer);
+    }
+#endif
+}
+
+
+PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
+{
+    Http        *http;
+    HttpStage   *stage;
+
+    http = net->http;
+    protocol = net->protocol = protocol > 0 ? protocol : HTTP_1_1;
+
+    /*
+        Create queues connected to the appropriate protocol filter. Supply conn for HTTP/1.
+        For HTTP/2:
+            The Q packetSize defines frame size and the Q max defines the window size.
+            The outputq->max must be set to HTTP2_DEFAULT_WINDOW by spec. The packetSize must be set to 16K minimum.
+     */
+#if ME_HTTP_HTTP2
+    stage = protocol == 1 ? http->http1Filter : http->http2Filter;
+#else
+    stage = http->http1Filter;
+#endif
+    net->inputq = httpCreateQueue(net, NULL, stage, HTTP_QUEUE_RX, NULL);
+    net->outputq = httpCreateQueue(net, NULL, stage, HTTP_QUEUE_TX, NULL);
+    httpPairQueues(net->inputq, net->outputq);
+    httpAppendQueue(net->socketq, net->outputq);
+
+#if ME_HTTP_HTTP2
+    httpSetQueueLimits(net->inputq, net->limits->frameSize, -1, net->limits->windowSize);
+    httpSetQueueLimits(net->outputq, HTTP2_DEFAULT_FRAME_SIZE, -1, HTTP2_DEFAULT_WINDOW);
+#endif
+}
+
+
+PUBLIC void httpNetClosed(HttpNet *net)
+{
+    HttpConn    *conn;
+    int         next;
+
+    for (ITERATE_ITEMS(net->connections, conn, next)) {
+        if (conn->state < HTTP_STATE_PARSED) {
+            if (!conn->errorMsg) {
+                conn->errorMsg = sfmt("Peer closed connection before receiving a response");
+            }
+            if (!net->errorMsg) {
+                net->errorMsg = conn->errorMsg;
+            }
+            conn->error = 1;
+        }
+        httpSetEof(conn);
+        httpSetState(conn, HTTP_STATE_COMPLETE);
+        mprCreateEvent(net->dispatcher, "disconnect", 0, httpProcess, conn->inputq, 0);
+    }
+}
+
+
+#if ME_HTTP_HTTP2
+static HttpHeaderTable *createHeaderTable(int maxsize)
+{
+    HttpHeaderTable     *table;
+
+    table = mprAllocObj(HttpHeaderTable, manageHeaderTable);
+    table->list = mprCreateList(256, 0);
+    table->size = 0;
+    table->max = maxsize;
+    return table;
+}
+
+
+static void manageHeaderTable(HttpHeaderTable *table, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(table->list);
+    }
+}
+#endif
+
+
+PUBLIC void httpAddConn(HttpNet *net, HttpConn *conn)
+{
+    mprAddItem(net->connections, conn);
+    conn->net = net;
+}
+
+
+PUBLIC void httpRemoveConn(HttpNet *net, HttpConn *conn)
+{
+    mprRemoveItem(net->connections, conn);
+}
+
+
+PUBLIC void httpNetTimeout(HttpNet *net)
+{
+    if (!net->timeoutEvent && !net->destroyed) {
+        /*
+            Will run on the HttpNet dispatcher unless shutting down and it is destroyed already
+         */
+        net->timeoutEvent = mprCreateEvent(net->dispatcher, "netTimeout", 0, netTimeout, net, 0);
+    }
+}
+
+
+PUBLIC bool httpGetAsync(HttpNet *net)
+{
+    return net->async;
+}
+
+
+PUBLIC void httpSetAsync(HttpNet *net, bool async)
+{
+    net->async = async;
+}
+
+
+//  TODO - naming. Some have Net, some not.
+
+PUBLIC void httpSetIOCallback(HttpNet *net, HttpIOCallback fn)
+{
+    net->ioCallback = fn;
+}
+
+
+PUBLIC void httpSetNetContext(HttpNet *net, void *context)
+{
+    net->context = context;
+}
+
+
+static void netTimeout(HttpNet *net, MprEvent *mprEvent)
+{
+    if (net->destroyed) {
+        return;
+    }
+    /* This will trigger an I/O event which will then destroy the network */
+    mprDisconnectSocket(net->sock);
+}
+
+
+
+//  TODO - review all these
+/*
+    Used by ejs
+ */
+PUBLIC void httpUseWorker(HttpNet *net, MprDispatcher *dispatcher, MprEvent *event)
+{
+    lock(net->http);
+    net->oldDispatcher = net->dispatcher;
+    net->dispatcher = dispatcher;
+    net->worker = 1;
+    assert(!net->workerEvent);
+    net->workerEvent = event;
+    unlock(net->http);
+}
+
+
+//  TODO comment?
+PUBLIC void httpUsePrimary(HttpNet *net)
+{
+    lock(net->http);
+    assert(net->worker);
+    assert(net->oldDispatcher && net->dispatcher != net->oldDispatcher);
+    net->dispatcher = net->oldDispatcher;
+    net->oldDispatcher = 0;
+    net->worker = 0;
+    unlock(net->http);
+}
+
+
+//  TODO - legacy httpBorrowConn?
+PUBLIC void httpBorrowNet(HttpNet *net)
+{
+    assert(!net->borrowed);
+    if (!net->borrowed) {
+        mprAddRoot(net);
+        net->borrowed = 1;
+    }
+}
+
+
+//  TODO - legacy httpReturnConn?
+PUBLIC void httpReturnNet(HttpNet *net)
+{
+    assert(net->borrowed);
+    if (net->borrowed) {
+        net->borrowed = 0;
+        mprRemoveRoot(net);
+        httpEnableNetEvents(net);
+    }
+}
+
+
+/*
+    Steal the socket object from a network. This disconnects the socket from management by the Http service.
+    It is the callers responsibility to call mprCloseSocket when required.
+    Harder than it looks. We clone the socket, steal the socket handle and set the socket handle to invalid.
+    This preserves the HttpNet.sock object for the network and returns a new MprSocket for the caller.
+ */
+PUBLIC MprSocket *httpStealSocket(HttpNet *net)
+{
+    MprSocket   *sock;
+
+    assert(net->sock);
+    assert(!net->destroyed);
+
+    if (!net->destroyed && !net->borrowed) {
+        lock(net->http);
+        sock = mprCloneSocket(net->sock);
+        (void) mprStealSocketHandle(net->sock);
+        mprRemoveSocketHandler(net->sock);
+        httpRemoveNet(net);
+
+        /* This will cause httpIOEvent to regard this as a client connection and not destroy this connection */
+        net->endpoint = 0;
+        net->async = 0;
+        unlock(net->http);
+        return sock;
+    }
+    return 0;
+}
+
+
+/*
+    Steal the O/S socket handle. This disconnects the socket handle from management by the network.
+    It is the callers responsibility to call close() on the Socket when required.
+    Note: this does not change the state of the network.
+ */
+PUBLIC Socket httpStealSocketHandle(HttpNet *net)
+{
+    return mprStealSocketHandle(net->sock);
+}
+
+
+PUBLIC cchar *httpGetProtocol(HttpNet *net)
+{
+    if (net->protocol == 0) {
+        return "HTTP/1.0";
+    } else if (net->protocol >= 2) {
+        return "HTTP/2";
+    } else {
+        return "HTTP/1.1";
+    }
+}
+
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
 /********* Start of file src/netConnector.c ************/
 
 /*
     netConnector.c -- General network connector.
 
-    The Network connector handles output data (only) from upstream handlers and filters. It uses vectored writes to
+    The Network connector handles I/O from upstream handlers and filters. It uses vectored writes to
     aggregate output packets into fewer actual I/O requests to the O/S.
 
     Copyright (c) All Rights Reserved. See details at the end of the file.
@@ -10025,11 +14410,19 @@ PUBLIC int httpAddRemedies()
 /**************************** Forward Declarations ****************************/
 
 static void addPacketForNet(HttpQueue *q, HttpPacket *packet);
+static void addToNetVector(HttpQueue *q, char *ptr, ssize bytes);
 static void adjustNetVec(HttpQueue *q, ssize written);
 static MprOff buildNetVec(HttpQueue *q);
 static void freeNetPackets(HttpQueue *q, ssize written);
-static void netClose(HttpQueue *q);
+static HttpPacket *getPacket(HttpNet *net, ssize *size);
+static void netOutgoing(HttpQueue *q, HttpPacket *packet);
 static void netOutgoingService(HttpQueue *q);
+static HttpPacket *readPacket(HttpNet *net);
+static void resumeEvents(HttpNet *net, MprEvent *event);
+
+#if ME_HTTP_HTTP2
+static int sleuthProtocol(HttpNet *net, HttpPacket *packet);
+#endif
 
 /*********************************** Code *************************************/
 /*
@@ -10042,109 +14435,372 @@ PUBLIC int httpOpenNetConnector()
     if ((stage = httpCreateConnector("netConnector", NULL)) == 0) {
         return MPR_ERR_CANT_CREATE;
     }
-    stage->close = netClose;
+    stage->outgoing = netOutgoing;
     stage->outgoingService = netOutgoingService;
     HTTP->netConnector = stage;
     return 0;
 }
 
 
-static void netClose(HttpQueue *q)
+/*
+    Accept a new client connection on a new socket. This is invoked from acceptNet in endpoint.c
+    and will come arrive on a worker thread with a new dispatcher dedicated to this connection.
+ */
+PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
 {
-    HttpTx      *tx;
+    HttpNet     *net;
+    HttpAddress *address;
+    HttpLimits  *limits;
+    MprSocket   *sock;
+    int64       value;
 
-    tx = q->conn->tx;
-    if (tx->file) {
-        mprCloseFile(tx->file);
-        tx->file = 0;
+    assert(event);
+    assert(event->dispatcher);
+    assert(endpoint);
+
+    if (mprShouldDenyNewRequests()) {
+        return 0;
+    }
+    sock = event->sock;
+
+    if ((net = httpCreateNet(event->dispatcher, endpoint, -1, HTTP_NET_ASYNC)) == 0) {
+        mprCloseSocket(sock, 0);
+        return 0;
+    }
+    httpBindSocket(net, sock);
+    limits = net->limits;
+
+    if ((address = httpMonitorAddress(net, 0)) == 0) {
+        mprCloseSocket(sock, 0);
+        return 0;
+    }
+    if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsMax) {
+        mprLog("net error", 0, "Too many concurrent connections, active: %d, max:%d", (int) value, limits->connectionsMax);
+        httpDestroyNet(net);
+        return 0;
+    }
+    address = net->address;
+    if (address && address->banUntil) {
+        if (address->banUntil < net->http->now) {
+            mprLog("net info", 3, "Stop ban for client %s", net->ip);
+            address->banUntil = 0;
+        } else {
+            mprLog("net info", 3, "Network connection refused, client banned: %s", address->banMsg ? address->banMsg : "");
+            //  TODO - address->banStatus not implemented
+            httpDestroyNet(net);
+            return 0;
+        }
+    }
+#if ME_COM_SSL
+    if (endpoint->ssl) {
+        if (mprUpgradeSocket(sock, endpoint->ssl, 0) < 0) {
+            httpMonitorNetEvent(net, HTTP_COUNTER_SSL_ERRORS, 1);
+            mprLog("net error", 0, "Cannot upgrade socket, %s", sock->errorMsg);
+            httpDestroyNet(net);
+            return 0;
+        }
+    }
+#endif
+    event->mask = MPR_READABLE;
+    event->timestamp = net->http->now;
+    (net->ioCallback)(net, event);
+    return net;
+}
+
+
+/*
+    Handle IO on the network. Initially the dispatcher will be set to the server->dispatcher and the first
+    I/O event will be handled on the server thread (or main thread). A request handler may create a new
+    net->dispatcher and transfer execution to a worker thread if required.
+ */
+PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
+{
+    HttpPacket  *packet;
+
+    if (net->destroyed) {
+        /* Network connection has been destroyed */
+        return;
+    }
+    net->lastActivity = net->http->now;
+    if (event->mask & MPR_WRITABLE) {
+        httpResumeQueue(net->socketq);
+        httpScheduleQueue(net->socketq);
+    }
+    packet = 0;
+
+    if (event->mask & MPR_READABLE) {
+        packet = readPacket(net);
+    }
+    if (packet) {
+#if ME_HTTP_HTTP2
+        if (!net->protocol) {
+            int protocol = sleuthProtocol(net, packet);
+            httpSetNetProtocol(net, protocol);
+        }
+#endif
+        if (net->protocol) {
+            httpPutPacket(net->inputq, packet);
+        }
+    }
+    httpServiceQueues(net, 0);
+
+    if (httpIsServer(net) && (net->error || net->eof)) {
+        httpDestroyNet(net);
+    } else if (httpIsClient(net) && net->eof) {
+        httpNetClosed(net);
+    } else if (net->async && !net->delay) {
+        httpEnableNetEvents(net);
+    }
+}
+
+
+#if ME_HTTP_HTTP2
+static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
+{
+    MprBuf      *buf;
+    ssize       len;
+    int         protocol;
+
+    buf = packet->content;
+    protocol = 0;
+
+    if ((len = mprGetBufLength(buf)) < (sizeof(HTTP2_PREFACE) - 1)) {
+        return 0;
+    }
+    if (memcmp(buf->start, HTTP2_PREFACE, sizeof(HTTP2_PREFACE) - 1) != 0) {
+        protocol = 1;
+    } else {
+        mprAdjustBufStart(buf, strlen(HTTP2_PREFACE));
+        protocol = 2;
+        httpTrace(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
+    }
+    return protocol;
+}
+#endif
+
+
+/*
+    Read data from the peer. This will use an existing packet on the inputq or allocate a new packet if required to
+    hold the data. Socket error messages are stored in net->errorMsg.
+ */
+static HttpPacket *readPacket(HttpNet *net)
+{
+    HttpPacket  *packet;
+    ssize       size, lastRead;
+
+    if ((packet = getPacket(net, &size)) != 0) {
+        lastRead = mprReadSocket(net->sock, mprGetBufEnd(packet->content), size);
+        net->eof = mprIsSocketEof(net->sock);
+
+#if ME_COM_SSL
+        if (net->sock->secured && !net->secure && net->sock->cipher) {
+            MprSocket   *sock;
+            net->secure = 1;
+            sock = net->sock;
+            if (sock->peerCert) {
+                httpTrace(net->trace, "net.ssl", "context",
+                    "msg:'Connection secured', cipher:'%s', peerName:'%s', subject:'%s', issuer:'%s', session:'%s'",
+                    sock->cipher, sock->peerName, sock->peerCert, sock->peerCertIssuer, sock->session);
+            } else {
+                httpTrace(net->trace, "net.ssl", "context", "msg:'Connection secured', cipher:'%s', session:'%s'", sock->cipher, sock->session);
+            }
+            if (mprGetLogLevel() >= 5) {
+                mprLog("info http ssl", 6, "SSL State: %s", mprGetSocketState(sock));
+            }
+        }
+#endif
+        if (lastRead > 0) {
+            mprAdjustBufEnd(packet->content, lastRead);
+            return packet;
+        }
+        if (lastRead < 0 && net->eof) {
+            net->eof = 1;
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+/*
+    Get the packet into which to read data. Return in *size the length of data to attempt to read.
+ */
+static HttpPacket *getPacket(HttpNet *net, ssize *lenp)
+{
+    HttpPacket  *packet;
+    MprBuf      *buf;
+    ssize       size;
+
+#if ME_HTTP_HTTP2
+    if (net->protocol < 2) {
+        size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
+    } else {
+        size = (net->inputq ? net->inputq->packetSize : HTTP2_DEFAULT_FRAME_SIZE) + HTTP2_FRAME_OVERHEAD;
+    }
+#else
+    size = net->inputq ? net->inputq->packetSize : ME_PACKET_SIZE;
+#endif
+    if (!net->inputq || (packet = httpGetPacket(net->inputq)) == NULL) {
+        if ((packet = httpCreateDataPacket(size)) == 0) {
+            return 0;
+        }
+    }
+    buf = packet->content;
+    mprResetBufIfEmpty(buf);
+    if (mprGetBufSpace(buf) < size && mprGrowBuf(buf, size) < 0) {
+        return 0;
+    }
+    *lenp = mprGetBufSpace(buf);
+    assert(*lenp > 0);
+    return packet;
+}
+
+
+PUBLIC int httpGetNetEventMask(HttpNet *net)
+{
+    MprSocket   *sock;
+    int         eventMask;
+
+    if ((sock = net->sock) == 0) {
+        return 0;
+    }
+    eventMask = 0;
+
+    if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
+            (net->socketq && (net->socketq->count > 0 || net->socketq->ioCount > 0))) {
+        if (!mprSocketHandshaking(sock)) {
+            /* Must wait to write until handshaking is complete */
+            eventMask |= MPR_WRITABLE;
+        }
+    }
+    if (!net->eof && (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max))) {
+        eventMask |= MPR_READABLE;
+    }
+    return eventMask;
+}
+
+
+static bool netBanned(HttpNet *net)
+{
+    HttpAddress     *address;
+
+    if ((address = net->address) != 0 && address->delay) {
+        if (address->delayUntil > net->http->now) {
+            /*
+                Defensive counter measure - go slow
+             */
+            mprCreateEvent(net->dispatcher, "delayConn", net->delay, resumeEvents, net, 0);
+            httpTrace(net->trace, "monitor.delay.stop", "context", "msg:'Suspend I/O',client:'%s'", net->ip);
+            return 1;
+        } else {
+            address->delay = 0;
+            httpTrace(net->trace, "monitor.delay.stop", "context", "msg:'Resume I/O',client:'%s'", net->ip);
+        }
+    }
+    return 0;
+}
+
+
+/*
+    Defensive countermesasure - resume output after a delay
+ */
+static void resumeEvents(HttpNet *net, MprEvent *event)
+{
+    net->delay = 0;
+    mprCreateEvent(net->dispatcher, "resumeConn", 0, httpEnableNetEvents, net, 0);
+}
+
+
+PUBLIC void httpEnableNetEvents(HttpNet *net)
+{
+    if (mprShouldAbortRequests() || net->borrowed || net->error || netBanned(net)) {
+        return;
+    }
+    /*
+        Used by ejs
+     */
+    if (net->workerEvent) {
+        MprEvent *event = net->workerEvent;
+        net->workerEvent = 0;
+        mprQueueEvent(net->dispatcher, event);
+        return;
+    }
+    httpSetupWaitHandler(net, httpGetNetEventMask(net));
+}
+
+
+PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
+{
+    MprSocket   *sp;
+
+    if ((sp = net->sock) == 0) {
+        return;
+    }
+    if (eventMask) {
+        if (sp->handler == 0) {
+            mprAddSocketHandler(sp, eventMask, net->dispatcher, net->ioCallback, net, 0);
+        } else {
+            mprSetSocketDispatcher(sp, net->dispatcher);
+            mprEnableSocketEvents(sp, eventMask);
+        }
+        if (sp->flags & (MPR_SOCKET_BUFFERED_READ | MPR_SOCKET_BUFFERED_WRITE)) {
+            mprRecallWaitHandler(sp->handler);
+        }
+    } else if (sp->handler) {
+        mprWaitOn(sp->handler, eventMask);
+    }
+}
+
+
+static void netOutgoing(HttpQueue *q, HttpPacket *packet)
+{
+    assert(q == q->net->socketq);
+
+    if (q->net->socketq) {
+        httpPutForService(q->net->socketq, packet, HTTP_SCHEDULE_QUEUE);
     }
 }
 
 
 static void netOutgoingService(HttpQueue *q)
 {
-    HttpConn    *conn;
-    HttpTx      *tx;
+    HttpNet     *net;
     ssize       written;
     int         errCode;
 
-    conn = q->conn;
-    tx = conn->tx;
-    conn->lastActivity = conn->http->now;
-
-    if (tx->finalizedConnector) {
-        return;
-    }
-    if (tx->flags & HTTP_TX_NO_BODY) {
-        httpDiscardQueueData(q, 1);
-    }
-    if ((tx->bytesWritten + q->count) > conn->limits->txBodySize && conn->limits->txBodySize != HTTP_UNLIMITED) {
-        httpLimitError(conn, HTTP_CODE_REQUEST_TOO_LARGE | ((tx->bytesWritten) ? HTTP_ABORT : 0),
-            "Http transmission aborted. Exceeded transmission max body of %lld bytes", conn->limits->txBodySize);
-        if (tx->bytesWritten) {
-            httpFinalizeConnector(conn);
-            return;
-        }
-    }
-#if !ME_ROM
-    if (tx->flags & HTTP_TX_SENDFILE) {
-        /* Relay via the send connector */
-        if (tx->file == 0) {
-            if (tx->flags & HTTP_TX_HEADERS_CREATED) {
-                tx->flags &= ~HTTP_TX_SENDFILE;
-            } else {
-                tx->connector = conn->http->sendConnector;
-                httpSendOpen(q);
-            }
-        }
-        if (tx->file) {
-            httpSendOutgoingService(q);
-            return;
-        }
-    }
-#endif
-    tx->writeBlocked = 0;
+    net = q->net;
+    net->writeBlocked = 0;
 
     while (q->first || q->ioIndex) {
         if (q->ioIndex == 0 && buildNetVec(q) <= 0) {
+            freeNetPackets(q, written);
             break;
         }
-        /*
-            Issue a single I/O request to write all the blocks in the I/O vector
-         */
-        assert(q->ioIndex > 0);
-        written = mprWriteSocketVector(conn->sock, q->iovec, q->ioIndex);
+        written = mprWriteSocketVector(net->sock, q->iovec, q->ioIndex);
         if (written < 0) {
             errCode = mprGetError();
             if (errCode == EAGAIN || errCode == EWOULDBLOCK) {
                 /*  Socket full, wait for an I/O event */
-                tx->writeBlocked = 1;
+                net->writeBlocked = 1;
                 break;
             }
-            if (errCode == EPROTO && conn->secure) {
-                httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR,
-                    "Cannot negotiate SSL with server: %s", conn->sock->errorMsg);
-            } else if (errCode != EPIPE && errCode != ECONNRESET && errCode != ECONNABORTED && errCode != ENOTCONN) {
-                httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "netConnector: Cannot write. errno %d", errCode);
+            if (errCode == EPROTO && net->secure) {
+                httpNetError(net, "Cannot negotiate SSL with server: %s", net->sock->errorMsg);
             } else {
-                httpDisconnect(conn);
+                httpNetError(net, "netConnector: Cannot write. errno %d", errCode);
             }
-            httpFinalizeConnector(conn);
-            httpTrace(conn, "connection.io.error", "error", "msg:'Connector write error', errno: %d", errCode);
+            net->eof = 1;
+            net->error = 1;
             break;
 
         } else if (written > 0) {
-            tx->bytesWritten += written;
             freeNetPackets(q, written);
             adjustNetVec(q, written);
 
         } else {
+            /* Socket full or SSL negotiate */
             break;
         }
-    }
-    if (q->first && q->first->flags & HTTP_PACKET_END) {
-        httpFinalizeConnector(conn);
-        httpGetPacket(q);
     }
 }
 
@@ -10154,38 +14810,42 @@ static void netOutgoingService(HttpQueue *q)
  */
 static MprOff buildNetVec(HttpQueue *q)
 {
-    HttpConn    *conn;
-    HttpTx      *tx;
-    HttpPacket  *packet, *prev;
-
-    conn = q->conn;
-    tx = conn->tx;
+    HttpPacket  *packet;
 
     /*
-        Examine each packet and accumulate as many packets into the I/O vector as possible. Leave the packets on the queue
-        for now, they are removed after the IO is complete for the entire packet.
+        Examine each packet and accumulate as many packets into the I/O vector as possible. Leave the packets on
+        the queue for now, they are removed after the IO is complete for the entire packet.
      */
-    for (packet = prev = q->first; packet && !(packet->flags & HTTP_PACKET_END); packet = packet->next) {
-        if (packet->flags & HTTP_PACKET_HEADER) {
-            if (tx->chunkSize <= 0 && q->count > 0 && tx->length < 0) {
-                /* No content length, but not chunking. So have to close the connection to signify the content end */
-                conn->keepAliveCount = 0;
-            }
-            httpWriteHeaders(q, packet);
-        }
+     for (packet = q->first; packet; packet = packet->next) {
         if (q->ioIndex >= (ME_MAX_IOVEC - 2)) {
             break;
         }
         if (httpGetPacketLength(packet) > 0 || packet->prefix) {
             addPacketForNet(q, packet);
-        } else {
-            /* Remove empty packets */
-            prev->next = packet->next;
-            continue;
         }
-        prev = packet;
     }
     return q->ioCount;
+}
+
+
+/*
+    Add a packet to the io vector. Return the number of bytes added to the vector.
+ */
+static void addPacketForNet(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+
+    net = q->net;
+    assert(q->count >= 0);
+    assert(q->ioIndex < (ME_MAX_IOVEC - 2));
+
+    net->bytesWritten += httpGetPacketLength(packet);
+    if (packet->prefix && mprGetBufLength(packet->prefix) > 0) {
+        addToNetVector(q, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix));
+    }
+    if (packet->content && mprGetBufLength(packet->content) > 0) {
+        addToNetVector(q, mprGetBufStart(packet->content), mprGetBufLength(packet->content));
+    }
 }
 
 
@@ -10203,44 +14863,16 @@ static void addToNetVector(HttpQueue *q, char *ptr, ssize bytes)
 }
 
 
-/*
-    Add a packet to the io vector. Return the number of bytes added to the vector.
- */
-static void addPacketForNet(HttpQueue *q, HttpPacket *packet)
-{
-    HttpConn    *conn;
-
-    conn = q->conn;
-    assert(q->count >= 0);
-    assert(q->ioIndex < (ME_MAX_IOVEC - 2));
-
-    if (packet->prefix) {
-        addToNetVector(q, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix));
-    }
-    if (httpGetPacketLength(packet) > 0) {
-        addToNetVector(q, mprGetBufStart(packet->content), mprGetBufLength(packet->content));
-    }
-    if (httpTracing(conn) && packet->flags & HTTP_PACKET_DATA) {
-        httpTraceBody(conn, 1, packet, -1);
-    }
-}
-
-
 static void freeNetPackets(HttpQueue *q, ssize bytes)
 {
     HttpPacket  *packet;
+    HttpConn    *conn;
     ssize       len;
 
     assert(q->count >= 0);
     assert(bytes > 0);
 
-    /*
-        Loop while data to be accounted for and we have not hit the end of data packet.
-        Chunks will have the chunk header in the packet->prefix.
-        The final chunk trailer will be in a packet->prefix with no other data content.
-        Must leave this routine with the end packet still on the queue and all bytes accounted for.
-     */
-    while ((packet = q->first) != 0 && !(packet->flags & HTTP_PACKET_END) && bytes > 0) {
+    while ((packet = q->first) != 0) {
         if (packet->prefix) {
             len = mprGetBufLength(packet->prefix);
             len = min(len, bytes);
@@ -10248,6 +14880,7 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
             bytes -= len;
             /* Prefixes don't count in the q->count. No need to adjust */
             if (mprGetBufLength(packet->prefix) == 0) {
+                /* Ensure the prefix is not resent if all the content is not sent */
                 packet->prefix = 0;
             }
         }
@@ -10259,15 +14892,20 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
             q->count -= len;
             assert(q->count >= 0);
         }
+        if (packet->flags & HTTP_PACKET_END) {
+            if ((conn = packet->conn) != 0) {
+                httpFinalizeConnector(conn);
+                mprCreateEvent(q->net->dispatcher, "endRequest", 0, httpProcess, conn->inputq, 0);
+            }
+        }
         if (httpGetPacketLength(packet) == 0) {
-            /* Done with this packet - consume it */
-            assert(!(packet->flags & HTTP_PACKET_END));
+            /* Done with this packet - consume it. Important for flow control. */
             httpGetPacket(q);
         } else {
+            /* Packet still has data to be written */
             break;
         }
     }
-    assert(bytes == 0);
 }
 
 
@@ -10308,7 +14946,7 @@ static void adjustNetVec(HttpQueue *q, ssize written)
             }
         }
         /*
-            Compact
+            Compact the vector
          */
         for (j = 0; i < q->ioIndex; ) {
             iovec[j++] = iovec[i++];
@@ -10358,7 +14996,7 @@ PUBLIC HttpPacket *httpCreatePacket(ssize size)
         return 0;
     }
     if (size != 0) {
-        if ((packet->content = mprCreateBuf(size < 0 ? ME_MAX_BUFFER: (ssize) size, -1)) == 0) {
+        if ((packet->content = mprCreateBuf(size < 0 ? ME_PACKET_SIZE: (ssize) size, -1)) == 0) {
             return 0;
         }
     }
@@ -10371,6 +15009,8 @@ static void managePacket(HttpPacket *packet, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(packet->prefix);
         mprMark(packet->content);
+        mprMark(packet->data);
+        mprMark(packet->conn);
         /* Don't mark next packet, list owner will mark */
     }
 }
@@ -10419,7 +15059,7 @@ PUBLIC HttpPacket *httpCreateHeaderPacket()
 {
     HttpPacket    *packet;
 
-    if ((packet = httpCreatePacket(ME_MAX_BUFFER)) == 0) {
+    if ((packet = httpCreatePacket(ME_BUFSIZE)) == 0) {
         return 0;
     }
     packet->flags = HTTP_PACKET_HEADER;
@@ -10476,6 +15116,7 @@ PUBLIC HttpPacket *httpGetPacket(HttpQueue *q)
     HttpQueue     *prev;
     HttpPacket    *packet;
 
+    packet = 0;
     while (q->first) {
         if ((packet = q->first) != 0) {
             q->first = packet->next;
@@ -10495,13 +15136,27 @@ PUBLIC HttpPacket *httpGetPacket(HttpQueue *q)
             if (prev && prev->flags & HTTP_QUEUE_SUSPENDED) {
                 /*
                     This queue was full and now is below the low water mark. Back-enable the previous queue.
+                    Must only resume the queue if a packet was actually dequed.
                  */
                 httpResumeQueue(prev);
             }
         }
-        return packet;
+        break;
     }
-    return 0;
+    return packet;
+}
+
+
+PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet)
+{
+    prev->next = packet->next;
+    if (q->last == packet) {
+        q->last = 0;
+    }
+    if (q->first == packet) {
+        q->first = 0;
+    }
+    q->count -= httpGetPacketLength(packet);
 }
 
 
@@ -10541,20 +15196,21 @@ PUBLIC bool httpIsPacketTooBig(HttpQueue *q, HttpPacket *packet)
  */
 PUBLIC void httpJoinPacketForService(HttpQueue *q, HttpPacket *packet, bool serviceQ)
 {
-    if (q->first == 0) {
-        /*  Just use the service queue as a holding queue while we aggregate the post data.  */
+    HttpPacket  *p, *last;
+
+    if (q->last == 0 || !(packet->flags & HTTP_PACKET_DATA)) {
         httpPutForService(q, packet, HTTP_DELAY_SERVICE);
 
     } else {
-        /* Skip over the header packet */
-        if (q->first && q->first->flags & HTTP_PACKET_HEADER) {
-            packet = q->first->next;
-            q->first = packet;
-        } else {
-            /* Aggregate all data into one packet and free the packet.  */
-            httpJoinPacket(q->first, packet);
+        /*
+            Find the last data packet and join with that
+         */
+        for (p = q->first, last = 0; p && !(p->flags & HTTP_PACKET_END); last = p, p = p->next);
+        assert(last);
+        if (last) {
+            httpJoinPacket(last, packet);
+            q->count += httpGetPacketLength(packet);
         }
-        q->count += httpGetPacketLength(packet);
     }
     if (serviceQ && !(q->flags & HTTP_QUEUE_SUSPENDED))  {
         httpScheduleQueue(q);
@@ -10644,9 +15300,10 @@ PUBLIC void httpPutPacket(HttpQueue *q, HttpPacket *packet)
     assert(packet);
     assert(q->put);
 
-    if (q->put) {
-        q->put(q, packet);
+    if (!packet->conn) {
+        packet->conn = q->conn;
     }
+    q->put(q, packet);
 }
 
 
@@ -10656,20 +15313,11 @@ PUBLIC void httpPutPacket(HttpQueue *q, HttpPacket *packet)
 PUBLIC void httpPutPacketToNext(HttpQueue *q, HttpPacket *packet)
 {
     assert(packet);
-    assert(q->nextQ->put);
 
-    if (q->nextQ && q->nextQ->put) {
-        q->nextQ->put(q->nextQ, packet);
-    }
-}
-
-
-PUBLIC void httpPutPackets(HttpQueue *q)
-{
-    HttpPacket    *packet;
-
-    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        httpPutPacketToNext(q, packet);
+    if (q->nextQ && q->nextQ->put && q != q->nextQ) {
+        httpPutPacket(q->nextQ, packet);
+    } else {
+        httpPutForService(q->nextQ, packet, 0);
     }
 }
 
@@ -10685,6 +15333,8 @@ PUBLIC bool httpNextQueueFull(HttpQueue *q)
 
 /*
     Put the packet back at the front of the queue
+    PutPacket sends to recieving function, PutBack/PutForService put to the queue
+    Also, PutBack does not have service option like PutForService does
  */
 PUBLIC void httpPutBackPacket(HttpQueue *q, HttpPacket *packet)
 {
@@ -10692,6 +15342,9 @@ PUBLIC void httpPutBackPacket(HttpQueue *q, HttpPacket *packet)
     assert(packet->next == 0);
     assert(q->count >= 0);
 
+    if (!packet->conn) {
+        packet->conn = q->conn;
+    }
     if (packet) {
         packet->next = q->first;
         if (q->first == 0) {
@@ -10710,6 +15363,9 @@ PUBLIC void httpPutForService(HttpQueue *q, HttpPacket *packet, bool serviceQ)
 {
     assert(packet);
 
+    if (!packet->conn) {
+        packet->conn = q->conn;
+    }
     q->count += httpGetPacketLength(packet);
     packet->next = 0;
 
@@ -10727,7 +15383,7 @@ PUBLIC void httpPutForService(HttpQueue *q, HttpPacket *packet, bool serviceQ)
 
 
 /*
-    Resize and possibly split a packet so it fits in the downstream queue. Put back the 2nd portion of the split packet
+    Resize and possibly split a packet to be smaller than "size". Put back the 2nd portion of the split packet
     on the queue. Ensure that the packet is not larger than "size" if it is greater than zero. If size < 0, then
     use the default packet size. Return the tail packet.
  */
@@ -10748,8 +15404,10 @@ PUBLIC HttpPacket *httpResizePacket(HttpQueue *q, HttpPacket *packet, ssize size
             Calculate the size that will fit downstream
          */
         len = packet->content ? httpGetPacketLength(packet) : 0;
+        if (size < 0) {
+            size = len;
+        }
         size = min(size, len);
-        size = min(size, q->nextQ->packetSize);
         if (size == 0 || size == len) {
             return 0;
         }
@@ -10764,7 +15422,7 @@ PUBLIC HttpPacket *httpResizePacket(HttpQueue *q, HttpPacket *packet, ssize size
 
 /*
     Split a packet at a given offset and return the tail packet containing the data after the offset.
-    The prefix data remains with the original packet.
+    The prefix data remains with the original packet, the tail does not inherit the prefix.
  */
 PUBLIC HttpPacket *httpSplitPacket(HttpPacket *orig, ssize offset)
 {
@@ -10793,7 +15451,7 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *orig, ssize offset)
                 To optimize, we allocate a new packet content buffer and the tail packet keeps the trimmed
                 original packet buffer.
              */
-            if ((tail = httpCreateDataPacket(0)) == 0) {
+            if ((tail = httpCreatePacket(0)) == 0) {
                 return 0;
             }
             tail->content = orig->content;
@@ -10807,9 +15465,9 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *orig, ssize offset)
 
         } else {
             count = httpGetPacketLength(orig) - offset;
-            size = max(count, ME_MAX_BUFFER);
+            size = max(count, ME_BUFSIZE);
             size = HTTP_PACKET_ALIGN(size);
-            if ((tail = httpCreateDataPacket(size)) == 0) {
+            if ((tail = httpCreatePacket(size)) == 0) {
                 return 0;
             }
             httpAdjustPacketEnd(orig, -count);
@@ -10818,6 +15476,7 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *orig, ssize offset)
             }
         }
     }
+    tail->conn = orig->conn;
     tail->flags = orig->flags;
     tail->type = orig->type;
     tail->last = orig->last;
@@ -11005,67 +15664,14 @@ static int pamChat(int msgCount, const struct pam_message **msg, struct pam_resp
 
 
 
-static void handleTrace(HttpConn *conn);
+/********************************** Forwards **********************************/
+
+static void handleTraceMethod(HttpConn *conn);
+static void readyError(HttpQueue *q);
+static void readyPass(HttpQueue *q);
+static void startPass(HttpQueue *q);
 
 /*********************************** Code *************************************/
-
-static void startPass(HttpQueue *q)
-{
-    if (q->conn->rx->flags & HTTP_TRACE) {
-        handleTrace(q->conn);
-    }
-}
-
-
-static void readyPass(HttpQueue *q)
-{
-    httpFinalizeOutput(q->conn);
-}
-
-
-static void readyError(HttpQueue *q)
-{
-    if (!q->conn->error) {
-        httpError(q->conn, HTTP_CODE_NOT_FOUND, "The requested resource is not available");
-    }
-    httpFinalizeOutput(q->conn);
-}
-
-
-PUBLIC void httpHandleOptions(HttpConn *conn)
-{
-    httpSetHeaderString(conn, "Allow", httpGetRouteMethods(conn->rx->route));
-    httpFinalizeOutput(conn);
-}
-
-
-static void handleTrace(HttpConn *conn)
-{
-    HttpTx      *tx;
-    HttpQueue   *q;
-    HttpPacket  *traceData, *headers;
-
-    /*
-        Create a dummy set of headers to use as the response body. Then reset so the connector will create
-        the headers in the normal fashion. Need to be careful not to have a content length in the headers in the body.
-     */
-    tx = conn->tx;
-    q = conn->writeq;
-    headers = q->first;
-    tx->flags |= HTTP_TX_NO_LENGTH;
-    httpWriteHeaders(q, headers);
-    httpDiscardData(conn, HTTP_QUEUE_TX);
-    traceData = httpCreateDataPacket(httpGetPacketLength(headers) + 128);
-    tx->flags &= ~(HTTP_TX_NO_LENGTH | HTTP_TX_HEADERS_CREATED);
-    q->count -= httpGetPacketLength(headers);
-    assert(q->count == 0);
-    mprFlushBuf(headers->content);
-    mprPutStringToBuf(traceData->content, mprGetBufStart(q->first->content));
-    httpSetContentType(conn, "message/http");
-    httpPutForService(q, traceData, HTTP_DELAY_SERVICE);
-    httpFinalize(conn);
-}
-
 
 PUBLIC int httpOpenPassHandler()
 {
@@ -11090,6 +15696,67 @@ PUBLIC int httpOpenPassHandler()
 }
 
 
+static void startPass(HttpQueue *q)
+{
+    HttpConn    *conn;
+
+    conn = q->conn;
+
+    if (conn->rx->flags & HTTP_TRACE && !conn->error) {
+        handleTraceMethod(conn);
+    }
+}
+
+
+static void readyPass(HttpQueue *q)
+{
+    httpFinalize(q->conn);
+    httpScheduleQueue(q);
+}
+
+
+static void readyError(HttpQueue *q)
+{
+    if (!q->conn->error) {
+        httpError(q->conn, HTTP_CODE_NOT_FOUND, "The requested resource is not available");
+    }
+    httpFinalize(q->conn);
+    httpScheduleQueue(q);
+}
+
+
+PUBLIC void httpHandleOptions(HttpConn *conn)
+{
+    httpSetHeaderString(conn, "Allow", httpGetRouteMethods(conn->rx->route));
+    httpFinalize(conn);
+}
+
+
+static void handleTraceMethod(HttpConn *conn)
+{
+    HttpTx      *tx;
+    HttpQueue   *q;
+    HttpPacket  *traceData;
+
+    tx = conn->tx;
+    q = conn->writeq;
+
+
+    /*
+        Create a dummy set of headers to use as the response body. Then reset so the connector will create
+        the headers in the normal fashion. Need to be careful not to have a content length in the headers in the body.
+     */
+    tx->flags |= HTTP_TX_NO_LENGTH;
+    httpDiscardData(conn, HTTP_QUEUE_TX);
+    traceData = httpCreateDataPacket(q->packetSize);
+    httpCreateHeaders1(q, traceData);
+    tx->flags &= ~(HTTP_TX_NO_LENGTH | HTTP_TX_HEADERS_CREATED);
+
+    httpSetContentType(conn, "message/http");
+    httpPutPacketToNext(q, traceData);
+    httpFinalize(conn);
+}
+
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -11113,10 +15780,10 @@ PUBLIC int httpOpenPassHandler()
 
 /********************************** Forward ***********************************/
 
+static int loadQueue(HttpQueue *q, ssize chunkSize);
 static bool matchFilter(HttpConn *conn, HttpStage *filter, HttpRoute *route, int dir);
-static void openQueues(HttpConn *conn);
-static void pairQueues(HttpConn *conn);
-static void httpStartHandler(HttpConn *conn);
+static void openPipeQueues(HttpConn *conn, HttpQueue *qhead);
+static void pairQueues(HttpQueue *head1, HttpQueue *head2);
 
 /*********************************** Code *************************************/
 /*
@@ -11125,18 +15792,19 @@ static void httpStartHandler(HttpConn *conn);
 PUBLIC void httpCreatePipeline(HttpConn *conn)
 {
     HttpRx      *rx;
+    HttpRoute   *route;
 
     rx = conn->rx;
-
-    if (httpServerConn(conn)) {
-        assert(rx->route);
-        httpCreateRxPipeline(conn, rx->route);
-        httpCreateTxPipeline(conn, rx->route);
+    route = rx->route;
+    if (httpClientConn(conn) && !route) {
+        route = conn->http->clientRoute;
     }
+    httpCreateRxPipeline(conn, route);
+    httpCreateTxPipeline(conn, route);
 }
 
 
-PUBLIC void httpCreateTxPipeline(HttpConn *conn, HttpRoute *route)
+PUBLIC void httpCreateRxPipeline(HttpConn *conn, HttpRoute *route)
 {
     Http        *http;
     HttpTx      *tx;
@@ -11152,6 +15820,58 @@ PUBLIC void httpCreateTxPipeline(HttpConn *conn, HttpRoute *route)
     rx = conn->rx;
     tx = conn->tx;
 
+    rx->inputPipeline = mprCreateList(-1, MPR_LIST_STABLE);
+    if (route) {
+        for (next = 0; (filter = mprGetNextItem(route->inputStages, &next)) != 0; ) {
+            if (filter->flags & HTTP_STAGE_INTERNAL) {
+                continue;
+            }
+            if (matchFilter(conn, filter, route, HTTP_STAGE_RX) == HTTP_ROUTE_OK) {
+                mprAddItem(rx->inputPipeline, filter);
+            }
+        }
+    }
+    mprAddItem(rx->inputPipeline, tx->handler ? tx->handler : conn->http->clientHandler);
+
+    q = conn->rxHead->prevQ;
+    for (next = 0; (stage = mprGetNextItem(rx->inputPipeline, &next)) != 0; ) {
+        q = httpCreateQueue(conn->net, conn, stage, HTTP_QUEUE_RX, q);
+        q->flags |= HTTP_QUEUE_REQUEST;
+    }
+    conn->readq = q;
+    if (httpClientConn(conn)) {
+        pairQueues(conn->rxHead, conn->txHead);
+        httpOpenQueues(conn);
+    }
+    if (q->net->protocol < 2) {
+        q->net->inputq->conn = conn;
+    }
+}
+
+
+PUBLIC void httpCreateTxPipeline(HttpConn *conn, HttpRoute *route)
+{
+    Http        *http;
+    HttpNet     *net;
+    HttpTx      *tx;
+    HttpRx      *rx;
+    HttpQueue   *q;
+    HttpStage   *stage, *filter;
+    int         next;
+
+    assert(conn);
+    if (!route) {
+        if (httpServerConn(conn)) {
+            mprLog("error http", 0, "Missing route");
+            return;
+        }
+        route = conn->http->clientRoute;
+    }
+    http = conn->http;
+    net = conn->net;
+    rx = conn->rx;
+    tx = conn->tx;
+
     tx->outputPipeline = mprCreateList(-1, MPR_LIST_STABLE);
     if (httpServerConn(conn)) {
         if (tx->handler == 0 || tx->finalized) {
@@ -11161,114 +15881,59 @@ PUBLIC void httpCreateTxPipeline(HttpConn *conn, HttpRoute *route)
     }
     if (route->outputStages) {
         for (next = 0; (filter = mprGetNextItem(route->outputStages, &next)) != 0; ) {
+            if (filter->flags & HTTP_STAGE_INTERNAL) {
+                continue;
+            }
             if (matchFilter(conn, filter, route, HTTP_STAGE_TX) == HTTP_ROUTE_OK) {
                 mprAddItem(tx->outputPipeline, filter);
                 tx->flags |= HTTP_TX_HAS_FILTERS;
             }
         }
     }
-    if (tx->connector == 0) {
-#if !ME_ROM
-        if (tx->handler == http->fileHandler && (rx->flags & HTTP_GET) && !(tx->flags & HTTP_TX_HAS_FILTERS) &&
-                !conn->secure && !httpTracing(conn)) {
-            tx->connector = http->sendConnector;
-        } else
-#endif
-        tx->connector = (route && route->connector) ? route->connector : http->netConnector;
-    }
-    mprAddItem(tx->outputPipeline, tx->connector);
-
-    /*  Create the outgoing queue heads and open the queues */
-    q = tx->queue[HTTP_QUEUE_TX];
-    for (next = 0; (stage = mprGetNextItem(tx->outputPipeline, &next)) != 0; ) {
-        q = httpCreateQueue(conn, stage, HTTP_QUEUE_TX, q);
-    }
-    conn->connectorq = tx->queue[HTTP_QUEUE_TX]->prevQ;
-
     /*
-        Double the connector max hi-water mark. This optimization permits connectors to accept packets without
-        unnecesary flow control.
+        Create the outgoing queues linked from the tx queue head
      */
-    conn->connectorq->max *= 2;
+    q = conn->txHead;
+    for (ITERATE_ITEMS(tx->outputPipeline, stage, next)) {
+        q = httpCreateQueue(conn->net, conn, stage, HTTP_QUEUE_TX, q);
+        q->flags |= HTTP_QUEUE_REQUEST;
+    }
+    conn->writeq = conn->txHead->nextQ;
+    pairQueues(conn->txHead, conn->rxHead);
+    pairQueues(conn->rxHead, conn->txHead);
+    httpTraceQueues(conn);
 
-    pairQueues(conn);
-
-    /*
-        Put the header before opening the queues incase an open routine actually services and completes the request
-     */
-    httpPutForService(conn->writeq, httpCreateHeaderPacket(), HTTP_DELAY_SERVICE);
+    tx->connector = http->netConnector;
 
     /*
         Open the pipeline stages. This calls the open entrypoints on all stages.
      */
-    openQueues(conn);
-
-    if (conn->error) {
-        if (tx->handler != http->passHandler) {
-            tx->handler = http->passHandler;
-            httpAssignQueue(conn->writeq, tx->handler, HTTP_QUEUE_TX);
-        }
-    }
     tx->flags |= HTTP_TX_PIPELINE;
+    httpOpenQueues(conn);
 
-    if (conn->endpoint) {
-        httpTrace(conn, "request.pipeline", "context",
-            "route:'%s',handler:'%s',target:'%s',endpoint:'%s:%d',host:'%s',referrer:'%s',filename:'%s'",
-            rx->route->pattern, tx->handler->name, rx->route->targetRule, conn->endpoint->ip, conn->endpoint->port,
+    if (conn->error && tx->handler != http->passHandler) {
+        tx->handler = http->passHandler;
+        httpAssignQueueCallbacks(conn->writeq, tx->handler, HTTP_QUEUE_TX);
+    }
+    if (net->endpoint) {
+        httpTrace(conn->trace, "pipeline", "context",
+            "route:'%s', handler:'%s', target:'%s', endpoint:'%s:%d', host:'%s', referrer:'%s', filename:'%s'",
+            rx->route->pattern, tx->handler->name, rx->route->targetRule, net->endpoint->ip, net->endpoint->port,
             conn->host->name ? conn->host->name : "default", rx->referrer ? rx->referrer : "",
             tx->filename ? tx->filename : "");
     }
 }
 
 
-PUBLIC void httpCreateRxPipeline(HttpConn *conn, HttpRoute *route)
+static void pairQueues(HttpQueue *head1, HttpQueue *head2)
 {
-    HttpTx      *tx;
-    HttpRx      *rx;
-    HttpQueue   *q;
-    HttpStage   *stage, *filter;
-    int         next;
+    HttpQueue   *q, *rq;
 
-    assert(conn);
-    assert(route);
-
-    rx = conn->rx;
-    tx = conn->tx;
-    rx->inputPipeline = mprCreateList(-1, MPR_LIST_STABLE);
-    if (route) {
-        for (next = 0; (filter = mprGetNextItem(route->inputStages, &next)) != 0; ) {
-            if (matchFilter(conn, filter, route, HTTP_STAGE_RX) == HTTP_ROUTE_OK) {
-                mprAddItem(rx->inputPipeline, filter);
-            }
-        }
-    }
-    mprAddItem(rx->inputPipeline, tx->handler ? tx->handler : conn->http->clientHandler);
-    /*  Create the incoming queue heads and open the queues.  */
-    q = tx->queue[HTTP_QUEUE_RX];
-    for (next = 0; (stage = mprGetNextItem(rx->inputPipeline, &next)) != 0; ) {
-        q = httpCreateQueue(conn, stage, HTTP_QUEUE_RX, q);
-    }
-    if (httpClientConn(conn)) {
-        pairQueues(conn);
-        openQueues(conn);
-    }
-}
-
-
-static void pairQueues(HttpConn *conn)
-{
-    HttpTx      *tx;
-    HttpQueue   *q, *qhead, *rq, *rqhead;
-
-    tx = conn->tx;
-    qhead = tx->queue[HTTP_QUEUE_TX];
-    rqhead = tx->queue[HTTP_QUEUE_RX];
-    for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
+    for (q = head1->nextQ; q != head1; q = q->nextQ) {
         if (q->pair == 0) {
-            for (rq = rqhead->nextQ; rq != rqhead; rq = rq->nextQ) {
+            for (rq = head2->nextQ; rq != head2; rq = rq->nextQ) {
                 if (q->stage == rq->stage) {
-                    q->pair = rq;
-                    rq->pair = q;
+                    httpPairQueues(q, rq);
                 }
             }
         }
@@ -11276,7 +15941,41 @@ static void pairQueues(HttpConn *conn)
 }
 
 
-static int openQueue(HttpQueue *q, ssize chunkSize)
+PUBLIC void httpOpenQueues(HttpConn *conn)
+{
+    openPipeQueues(conn, conn->rxHead);
+    openPipeQueues(conn, conn->txHead);
+}
+
+
+static void openPipeQueues(HttpConn *conn, HttpQueue *qhead)
+{
+    HttpTx      *tx;
+    HttpQueue   *q;
+
+    tx = conn->tx;
+    for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
+        if (q->open && !(q->flags & (HTTP_QUEUE_OPEN_TRIED))) {
+            if (q->pair == 0 || !(q->pair->flags & HTTP_QUEUE_OPEN_TRIED)) {
+                loadQueue(q, tx->chunkSize);
+                if (q->open) {
+                    q->flags |= HTTP_QUEUE_OPEN_TRIED;
+                    if (q->stage->open(q) == 0) {
+                        q->flags |= HTTP_QUEUE_OPENED;
+                    } else {
+                        if (!conn->error) {
+                            httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open stage %s", q->stage->name);
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+static int loadQueue(HttpQueue *q, ssize chunkSize)
 {
     Http        *http;
     HttpConn    *conn;
@@ -11306,53 +16005,9 @@ static int openQueue(HttpQueue *q, ssize chunkSize)
 }
 
 
-static void openQueues(HttpConn *conn)
-{
-    HttpTx      *tx;
-    HttpQueue   *q, *qhead;
-    int         i;
-
-    tx = conn->tx;
-    for (i = 0; i < HTTP_MAX_QUEUE; i++) {
-        qhead = tx->queue[i];
-        for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
-            if (q->open && !(q->flags & (HTTP_QUEUE_OPEN_TRIED))) {
-                if (q->pair == 0 || !(q->pair->flags & HTTP_QUEUE_OPEN_TRIED)) {
-                    openQueue(q, tx->chunkSize);
-                    if (q->open) {
-                        q->flags |= HTTP_QUEUE_OPEN_TRIED;
-                        if (q->stage->open(q) == 0) {
-                            q->flags |= HTTP_QUEUE_OPENED;
-                        } else {
-                            if (!conn->error) {
-                                httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot open stage %s", q->stage->name);
-                            }
-
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-PUBLIC void httpSetSendConnector(HttpConn *conn, cchar *path)
-{
-#if !ME_ROM
-    HttpTx      *tx;
-
-    tx = conn->tx;
-    tx->flags |= HTTP_TX_SENDFILE;
-    tx->filename = sclone(path);
-#else
-    mprLog("error http config", 0, "Send connector not available if ROMFS enabled");
-#endif
-}
-
-
 /*
     Set the fileHandler as the selected handler for the request
+    Called by ESP to render a document.
  */
 PUBLIC void httpSetFileHandler(HttpConn *conn, cchar *path)
 {
@@ -11363,10 +16018,6 @@ PUBLIC void httpSetFileHandler(HttpConn *conn, cchar *path)
     tx = conn->tx;
     if (path && path != tx->filename) {
         httpSetFilename(conn, path, 0);
-    }
-    if ((conn->rx->flags & HTTP_GET) && !(tx->flags & HTTP_TX_HAS_FILTERS) && !conn->secure && !httpTracing(conn)) {
-        tx->flags |= HTTP_TX_SENDFILE;
-        tx->connector = HTTP->sendConnector;
     }
     tx->entityLength = tx->fileInfo.size;
     fp = tx->handler = HTTP->fileHandler;
@@ -11379,25 +16030,28 @@ PUBLIC void httpSetFileHandler(HttpConn *conn, cchar *path)
 
 PUBLIC void httpClosePipeline(HttpConn *conn)
 {
-    HttpTx      *tx;
     HttpQueue   *q, *qhead;
-    int         i;
 
-    tx = conn->tx;
-    if (tx) {
-        for (i = 0; i < HTTP_MAX_QUEUE; i++) {
-            qhead = tx->queue[i];
-            for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
-                if (q->close && q->flags & HTTP_QUEUE_OPENED) {
-                    q->flags &= ~HTTP_QUEUE_OPENED;
-                    q->stage->close(q);
-                }
-            }
+    qhead = conn->txHead;
+    for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
+        if (q->close && q->flags & HTTP_QUEUE_OPENED) {
+            q->flags &= ~HTTP_QUEUE_OPENED;
+            q->stage->close(q);
+        }
+    }
+    qhead = conn->rxHead;
+    for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
+        if (q->close && q->flags & HTTP_QUEUE_OPENED) {
+            q->flags &= ~HTTP_QUEUE_OPENED;
+            q->stage->close(q);
         }
     }
 }
 
 
+/*
+    Start all queues, but do not start the handler
+ */
 PUBLIC void httpStartPipeline(HttpConn *conn)
 {
     HttpQueue   *qhead, *q, *prevQ, *nextQ;
@@ -11406,37 +16060,40 @@ PUBLIC void httpStartPipeline(HttpConn *conn)
 
     tx = conn->tx;
     rx = conn->rx;
-    assert(conn->endpoint);
+    assert(conn->net->endpoint);
+
+    qhead = conn->txHead;
+    for (q = qhead->prevQ; q != qhead; q = prevQ) {
+        prevQ = q->prevQ;
+        if (q->start && !(q->flags & HTTP_QUEUE_STARTED)) {
+            if (!(q->stage->flags & HTTP_STAGE_HANDLER)) {
+                q->flags |= HTTP_QUEUE_STARTED;
+                q->stage->start(q);
+            }
+        }
+    }
 
     if (rx->needInputPipeline) {
-        qhead = tx->queue[HTTP_QUEUE_RX];
-        for (q = qhead->nextQ; q->nextQ != qhead; q = nextQ) {
+        qhead = conn->rxHead;
+        for (q = qhead->nextQ; q != qhead; q = nextQ) {
             nextQ = q->nextQ;
             if (q->start && !(q->flags & HTTP_QUEUE_STARTED)) {
+                /* Don't start if tx side already started */
                 if (q->pair == 0 || !(q->pair->flags & HTTP_QUEUE_STARTED)) {
-                    q->flags |= HTTP_QUEUE_STARTED;
-                    q->stage->start(q);
+                    if (!(q->stage->flags & HTTP_STAGE_HANDLER)) {
+                        q->flags |= HTTP_QUEUE_STARTED;
+                        q->stage->start(q);
+                    }
                 }
             }
         }
     }
-    qhead = tx->queue[HTTP_QUEUE_TX];
-    for (q = qhead->prevQ; q->prevQ != qhead; q = prevQ) {
-        prevQ = q->prevQ;
-        if (q->start && !(q->flags & HTTP_QUEUE_STARTED)) {
-            q->flags |= HTTP_QUEUE_STARTED;
-            q->stage->start(q);
-        }
-    }
-    httpStartHandler(conn);
-
-    if (tx->pendingFinalize) {
-        tx->finalizedOutput = 0;
-        httpFinalizeOutput(conn);
-    }
 }
 
 
+/*
+    Called when all input data has been received
+ */
 PUBLIC void httpReadyHandler(HttpConn *conn)
 {
     HttpQueue   *q;
@@ -11449,61 +16106,33 @@ PUBLIC void httpReadyHandler(HttpConn *conn)
 }
 
 
-static void httpStartHandler(HttpConn *conn)
+PUBLIC void httpStartHandler(HttpConn *conn)
 {
     HttpQueue   *q;
+    HttpTx      *tx;
 
-    assert(!conn->tx->started);
-
-    conn->tx->started = 1;
-    q = conn->writeq;
-    if (q->stage->start && !(q->flags & HTTP_QUEUE_STARTED)) {
-        q->flags |= HTTP_QUEUE_STARTED;
-        q->stage->start(q);
+    tx = conn->tx;
+    if (!tx->started) {
+        tx->started = 1;
+        q = conn->writeq;
+        if (q->stage->start && !(q->flags & HTTP_QUEUE_STARTED)) {
+            q->flags |= HTTP_QUEUE_STARTED;
+            q->stage->start(q);
+        }
+        if (tx->pendingFinalize) {
+            tx->finalizedOutput = 0;
+            httpFinalizeOutput(conn);
+        }
     }
 }
 
 
-PUBLIC bool httpQueuesNeedService(HttpConn *conn)
+PUBLIC bool httpQueuesNeedService(HttpNet *net)
 {
     HttpQueue   *q;
 
-    q = conn->serviceq;
+    q = net->serviceq;
     return (q->scheduleNext != q);
-}
-
-
-/*
-    Run the queue service routines until there is no more work to be done.
-    If flags & HTTP_BLOCK, this routine may block while yielding.  Return true if actual work was done.
- */
-PUBLIC bool httpServiceQueues(HttpConn *conn, int flags)
-{
-    HttpQueue   *q;
-    bool        workDone;
-
-    workDone = 0;
-
-    while (conn->state < HTTP_STATE_COMPLETE && (q = httpGetNextQueueForService(conn->serviceq)) != NULL) {
-        if (q->servicing) {
-            /* Called re-entrantly */
-            q->flags |= HTTP_QUEUE_RESERVICE;
-        } else {
-            assert(q->schedulePrev == q->scheduleNext);
-            httpServiceQueue(q);
-            workDone = 1;
-        }
-        if (mprNeedYield() && (flags & HTTP_BLOCK)) {
-            mprYield(0);
-        }
-    }
-    /*
-        Always do a yield if requested even if there are no queues to service
-     */
-    if (mprNeedYield() && (flags & HTTP_BLOCK)) {
-        mprYield(0);
-    }
-    return workDone;
 }
 
 
@@ -11516,7 +16145,8 @@ PUBLIC void httpDiscardData(HttpConn *conn, int dir)
     if (tx == 0) {
         return;
     }
-    qhead = tx->queue[dir];
+    qhead = (dir == HTTP_QUEUE_TX) ? conn->txHead : conn->rxHead;
+    httpDiscardQueueData(qhead, 1);
     for (q = qhead->nextQ; q != qhead; q = q->nextQ) {
         httpDiscardQueueData(q, 1);
     }
@@ -11548,6 +16178,1011 @@ static bool matchFilter(HttpConn *conn, HttpStage *filter, HttpRoute *route, int
  */
 
 
+/********* Start of file src/process.c ************/
+
+/*
+    process.c - Process HTTP request/response.
+
+    Copyright (c) All Rights Reserved. See details at the end of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+/********************************** Forwards **********************************/
+
+static void addMatchEtag(HttpConn *conn, char *etag);
+static void prepErrorDoc(HttpQueue *q);
+static bool mapMethod(HttpConn *conn);
+static void measureRequest(HttpQueue *q);
+static bool parseRange(HttpConn *conn, char *value);
+static void parseUri(HttpConn *conn);
+static bool processCompletion(HttpQueue *q);
+static bool processContent(HttpQueue *q);
+static void processFinalized(HttpQueue *q);
+static void processFirst(HttpQueue *q);
+static void processHeaders(HttpQueue *q);
+static void processParsed(HttpQueue *q);
+static void processReady(HttpQueue *q);
+static bool processRunning(HttpQueue *q);
+static bool pumpOutput(HttpQueue *q);
+static void routeRequest(HttpConn *conn);
+static int sendContinue(HttpQueue *q);
+
+/*********************************** Code *************************************/
+/*
+    HTTP Protocol state machine for HTTP/1 server requests and client responses.
+    Process an incoming request/response and drive the state machine.
+    This will process only one request/response.
+    All socket I/O is non-blocking, and this routine must not block.
+ */
+PUBLIC void httpProcess(HttpQueue *q)
+{
+    HttpConn    *conn;
+    bool        more;
+    int         count;
+
+    if (!q) {
+        return;
+    }
+    conn = q->conn;
+
+    for (count = 0, more = 1; more && count < 10; count++) {
+        switch (conn->state) {
+        case HTTP_STATE_PARSED:
+            processFirst(q);
+            processHeaders(q);
+            processParsed(q);
+            break;
+
+        case HTTP_STATE_CONTENT:
+            more = processContent(q);
+            break;
+
+        case HTTP_STATE_READY:
+            processReady(q);
+            break;
+
+        case HTTP_STATE_RUNNING:
+            more = processRunning(q);
+            break;
+
+        case HTTP_STATE_FINALIZED:
+            processFinalized(q);
+            break;
+
+        case HTTP_STATE_COMPLETE:
+            more = processCompletion(q);
+            break;
+
+        default:
+            if (conn->error) {
+                httpSetState(conn, HTTP_STATE_COMPLETE);
+            }
+            more = 0;
+            break;
+        }
+        httpServiceQueues(conn->net, HTTP_BLOCK);
+    }
+    if (conn->complete && httpServerConn(conn)) {
+        if (conn->keepAliveCount <= 0 || conn->net->protocol >= 2) {
+            httpDestroyConn(conn);
+        } else {
+            httpResetServerConn(conn);
+        }
+    }
+}
+
+
+static void processFirst(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpRx      *rx;
+
+    net = q->net;
+    conn = q->conn;
+    rx = conn->rx;
+
+    if (httpIsServer(net)) {
+        conn->startMark = mprGetHiResTicks();
+        conn->started = conn->http->now;
+        conn->http->totalRequests++;
+        httpSetState(conn, HTTP_STATE_FIRST);
+
+    } else {
+#if TODO /* TODO: 100 Continue */
+        if (rx->status != HTTP_CODE_CONTINUE) {
+            /*
+                Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
+             */
+            httpCreateRxPipeline(conn, NULL);
+        }
+#endif
+
+    }
+    if (rx->flags & HTTP_EXPECT_CONTINUE) {
+        sendContinue(q);
+        rx->flags &= ~HTTP_EXPECT_CONTINUE;
+    }
+
+    if (httpTracing(net) && httpIsServer(net)) {
+        httpTrace(conn->trace, "http.rx.headers", "request", "method:'%s', uri:'%s', protocol:'%d'",
+            rx->method, rx->uri, conn->net->protocol);
+        if (net->protocol >= 2) {
+            httpTrace(conn->trace, "http.rx.headers", "context", "\n%s", httpTraceHeaders(q, conn->rx->headers));
+        }
+    }
+}
+
+
+static void processHeaders(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    HttpLimits  *limits;
+    MprKey      *kp;
+    char        *cp, *key, *value, *tok;
+    int         keepAliveHeader;
+
+    net = q->net;
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+    limits = conn->limits;
+    keepAliveHeader = 0;
+
+    for (ITERATE_KEYS(rx->headers, kp)) {
+        key = kp->key;
+        value = (char*) kp->data;
+        switch (tolower((uchar) key[0])) {
+        case 'a':
+            if (strcasecmp(key, "authorization") == 0) {
+                value = sclone(value);
+                conn->authType = slower(stok(value, " \t", &tok));
+                rx->authDetails = sclone(tok);
+
+            } else if (strcasecmp(key, "accept-charset") == 0) {
+                rx->acceptCharset = sclone(value);
+
+            } else if (strcasecmp(key, "accept") == 0) {
+                rx->accept = sclone(value);
+
+            } else if (strcasecmp(key, "accept-encoding") == 0) {
+                rx->acceptEncoding = sclone(value);
+
+            } else if (strcasecmp(key, "accept-language") == 0) {
+                rx->acceptLanguage = sclone(value);
+            }
+            break;
+
+        case 'c':
+            if (strcasecmp(key, "connection") == 0 && net->protocol < 2) {
+                rx->connection = sclone(value);
+                if (scaselesscmp(value, "KEEP-ALIVE") == 0) {
+                    keepAliveHeader = 1;
+
+                } else if (scaselesscmp(value, "CLOSE") == 0) {
+                    conn->keepAliveCount = 0;
+                }
+
+            } else if (strcasecmp(key, "content-length") == 0) {
+                if (rx->length >= 0) {
+                    httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Mulitple content length headers");
+                    break;
+                }
+                rx->length = stoi(value);
+                if (rx->length < 0) {
+                    httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad content length");
+                    return;
+                }
+                rx->contentLength = sclone(value);
+                assert(rx->length >= 0);
+                if (httpServerConn(conn) || !scaselessmatch(tx->method, "HEAD")) {
+                    rx->remainingContent = rx->length;
+                    rx->needInputPipeline = 1;
+                }
+
+            } else if (strcasecmp(key, "content-range") == 0) {
+                /*
+                    The Content-Range header is used in the response. The Range header is used in the request.
+                    This headers specifies the range of any posted body data
+                    Format is:  Content-Range: bytes n1-n2/length
+                    Where n1 is first byte pos and n2 is last byte pos
+                 */
+                char    *sp;
+                MprOff  start, end, size;
+
+                start = end = size = -1;
+                sp = value;
+                while (*sp && !isdigit((uchar) *sp)) {
+                    sp++;
+                }
+                if (*sp) {
+                    start = stoi(sp);
+                    if ((sp = strchr(sp, '-')) != 0) {
+                        end = stoi(++sp);
+                        if ((sp = strchr(sp, '/')) != 0) {
+                            /*
+                                Note this is not the content length transmitted, but the original size of the input of which
+                                the client is transmitting only a portion.
+                             */
+                            size = stoi(++sp);
+                        }
+                    }
+                }
+                if (start < 0 || end < 0 || size < 0 || end < start) {
+                    httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad content range");
+                    break;
+                }
+                rx->inputRange = httpCreateRange(conn, start, end);
+
+            } else if (strcasecmp(key, "content-type") == 0) {
+                rx->mimeType = sclone(value);
+                if (rx->flags & (HTTP_POST | HTTP_PUT)) {
+                    if (httpServerConn(conn)) {
+                        rx->form = scontains(rx->mimeType, "application/x-www-form-urlencoded") != 0;
+                        rx->json = sstarts(rx->mimeType, "application/json");
+                        rx->upload = scontains(rx->mimeType, "multipart/form-data") != 0;
+                    }
+                }
+            } else if (strcasecmp(key, "cookie") == 0) {
+                /* Should be only one cookie header really with semicolon delimmited key/value pairs */
+                if (rx->cookie && *rx->cookie) {
+                    rx->cookie = sjoin(rx->cookie, "; ", value, NULL);
+                } else {
+                    rx->cookie = sclone(value);
+                }
+            }
+            break;
+
+        case 'e':
+            if (strcasecmp(key, "expect") == 0) {
+                /*
+                    Handle 100-continue for HTTP/1.1+ clients only. This is the only expectation that is currently supported.
+                 */
+                if (conn->net->protocol > 0) {
+                    if (strcasecmp(value, "100-continue") != 0) {
+                        httpBadRequestError(conn, HTTP_CODE_EXPECTATION_FAILED, "Expect header value is not supported");
+                    } else {
+                        rx->flags |= HTTP_EXPECT_CONTINUE;
+                    }
+                }
+            }
+            break;
+
+        case 'h':
+            if (strcasecmp(key, "host") == 0) {
+                if ((int) strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:")
+                        < (int) slen(value)) {
+                    httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host header");
+                } else {
+                    rx->hostHeader = sclone(value);
+                }
+            }
+            break;
+
+        case 'i':
+            if ((strcasecmp(key, "if-modified-since") == 0) || (strcasecmp(key, "if-unmodified-since") == 0)) {
+                MprTime     newDate = 0;
+                char        *cp;
+                bool        ifModified = (tolower((uchar) key[3]) == 'm');
+
+                if ((cp = strchr(value, ';')) != 0) {
+                    *cp = '\0';
+                }
+                if (mprParseTime(&newDate, value, MPR_UTC_TIMEZONE, NULL) < 0) {
+                    assert(0);
+                    break;
+                }
+                if (newDate) {
+                    rx->since = newDate;
+                    rx->ifModified = ifModified;
+                    rx->flags |= HTTP_IF_MODIFIED;
+                }
+
+            } else if ((strcasecmp(key, "if-match") == 0) || (strcasecmp(key, "if-none-match") == 0)) {
+                char    *word, *tok;
+                bool    ifMatch = (tolower((uchar) key[3]) == 'm');
+
+                if ((tok = strchr(value, ';')) != 0) {
+                    *tok = '\0';
+                }
+                rx->ifMatch = ifMatch;
+                rx->flags |= HTTP_IF_MODIFIED;
+                value = sclone(value);
+                word = stok(value, " ,", &tok);
+                while (word) {
+                    addMatchEtag(conn, word);
+                    word = stok(0, " ,", &tok);
+                }
+
+            } else if (strcasecmp(key, "if-range") == 0) {
+                char    *word, *tok;
+                if ((tok = strchr(value, ';')) != 0) {
+                    *tok = '\0';
+                }
+                rx->ifMatch = 1;
+                rx->flags |= HTTP_IF_MODIFIED;
+                value = sclone(value);
+                word = stok(value, " ,", &tok);
+                while (word) {
+                    addMatchEtag(conn, word);
+                    word = stok(0, " ,", &tok);
+                }
+            }
+            break;
+
+        case 'k':
+            /* Keep-Alive: timeout=N, max=1 */
+            if (strcasecmp(key, "keep-alive") == 0) {
+                if ((tok = scontains(value, "max=")) != 0) {
+                    conn->keepAliveCount = atoi(&tok[4]);
+                    if (conn->keepAliveCount < 0) {
+                        conn->keepAliveCount = 0;
+                    }
+                    if (conn->keepAliveCount > ME_MAX_KEEP_ALIVE) {
+                        conn->keepAliveCount = ME_MAX_KEEP_ALIVE;
+                    }
+                    /*
+                        IMPORTANT: Deliberately close client connections one request early. This encourages a client-led
+                        termination and may help relieve excessive server-side TIME_WAIT conditions.
+                     */
+                    if (httpClientConn(conn) && conn->keepAliveCount == 1) {
+                        conn->keepAliveCount = 0;
+                    }
+                }
+            }
+            break;
+
+        case 'l':
+            if (strcasecmp(key, "location") == 0) {
+                rx->redirect = sclone(value);
+            }
+            break;
+
+        case 'o':
+            if (strcasecmp(key, "origin") == 0) {
+                rx->origin = sclone(value);
+            }
+            break;
+
+        case 'p':
+            if (strcasecmp(key, "pragma") == 0) {
+                rx->pragma = sclone(value);
+            }
+            break;
+
+        case 'r':
+            if (strcasecmp(key, "range") == 0) {
+                /*
+                    The Content-Range header is used in the response. The Range header is used in the request.
+                 */
+                if (!parseRange(conn, value)) {
+                    httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad range");
+                }
+            } else if (strcasecmp(key, "referer") == 0) {
+                /* NOTE: yes the header is misspelt in the spec */
+                rx->referrer = sclone(value);
+            }
+            break;
+
+        case 't':
+#if DONE_IN_HTTP1
+            if (strcasecmp(key, "transfer-encoding") == 0 && conn->net->protocol == 1) {
+                if (scaselesscmp(value, "chunked") == 0) {
+                    /*
+                        remainingContent will be revised by the chunk filter as chunks are processed and will
+                        be set to zero when the last chunk has been received.
+                     */
+                    rx->flags |= HTTP_CHUNKED;
+                    rx->chunkState = HTTP_CHUNK_START;
+                    rx->remainingContent = HTTP_UNLIMITED;
+                    rx->needInputPipeline = 1;
+                }
+            }
+#endif
+            break;
+
+        case 'x':
+            if (strcasecmp(key, "x-http-method-override") == 0) {
+                httpSetMethod(conn, value);
+
+            } else if (strcasecmp(key, "x-own-params") == 0) {
+                /*
+                    Optimize and don't convert query and body content into params.
+                    This is for those who want very large forms and to do their own custom handling.
+                 */
+                rx->ownParams = 1;
+#if ME_DEBUG
+            } else if (strcasecmp(key, "x-chunk-size") == 0 && net->protocol < 2) {
+                tx->chunkSize = atoi(value);
+                if (tx->chunkSize <= 0) {
+                    tx->chunkSize = 0;
+                } else if (tx->chunkSize > conn->limits->chunkSize) {
+                    tx->chunkSize = conn->limits->chunkSize;
+                }
+#endif
+            }
+            break;
+
+        case 'u':
+            if (scaselesscmp(key, "upgrade") == 0) {
+                rx->upgrade = sclone(value);
+            } else if (strcasecmp(key, "user-agent") == 0) {
+                rx->userAgent = sclone(value);
+            }
+            break;
+
+        case 'w':
+            if (strcasecmp(key, "www-authenticate") == 0) {
+                cp = value;
+                while (*value && !isspace((uchar) *value)) {
+                    value++;
+                }
+                *value++ = '\0';
+                conn->authType = slower(cp);
+                rx->authDetails = sclone(value);
+            }
+            break;
+        }
+    }
+    if (net->protocol == 0 && !keepAliveHeader) {
+        conn->keepAliveCount = 0;
+    }
+
+}
+
+
+/*
+    Called once the HTTP request/response headers have been parsed
+ */
+static void processParsed(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    cchar       *hostname;
+
+    net = q->net;
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    if (httpServerConn(conn)) {
+        hostname = rx->hostHeader;
+        if (schr(rx->hostHeader, ':')) {
+            mprParseSocketAddress(rx->hostHeader, &hostname, NULL, NULL, 0);
+        }
+        if ((conn->host = httpMatchHost(net, hostname)) == 0) {
+            conn->host = mprGetFirstItem(net->endpoint->hosts);
+            httpError(conn, HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
+        }
+        if (!rx->originalUri) {
+            rx->originalUri = rx->uri;
+        }
+        parseUri(conn);
+    }
+
+    if (rx->form && rx->length >= conn->limits->rxFormSize && conn->limits->rxFormSize != HTTP_UNLIMITED) {
+        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+            "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
+    }
+    if (conn->error) {
+        /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
+        conn->keepAliveCount = 0;
+    }
+    if (httpClientConn(conn) && conn->keepAliveCount <= 0 && rx->length < 0 && rx->chunkState == HTTP_CHUNK_UNCHUNKED) {
+        /*
+            Google does responses with a body and without a Content-Length like this:
+                Connection: close
+                Location: URI
+         */
+        rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
+    }
+
+    if (httpIsServer(conn->net)) {
+        //  TODO is rx->length getting set for HTTP/2?
+        if (!rx->upload && rx->length >= conn->limits->rxBodySize && conn->limits->rxBodySize != HTTP_UNLIMITED) {
+            httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+                "Request content length %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxBodySize);
+            return;
+        }
+        httpAddQueryParams(conn);
+        rx->streaming = httpGetStreaming(conn->host, rx->mimeType, rx->uri);
+        if (rx->streaming && httpServerConn(conn)) {
+            /*
+                Disable upload if streaming, used by PHP to stream input and process file upload in PHP.
+             */
+            rx->upload = 0;
+            routeRequest(conn);
+        }
+    } else {
+#if ME_HTTP_WEB_SOCKETS
+        if (conn->upgraded && !httpVerifyWebSocketsHandshake(conn)) {
+            httpSetState(conn, HTTP_STATE_FINALIZED);
+            return;
+        }
+#endif
+    }
+    httpSetState(conn, HTTP_STATE_CONTENT);
+    if (rx->remainingContent == 0) {
+        httpSetEof(conn);
+        httpFinalizeInput(conn);
+    }
+}
+
+
+static void routeRequest(HttpConn *conn)
+{
+    HttpRx      *rx;
+
+    rx = conn->rx;
+    httpRouteRequest(conn);
+    httpCreatePipeline(conn);
+    httpStartPipeline(conn);
+    httpStartHandler(conn);
+}
+
+
+static bool pumpOutput(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpTx      *tx;
+    HttpQueue   *wq;
+    ssize       count;
+
+    conn = q->conn;
+    tx = conn->tx;
+
+    if (tx->started && !conn->net->writeBlocked) {
+        wq = conn->writeq;
+        count = wq->count;
+        if (!tx->finalizedOutput) {
+            HTTP_NOTIFY(conn, HTTP_EVENT_WRITABLE, 0);
+            if (tx->handler->writable) {
+                tx->handler->writable(wq);
+            }
+        }
+        return (wq->count - count) ? 0 : 1;
+    }
+    return 0;
+}
+
+
+static bool processContent(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpPacket  *packet;
+
+    conn = q->conn;
+    rx = conn->rx;
+
+    if (rx->eof) {
+        if (httpServerConn(conn)) {
+            if (httpAddBodyParams(conn) < 0) {
+                httpError(conn, HTTP_CODE_BAD_REQUEST, "Bad request parameters");
+                return 1;
+            }
+            mapMethod(conn);
+            if (!rx->route) {
+                routeRequest(conn);
+            }
+            while ((packet = httpGetPacket(conn->rxHead)) != 0) {
+                httpPutPacket(conn->readq, packet);
+            }
+        }
+        httpSetState(conn, HTTP_STATE_READY);
+        if (conn->readq->first) {
+            HTTP_NOTIFY(conn, HTTP_EVENT_READABLE, 0);
+        }
+    }
+    return pumpOutput(q) || rx->eof;
+}
+
+
+/*
+    In the ready state after all content has been received
+ */
+static void processReady(HttpQueue *q)
+{
+    HttpConn    *conn;
+
+    conn = q->conn;
+    httpReadyHandler(conn);
+    httpSetState(conn, HTTP_STATE_RUNNING);
+    if (httpClientConn(conn) && !conn->upgraded) {
+        httpFinalize(conn);
+    }
+}
+
+
+static bool processRunning(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpTx      *tx;
+
+    conn = q->conn;
+    tx = conn->tx;
+
+    if (tx->finalized && tx->finalizedConnector) {
+        httpSetState(conn, HTTP_STATE_FINALIZED);
+        return 1;
+    }
+    return pumpOutput(q);
+}
+
+
+static void processFinalized(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    assert(tx->finalized);
+    assert(tx->finalizedOutput);
+    assert(tx->finalizedInput);
+
+#if ME_TRACE_MEM
+    mprDebug(1, "Request complete, status %d, error %d, connError %d, %s%s, memsize %.2f MB",
+        tx->status, conn->error, conn->net->error, rx->hostHeader, rx->uri, mprGetMem() / 1024 / 1024.0);
+#endif
+    if (httpServerConn(conn) && rx) {
+        httpMonitorEvent(conn, HTTP_COUNTER_NETWORK_IO, tx->bytesWritten);
+    }
+    if (httpServerConn(conn) && conn->activeRequest) {
+        httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
+        conn->activeRequest = 0;
+    }
+    measureRequest(q);
+
+    if (rx->session) {
+        httpWriteSession(conn);
+    }
+    httpClosePipeline(conn);
+
+    if (conn->net->eof) {
+        if (!conn->errorMsg) {
+            conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Server close");
+        }
+        httpTrace(conn->trace, "http.connection.close", "network", "msg:'%s'", conn->errorMsg);
+    }
+    if (tx->errorDocument && !smatch(tx->errorDocument, rx->uri)) {
+        prepErrorDoc(q);
+    } else {
+        conn->complete = 1;
+        httpSetState(conn, HTTP_STATE_COMPLETE);
+    }
+}
+
+
+static bool processCompletion(HttpQueue *q)
+{
+    HttpConn    *conn;
+
+    conn = q->conn;
+    if (conn->http->requestCallback) {
+        (conn->http->requestCallback)(conn);
+    }
+    return 0;
+}
+
+
+static void measureRequest(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    MprTicks    elapsed;
+    MprOff      received;
+    int         status;
+
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+
+    elapsed = mprGetTicks() - conn->started;
+    if (httpTracing(q->net)) {
+        status = httpServerConn(conn) ? tx->status : rx->status;
+        received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
+#if MPR_HIGH_RES_TIMER
+        httpTraceData(conn->trace,
+            "http.completion", "result", 0, (void*) conn, 0, "status:%d, error:%d, elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
+            status, conn->error, elapsed, mprGetHiResTicks() - conn->startMark, received, tx->bytesWritten);
+#else
+        httpTraceData(conn->trace, "http.completion", "result", 0, (void*) conn, 0, "status:%d, error:%d, elapsed:%llu, received:%lld, sent:%lld",
+            status, conn->error, elapsed, received, tx->bytesWritten);
+#endif
+    }
+}
+
+
+static void prepErrorDoc(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+
+    conn = q->conn;
+    rx = conn->rx;
+    tx = conn->tx;
+    if (!rx->headerPacket || conn->errorDoc) {
+        return;
+    }
+    httpTrace(conn->trace, "http.errordoc", "context", "location:'%s', status:%d", tx->errorDocument, tx->status);
+
+    httpClosePipeline(conn);
+    httpDiscardData(conn, HTTP_QUEUE_RX);
+    httpDiscardData(conn, HTTP_QUEUE_TX);
+
+    conn->rx = httpCreateRx(conn);
+    conn->tx = httpCreateTx(conn, NULL);
+
+    conn->rx->headers = rx->headers;
+    conn->rx->method = rx->method;
+    conn->rx->originalUri = rx->uri;
+    conn->rx->uri = (char*) tx->errorDocument;
+    conn->tx->status = tx->status;
+    rx->conn = tx->conn = 0;
+
+    conn->error = 0;
+    conn->errorMsg = 0;
+    conn->upgraded = 0;
+    conn->state = HTTP_STATE_PARSED;
+    conn->errorDoc = 1;
+    conn->keepAliveCount = 0;
+
+    parseUri(conn);
+    routeRequest(conn);
+}
+
+
+PUBLIC void httpSetMethod(HttpConn *conn, cchar *method)
+{
+    conn->rx->method = sclone(method);
+    httpParseMethod(conn);
+}
+
+
+static bool mapMethod(HttpConn *conn)
+{
+    HttpRx      *rx;
+    cchar       *method;
+
+    rx = conn->rx;
+    if (rx->flags & HTTP_POST && (method = httpGetParam(conn, "-http-method-", 0)) != 0) {
+        if (!scaselessmatch(method, rx->method)) {
+            httpTrace(conn->trace, "http.mapMethod", "context", "originalMethod:'%s', method:'%s'", rx->method, method);
+            httpSetMethod(conn, method);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+PUBLIC ssize httpGetReadCount(HttpConn *conn)
+{
+    return conn->readq->count;
+}
+
+
+PUBLIC cchar *httpGetBodyInput(HttpConn *conn)
+{
+    HttpQueue   *q;
+    HttpRx      *rx;
+    MprBuf      *content;
+
+    rx = conn->rx;
+    if (!conn->rx->eof) {
+        return 0;
+    }
+    q = conn->readq;
+    if (q->first) {
+        httpJoinPackets(q, -1);
+        if ((content = q->first->content) != 0) {
+            mprAddNullToBuf(content);
+            return mprGetBufStart(content);
+        }
+    }
+    return 0;
+}
+
+
+static void addMatchEtag(HttpConn *conn, char *etag)
+{
+    HttpRx   *rx;
+
+    rx = conn->rx;
+    if (rx->etags == 0) {
+        rx->etags = mprCreateList(-1, MPR_LIST_STABLE);
+    }
+    mprAddItem(rx->etags, sclone(etag));
+}
+
+
+/*
+    Format is:  Range: bytes=n1-n2,n3-n4,...
+    Where n1 is first byte pos and n2 is last byte pos
+
+    Examples:
+        Range: bytes=0-49             first 50 bytes
+        Range: bytes=50-99,200-249    Two 50 byte ranges from 50 and 200
+        Range: bytes=-50              Last 50 bytes
+        Range: bytes=1-               Skip first byte then emit the rest
+
+    Return 1 if more ranges, 0 if end of ranges, -1 if bad range.
+ */
+static bool parseRange(HttpConn *conn, char *value)
+{
+    HttpTx      *tx;
+    HttpRange   *range, *last, *next;
+    char        *tok, *ep;
+
+    tx = conn->tx;
+    value = sclone(value);
+
+    /*
+        Step over the "bytes="
+     */
+    stok(value, "=", &value);
+
+    for (last = 0; value && *value; ) {
+        if ((range = httpCreateRange(conn, 0, 0)) == 0) {
+            return 0;
+        }
+        /*
+            A range "-7" will set the start to -1 and end to 8
+         */
+        if ((tok = stok(value, ",", &value)) == 0) {
+            return 0;
+        }
+        if (*tok != '-') {
+            range->start = (ssize) stoi(tok);
+        } else {
+            range->start = -1;
+        }
+        range->end = -1;
+
+        if ((ep = strchr(tok, '-')) != 0) {
+            if (*++ep != '\0') {
+                /*
+                    End is one beyond the range. Makes the math easier.
+                 */
+                range->end = (ssize) stoi(ep) + 1;
+            }
+        }
+        if (range->start >= 0 && range->end >= 0) {
+            range->len = (int) (range->end - range->start);
+        }
+        if (last == 0) {
+            tx->outputRanges = range;
+        } else {
+            last->next = range;
+        }
+        last = range;
+    }
+
+    /*
+        Validate ranges
+     */
+    for (range = tx->outputRanges; range; range = range->next) {
+        if (range->end != -1 && range->start >= range->end) {
+            return 0;
+        }
+        if (range->start < 0 && range->end < 0) {
+            return 0;
+        }
+        next = range->next;
+        if (range->start < 0 && next) {
+            /* This range goes to the end, so cannot have another range afterwards */
+            return 0;
+        }
+        if (next) {
+            if (range->end < 0) {
+                return 0;
+            }
+            if (next->start >= 0 && range->end > next->start) {
+                return 0;
+            }
+        }
+    }
+    conn->tx->currentRange = tx->outputRanges;
+    return (last) ? 1: 0;
+}
+
+
+static void parseUri(HttpConn *conn)
+{
+    HttpRx      *rx;
+    HttpUri     *up;
+    cchar       *hostname;
+
+    rx = conn->rx;
+    if (httpSetUri(conn, rx->uri) < 0) {
+        httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad URL");
+        rx->parsedUri = httpCreateUri("", 0);
+
+    } else {
+        /*
+            Complete the URI based on the connection state. Must have a complete scheme, host, port and path.
+         */
+        up = rx->parsedUri;
+        up->scheme = sclone(conn->secure ? "https" : "http");
+        hostname = rx->hostHeader ? rx->hostHeader : conn->host->name;
+        if (!hostname) {
+            hostname = conn->sock->acceptIp;
+        }
+        if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0 || up->host == 0 || *up->host == '\0') {
+            if (!conn->error) {
+                httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host");
+            }
+        } else {
+            up->port = conn->sock->listenSock->port;
+        }
+    }
+}
+
+
+/*
+    Sends an 100 Continue response to the client. This bypasses the transmission pipeline, writing directly to the socket.
+ */
+static int sendContinue(HttpQueue *q)
+{
+    HttpConn    *conn;
+    cchar       *response;
+    int         mode;
+
+    conn = q->conn;
+    assert(conn);
+
+    if (!conn->tx->finalized && !conn->tx->bytesWritten) {
+        response = sfmt("%s 100 Continue\r\n\r\n", httpGetProtocol(conn->net));
+        mode = mprGetSocketBlockingMode(conn->sock);
+        mprWriteSocket(conn->sock, response, slen(response));
+        mprSetSocketBlockingMode(conn->sock, mode);
+        mprFlushSocket(conn->sock);
+    }
+    return 0;
+}
+
+
+PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers)
+{
+    MprBuf  *buf;
+    MprKey  *kp;
+
+    buf = mprCreateBuf(0, 0);
+    for (ITERATE_KEYS(headers, kp)) {
+        if (*kp->key == '=') {
+            mprPutToBuf(buf, ":%s: %s\n", &kp->key[1], kp->data);
+        } else {
+            mprPutToBuf(buf, "%s: %s\n", kp->key, kp->data);
+        }
+    }
+    mprAddNullToBuf(buf);
+    return mprGetBufStart(buf);
+}
+
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
 /********* Start of file src/queue.c ************/
 
 /*
@@ -11561,18 +17196,24 @@ static bool matchFilter(HttpConn *conn, HttpStage *filter, HttpRoute *route, int
 
 /********************************** Forwards **********************************/
 
+static void initQueue(HttpNet *net, HttpConn *conn, HttpQueue *q, cchar *name, int dir);
 static void manageQueue(HttpQueue *q, int flags);
+static void serviceQueue(HttpQueue *q);
 
 /************************************ Code ************************************/
-
-PUBLIC HttpQueue *httpCreateQueueHead(HttpConn *conn, cchar *name)
+/*
+    Create a queue head that has no processing callbacks
+ */
+PUBLIC HttpQueue *httpCreateQueueHead(HttpNet *net, HttpConn *conn, cchar *name, int dir)
 {
     HttpQueue   *q;
+
+    assert(net);
 
     if ((q = mprAllocObj(HttpQueue, manageQueue)) == 0) {
         return 0;
     }
-    httpInitQueue(conn, q, name);
+    initQueue(net, conn, q, name, dir);
     httpInitSchedulerQueue(q);
     return q;
 }
@@ -11582,26 +17223,38 @@ PUBLIC HttpQueue *httpCreateQueueHead(HttpConn *conn, cchar *name)
     Create a queue associated with a connection.
     Prev may be set to the previous queue in a pipeline. If so, then the Conn.readq and writeq are updated.
  */
-PUBLIC HttpQueue *httpCreateQueue(HttpConn *conn, HttpStage *stage, int dir, HttpQueue *prev)
+PUBLIC HttpQueue *httpCreateQueue(HttpNet *net, HttpConn *conn, HttpStage *stage, int dir, HttpQueue *prev)
 {
     HttpQueue   *q;
 
     if ((q = mprAllocObj(HttpQueue, manageQueue)) == 0) {
         return 0;
     }
-    q->conn = conn;
-    httpInitQueue(conn, q, sfmt("%s-%s", stage->name, dir == HTTP_QUEUE_TX ? "tx" : "rx"));
+    initQueue(net, conn, q, stage->name, dir);
     httpInitSchedulerQueue(q);
-    httpAssignQueue(q, stage, dir);
+    httpAssignQueueCallbacks(q, stage, dir);
     if (prev) {
-        httpAppendQueue(prev, q);
-        if (dir == HTTP_QUEUE_RX) {
-            conn->readq = conn->tx->queue[HTTP_QUEUE_RX]->prevQ;
-        } else {
-            conn->writeq = conn->tx->queue[HTTP_QUEUE_TX]->nextQ;
-        }
+        httpAppendQueue(q, prev);
     }
     return q;
+}
+
+
+static void initQueue(HttpNet *net, HttpConn *conn, HttpQueue *q, cchar *name, int dir)
+{
+    q->net = net;
+    q->conn = conn;
+    q->flags = dir == HTTP_QUEUE_TX ? HTTP_QUEUE_OUTGOING : 0;
+    q->nextQ = q;
+    q->prevQ = q;
+    q->name = sfmt("%s-%s", name, dir == HTTP_QUEUE_TX ? "tx" : "rx");
+    if (conn && conn->tx && conn->tx->chunkSize > 0) {
+        q->packetSize = conn->tx->chunkSize;
+    } else {
+        q->packetSize = net->limits->bufferSize;
+    }
+    q->max = q->packetSize * 4;
+    q->low = q->max / 4;
 }
 
 
@@ -11631,7 +17284,10 @@ static void manageQueue(HttpQueue *q, int flags)
 }
 
 
-PUBLIC void httpAssignQueue(HttpQueue *q, HttpStage *stage, int dir)
+/*
+    Assign stage callbacks to a queue
+ */
+PUBLIC void httpAssignQueueCallbacks(HttpQueue *q, HttpStage *stage, int dir)
 {
     q->stage = stage;
     q->close = stage->close;
@@ -11647,44 +17303,26 @@ PUBLIC void httpAssignQueue(HttpQueue *q, HttpStage *stage, int dir)
 }
 
 
-PUBLIC void httpInitQueue(HttpConn *conn, HttpQueue *q, cchar *name)
+PUBLIC void httpSetQueueLimits(HttpQueue *q, ssize packetSize, ssize low, ssize max)
 {
-    HttpTx      *tx;
-
-    tx = conn->tx;
-    q->conn = conn;
-    q->nextQ = q;
-    q->prevQ = q;
-    q->name = sclone(name);
-    q->max = conn->limits->bufferSize;
-    q->low = q->max / 100 *  5;
-    if (tx && tx->chunkSize > 0) {
-        q->packetSize = tx->chunkSize;
-    } else {
-        q->packetSize = q->max;
+    if (packetSize > 0) {
+        q->packetSize = packetSize;
+    }
+    if (max >= 0) {
+        q->max = max;
+        q->low = q->max / 4;
+    }
+    if (low >= 0) {
+        q->low = low;
     }
 }
 
 
-PUBLIC void httpSetQueueLimits(HttpQueue *q, ssize low, ssize max)
+PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2)
 {
-    q->low = low;
-    q->max = max;
+    q1->pair = q2;
+    q2->pair = q1;
 }
-
-
-#if KEEP
-/*
-    Insert a queue after the previous element
- */
-PUBLIC void httpAppendQueueToHead(HttpQueue *head, HttpQueue *q)
-{
-    q->nextQ = head;
-    q->prevQ = head->prevQ;
-    head->prevQ->nextQ = q;
-    head->prevQ = q;
-}
-#endif
 
 
 PUBLIC bool httpIsQueueSuspended(HttpQueue *q)
@@ -11734,7 +17372,11 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
                 continue;
             } else {
                 len = httpGetPacketLength(packet);
-                q->conn->tx->length -= len;
+                //  TODO - should do this in caller or have higher level routine that does this with "conn" as arg
+                //  TODO - or should we just set tx->length to zero?
+                if (q->conn && q->conn->tx && q->conn->tx->length > 0) {
+                    q->conn->tx->length -= len;
+                }
                 q->count -= len;
                 assert(q->count >= 0);
                 if (packet->content) {
@@ -11748,41 +17390,41 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
 
 
 /*
-    Flush queue data by scheduling the queue and servicing all scheduled queues. Return true if there is room for more data.
-    If blocking is requested, the call will block until the queue count falls below the queue max.
-    WARNING: Be very careful when using blocking == true. Should only be used by end applications and not by middleware.
+    Flush queue data toward the connector by scheduling the queue and servicing all scheduled queues.
+    Return true if there is room for more data. If blocking is requested, the call will block until
+    the queue count falls below the queue max. WARNING: Be very careful when using blocking == true.
+    Should only be used by end applications and not by middleware.
+    NOTE: may return early if the inactivityTimeout expires.
+    WARNING: may yield.
  */
 PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
 {
-    HttpConn    *conn;
-    HttpTx      *tx;
+    HttpNet     *net;
 
-    conn = q->conn;
-    tx = conn->tx;
+    net = q->net;
 
     /*
         Initiate flushing
      */
     httpScheduleQueue(q);
-    httpServiceQueues(conn, flags);
+    httpServiceQueues(net, flags);
 
     if (flags & HTTP_BLOCK) {
         /*
             Blocking mode: Fully drain the pipeline. This blocks until the connector has written all the data
             to the O/S socket.
          */
-        while (tx->writeBlocked || conn->connectorq->count > 0 || conn->connectorq->ioCount) {
-            if (conn->connError) {
+        while (net->socketq->count > 0 || net->socketq->ioCount) {
+            if (net->error) {
                 break;
             }
-            assert(!tx->finalizedConnector);
-            assert(conn->connectorq->count > 0 || conn->connectorq->ioCount);
-            if (!mprWaitForSingleIO((int) conn->sock->fd, MPR_WRITABLE, conn->limits->inactivityTimeout)) {
+            if (!mprWaitForSingleIO((int) net->sock->fd, MPR_WRITABLE, net->limits->inactivityTimeout)) {
                 break;
             }
-            conn->lastActivity = conn->http->now;
-            httpResumeQueue(conn->connectorq);
-            httpServiceQueues(conn, flags);
+            net->lastActivity = net->http->now;
+            httpResumeQueue(net->socketq);
+            httpScheduleQueue(net->socketq);
+            httpServiceQueues(net, flags);
         }
     }
     return (q->count < q->max) ? 1 : 0;
@@ -11800,15 +17442,18 @@ PUBLIC void httpFlush(HttpConn *conn)
  */
 PUBLIC void httpFlushAll(HttpConn *conn)
 {
-    httpFlushQueue(conn->writeq, conn->async ? HTTP_NON_BLOCK : HTTP_BLOCK);
+    httpFlushQueue(conn->writeq, conn->net->async ? HTTP_NON_BLOCK : HTTP_BLOCK);
 }
 
 
 PUBLIC void httpResumeQueue(HttpQueue *q)
 {
-    if (q) {
+    if (q && (q->flags & HTTP_QUEUE_SUSPENDED)) {
         q->flags &= ~HTTP_QUEUE_SUSPENDED;
         httpScheduleQueue(q);
+    }
+    if (q->count == 0 && q->prevQ->flags & HTTP_QUEUE_SUSPENDED) {
+        httpResumeQueue(q->prevQ);
     }
 }
 
@@ -11865,12 +17510,13 @@ PUBLIC void httpInitSchedulerQueue(HttpQueue *q)
 /*
     Append a queue after the previous element
  */
-PUBLIC void httpAppendQueue(HttpQueue *prev, HttpQueue *q)
+PUBLIC HttpQueue *httpAppendQueue(HttpQueue *q, HttpQueue *prev)
 {
     q->nextQ = prev->nextQ;
     q->prevQ = prev;
     prev->nextQ->prevQ = q;
     prev->nextQ = q;
+    return q;
 }
 
 
@@ -11892,8 +17538,7 @@ PUBLIC void httpScheduleQueue(HttpQueue *q)
 {
     HttpQueue     *head;
 
-    assert(q->conn);
-    head = q->conn->serviceq;
+    head = q->net->serviceq;
 
     if (q->scheduleNext == q && !(q->flags & HTTP_QUEUE_SUSPENDED)) {
         q->scheduleNext = head;
@@ -11904,9 +17549,13 @@ PUBLIC void httpScheduleQueue(HttpQueue *q)
 }
 
 
-PUBLIC void httpServiceQueue(HttpQueue *q)
+static void serviceQueue(HttpQueue *q)
 {
-    q->conn->currentq = q;
+    /*
+        Hold the queue for GC while scheduling.
+        TODO - this is probably not required as the queue is always linked into a pipeline
+     */
+    q->net->holdq = q;
 
     if (q->servicing) {
         q->flags |= HTTP_QUEUE_RESERVICE;
@@ -11914,14 +17563,12 @@ PUBLIC void httpServiceQueue(HttpQueue *q)
         /*
             Since we are servicing this "q" now, we can remove from the schedule queue if it is already queued.
          */
-        if (q->conn->serviceq->scheduleNext == q) {
-            httpGetNextQueueForService(q->conn->serviceq);
+        if (q->net->serviceq->scheduleNext == q) {
+            httpGetNextQueueForService(q->net->serviceq);
         }
         if (!(q->flags & HTTP_QUEUE_SUSPENDED)) {
             q->servicing = 1;
-            if (q->service) {
-                q->service(q);
-            }
+            q->service(q);
             if (q->flags & HTTP_QUEUE_RESERVICE) {
                 q->flags &= ~HTTP_QUEUE_RESERVICE;
                 httpScheduleQueue(q);
@@ -11934,30 +17581,66 @@ PUBLIC void httpServiceQueue(HttpQueue *q)
 
 
 /*
+    Run the queue service routines until there is no more work to be done.
+    If flags & HTTP_BLOCK, this routine may block while yielding.  Return true if actual work was done.
+ */
+PUBLIC bool httpServiceQueues(HttpNet *net, int flags)
+{
+    HttpQueue   *q;
+    bool        workDone;
+
+    workDone = 0;
+
+    /*
+        If switching to net->queues -- may need some limit on number of iterations
+     */
+    while ((q = httpGetNextQueueForService(net->serviceq)) != NULL) {
+        if (q->servicing) {
+            /* Called re-entrantly */
+            q->flags |= HTTP_QUEUE_RESERVICE;
+        } else {
+            assert(q->schedulePrev == q->scheduleNext);
+            serviceQueue(q);
+            workDone = 1;
+        }
+        if (mprNeedYield() && (flags & HTTP_BLOCK)) {
+            mprYield(0);
+        }
+    }
+    /*
+        Always do a yield if requested even if there are no queues to service
+     */
+    if (mprNeedYield() && (flags & HTTP_BLOCK)) {
+        mprYield(0);
+    }
+    return workDone;
+}
+
+
+/*
     Return true if the next queue will accept this packet. If not, then disable the queue's service procedure.
     This may split the packet if it exceeds the downstreams maximum packet size.
  */
-PUBLIC bool httpWillNextQueueAcceptPacket(HttpQueue *q, HttpPacket *packet)
+PUBLIC bool httpWillQueueAcceptPacket(HttpQueue *q, HttpQueue *nextQ, HttpPacket *packet)
 {
-    HttpQueue   *nextQ;
-    ssize       size;
+    ssize       room, size;
 
-    nextQ = q->nextQ;
     size = httpGetPacketLength(packet);
-    if (size <= nextQ->packetSize && (size + nextQ->count) <= nextQ->max) {
+    room = min(nextQ->packetSize, nextQ->max - nextQ->count);
+    if (size <= room) {
         return 1;
     }
-    httpResizePacket(q, packet, 0);
-    size = httpGetPacketLength(packet);
-    assert(size <= nextQ->packetSize);
-    /*
-        Packet size is now acceptable. Accept the packet if the queue is mostly empty (< low) or if the
-        packet will fit entirely under the max or if the queue.
-        NOTE: queue maximums are advisory. We choose to potentially overflow the max here to optimize the case where
-        the queue may have say one byte and a max size packet would overflow by 1.
-     */
-    if (nextQ->count < nextQ->low || (size + nextQ->count) <= nextQ->max) {
-        return 1;
+    if (room > 0) {
+        /*
+            Resize the packet to fit downstream. This will putback the tail if required.
+         */
+        httpResizePacket(q, packet, room);
+        size = httpGetPacketLength(packet);
+        assert(size <= room);
+        assert(size <= nextQ->packetSize);
+        if (size > 0) {
+            return 1;
+        }
     }
     /*
         The downstream queue cannot accept this packet, so disable queue and mark the downstream queue as full and service
@@ -11970,32 +17653,10 @@ PUBLIC bool httpWillNextQueueAcceptPacket(HttpQueue *q, HttpPacket *packet)
 }
 
 
-#if KEEP
-PUBLIC bool httpWillQueueAcceptPacket(HttpQueue *q, HttpPacket *packet, bool split)
+PUBLIC bool httpWillNextQueueAcceptPacket(HttpQueue *q, HttpPacket *packet)
 {
-    ssize       size;
-
-    size = httpGetPacketLength(packet);
-    if (size <= q->packetSize && (size + q->count) <= q->max) {
-        return 1;
-    }
-    if (split) {
-        httpResizePacket(q, packet, 0);
-        size = httpGetPacketLength(packet);
-        assert(size <= q->packetSize);
-        if ((size + q->count) <= q->max) {
-            return 1;
-        }
-    }
-    /*
-        The downstream queue is full, so disable the queue and mark the downstream queue as full and service
-     */
-    if (!(q->flags & HTTP_QUEUE_SUSPENDED)) {
-        httpScheduleQueue(q);
-    }
-    return 0;
+    return httpWillQueueAcceptPacket(q, q->nextQ, packet);
 }
-#endif
 
 
 /*
@@ -12050,6 +17711,9 @@ PUBLIC bool httpVerifyQueue(HttpQueue *q)
 
 /*
     rangeFilter.c - Ranged request filter.
+
+    This is an output only filter to select a subet range of data to transfer to the client.
+
     Copyright (c) All Rights Reserved. See details at the end of the file.
  */
 
@@ -12063,10 +17727,11 @@ PUBLIC bool httpVerifyQueue(HttpQueue *q)
 
 /********************************** Forwards **********************************/
 
-static bool applyRange(HttpQueue *q, HttpPacket *packet);
+static HttpPacket *selectBytes(HttpQueue *q, HttpPacket *packet);
 static void createRangeBoundary(HttpConn *conn);
 static HttpPacket *createRangePacket(HttpConn *conn, HttpRange *range);
 static HttpPacket *createFinalRangePacket(HttpConn *conn);
+static void manageRange(HttpRange *range, int flags);
 static void outgoingRangeService(HttpQueue *q);
 static bool fixRangeLength(HttpConn *conn, HttpQueue *q);
 static int matchRange(HttpConn *conn, HttpRoute *route, int dir);
@@ -12086,6 +17751,28 @@ PUBLIC int httpOpenRangeFilter()
     filter->start = startRange;
     filter->outgoingService = outgoingRangeService;
     return 0;
+}
+
+
+PUBLIC HttpRange *httpCreateRange(HttpConn *conn, MprOff start, MprOff end)
+{
+    HttpRange     *range;
+
+    if ((range = mprAllocObj(HttpRange, manageRange)) == 0) {
+        return 0;
+    }
+    range->start = start;
+    range->end = end;
+    range->len = end - start;
+    return range;
+}
+
+
+static void manageRange(HttpRange *range, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(range->next);
+    }
 }
 
 
@@ -12119,6 +17806,9 @@ static void startRange(HttpQueue *q)
         tx->outputRanges = 0;
     } else {
         tx->status = HTTP_CODE_PARTIAL;
+        /*
+            More than one range so create a range boundary (like chunking)
+         */
         if (tx->outputRanges->next) {
             createRangeBoundary(conn);
         }
@@ -12149,27 +17839,24 @@ static void outgoingRangeService(HttpQueue *q)
     }
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
         if (packet->flags & HTTP_PACKET_DATA) {
-            if (!applyRange(q, packet)) {
-                return;
+            if ((packet = selectBytes(q, packet)) == 0) {
+                continue;
             }
-        } else {
-            /*
-                Send headers and end packet downstream
-             */
-            if (packet->flags & HTTP_PACKET_END && tx->rangeBoundary) {
+        } else if (packet->flags & HTTP_PACKET_END) {
+            if (tx->rangeBoundary) {
                 httpPutPacketToNext(q, createFinalRangePacket(conn));
             }
-            if (!httpWillNextQueueAcceptPacket(q, packet)) {
-                httpPutBackPacket(q, packet);
-                return;
-            }
-            httpPutPacketToNext(q, packet);
         }
+        if (!httpWillNextQueueAcceptPacket(q, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        httpPutPacketToNext(q, packet);
     }
 }
 
 
-static bool applyRange(HttpQueue *q, HttpPacket *packet)
+static HttpPacket *selectBytes(HttpQueue *q, HttpPacket *packet)
 {
     HttpRange   *range;
     HttpConn    *conn;
@@ -12179,28 +17866,24 @@ static bool applyRange(HttpQueue *q, HttpPacket *packet)
 
     conn = q->conn;
     tx = conn->tx;
-    range = tx->currentRange;
-
-    if (mprNeedYield()) {
-        httpScheduleQueue(q);
-        httpPutBackPacket(q, packet);
+    
+    if ((range = tx->currentRange) == 0) {
         return 0;
     }
+
     /*
         Process the data packet over multiple ranges ranges until all the data is processed or discarded.
-        A packet may contain data or it may be empty with an associated entityLength. If empty, range packets
-        are filled with entity data as required.
      */
     while (range && packet) {
-        length = httpGetPacketEntityLength(packet);
+        length = httpGetPacketLength(packet);
         if (length <= 0) {
-            break;
+            return 0;
         }
         endPacket = tx->rangePos + length;
         if (endPacket < range->start) {
             /* Packet is before the next range, so discard the entire packet and seek forwards */
             tx->rangePos += length;
-            break;
+            return 0;
 
         } else if (tx->rangePos < range->start) {
             /*  Packet starts before range so skip some data, but some packet data is in range */
@@ -12209,37 +17892,33 @@ static bool applyRange(HttpQueue *q, HttpPacket *packet)
             if (gap < length) {
                 httpAdjustPacketStart(packet, (ssize) gap);
             }
+            if (tx->rangePos >= range->end) {
+                range = tx->currentRange = range->next;
+            }
             /* Keep going and examine next range */
 
         } else {
             /* In range */
             assert(range->start <= tx->rangePos && tx->rangePos < range->end);
             span = min(length, (range->end - tx->rangePos));
+            span = max(span, 0);
             count = (ssize) min(span, q->nextQ->packetSize);
             assert(count > 0);
-            if (!httpWillNextQueueAcceptSize(q, count)) {
-                httpPutBackPacket(q, packet);
-                return 0;
-            }
             if (length > count) {
                 /* Split packet if packet extends past range */
                 httpPutBackPacket(q, httpSplitPacket(packet, count));
             }
-            if (packet->fill && (*packet->fill)(q, packet, tx->rangePos, count) < 0) {
-                return 0;
-            }
             if (tx->rangeBoundary) {
                 httpPutPacketToNext(q, createRangePacket(conn, range));
             }
-            httpPutPacketToNext(q, packet);
-            packet = 0;
             tx->rangePos += count;
-        }
-        if (tx->rangePos >= range->end) {
-            tx->currentRange = range = range->next;
+            if (tx->rangePos >= range->end) {
+                tx->currentRange = range->next;
+            }
+            break;
         }
     }
-    return 1;
+    return packet;
 }
 
 
@@ -12256,7 +17935,7 @@ static HttpPacket *createRangePacket(HttpConn *conn, HttpRange *range)
 
     length = (tx->entityLength >= 0) ? itos(tx->entityLength) : "*";
     packet = httpCreatePacket(HTTP_RANGE_BUFSIZE);
-    packet->flags |= HTTP_PACKET_RANGE;
+    packet->flags |= HTTP_PACKET_RANGE | HTTP_PACKET_DATA;
     mprPutToBuf(packet->content,
         "\r\n--%s\r\n"
         "Content-Range: bytes %lld-%lld/%s\r\n\r\n",
@@ -12276,7 +17955,7 @@ static HttpPacket *createFinalRangePacket(HttpConn *conn)
     tx = conn->tx;
 
     packet = httpCreatePacket(HTTP_RANGE_BUFSIZE);
-    packet->flags |= HTTP_PACKET_RANGE;
+    packet->flags |= HTTP_PACKET_RANGE | HTTP_PACKET_DATA;
     mprPutToBuf(packet->content, "\r\n--%s--\r\n", tx->rangeBoundary);
     return packet;
 }
@@ -12444,10 +18123,8 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     route->defaultLanguage = sclone("en");
     route->home = route->documents = mprGetCurrentPath();
     route->flags = HTTP_ROUTE_STEALTH;
-
     route->flags |= HTTP_ROUTE_ENV_ESCAPE;
     route->envPrefix = sclone("CGI_");
-
     route->host = host;
     route->http = HTTP;
     route->lifespan = ME_MAX_CACHE_DURATION;
@@ -12457,9 +18134,7 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     route->workers = -1;
     route->prefix = MPR->emptyString;
     route->trace = http->trace;
-#if DEPRECATE
-    route->serverPrefix = MPR->emptyString;
-#endif
+
     route->headers = mprCreateList(-1, MPR_LIST_STABLE);
     route->handlers = mprCreateList(-1, MPR_LIST_STABLE);
     route->indexes = mprCreateList(-1, MPR_LIST_STABLE);
@@ -12473,8 +18148,9 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
 
     httpAddRouteMethods(route, NULL);
     httpAddRouteFilter(route, http->rangeFilter->name, NULL, HTTP_STAGE_TX);
-    httpAddRouteFilter(route, http->chunkFilter->name, NULL, HTTP_STAGE_RX | HTTP_STAGE_TX);
-
+    if (http->uploadFilter) {
+        httpAddRouteFilter(route, http->uploadFilter->name, NULL, HTTP_STAGE_TX);
+    }
     /*
         Standard headers for all routes. These should not break typical content
         Users then vary via header directives
@@ -12567,9 +18243,6 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     route->updates = parent->updates;
     route->vars = parent->vars;
     route->workers = parent->workers;
-#if DEPRECATE
-    route->serverPrefix = parent->serverPrefix;
-#endif
     return route;
 }
 
@@ -12632,9 +18305,6 @@ static void manageRoute(HttpRoute *route, int flags)
         mprMark(route->updates);
         mprMark(route->vars);
         mprMark(route->webSocketsProtocol);
-#if DEPRECATE
-        mprMark(route->serverPrefix);
-#endif
 
     } else if (flags & MPR_MANAGE_FREE) {
         if (route->patternCompiled && (route->flags & HTTP_ROUTE_FREE_PATTERN)) {
@@ -12658,7 +18328,7 @@ PUBLIC HttpRoute *httpCreateDefaultRoute(HttpHost *host)
 
 
 /*
-    Create and configure a basic route. This is used for client side and Ejscript routes. Host may be null.
+    Create and configure a basic route. This is used for client side routes. Host may be null.
  */
 PUBLIC HttpRoute *httpCreateConfiguredRoute(HttpHost *host, int serverSide)
 {
@@ -12673,9 +18343,6 @@ PUBLIC HttpRoute *httpCreateConfiguredRoute(HttpHost *host, int serverSide)
 #if ME_HTTP_WEB_SOCKETS
     httpAddRouteFilter(route, http->webSocketFilter->name, NULL, HTTP_STAGE_RX | HTTP_STAGE_TX);
 #endif
-    if (serverSide) {
-        httpAddRouteFilter(route, http->uploadFilter->name, NULL, HTTP_STAGE_RX);
-    }
     return route;
 }
 
@@ -12742,7 +18409,7 @@ PUBLIC void httpStopRoute(HttpRoute *route)
 
 /*
     Find the matching route and handler for a request. If any errors occur, the pass handler is used to
-    pass errors via the net/sendfile connectors onto the client. This process may rewrite the request
+    pass errors via the net connector onto the client. This process may rewrite the request
     URI and may redirect the request.
  */
 PUBLIC void httpRouteRequest(HttpConn *conn)
@@ -12812,7 +18479,7 @@ PUBLIC void httpRouteRequest(HttpConn *conn)
 static int matchRoute(HttpConn *conn, HttpRoute *route)
 {
     HttpRx      *rx;
-    char        *savePathInfo, *pathInfo;
+    cchar       *savePathInfo, *pathInfo;
     int         rc;
 
     assert(conn);
@@ -12904,8 +18571,7 @@ static int checkRoute(HttpConn *conn, HttpRoute *route)
     if (route->requestHeaders) {
         for (next = 0; (op = mprGetNextItem(route->requestHeaders, &next)) != 0; ) {
             if ((header = httpGetHeader(conn, op->name)) != 0) {
-                count = pcre_exec(op->mdata, NULL, header, (int) slen(header), 0, 0,
-                    matched, sizeof(matched) / sizeof(int));
+                count = pcre_exec(op->mdata, NULL, header, (int) slen(header), 0, 0, matched, sizeof(matched) / sizeof(int));
                 result = count > 0;
                 if (op->flags & HTTP_ROUTE_NOT) {
                     result = !result;
@@ -12919,8 +18585,7 @@ static int checkRoute(HttpConn *conn, HttpRoute *route)
     if (route->params) {
         for (next = 0; (op = mprGetNextItem(route->params, &next)) != 0; ) {
             if ((field = httpGetParam(conn, op->name, "")) != 0) {
-                count = pcre_exec(op->mdata, NULL, field, (int) slen(field), 0, 0,
-                    matched, sizeof(matched) / sizeof(int));
+                count = pcre_exec(op->mdata, NULL, field, (int) slen(field), 0, 0, matched, sizeof(matched) / sizeof(int));
                 result = count > 0;
                 if (op->flags & HTTP_ROUTE_NOT) {
                     result = !result;
@@ -13065,7 +18730,7 @@ PUBLIC cchar *httpMapContent(HttpConn *conn, cchar *filename)
                     path = sjoin(filename, ext, NULL);
                 }
                 if (mprGetPathInfo(path, &info) == 0) {
-                    httpTrace(conn, "request.map", "context", "originalFilename:'%s',filename:'%s'", filename, path);
+                    httpTrace(conn->trace, "route.map", "context", "originalFilename:'%s', filename:'%s'", filename, path);
                     filename = path;
                     if (zipped) {
                         httpSetHeader(conn, "Content-Encoding", "gzip");
@@ -13160,10 +18825,13 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
     HttpStage   *stage;
     HttpStage   *filter;
     char        *extlist, *word, *tok;
-    int         pos, next;
+    int         next;
 
     assert(route);
 
+    if (smatch(name, "uploadFilter") || smatch(name, "chunkFilter")) {
+        return 0;
+    }
     for (ITERATE_ITEMS(route->outputStages, stage, next)) {
         if (smatch(stage->name, name)) {
             mprLog("warn http route", 0, "Stage \"%s\" is already configured for the route \"%s\". Ignoring.",
@@ -13204,13 +18872,7 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
     }
     if (direction & HTTP_STAGE_TX && filter->outgoing) {
         GRADUATE_LIST(route, outputStages);
-        if (smatch(name, "cacheFilter") &&
-                (pos = mprGetListLength(route->outputStages) - 1) >= 0 &&
-                smatch(((HttpStage*) mprGetLastItem(route->outputStages))->name, "chunkFilter")) {
-            mprInsertItemAtPos(route->outputStages, pos, filter);
-        } else {
-            mprAddItem(route->outputStages, filter);
-        }
+        mprAddItem(route->outputStages, filter);
     }
     return 0;
 }
@@ -13815,26 +19477,6 @@ PUBLIC void httpSetRoutePreserveFrames(HttpRoute *route, bool on)
 }
 
 
-#if DEPRECATE
-PUBLIC void httpSetRouteServerPrefix(HttpRoute *route, cchar *prefix)
-{
-    assert(route);
-    assert(!smatch(prefix, "/"));
-
-    if (prefix && *prefix) {
-        if (smatch(prefix, "/")) {
-            route->serverPrefix = MPR->emptyString;
-        } else {
-            route->serverPrefix = sclone(prefix);
-        }
-    } else {
-        route->serverPrefix = MPR->emptyString;
-    }
-    assert(route->serverPrefix);
-}
-#endif
-
-
 PUBLIC void httpSetRouteSessionVisibility(HttpRoute *route, bool visible)
 {
     route->flags &= ~HTTP_ROUTE_VISIBLE_SESSION;
@@ -13914,7 +19556,6 @@ PUBLIC int httpSetRouteTarget(HttpRoute *route, cchar *rule, cchar *details)
             return MPR_ERR_BAD_SYNTAX;
         }
         route->target = finalizeReplacement(route, redirect);
-        return 0;
 
     } else if (scaselessmatch(rule, "run")) {
         route->target = finalizeReplacement(route, details);
@@ -14288,7 +19929,7 @@ PUBLIC void httpFinalizeRoute(HttpRoute *route)
 PUBLIC cchar *httpGetRouteTop(HttpConn *conn)
 {
     HttpRx  *rx;
-    char   *pp, *top;
+    cchar   *pp, *top;
     int     count;
 
     rx = conn->rx;
@@ -14302,9 +19943,6 @@ PUBLIC cchar *httpGetRouteTop(HttpConn *conn)
         if (*pp == '/' && count++ > 0) {
             top = sjoin(top, "../", NULL);
         }
-    }
-    if (*top) {
-        top[slen(top) - 1] = '\0';
     }
     return top;
 }
@@ -14322,7 +19960,7 @@ PUBLIC char *httpTemplate(HttpConn *conn, cchar *template, MprHash *options)
     HttpRx      *rx;
     HttpRoute   *route;
     cchar       *cp, *ep, *value;
-    char        key[ME_MAX_BUFFER];
+    char        key[ME_BUFSIZE];
 
     rx = conn->rx;
     route = rx->route;
@@ -14333,11 +19971,6 @@ PUBLIC char *httpTemplate(HttpConn *conn, cchar *template, MprHash *options)
     for (cp = template; *cp; cp++) {
         if (cp == template && *cp == '~') {
             mprPutStringToBuf(buf, httpGetRouteTop(conn));
-#if DEPRECATE
-        } else if (cp == template && *cp == '|') {
-            mprPutStringToBuf(buf, route->prefix);
-            mprPutStringToBuf(buf, route->serverPrefix);
-#endif
 
         } else if (*cp == '$' && cp[1] == '{' && (cp == template || cp[-1] != '\\')) {
             cp += 2;
@@ -14496,7 +20129,7 @@ static int testCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *conditio
 
 
 /*
-    Allow/Deny authorization
+    Allow/Deny authorization based on network IP
  */
 static int allowDenyCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 {
@@ -14548,6 +20181,7 @@ static int allowDenyCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 
 /*
     This condition is used to implement all user authentication for routes
+    It accesses form body parameters for login.
  */
 static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 {
@@ -14558,8 +20192,8 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
     assert(route);
 
     auth = route->auth;
-    if (!auth || !auth->type) {
-        /* Authentication not required */
+    if (!auth || !auth->type || !(auth->type->flags & HTTP_AUTH_TYPE_CONDITION)) {
+        /* Authentication not required or not using authCondition */
         return HTTP_ROUTE_OK;
     }
     if (!httpIsAuthenticated(conn)) {
@@ -14571,21 +20205,21 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
                     httpError(conn, HTTP_CODE_UNAUTHORIZED, "Access Denied, login required");
                 }
             }
-            /* 
-                Request has been denied and a response generated. So OK to accept this route. 
+            /*
+                Request has been denied and a response generated. So OK to accept this route.
              */
             return HTTP_ROUTE_OK;
         }
     }
     if (!httpCanUser(conn, NULL)) {
-        httpTrace(conn, "auth.check", "error", "msg:'Access denied, user is not authorized for access'");
+        httpTrace(conn->trace, "auth.check", "error", "msg:'Access denied, user is not authorized for access'");
         if (!conn->tx->finalized) {
             httpError(conn, HTTP_CODE_FORBIDDEN, "Access denied. User is not authorized for access.");
             /* Request has been denied and a response generated. So OK to accept this route. */
         }
     }
-    /* 
-        OK to accept route. This does not mean the request was authenticated - an error may have been already generated 
+    /*
+        OK to accept route. This does not mean the request was authenticated - an error may have been already generated
      */
     return HTTP_ROUTE_OK;
 }
@@ -14593,6 +20227,7 @@ static int authCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 
 /*
     This condition is used for "Condition unauthorized"
+    It accesses form body parameters for login.
  */
 static int unauthorizedCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 {
@@ -14600,7 +20235,7 @@ static int unauthorizedCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *
     cchar       *username, *password;
 
     auth = route->auth;
-    if (!auth || !auth->type) {
+    if (!auth || !auth->type || !(auth->type->flags & HTTP_AUTH_TYPE_CONDITION)) {
         return HTTP_ROUTE_REJECT;
     }
     if (httpIsAuthenticated(conn)) {
@@ -14670,6 +20305,9 @@ static int existsCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 }
 
 
+/*
+    Test if a condition matches by regular expression
+ */
 static int matchCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 {
     char    *str;
@@ -14689,7 +20327,7 @@ static int matchCondition(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 
 
 /*
-    Test if the connection is secure
+    Test if the connection is secure.
     Set op->details to a non-zero "age" to emit a Strict-Transport-Security header
     A negative age signifies to "includeSubDomains"
  */
@@ -14750,11 +20388,11 @@ static int cmdUpdate(HttpConn *conn, HttpRoute *route, HttpRouteOp *op)
 
     command = expandTokens(conn, op->details);
     cmd = mprCreateCmd(conn->dispatcher);
-    httpTrace(conn, "request.run", "context", "command:'%s'", command);
+    httpTrace(conn->trace, "route.run", "context", "command:'%s'", command);
     if ((status = mprRunCmd(cmd, command, NULL, NULL, &out, &err, -1, 0)) != 0) {
         /* Don't call httpError, just set errorMsg which can be retrieved via: ${request:error} */
         conn->errorMsg = sfmt("Command failed: %s\nStatus: %d\n%s\n%s", command, status, out, err);
-        httpTrace(conn, "request.run.error", "error", "command:'%s',error:'%s'", command, conn->errorMsg);
+        httpTrace(conn->trace, "route.run.error", "error", "command:'%s', error:'%s'", command, conn->errorMsg);
         /* Continue */
     }
     mprDestroyCmd(cmd);
@@ -14874,13 +20512,6 @@ PUBLIC HttpRoute *httpDefineRoute(HttpRoute *parent, cchar *methods, cchar *patt
     if ((route = httpCreateInheritedRoute(parent)) == 0) {
         return 0;
     }
-#if DEPRECATE
-    if (schr(target, '-')) {
-        char   *controller, *action;
-        controller = ssplit(sclone(target), "-", &action);
-        target = sjoin(controller, "/", action, NULL);
-    }
-#endif
     httpSetRoutePattern(route, pattern, 0);
     if (methods) {
         httpSetRouteMethods(route, methods);
@@ -14898,19 +20529,11 @@ PUBLIC HttpRoute *httpAddRestfulRoute(HttpRoute *parent, cchar *methods, cchar *
 {
     cchar   *source;
 
-#if DEPRECATE
-    if (*resource == '{') {
-        pattern = sfmt("^%s%s/%s%s", parent->prefix, parent->serverPrefix, resource, pattern);
-    } else {
-        pattern = sfmt("^%s%s/{controller=%s}%s", parent->prefix, parent->serverPrefix, resource, pattern);
-    }
-#else
     if (*resource == '{') {
         pattern = sfmt("^%s/%s%s", parent->prefix, resource, pattern);
     } else {
         pattern = sfmt("^%s/{controller=%s}%s", parent->prefix, resource, pattern);
     }
-#endif
     if (target && *target) {
         target = sjoin("/", target, NULL);
     }
@@ -14981,11 +20604,7 @@ PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *parent, cchar *action)
     HttpLimits  *limits;
     cchar       *path, *pattern;
 
-#if DEPRECATE
-    pattern = sfmt("^%s%s/{controller}/%s", parent->prefix, parent->serverPrefix, action);
-#else
     pattern = sfmt("^%s/{controller}/%s", parent->prefix, action);
-#endif
     path = sjoin("$1/", action, NULL);
     route = httpDefineRoute(parent, "GET", pattern, path, "${controller}.c");
     httpAddRouteFilter(route, "webSocketFilter", "", HTTP_STAGE_RX | HTTP_STAGE_TX);
@@ -15117,9 +20736,6 @@ static void defineHostVars(HttpRoute *route)
     mprAddKey(route->vars, "DOCUMENTS", route->documents);
     mprAddKey(route->vars, "HOME", route->home);
     mprAddKey(route->vars, "HOST", route->host->name);
-#if DEPRECATE
-    mprAddKey(route->vars, "SERVER_NAME", route->host->name);
-#endif
 }
 
 
@@ -15268,6 +20884,7 @@ static char *expandRequestTokens(HttpConn *conn, char *str)
             } else if (smatch(value, "uri")) {
                 mprPutStringToBuf(buf, rx->uri);
             }
+
         } else if (smatch(key, "ssl")) {
             value = stok(value, "=", &defaultValue);
             if (smatch(value, "state")) {
@@ -15791,32 +21408,14 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits)
 
 /***************************** Forward Declarations ***************************/
 
-static void addMatchEtag(HttpConn *conn, char *etag);
-static void delayAwake(HttpConn *conn, MprEvent *event);
-static char *getToken(HttpConn *conn, cchar *delim);
-static bool getOutput(HttpConn *conn);
-static void manageRange(HttpRange *range, int flags);
 static void manageRx(HttpRx *rx, int flags);
-static bool parseHeaders(HttpConn *conn, HttpPacket *packet);
-static bool parseIncoming(HttpConn *conn);
-static bool parseRange(HttpConn *conn, char *value);
-static bool parseRequestLine(HttpConn *conn, HttpPacket *packet);
-static bool parseResponseLine(HttpConn *conn, HttpPacket *packet);
-static void parseUri(HttpConn *conn);
-static bool processCompletion(HttpConn *conn);
-static bool processFinalized(HttpConn *conn);
-static bool processContent(HttpConn *conn);
-static void parseMethod(HttpConn *conn);
-static bool processParsed(HttpConn *conn);
-static bool processReady(HttpConn *conn);
-static bool processRunning(HttpConn *conn);
-static int sendContinue(HttpConn *conn);
 
 /*********************************** Code *************************************/
 
 PUBLIC HttpRx *httpCreateRx(HttpConn *conn)
 {
     HttpRx      *rx;
+    int         peer;
 
     if ((rx = mprAllocObj(HttpRx, manageRx)) == 0) {
         return 0;
@@ -15830,7 +21429,10 @@ PUBLIC HttpRx *httpCreateRx(HttpConn *conn)
     rx->needInputPipeline = httpClientConn(conn);
     rx->headers = mprCreateHash(HTTP_SMALL_HASH_SIZE, MPR_HASH_CASELESS | MPR_HASH_STABLE);
     rx->chunkState = HTTP_CHUNK_UNCHUNKED;
-    rx->seqno = ++conn->totalRequests;
+
+    rx->seqno = ++conn->net->totalRequests;
+    peer = conn->net->address ? conn->net->address->seqno : 0;
+    rx->traceId = sfmt("%d-0-%d-%d", peer, conn->net->seqno, rx->seqno);
     return rx;
 }
 
@@ -15843,6 +21445,7 @@ static void manageRx(HttpRx *rx, int flags)
         mprMark(rx->acceptEncoding);
         mprMark(rx->acceptLanguage);
         mprMark(rx->authDetails);
+        mprMark(rx->authType);
         mprMark(rx->conn);
         mprMark(rx->connection);
         mprMark(rx->contentLength);
@@ -15877,6 +21480,7 @@ static void manageRx(HttpRx *rx, int flags)
         mprMark(rx->statusMessage);
         mprMark(rx->svars);
         mprMark(rx->target);
+        mprMark(rx->traceId);
         mprMark(rx->upgrade);
         mprMark(rx->uri);
         mprMark(rx->userAgent);
@@ -15894,1186 +21498,6 @@ PUBLIC void httpDestroyRx(HttpRx *rx)
 }
 
 
-/*
-    HTTP Protocol state machine for server-side requests and client responses.
-    Process an incoming request and drive the state machine. This will process only one request.
-    All socket I/O is non-blocking, and this routine must not block. Note: packet may be null.
-    Return true if the request is completed successfully.
-
-    MUST only ever be called from httpIOEvent otherwise recursion plays havoc.
- */
-PUBLIC void httpProtocol(HttpConn *conn)
-{
-    bool    canProceed;
-
-    assert(conn);
-
-    conn->lastActivity = conn->http->now;
-
-    do {
-        switch (conn->state) {
-        case HTTP_STATE_BEGIN:
-        case HTTP_STATE_CONNECTED:
-            canProceed = parseIncoming(conn);
-            break;
-
-        case HTTP_STATE_PARSED:
-            canProceed = processParsed(conn);
-            break;
-
-        case HTTP_STATE_CONTENT:
-            canProceed = processContent(conn);
-            break;
-
-        case HTTP_STATE_READY:
-            canProceed = processReady(conn);
-            break;
-
-        case HTTP_STATE_RUNNING:
-            canProceed = processRunning(conn);
-            break;
-
-        case HTTP_STATE_FINALIZED:
-            canProceed = processFinalized(conn);
-            break;
-
-        case HTTP_STATE_COMPLETE:
-            canProceed = processCompletion(conn);
-            break;
-
-        default:
-            canProceed = 0;
-            break;
-        }
-
-        httpServiceQueues(conn, HTTP_BLOCK);
-
-        /*
-            This is the primary top-level GC yield for the http engine
-         */
-        if (mprNeedYield()) {
-            mprYield(0);
-        }
-    } while (canProceed);
-}
-
-
-/*
-    Parse the incoming http message. Return true to keep going with this or subsequent request, zero means
-    insufficient data to proceed.
- */
-static bool parseIncoming(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpAddress *address;
-    HttpPacket  *packet;
-    HttpLimits  *limits;
-    char        *start, *end, *hostname;
-    ssize       len;
-    int64       value;
-
-    if ((packet = conn->input) == 0) {
-        return 0;
-    }
-    if (mprShouldDenyNewRequests()) {
-        httpError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "The server is terminating");
-        return 0;
-    }
-    assert(conn->rx);
-    assert(conn->tx);
-    rx = conn->rx;
-    limits = conn->limits;
-
-    if (httpServerConn(conn) && !conn->activeRequest) {
-        /*
-            ErrorDocuments may come through here twice so test activeRequest to keep counters valid.
-         */
-        conn->activeRequest = 1;
-        if ((value = httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) >= limits->requestsPerClientMax) {
-            httpError(conn, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
-                "Too many concurrent requests for client: %s %d/%d", conn->ip, (int) value, limits->requestsPerClientMax);
-            return 0;
-        }
-        httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
-    }
-
-    if ((len = httpGetPacketLength(packet)) == 0) {
-        return 0;
-    }
-    start = mprGetBufStart(packet->content);
-    while (*start == '\r' || *start == '\n') {
-        if (mprGetCharFromBuf(packet->content) < 0) {
-            break;
-        }
-        start = mprGetBufStart(packet->content);
-    }
-    /*
-        Don't start processing until all the headers have been received (delimited by two blank lines)
-     */
-    if ((end = sncontains(start, "\r\n\r\n", len)) == 0 && (end = sncontains(start, "\n\n", len)) == 0) {
-        if (len >= limits->headerSize) {
-            httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Header too big. Length %zd vs limit %zd", len, limits->headerSize);
-        }
-        return 0;
-    }
-    rx->headerPacketLength = len = end - start;
-
-    if (len >= limits->headerSize) {
-        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE, "Header too big. Length %zd vs limit %zd", len,
-            limits->headerSize);
-        return 0;
-    }
-    if (httpServerConn(conn)) {
-        /* This will set conn->error if it does not validate - keep going to generate a response */
-        if (!parseRequestLine(conn, packet)) {
-            return 0;
-        }
-    } else if (!parseResponseLine(conn, packet)) {
-        return 0;
-    }
-    if (!parseHeaders(conn, packet)) {
-        return 0;
-    }
-    if (httpServerConn(conn)) {
-        hostname = rx->hostHeader;
-        if (schr(rx->hostHeader, ':')) {
-            mprParseSocketAddress(rx->hostHeader, &hostname, NULL, NULL, 0);
-        }
-        if ((conn->host = httpMatchHost(conn, hostname)) == 0) {
-            conn->host = mprGetFirstItem(conn->endpoint->hosts);
-            httpError(conn, HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
-        }
-        parseUri(conn);
-
-    } else if (rx->status != HTTP_CODE_CONTINUE) {
-        /*
-            Ignore Expect status responses. NOTE: Clients have already created their Tx pipeline.
-         */
-        httpCreateRxPipeline(conn, conn->http->clientRoute);
-    }
-    if (rx->flags & HTTP_EXPECT_CONTINUE) {
-        sendContinue(conn);
-        rx->flags &= ~HTTP_EXPECT_CONTINUE;
-    }
-    httpSetState(conn, HTTP_STATE_PARSED);
-
-    if ((address = conn->address) != 0) {
-        if (address->delay) {
-            if (address->delayUntil > conn->http->now) {
-                /*
-                    Defensive counter measure - go slow
-                 */
-                mprCreateEvent(conn->dispatcher, "delayConn", conn->delay, delayAwake, conn, 0);
-                return 0;
-            } else {
-                address->delay = 0;
-                httpTrace(conn, "monitor.delay.stop", "context", "client:'%s'", conn->ip);
-            }
-        }
-    }
-    return 1;
-}
-
-
-/*
-    Defensive countermesasure - resume output after a delay
- */
-static void delayAwake(HttpConn *conn, MprEvent *event)
-{
-    conn->delay = 0;
-    mprCreateEvent(conn->dispatcher, "resumeConn", 0, httpIOEvent, conn, 0);
-}
-
-
-static bool mapMethod(HttpConn *conn)
-{
-    HttpRx      *rx;
-    cchar       *method;
-
-    rx = conn->rx;
-    if (rx->flags & HTTP_POST && (method = httpGetParam(conn, "-http-method-", 0)) != 0) {
-        if (!scaselessmatch(method, rx->method)) {
-            httpTrace(conn, "request.method", "context", "originalMethod:'%s',method:'%s'", rx->method, method);
-            httpSetMethod(conn, method);
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-static void parseMethod(HttpConn *conn)
-{
-    HttpRx      *rx;
-    cchar       *method;
-    int         methodFlags;
-
-    rx = conn->rx;
-    method = rx->method;
-    methodFlags = 0;
-
-    switch (method[0]) {
-    case 'D':
-        if (strcmp(method, "DELETE") == 0) {
-            methodFlags = HTTP_DELETE;
-        }
-        break;
-
-    case 'G':
-        if (strcmp(method, "GET") == 0) {
-            methodFlags = HTTP_GET;
-        }
-        break;
-
-    case 'H':
-        if (strcmp(method, "HEAD") == 0) {
-            methodFlags = HTTP_HEAD;
-        }
-        break;
-
-    case 'O':
-        if (strcmp(method, "OPTIONS") == 0) {
-            methodFlags = HTTP_OPTIONS;
-        }
-        break;
-
-    case 'P':
-        if (strcmp(method, "POST") == 0) {
-            methodFlags = HTTP_POST;
-            rx->needInputPipeline = 1;
-
-        } else if (strcmp(method, "PUT") == 0) {
-            methodFlags = HTTP_PUT;
-            rx->needInputPipeline = 1;
-        }
-        break;
-
-    case 'T':
-        if (strcmp(method, "TRACE") == 0) {
-            methodFlags = HTTP_TRACE;
-        }
-        break;
-    }
-    rx->flags |= methodFlags;
-}
-
-
-/*
-    Parse the first line of a http request. Return true if the first line parsed. This is only called once all the headers
-    have been read and buffered. Requests look like: METHOD URL HTTP/1.X.
- */
-static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
-{
-    HttpRx      *rx;
-    HttpLimits  *limits;
-    char        *headers, *method, *uri, *protocol, *start;
-    MprBuf      *content;
-    ssize       len;
-
-    rx = conn->rx;
-    limits = conn->limits;
-
-    /*
-        These are initially set when the connection is accepted via httpAddConn. Revise to mark a new request.
-     */
-    conn->startMark = mprGetHiResTicks();
-    conn->started = conn->http->now;
-
-    content = packet->content;
-    start = content->start;
-    headers = httpTracing(conn) ? snclone(start, rx->headerPacketLength) : 0;
-
-    method = getToken(conn, 0);
-    rx->originalMethod = rx->method = supper(method);
-    parseMethod(conn);
-
-    uri = getToken(conn, 0);
-    len = slen(uri);
-    if (*uri == '\0') {
-        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty URI");
-        return 0;
-    } else if (len >= limits->uriSize) {
-        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_URL_TOO_LARGE,
-            "Bad request. URI too long. Length %zd vs limit %zd", len, limits->uriSize);
-        return 0;
-    }
-    protocol = getToken(conn, "\r\n");
-    conn->protocol = supper(protocol);
-    if (smatch(conn->protocol, "HTTP/1.0") || *conn->protocol == 0) {
-        if (rx->flags & (HTTP_POST|HTTP_PUT)) {
-            rx->remainingContent = HTTP_UNLIMITED;
-            rx->needInputPipeline = 1;
-        }
-        conn->http10 = 1;
-        conn->mustClose = 1;
-    } else if (strcmp(protocol, "HTTP/1.1") != 0) {
-        conn->protocol = sclone("HTTP/1.0");
-        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
-        return 0;
-    }
-    rx->uri = sclone(uri);
-    if (!rx->originalUri) {
-        rx->originalUri = rx->uri;
-    }
-    conn->http->totalRequests++;
-    httpSetState(conn, HTTP_STATE_FIRST);
-
-    if (httpTracing(conn)) {
-        httpTrace(conn, "rx.first.server", "request", "method:'%s',uri:'%s',protocol:'%s'",
-            rx->method, rx->uri, conn->protocol);
-        httpTraceContent(conn, "rx.headers.server", "context", headers, rx->headerPacketLength, NULL);
-    }
-    return 1;
-}
-
-
-/*
-    Parse the first line of a http response. Return true if the first line parsed. This is only called once all the headers
-    have been read and buffered. Response status lines look like: HTTP/1.X CODE Message
- */
-static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    MprBuf      *content;
-    cchar       *endp;
-    char        *protocol, *status;
-    ssize       len;
-
-    rx = conn->rx;
-    tx = conn->tx;
-
-    protocol = conn->protocol = supper(getToken(conn, 0));
-    if (strcmp(protocol, "HTTP/1.0") == 0) {
-        conn->http10 = 1;
-        if (!scaselessmatch(tx->method, "HEAD")) {
-            rx->remainingContent = HTTP_UNLIMITED;
-        }
-    } else if (strcmp(protocol, "HTTP/1.1") != 0) {
-        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
-        return 0;
-    }
-    status = getToken(conn, 0);
-    if (*status == '\0') {
-        httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status code");
-        return 0;
-    }
-    rx->status = atoi(status);
-    rx->statusMessage = sclone(getToken(conn, "\r\n"));
-
-    len = slen(rx->statusMessage);
-    if (len >= conn->limits->uriSize) {
-        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_URL_TOO_LARGE,
-            "Bad response. Status message too long. Length %zd vs limit %zd", len, conn->limits->uriSize);
-        return 0;
-    }
-    if (httpTracing(conn)) {
-        httpTrace(conn, "rx.first.client", "request", "status:%d,protocol:'%s'", rx->status, protocol);
-        content = packet->content;
-        endp = strstr((char*) content->start, "\r\n\r\n");
-        len = (endp) ? (int) (endp - content->start + 4) : 0;
-        httpTraceContent(conn, "rx.headers.client", "context", content->start, len, NULL);
-    }
-    if (rx->status == HTTP_CODE_CONTINUE) {
-        /* Eat the blank line and wait for the real response */
-        mprAdjustBufStart(packet->content, 2);
-        return 0;
-    }
-    return 1;
-}
-
-
-/*
-    Parse the request headers. Return true if the header parsed.
- */
-static bool parseHeaders(HttpConn *conn, HttpPacket *packet)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpLimits  *limits;
-    MprBuf      *content;
-    char        *cp, *key, *value, *tok, *hvalue;
-    cchar       *oldValue;
-    int         count, keepAliveHeader;
-
-    rx = conn->rx;
-    tx = conn->tx;
-    rx->headerPacket = packet;
-    content = packet->content;
-    limits = conn->limits;
-    keepAliveHeader = 0;
-
-    for (count = 0; content->start[0] != '\r' && !conn->error; count++) {
-        if (count >= limits->headerMax) {
-            httpLimitError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Too many headers");
-            return 0;
-        }
-        if ((key = getToken(conn, ":")) == 0 || *key == '\0') {
-            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
-            return 0;
-        }
-        value = getToken(conn, "\r\n");
-        while (isspace((uchar) *value)) {
-            value++;
-        }
-        if (strspn(key, "%<>/\\") > 0) {
-            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header key value");
-            return 0;
-        }
-        if ((oldValue = mprLookupKey(rx->headers, key)) != 0) {
-            hvalue = sfmt("%s, %s", oldValue, value);
-        } else {
-            hvalue = sclone(value);
-        }
-        mprAddKey(rx->headers, key, hvalue);
-
-        switch (tolower((uchar) key[0])) {
-        case 'a':
-            if (strcasecmp(key, "authorization") == 0) {
-                value = sclone(value);
-                conn->authType = slower(stok(value, " \t", &tok));
-                rx->authDetails = sclone(tok);
-
-            } else if (strcasecmp(key, "accept-charset") == 0) {
-                rx->acceptCharset = sclone(value);
-
-            } else if (strcasecmp(key, "accept") == 0) {
-                rx->accept = sclone(value);
-
-            } else if (strcasecmp(key, "accept-encoding") == 0) {
-                rx->acceptEncoding = sclone(value);
-
-            } else if (strcasecmp(key, "accept-language") == 0) {
-                rx->acceptLanguage = sclone(value);
-            }
-            break;
-
-        case 'c':
-            if (strcasecmp(key, "connection") == 0) {
-                rx->connection = sclone(value);
-                if (scaselesscmp(value, "KEEP-ALIVE") == 0) {
-                    keepAliveHeader = 1;
-
-                } else if (scaselesscmp(value, "CLOSE") == 0) {
-                    conn->keepAliveCount = 0;
-                    conn->mustClose = 1;
-                }
-
-            } else if (strcasecmp(key, "content-length") == 0) {
-                if (rx->length >= 0) {
-                    httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_BAD_REQUEST, "Mulitple content length headers");
-                    break;
-                }
-                rx->length = stoi(value);
-                if (rx->length < 0) {
-                    httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad content length");
-                    return 0;
-                }
-                rx->contentLength = sclone(value);
-                assert(rx->length >= 0);
-                if (httpServerConn(conn) || !scaselessmatch(tx->method, "HEAD")) {
-                    rx->remainingContent = rx->length;
-                    rx->needInputPipeline = 1;
-                }
-
-            } else if (strcasecmp(key, "content-range") == 0) {
-                /*
-                    The Content-Range header is used in the response. The Range header is used in the request.
-                    This headers specifies the range of any posted body data
-                    Format is:  Content-Range: bytes n1-n2/length
-                    Where n1 is first byte pos and n2 is last byte pos
-                 */
-                char    *sp;
-                MprOff  start, end, size;
-
-                start = end = size = -1;
-                sp = value;
-                while (*sp && !isdigit((uchar) *sp)) {
-                    sp++;
-                }
-                if (*sp) {
-                    start = stoi(sp);
-                    if ((sp = strchr(sp, '-')) != 0) {
-                        end = stoi(++sp);
-                        if ((sp = strchr(sp, '/')) != 0) {
-                            /*
-                                Note this is not the content length transmitted, but the original size of the input of which
-                                the client is transmitting only a portion.
-                             */
-                            size = stoi(++sp);
-                        }
-                    }
-                }
-                if (start < 0 || end < 0 || size < 0 || end < start) {
-                    httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad content range");
-                    break;
-                }
-                rx->inputRange = httpCreateRange(conn, start, end);
-
-            } else if (strcasecmp(key, "content-type") == 0) {
-                rx->mimeType = sclone(value);
-                if (rx->flags & (HTTP_POST | HTTP_PUT)) {
-                    if (httpServerConn(conn)) {
-                        rx->form = scontains(rx->mimeType, "application/x-www-form-urlencoded") != 0;
-                        rx->upload = scontains(rx->mimeType, "multipart/form-data") != 0;
-                    }
-                } else {
-                    rx->form = rx->upload = 0;
-                }
-            } else if (strcasecmp(key, "cookie") == 0) {
-                if (rx->cookie && *rx->cookie) {
-                    rx->cookie = sjoin(rx->cookie, "; ", value, NULL);
-                } else {
-                    rx->cookie = sclone(value);
-                }
-            }
-            break;
-
-        case 'e':
-            if (strcasecmp(key, "expect") == 0) {
-                /*
-                    Handle 100-continue for HTTP/1.1 clients only. This is the only expectation that is currently supported.
-                 */
-                if (!conn->http10) {
-                    if (strcasecmp(value, "100-continue") != 0) {
-                        httpBadRequestError(conn, HTTP_CODE_EXPECTATION_FAILED, "Expect header value is not supported");
-                    } else {
-                        rx->flags |= HTTP_EXPECT_CONTINUE;
-                    }
-                }
-            }
-            break;
-
-        case 'h':
-            if (strcasecmp(key, "host") == 0) {
-                if ((int) strspn(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.[]:")
-                        < (int) slen(value)) {
-                    httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host header");
-                } else {
-                    rx->hostHeader = sclone(value);
-                }
-            }
-            break;
-
-        case 'i':
-            if ((strcasecmp(key, "if-modified-since") == 0) || (strcasecmp(key, "if-unmodified-since") == 0)) {
-                MprTime     newDate = 0;
-                char        *cp;
-                bool        ifModified = (tolower((uchar) key[3]) == 'm');
-
-                if ((cp = strchr(value, ';')) != 0) {
-                    *cp = '\0';
-                }
-                if (mprParseTime(&newDate, value, MPR_UTC_TIMEZONE, NULL) < 0) {
-                    assert(0);
-                    break;
-                }
-                if (newDate) {
-                    rx->since = newDate;
-                    rx->ifModified = ifModified;
-                    rx->flags |= HTTP_IF_MODIFIED;
-                }
-
-            } else if ((strcasecmp(key, "if-match") == 0) || (strcasecmp(key, "if-none-match") == 0)) {
-                char    *word, *tok;
-                bool    ifMatch = (tolower((uchar) key[3]) == 'm');
-
-                if ((tok = strchr(value, ';')) != 0) {
-                    *tok = '\0';
-                }
-                rx->ifMatch = ifMatch;
-                rx->flags |= HTTP_IF_MODIFIED;
-                value = sclone(value);
-                word = stok(value, " ,", &tok);
-                while (word) {
-                    addMatchEtag(conn, word);
-                    word = stok(0, " ,", &tok);
-                }
-
-            } else if (strcasecmp(key, "if-range") == 0) {
-                char    *word, *tok;
-                if ((tok = strchr(value, ';')) != 0) {
-                    *tok = '\0';
-                }
-                rx->ifMatch = 1;
-                rx->flags |= HTTP_IF_MODIFIED;
-                value = sclone(value);
-                word = stok(value, " ,", &tok);
-                while (word) {
-                    addMatchEtag(conn, word);
-                    word = stok(0, " ,", &tok);
-                }
-            }
-            break;
-
-        case 'k':
-            /* Keep-Alive: timeout=N, max=1 */
-            if (strcasecmp(key, "keep-alive") == 0) {
-                if ((tok = scontains(value, "max=")) != 0) {
-                    conn->keepAliveCount = atoi(&tok[4]);
-                    if (conn->keepAliveCount < 0) {
-                        conn->keepAliveCount = 0;
-                    }
-                    if (conn->keepAliveCount > ME_MAX_KEEP_ALIVE) {
-                        conn->keepAliveCount = ME_MAX_KEEP_ALIVE;
-                    }
-                    /*
-                        IMPORTANT: Deliberately close client connections one request early. This encourages a client-led
-                        termination and may help relieve excessive server-side TIME_WAIT conditions.
-                     */
-                    if (httpClientConn(conn) && conn->keepAliveCount == 1) {
-                        conn->keepAliveCount = 0;
-                    }
-                }
-            }
-            break;
-
-        case 'l':
-            if (strcasecmp(key, "location") == 0) {
-                rx->redirect = sclone(value);
-            }
-            break;
-
-        case 'o':
-            if (strcasecmp(key, "origin") == 0) {
-                rx->origin = sclone(value);
-            }
-            break;
-
-        case 'p':
-            if (strcasecmp(key, "pragma") == 0) {
-                rx->pragma = sclone(value);
-            }
-            break;
-
-        case 'r':
-            if (strcasecmp(key, "range") == 0) {
-                /*
-                    The Content-Range header is used in the response. The Range header is used in the request.
-                 */
-                if (!parseRange(conn, value)) {
-                    httpBadRequestError(conn, HTTP_CLOSE | HTTP_CODE_RANGE_NOT_SATISFIABLE, "Bad range");
-                }
-            } else if (strcasecmp(key, "referer") == 0) {
-                /* NOTE: yes the header is misspelt in the spec */
-                rx->referrer = sclone(value);
-            }
-            break;
-
-        case 't':
-            if (strcasecmp(key, "transfer-encoding") == 0) {
-                if (scaselesscmp(value, "chunked") == 0 && !conn->http10) {
-                    /*
-                        remainingContent will be revised by the chunk filter as chunks are processed and will
-                        be set to zero when the last chunk has been received.
-                     */
-                    rx->flags |= HTTP_CHUNKED;
-                    rx->chunkState = HTTP_CHUNK_START;
-                    rx->remainingContent = HTTP_UNLIMITED;
-                    rx->needInputPipeline = 1;
-                }
-            }
-            break;
-
-        case 'x':
-            if (strcasecmp(key, "x-http-method-override") == 0) {
-                httpSetMethod(conn, value);
-
-            } else if (strcasecmp(key, "x-own-params") == 0) {
-                /*
-                    Optimize and don't convert query and body content into params.
-                    This is for those who want very large forms and to do their own custom handling.
-                 */
-                rx->ownParams = 1;
-#if ME_DEBUG
-            } else if (strcasecmp(key, "x-chunk-size") == 0) {
-                tx->chunkSize = atoi(value);
-                if (tx->chunkSize <= 0) {
-                    tx->chunkSize = 0;
-                } else if (tx->chunkSize > conn->limits->chunkSize) {
-                    tx->chunkSize = conn->limits->chunkSize;
-                }
-#endif
-            }
-            break;
-
-        case 'u':
-            if (scaselesscmp(key, "upgrade") == 0) {
-                rx->upgrade = sclone(value);
-            } else if (strcasecmp(key, "user-agent") == 0) {
-                rx->userAgent = sclone(value);
-            }
-            break;
-
-        case 'w':
-            if (strcasecmp(key, "www-authenticate") == 0) {
-                cp = value;
-                while (*value && !isspace((uchar) *value)) {
-                    value++;
-                }
-                *value++ = '\0';
-                conn->authType = slower(cp);
-                rx->authDetails = sclone(value);
-            }
-            break;
-        }
-    }
-    if (rx->form && rx->length >= conn->limits->rxFormSize && conn->limits->rxFormSize != HTTP_UNLIMITED) {
-        httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Request form of %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxFormSize);
-    }
-    if (conn->error) {
-        /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
-        conn->keepAliveCount = 0;
-        conn->connError = 1;
-    }
-    if (conn->http10 && !keepAliveHeader) {
-        conn->keepAliveCount = 0;
-    }
-    if (httpClientConn(conn) && conn->mustClose && rx->length < 0) {
-        /*
-            Google does responses with a body and without a Content-Lenght like this:
-                Connection: close
-                Location: URI
-         */
-        rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
-    }
-    if (!(rx->flags & HTTP_CHUNKED)) {
-        /*
-            Step over "\r\n" after headers.
-            Don't do this if chunked so chunking can parse a single chunk delimiter of "\r\nSIZE ...\r\n"
-         */
-        mprAdjustBufStart(content, 2);
-    }
-    /*
-        Split the headers and retain the data in conn->input. Revise lastRead to the number of data bytes available.
-     */
-    conn->input = httpSplitPacket(packet, 0);
-    conn->lastRead = httpGetPacketLength(conn->input);
-    return 1;
-}
-
-
-/*
-    Called once the HTTP request/response headers have been parsed
- */
-static bool processParsed(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpQueue   *q;
-
-    rx = conn->rx;
-    tx = conn->tx;
-
-    if (httpServerConn(conn)) {
-        httpAddQueryParams(conn);
-        rx->streaming = httpGetStreaming(conn->host, rx->mimeType, rx->uri);
-        if (rx->streaming) {
-            httpRouteRequest(conn);
-        }
-        /*
-            Delay testing rxBodySize till after routing for streaming requests. This way, recieveBodySize
-            can be defined per route.
-         */
-        if (!rx->upload && rx->length >= conn->limits->rxBodySize && conn->limits->rxBodySize != HTTP_UNLIMITED) {
-            httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Request content length %lld bytes is too big. Limit %lld", rx->length, conn->limits->rxBodySize);
-            return 0;
-        }
-        if (rx->streaming) {
-            httpCreatePipeline(conn);
-            /*
-                Delay starting uploads until the files are extracted.
-             */
-            if (!rx->upload) {
-                httpStartPipeline(conn);
-            }
-        }
-#if ME_HTTP_WEB_SOCKETS
-    } else {
-        if (conn->upgraded && !httpVerifyWebSocketsHandshake(conn)) {
-            httpSetState(conn, HTTP_STATE_FINALIZED);
-            return 1;
-        }
-#endif
-    }
-    httpSetState(conn, HTTP_STATE_CONTENT);
-    if (rx->remainingContent == 0) {
-        httpSetEof(conn);
-    }
-    if (rx->eof && tx->started) {
-        q = tx->queue[HTTP_QUEUE_RX];
-        httpPutPacketToNext(q, httpCreateEndPacket());
-        httpSetState(conn, HTTP_STATE_READY);
-    }
-    return 1;
-}
-
-
-/*
-    Filter the packet data and determine the number of useful bytes in the packet.
-    The packet may be split if it contains chunk data for the next chunk.
-    Set *more to true if there is more useful (non-chunk header) data to be processed.
-    Packet may be null.
- */
-static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    MprOff      size;
-    HttpLimits  *limits;
-    ssize       nbytes;
-
-    rx = conn->rx;
-    tx = conn->tx;
-    limits = conn->limits;
-    *more = 0;
-
-    if (mprIsSocketEof(conn->sock) || conn->connError) {
-        httpSetEof(conn);
-    }
-    if (rx->chunkState) {
-        nbytes = httpFilterChunkData(tx->queue[HTTP_QUEUE_RX], packet);
-        if (rx->chunkState == HTTP_CHUNK_EOF) {
-            httpSetEof(conn);
-            assert(rx->remainingContent == 0);
-        }
-    } else {
-        nbytes = (ssize) min(rx->remainingContent, conn->lastRead);
-        if (!conn->upgraded && (rx->remainingContent - nbytes) <= 0) {
-            httpSetEof(conn);
-        }
-    }
-    conn->lastRead = 0;
-
-    assert(nbytes >= 0);
-    rx->bytesRead += nbytes;
-    if (!conn->upgraded) {
-        if (rx->remainingContent != HTTP_UNLIMITED) {
-            rx->remainingContent -= nbytes;
-        }
-        assert(rx->remainingContent >= 0);
-    }
-
-    if (limits->rxBodySize < HTTP_UNLIMITED) {
-        /*
-            Enforce sandbox limits
-         */
-        size = rx->bytesRead - rx->bytesUploaded;
-        if (size >= limits->rxBodySize) {
-            httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Receive body of %lld bytes (sofar) is too big. Limit %lld", size, limits->rxBodySize);
-
-        } else if (rx->form && size >= limits->rxFormSize) {
-            httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Receive form of %lld bytes (sofar) is too big. Limit %lld", size, limits->rxFormSize);
-        }
-    }
-    if (packet && httpTracing(conn)) {
-        httpTraceBody(conn, 0, packet, nbytes);
-    }
-    if (rx->eof) {
-#if GITHUB_BUG || 1
-        /*
-            GitHub is doing a 302 redirection with a "Transfer-Encoding" with a "Connection:close" header without any body
-         */
-        if (conn->mustClose && (rx->chunkState && rx->chunkState != HTTP_CHUNK_EOF)) {
-            rx->chunkState = HTTP_CHUNK_EOF;
-        }
-#endif
-        if ((rx->remainingContent > 0 && (rx->length > 0 || !conn->mustClose)) ||
-            (rx->chunkState && rx->chunkState != HTTP_CHUNK_EOF)) {
-            /* Closing is the only way for HTTP/1.0 to signify the end of data */
-            httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Connection lost");
-            return 0;
-        }
-        if (nbytes > 0 && httpGetPacketLength(packet) > nbytes) {
-            conn->input = httpSplitPacket(packet, nbytes);
-            *more = 1;
-        }
-    } else {
-        if (rx->chunkState && nbytes > 0 && httpGetPacketLength(packet) > nbytes) {
-            /* Split data for next chunk */
-            conn->input = httpSplitPacket(packet, nbytes);
-            *more = 1;
-        }
-    }
-    return nbytes;
-}
-
-
-static bool processContent(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpQueue   *q;
-    HttpPacket  *packet;
-    ssize       nbytes;
-    int         moreData;
-
-    assert(conn);
-    rx = conn->rx;
-    tx = conn->tx;
-
-    q = tx->queue[HTTP_QUEUE_RX];
-    packet = conn->input;
-    /* Packet may be null */
-
-    if ((nbytes = filterPacket(conn, packet, &moreData)) > 0) {
-        if (!tx->finalized) {
-            if (rx->inputPipeline) {
-                httpPutPacketToNext(q, packet);
-            } else {
-                httpPutForService(q, packet, HTTP_DELAY_SERVICE);
-            }
-        }
-        if (packet == conn->input) {
-            conn->input = 0;
-        }
-    }
-    if (rx->eof) {
-        if (conn->state < HTTP_STATE_FINALIZED) {
-            if (httpServerConn(conn)) {
-                if (!rx->route) {
-                    if (httpAddBodyParams(conn) < 0) {
-                        httpError(conn, HTTP_CODE_BAD_REQUEST, "Bad request parameters");
-                    } else {
-                        mapMethod(conn);
-                    }
-                    httpRouteRequest(conn);
-                    httpCreatePipeline(conn);
-                    /*
-                        Transfer buffered input body data into the pipeline
-                     */
-                    while ((packet = httpGetPacket(q)) != 0) {
-                        httpPutPacketToNext(q, packet);
-                    }
-                }
-                httpPutPacketToNext(q, httpCreateEndPacket());
-                if (!tx->started) {
-                    httpStartPipeline(conn);
-                }
-            } else {
-                httpPutPacketToNext(q, httpCreateEndPacket());
-            }
-            httpSetState(conn, HTTP_STATE_READY);
-        }
-        return 1;
-    }
-    if (tx->started) {
-        /*
-            Some requests (websockets) remain in the content state while still generating output
-         */
-        moreData += getOutput(conn);
-    }
-    return (conn->connError || moreData || mprNeedYield());
-}
-
-
-/*
-    In the ready state after all content has been received
- */
-static bool processReady(HttpConn *conn)
-{
-    httpReadyHandler(conn);
-    httpSetState(conn, HTTP_STATE_RUNNING);
-    if (httpClientConn(conn) && !conn->upgraded) {
-        httpFinalize(conn);
-    }
-    return 1;
-}
-
-
-static bool processRunning(HttpConn *conn)
-{
-    assert(conn->rx->eof);
-
-    if (conn->tx->finalized && conn->tx->finalizedConnector) {
-        httpSetState(conn, HTTP_STATE_FINALIZED);
-        return 1;
-    }
-    if (httpServerConn(conn)) {
-        return getOutput(conn) || httpQueuesNeedService(conn) || mprNeedYield();
-    }
-    return 0;
-}
-
-
-/*
-    Get more output by invoking the handler's writable callback. Called by processRunning.
-    Also issues an HTTP_EVENT_WRITABLE for application level notification.
- */
-static bool getOutput(HttpConn *conn)
-{
-    HttpQueue   *q;
-    HttpTx      *tx;
-    ssize       count;
-
-    tx = conn->tx;
-    if (tx->started && !tx->writeBlocked) {
-        q = conn->writeq;
-        count = q->count;
-        if (!tx->finalizedOutput) {
-            HTTP_NOTIFY(conn, HTTP_EVENT_WRITABLE, 0);
-            if (tx->handler->writable) {
-                tx->handler->writable(q);
-            }
-        }
-        if (count != q->count) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-static void createErrorRequest(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    HttpPacket  *packet;
-    MprBuf      *buf;
-    char        *cp, *headers, *originalUri;
-    int         key;
-
-    rx = conn->rx;
-    tx = conn->tx;
-    if (!rx->headerPacket || conn->errorDoc) {
-        return;
-    }
-    httpTrace(conn, "request.errordoc", "context", "location:'%s',status:%d", tx->errorDocument, tx->status);
-
-    originalUri = rx->uri;
-    conn->rx = httpCreateRx(conn);
-    conn->tx = httpCreateTx(conn, NULL);
-
-    /* Preserve the old status */
-    conn->tx->status = tx->status;
-    conn->rx->originalUri = originalUri;
-    conn->error = 0;
-    conn->errorMsg = 0;
-    conn->upgraded = 0;
-    conn->worker = 0;
-
-    packet = httpCreateDataPacket(ME_MAX_BUFFER);
-    mprPutToBuf(packet->content, "%s %s %s\r\n", rx->method, tx->errorDocument, conn->protocol);
-    /*
-        Sever the old Rx and Tx for GC
-     */
-    rx->conn = 0;
-    tx->conn = 0;
-
-    /*
-        Reconstruct the headers. Change nulls to '\r', ' ', or ':' as appropriate
-     */
-    key = 0;
-    headers = 0;
-    /*
-        Ensure buffer always has a trailing null (one past buf->end)
-     */
-    buf = rx->headerPacket->content;
-    mprAddNullToBuf(buf);
-    for (cp = buf->data; cp < &buf->end[-1]; cp++) {
-        if (*cp == '\0') {
-            if (cp[1] == '\n') {
-                if (!headers) {
-                    headers = &cp[2];
-                }
-                *cp = '\r';
-                if (&cp[4] <= buf->end && cp[2] == '\r' && cp[3] == '\n') {
-                    cp[4] = '\0';
-                }
-                key = 0;
-            } else if (!key) {
-                *cp = ':';
-                key = 1;
-            } else {
-                *cp = ' ';
-            }
-        }
-    }
-    if (!headers || headers >= buf->end) {
-        headers = "\r\n";
-    }
-    mprPutStringToBuf(packet->content, headers);
-    conn->input = packet;
-    conn->state = HTTP_STATE_CONNECTED;
-    conn->errorDoc = 1;
-    conn->keepAliveCount = 0;
-}
-
-
-static bool processFinalized(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-
-    rx = conn->rx;
-    tx = conn->tx;
-    assert(tx->finalized);
-    assert(tx->finalizedOutput);
-    assert(tx->finalizedConnector);
-
-#if ME_TRACE_MEM
-    mprDebug(1, "Request complete, status %d, error %d, connError %d, %s%s, memsize %.2f MB",
-        tx->status, conn->error, conn->connError, rx->hostHeader, rx->uri, mprGetMem() / 1024 / 1024.0);
-#endif
-    httpClosePipeline(conn);
-
-    if (httpServerConn(conn) && rx) {
-        httpMonitorEvent(conn, HTTP_COUNTER_NETWORK_IO, tx->bytesWritten);
-    }
-    httpSetState(conn, HTTP_STATE_COMPLETE);
-    if (tx->errorDocument && !conn->connError && !smatch(tx->errorDocument, rx->uri)) {
-        createErrorRequest(conn);
-    }
-    return 1;
-}
-
-
-static bool processCompletion(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpTx      *tx;
-    MprTicks    elapsed;
-    MprOff      received;
-    int         status;
-
-    rx = conn->rx;
-    tx = conn->tx;
-
-    if (rx->session) {
-        httpWriteSession(conn);
-    }
-    if (httpServerConn(conn) && conn->activeRequest) {
-        httpMonitorEvent(conn, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
-        conn->activeRequest = 0;
-    }
-    elapsed = mprGetTicks() - conn->started;
-    if (httpTracing(conn)) {
-        status = conn->endpoint ? tx->status : rx->status;
-        received = rx->headerPacketLength + rx->bytesRead;
-#if MPR_HIGH_RES_TIMER
-        httpTrace(conn,
-            "request.completion", "result",
-            "status:%d,error:%d,connError:%d,elapsed:%llu,elapsedTicks:%llu,received:%lld,sent:%lld",
-            status, conn->error, conn->connError, elapsed, mprGetHiResTicks() - conn->startMark,
-            received, tx->bytesWritten);
-#else
-        httpTrace(conn, "request.completion", "result",
-            "status:%d,error:%d,connError:%d,elapsed:%llu,received:%lld,sent:%lld",
-            status, conn->error, conn->connError, elapsed, received, tx->bytesWritten);
-#endif
-    }
-    if (conn->http->requestCallback) {
-        (conn->http->requestCallback)(conn);
-    }
-    return 0;
-}
-
-
 PUBLIC void httpSetRequestCallback(HttpRequestCallback callback)
 {
     if (HTTP) {
@@ -17082,9 +21506,6 @@ PUBLIC void httpSetRequestCallback(HttpRequestCallback callback)
 }
 
 
-/*
-    Used by ejscript Request.close
- */
 PUBLIC void httpCloseRx(HttpConn *conn)
 {
     if (conn->rx && !conn->rx->remainingContent) {
@@ -17092,7 +21513,7 @@ PUBLIC void httpCloseRx(HttpConn *conn)
         conn->keepAliveCount = 0;
     }
     if (httpClientConn(conn)) {
-        httpEnableConnEvents(conn);
+        httpEnableNetEvents(conn->net);
     }
 }
 
@@ -17124,28 +21545,6 @@ PUBLIC bool httpContentNotModified(HttpConn *conn)
 }
 
 
-PUBLIC HttpRange *httpCreateRange(HttpConn *conn, MprOff start, MprOff end)
-{
-    HttpRange     *range;
-
-    if ((range = mprAllocObj(HttpRange, manageRange)) == 0) {
-        return 0;
-    }
-    range->start = start;
-    range->end = end;
-    range->len = end - start;
-    return range;
-}
-
-
-static void manageRange(HttpRange *range, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(range->next);
-    }
-}
-
-
 PUBLIC MprOff httpGetContentLength(HttpConn *conn)
 {
     if (conn->rx == 0) {
@@ -17166,6 +21565,10 @@ PUBLIC cchar *httpGetCookies(HttpConn *conn)
 }
 
 
+/*
+    Extract a cookie.
+    The rx->cookies contains a list of header cookies. A site may submit multiple cookies separated by ";"
+ */
 PUBLIC cchar *httpGetCookie(HttpConn *conn, cchar *name)
 {
     HttpRx  *rx;
@@ -17184,10 +21587,11 @@ PUBLIC cchar *httpGetCookie(HttpConn *conn, cchar *name)
     nlen = slen(name);
     while ((value = strstr(cookie, name)) != 0) {
         /* Ignore corrupt cookies of the form "name=;" */
-        if ((value == cookie || value[-1] == ' ' || value[-1] == ';') && value[nlen] == '=' && value[nlen+1] != ';') {
+        if ((value == rx->cookie || value[-1] == ' ' || value[-1] == ';') && value[nlen] == '=' && value[nlen+1] != ';') {
             break;
         }
-        cookie += nlen;
+        cookie += (value - cookie) + nlen;
+
     }
     if (value == 0) {
         return 0;
@@ -17280,49 +21684,9 @@ PUBLIC int httpGetStatus(HttpConn *conn)
 }
 
 
-PUBLIC char *httpGetStatusMessage(HttpConn *conn)
+PUBLIC cchar *httpGetStatusMessage(HttpConn *conn)
 {
     return (conn->rx) ? conn->rx->statusMessage : 0;
-}
-
-
-PUBLIC void httpSetMethod(HttpConn *conn, cchar *method)
-{
-    conn->rx->method = sclone(method);
-    parseMethod(conn);
-}
-
-
-static void parseUri(HttpConn *conn)
-{
-    HttpRx      *rx;
-    HttpUri     *up;
-    cchar       *hostname;
-
-    rx = conn->rx;
-    if (httpSetUri(conn, rx->uri) < 0) {
-        httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad URL");
-        rx->parsedUri = httpCreateUri("", 0);
-
-    } else {
-        /*
-            Complete the URI based on the connection state.
-            Must have a complete scheme, host, port and path.
-         */
-        up = rx->parsedUri;
-        up->scheme = sclone(conn->secure ? "https" : "http");
-        hostname = rx->hostHeader ? rx->hostHeader : conn->host->name;
-        if (!hostname) {
-            hostname = conn->sock->acceptIp;
-        }
-        if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0 || up->host == 0 || *up->host == '\0') {
-            if (!conn->error) {
-                httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host");
-            }
-        } else {
-            up->port = conn->sock->listenSock->port;
-        }
-    }
 }
 
 
@@ -17355,93 +21719,9 @@ PUBLIC int httpSetUri(HttpConn *conn, cchar *uri)
 }
 
 
-PUBLIC ssize httpGetReadCount(HttpConn *conn)
-{
-    return conn->readq->count;
-}
-
-
 PUBLIC bool httpIsEof(HttpConn *conn)
 {
     return conn->rx == 0 || conn->rx->eof;
-}
-
-
-PUBLIC cchar *httpGetBodyInput(HttpConn *conn)
-{
-    HttpQueue   *q;
-    HttpRx      *rx;
-    MprBuf      *content;
-
-    rx = conn->rx;
-    if (!rx->eof) {
-        return 0;
-    }
-    q = conn->readq;
-    if (q->first) {
-        httpJoinPackets(q, -1);
-        if ((content = q->first->content) != 0) {
-            mprAddNullToBuf(content);
-            return mprGetBufStart(content);
-        }
-    }
-    return 0;
-}
-
-
-/*
-    Set the connector as write blocked and cannot proceed.
- */
-PUBLIC void httpSocketBlocked(HttpConn *conn)
-{
-    conn->tx->writeBlocked = 1;
-}
-
-
-static void addMatchEtag(HttpConn *conn, char *etag)
-{
-    HttpRx   *rx;
-
-    rx = conn->rx;
-    if (rx->etags == 0) {
-        rx->etags = mprCreateList(-1, MPR_LIST_STABLE);
-    }
-    mprAddItem(rx->etags, sclone(etag));
-}
-
-
-/*
-    Get the next input token. The content buffer is advanced to the next token. This routine always returns a
-    non-null token. The empty string means the delimiter was not found. The delimiter is a string to match and not
-    a set of characters. If null, it means use white space (space or tab) as a delimiter.
- */
-static char *getToken(HttpConn *conn, cchar *delim)
-{
-    MprBuf  *buf;
-    char    *token, *endToken, *nextToken;
-
-    buf = conn->input->content;
-    nextToken = mprGetBufEnd(buf);
-
-    for (token = mprGetBufStart(buf); (*token == ' ' || *token == '\t') && token < nextToken; token++) {}
-    if (token >= nextToken) {
-        return "";
-    }
-    if (delim == 0) {
-        delim = " \t";
-        if ((endToken = strpbrk(token, delim)) != 0) {
-            nextToken = endToken + strspn(endToken, delim);
-            *endToken = '\0';
-        }
-    } else {
-        if ((endToken = strstr(token, delim)) != 0) {
-            *endToken = '\0';
-            /* Only eat one occurence of the delimiter */
-            nextToken = endToken + strlen(delim);
-        }
-    }
-    buf->start = nextToken;
-    return token;
 }
 
 
@@ -17494,100 +21774,11 @@ PUBLIC bool httpMatchModified(HttpConn *conn, MprTime time)
 }
 
 
-/*
-    Format is:  Range: bytes=n1-n2,n3-n4,...
-    Where n1 is first byte pos and n2 is last byte pos
-
-    Examples:
-        Range: bytes=0-49             first 50 bytes
-        Range: bytes=50-99,200-249    Two 50 byte ranges from 50 and 200
-        Range: bytes=-50              Last 50 bytes
-        Range: bytes=1-               Skip first byte then emit the rest
-
-    Return 1 if more ranges, 0 if end of ranges, -1 if bad range.
- */
-static bool parseRange(HttpConn *conn, char *value)
-{
-    HttpTx      *tx;
-    HttpRange   *range, *last, *next;
-    char        *tok, *ep;
-
-    tx = conn->tx;
-    value = sclone(value);
-
-    /*
-        Step over the "bytes="
-     */
-    stok(value, "=", &value);
-
-    for (last = 0; value && *value; ) {
-        if ((range = mprAllocObj(HttpRange, manageRange)) == 0) {
-            return 0;
-        }
-        /*
-            A range "-7" will set the start to -1 and end to 8
-         */
-        if ((tok = stok(value, ",", &value)) == 0) {
-            return 0;
-        }
-        if (*tok != '-') {
-            range->start = (ssize) stoi(tok);
-        } else {
-            range->start = -1;
-        }
-        range->end = -1;
-
-        if ((ep = strchr(tok, '-')) != 0) {
-            if (*++ep != '\0') {
-                /*
-                    End is one beyond the range. Makes the math easier.
-                 */
-                range->end = (ssize) stoi(ep) + 1;
-            }
-        }
-        if (range->start >= 0 && range->end >= 0) {
-            range->len = (int) (range->end - range->start);
-        }
-        if (last == 0) {
-            tx->outputRanges = range;
-        } else {
-            last->next = range;
-        }
-        last = range;
-    }
-
-    /*
-        Validate ranges
-     */
-    for (range = tx->outputRanges; range; range = range->next) {
-        if (range->end != -1 && range->start >= range->end) {
-            return 0;
-        }
-        if (range->start < 0 && range->end < 0) {
-            return 0;
-        }
-        next = range->next;
-        if (range->start < 0 && next) {
-            /* This range goes to the end, so cannot have another range afterwards */
-            return 0;
-        }
-        if (next) {
-            if (range->end < 0) {
-                return 0;
-            }
-            if (next->start >= 0 && range->end > next->start) {
-                return 0;
-            }
-        }
-    }
-    conn->tx->currentRange = tx->outputRanges;
-    return (last) ? 1: 0;
-}
-
-
 PUBLIC void httpSetEof(HttpConn *conn)
 {
-    conn->rx->eof = 1;
+    if (conn->net->protocol < 2) {
+        conn->rx->eof = 1;
+    }
 }
 
 
@@ -17711,14 +21902,14 @@ PUBLIC void httpTrimExtraPath(HttpConn *conn)
 
     rx = conn->rx;
     if (!(rx->flags & (HTTP_OPTIONS | HTTP_TRACE))) {
-        if ((cp = strchr(rx->pathInfo, '.')) != 0 && (extra = strchr(cp, '/')) != 0) {
+        if ((cp = schr(rx->pathInfo, '.')) != 0 && (extra = schr(cp, '/')) != 0) {
             len = extra - rx->pathInfo;
             if (0 < len && len < slen(rx->pathInfo)) {
                 rx->extraPath = sclone(&rx->pathInfo[len]);
-                rx->pathInfo[len] = '\0';
+                rx->pathInfo = snclone(rx->pathInfo, len);
             }
         }
-        if ((cp = strchr(rx->target, '.')) != 0 && (extra = strchr(cp, '/')) != 0) {
+        if ((cp = schr(rx->target, '.')) != 0 && (extra = schr(cp, '/')) != 0) {
             len = extra - rx->target;
             if (0 < len && len < slen(rx->target)) {
                 rx->target[len] = '\0';
@@ -17728,369 +21919,61 @@ PUBLIC void httpTrimExtraPath(HttpConn *conn)
 }
 
 
-/*
-    Sends an 100 Continue response to the client. This bypasses the transmission pipeline, writing directly to the socket.
- */
-static int sendContinue(HttpConn *conn)
+PUBLIC void httpParseMethod(HttpConn *conn)
 {
-    cchar      *response;
-    int         mode;
+    HttpRx      *rx;
+    cchar       *method;
+    int         methodFlags;
 
-    assert(conn);
+    rx = conn->rx;
+    method = rx->method;
+    methodFlags = 0;
 
-    if (!conn->tx->finalized && !conn->tx->bytesWritten) {
-        response = sfmt("%s 100 Continue\r\n\r\n", conn->protocol);
-        mode = mprGetSocketBlockingMode(conn->sock);
-        mprWriteSocket(conn->sock, response, slen(response));
-        mprSetSocketBlockingMode(conn->sock, mode);
-        mprFlushSocket(conn->sock);
+    switch (method[0]) {
+    case 'D':
+        if (strcmp(method, "DELETE") == 0) {
+            methodFlags = HTTP_DELETE;
+        }
+        break;
+
+    case 'G':
+        if (strcmp(method, "GET") == 0) {
+            methodFlags = HTTP_GET;
+        }
+        break;
+
+    case 'H':
+        if (strcmp(method, "HEAD") == 0) {
+            methodFlags = HTTP_HEAD;
+        }
+        break;
+
+    case 'O':
+        if (strcmp(method, "OPTIONS") == 0) {
+            methodFlags = HTTP_OPTIONS;
+        }
+        break;
+
+    case 'P':
+        if (strcmp(method, "POST") == 0) {
+            methodFlags = HTTP_POST;
+            rx->needInputPipeline = 1;
+
+        } else if (strcmp(method, "PUT") == 0) {
+            methodFlags = HTTP_PUT;
+            rx->needInputPipeline = 1;
+        }
+        break;
+
+    case 'T':
+        if (strcmp(method, "TRACE") == 0) {
+            methodFlags = HTTP_TRACE;
+        }
+        break;
     }
-    return 0;
+    rx->flags |= methodFlags;
 }
 
-
-/*
-    Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
- */
-
-
-/********* Start of file src/sendConnector.c ************/
-
-/*
-    sendConnector.c -- Send file connector.
-
-    The Sendfile connector supports the optimized transmission of whole static files. It uses operating system
-    sendfile APIs to eliminate reading the document into user space and multiple socket writes. The send connector
-    is not a general purpose connector. It cannot handle dynamic data or ranged requests. It does support chunked requests.
-
-    Copyright (c) All Rights Reserved. See details at the end of the file.
- */
-
-/********************************* Includes ***********************************/
-
-
-
-/**************************** Forward Declarations ****************************/
-#if !ME_ROM
-
-static void addPacketForSend(HttpQueue *q, HttpPacket *packet);
-static void adjustSendVec(HttpQueue *q, MprOff written);
-static MprOff buildSendVec(HttpQueue *q);
-static void freeSendPackets(HttpQueue *q, MprOff written);
-static void sendClose(HttpQueue *q);
-
-/*********************************** Code *************************************/
-
-PUBLIC int httpOpenSendConnector()
-{
-    HttpStage     *stage;
-
-    if ((stage = httpCreateConnector("sendConnector", NULL)) == 0) {
-        return MPR_ERR_CANT_CREATE;
-    }
-    stage->open = httpSendOpen;
-    stage->close = sendClose;
-    stage->outgoingService = httpSendOutgoingService;
-    HTTP->sendConnector = stage;
-    return 0;
-}
-
-
-/*
-    Initialize the send connector for a request
- */
-PUBLIC int httpSendOpen(HttpQueue *q)
-{
-    HttpConn    *conn;
-    HttpTx      *tx;
-
-    conn = q->conn;
-    tx = conn->tx;
-
-    if (tx->connector != conn->http->sendConnector) {
-        httpAssignQueue(q, tx->connector, HTTP_QUEUE_TX);
-        tx->connector->open(q);
-        return 0;
-    }
-    if (!(tx->flags & HTTP_TX_NO_BODY)) {
-        assert(tx->fileInfo.valid);
-        if (tx->fileInfo.size > conn->limits->txBodySize &&
-                conn->limits->txBodySize < HTTP_UNLIMITED) {
-            httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
-                "Http transmission aborted. File size exceeds max body of %lld bytes", conn->limits->txBodySize);
-            return MPR_ERR_CANT_OPEN;
-        }
-        tx->file = mprOpenFile(tx->filename, O_RDONLY | O_BINARY, 0);
-        if (tx->file == 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot open document: %s, err %d", tx->filename, mprGetError());
-        }
-    }
-    return 0;
-}
-
-
-static void sendClose(HttpQueue *q)
-{
-    HttpTx  *tx;
-
-    tx = q->conn->tx;
-    if (tx->file) {
-        mprCloseFile(tx->file);
-        tx->file = 0;
-    }
-}
-
-
-PUBLIC void httpSendOutgoingService(HttpQueue *q)
-{
-    HttpConn    *conn;
-    HttpTx      *tx;
-    MprFile     *file;
-    MprOff      written;
-    int         errCode;
-
-    conn = q->conn;
-    tx = conn->tx;
-    conn->lastActivity = conn->http->now;
-
-    if (tx->finalizedConnector) {
-        return;
-    }
-    if (tx->flags & HTTP_TX_NO_BODY) {
-        httpDiscardQueueData(q, 1);
-    }
-    if ((tx->bytesWritten + q->ioCount) > conn->limits->txBodySize && conn->limits->txBodySize < HTTP_UNLIMITED) {
-        httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE | ((tx->bytesWritten) ? HTTP_ABORT : 0),
-            "Http transmission aborted. Exceeded max body of %lld bytes", conn->limits->txBodySize);
-        if (tx->bytesWritten) {
-            httpFinalizeConnector(conn);
-            return;
-        }
-    }
-    tx->writeBlocked = 0;
-
-    if (q->ioIndex == 0) {
-        buildSendVec(q);
-    }
-    /*
-        No need to loop around as send file tries to write as much of the file as possible.
-        If not eof, will always have the socket blocked.
-     */
-    file = q->ioFile ? tx->file : 0;
-    written = mprSendFileToSocket(conn->sock, file, q->ioPos, q->ioCount, q->iovec, q->ioIndex, NULL, 0);
-    if (written < 0) {
-        errCode = mprGetError();
-        if (errCode == EAGAIN || errCode == EWOULDBLOCK) {
-            /*  Socket full, wait for an I/O event */
-            tx->writeBlocked = 1;
-        } else {
-            if (errCode != EPIPE && errCode != ECONNRESET && errCode != ECONNABORTED && errCode != ENOTCONN) {
-                httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "sendConnector: error, errCode %d", errCode);
-            } else {
-                httpDisconnect(conn);
-            }
-            httpFinalizeConnector(conn);
-        }
-        httpTrace(conn, "connection.io.error", "error", "msg:'Connector write error',errno:%d", errCode);
-
-    } else if (written > 0) {
-        tx->bytesWritten += written;
-        freeSendPackets(q, written);
-        adjustSendVec(q, written);
-    }
-    if (q->first && q->first->flags & HTTP_PACKET_END) {
-        httpFinalizeConnector(conn);
-        httpGetPacket(q);
-    }
-}
-
-
-/*
-    Build the IO vector. This connector uses the send file API which permits multiple IO blocks to be written with
-    file data. This is used to write transfer the headers and chunk encoding boundaries. Return the count of bytes to
-    be written. Return -1 for EOF.
- */
-static MprOff buildSendVec(HttpQueue *q)
-{
-    HttpPacket  *packet, *prev;
-
-    assert(q->ioIndex == 0);
-    q->ioCount = 0;
-    q->ioFile = 0;
-
-    /*
-        Examine each packet and accumulate as many packets into the I/O vector as possible. Can only have one data packet at
-        a time due to the limitations of the sendfile API (on Linux). And the data packet must be after all the
-        vector entries. Leave the packets on the queue for now, they are removed after the IO is complete for the
-        entire packet.
-     */
-    for (packet = prev = q->first; packet && !(packet->flags & HTTP_PACKET_END); packet = packet->next) {
-        if (packet->flags & HTTP_PACKET_HEADER) {
-            httpWriteHeaders(q, packet);
-        }
-        if (q->ioFile || q->ioIndex >= (ME_MAX_IOVEC - 2)) {
-            /* Only one file entry allowed */
-            break;
-        }
-        if (packet->prefix || packet->esize || httpGetPacketLength(packet) > 0) {
-            addPacketForSend(q, packet);
-        } else {
-            /* Remove empty packets */
-            prev->next = packet->next;
-            continue;
-        }
-        prev = packet;
-    }
-    return q->ioCount;
-}
-
-
-/*
-    Add one entry to the io vector
- */
-static void addToSendVector(HttpQueue *q, char *ptr, ssize bytes)
-{
-    assert(ptr > 0);
-    assert(bytes > 0);
-
-    q->iovec[q->ioIndex].start = ptr;
-    q->iovec[q->ioIndex].len = bytes;
-    q->ioCount += bytes;
-    q->ioIndex++;
-}
-
-
-/*
-    Add a packet to the io vector. Return the number of bytes added to the vector.
- */
-static void addPacketForSend(HttpQueue *q, HttpPacket *packet)
-{
-    HttpConn     *conn;
-
-    conn = q->conn;
-    assert(q->count >= 0);
-    assert(q->ioIndex < (ME_MAX_IOVEC - 2));
-
-    if (packet->prefix) {
-        addToSendVector(q, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix));
-    }
-    if (packet->esize > 0) {
-        assert(q->ioFile == 0);
-        q->ioFile = 1;
-        q->ioCount += packet->esize;
-
-    } else if (httpGetPacketLength(packet) > 0) {
-        /*
-            Header packets have actual content. File data packets are virtual and only have a count.
-         */
-        addToSendVector(q, mprGetBufStart(packet->content), httpGetPacketLength(packet));
-        if (httpTracing(conn) && packet->flags & HTTP_PACKET_DATA) {
-            httpTraceBody(conn, 1, packet, -1);
-        }
-    }
-}
-
-
-static void freeSendPackets(HttpQueue *q, MprOff bytes)
-{
-    HttpPacket  *packet;
-    ssize       len;
-
-    assert(q->first);
-    assert(q->count >= 0);
-    assert(bytes >= 0);
-
-    /*
-        Loop while data to be accounted for and we have not hit the end of data packet
-        There should be 2-3 packets on the queue. A header packet for the HTTP response headers, an optional
-        data packet with packet->esize set to the size of the file, and an end packet with no content.
-        Must leave this routine with the end packet still on the queue and all bytes accounted for.
-     */
-    while ((packet = q->first) != 0 && !(packet->flags & HTTP_PACKET_END) && bytes > 0) {
-        if (packet->prefix) {
-            len = mprGetBufLength(packet->prefix);
-            len = (ssize) min(len, bytes);
-            mprAdjustBufStart(packet->prefix, len);
-            bytes -= len;
-            /* Prefixes don't count in the q->count. No need to adjust */
-            if (mprGetBufLength(packet->prefix) == 0) {
-                packet->prefix = 0;
-            }
-        }
-        if (packet->esize) {
-            len = (ssize) min(packet->esize, bytes);
-            packet->esize -= len;
-            packet->epos += len;
-            bytes -= len;
-            assert(packet->esize >= 0);
-
-        } else if ((len = httpGetPacketLength(packet)) > 0) {
-            /* Header packets come here */
-            len = (ssize) min(len, bytes);
-            mprAdjustBufStart(packet->content, len);
-            bytes -= len;
-            q->count -= len;
-            assert(q->count >= 0);
-        }
-        if (packet->esize == 0 && httpGetPacketLength(packet) == 0) {
-            /* Done with this packet - consume it */
-            assert(!(packet->flags & HTTP_PACKET_END));
-            httpGetPacket(q);
-        } else {
-            break;
-        }
-    }
-    assert(bytes == 0);
-}
-
-
-/*
-    Clear entries from the IO vector that have actually been transmitted. This supports partial writes due to the socket
-    being full. Don't come here if we've seen all the packets and all the data has been completely written. ie. small files
-    don't come here.
- */
-static void adjustSendVec(HttpQueue *q, MprOff written)
-{
-    MprIOVec    *iovec;
-    ssize       len;
-    int         i, j;
-
-    iovec = q->iovec;
-    for (i = 0; i < q->ioIndex; i++) {
-        len = iovec[i].len;
-        if (written < len) {
-            iovec[i].start += (ssize) written;
-            iovec[i].len -= (ssize) written;
-            return;
-        }
-        written -= len;
-        q->ioCount -= len;
-        for (j = i + 1; i < q->ioIndex; ) {
-            iovec[j++] = iovec[i++];
-        }
-        q->ioIndex--;
-        i--;
-    }
-    if (written > 0 && q->ioFile) {
-        /* All remaining data came from the file */
-        q->ioPos += written;
-    }
-    q->ioIndex = 0;
-    q->ioCount = 0;
-    q->ioFile = 0;
-}
-
-
-#else
-PUBLIC int httpOpenSendConnector() { return 0; }
-PUBLIC int httpSendOpen(HttpQueue *q) { return 0; }
-PUBLIC void httpSendOutgoingService(HttpQueue *q) {}
-#endif /* !ME_ROM */
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -18228,6 +22111,7 @@ PUBLIC HttpSession *httpGetSession(HttpConn *conn, int create)
         if ((id = httpGetSessionID(conn)) != 0) {
             if ((data = mprReadCache(conn->http->sessionCache, id, 0, 0)) != 0) {
                 rx->session = allocSessionObj(conn, id, data);
+                rx->traceId = sfmt("%d-%d-%d-%d", conn->net->address->seqno, rx->session->seqno, conn->net->seqno, rx->seqno);
             }
         }
         if (!rx->session && create) {
@@ -18247,12 +22131,17 @@ PUBLIC HttpSession *httpGetSession(HttpConn *conn, int create)
             unlock(http);
 
             rx->session = allocSessionObj(conn, id, NULL);
+            rx->traceId = sfmt("%d-%d-%d-%d", conn->net->address->seqno, rx->session->seqno, conn->net->seqno, rx->seqno);
             flags = (route->flags & HTTP_ROUTE_VISIBLE_SESSION) ? 0 : HTTP_COOKIE_HTTP;
+            if (conn->secure) {
+                flags |= HTTP_COOKIE_SECURE;
+            }
+            flags |= HTTP_COOKIE_SAME_LAX;
             cookie = route->cookie ? route->cookie : HTTP_SESSION_COOKIE;
             lifespan = (route->flags & HTTP_ROUTE_PERSIST_COOKIE) ? rx->session->lifespan : 0;
             url = (route->prefix && *route->prefix) ? route->prefix : "/";
             httpSetCookie(conn, cookie, rx->session->id, url, NULL, lifespan, flags);
-            httpTrace(conn, "request.session.create", "context", "cookie:'%s',session:'%s'", cookie, rx->session->id);
+            httpTrace(conn->trace, "session.create", "context", "cookie:'%s', session:'%s'", cookie, rx->session->id);
 
             if ((route->flags & HTTP_ROUTE_XSRF) && rx->securityToken) {
                 httpSetSessionVar(conn, ME_XSRF_COOKIE, rx->securityToken);
@@ -18469,11 +22358,16 @@ PUBLIC int httpAddSecurityToken(HttpConn *conn, bool recreate)
 {
     HttpRoute   *route;
     cchar       *securityToken, *url;
+    int         flags;
 
     route = conn->rx->route;
     securityToken = httpGetSecurityToken(conn, recreate);
     url = (route->prefix && *route->prefix) ? route->prefix : "/";
-    httpSetCookie(conn, ME_XSRF_COOKIE, securityToken, url, NULL,  0, 0);
+    flags = (route->flags & HTTP_ROUTE_VISIBLE_SESSION) ? 0 : HTTP_COOKIE_HTTP;
+    if (conn->secure) {
+        flags |= HTTP_COOKIE_SECURE;
+    }
+    httpSetCookie(conn, ME_XSRF_COOKIE, securityToken, url, NULL,  0, flags);
     httpSetHeaderString(conn, ME_XSRF_HEADER, securityToken);
     return 0;
 }
@@ -18492,14 +22386,14 @@ PUBLIC bool httpCheckSecurityToken(HttpConn *conn)
         if (!requestToken) {
             requestToken = httpGetParam(conn, ME_XSRF_PARAM, 0);
             if (!requestToken) {
-                httpTrace(conn, "request.xsrf.error", "error", "msg:'Missing security token in request'");
+                httpTrace(conn->trace, "session.xsrf.error", "error", "msg:'Missing security token in request'");
             }
         }
         if (!smatch(sessionToken, requestToken)) {
             /*
                 Potential CSRF attack. Deny request. Re-create a new security token so legitimate clients can retry.
              */
-            httpTrace(conn, "request.xsrf.error", "error",
+            httpTrace(conn->trace, "session.xsrf.error", "error",
                 "msg:'Security token in request does not match session token',xsrf:'%s',sessionXsrf:'%s'",
                 requestToken, sessionToken);
             httpAddSecurityToken(conn, 1);
@@ -18545,48 +22439,7 @@ static void manageStage(HttpStage *stage, int flags);
  */
 static void outgoing(HttpQueue *q, HttpPacket *packet)
 {
-    int     enableService;
-
-    /*
-        Handlers service routines must only be auto-enabled if better than ready.
-     */
-    enableService = !(q->stage->flags & HTTP_STAGE_HANDLER) || (q->conn->state >= HTTP_STATE_READY) ? 1 : 0;
-    httpPutForService(q, packet, enableService);
-}
-
-
-/*
-    Incoming data routine.  Simply transfer the data upstream to the next filter or handler.
- */
-static void incoming(HttpQueue *q, HttpPacket *packet)
-{
-    assert(q);
-    assert(packet);
-
-    if (q->nextQ->put) {
-        httpPutPacketToNext(q, packet);
-    } else {
-        /* This queue is the last queue in the pipeline */
-        if (httpGetPacketLength(packet) > 0) {
-            if (packet->flags & HTTP_PACKET_SOLO) {
-                httpPutForService(q, packet, HTTP_DELAY_SERVICE);
-            } else {
-                httpJoinPacketForService(q, packet, 0);
-            }
-        } else {
-            /* Zero length packet means eof */
-            httpPutForService(q, packet, HTTP_DELAY_SERVICE);
-        }
-        HTTP_NOTIFY(q->conn, HTTP_EVENT_READABLE, 0);
-    }
-}
-
-
-PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet)
-{
-    assert(q);
-    assert(packet);
-    httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+    httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
 }
 
 
@@ -18601,6 +22454,44 @@ PUBLIC void httpDefaultOutgoingServiceStage(HttpQueue *q)
         }
         httpPutPacketToNext(q, packet);
     }
+}
+
+
+/*
+    Default incoming data routine. Simply transfer the data upstream to the next filter or handler.
+    This will join incoming packets.
+ */
+static void incoming(HttpQueue *q, HttpPacket *packet)
+{
+    assert(q);
+    assert(packet);
+
+    if (q->nextQ->put) {
+        httpPutPacketToNext(q, packet);
+    } else {
+        /*
+            No upstream put routine to accept the packet. So put on this queues service routine
+            for deferred processing. Join packets by default.
+         */
+        if (httpGetPacketLength(packet) > 0) {
+            if (packet->flags & HTTP_PACKET_SOLO) {
+                httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+            } else {
+                httpJoinPacketForService(q, packet, HTTP_DELAY_SERVICE);
+            }
+        } else {
+            /* Zero length packet means eof */
+            httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+        }
+    }
+}
+
+
+PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet)
+{
+    assert(q);
+    assert(packet);
+    httpPutForService(q, packet, HTTP_DELAY_SERVICE);
 }
 
 
@@ -18681,20 +22572,155 @@ PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module)
  */
 
 
+/********* Start of file src/tailFilter.c ************/
+
+/*
+    tailFilter.c -- Filter for the start/end of request pipeline.
+
+    Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
+ */
+
+/********************************* Includes ***********************************/
+
+
+
+/********************************** Forwards **********************************/
+
+static HttpPacket *createAltBodyPacket(HttpQueue *q);
+static void incomingTail(HttpQueue *q, HttpPacket *packet);
+static void outgoingTail(HttpQueue *q, HttpPacket *packet);
+static void outgoingTailService(HttpQueue *q);
+
+/*********************************** Code *************************************/
+
+PUBLIC int httpOpenTailFilter()
+{
+    HttpStage     *filter;
+
+    if ((filter = httpCreateFilter("tailFilter", NULL)) == 0) {
+        return MPR_ERR_CANT_CREATE;
+    }
+    HTTP->tailFilter = filter;
+    filter->incoming = incomingTail;
+    filter->outgoing = outgoingTail;
+    filter->outgoingService = outgoingTailService;
+    return 0;
+}
+
+
+static void incomingTail(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+
+    conn = q->conn;
+    rx = conn->rx;
+
+    if (q->net->eof) {
+        httpSetEof(conn);
+    }
+    httpPutPacketToNext(q, packet);
+    if (rx->eof) {
+        httpPutPacketToNext(q, httpCreateEndPacket());
+    }
+    if (rx->route && conn->readq->first) {
+        HTTP_NOTIFY(conn, HTTP_EVENT_READABLE, 0);
+    }
+}
+
+
+static void outgoingTail(HttpQueue *q, HttpPacket *packet)
+{
+    HttpNet     *net;
+    HttpConn    *conn;
+    HttpTx      *tx;
+    HttpPacket  *headers, *tail;
+
+    conn = q->conn;
+    tx = conn->tx;
+    net = q->net;
+    conn->lastActivity = conn->http->now;
+
+    if (!(tx->flags & HTTP_TX_HEADERS_CREATED)) {
+        headers = httpCreateHeaders(q, NULL);
+        while (httpGetPacketLength(headers) > net->outputq->packetSize) {
+            tail = httpSplitPacket(headers, net->outputq->packetSize);
+            httpPutForService(q, headers, 1);
+            headers = tail;
+        }
+        httpPutForService(q, headers, 1);
+        if (tx->altBody) {
+            httpPutForService(q, createAltBodyPacket(q), 1);
+        }
+    }
+    if (packet->flags & HTTP_PACKET_DATA) {
+        tx->bytesWritten += httpGetPacketLength(packet);
+        if (tx->bytesWritten > conn->limits->txBodySize) {
+            httpLimitError(conn, HTTP_CODE_REQUEST_TOO_LARGE | ((tx->bytesWritten) ? HTTP_ABORT : 0),
+                "Http transmission aborted. Exceeded transmission max body of %lld bytes", conn->limits->txBodySize);
+        }
+    }
+    httpPutForService(q, packet, 1);
+}
+
+
+static void outgoingTailService(HttpQueue *q)
+{
+    HttpConn    *conn;
+    HttpNet     *net;
+    HttpPacket  *packet;
+
+    conn = q->conn;
+    net = conn->net;
+
+    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
+        if (!httpWillQueueAcceptPacket(q, net->outputq, packet)) {
+            httpPutBackPacket(q, packet);
+            return;
+        }
+        httpPutPacket(net->outputq, packet);
+    }
+}
+
+
+/*
+    Create an alternate response body for error responses.
+ */
+static HttpPacket *createAltBodyPacket(HttpQueue *q)
+{
+    HttpTx      *tx;
+    HttpPacket  *packet;
+
+    tx = q->conn->tx;
+    packet = httpCreateDataPacket(slen(tx->altBody));
+    mprPutStringToBuf(packet->content, tx->altBody);
+    return packet;
+}
+
+
+/*
+    Copyright (c) Embedthis Software. All Rights Reserved.
+    This software is distributed under commercial and open source licenses.
+    You may use the Embedthis Open Source license or you may acquire a
+    commercial license from Embedthis Software. You agree to be fully bound
+    by the terms of either license. Consult the LICENSE.md distributed with
+    this software for full details and other copyrights.
+ */
+
+
 /********* Start of file src/trace.c ************/
 
 /*
     trace.c -- Trace data
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
 
-    Event type default labels:
-
-        request: 1
-        result:  2
-        context: 3
-        form:    4
-        body:    5
-        debug:   5
+    Event types and trace levels:
+    0: debug
+    1: request
+    2: error, result
+    3: context
+    4: packet
+    5: detail
  */
 
 /********************************* Includes ***********************************/
@@ -18706,14 +22732,14 @@ PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module)
 static void manageTrace(HttpTrace *trace, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
+        mprMark(trace->buf);
+        mprMark(trace->events);
         mprMark(trace->file);
         mprMark(trace->format);
         mprMark(trace->lastTime);
-        mprMark(trace->buf);
-        mprMark(trace->path);
-        mprMark(trace->events);
         mprMark(trace->mutex);
         mprMark(trace->parent);
+        mprMark(trace->path);
     }
 }
 
@@ -18734,15 +22760,19 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent)
         if ((trace->events = mprCreateHash(0, MPR_HASH_STATIC_VALUES)) == 0) {
             return 0;
         }
+        mprAddKey(trace->events, "debug", ITOP(0));
         mprAddKey(trace->events, "request", ITOP(1));
-        mprAddKey(trace->events, "result", ITOP(2));
         mprAddKey(trace->events, "error", ITOP(2));
+        mprAddKey(trace->events, "result", ITOP(2));
         mprAddKey(trace->events, "context", ITOP(3));
-        mprAddKey(trace->events, "form", ITOP(4));
-        mprAddKey(trace->events, "body", ITOP(5));
-        mprAddKey(trace->events, "debug", ITOP(5));
+        mprAddKey(trace->events, "packet", ITOP(4));
+        mprAddKey(trace->events, "detail", ITOP(5));
 
+        /*
+            Max log file size
+         */
         trace->size = HTTP_TRACE_MAX_SIZE;
+        trace->maxContent = MAXINT;
         trace->formatter = httpDetailTraceFormatter;
         trace->logger = httpWriteTraceLogFile;
         trace->mutex = mprCreateLock();
@@ -18796,6 +22826,12 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name)
         }
         mprAddKey(trace->events, "result", ITOP(0));
         formatter = httpCommonTraceFormatter;
+
+#if FUTURE
+    } else if (smatch(name, "simple")) {
+       formatter = httpSimpleTraceFormatter;
+#endif
+
     } else {
        formatter = httpDetailTraceFormatter;
     }
@@ -18821,167 +22857,76 @@ PUBLIC void httpSetTraceLogger(HttpTrace *trace, HttpTraceLogger callback)
 
 
 /*
-    Internal convenience: Used for incoming and outgoing packets.
+    Inner routine for httpTrace()
  */
-PUBLIC bool httpTraceBody(HttpConn *conn, bool outgoing, HttpPacket *packet, ssize len)
+PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...)
 {
-    cchar   *event, *type;
+    va_list     args;
 
-    if (!conn) {
+    assert(event && *event);
+    assert(type && *type);
+
+    va_start(args, fmt);
+    httpFormatTrace(trace, event, type, flags, NULL, 0, fmt, args);
+    va_end(args);
+    return 1;
+}
+
+
+PUBLIC bool httpTracePacket(HttpTrace *trace, cchar *event, cchar *type, int flags, HttpPacket *packet, cchar *fmt, ...)
+{
+    va_list     args;
+    int         level;
+
+    assert(packet);
+
+    if (!trace || !packet) {
         return 0;
     }
-    if (len < 0) {
-        len = httpGetPacketLength(packet);
+    level = PTOI(mprLookupKey(trace->events, type));
+    if (level > HTTP->traceLevel) { \
+        return 0;
     }
-    if (outgoing) {
-        if (conn->endpoint) {
-            type = "body";
-            event = "tx.body.data";
-        } else {
-            if (sstarts(conn->tx->mimeType, "application/x-www-form-urlencoded")) {
-                type = "form";
-                event = "tx.body.form";
-            } else {
-                type = "body";
-                event = "tx.body.data";
-            }
-        }
-    } else {
-        if (conn->endpoint) {
-            if (conn->rx->form) {
-                type = "form";
-                event = "rx.body.form";
-            } else {
-                type = "body";
-                event = "rx.body.data";
-            }
-        } else {
-            type = "body";
-            event = "rx.body.data";
-        }
-    }
-    return httpTracePacket(conn, event, type, packet, "length:%zd", len);
+    va_start(args, fmt);
+    httpFormatTrace(trace, event, type, flags | HTTP_TRACE_PACKET, (char*) packet, 0, fmt, args);
+    va_end(args);
+    return 1;
 }
 
 
 /*
-    Trace request body content
+    Trace request body data
  */
-PUBLIC bool httpTraceContent(HttpConn *conn, cchar *event, cchar *type, cchar *buf, ssize len, cchar *values, ...)
+PUBLIC bool httpTraceData(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, ...)
 {
     Http        *http;
-    HttpTrace   *trace;
-    va_list     ap;
+    va_list     args;
     int         level;
 
-    assert(conn);
+    assert(trace);
     assert(buf);
 
     http = HTTP;
     if (http->traceLevel == 0) {
         return 0;
     }
-    if (conn) {
-        if (conn->rx->skipTrace) {
-            return 0;
-        }
-        trace = conn->trace;
-    } else {
-        trace = http->trace;
-    }
     level = PTOI(mprLookupKey(trace->events, type));
-    if (level == 0 || level > http->traceLevel) {
+    if (level > http->traceLevel) {
         return 0;
     }
-    if (conn) {
-        if ((smatch(event, "rx.body.data") && (conn->rx->bytesRead >= conn->trace->maxContent)) ||
-            (smatch(event, "tx.body.data") && (conn->tx->bytesWritten >= conn->trace->maxContent))) {
-            if (!conn->rx->webSocket) {
-                conn->rx->skipTrace = 1;
-                httpTrace(conn, event, type, "msg: 'Abbreviating body trace'");
-            }
-            return 0;
-        }
-    }
-    if (values) {
-        va_start(ap, values);
-        values = sfmtv(values, ap);
-        va_end(ap);
-    }
-    httpFormatTrace(trace, conn, event, type, values, buf, len);
+    va_start(args, fmt);
+    httpFormatTrace(trace, event, type, flags, buf, len, fmt, args);
+    va_end(args);
     return 1;
 }
 
 
 /*
-    Trace any packet
+    Format and emit trace
  */
-PUBLIC bool httpTracePacket(HttpConn *conn, cchar *event, cchar *type, HttpPacket *packet, cchar *values, ...)
+PUBLIC void httpFormatTrace(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args)
 {
-    va_list     ap;
-    int         level;
-
-    assert(conn);
-    assert(packet);
-
-    if (!conn || conn->http->traceLevel == 0 || conn->rx->skipTrace) {
-        return 0;
-    }
-    level = PTOI(mprLookupKey(conn->trace->events, type));
-    if (level == 0 || level > conn->http->traceLevel) { \
-        return 0;
-    }
-    if (packet->prefix) {
-        httpTraceContent(conn, event, type, mprGetBufStart(packet->prefix), mprGetBufLength(packet->prefix), 0);
-    }
-    if (values) {
-        va_start(ap, values);
-        values = sfmtv(values, ap);
-        va_end(ap);
-    }
-    if (packet->content) {
-        if (values) {
-            httpTraceContent(conn, event, type, mprGetBufStart(packet->content), httpGetPacketLength(packet), "%s", values);
-        } else {
-            httpTraceContent(conn, event, type, mprGetBufStart(packet->content), httpGetPacketLength(packet), 0);
-        }
-    }
-    return 1;
-}
-
-
-/*
-    Inner routine for httpTrace()
-    Conn may be null.
- */
-PUBLIC bool httpTraceProc(HttpConn *conn, cchar *event, cchar *type, cchar *values, ...)
-{
-    HttpTrace   *trace;
-    va_list     ap;
-
-    assert(event && *event);
-    assert(type && *type);
-
-    if (conn && conn->rx->skipTrace) {
-        return 0;
-    }
-    trace = conn ? conn->trace : HTTP->trace;
-
-    if (values) {
-        va_start(ap, values);
-        values = sfmtv(values, ap);
-        va_end(ap);
-    }
-    httpFormatTrace(trace, conn, event, type, values, 0, 0);
-    return 1;
-}
-
-
-
-PUBLIC void httpFormatTrace(HttpTrace *trace, HttpConn *conn, cchar *event, cchar *type, cchar *values, cchar *buf,
-    ssize len)
-{
-    (trace->formatter)(trace, conn, event, type, values, buf, len);
+    (trace->formatter)(trace, event, type, flags, buf, len, fmt, args);
 }
 
 
@@ -18995,70 +22940,77 @@ PUBLIC void httpWriteTrace(HttpTrace *trace, cchar *buf, ssize len)
 
 
 /*
-    Get a printable version of a buffer. Return a pointer to the start of printable data.
-    This will use the tx or rx mime type if possible.
-    Skips UTF encoding prefixes
+    Format a detailed request message
  */
-PUBLIC cchar *httpMakePrintable(HttpTrace *trace, HttpConn *conn, cchar *event, cchar *buf, ssize *lenp)
+PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *data, ssize len, cchar *fmt, va_list args)
 {
-    cchar   *start, *cp, *digits;
-    char    *data, *dp;
-    ssize   len;
-    int     i;
+    HttpPacket  *packet;
+    MprBuf      *buf;
+    MprTime     now;
+    char        *msg;
+    bool        hex;
 
-    if (conn) {
-        if (smatch(event, "rx.body")) {
-            if (sstarts(mprLookupMime(0, conn->rx->mimeType), "text/")) {
-                return buf;
-            }
-        } else if (smatch(event, "tx.body")) {
-            if (sstarts(mprLookupMime(0, conn->tx->mimeType), "text/")) {
-                return buf;
-            }
+    assert(trace);
+    lock(trace);
+
+    hex = (trace->flags & HTTP_TRACE_HEX) ? 1 : 0;
+
+    if (!trace->buf) {
+        trace->buf = mprCreateBuf(0, 0);
+    }
+    buf = trace->buf;
+    mprFlushBuf(buf);
+
+    now = mprGetTime();
+    if (trace->lastMark < (now + TPS) || trace->lastTime == 0) {
+        trace->lastTime = mprGetDate("%T");
+        trace->lastMark = now;
+    }
+
+    if (event && type) {
+        if (scontains(event, ".tx")) {
+            mprPutToBuf(buf, "%s SEND event=%s type=%s", trace->lastTime, event, type);
+        } else {
+            mprPutToBuf(buf, "%s RECV event=%s type=%s", trace->lastTime, event, type);
         }
     }
-    start = buf;
-    len = *lenp;
-    if (len > 3 && start[0] == (char) 0xef && start[1] == (char) 0xbb && start[2] == (char) 0xbf) {
-        /* Step over UTF encoding */
-        start += 3;
-        *lenp -= 3;
+    if (fmt) {
+        mprPutCharToBuf(buf, ' ');
+        msg = sfmtv(fmt, args);
+        mprPutStringToBuf(buf, msg);
     }
-    len = min(len, trace->maxContent);
-
-    for (i = 0; i < len; i++) {
-        if (!isprint((uchar) start[i]) && start[i] != '\n' && start[i] != '\r' && start[i] != '\t') {
-            data = mprAlloc(len * 3 + ((len / 16) + 1) + 1);
-            digits = "0123456789ABCDEF";
-            for (i = 0, cp = start, dp = data; cp < &start[len]; cp++) {
-                *dp++ = digits[(*cp >> 4) & 0x0f];
-                *dp++ = digits[*cp & 0x0f];
-                *dp++ = ' ';
-                if ((++i % 16) == 0) {
-                    *dp++ = '\n';
-                }
-            }
-            *dp++ = '\n';
-            *dp = '\0';
-            start = data;
-            *lenp = dp - start;
-            break;
+    if (fmt || event || type) {
+        mprPutStringToBuf(buf, "\n");
+    }
+    if (flags & HTTP_TRACE_PACKET) {
+        packet = (HttpPacket*) data;
+        if (packet->prefix) {
+            len = mprGetBufLength(packet->prefix);
+            data = httpMakePrintable(trace, packet->prefix->start, &hex, &len);
+            mprPutBlockToBuf(buf, data, len);
         }
+        if (packet->content) {
+            len = mprGetBufLength(packet->content);
+            data = httpMakePrintable(trace, packet->content->start, &hex, &len);
+            mprPutBlockToBuf(buf, data, len);
+        }
+        mprPutStringToBuf(buf, "\n");
+    } else if (data && len > 0) {
+        data = httpMakePrintable(trace, data, &hex, &len);
+        mprPutBlockToBuf(buf, data, len);
+        mprPutStringToBuf(buf, "\n");
     }
-    return start;
+    httpWriteTrace(trace, mprGetBufStart(buf), mprGetBufLength(buf));
+    unlock(trace);
 }
 
 
-/*
-    Format a detailed request message
- */
-PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *event, cchar *type, cchar *values,
-    cchar *data, ssize len)
+#if FUTURE
+PUBLIC void httpSimpleTraceFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags cchar *data, ssize len, cchar *fmt, va_list args)
 {
     MprBuf      *buf;
-    MprTime     now;
-    char        *cp;
-    int         client, sessionSeqno, gotColon;
+    char        *msg;
+    bool        hex;
 
     assert(trace);
     assert(event);
@@ -19071,49 +23023,154 @@ PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *ev
     buf = trace->buf;
     mprFlushBuf(buf);
 
-    if (conn) {
-        now = mprGetTime();
-        if (trace->lastMark < (now + TPS) || trace->lastTime == 0) {
-            trace->lastTime = mprGetDate("%T");
-            trace->lastMark = now;
-        }
-        client = conn->address ? conn->address->seqno : 0;
-        sessionSeqno = conn->rx->session ? (int) stoi(conn->rx->session->id) : 0;
-        mprPutToBuf(buf, "%s %d-%d-%d-%d %s", trace->lastTime, client, sessionSeqno, conn->seqno, conn->rx->seqno, event);
-    } else {
-        mprPutToBuf(buf, "%s: %s", trace->lastTime, event);
-    }
-    if (values) {
-        mprPutCharToBuf(buf, ' ');
-        gotColon = 0;
-        for (cp = (char*) values; *cp; cp++) {
-            if (cp[0] == ':' && !gotColon) {
-                cp[0] = '=';
-                gotColon = 1;
-            } else if (cp[0] == ',') {
-                cp[0] = ' ';
-                gotColon = 0;
-            }
-        }
-        mprPutStringToBuf(buf, values);
-        mprPutCharToBuf(buf, '\n');
-    }
-    if (data) {
-        mprPutToBuf(buf, "\n----\n");
-        data = httpMakePrintable(trace, conn, event, data, &len);
+    if (data && len > 0) {
+        hex = 0;
+        data = httpMakePrintable(trace, data, &hex, &len);
         mprPutBlockToBuf(buf, data, len);
-        if (len > 0 && data[len - 1] != '\n') {
-            mprPutCharToBuf(buf, '\n');
-        }
-        mprPutToBuf(buf, "----\n");
     }
-    if (!values && !data) {
-        mprPutCharToBuf(buf, '\n');
+    mprPutToBuf(buf, "%s %s", event, type);
+    if (fmt) {
+        mprPutCharToBuf(buf, ' ');
+        msg = sfmtv(fmt, args);
+        mprPutStringToBuf(buf, msg);
     }
+    mprPutStringToBuf(buf, "\n");
+
     httpWriteTrace(trace, mprGetBufStart(buf), mprGetBufLength(buf));
     unlock(trace);
 }
+#endif
 
+
+/*
+    Common Log Formatter (NCSA)
+    This formatter only emits messages only for connections at their complete event.
+ */
+PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, cchar *type, cchar *event, int flags, cchar *data, ssize len, cchar *msg, va_list args)
+{
+    HttpConn    *conn;
+    HttpRx      *rx;
+    HttpTx      *tx;
+    MprBuf      *buf;
+    cchar       *fmt, *cp, *qualifier, *timeText, *value;
+    char        c, keyBuf[256];
+    int         buflen;
+
+    assert(trace);
+    assert(type && *type);
+    assert(event && *event);
+
+    conn = (HttpConn*) data;
+    if (!conn || len != 0) {
+        return;
+    }
+    if (!smatch(event, "result")) {
+        return;
+    }
+    rx = conn->rx;
+    tx = conn->tx;
+    fmt = trace->format;
+    if (fmt == 0 || fmt[0] == '\0') {
+        fmt = ME_HTTP_LOG_FORMAT;
+    }
+    buflen = ME_MAX_URI + 256;
+    buf = mprCreateBuf(buflen, buflen);
+
+    while ((c = *fmt++) != '\0') {
+        if (c != '%' || (c = *fmt++) == '%') {
+            mprPutCharToBuf(buf, c);
+            continue;
+        }
+        switch (c) {
+        case 'a':                           /* Remote IP */
+            mprPutStringToBuf(buf, conn->ip);
+            break;
+
+        case 'A':                           /* Local IP */
+            mprPutStringToBuf(buf, conn->sock->listenSock->ip);
+            break;
+
+        case 'b':
+            if (tx->bytesWritten == 0) {
+                mprPutCharToBuf(buf, '-');
+            } else {
+                mprPutIntToBuf(buf, tx->bytesWritten);
+            }
+            break;
+
+        case 'B':                           /* Bytes written (minus headers) */
+            mprPutIntToBuf(buf, (tx->bytesWritten - tx->headerSize));
+            break;
+
+        case 'h':                           /* Remote host */
+            mprPutStringToBuf(buf, conn->ip);
+            break;
+
+        case 'l':                           /* user identity - unknown */
+            mprPutCharToBuf(buf, '-');
+            break;
+
+        case 'n':                           /* Local host */
+            mprPutStringToBuf(buf, rx->parsedUri->host);
+            break;
+
+        case 'O':                           /* Bytes written (including headers) */
+            mprPutIntToBuf(buf, tx->bytesWritten);
+            break;
+
+        case 'r':                           /* First line of request */
+            mprPutToBuf(buf, "%s %s %s", rx->method, rx->uri, httpGetProtocol(conn->net));
+            break;
+
+        case 's':                           /* Response code */
+            mprPutIntToBuf(buf, tx->status);
+            break;
+
+        case 't':                           /* Time */
+            mprPutCharToBuf(buf, '[');
+            timeText = mprFormatLocalTime(MPR_DEFAULT_DATE, mprGetTime());
+            mprPutStringToBuf(buf, timeText);
+            mprPutCharToBuf(buf, ']');
+            break;
+
+        case 'u':                           /* Remote username */
+            mprPutStringToBuf(buf, conn->username ? conn->username : "-");
+            break;
+
+        case '{':                           /* Header line "{header}i" */
+            qualifier = fmt;
+            if ((cp = schr(qualifier, '}')) != 0) {
+                fmt = &cp[1];
+                switch (*fmt++) {
+                case 'i':
+                    sncopy(keyBuf, sizeof(keyBuf), qualifier, cp - qualifier);
+                    value = (char*) mprLookupKey(rx->headers, keyBuf);
+                    mprPutStringToBuf(buf, value ? value : "-");
+                    break;
+                default:
+                    mprPutSubStringToBuf(buf, qualifier, qualifier - cp);
+                }
+
+            } else {
+                mprPutCharToBuf(buf, c);
+            }
+            break;
+
+        case '>':
+            if (*fmt == 's') {
+                fmt++;
+                mprPutIntToBuf(buf, tx->status);
+            }
+            break;
+
+        default:
+            mprPutCharToBuf(buf, c);
+            break;
+        }
+    }
+    mprPutCharToBuf(buf, '\n');
+    httpWriteTrace(trace, mprBufToString(buf), mprGetBufLength(buf));
+}
 
 /************************************** TraceLogFile **************************/
 
@@ -19180,7 +23237,7 @@ PUBLIC int httpOpenTraceLogFile(HttpTrace *trace)
 
 
 /*
-    Start tracing when instructed via a command line option. No backup, max size or custom format.
+    Start tracing when instructed via a command line option.
  */
 PUBLIC int httpStartTracing(cchar *traceSpec)
 {
@@ -19244,136 +23301,65 @@ PUBLIC void httpWriteTraceLogFile(HttpTrace *trace, cchar *buf, ssize len)
 
 
 /*
-    Common Log Formatter (NCSA)
-    This formatter only emits messages only for connections at their complete event.
+    Get a printable version of a buffer. Return a pointer to the start of printable data.
+    This will use the tx or rx mime type if possible.
+    Skips UTF encoding prefixes
  */
-PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, HttpConn *conn, cchar *type, cchar *event, cchar *valuesUnused,
-    cchar *bufUnused, ssize lenUnused)
+PUBLIC cchar *httpMakePrintable(HttpTrace *trace, cchar *buf, bool *hex, ssize *lenp)
 {
-    HttpRx      *rx;
-    HttpTx      *tx;
-    MprBuf      *buf;
-    cchar       *fmt, *cp, *qualifier, *timeText, *value;
-    char        c, keyBuf[256];
-    int         len;
+    cchar   *start, *cp, *digits, *sol;
+    char    *data, *dp;
+    ssize   len, bsize, lines;
+    int     i, j;
 
-    assert(trace);
-    assert(type && *type);
-    assert(event && *event);
-
-    if (!conn) {
-        return;
+    start = buf;
+    len = *lenp;
+    if (len > 3 && start[0] == (char) 0xef && start[1] == (char) 0xbb && start[2] == (char) 0xbf) {
+        /* Step over UTF encoding */
+        start += 3;
+        *lenp -= 3;
     }
-    assert(type && *type);
-    assert(event && *event);
-
-    if (!smatch(event, "result")) {
-        return;
-    }
-    rx = conn->rx;
-    tx = conn->tx;
-    fmt = trace->format;
-    if (fmt == 0) {
-        fmt = ME_HTTP_LOG_FORMAT;
-    }
-    len = ME_MAX_URI + 256;
-    buf = mprCreateBuf(len, len);
-
-    while ((c = *fmt++) != '\0') {
-        if (c != '%' || (c = *fmt++) == '%') {
-            mprPutCharToBuf(buf, c);
-            continue;
-        }
-        switch (c) {
-        case 'a':                           /* Remote IP */
-            mprPutStringToBuf(buf, conn->ip);
-            break;
-
-        case 'A':                           /* Local IP */
-            mprPutStringToBuf(buf, conn->sock->listenSock->ip);
-            break;
-
-        case 'b':
-            if (tx->bytesWritten == 0) {
-                mprPutCharToBuf(buf, '-');
-            } else {
-                mprPutIntToBuf(buf, tx->bytesWritten);
-            }
-            break;
-
-        case 'B':                           /* Bytes written (minus headers) */
-            mprPutIntToBuf(buf, (tx->bytesWritten - tx->headerSize));
-            break;
-
-        case 'h':                           /* Remote host */
-            mprPutStringToBuf(buf, conn->ip);
-            break;
-
-        case 'l':                           /* user identity - unknown */
-            mprPutCharToBuf(buf, '-');
-            break;
-
-        case 'n':                           /* Local host */
-            mprPutStringToBuf(buf, rx->parsedUri->host);
-            break;
-
-        case 'O':                           /* Bytes written (including headers) */
-            mprPutIntToBuf(buf, tx->bytesWritten);
-            break;
-
-        case 'r':                           /* First line of request */
-            mprPutToBuf(buf, "%s %s %s", rx->method, rx->uri, conn->protocol);
-            break;
-
-        case 's':                           /* Response code */
-            mprPutIntToBuf(buf, tx->status);
-            break;
-
-        case 't':                           /* Time */
-            mprPutCharToBuf(buf, '[');
-            timeText = mprFormatLocalTime(MPR_DEFAULT_DATE, mprGetTime());
-            mprPutStringToBuf(buf, timeText);
-            mprPutCharToBuf(buf, ']');
-            break;
-
-        case 'u':                           /* Remote username */
-            mprPutStringToBuf(buf, conn->username ? conn->username : "-");
-            break;
-
-        case '{':                           /* Header line "{header}i" */
-            qualifier = fmt;
-            if ((cp = schr(qualifier, '}')) != 0) {
-                fmt = &cp[1];
-                switch (*fmt++) {
-                case 'i':
-                    sncopy(keyBuf, sizeof(keyBuf), qualifier, cp - qualifier);
-                    value = (char*) mprLookupKey(rx->headers, keyBuf);
-                    mprPutStringToBuf(buf, value ? value : "-");
-                    break;
-                default:
-                    mprPutSubStringToBuf(buf, qualifier, qualifier - cp);
+    for (i = 0; i < len; i++) {
+        if (*hex || (!isprint((uchar) start[i]) && start[i] != '\n' && start[i] != '\r' && start[i] != '\t')) {
+            /*
+                Round up lines, 4 chars per byte plush 3 chars per line (||\n)
+             */
+            lines = len / 16 + 1;
+            bsize = ((lines * 16) * 4) + (lines * 5) + 2;
+            data = mprAlloc(bsize);
+            digits = "0123456789ABCDEF";
+            for (i = 0, cp = start, dp = data; cp < &start[len]; ) {
+                sol = cp;
+                for (j = 0; j < 16 && cp < &start[len]; j++, cp++) {
+                    *dp++ = digits[(*cp >> 4) & 0x0f];
+                    *dp++ = digits[*cp & 0x0f];
+                    *dp++ = ' ';
                 }
-
-            } else {
-                mprPutCharToBuf(buf, c);
+                for (; j < 16; j++) {
+                    *dp++ = ' '; *dp++ = ' '; *dp++ = ' ';
+                }
+                *dp++ = ' '; *dp++ = ' '; *dp++ = '|';
+                for (j = 0, cp = sol; j < 16 && cp < &start[len]; j++, cp++) {
+                    *dp++ = isprint(*cp) ? *cp : '.';
+                }
+                for (; j < 16; j++) {
+                    *dp++ = ' ';
+                }
+                *dp++ = '|';
+                *dp++ = '\n';
+                assert((dp - data) <= bsize);
             }
-            break;
-
-        case '>':
-            if (*fmt == 's') {
-                fmt++;
-                mprPutIntToBuf(buf, tx->status);
-            }
-            break;
-
-        default:
-            mprPutCharToBuf(buf, c);
+            *dp = '\0';
+            assert((dp - data) <= bsize);
+            start = data;
+            *lenp = dp - start;
+            *hex = 1;
             break;
         }
     }
-    mprPutCharToBuf(buf, '\n');
-    httpWriteTrace(trace, mprBufToString(buf), mprGetBufLength(buf));
+    return start;
 }
+
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -19404,11 +23390,18 @@ static void manageTx(HttpTx *tx, int flags);
 
 PUBLIC HttpTx *httpCreateTx(HttpConn *conn, MprHash *headers)
 {
+    Http        *http;
+    HttpNet     *net;
     HttpTx      *tx;
+
+    assert(conn);
+    assert(conn->net);
 
     if ((tx = mprAllocObj(HttpTx, manageTx)) == 0) {
         return 0;
     }
+    http = conn->http;
+    net = conn->net;
     conn->tx = tx;
     tx->conn = conn;
     tx->status = HTTP_CODE_OK;
@@ -19416,13 +23409,6 @@ PUBLIC HttpTx *httpCreateTx(HttpConn *conn, MprHash *headers)
     tx->entityLength = -1;
     tx->chunkSize = -1;
     tx->cookies = mprCreateHash(HTTP_SMALL_HASH_SIZE, 0);
-    tx->headers = mprCreateHash(HTTP_SMALL_HASH_SIZE, 0);
-
-    tx->queue[HTTP_QUEUE_TX] = httpCreateQueueHead(conn, "TxHead");
-    conn->writeq = tx->queue[HTTP_QUEUE_TX]->nextQ;
-
-    tx->queue[HTTP_QUEUE_RX] = httpCreateQueueHead(conn, "RxHead");
-    conn->readq = tx->queue[HTTP_QUEUE_RX]->prevQ;
 
     if (headers) {
         tx->headers = headers;
@@ -19453,7 +23439,6 @@ static void manageTx(HttpTx *tx, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(tx->altBody);
-        mprMark(tx->authType);
         mprMark(tx->cache);
         mprMark(tx->cacheBuffer);
         mprMark(tx->cachedContent);
@@ -19473,8 +23458,6 @@ static void manageTx(HttpTx *tx, int flags)
         mprMark(tx->outputPipeline);
         mprMark(tx->outputRanges);
         mprMark(tx->parsedUri);
-        mprMark(tx->queue[0]);
-        mprMark(tx->queue[1]);
         mprMark(tx->rangeBoundary);
         mprMark(tx->webSockKey);
     }
@@ -19484,7 +23467,7 @@ static void manageTx(HttpTx *tx, int flags)
 /*
     Add key/value to the header hash. If already present, update the value
 */
-static void setHdr(HttpConn *conn, cchar *key, cchar *value)
+static void updateHdr(HttpConn *conn, cchar *key, cchar *value)
 {
     assert(key && *key);
     assert(value);
@@ -19525,7 +23508,7 @@ PUBLIC void httpAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
         value = MPR->emptyString;
     }
     if (conn->tx && !mprLookupKey(conn->tx->headers, key)) {
-        setHdr(conn, key, value);
+        updateHdr(conn, key, value);
     }
 }
 
@@ -19539,7 +23522,7 @@ PUBLIC void httpAddHeaderString(HttpConn *conn, cchar *key, cchar *value)
     assert(value);
 
     if (conn->tx && !mprLookupKey(conn->tx->headers, key)) {
-        setHdr(conn, key, sclone(value));
+        updateHdr(conn, key, sclone(value));
     }
 }
 
@@ -19586,10 +23569,10 @@ PUBLIC void httpAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
                 mprAddDuplicateKey(conn->tx->headers, key, value);
             }
         } else {
-            setHdr(conn, key, sfmt("%s, %s", (char*) kp->data, value));
+            updateHdr(conn, key, sfmt("%s, %s", (char*) kp->data, value));
         }
     } else {
-        setHdr(conn, key, value);
+        updateHdr(conn, key, value);
     }
 }
 
@@ -19613,10 +23596,10 @@ PUBLIC void httpAppendHeaderString(HttpConn *conn, cchar *key, cchar *value)
         if (scaselessmatch(key, "Set-Cookie")) {
             mprAddDuplicateKey(conn->tx->headers, key, sclone(value));
         } else {
-            setHdr(conn, key, sfmt("%s, %s", oldValue, value));
+            updateHdr(conn, key, sfmt("%s, %s", oldValue, value));
         }
     } else {
-        setHdr(conn, key, sclone(value));
+        updateHdr(conn, key, sclone(value));
     }
 }
 
@@ -19645,7 +23628,7 @@ PUBLIC void httpSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     va_start(vargs, fmt);
     value = sfmtv(fmt, vargs);
     va_end(vargs);
-    setHdr(conn, key, value);
+    updateHdr(conn, key, value);
 }
 
 
@@ -19654,7 +23637,7 @@ PUBLIC void httpSetHeaderString(HttpConn *conn, cchar *key, cchar *value)
     assert(key && *key);
     assert(value);
 
-    setHdr(conn, key, sclone(value));
+    updateHdr(conn, key, sclone(value));
 }
 
 
@@ -19679,23 +23662,24 @@ PUBLIC void httpFinalizeConnector(HttpConn *conn)
  */
 PUBLIC void httpFinalize(HttpConn *conn)
 {
-    HttpTx  *tx;
+    HttpTx      *tx;
 
     tx = conn->tx;
     if (!tx || tx->finalized) {
         return;
     }
-    tx->finalized = 1;
     if (conn->rx->session) {
         httpWriteSession(conn);
     }
+    httpFinalizeInput(conn);
     httpFinalizeOutput(conn);
+    tx->finalized = 1;
 }
 
 
 /*
-    This means the caller has generated the entire transmit body. Note: the data may not yet have drained from
-    the pipeline or socket and the caller may not have read a response.
+    The handler has generated the entire transmit body. Note: the data may not yet have drained from
+    the pipeline or socket and the caller may not have read all the input body content.
  */
 PUBLIC void httpFinalizeOutput(HttpConn *conn)
 {
@@ -19705,8 +23689,6 @@ PUBLIC void httpFinalizeOutput(HttpConn *conn)
     if (!tx || tx->finalizedOutput) {
         return;
     }
-    assert(conn->writeq);
-
     tx->responded = 1;
     tx->finalizedOutput = 1;
     if (!(tx->flags & HTTP_TX_PIPELINE)) {
@@ -19714,7 +23696,27 @@ PUBLIC void httpFinalizeOutput(HttpConn *conn)
         tx->pendingFinalize = 1;
         return;
     }
-    httpPutForService(conn->writeq, httpCreateEndPacket(), HTTP_SCHEDULE_QUEUE);
+    if (tx->finalizedInput) {
+        httpFinalize(conn);
+    }
+    httpPutPacket(conn->writeq, httpCreateEndPacket());
+}
+
+
+/*
+    This means the handler has processed all the input
+ */
+PUBLIC void httpFinalizeInput(HttpConn *conn)
+{
+    HttpTx      *tx;
+
+    tx = conn->tx;
+    if (tx && !tx->finalizedInput) {
+        tx->finalizedInput = 1;
+        if (tx->finalizedOutput) {
+            httpFinalize(conn);
+        }
+    }
 }
 
 
@@ -19730,6 +23732,12 @@ PUBLIC int httpIsOutputFinalized(HttpConn *conn)
 }
 
 
+PUBLIC int httpIsInputFinalized(HttpConn *conn)
+{
+    return conn->tx->finalizedInput;
+}
+
+
 /*
     This formats a response and sets the altBody. The response is not HTML escaped.
     This is the lowest level for formatResponse.
@@ -19737,7 +23745,7 @@ PUBLIC int httpIsOutputFinalized(HttpConn *conn)
 PUBLIC ssize httpFormatResponsev(HttpConn *conn, cchar *fmt, va_list args)
 {
     HttpTx      *tx;
-    char        *body;
+    cchar       *body;
 
     tx = conn->tx;
     tx->responded = 1;
@@ -19772,7 +23780,7 @@ PUBLIC ssize httpFormatResponse(HttpConn *conn, cchar *fmt, ...)
 PUBLIC ssize httpFormatResponseBody(HttpConn *conn, cchar *title, cchar *fmt, ...)
 {
     va_list     args;
-    char        *msg, *body;
+    cchar       *msg, *body;
 
     va_start(args, fmt);
     body = fmt ? sfmtv(fmt, args) : conn->errorMsg;
@@ -19795,7 +23803,7 @@ PUBLIC void *httpGetQueueData(HttpConn *conn)
 {
     HttpQueue     *q;
 
-    q = conn->tx->queue[HTTP_QUEUE_TX];
+    q = conn->writeq;
     return q->nextQ->queueData;
 }
 
@@ -19805,14 +23813,9 @@ PUBLIC void httpOmitBody(HttpConn *conn)
     HttpTx  *tx;
 
     tx = conn->tx;
-    if (!tx) {
-        return;
-    }
-    tx->flags |= HTTP_TX_NO_BODY;
-    tx->length = -1;
-    if (tx->flags & HTTP_TX_HEADERS_CREATED) {
-        /* Connectors will detect this also and disconnect */
-    } else {
+    if (tx && !(tx->flags & HTTP_TX_HEADERS_CREATED)) {
+        tx->flags |= HTTP_TX_NO_BODY;
+        tx->length = -1;
         httpDiscardData(conn, HTTP_QUEUE_TX);
     }
 }
@@ -19863,7 +23866,7 @@ PUBLIC void httpRedirect(HttpConn *conn, int status, cchar *targetUri)
             "<html><head><title>%s</title></head>\r\n"
             "<body><h1>%s</h1>\r\n<p>The document has moved <a href=\"%s\">here</a>.</p></body></html>\r\n",
             msg, msg, targetUri);
-        httpTrace(conn, "request.redirect", "context", "status:%d,location:'%s'", status, targetUri);
+        httpTrace(conn->trace, "http.redirect", "context", "status:%d,location:'%s'", status, targetUri);
     } else {
         httpFormatResponse(conn,
             "<!DOCTYPE html>\r\n"
@@ -19897,7 +23900,8 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
     MprTicks lifespan, int flags)
 {
     HttpRx      *rx;
-    char        *cp, *expiresAtt, *expires, *domainAtt, *domain, *secure, *httponly;
+    cchar       *domain, *domainAtt;
+    char        *cp, *expiresAtt, *expires, *secure, *httpOnly, *sameSite;
 
     rx = conn->rx;
     if (path == 0) {
@@ -19945,10 +23949,15 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
         expires = expiresAtt = "";
     }
     secure = (conn->secure & (flags & HTTP_COOKIE_SECURE)) ? "; secure" : "";
-    httponly = (flags & HTTP_COOKIE_HTTP) ?  "; httponly" : "";
-
+    httpOnly = (flags & HTTP_COOKIE_HTTP) ?  "; httponly" : "";
+    sameSite = "";
+    if (flags & HTTP_COOKIE_SAME_LAX) {
+        sameSite = "; SameSite=Lax";
+    } else if (flags & HTTP_COOKIE_SAME_STRICT) {
+        sameSite = "; SameSite=Strict";
+    }
     mprAddKey(conn->tx->cookies, name,
-        sjoin(value, "; path=", path, domainAtt, domain, expiresAtt, expires, secure, httponly, NULL));
+        sjoin(value, "; path=", path, domainAtt, domain, expiresAtt, expires, secure, httpOnly, sameSite, NULL));
 
     if ((cp = mprLookupKey(conn->tx->headers, "Cache-Control")) == 0 || !scontains(cp, "no-cache")) {
         httpAppendHeader(conn, "Cache-Control", "no-cache=\"set-cookie\"");
@@ -19999,10 +24008,33 @@ static void setCorsHeaders(HttpConn *conn)
 }
 
 
+PUBLIC HttpPacket *httpCreateHeaders(HttpQueue *q, HttpPacket *packet)
+{
+    HttpConn    *conn;
+
+    conn = q->conn;
+
+    if (!packet) {
+        packet = httpCreateHeaderPacket();
+        packet->conn = q->conn;
+    }
+#if ME_HTTP_HTTP2
+    if (q->net->protocol >= 2) {
+        httpCreateHeaders2(q, packet);
+    } else {
+        httpCreateHeaders1(q, packet);
+    }
+#else
+    httpCreateHeaders1(q, packet);
+#endif
+    return packet;
+}
+
+
 /*
-    Set headers for httpWriteHeaders. This defines standard headers.
+    Define headers for httpWriteHeaders. This defines standard headers.
  */
-static void setHeaders(HttpConn *conn, HttpPacket *packet)
+PUBLIC void httpPrepareHeaders(HttpConn *conn)
 {
     HttpRx      *rx;
     HttpTx      *tx;
@@ -20013,11 +24045,19 @@ static void setHeaders(HttpConn *conn, HttpPacket *packet)
     MprOff      length;
     int         next;
 
-    assert(packet->flags == HTTP_PACKET_HEADER);
-
     rx = conn->rx;
     tx = conn->tx;
     route = rx->route;
+
+    if (tx->flags & HTTP_TX_HEADERS_CREATED) {
+        return;
+    }
+    tx->flags |= HTTP_TX_HEADERS_CREATED;
+
+    if (conn->headersCallback) {
+        /* Must be before headers below */
+        (conn->headersCallback)(conn->headersCallbackArg);
+    }
 
     /*
         Create headers for cookies
@@ -20055,9 +24095,8 @@ static void setHeaders(HttpConn *conn, HttpPacket *packet)
 
     } else if (httpServerConn(conn)) {
         /* Server must not emit a content length header for 1XX, 204 and 304 status */
-        if (!((100 <= tx->status && tx->status <= 199) || tx->status == 204 || tx->status == 304 ||
-                tx->flags & HTTP_TX_NO_LENGTH)) {
-            if (length >= 0) {
+        if (!((100 <= tx->status && tx->status <= 199) || tx->status == 204 || tx->status == 304 || tx->flags & HTTP_TX_NO_LENGTH)) {
+            if (length > 0 || (length == 0 && conn->net->protocol < 2)) {
                 httpAddHeader(conn, "Content-Length", "%lld", length);
             }
         }
@@ -20084,19 +24123,21 @@ static void setHeaders(HttpConn *conn, HttpPacket *packet)
         if (!(route->flags & HTTP_ROUTE_STEALTH)) {
             httpAddHeaderString(conn, "Server", conn->http->software);
         }
-        /*
-            If keepAliveCount == 1
-         */
-        if (--conn->keepAliveCount > 0) {
-            assert(conn->keepAliveCount >= 1);
-            httpAddHeaderString(conn, "Connection", "Keep-Alive");
-            if (!(route->flags & HTTP_ROUTE_STEALTH)) {
-                httpAddHeader(conn, "Keep-Alive", "timeout=%lld, max=%d", conn->limits->inactivityTimeout / 1000,
-                    conn->keepAliveCount);
+        if (conn->net->protocol < 2) {
+            /*
+                If keepAliveCount == 1
+             */
+            if (--conn->keepAliveCount > 0) {
+                assert(conn->keepAliveCount >= 1);
+                httpAddHeaderString(conn, "Connection", "Keep-Alive");
+                if (!(route->flags & HTTP_ROUTE_STEALTH) || 1) {
+                    httpAddHeader(conn, "Keep-Alive", "timeout=%lld, max=%d", conn->limits->inactivityTimeout / 1000,
+                        conn->keepAliveCount);
+                }
+            } else {
+                /* Tell the peer to close the connection */
+                httpAddHeaderString(conn, "Connection", "close");
             }
-        } else {
-            /* Tell the peer to close the connection */
-            httpAddHeaderString(conn, "Connection", "close");
         }
         if (route->flags & HTTP_ROUTE_CORS) {
             setCorsHeaders(conn);
@@ -20119,6 +24160,7 @@ static void setHeaders(HttpConn *conn, HttpPacket *packet)
 }
 
 
+#if UNUSED
 PUBLIC void httpSetEntityLength(HttpConn *conn, int64 len)
 {
     HttpTx      *tx;
@@ -20129,6 +24171,7 @@ PUBLIC void httpSetEntityLength(HttpConn *conn, int64 len)
         tx->length = len;
     }
 }
+#endif
 
 
 /*
@@ -20175,7 +24218,7 @@ PUBLIC bool httpSetFilename(HttpConn *conn, cchar *filename, int flags)
 
     if (tx->flags & HTTP_TX_PIPELINE) {
         /* Filename being revised after pipeline created */
-        httpTrace(conn, "request.document", "context", "filename:'%s'", tx->filename);
+        httpTrace(conn->trace, "http.document", "context", "filename:'%s'", tx->filename);
     }
     return info->valid;
 }
@@ -20200,109 +24243,6 @@ PUBLIC void httpSetContentType(HttpConn *conn, cchar *mimeType)
     httpSetHeaderString(conn, "Content-Type", conn->tx->mimeType);
 }
 
-
-PUBLIC void httpWriteHeaders(HttpQueue *q, HttpPacket *packet)
-{
-    Http        *http;
-    HttpConn    *conn;
-    HttpTx      *tx;
-    HttpUri     *parsedUri;
-    HttpPacket  *altPacket;
-    MprKey      *kp;
-    MprBuf      *buf;
-
-    assert(packet->flags == HTTP_PACKET_HEADER);
-
-    conn = q->conn;
-    http = conn->http;
-    tx = conn->tx;
-    buf = packet->content;
-
-    if (tx->flags & HTTP_TX_HEADERS_CREATED) {
-        return;
-    }
-    tx->flags |= HTTP_TX_HEADERS_CREATED;
-    tx->responded = 1;
-    if (conn->headersCallback) {
-        /* Must be before headers below */
-        (conn->headersCallback)(conn->headersCallbackArg);
-    }
-    if (tx->flags & HTTP_TX_USE_OWN_HEADERS && !conn->error) {
-        conn->keepAliveCount = 0;
-        return;
-    }
-    setHeaders(conn, packet);
-
-    if (httpServerConn(conn)) {
-        mprPutStringToBuf(buf, conn->protocol);
-        mprPutCharToBuf(buf, ' ');
-        mprPutIntToBuf(buf, tx->status);
-        mprPutCharToBuf(buf, ' ');
-        mprPutStringToBuf(buf, httpLookupStatus(tx->status));
-        /* Server tracing of status happens in the "complete" event */
-
-    } else {
-        mprPutStringToBuf(buf, tx->method);
-        mprPutCharToBuf(buf, ' ');
-        parsedUri = tx->parsedUri;
-        if (http->proxyHost && *http->proxyHost) {
-            if (parsedUri->query && *parsedUri->query) {
-                mprPutToBuf(buf, "http://%s:%d%s?%s %s", http->proxyHost, http->proxyPort,
-                    parsedUri->path, parsedUri->query, conn->protocol);
-            } else {
-                mprPutToBuf(buf, "http://%s:%d%s %s", http->proxyHost, http->proxyPort, parsedUri->path, conn->protocol);
-            }
-        } else {
-            if (parsedUri->query && *parsedUri->query) {
-                mprPutToBuf(buf, "%s?%s %s", parsedUri->path, parsedUri->query, conn->protocol);
-            } else {
-                mprPutStringToBuf(buf, parsedUri->path);
-                mprPutCharToBuf(buf, ' ');
-                mprPutStringToBuf(buf, conn->protocol);
-            }
-        }
-        /* Client side trace */
-        httpTrace(conn, "tx.first.client", "request", "method:'%s',uri:'%s',protocol:'%s'", tx->method,
-            parsedUri->path, conn->protocol);
-    }
-    mprPutStringToBuf(buf, "\r\n");
-
-    /*
-        Output headers
-     */
-    kp = mprGetFirstKey(conn->tx->headers);
-    while (kp) {
-        mprPutStringToBuf(packet->content, kp->key);
-        mprPutStringToBuf(packet->content, ": ");
-        if (kp->data) {
-            mprPutStringToBuf(packet->content, kp->data);
-        }
-        mprPutStringToBuf(packet->content, "\r\n");
-        kp = mprGetNextKey(conn->tx->headers, kp);
-    }
-    httpTracePacket(conn, conn->endpoint ? "tx.headers.server" : "tx.headers.client", "context", packet, 0);
-
-    /*
-        By omitting the "\r\n" delimiter after the headers, chunks can emit "\r\nSize\r\n" as a single chunk delimiter
-     */
-    if (tx->chunkSize <= 0) {
-        mprPutStringToBuf(buf, "\r\n");
-    }
-    tx->headerSize = mprGetBufLength(buf);
-    tx->flags |= HTTP_TX_HEADERS_CREATED;
-    tx->authType = conn->authType;
-    q->count += httpGetPacketLength(packet);
-
-    if (tx->altBody) {
-        /* Error responses are emitted here */
-        httpDiscardQueueData(tx->queue[HTTP_QUEUE_TX]->nextQ, 0);
-        altPacket = httpCreateDataPacket(slen(tx->altBody));
-        mprPutStringToBuf(altPacket->content, tx->altBody);
-        packet = httpGetPacket(q);
-        httpPutBackPacket(q, altPacket);
-        httpPutBackPacket(q, packet);
-    }
-}
 
 
 PUBLIC bool httpFileExists(HttpConn *conn)
@@ -20342,7 +24282,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
     tx->responded = 1;
 
     for (totalWritten = 0; len > 0; ) {
-        if (conn->state >= HTTP_STATE_FINALIZED || conn->connError) {
+        if (conn->state >= HTTP_STATE_FINALIZED || conn->net->error) {
             return MPR_ERR_CANT_WRITE;
         }
         if (q->last && q->last != q->first && q->last->flags & HTTP_PACKET_DATA && mprGetBufSpace(q->last->content) > 0) {
@@ -20352,7 +24292,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
             if ((packet = httpCreateDataPacket(packetSize)) == 0) {
                 return MPR_ERR_MEMORY;
             }
-            httpPutForService(q, packet, HTTP_DELAY_SERVICE);
+            httpPutPacket(q, packet);
         }
         assert(mprGetBufSpace(packet->content) > 0);
         thisWrite = min(len, mprGetBufSpace(packet->content));
@@ -20379,7 +24319,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
         return MPR_ERR_CANT_WRITE;
     }
     if (httpClientConn(conn)) {
-        httpEnableConnEvents(conn);
+        httpEnableNetEvents(conn->net);
     }
     return totalWritten;
 }
@@ -20423,8 +24363,12 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...)
 
 /*
     uploadFilter.c - Upload file filter.
+
     The upload filter processes post data according to RFC-1867 ("multipart/form-data" post data).
     It saves the uploaded files in a configured upload directory.
+
+    The upload filter is configured in the standard pipeline before the request is parsed and routed.
+
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
 
@@ -20459,17 +24403,20 @@ typedef struct Upload {
 /********************************** Forwards **********************************/
 
 static void addUploadFile(HttpConn *conn, HttpUploadFile *upfile);
+static Upload *allocUpload(HttpQueue *q);
+static void cleanUploadedFiles(HttpConn *conn);
 static void closeUpload(HttpQueue *q);
 static char *getBoundary(char *buf, ssize bufLen, char *boundary, ssize boundaryLen, bool *pureData);
+static cchar *getUploadDir(HttpConn *conn);
 static void incomingUpload(HttpQueue *q, HttpPacket *packet);
 static void manageHttpUploadFile(HttpUploadFile *file, int flags);
 static void manageUpload(Upload *up, int flags);
-static int matchUpload(HttpConn *conn, HttpRoute *route, int dir);
 static int openUpload(HttpQueue *q);
 static int  processUploadBoundary(HttpQueue *q, char *line);
 static int  processUploadHeader(HttpQueue *q, char *line);
 static int  processUploadData(HttpQueue *q);
-static void cleanUploadedFiles(HttpConn *conn);
+static void renameUploadedFiles(HttpConn *conn);
+static void  startUpload(HttpQueue *q);
 
 /************************************* Code ***********************************/
 
@@ -20481,59 +24428,19 @@ PUBLIC int httpOpenUploadFilter()
         return MPR_ERR_CANT_CREATE;
     }
     HTTP->uploadFilter = filter;
-    filter->match = matchUpload;
+    filter->flags |= HTTP_STAGE_INTERNAL;
     filter->open = openUpload;
     filter->close = closeUpload;
+    filter->start = startUpload;
     filter->incoming = incomingUpload;
     return 0;
 }
 
 
 /*
-    Match if this request needs the upload filter. Return true if needed.
- */
-static int matchUpload(HttpConn *conn, HttpRoute *route, int dir)
-{
-    HttpRx  *rx;
-    char    *pat;
-    ssize   len;
-
-    if (!(dir & HTTP_STAGE_RX)) {
-        return HTTP_ROUTE_OMIT_FILTER;
-    }
-    rx = conn->rx;
-    if (!(rx->flags & HTTP_POST) || rx->remainingContent <= 0) {
-        return HTTP_ROUTE_OMIT_FILTER;
-    }
-    pat = "multipart/form-data";
-    len = strlen(pat);
-    if (sncaselesscmp(rx->mimeType, pat, len) == 0) {
-        rx->upload = 1;
-        return HTTP_ROUTE_OK;
-    }
-    return HTTP_ROUTE_OMIT_FILTER;
-}
-
-
-static cchar *getUploadDir(HttpRoute *route)
-{
-    cchar   *uploadDir;
-
-    if ((uploadDir = httpGetDir(route, "upload")) == 0) {
-#if ME_WIN_LIKE
-        uploadDir = mprNormalizePath(getenv("TEMP"));
-#else
-        uploadDir = sclone("/tmp");
-#endif
-    }
-    return uploadDir;
-}
-
-
-/*
     Initialize the upload filter for a new request
  */
-static int openUpload(HttpQueue *q)
+static Upload *allocUpload(HttpQueue *q)
 {
     HttpConn    *conn;
     HttpRx      *rx;
@@ -20543,16 +24450,13 @@ static int openUpload(HttpQueue *q)
 
     conn = q->conn;
     rx = conn->rx;
-
     if ((up = mprAllocObj(Upload, manageUpload)) == 0) {
-        return MPR_ERR_MEMORY;
+        return 0;
     }
     q->queueData = up;
     up->contentState = HTTP_UPLOAD_BOUNDARY;
-    rx->autoDelete = rx->route->autoDelete;
-    rx->renameUploads = rx->route->renameUploads;
 
-    uploadDir = getUploadDir(rx->route);
+    uploadDir = getUploadDir(conn);
     httpSetParam(conn, "UPLOAD_DIR", uploadDir);
 
     if ((boundary = strstr(rx->mimeType, "boundary=")) != 0) {
@@ -20562,9 +24466,9 @@ static int openUpload(HttpQueue *q)
     }
     if (up->boundaryLen == 0 || *up->boundary == '\0') {
         httpError(conn, HTTP_CODE_BAD_REQUEST, "Bad boundary");
-        return MPR_ERR_BAD_ARGS;
+        return 0;
     }
-    return 0;
+    return up;
 }
 
 
@@ -20581,19 +24485,49 @@ static void manageUpload(Upload *up, int flags)
 }
 
 
-/*
-    Cleanup when the entire request has complete
- */
-static void closeUpload(HttpQueue *q)
+static void freeUpload(HttpQueue *q)
 {
     HttpUploadFile  *file;
     Upload          *up;
 
-    up = q->queueData;
-    cleanUploadedFiles(q->conn);
-    if (up->currentFile) {
-        file = up->currentFile;
-        file->filename = 0;
+    if ((up = q->queueData) != 0) {
+        if (up->currentFile) {
+            file = up->currentFile;
+            file->filename = 0;
+        }
+        q->queueData = 0;
+    }
+}
+
+
+static int openUpload(HttpQueue *q)
+{
+    /* Necessary because we want closeUpload to be able to clean files */
+    return 0;
+}
+
+
+static void closeUpload(HttpQueue *q)
+{
+    Upload      *up;
+
+    if ((up = q->queueData) != 0) {
+        cleanUploadedFiles(q->conn);
+        freeUpload(q);
+    }
+}
+
+
+/*
+    Start is invoked when the full request pipeline is started. For upload, this actually happens after
+    all input has been received.
+ */
+static void startUpload(HttpQueue *q)
+{
+    Upload      *up;
+
+    if ((up = q->queueData) != 0) {
+        renameUploadedFiles(q->conn);
     }
 }
 
@@ -20616,17 +24550,23 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
 
     conn = q->conn;
     rx = conn->rx;
-    up = q->queueData;
-    if (conn->error) {
+    if (!rx->upload || conn->error) {
+        httpPutPacketToNext(q, packet);
         return;
     }
-    if (httpGetPacketLength(packet) == 0) {
+    if ((up = q->queueData) == 0) {
+        if ((up = allocUpload(q)) == 0) {
+            return;
+        }
+    }
+    if (packet->flags & HTTP_PACKET_END) {
         if (up->contentState != HTTP_UPLOAD_CONTENT_END) {
             httpError(conn, HTTP_CODE_BAD_REQUEST, "Client supplied insufficient upload data");
         }
         httpPutPacketToNext(q, packet);
         return;
     }
+
     /*
         Put the packet data onto the service queue for buffering. This aggregates input data incase we don't have
         a complete mime record yet.
@@ -20803,7 +24743,7 @@ static int processUploadHeader(HttpQueue *q, char *line)
                 /*
                     Create the file to hold the uploaded data
                  */
-                uploadDir = getUploadDir(rx->route);
+                uploadDir = getUploadDir(conn);
                 up->tmpPath = mprGetTempPath(uploadDir);
                 if (up->tmpPath == 0) {
                     if (!mprPathExists(uploadDir, X_OK)) {
@@ -20813,7 +24753,7 @@ static int processUploadHeader(HttpQueue *q, char *line)
                         "Cannot create upload temp file %s. Check upload temp dir %s", up->tmpPath, uploadDir);
                     return MPR_ERR_CANT_OPEN;
                 }
-                httpTrace(conn, "request.upload.file", "context", "clientFilename:'%s',filename:'%s'",
+                httpTrace(conn->trace, "upload.file", "context", "clientFilename:'%s', filename:'%s'",
                     up->clientFilename, up->tmpPath);
 
                 up->file = mprOpenFile(up->tmpPath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
@@ -20860,12 +24800,11 @@ static void defineFileFields(HttpQueue *q, Upload *up)
     char            *key;
 
     conn = q->conn;
+#if DEPRECATED || 1
     if (conn->tx->handler == conn->http->ejsHandler) {
-        /*
-            Ejscript manages this for itself
-         */
         return;
     }
+#endif
     up = q->queueData;
     file = up->currentFile;
     key = sjoin("FILE_CLIENT_FILENAME_", up->name, NULL);
@@ -20989,14 +24928,14 @@ static int processUploadData(HttpQueue *q)
              */
             data[dataLen] = '\0';
 #if KEEP
-            httpTrace(conn, "request.upload.variables", "context", "'%s':'%s'", up->name, data);
+            httpTrace(conn->trace, "upload.variables", "context", "'%s':'%s'", up->name, data);
 #endif
             key = mprUriDecode(up->name);
             data = mprUriDecode(data);
             httpSetParam(conn, key, data);
 
             if (packet == 0) {
-                packet = httpCreatePacket(ME_MAX_BUFFER);
+                packet = httpCreatePacket(ME_BUFSIZE);
             }
             if (httpGetPacketLength(packet) > 0) {
                 /*
@@ -21005,7 +24944,6 @@ static int processUploadData(HttpQueue *q)
                 mprPutCharToBuf(packet->content, '&');
             } else {
                 conn->rx->mimeType = sclone("application/x-www-form-urlencoded");
-
             }
             mprPutToBuf(packet->content, "%s=%s", up->name, data);
         }
@@ -21077,26 +25015,57 @@ static void cleanUploadedFiles(HttpConn *conn)
 {
     HttpRx          *rx;
     HttpUploadFile  *file;
-    cchar           *path, *uploadDir;
     int             index;
 
     rx = conn->rx;
-    uploadDir = getUploadDir(rx->route);
 
     for (ITERATE_ITEMS(rx->files, file, index)) {
-        if (file->filename) {
-            if (rx->autoDelete) {
+        if (file->filename && rx->route) {
+            if (rx->route->autoDelete && !rx->route->renameUploads) {
                 mprDeletePath(file->filename);
-
-            } else if (rx->renameUploads) {
-                path = mprJoinPath(uploadDir, file->clientFilename);
-                if (rename(file->filename, path) != 0) {
-                    mprLog("http error", 0, "Cannot rename %s to %s", file->filename, path);
-                }
             }
             file->filename = 0;
         }
     }
+}
+
+
+static void renameUploadedFiles(HttpConn *conn)
+{
+    HttpRx          *rx;
+    HttpUploadFile  *file;
+    cchar           *path, *uploadDir;
+    int             index;
+
+    rx = conn->rx;
+    uploadDir = getUploadDir(conn);
+
+    for (ITERATE_ITEMS(rx->files, file, index)) {
+        if (file->filename && rx->route) {
+            if (rx->route->renameUploads) {
+                path = mprJoinPath(uploadDir, file->clientFilename);
+                if (rename(file->filename, path) != 0) {
+                    mprLog("http error", 0, "Cannot rename %s to %s", file->filename, path);
+                }
+                file->filename = path;
+            }
+        }
+    }
+}
+
+
+static cchar *getUploadDir(HttpConn *conn)
+{
+    cchar   *uploadDir;
+
+    if ((uploadDir = httpGetDir(conn->host->defaultRoute, "upload")) == 0) {
+#if ME_WIN_LIKE
+        uploadDir = mprNormalizePath(getenv("TEMP"));
+#else
+        uploadDir = sclone("/tmp");
+#endif
+    }
+    return uploadDir;
 }
 
 /*
@@ -21362,7 +25331,7 @@ PUBLIC HttpUri *httpCreateUriFromParts(cchar *scheme, cchar *host, int port, cch
 PUBLIC HttpUri *httpCloneUri(HttpUri *base, int flags)
 {
     HttpUri     *up;
-    char        *path, *cp, *tok;
+    cchar       *path, *cp, *tok;
 
     if ((up = mprAllocObj(HttpUri, manageUri)) == 0) {
         up->valid = 0;
@@ -21545,7 +25514,8 @@ PUBLIC char *httpFormatUri(cchar *scheme, cchar *host, int port, cchar *path, cc
 PUBLIC HttpUri *httpGetRelativeUri(HttpUri *base, HttpUri *target, int clone)
 {
     HttpUri     *uri;
-    char        *basePath, *bp, *cp, *tp, *startDiff;
+    cchar       *bp, *startDiff, *tp;
+    char        *basePath, *cp, *path;
     int         i, baseSegments, commonSegments;
 
     if (base == 0) {
@@ -21604,7 +25574,7 @@ PUBLIC HttpUri *httpGetRelativeUri(HttpUri *base, HttpUri *target, int clone)
     uri->scheme = 0;
     uri->port = 0;
 
-    uri->path = cp = mprAlloc(baseSegments * 3 + (int) slen(target->path) + 2);
+    uri->path = path = cp = mprAlloc(baseSegments * 3 + (int) slen(target->path) + 2);
     for (i = commonSegments; i < baseSegments; i++) {
         *cp++ = '.';
         *cp++ = '.';
@@ -21618,7 +25588,7 @@ PUBLIC HttpUri *httpGetRelativeUri(HttpUri *base, HttpUri *target, int clone)
          */
         cp[-1] = '\0';
     } else {
-        strcpy(uri->path, ".");
+        strcpy(path, ".");
     }
     return uri;
 }
@@ -22034,10 +26004,10 @@ static int getDefaultPort(cchar *scheme)
 
 static void trimPathToDirname(HttpUri *uri)
 {
-    char        *path, *cp;
-    int         len;
+    char    *path, *cp;
+    int     len;
 
-    path = uri->path;
+    path = (char*) uri->path;
     len = (int) slen(path);
     if (path[len - 1] == '/') {
         if (len > 1) {
@@ -22068,14 +26038,6 @@ static cchar *expandRouteName(HttpConn *conn, cchar *routeName)
     if (sstarts(routeName, "${app}")) {
         return sjoin(httpGetRouteTop(conn), &routeName[6], NULL);
     }
-#if DEPRECATE
-    if (routeName[0] == '|') {
-        HttpRoute   *route;
-        route = conn->rx->route;
-        assert(routeName[0] != '|');
-        return sjoin(route->prefix, &routeName[1], NULL);
-    }
-#endif
     return routeName;
 }
 
@@ -22167,7 +26129,6 @@ PUBLIC HttpRole *httpAddRole(HttpAuth *auth, cchar *name, cchar *abilities)
     if (mprAddKey(auth->roles, name, role) == 0) {
         return 0;
     }
-    mprDebug("http auth", 5, "Role \"%s\" defined, abilities=\"%s\"", role->name, abilities);
     return role;
 }
 
@@ -22400,7 +26361,7 @@ PUBLIC void httpCreateCGIParams(HttpConn *conn)
     mprAddKey(svars, "SERVER_ADDR", sock->acceptIp);
     mprAddKey(svars, "SERVER_NAME", host->name);
     mprAddKeyFmt(svars, "SERVER_PORT", "%d", sock->acceptPort);
-    mprAddKey(svars, "SERVER_PROTOCOL", conn->protocol);
+    mprAddKey(svars, "SERVER_PROTOCOL", sclone(httpGetProtocol(conn->net)));
     mprAddKey(svars, "SERVER_SOFTWARE", conn->http->software);
 
     /*
@@ -22470,9 +26431,9 @@ static void addParamsFromBuf(HttpConn *conn, cchar *buf, ssize len)
                 Append to existing keywords
              */
             prior = mprReadJsonObj(params, keyword);
-#if ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT
+#if (ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT) && (DEPRECATED || 1)
             /*
-                Just for ejscript, we allow embedded ".[]" in the keys
+                We allow embedded ".[]" in the keys
              */
             if (prior && prior->type == MPR_JSON_VALUE) {
                 if (*value) {
@@ -22519,18 +26480,17 @@ PUBLIC int httpAddBodyParams(HttpConn *conn)
     rx = conn->rx;
     q = conn->readq;
 
-    if (rx->eof && !(rx->flags & HTTP_ADDED_BODY_PARAMS)) {
+    if (rx->eof && (rx->form || rx->upload || rx->json) && !(rx->flags & HTTP_ADDED_BODY_PARAMS)) {
+        httpJoinPackets(q, -1);
         if (q->first && q->first->content) {
-            httpJoinPackets(q, -1);
             content = q->first->content;
-            if (rx->form || rx->upload) {
-                mprAddNullToBuf(content);
-                addParamsFromBuf(conn, mprGetBufStart(content), mprGetBufLength(content));
-
-            } else if (sstarts(rx->mimeType, "application/json")) {
+            mprAddNullToBuf(content);
+            if (rx->json) {
                 if (mprParseJsonInto(httpGetBodyInput(conn), httpGetParams(conn)) == 0) {
                     return MPR_ERR_BAD_FORMAT;
                 }
+            } else {
+                addParamsFromBuf(conn, mprGetBufStart(content), mprGetBufLength(content));
             }
         }
         rx->flags |= HTTP_ADDED_BODY_PARAMS;
@@ -22596,7 +26556,7 @@ static int sortParam(MprJson **j1, MprJson **j2)
     Return the request parameters as a string.
     This will return the exact same string regardless of the order of form parameters.
  */
-PUBLIC char *httpGetParamsString(HttpConn *conn)
+PUBLIC cchar *httpGetParamsString(HttpConn *conn)
 {
     HttpRx      *rx;
     MprJson     *jp, *params;
@@ -22689,7 +26649,7 @@ PUBLIC bool httpMatchParam(HttpConn *conn, cchar *var, cchar *value)
     Message frame states
  */
 #define WS_BEGIN       0
-#define WS_EXT_DATA    1                /* Unused */
+#define WS_EXT_DATA    1
 #define WS_MSG         2
 #define WS_CLOSED      3
 
@@ -22929,7 +26889,6 @@ static int openWebSock(HttpQueue *q)
 {
     HttpConn        *conn;
     HttpWebSocket   *ws;
-    HttpPacket      *packet;
 
     assert(q);
     conn = q->conn;
@@ -22940,10 +26899,10 @@ static int openWebSock(HttpQueue *q)
     ws->closeStatus = WS_STATUS_NO_STATUS;
     conn->timeoutCallback = webSockTimeout;
 
-    if ((packet = httpGetPacket(conn->writeq)) != 0) {
-        assert(packet->flags & HTTP_PACKET_HEADER);
-        httpPutForService(q, packet, HTTP_SCHEDULE_QUEUE);
-    }
+    /*
+        Create an empty data packet to force the headers out
+     */
+    httpPutPacketToNext(q->pair, httpCreateDataPacket(0));
     conn->tx->responded = 0;
     return 0;
 }
@@ -23015,7 +26974,7 @@ static void incomingWebSockData(HttpQueue *q, HttpPacket *packet)
          */
         httpJoinPacketForService(q, packet, 0);
     }
-    httpTracePacket(conn, "body", "request.websockets.data", packet, "state:%d,frame:%d,length:%zu",
+    httpTracePacket(conn->trace, "request.websockets.data", "packet", 0, packet, "state:%d, frame:%d, length:%zu",
         ws->state, ws->frameState, httpGetPacketLength(packet));
 
     if (packet->flags & HTTP_PACKET_END) {
@@ -23236,12 +27195,12 @@ static int processFrame(HttpQueue *q, HttpPacket *packet)
     assert(content);
 
     mprAddNullToBuf(content);
-    httpTrace(conn, "rx.websockets.packet", "body", "wsSeq:%d,wsTypeName:'%s',wsType:%d,wsLast:%d,wsLength:%zu",
+    httpTrace(conn->trace, "websockets.rx.packet", "context", "wsSeq:%d, wsTypeName:'%s', wsType:%d, wsLast:%d, wsLength:%zu",
          ws->rxSeq++, codetxt[packet->type], packet->type, packet->last, mprGetBufLength(content));
 
     switch (packet->type) {
     case WS_MSG_TEXT:
-        httpTracePacket(conn, "rx.body.websockets.data", "body", packet, 0);
+        httpTracePacket(conn->trace, "websockets.rx.data", "packet", 0, packet, 0);
         /* Fall through */
 
     case WS_MSG_BINARY:
@@ -23306,6 +27265,9 @@ static int processFrame(HttpQueue *q, HttpPacket *packet)
                 ws->currentMessageType = 0;
             }
         }
+        if (conn->readq->first) {
+            HTTP_NOTIFY(conn, HTTP_EVENT_READABLE, 0);
+        }
         break;
 
     case WS_MSG_CLOSE:
@@ -23340,10 +27302,10 @@ static int processFrame(HttpQueue *q, HttpPacket *packet)
                 }
             }
         }
-        httpTrace(conn, "rx.websockets.close", "context",
-            "wsCloseStatus:%d,wsCloseReason:'%s',wsClosing:%d", ws->closeStatus, ws->closeReason, ws->closing);
+        httpTrace(conn->trace, "websockets.rx.close", "context",
+            "wsCloseStatus:%d, wsCloseReason:'%s', wsClosing:%d", ws->closeStatus, ws->closeReason, ws->closing);
         if (ws->closing) {
-            httpDisconnect(conn);
+            httpDisconnectConn(conn);
         } else {
             /* Acknowledge the close. Echo the received status */
             httpSendClose(conn, WS_STATUS_OK, "OK");
@@ -23494,7 +27456,7 @@ PUBLIC ssize httpSendBlock(HttpConn *conn, int type, cchar *buf, ssize len, int 
 
     httpFlushQueue(q, flags);
     if (httpClientConn(conn)) {
-        httpEnableConnEvents(conn);
+        httpEnableNetEvents(conn->net);
     }
     return totalWritten;
 }
@@ -23535,7 +27497,7 @@ PUBLIC ssize httpSendClose(HttpConn *conn, int status, cchar *reason)
     if (reason) {
         scopy(&msg[2], len - 2, reason);
     }
-    httpTrace(conn, "tx.websockets.close", "context", "wsCloseStatus:%d,wsCloseReason:'%s'", status, reason);
+    httpTrace(conn->trace, "websockets.tx.close", "context", "wsCloseStatus:%d, wsCloseReason:'%s'", status, reason);
     return httpSendBlock(conn, WS_MSG_CLOSE, msg, len, HTTP_BUFFER);
 }
 
@@ -23606,8 +27568,8 @@ static void outgoingWebSockService(HttpQueue *q)
             }
             *prefix = '\0';
             mprAdjustBufEnd(packet->prefix, prefix - packet->prefix->start);
-            httpTracePacket(conn, "tx.websockets.packet", "body", packet,
-                "wsSeqno:%d,wsTypeName:\"%s\",wsType:%d,wsLast:%d,wsLength:%zd",
+            httpTracePacket(conn->trace, "websockets.tx.packet", "packet", 0, packet,
+                "wsSeqno:%d, wsTypeName:\"%s\", wsType:%d, wsLast:%d, wsLength:%zd",
                 ws->txSeq++, codetxt[packet->type], packet->type, packet->last, httpGetPacketLength(packet));
         }
         httpPutPacketToNext(q, packet);
@@ -23886,7 +27848,7 @@ static void traceErrorProc(HttpConn *conn, cchar *fmt, ...)
     ws->errorMsg = sfmtv(fmt, args);
     va_end(args);
 
-    httpTrace(conn, "rx.websockets.error", "error", "msg:'%s'", ws->errorMsg);
+    httpTrace(conn->trace, "websockets.tx.error", "error", "msg:'%s'", ws->errorMsg);
 }
 
 #endif /* ME_HTTP_WEB_SOCKETS */

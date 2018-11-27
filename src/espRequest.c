@@ -340,7 +340,7 @@ static bool loadController(HttpConn *conn)
                 return 0;
             }
         } else if (loaded) {
-            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpTrace(conn->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -360,7 +360,7 @@ static bool setToken(HttpConn *conn)
         if (!httpCheckSecurityToken(conn)) {
             httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
             if (route->json) {
-                httpTrace(conn, "esp.xsrf.error", "error", 0);
+                httpTrace(conn->trace, "esp.xsrf.error", "error", 0);
                 espRenderString(conn,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
                 espFinalize(conn);
@@ -415,7 +415,7 @@ static int runAction(HttpConn *conn)
     assert(eroute->top);
     action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
-        httpTrace(conn, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
         setupFeedback(conn);
         if (!httpIsFinalized(conn)) {
             (action)(conn);
@@ -450,7 +450,7 @@ static cchar *loadView(HttpConn *conn, cchar *target)
             return 0;
         }
         if (loaded) {
-            httpTrace(conn, "esp.handler", "context", "msg: 'Load module %s'", path);
+            httpTrace(conn->trace, "esp.handler", "context", "msg: 'Load module %s'", path);
         }
         mprRelease(target);
     }
@@ -596,7 +596,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
         for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
                 if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
-                    httpTrace(conn, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
                     espRenderView(conn, dest, 0);
                     return;
                 }
@@ -616,7 +616,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpTrace(conn, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
         espRenderView(conn, dest, 0);
         return;
     }
@@ -640,8 +640,8 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     }
 #endif
 
-    httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
-    conn->rx->target = &conn->rx->pathInfo[1];
+    httpTrace(conn->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    conn->rx->target = (char*) &conn->rx->pathInfo[1];
     httpMapFile(conn);
     if (conn->tx->fileInfo.isDir) {
         httpHandleDirectory(conn);
@@ -1040,7 +1040,7 @@ static EspRoute *cloneEspRoute(HttpRoute *route, EspRoute *parent)
     Get an EspRoute. Allocate if required.
     It is expected that the caller will modify the EspRoute.
  */
-PUBLIC EspRoute *espRoute(HttpRoute *route)
+PUBLIC EspRoute *espRoute(HttpRoute *route, bool create)
 {
     HttpRoute   *rp;
 
@@ -1054,7 +1054,7 @@ PUBLIC EspRoute *espRoute(HttpRoute *route)
         if (rp->eroute) {
             return cloneEspRoute(route, rp->eroute);
         }
-        if (rp->parent == 0) {
+        if (rp->parent == 0 && create) {
             /*
                 Create an ESP configuration on the top level parent so others can inherit
                 Load the compiler rules once for all
@@ -1066,7 +1066,10 @@ PUBLIC EspRoute *espRoute(HttpRoute *route)
             break;
         }
     }
-    return cloneEspRoute(route, rp->eroute);
+    if (rp) {
+        return cloneEspRoute(route, rp->eroute);
+    }
+    return 0;
 }
 
 
@@ -1169,24 +1172,46 @@ static bool preload(HttpRoute *route)
 {
 #if !ME_STATIC
     EspRoute    *eroute;
-    MprJson     *preload, *item;
+    MprJson     *preload, *item, *sources, *si;
+    MprList     *files;
     cchar       *errMsg, *source;
     char        *kind;
-    int         i;
+    int         i, index, next;
 
     eroute = route->eroute;
     if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
+            /* Must be pre-compiled if combined */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
         } else {
-            source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
-        }
-        if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-            if (eroute->combine) {
-                mprLog("error esp", 0, "%s", errMsg);
-                return 0;
+            if ((sources = mprGetJsonObj(route->config, "esp.app.source")) != 0) {
+                for (ITERATE_JSON(sources, si, index)) {
+                    files = mprGlobPathFiles(".", si->value, 0);
+                    if (mprGetListLength(files) == 0) {
+                        mprLog("error esp", 0, "ESP source pattern does not match any files \"%s\"", si->value);
+                    }
+                    for (ITERATE_ITEMS(files, source, next)) {
+                        if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                            //  TODO - why test combine?
+                            if (eroute->combine || 1) {
+                                mprLog("error esp", 0, "%s", errMsg);
+                                return 0;
+                            }
+                        }
+                    }
+                }
+            } else {
+                source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
+                if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                    //  TODO - why test combine?
+                    if (eroute->combine) {
+                        mprLog("error esp", 0, "%s", errMsg);
+                        return 0;
+                    }
+                }
             }
         }
+
         if (!eroute->combine && (preload = mprGetJsonObj(route->config, "esp.preload")) != 0) {
             for (ITERATE_JSON(preload, item, i)) {
                 source = ssplit(sclone(item->value), ":", &kind);
@@ -1208,8 +1233,8 @@ static bool preload(HttpRoute *route)
 
 /*
     Initialize ESP.
-    Prefix is the URI prefix for the application
-    Path is the path to the esp.json
+    Prefix is the URI prefix for the application.
+    Path is the path to the esp.json.
  */
 PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
 {
@@ -1221,9 +1246,8 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         return MPR_ERR_BAD_ARGS;
     }
     lock(esp);
-    if ((eroute = espRoute(route)) == 0) {
-        unlock(esp);
-        return MPR_ERR_MEMORY;
+    if ((eroute = espRoute(route, 0)) == 0) {
+        eroute = espCreateRoute(route);
     }
     if (prefix) {
         if (*prefix != '/') {
@@ -1387,7 +1411,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     setDir(route, "PAKS", 0, app);
     setDir(route, "PARTIALS", 0, app);
     setDir(route, "SRC", 0, app);
-    setDir(route, "UPLOAD", "/tmp", app);
+    setDir(route, "UPLOAD", "/tmp", 0);
 }
 
 

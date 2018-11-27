@@ -6,7 +6,7 @@ Commercial licenses for this software and support services are available
 from Embedthis Software.
 
 * [GPL License](http://www.gnu.org/licenses/gpl-2.0.html)
-* [Embedthis Commercial License](https://embedthis.com/licensing/)
+* [Embedthis Commercial License](https://www.embedthis.com/licensing/)
 
 If have a commercial license with an active maintenance agreement you can
 incorporate new releases, updates and patches from new releases.

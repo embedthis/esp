@@ -9,13 +9,14 @@ The following samples are available:
 * [controller](controller/README.md)         Creating ESP controllers.
 * [html-mvc](html-mvc/README.md)             ESP esp-html-mvc application.
 * [layout](layout/README.md)                 ESP layout templates.
+* [login-auth](login-auth/README.md)         ESP app-based login.
 * [login-database](login-database/README.md) ESP database storage of passwords for login.
-* [login-form](login-form/README.md)         ESP form-based login.
 * [login-roles](login-roles/README.md)       ESP role based user authorization.
-* [many](many/README.md)                     Run many ESP applications in one instance.
+* [multiple-apps](multiple-apps/README.md)   Run multiple ESP applications in one instance.
 * [page](page/README.md)                     Serving ESP web pages.
 * [session](session/README.md)               Using ESP session state storage.
 * [upload](upload/README.md)                 ESP file upload.
+* [websockets](websockets/README.md)         WebSockets chat server.
 
 ### Building
 
@@ -25,14 +26,14 @@ To build the samples, see the per-sample README instructions.
 
 The full product documentation is supplied in HTML format under the doc directory. This is also available online at:
 
-* https://embedthis.com/esp/doc/index.html
+* https://www.embedthis.com/esp/doc/index.html
 
 Licensing
 ---
 
 Please see:
 
-https://embedthis.com/licensing/index.html
+https://www.embedthis.com/licensing/index.html
 
 
 Copyright

@@ -18,7 +18,7 @@
                     </li>
 
                     <li><b>Render</b>
-                        <p>Install <a href="https://embedthis.com/expansive/">Expansive</b></a>
+                        <p>Install <a href="https://www.embedthis.com/expansive/">Expansive</b></a>
                         and run <b>"expansive render"</b> to render the site into the "dist" directory.</p></li>
 
                     <li><b>Serve</b>
@@ -31,7 +31,7 @@
 
                     <li><b>Generate Controllers</a></b>
                         <p>Create controllers to manage your app. Run 
-                            <a href="https://embedthis.com/esp/doc/users/esp.html"><b>esp</b></a> 
+                            <a href="https://www.embedthis.com/esp/doc/users/esp.html"><b>esp</b></a> 
                             with no options to see its usage.</p>
                         <pre>esp generate controller NAME [action, ...]</pre>
                     </li>
@@ -42,8 +42,8 @@
                     </li>
                     
                     <li><b>Read the Documentation</b>
-                        <p>Go to <a href="https://embedthis.com/esp/doc/">
-                        https://embedthis.com/esp/doc/</a> for the latest ESP documentation.
+                        <p>Go to <a href="https://www.embedthis.com/esp/doc/">
+                        https://www.embedthis.com/esp/doc/</a> for the latest ESP documentation.
                         Here you can read quick tours, overviews and access all the ESP APIs.</b>
                     </li>
                     <li><b>Enjoy!</b></li>
@@ -54,10 +54,10 @@
         <aside>
             <h2 class="section">ESP Links</h2>
             <ul>
-                <li><a href="https://embedthis.com">Official Web Site</a></li>
-                <li><a href="https://embedthis.com/esp/doc/">Documentation</a></li>
-                <li><a href="https://embedthis.com/esp/doc/users/">ESP User's Guide</a></li>
+                <li><a href="https://www.embedthis.com">Official Web Site</a></li>
+                <li><a href="https://www.embedthis.com/esp/doc/">Documentation</a></li>
+                <li><a href="https://www.embedthis.com/esp/doc/users/">ESP User's Guide</a></li>
                 <li><a href="https://github.com/embedthis/esp">ESP Repository and Issue List</a></li>
-                <li><a href="https://embedthis.com/blog/">Embedthis Blog</a></li>
+                <li><a href="https://www.embedthis.com/blog/">Embedthis Blog</a></li>
             </ul>
         </aside>

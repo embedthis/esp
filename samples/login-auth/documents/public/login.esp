@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-    <link href="login.css" rel="stylesheet" type="text/css" />
+    <link href="/public/login.css" rel="stylesheet" type="text/css" />
     <title>login.esp</title>
 </head>
 <body>

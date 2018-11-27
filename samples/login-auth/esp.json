@@ -1,0 +1,47 @@
+{
+    name: "login_auth",
+    description: "login-auth",
+    version: "1.0.0",
+    esp: {
+        app: {
+            source: [ "app.c" ]
+        }
+    },
+    http: {
+        auth: {
+            store: "config",
+            type: "app",
+            realm: "example.com",
+            users: {
+                joshua: {
+                    password: "BF1:00128:5RdIPYT33dz2Mq7D:0YQi7BNN2ZdEHQPYS4ZPtQIfnIZxEQ00"
+                },
+            }
+        },
+        redirect: "secure",
+        server: {
+            listen: [
+                "http://127.0.0.1:4000",
+                "https://127.0.0.1:4443"
+            ]
+        },
+        ssl: {
+            certificate: "../../src/certs/samples/self.crt",
+            key: "../../src/certs/samples/self.key"
+        },
+        routes: [
+            {
+                pattern: "/user/{action}",
+                source: "user.c",
+                target: "user/${action}"
+            },
+            {
+                pattern: "/public",
+                auth: "none"
+            }
+        ],
+        timeouts: {
+            session: "1min"
+        }
+    }
+}

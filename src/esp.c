@@ -173,6 +173,7 @@ static void qtrace(cchar *tag, cchar *fmt, ...);
 static void trace(cchar *tag, cchar *fmt, ...);
 static void usageError();
 static void user(int argc, char **argv);
+static bool verifyConfig();
 static void vtrace(cchar *tag, cchar *fmt, ...);
 static void why(cchar *path, cchar *fmt, ...);
 
@@ -362,11 +363,6 @@ static int parseArgs(int argc, char **argv)
 
         } else if (smatch(argp, "optimize") || smatch(argp, "optimized")) {
             app->compileMode = ESP_COMPILE_OPTIMIZED;
-
-#if DEPRECATED || 1
-        } else if (smatch(argp, "overwrite")) {
-            app->force = 1;
-#endif
 
         } else if (smatch(argp, "platform")) {
             if (argind >= argc) {
@@ -640,20 +636,26 @@ static void initialize(int argc, char **argv)
                 fail("ESP %s is not acceptable for this application which requires ESP %s", ME_VERSION, criteria);
             }
         }
-        app->paksDir = getJson(app->package, "directories.paks", app->paksDir);
     }
-
     app->description = getJson(app->package, "description", app->description);
     app->name = getJson(app->package, "name", app->name);
     app->title = getJson(app->package, "title", app->title);
     app->version = getJson(app->package, "version", app->version);
+    app->paksDir = getJson(app->package, "directories.paks", app->paksDir);
 
     path = mprJoinPath(route->home, "esp.json");
     if (mprPathExists(path, R_OK)) {
         if ((app->config = readConfig(path)) == 0) {
             return;
         }
+        app->name = getJson(app->config, "name", app->name);
+        app->version = getJson(app->config, "version", app->version);
+        app->paksDir = getJson(app->config, "directories.paks", app->paksDir);
     }
+    if (!verifyConfig()) {
+        return;
+    }
+
     /*
         Read name, title, description and version from esp.json - permits execution without pak.json
      */
@@ -699,18 +701,26 @@ static void initialize(int argc, char **argv)
     esp = stage->stageData;
     esp->compileMode = app->compileMode;
 
-#if DEPRECATE || 1
     path = mprJoinPath(route->home, "db/migrations");
     if (mprPathExists(path, R_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
         app->migDir = path;
         httpSetDir(route, "MIGRATIONS", path);
-    } else
-#endif
-    {
+    } else {
         app->migDir = httpGetDir(route, "MIGRATIONS");
         app->migDir = getJson(app->package, "directories.migrations", app->migDir);
     }
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
+}
+
+
+static bool verifyConfig()
+{
+    app->name = sreplace(app->name, "-", "_");
+    if (!smatch(app->name, stok(sclone(app->name), "-\\/[](){}<>!@`~#$%^&*+=|", NULL))) {
+        fail("Invalid characters in application name: %s", app->name);
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -1259,8 +1269,7 @@ static void setConfigValue(MprJson *config, cchar *key, cchar *value)
 static void serve(int argc, char **argv)
 {
     HttpEndpoint    *endpoint;
-    cchar           *address;
-    char            *ip;
+    cchar           *address, *ip;
     int             i, port;
 
     if (app->error) {
@@ -1894,9 +1903,11 @@ static bool selectView(HttpRoute *route, cchar *path)
  */
 static void compileItems(HttpRoute *route)
 {
+    MprJson     *source, *sourceList;
+    MprList     *files;
     MprDirEntry *dp;
     cchar       *dir, *path;
-    int         found, next;
+    int         found, index, next;
 
     found = 0;
     // trace("info", "Compile items for route %s", route->pattern);
@@ -1925,12 +1936,28 @@ static void compileItems(HttpRoute *route)
         }
     }
 #endif
-    if ((dir = mprJoinPath(httpGetDir(route, "SRC"), "app.c")) != 0 && !smatch(dir, ".")) {
-        if (mprPathExists(dir, R_OK) && selectResource(dir, "c")) {
-            compileFile(route, dir, ESP_SRC);
-            found++;
+    if ((sourceList = mprGetJsonObj(app->config, "esp.app.source")) != 0) {
+        for (ITERATE_JSON(sourceList, source, index)) {
+            files = mprGlobPathFiles(".", source->value, 0);
+            if (mprGetListLength(files) == 0) {
+                fail("ESP source pattern does not match any files \"%s\"", source->value);
+            }
+            for (ITERATE_ITEMS(files, path, next)) {
+                if (mprPathExists(path, R_OK) && selectResource(path, "c")) {
+                    compileFile(route, path, ESP_SRC);
+                    found++;
+                }
+            }
+        }
+    } else {
+        if ((dir = mprJoinPath(httpGetDir(route, "SRC"), "app.c")) != 0 && !smatch(dir, ".")) {
+            if (mprPathExists(dir, R_OK) && selectResource(dir, "c")) {
+                compileFile(route, dir, ESP_SRC);
+                found++;
+            }
         }
     }
+
     if (!route->sourceName) {
         app->files = mprGetPathFiles(route->documents, MPR_PATH_DESCEND);
         for (next = 0; (dp = mprGetNextItem(app->files, &next)) != 0 && !app->error; ) {
@@ -1966,7 +1993,8 @@ static void compileCombined(HttpRoute *route)
     MprDirEntry     *dp;
     MprKey          *kp;
     EspRoute        *eroute;
-    MprJson         *extensions, *ext;
+    MprJson         *extensions, *ext, *source, *sourceList;
+    MprList         *files;
     cchar           *controllers, *item, *name;
     char            *path, *line;
     int             next, kind, index;
@@ -1981,9 +2009,23 @@ static void compileCombined(HttpRoute *route)
     app->combineItems = mprCreateList(-1, MPR_LIST_STABLE);
     app->combinePath = mprJoinPath(httpGetDir(route, "CACHE"), sjoin(name, ".c", NULL));
 
-    path = mprJoinPath(httpGetDir(app->route, "SRC"), "app.c");
-    if (mprPathExists(path, R_OK)) {
-        mprAddKey(app->build, path, "src");
+    if ((sourceList = mprGetJsonObj(app->config, "esp.app.source")) != 0) {
+        for (ITERATE_JSON(sourceList, source, index)) {
+            files = mprGlobPathFiles(".", source->value, 0);
+            if (mprGetListLength(files) == 0) {
+                fail("Cannot compile. Cannot find file matching esp.app.source pattern: \"%s\"", source->value);
+            }
+            for (ITERATE_ITEMS(files, path, next)) {
+                if (mprPathExists(path, R_OK) && selectResource(path, "c")) {
+                    mprAddKey(app->build, path, "src");
+                }
+            }
+        }
+    } else {
+        path = mprJoinPath(httpGetDir(app->route, "SRC"), "app.c");
+        if (mprPathExists(path, R_OK)) {
+            mprAddKey(app->build, path, "src");
+        }
     }
     controllers = httpGetDir(route, "CONTROLLERS");
     if (!mprSamePath(controllers, route->home)) {
@@ -2031,9 +2073,9 @@ static void compileCombined(HttpRoute *route)
             compileFile(route, kp->key, kind);
         }
         mprWriteFileFmt(app->combineFile,
-            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
+            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {
-            mprWriteFileFmt(app->combineFile, "    %s(route, module);\n", line);
+            mprWriteFileFmt(app->combineFile, "    %s(route);\n", line);
         }
         mprWriteFileFmt(app->combineFile, "    return 0;\n}\n");
         mprCloseFile(app->combineFile);
@@ -2461,17 +2503,6 @@ static cchar *getTemplate(cchar *key, MprHash *tokens)
         if (mprPathExists(app->paksDir, X_OK)) {
             return readTemplate(mprJoinPath(app->paksDir, pattern), tokens, NULL);
         }
-#if DEPRECATED
-        if (mprPathExists(app->eroute->generateDir, X_OK)) {
-            return readTemplate(mprJoinPath(app->eroute->generateDir, pattern), tokens, NULL);
-        }
-        if (mprPathExists("generate", X_OK)) {
-            return readTemplate(mprJoinPath("generate", pattern), tokens, NULL);
-        }
-        if (mprPathExists("templates", X_OK)) {
-            return readTemplate(mprJoinPath("templates", pattern), tokens, NULL);
-        }
-#endif
     }
     return 0;
 }
@@ -2583,7 +2614,7 @@ static void usageError()
     initRuntime();
     paks = getCachedPaks();
     if (paks) {
-        mprEprintf("  Local Paks: (See also https://embedthis.com/catalog/)\n%s\n", paks);
+        mprEprintf("  Local Paks: (See also https://www.embedthis.com/catalog/)\n%s\n", paks);
     }
     app->error = 1;
 }

@@ -400,10 +400,10 @@
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>espGetReferrer</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga400095fc3f1743660baedac7c95ff53c</anchor>
+      <anchor>ga9ff8d4c4ec644a0e49ff6ef4b5a7e906</anchor>
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
@@ -442,10 +442,10 @@
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>espGetStatusMessage</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gad4631deeb02544938b8590806ae8bb8e</anchor>
+      <anchor>gac04afa433a4830bb12c541040b9e89f5</anchor>
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">

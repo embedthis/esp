@@ -126,8 +126,8 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (target) {
-#if DEPRECATED || 1 
-        /* 
+#if DEPRECATED || 1
+        /*
             Keep till version 6
          */
         if (scontains(target, "-cmd-")) {
@@ -177,7 +177,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
     if (route->eroute) {
         eroute = ((EspRoute*) route->eroute)->top;
     } else {
-        if ((eroute = espRoute(route)) == 0) {
+        if ((eroute = espRoute(route, 1)) == 0) {
             /* Should never happen */
             return;
         }
@@ -380,7 +380,7 @@ PUBLIC cchar *espGetQueryString(HttpConn *conn)
 }
 
 
-PUBLIC char *espGetReferrer(HttpConn *conn)
+PUBLIC cchar *espGetReferrer(HttpConn *conn)
 {
     if (conn->rx->referrer) {
         return conn->rx->referrer;
@@ -430,7 +430,7 @@ PUBLIC int espGetStatus(HttpConn *conn)
 }
 
 
-PUBLIC char *espGetStatusMessage(HttpConn *conn)
+PUBLIC cchar *espGetStatusMessage(HttpConn *conn)
 {
     return httpGetStatusMessage(conn);
 }
@@ -637,7 +637,7 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
             httpSetContentType(conn, "text/html");
             written += espRenderString(conn, text);
             espFinalize(conn);
-            httpTrace(conn, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpTrace(conn->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -649,7 +649,7 @@ PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path)
 {
     MprFile     *from;
     ssize       count, written, nbytes;
-    char        buf[ME_MAX_BUFFER];
+    char        buf[ME_BUFSIZE];
 
     if ((from = mprOpenFile(path, O_RDONLY | O_BINARY, 0)) == 0) {
         return MPR_ERR_CANT_OPEN;
@@ -806,7 +806,7 @@ PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags)
     if (conn->rx->route->json) {
         httpSetContentType(conn, "application/json");
         if (grid) {
-            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n", ediGridAsJson(grid, flags), 
+            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n", ediGridAsJson(grid, flags),
                 ediGetGridSchemaAsJson(grid));
         }
         return espRender(conn, "{}");
@@ -820,7 +820,7 @@ PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags)
     if (conn->rx->route->json) {
         httpSetContentType(conn, "application/json");
         if (rec) {
-            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n", 
+            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n",
                 ediRecAsJson(rec, flags), ediGetRecSchemaAsJson(rec));
         }
         return espRender(conn, "{}");
@@ -1108,7 +1108,7 @@ PUBLIC cchar *espUri(HttpConn *conn, cchar *target)
 }
 
 
-PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime, 
+PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
     cchar *message, MprList *files)
 {
     MprList         *lines;
@@ -1167,7 +1167,7 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
     mprAddItem(lines, sfmt("%s--", boundary));
 
     body = mprListToString(lines, "\n");
-    httpTraceContent(conn, "esp.email", "context", body, slen(body), 0);
+    httpTrace(conn->trace, "esp.email", "context", "%s", body);
 
     cmd = mprCreateCmd(conn->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, -1, 0) < 0) {
@@ -1175,14 +1175,14 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
-        httpTrace(conn, "esp.email.error", "error", 
+        httpTrace(conn->trace, "esp.email.error", "error",
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
-        httpTrace(conn, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        httpTrace(conn->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
@@ -1197,7 +1197,7 @@ PUBLIC void espClearCurrentSession(HttpConn *conn)
 
     eroute = conn->rx->route->eroute;
     if (eroute->currentSession) {
-        httpTrace(conn, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
+        httpTrace(conn->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
     }
     eroute->currentSession = 0;
 }
@@ -1212,7 +1212,7 @@ PUBLIC void espSetCurrentSession(HttpConn *conn)
 
     eroute = conn->rx->route->eroute;
     eroute->currentSession = httpGetSessionID(conn);
-    httpTrace(conn, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
+    httpTrace(conn->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
 }
 
 

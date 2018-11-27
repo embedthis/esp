@@ -30,4 +30,4 @@ To generate an appweb.conf Appweb configuration file for hosting the ESP applica
 
 ### Get Pak from
 
-[https://embedthis.com/pak](https://embedthis.com/pak)
+[https://www.embedthis.com/pak](https://www.embedthis.com/pak)

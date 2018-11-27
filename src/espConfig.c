@@ -54,7 +54,8 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
 
     eroute = route->eroute;
 
-    if (smatch(mprGetJson(prop, "app"), "true")) {
+#if MOVED
+    if (mprGetJson(prop, "app")) {
         eroute->app = 1;
     }
     if (eroute->app) {
@@ -66,6 +67,7 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
         eroute->keep = smatch(route->mode, "release") == 0;
     }
     espSetDefaultDirs(route, eroute->app);
+#endif
     httpParseAll(route, key, prop);
 
     /*
@@ -82,6 +84,43 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
         if (!mprLookupStringItem(route->indexes, "index.html")) {
             httpAddRouteIndex(route, "index.html");
         }
+    }
+}
+
+/*
+    app: {
+        source: [
+            'patterns/ *.c',
+        ],
+        tokens: [
+            CFLAGS: '-DMY=42'
+        ],
+    }
+ */
+static void parseApp(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+
+    if (!(prop->type & MPR_JSON_OBJ)) {
+        if (prop->type & MPR_JSON_TRUE) {
+            eroute->app = 1;
+        }
+    } else {
+        eroute->app = 1;
+    }
+    if (eroute->app) {
+        /*
+            Set some defaults before parsing "esp". This permits user overrides.
+         */
+        httpSetRouteXsrf(route, 1);
+        httpAddRouteHandler(route, "espHandler", "");
+        eroute->keep = smatch(route->mode, "release") == 0;
+        espSetDefaultDirs(route, eroute->app);
+    }
+    if (prop->type & MPR_JSON_OBJ) {
+        httpParseAll(route, key, prop);
     }
 }
 
@@ -382,6 +421,7 @@ PUBLIC int espInitParser()
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
     httpAddConfig("esp", parseEsp);
+    httpAddConfig("esp.app", parseApp);
     httpAddConfig("esp.apps", parseApps);
     httpAddConfig("esp.build", parseBuild);
     httpAddConfig("esp.combine", parseCombine);

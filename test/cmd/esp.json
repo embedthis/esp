@@ -4,9 +4,13 @@
 {
     name: "esptest",
     esp: {
-        app: true
+        app: true,
     },
     http: {
+        directories: {
+            /* Relative to home or absolute */
+            upload: 'uploaded'
+        },
         server: {
             listen: [
                 'http://127.0.0.1:7300',
@@ -99,10 +103,6 @@
                         extensions: [ '*' ]
                     }],
                 },
-                directories: {
-                    /* Relative to home or absolute */
-                    upload: 'uploaded'
-                }
             }
         ]
     }

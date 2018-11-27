@@ -21,9 +21,9 @@ Me.load({
     },
 
     customize: [
-        /* 
+        /*
             The optional custom.me file is loaded after main.me is fully processed. It can
-            thus override any setting. Feel free to create and customize. 
+            thus override any setting. Feel free to create and customize.
          */
         'custom.me',
     ],
@@ -41,6 +41,7 @@ Me.load({
         tune: 'size',
 
         http: {
+            http2: true,
             /* Use PAM (Plugable Authentication Module) to store passwords */
             pam: true,
             webSockets: true,
@@ -61,8 +62,6 @@ Me.load({
         watchdog: {
             name: 'espman',
         },
-
-        tune: 'speed',
     },
 
     scripts: {
@@ -97,4 +96,3 @@ Me.load({
         // 'mpr.logging':  'Enable application logging (true|false)',
     },
 })
-

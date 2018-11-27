@@ -15,14 +15,14 @@ The ESP test page, index.esp, demonstrates the various ESP directives. These inc
 
 Requirements
 ---
-* [ESP](https://embedthis.com/esp/download.html)
+* [ESP](https://www.embedthis.com/esp/download.html)
 
 To run:
 ---
     esp
 
-The server listens on port 4000. Browse to: 
- 
+The server listens on port 4000. Browse to:
+
      http://localhost:4000/index.esp
 
 Code:
@@ -31,10 +31,10 @@ Code:
 
 Documentation:
 ---
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP APIs](https://embedthis.com/esp/doc/ref/api/esp.html)
-* [ESP Guide](https://embedthis.com/esp/doc/users/index.html)
-* [ESP Overview](https://embedthis.com/esp/doc/users/using.html)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP APIs](https://www.embedthis.com/esp/doc/ref/api/esp.html)
+* [ESP Guide](https://www.embedthis.com/esp/doc/users/index.html)
+* [ESP Overview](https://www.embedthis.com/esp/doc/users/using.html)
 
 See Also:
 ---

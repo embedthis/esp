@@ -9,12 +9,15 @@
             File upload permits multiple files. Iterate over all uploaded files.
             The file is uploaded to a temporary file file->filename. The original
             client filename is file->clientFilename. This page should copy, move
-            or process the temporary file. The temporary will be automatically 
+            or process the temporary file. The temporary will be automatically
             removed when this page completes.
 
             The reason for using a temporary is that multiple clients may upload
             a file with the same filename at the same time. Temporary filenames
             are unique and solve potential conflicts.
+
+            If you specify "renameUploads: true" in the esp.json, then the filename
+            will be renamed to that supplied by the client before this page is run.
          */
         conn = getConn();
         for (ITERATE_ITEMS(conn->rx->files, file, index)) {

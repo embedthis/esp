@@ -15,10 +15,6 @@
                 'http://127.0.0.1:7300',
                 'https://127.0.0.1:7543',
             ],
-            "log": {
-                "location": "error.log",
-                "level": 4
-            },
         },
         auth: {
             roles: {
@@ -49,6 +45,10 @@
                 },
             },
         },
+        "log": {
+            "location": "error.log",
+            "level": 4
+        },
         pipeline: {
             handlers: {
                 espHandler:  [ '*.esp', '*.xesp' ],
@@ -63,7 +63,7 @@
             "location": "trace.log",
             "level": 4
         },
-        routes: [ 
+        routes: [
             {
                 pattern: '^/auth/basic',
                 auth: {

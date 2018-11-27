@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">  
-</head>
+<head><link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"></head>
 <body>
     <h1>Welcome</h1>
-
-    <p>You will remain logged in for one minute of inactivity. 
+    <p>You will remain logged in for one minute of inactivity.
         Click <a href="/">here</a> to restart the inactivity timer.</p>
     <p>Click to <a href="/user/logout">Logout</a> and you will be redirected back to the login form.</p>
 
     <script>
-        setTimeout(function() { document.location = "/user/logout"; }, 60 * 1000);
+        setTimeout(function() { 
+            document.location = "/user/logout";
+        }, 60 * 1000);
     </script>
 </body>
 </html>

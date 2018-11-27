@@ -269,12 +269,13 @@ PUBLIC int espLoadConfig(HttpRoute *route);
     Return the corresponding EspRoute for the given Route.
     @description Returns the defined EspRoute for the given Route. Creates a new EspRoute if required.
     @param route Parent route from which to inherit configuration.
+    @param create Set to true to create an EspRoute if a suitable one cannot be found.
     @returns The EspRoute object.
     @ingroup EspRoute
     @stability Prototype
     @param route
  */
-PUBLIC EspRoute *espRoute(HttpRoute *route);
+PUBLIC EspRoute *espRoute(HttpRoute *route, bool create);
 
 /**
     Add caching for response content.
@@ -954,7 +955,7 @@ PUBLIC cchar *espGetQueryString(HttpConn *conn);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC char *espGetReferrer(HttpConn *conn);
+PUBLIC cchar *espGetReferrer(HttpConn *conn);
 
 /**
     Get the current route HttpRoute object.
@@ -1014,7 +1015,7 @@ PUBLIC int espGetStatus(HttpConn *conn);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC char *espGetStatusMessage(HttpConn *conn);
+PUBLIC cchar *espGetStatusMessage(HttpConn *conn);
 
 /**
     Get the uploaded files.
