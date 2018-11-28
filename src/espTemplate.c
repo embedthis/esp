@@ -241,7 +241,6 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     EspRoute    *eroute;
     cchar       **env, *commandLine;
     char        *err, *out;
-    int         rc;
 
     *errMsg = 0;
     eroute = route->eroute;
@@ -267,18 +266,14 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     /*
         WARNING: GC will run here
      */
-    mprHold((void*) commandLine);
-    rc = mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0);
-    mprRelease((void*) commandLine);
-
-    if (rc != 0) {
+    if (mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0) != 0) {
         if (err == 0 || *err == '\0') {
             /* Windows puts errors to stdout Ugh! */
             err = out;
         }
-        mprLog("error esp", 0, "Cannot run command: %s, error %s", commandLine, err);
+        mprLog("error esp", 0, "Cannot run command: %s, error %s", command, err);
         if (route->flags & HTTP_ROUTE_SHOW_ERRORS) {
-            *errMsg = sfmt("Cannot run command: %s, error %s", commandLine, err);
+            *errMsg = sfmt("Cannot run command: %s, error %s", command, err);
         } else {
             *errMsg = "Cannot compile view";
         }
@@ -318,7 +313,7 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
     source      ESP source file name
     module      Module file name
 
-    WARNING: this routine blocks and runs GC. All parameters must be retained.
+    WARNING: this routine yields and runs GC. All parameters must be retained by the caller.
  */
 PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName,
     int isView, char **errMsg)

@@ -419,9 +419,12 @@ static DynLock *sslCreateDynLock(cchar *file, int line)
 
 static void sslDestroyDynLock(DynLock *dl, cchar *file, int line)
 {
+    MprMutex    *mutex;
+
     if (dl->mutex) {
-        mprRelease(dl->mutex);
+        mutex = dl->mutex;
         dl->mutex = 0;
+        mprRelease(mutex);
     }
 }
 

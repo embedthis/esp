@@ -2833,7 +2833,7 @@ PUBLIC void *httpLookupStageData(cchar *name);
 /**
     Set stage data
     @description Stages can store extra configuration information indexed by key. This is used by handlers, filters,
-        connectors and and handlers.
+        connectors and applications.
     @param conn HttpConn connection object
     @param key Key index into the stage data
     @param data Reference to custom data allocated via mprAlloc.
@@ -4922,7 +4922,8 @@ typedef struct HttpRoute {
     MprList         *updates;               /**< Route and request updates */
 
     void            *patternCompiled;       /**< Compiled pattern regular expression (not alloced) */
-    char            *sourceName;            /**< Source name for route target */
+    cchar           *source;                /**< Final source for route target */
+    cchar           *sourceName;            /**< Source name for route target */
     MprList         *tokens;                /**< Tokens in pattern, {name} */
     MprList         *headers;               /**< Response header values */
 
@@ -6463,7 +6464,7 @@ typedef struct HttpRx {
     MprHash         *headers;               /**< Header variables */
     MprList         *inputPipeline;         /**< Input processing */
     HttpUri         *parsedUri;             /**< Parsed request uri */
-    MprHash         *requestData;           /**< General request data storage. Users must create hash table if required */
+    MprHash         *requestData;           /**< General request data storage. Set via #httpSetStageData */
     MprTime         since;                  /**< If-Modified date */
 
     int             chunkState;             /**< Chunk encoding state */

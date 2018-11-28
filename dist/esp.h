@@ -2390,7 +2390,7 @@ PUBLIC ssize espRenderCached(HttpConn *conn);
 /**
     Render an ESP document
     @description If the document is an ESP page, it will be rendered as a view via #espRenderDocument.
-        Otherwise, it will be rendered using the fileHandler as a static document.
+        Otherwise, it will be rendered using the fileHandler as a static document. This routine may yield.
     @param conn Http connection object
     @param path Relative pathname from route->documents to the document to render.
     @ingroup EspReq
@@ -2499,7 +2499,7 @@ PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
     Render an ESP view page to the client
     @param conn Http connection object
     @param view View name. The view name is interpreted relative to the matching route documents directory and may omit
-        an ESP extension.
+        an ESP extension. This routine may yield.
     @param flags Reserved. Set to zero.
     @return true if a vew can be rendered.
     @ingroup EspReq

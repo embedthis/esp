@@ -5791,11 +5791,10 @@ PUBLIC int mprUnloadModule(MprModule *mp);
  */
 #define MPR_EVENT_CONTINUOUS        0x1     /**< Timer event runs is automatically rescheduled */
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
-#define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent */
+#define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
 #define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
 #define MPR_EVENT_RUNNING           0x10    /**< Event currently executing */
-#define MPR_EVENT_HOLD              0x20    /**< Hold the event object to prevent from GC */
-#define MPR_EVENT_WAIT              0x40    /**< Wait untill the event is complete */
+#define MPR_EVENT_FOREIGN           0x20    /**< Invoking from a foreign non-mpr thread */
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
 
@@ -5896,7 +5895,8 @@ typedef struct MprEventService {
 PUBLIC void mprClearWaiting(void);
 
 /**
-    Create a new event dispatcher
+    Create a new event dispatcher.
+    @description Dispatchers are event queues that serialize the execution of work. Most of the MPR routines are not thread-safe and thus access to objects needs to be serialized by creating events to run on dispatchers. Resources such as connections will typically own a dispatcher that is used to serialize their work.
     @param name Useful name for debugging
     @param flags Dispatcher flags.
     @returns a Dispatcher object that can manage events and be used with mprCreateEvent
@@ -6026,8 +6026,11 @@ PUBLIC void mprWakeEventService(void);
 PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
 
 /**
-    Create a new event
-    @description Create a new event for service
+    Queue an new event for service on a dispatcher.
+    @description Create an event to run a callback on an event dispatcher queue.
+        The MPR serializes work in a thread-safe manner on dispatcher queues. Resources such as connections will typically
+        own a dispatcher that is used to serialize their work.
+        \n\n
         This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from
         a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread
         may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole
@@ -6042,16 +6045,13 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
     @param data Data to associate with the event and stored in event->data. The data must be either an allocated memory
         object or MPR_EVENT_STATIC_DATA must be specified in flags.
     @param flags Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event
-        which will be automatically rescheduled accoring to the specified period. Use MPR_EVENT_STATIC_DATA if the
+        which will be automatically rescheduled according to the specified period. Use MPR_EVENT_STATIC_DATA if the
         data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event
-        without creating using a worker thread. This should only be used for quick non-blocking event callbacks.
-        Set to MPR_EVENT_HOLD to call #mprHold on the event object before returning. The caller must then call #mprRelease
-        on the event object. Set to MPR_EVENT_WAIT for the mprCreateEvent call to wait until the event callback has been run and returned.
-        This is useful if the data is transient (such as a local variable) and the stack must be preserved throughout the event call.
-        NOTE: this will not wait if the caller is currently executing an event on the nominated dispatcher.
-    @return Returns the event object if successful. Warning: the event callback may run to completion and the event
-        object may be itself collected before this function returns (unless MPR_EVENT_HOLD has been specified). In this
-        case, the return value will be non-zero, but the memory it points to may be freed or re-assigned.
+        without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks.
+        \n\n
+        When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.
+    @return Returns the event object if successful. This routine may return before or after the even callback has run.
+        If MPR_EVENT_FOREIGN is supplied, the return value is always zero.
     @ingroup MprEvent
     @stability Evolving
  */

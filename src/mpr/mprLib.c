@@ -1507,12 +1507,7 @@ static void sweep()
  */
 void *palloc(size_t size)
 {
-    void    *ptr;
-
-    if ((ptr = mprAllocZeroed(size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO);
 }
 
 
@@ -1524,20 +1519,22 @@ PUBLIC void pfree(void *ptr)
 {
     if (ptr) {
         mprRelease(ptr);
-
     }
 }
 
 
 PUBLIC void *prealloc(void *ptr, size_t size)
 {
+    void    *mem;
+
+    if ((mem = mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO)) == 0) {
+        return 0;
+    }
     if (ptr) {
+        memcpy(mem, ptr, psize(ptr));
         mprRelease(ptr);
     }
-    if ((ptr =  mprRealloc(ptr, size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return mem;
 }
 
 
@@ -1597,11 +1594,11 @@ PUBLIC void mprHoldBlocks(cvoid *ptr, ...)
 
 PUBLIC void mprReleaseBlocks(cvoid *ptr, ...)
 {
-    va_list args;
+    va_list     args;
 
     if (ptr) {
-        mprRelease(ptr);
         va_start(args, ptr);
+        mprRelease(ptr);
         while ((ptr = va_arg(args, char*)) != 0) {
             mprRelease(ptr);
         }
@@ -11029,18 +11026,28 @@ PUBLIC MprEvent *mprCreateEventQueue()
     Create and queue a new event for service. Period is used as the delay before running the event and as the period
     between events for continuous events.
 
-    WARNING: this routine is unique in that it may be called from a non-MPR thread. This means it may run in
-    parallel with the GC. So memory must be held until safely queued.
+    This routine is foreign thread-safe, i.e. it can be called by non-mpr threads where it runs in parallel with the GC.
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
     MprEvent    *event;
-    MprThread   *thread;
+    int         aflags;
 
-    /*
-        Create and hold the event object (immune from GC for foreign threads)
-     */
-    if ((event = mprAllocMem(sizeof(MprEvent), MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO | MPR_ALLOC_HOLD)) == 0) {
+    aflags = MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO;
+    if (flags & MPR_EVENT_FOREIGN) {
+        /*
+            Foreign threads cannot safely reference a dispatcher as it may be deleted anytime.
+         */
+        flags &= ~MPR_EVENT_DONT_QUEUE;
+        flags |= MPR_EVENT_QUICK;
+        dispatcher = 0;
+        /*
+            Hold memory for foreign threads to be immune from GC.
+            Supplied data should be static (non mpr) or be held via mprHold.
+         */
+        aflags |= MPR_ALLOC_HOLD | MPR_EVENT_STATIC_DATA;
+    }
+    if ((event = mprAllocMem(sizeof(MprEvent), aflags)) == 0) {
         return 0;
     }
     mprSetManager(event, (MprManager) manageEvent);
@@ -11067,26 +11074,11 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
 
     if (!(flags & MPR_EVENT_DONT_QUEUE)) {
         mprQueueEvent(dispatcher, event);
-    }
-    if (flags & MPR_EVENT_WAIT) {
-        thread = mprGetCurrentThread();
-        if (dispatcher->owner != thread->osThread) {
-            event->cond = mprCreateCond();
-            mprWaitForCond(event->cond, -1);
-        } else {
-            static int once = 0;
-            if (once++ == 0) {
-                mprLog("error", 0, "Calling MPR_EVENT_WAIT when current thread is servicing dispatcher %s. Skip wait.", dispatcher->name);
-            }
+        if (flags & MPR_EVENT_FOREIGN) {
+            mprRelease(event);
+            /* Warning: event may collected by GC here */
+            return 0;
         }
-    }
-
-    /* Unset eternal */
-    if (!(flags & MPR_EVENT_HOLD)) {
-        mprRelease(event);
-        /*
-            Warning: if invoked from a foreign (non-mpr) thread, the event may be collected by GC here
-         */
     }
     return event;
 }

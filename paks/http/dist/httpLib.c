@@ -5945,6 +5945,7 @@ static void commonPrep(HttpConn *conn)
         mprRemoveEvent(conn->timeoutEvent);
         conn->timeoutEvent = 0;
     }
+    conn->started = conn->http->now;
     conn->lastActivity = conn->http->now;
     conn->error = 0;
     conn->errorMsg = 0;
@@ -13236,7 +13237,6 @@ static void invokeDefenses(HttpMonitor *monitor, MprHash *args)
     int             next;
 
     http = monitor->http;
-    mprHold(args);
 
     for (ITERATE_ITEMS(monitor->defenses, defense, next)) {
         if ((remedyProc = mprLookupKey(http->remedies, defense->remedy)) == 0) {
@@ -13281,7 +13281,6 @@ static void invokeDefenses(HttpMonitor *monitor, MprHash *args)
         }
 #endif
     }
-    mprRelease(args);
 }
 
 
@@ -13314,9 +13313,11 @@ static void checkCounter(HttpMonitor *monitor, HttpCounter *counter, cchar *ip)
             sfmt("{ COUNTER: '%s', DATE: '%s', IP: '%s', LIMIT: %lld, MESSAGE: '%s', PERIOD: %lld, SUBJECT: '%s', VALUE: %lld }",
             monitor->counterName, mprGetDate(NULL), ip, monitor->limit, msg, period, subject, counter->value));
         /*
-            WARNING: may yield depending on remedy
+            WARNING: remedies may yield
          */
+        mprAddRoot(args);
         invokeDefenses(monitor, args);
+        mprRemoveRoot(args);
     }
     counter->value = 0;
 }
@@ -13381,14 +13382,13 @@ static void checkMonitor(HttpMonitor *monitor, MprEvent *event)
         lock(http->addresses);
         for (ITERATE_KEY_DATA(http->addresses, kp, address)) {
             counter = &address->counters[monitor->counterIndex];
-            unlock(http->addresses);
 
             /*
                 WARNING: this may allow new addresses to be added or stale addresses to be removed.
                 Regardless, because GC is paused, iterating is safe.
              */
+            unlock(http->addresses);
             checkCounter(monitor, counter, kp->key);
-
             lock(http->addresses);
         }
         if (mprGetHashLength(http->addresses) == 0) {
@@ -18293,6 +18293,7 @@ static void manageRoute(HttpRoute *route, int flags)
         mprMark(route->responseFormat);
         mprMark(route->script);
         mprMark(route->scriptPath);
+        mprMark(route->source);
         mprMark(route->sourceName);
         mprMark(route->ssl);
         mprMark(route->startSegment);
