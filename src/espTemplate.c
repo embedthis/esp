@@ -37,8 +37,17 @@ typedef struct EspParse {
     MprBuf  *token;                         /**< Input token */
 } EspParse;
 
+
+typedef struct CompileContext {
+    cchar   *csource;
+    cchar   *source;
+    cchar   *module;
+    cchar   *cache;
+} CompileContext;
+
 /************************************ Forwards ********************************/
 
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache);
 static int getEspToken(EspParse *parse);
 static cchar *getDebug(EspRoute *eroute);
 static cchar *getEnvString(HttpRoute *route, cchar *key, cchar *defaultValue);
@@ -52,6 +61,7 @@ static cchar *getLibs(cchar *os);
 static cchar *getMappedArch(cchar *arch);
 static cchar *getObjExt(cchar *os);
 static cchar *getVxCPU(cchar *arch);
+static void manageContext(CompileContext *context, int flags);
 static bool matchToken(cchar **str, cchar *token);
 
 #if ME_WIN_LIKE
@@ -318,11 +328,12 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
 PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName,
     int isView, char **errMsg)
 {
-    MprFile     *fp;
-    EspRoute    *eroute;
-    cchar       *csource, *layoutsDir;
-    char        *layout, *script, *page, *err;
-    ssize       len;
+    MprFile         *fp;
+    EspRoute        *eroute;
+    CompileContext  *context;
+    cchar           *csource, *layoutsDir;
+    char            *layout, *script, *page, *err;
+    ssize           len;
 
     eroute = route->eroute;
     assert(eroute->compile);
@@ -388,15 +399,20 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         return 0;
     }
 
+    context = allocContext(source, csource, module, cacheName);
+    mprAddRoot(context);
+
     /*
         Run compiler: WARNING: GC yield here
      */
     if (runCommand(route, dispatcher, eroute->compileCmd, csource, module, errMsg) != 0) {
+        mprRemoveRoot(context);
         return 0;
     }
     if (eroute->linkCmd) {
         /* WARNING: GC yield here */
         if (runCommand(route, dispatcher, eroute->linkCmd, csource, module, errMsg) != 0) {
+            mprRemoveRoot(context);
             return 0;
         }
 #if !MACOSX
@@ -412,6 +428,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
             Windows leaves intermediate object in the current directory
          */
         cchar   *path;
+//  MOB - csource may be freed here
         path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
@@ -421,6 +438,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     if (!eroute->keep && isView) {
         mprDeletePath(csource);
     }
+    mprRemoveRoot(context);
     return 1;
 }
 
@@ -1320,6 +1338,35 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
 #else
     return getCompilerName(os, arch);
 #endif
+}
+
+
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache)
+{
+    CompileContext *context;
+
+    if ((context = mprAllocObj(CompileContext, manageContext)) == 0) {
+        return 0;
+    }
+    /*
+        Use actual references to ensure we retain the memory
+     */
+    context->csource = csource;
+    context->source = source;
+    context->module = module;
+    context->cache = cache;
+    return context;
+}
+
+
+static void manageContext(CompileContext *context, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(context->csource);
+        mprMark(context->source);
+        mprMark(context->module);
+        mprMark(context->cache);
+    }
 }
 
 /*

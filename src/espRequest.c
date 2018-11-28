@@ -14,12 +14,6 @@
  */
 static Esp *esp;
 
-typedef struct LoadContext {
-    cchar   *source;
-    cchar   *module;
-    cchar   *cache;
-} LoadContext;
-
 /*
     espRenderView flags are reserved (UNUSED)
  */
@@ -27,12 +21,10 @@ typedef struct LoadContext {
 
 /************************************ Forward *********************************/
 
-static LoadContext* allocContext(cchar *source, cchar *module, cchar *cache);
 static int cloneDatabase(HttpConn *conn);
 static void closeEsp(HttpQueue *q);
 static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
-static void manageContext(LoadContext *context, int flags);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
 static int openEsp(HttpQueue *q);
@@ -827,10 +819,8 @@ static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kin
             if (recompile || (isView && layoutIsStale(eroute, source, module))) {
                 if (recompile) {
                     /*
-                        WARNING: espCompile may yield, so store the source, module and cache references in the route data.
-                        Preferable to using mprHold/Release.
+                        WARNING: espCompile may yield. espCompile will retain the arguments (source, module, cache) for us.
                      */
-                    httpSetRouteData(route, "esp:loadContext", allocContext(source, module, cache));
                     if (!espCompile(route, dispatcher, source, module, cache, isView, (char**) errMsg)) {
                         unlock(esp);
                         return MPR_ERR_CANT_WRITE;
@@ -1489,32 +1479,6 @@ static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified)
     }
 }
 
-
-static LoadContext* allocContext(cchar *source, cchar *module, cchar *cache)
-{
-    LoadContext *context;
-
-    if ((context = mprAllocObj(LoadContext, manageContext)) == 0) {
-        return 0;
-    }
-    /*
-        Use actual references to ensure we retain the memory
-     */
-    context->source = source;
-    context->module = module;
-    context->cache = cache;
-    return context;
-}
-
-
-static void manageContext(LoadContext *context, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(context->source);
-        mprMark(context->module);
-        mprMark(context->cache);
-    }
-}
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
