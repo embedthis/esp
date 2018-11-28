@@ -542,7 +542,7 @@ static void *srcompile(cchar *pattern)
 
     options = PCRE_JAVASCRIPT_COMPAT;
     if ((pp = pcre_compile2(pattern, options, 0, &err, &column, NULL)) == 0) {
-        mprLog("error ejscript", 0, "Cannot compile pattern %s. Error %s at column %d", pattern, err, column);
+        mprLog("error version", 0, "Cannot compile pattern %s. Error %s at column %d", pattern, err, column);
         return 0;
     }
     return pp;

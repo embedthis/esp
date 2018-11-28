@@ -2,7 +2,7 @@
     "name": "mpr-mbedtls",
     "title": "MbedTLS support",
     "description": "MbedTLS Support for the MPR",
-    "version": "0.5.0",
+    "version": "2.8.1",
     "keywords": [
         "me",
         "ssl",
@@ -36,11 +36,9 @@
     "devDependencies": {
         "makeme": ">=0.9.3"
     },
-    "pak": {
-        "export": [
-            "*.c",
-            "*.me"
-        ],
-        "origin": "embedthis/mpr-mbedtls"
-    }
+    "export": [
+        "*.c",
+        "*.me"
+    ],
+    "origin": "embedthis/mpr-mbedtls"
 }

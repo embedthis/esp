@@ -2,7 +2,7 @@
     "name": "mpr-openssl",
     "title": "OpenSSL support",
     "description": "OpenSSL Support for the MPR",
-    "version": "0.5.0",
+    "version": "1.0.1",
     "keywords": [
         "me",
         "ssl",
@@ -33,11 +33,9 @@
     "devDependencies": {
         "makeme": ">=0.9.2"
     },
-    "pak": {
-        "export": [
-            "*.c",
-            "*.me"
-        ],
-        "origin": "embedthis/mpr-openssl"
-    }
+    "export": [
+        "*.c",
+        "*.me"
+    ],
+    "origin": "embedthis/mpr-openssl"
 }

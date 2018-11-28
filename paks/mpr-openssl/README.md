@@ -17,4 +17,4 @@ OpenSSL stack interface. This provides the interface between the MPR Socket laye
 
 ## Get Pak
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/)
+[https://www.embedthis.com/pak/](https://www.embedthis.com/pak/)

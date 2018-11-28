@@ -2,7 +2,7 @@
     "name": "http",
     "description": "Embedthis Http Library",
     "title": "Embedthis Http",
-    "version": "6.2.4",
+    "version": "6.3.0",
     "keywords": [
         "http",
         "webserver"
@@ -31,25 +31,23 @@
     ],
     "dependencies": {
         "certs": "~0.1",
-        "mpr": "~6.2",
-        "mpr-mbedtls": "~0.5",
-        "osdep": "~0.9",
+        "mpr": "~6.3",
+        "mpr-mbedtls": "~2",
+        "osdep": "~1",
         "pcre": "~1.0",
         "ssl": "~0.9"
     },
     "optionalDependencies": {
-        "mpr-openssl": "~0.5"
+        "mpr-openssl": "~1.0"
     },
     "devDependencies": {
-        "makeme": ">=0.9.0",
-        "pak": ">=0.11.0"
+        "makeme": ">=1.0",
+        "pak": ">=1.0"
     },
     "files": [
         "dist/",
         "doc/api/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/http"
-    }
+    "import": true,
+    "origin": "embedthis/http"
 }

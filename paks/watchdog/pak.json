@@ -30,7 +30,7 @@
         }
     ],
     "dependencies": {
-        "mpr": "~6.2"
+        "mpr": "~7"
     },
     "devDependencies": {
         "makeme": ">=0.9.0",
@@ -40,8 +40,6 @@
         "dist/**",
         "doc/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/watchdog"
-    }
+    "import": true,
+    "origin": "embedthis/watchdog"
 }

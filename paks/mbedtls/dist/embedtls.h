@@ -87,14 +87,12 @@
     #define MBEDTLS_CIPHER_MODE_CBC
 #elif defined(ME_MBEDTLS_CBC) && ME_MBEDTLS_CBC == 0
     #undef MBEDTLS_CIPHER_MODE_CBC
-mob mob
 #endif
 
 #if ME_MBEDTLS_CCM
     #define MBEDTLS_CCM_C
 #elif defined(ME_MBEDTLS_CCM) && ME_MBEDTLS_CCM == 0
     #undef MBEDTLS_CCM_C
-mob mob
 #endif
 
 #if ME_MBEDTLS_DES

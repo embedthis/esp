@@ -2,7 +2,7 @@
     "name": "mpr",
     "description": "Embedthis Multithreaded Portable Runtime",
     "title": "Embedthis MPR",
-    "version": "6.2.4",
+    "version": "6.3.0",
     "keywords": [
         "mpr",
         "runtime"
@@ -30,24 +30,22 @@
         }
     ],
     "dependencies": {
-        "osdep": "~0.9"
+        "osdep": "~1.0"
     },
     "optionalDependencies": {
         "certs": "~0.1",
         "ssl": "~0.9",
-        "mpr-openssl": "~0.5",
-        "mpr-mbedtls": "~0.5"
+        "mpr-openssl": "~1.0",
+        "mpr-mbedtls": "~2"
     },
     "devDependencies": {
-        "makeme": ">=0.9.0",
-        "pak": ">=0.11.0"
+        "makeme": ">=1.0",
+        "pak": ">=1.0"
     },
     "files": [
         "dist/",
         "doc/api/"
     ],
-    "pak": {
-        "import": true,
-        "origin": "embedthis/mpr"
-    }
+    "import": true,
+    "origin": "embedthis/mpr"
 }
