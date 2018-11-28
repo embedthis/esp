@@ -3871,7 +3871,7 @@ static void parseAttach(HttpRoute *route, cchar *key, MprJson *prop)
 {
     HttpEndpoint    *endpoint;
     MprJson         *child;
-    char            *ip;
+    cchar           *ip;
     int             ji, port;
 
     if (prop->type & MPR_JSON_VALUE) {
@@ -4709,7 +4709,9 @@ static void parseRedirect(HttpRoute *route, cchar *key, MprJson *prop)
     cchar       *from, *status, *to;
     int         ji;
 
-    if (prop->type & MPR_JSON_STRING) {
+    if (prop->type & MPR_JSON_FALSE) {
+        /* skip */
+    } else if (prop->type & MPR_JSON_STRING) {
         if (smatch(prop->value, "secure") ||smatch(prop->value, "https://")) {
             httpAddRouteCondition(route, "secure", "https://", HTTP_ROUTE_REDIRECT);
         } else {
@@ -4904,7 +4906,7 @@ static void parseServerListen(HttpRoute *route, cchar *key, MprJson *prop)
     HttpEndpoint    *endpoint, *dual;
     HttpHost        *host;
     MprJson         *child;
-    char            *ip;
+    cchar           *ip;
     int             ji, port, secure;
 
     if (route->flags & (HTTP_ROUTE_HOSTED | HTTP_ROUTE_OWN_LISTEN)) {
@@ -8028,7 +8030,7 @@ PUBLIC int httpSecureEndpoint(HttpEndpoint *endpoint, struct MprSsl *ssl)
 PUBLIC int httpSecureEndpointByName(cchar *name, struct MprSsl *ssl)
 {
     HttpEndpoint    *endpoint;
-    char            *ip;
+    cchar           *ip;
     int             port, next, count;
 
     if (mprParseSocketAddress(name, &ip, &port, NULL, -1) < 0) {
@@ -9366,7 +9368,6 @@ static void invokeDefenses(HttpMonitor *monitor, MprHash *args)
     int             next;
 
     http = monitor->http;
-    mprHold(args);
 
     for (ITERATE_ITEMS(monitor->defenses, defense, next)) {
         if ((remedyProc = mprLookupKey(http->remedies, defense->remedy)) == 0) {
@@ -9411,7 +9412,6 @@ static void invokeDefenses(HttpMonitor *monitor, MprHash *args)
         }
 #endif
     }
-    mprRelease(args);
 }
 
 
@@ -9446,7 +9446,9 @@ static void checkCounter(HttpMonitor *monitor, HttpCounter *counter, cchar *ip)
         /*
             WARNING: may yield depending on remedy
          */
+        mprAddRoot(args);
         invokeDefenses(monitor, args);
+        mprRemoveRoot(args);
     }
     counter->value = 0;
 }
@@ -15966,7 +15968,8 @@ static bool parseIncoming(HttpConn *conn)
     HttpAddress *address;
     HttpPacket  *packet;
     HttpLimits  *limits;
-    char        *start, *end, *hostname;
+    cchar       *hostname;
+    char        *start, *end;
     ssize       len;
     int64       value;
 
@@ -17313,7 +17316,7 @@ static void parseUri(HttpConn *conn)
         if (!hostname) {
             hostname = conn->sock->acceptIp;
         }
-        if (mprParseSocketAddress(hostname, &up->host, NULL, NULL, 0) < 0 || up->host == 0 || *up->host == '\0') {
+        if (mprParseSocketAddress(hostname, (cchar**) &up->host, NULL, NULL, 0) < 0 || up->host == 0 || *up->host == '\0') {
             if (!conn->error) {
                 httpBadRequestError(conn, HTTP_CODE_BAD_REQUEST, "Bad host");
             }
@@ -19895,7 +19898,8 @@ PUBLIC void httpSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path
     MprTicks lifespan, int flags)
 {
     HttpRx      *rx;
-    char        *cp, *expiresAtt, *expires, *domainAtt, *domain, *secure, *httponly;
+    cchar       *domain, *domainAtt;
+    char        *cp, *expiresAtt, *expires, *secure, *httponly;
 
     rx = conn->rx;
     if (path == 0) {

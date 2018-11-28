@@ -149,25 +149,25 @@ static ME_INLINE bool claim(MprMem *mp);
 static ME_INLINE void clearbitmap(size_t *bitmap, int bindex);
 static void dummyManager(void *ptr, int flags);
 static void freeBlock(MprMem *mp);
-static void getSystemInfo();
+static void getSystemInfo(void);
 static MprMem *growHeap(size_t size);
-static void invokeAllDestructors();
+static void invokeAllDestructors(void);
 static ME_INLINE size_t qtosize(int qindex);
 static ME_INLINE bool linkBlock(MprMem *mp);
 static ME_INLINE void linkSpareBlock(char *ptr, size_t size);
 static ME_INLINE void initBlock(MprMem *mp, size_t size, int first);
-static int initQueues();
-static void invokeDestructors();
-static void markAndSweep();
-static void markRoots();
-static int pauseThreads();
-static void printMemReport();
+static int initQueues(void);
+static void invokeDestructors(void);
+static void markAndSweep(void);
+static void markRoots(void);
+static int pauseThreads(void);
+static void printMemReport(void);
 static ME_INLINE void release(MprFreeQueue *freeq);
 static void resumeThreads(int flags);
 static ME_INLINE void setbitmap(size_t *bitmap, int bindex);
 static ME_INLINE int sizetoq(size_t size);
-static void dontBusyWait();
-static void sweep();
+static void dontBusyWait(void);
+static void sweep(void);
 static void sweeperThread(void *unused, MprThread *tp);
 static ME_INLINE void triggerGC(int always);
 static ME_INLINE void unlinkBlock(MprMem *mp);
@@ -185,11 +185,11 @@ static void vmfree(void *ptr, size_t size);
     #define freeLocation(mp)
 #endif
 #if ME_MPR_ALLOC_STATS
-    static void printQueueStats();
-    static void printGCStats();
+    static void printQueueStats(void);
+    static void printGCStats(void);
 #endif
 #if ME_MPR_ALLOC_STACK
-    static void monitorStack();
+    static void monitorStack(void);
 #else
     #define monitorStack()
 #endif
@@ -436,7 +436,9 @@ PUBLIC size_t mprMemcpy(void *dest, size_t destMax, cvoid *src, size_t nbytes)
     assert(destMax <= 0 || destMax >= nbytes);
     assert(src);
     assert(nbytes >= 0);
-
+    if (!dest || !src) {
+        return 0;
+    }
     if (destMax > 0 && nbytes > destMax) {
         assert(!MPR_ERR_WONT_FIT);
         return 0;
@@ -1114,8 +1116,9 @@ static int pauseThreads()
      */
     heap->mustYield = 1;
     timeout = MPR_TIMEOUT_GC_SYNC;
-    ts = MPR->threadService;
-
+    if ((ts = MPR->threadService) == 0 || !ts->threads) {
+        return 0;
+    }
     start = mprGetTicks();
     if (mprGetDebugMode()) {
         timeout = timeout * 500;
@@ -1158,7 +1161,9 @@ static void resumeThreads(int flags)
     MprThread           *tp;
     int                 i;
 
-    ts = MPR->threadService;
+    if ((ts = MPR->threadService) == 0 || !ts->threads) {
+        return;
+    }
     lock(ts->threads);
     heap->mustYield = 0;
     for (i = 0; i < ts->threads->length; i++) {
@@ -1502,12 +1507,7 @@ static void sweep()
  */
 void *palloc(size_t size)
 {
-    void    *ptr;
-
-    if ((ptr = mprAllocZeroed(size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO);
 }
 
 
@@ -1519,20 +1519,22 @@ PUBLIC void pfree(void *ptr)
 {
     if (ptr) {
         mprRelease(ptr);
-
     }
 }
 
 
 PUBLIC void *prealloc(void *ptr, size_t size)
 {
+    void    *mem;
+
+    if ((mem = mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO)) == 0) {
+        return 0;
+    }
     if (ptr) {
+        memcpy(mem, ptr, psize(ptr));
         mprRelease(ptr);
     }
-    if ((ptr =  mprRealloc(ptr, size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return mem;
 }
 
 
@@ -1592,11 +1594,11 @@ PUBLIC void mprHoldBlocks(cvoid *ptr, ...)
 
 PUBLIC void mprReleaseBlocks(cvoid *ptr, ...)
 {
-    va_list args;
+    va_list     args;
 
     if (ptr) {
-        mprRelease(ptr);
         va_start(args, ptr);
+        mprRelease(ptr);
         while ((ptr = va_arg(args, char*)) != 0) {
             mprRelease(ptr);
         }
@@ -1617,7 +1619,9 @@ PUBLIC bool mprEnableGC(bool on)
 
 PUBLIC void mprAddRoot(cvoid *root)
 {
-    mprAddItem(heap->roots, root);
+    if (root) {
+        mprAddItem(heap->roots, root);
+    }
 }
 
 
@@ -2654,7 +2658,9 @@ static void manageMpr(Mpr *mpr, int flags)
             Argv will do a single allocation into argv == argBuf. May reallocate the program name in argv[0]
          */
         mprMark(mpr->argv);
-        mprMark(mpr->argv[0]);
+        if (mpr->argv) {
+            mprMark(mpr->argv[0]);
+        }
         mprMark(mpr->logPath);
         mprMark(mpr->pathEnv);
         mprMark(mpr->name);
@@ -2749,7 +2755,9 @@ static void shutdownMonitor(void *data, MprEvent *event)
             }
         }
     } else {
-        mprLog("info mpr", 2, "Waiting for requests to complete, %lld secs remaining ...", remaining / TPS);
+        if (!mprGetDebugMode()) {
+            mprLog("info mpr", 2, "Waiting for requests to complete, %lld secs remaining ...", remaining / TPS);
+        }
         mprRescheduleEvent(event, 1000);
     }
 }
@@ -2793,7 +2801,7 @@ PUBLIC void mprShutdown(int how, int exitStatus, MprTicks timeout)
         }
         /* No continue */
     }
-    mprLog("info mpr", 5, "Application exit, waiting for existing requests to complete.");
+    mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
 
     if (!mprIsIdle(0)) {
         mprCreateTimerEvent(NULL, "shutdownMonitor", 0, shutdownMonitor, 0, MPR_EVENT_QUICK);
@@ -3198,7 +3206,9 @@ PUBLIC int mprMakeArgv(cchar *command, cchar ***argvp, int flags)
     int     argc;
 
     assert(command);
-
+    if (!command) {
+        return MPR_ERR_BAD_ARGS;
+    }
     /*
         Allocate one vector for argv and the actual args themselves
      */
@@ -4320,6 +4330,9 @@ PUBLIC ssize mprGetBlockFromBuf(MprBuf *bp, char *buf, ssize size)
 {
     ssize     thisLen, bytesRead;
 
+    if (!bp || !buf) {
+        return 0;
+    }
     assert(buf);
     assert(size >= 0);
     assert(bp->buflen == (bp->endbuf - bp->data));
@@ -4328,13 +4341,12 @@ PUBLIC ssize mprGetBlockFromBuf(MprBuf *bp, char *buf, ssize size)
         Get the max bytes in a straight copy
      */
     bytesRead = 0;
-    while (size > 0) {
+    while (size > 0 && bp->start) {
         thisLen = mprGetBufLength(bp);
         thisLen = min(thisLen, size);
         if (thisLen <= 0) {
             break;
         }
-
         memcpy(buf, bp->start, thisLen);
         buf += thisLen;
         bp->start += thisLen;
@@ -4641,6 +4653,95 @@ PUBLIC char *mprBufToString(MprBuf *bp)
 {
     mprAddNullToBuf(bp);
     return sclone(mprGetBufStart(bp));
+}
+
+
+PUBLIC void mprPutUint16ToBuf(MprBuf *buf, uint16 num)
+{
+    uchar   *bp;
+
+    if (mprGetBufSpace(buf) < sizeof(num)) {
+        mprGrowBuf(buf, sizeof(num));
+    }
+    bp = (uchar*) mprGetBufEnd(buf);
+    bp[0] = num >> 8;
+    bp[1] = num & 0xFF;
+    mprAdjustBufEnd(buf, sizeof(num));
+}
+
+
+PUBLIC void mprPutUint32ToBuf(MprBuf *buf, uint32 num)
+{
+    uchar   *bp;
+
+    if (mprGetBufSpace(buf) < sizeof(num)) {
+        mprGrowBuf(buf, sizeof(num));
+    }
+    bp = (uchar*) mprGetBufEnd(buf);
+    bp[0] = num >> 24;
+    bp[1] = num >> 16;
+    bp[2] = num >> 8;
+    bp[3] = num;
+    mprAdjustBufEnd(buf, sizeof(num));
+}
+
+
+PUBLIC uint mprGetUint16FromBuf(MprBuf *buf)
+{
+    uchar   *bp;
+    uint16  value;
+
+    if (mprGetBufLength(buf) < sizeof(value)) {
+        return 0;
+    }
+    bp = (uchar*) mprGetBufStart(buf);
+    value = bp[0] << 8 | bp[1];
+    mprAdjustBufStart(buf, sizeof(value));
+    return value;
+}
+
+
+PUBLIC uint mprGetUint24FromBuf(MprBuf *buf)
+{
+    uchar   *bp;
+    uint32  value;
+
+    if (mprGetBufLength(buf) < 3) {
+        return 0;
+    }
+    bp = (uchar*) mprGetBufStart(buf);
+    value = bp[0] << 16 | bp[1] << 8 | bp[2];
+    mprAdjustBufStart(buf, 3);
+    return value;
+}
+
+
+PUBLIC uint mprGetUint32FromBuf(MprBuf *buf)
+{
+    uchar   *bp;
+    uint32  value;
+
+    if (mprGetBufLength(buf) < sizeof(value)) {
+        return 0;
+    }
+    bp = (uchar*) mprGetBufStart(buf);
+    value = bp[0] << 24 | bp[1] << 16 | bp[2] << 8 | bp[3];
+    mprAdjustBufStart(buf, sizeof(value));
+    return value;
+}
+
+
+PUBLIC uint mprPeekUint32FromBuf(MprBuf *buf)
+{
+    uchar   *bp;
+    uint32  value;
+
+    if (mprGetBufLength(buf) < sizeof(value)) {
+        return 0;
+    }
+    bp = (uchar*) mprGetBufStart(buf);
+    value = bp[0] << 24 | bp[1] << 16 | bp[2] << 8 | bp[3];
+    return value;
 }
 
 
@@ -5391,10 +5492,6 @@ PUBLIC MprCmd *mprCreateCmd(MprDispatcher *dispatcher)
     if ((cmd = mprAllocObj(MprCmd, manageCmd)) == 0) {
         return 0;
     }
-#if KEEP
-    cmd->timeoutPeriod = MPR_TIMEOUT_CMD;
-    cmd->timestamp = mprGetTicks();
-#endif
     cmd->forkCallback = (MprForkCallback) closeFiles;
     cmd->dispatcher = dispatcher ? dispatcher : MPR->dispatcher;
     cmd->status = -1;
@@ -5449,7 +5546,7 @@ static void manageCmd(MprCmd *cmd, int flags)
         mprMark(cmd->command);
 #endif
         mprMark(cmd->argv);
-        for (i = 0; i < cmd->argc; i++) {
+        for (i = 0; cmd->argv && i < cmd->argc; i++) {
             mprMark(cmd->argv[i]);
         }
 
@@ -5569,7 +5666,7 @@ PUBLIC void mprCloseCmdFd(MprCmd *cmd, int channel)
         if (channel != MPR_CMD_STDIN) {
             cmd->eofCount++;
             if (cmd->eofCount >= cmd->requiredEof) {
-#if VXWORKS
+#if VXWORKS || XCODE_DEBUG
                 reapCmd(cmd, 0);
 #endif
                 if (cmd->pid == 0) {
@@ -5789,7 +5886,7 @@ PUBLIC int mprStartCmd(MprCmd *cmd, int argc, cchar **argv, cchar **envp, int fl
         mprLog("error mpr cmd", 0, "Program \"%s\", is a directory", cmd->program);
         return MPR_ERR_CANT_ACCESS;
     }
-    mprLog("info mpr cmd", 5, "Program: %s", cmd->program);
+    mprLog("info mpr cmd", 6, "Program: %s", cmd->program);
     cmd->argv[0] = cmd->program;
 
     prepWinCommand(cmd);
@@ -5801,10 +5898,10 @@ PUBLIC int mprStartCmd(MprCmd *cmd, int argc, cchar **argv, cchar **envp, int fl
         return MPR_ERR_MEMORY;
     }
     for (i = 0; i < cmd->argc; i++) {
-        mprLog("info mpr cmd", 5, "    arg[%d]: %s", i, cmd->argv[i]);
+        mprLog("info mpr cmd", 6, "    arg[%d]: %s", i, cmd->argv[i]);
     }
     for (ITERATE_ITEMS(cmd->env, pair, next)) {
-        mprLog("info mpr cmd", 5, "    env[%d]: %s", next, pair);
+        mprLog("info mpr cmd", 6, "    env[%d]: %s", next, pair);
     }
     slock(cmd);
     if (makeCmdIO(cmd) < 0) {
@@ -5863,7 +5960,7 @@ static int makeCmdIO(MprCmd *cmd)
  */
 PUBLIC int mprStopCmd(MprCmd *cmd, int signal)
 {
-    mprDebug("mpr cmd", 5, "cmd: stop");
+    mprDebug("mpr cmd", 6, "cmd: stop");
     if (signal < 0) {
         signal = SIGTERM;
     }
@@ -6158,7 +6255,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
         if (!WIFSTOPPED(status)) {
             if (WIFEXITED(status)) {
                 cmd->status = WEXITSTATUS(status);
-                mprDebug("mpr cmd", 5, "Process exited pid %d, status %d", cmd->pid, cmd->status);
+                mprDebug("mpr cmd", 6, "Process exited pid %d, status %d", cmd->pid, cmd->status);
             } else if (WIFSIGNALED(status)) {
                 cmd->status = WTERMSIG(status);
             }
@@ -6169,7 +6266,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
             }
         }
     } else {
-        mprDebug("mpr cmd", 5, "Still running pid %d, thread %s", cmd->pid, mprGetCurrentThreadName());
+        mprDebug("mpr cmd", 6, "Still running pid %d, thread %s", cmd->pid, mprGetCurrentThreadName());
     }
 }
 #endif
@@ -6213,7 +6310,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
         if (cmd->eofCount >= cmd->requiredEof) {
             completeCommand(cmd);
         }
-        mprDebug("mpr cmd", 5, "Process reaped: status %d, pid %d, eof %d / %d", cmd->status, cmd->pid,
+        mprDebug("mpr cmd", 6, "Process reaped: status %d, pid %d, eof %d / %d", cmd->status, cmd->pid,
                 cmd->eofCount, cmd->requiredEof);
         if (cmd->callback) {
             (cmd->callback)(cmd, -1, cmd->callbackData);
@@ -6262,10 +6359,6 @@ static void defaultCmdCallback(MprCmd *cmd, int channel, void *data)
     }
     len = mprReadCmd(cmd, channel, mprGetBufEnd(buf), space);
     errCode = mprGetError();
-#if KEEP
-    mprDebug("mpr cmd", 5, "defaultCmdCallback channel %d, read len %zd, pid %d, eof %d/%d", channel, len, cmd->pid,
-            cmd->eofCount, cmd->requiredEof);
-#endif
     if (len <= 0) {
         if (len == 0 || (len < 0 && !(errCode == EAGAIN || errCode == EWOULDBLOCK))) {
             mprCloseCmdFd(cmd, channel);
@@ -6324,17 +6417,6 @@ PUBLIC int mprGetCmdExitStatus(MprCmd *cmd)
 PUBLIC bool mprIsCmdRunning(MprCmd *cmd)
 {
     return cmd->pid > 0;
-}
-
-
-/* KEEP - not yet supported */
-
-PUBLIC void mprSetCmdTimeout(MprCmd *cmd, MprTicks timeout)
-{
-    assert(0);
-#if KEEP
-    cmd->timeoutPeriod = timeout;
-#endif
 }
 
 
@@ -6635,7 +6717,7 @@ static void prepWinCommand(MprCmd *cmd)
         }
     }
     *dp = '\0';
-    mprLog("info mpr cmd", 5, "Windows command line: %s", cmd->command);
+    mprLog("info mpr cmd", 6, "Windows command line: %s", cmd->command);
 #endif /* ME_WIN_LIKE */
 }
 
@@ -6795,7 +6877,7 @@ static int makeChannel(MprCmd *cmd, int index)
     file = &cmd->files[index];
     file->name = sfmt("/pipe/%s_%d_%d", ME_NAME, taskIdSelf(), tempSeed++);
 
-    if (pipeDevCreate(file->name, 5, ME_BUFSIZE) < 0) {
+    if (pipeDevCreate(file->name, 6, ME_BUFSIZE) < 0) {
         mprLog("error mpr cmd", 0, "Cannot create pipes to run %s", cmd->program);
         return MPR_ERR_CANT_OPEN;
     }
@@ -6840,7 +6922,7 @@ static int startProcess(MprCmd *cmd)
     /*
         Create the child
      */
-    cmd->pid = vfork();
+    cmd->pid = fork();
 
     if (cmd->pid < 0) {
         mprLog("error mpr cmd", 0, "Cannot fork a new process to run %s, errno %d", cmd->program, mprGetOsError());
@@ -7124,7 +7206,9 @@ PUBLIC MprCond *mprCreateCond()
 static void manageCond(MprCond *cp, int flags)
 {
     assert(cp);
-
+    if (!cp) {
+        return;
+    }
     if (flags & MPR_MANAGE_MARK) {
         mprMark(cp->mutex);
 
@@ -7573,7 +7657,7 @@ PUBLIC char *mprGetRandomString(ssize size)
     char        *hex = "0123456789abcdef";
     char        *bytes, *ascii, *ap, *cp, *bp;
     ssize       len;
-    int         i, pid;
+    int         i;
 
     len = size / 2;
     bytes = mprAlloc(len);
@@ -7582,14 +7666,13 @@ PUBLIC char *mprGetRandomString(ssize size)
     if (mprGetRandomBytes(bytes, len, 0) < 0) {
         mprLog("critical mpr", 0, "Failed to get random bytes");
         now = mprGetTime();
-        pid = (int) getpid();
         cp = (char*) &now;
         bp = bytes;
         for (i = 0; i < sizeof(now) && bp < &bytes[len]; i++) {
             *bp++= *cp++;
         }
         cp = (char*) &now;
-        for (i = 0; i < sizeof(pid) && bp < &bytes[len]; i++) {
+        for (i = 0; i < sizeof(char*) && bp < &bytes[len]; i++) {
             *bp++ = *cp++;
         }
     }
@@ -9556,6 +9639,9 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
         if (q) {
             for (event = q->next; event != q; event = next) {
                 next = event->next;
+                if (event->cond) {
+                    mprSignalCond(event->cond);
+                }
                 if (event->dispatcher) {
                     mprRemoveEvent(event);
                 }
@@ -9807,7 +9893,9 @@ PUBLIC void mprWakeDispatchers()
     MprEventService     *es;
     MprDispatcher       *runQ, *dp;
 
-    es = MPR->eventService;
+    if ((es = MPR->eventService) == 0) {
+        return;
+    }
     lock(es);
     runQ = es->runQ;
     for (dp = runQ->next; dp != runQ; dp = dp->next) {
@@ -9884,7 +9972,9 @@ PUBLIC void mprScheduleDispatcher(MprDispatcher *dispatcher)
     if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return;
     }
-    es = dispatcher->service;
+    if ((es = dispatcher->service) == 0) {
+        return;
+    }
     lock(es);
     mustWakeWaitService = es->waiting;
 
@@ -9966,6 +10056,9 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         mprAtomicAdd64(&dispatcher->mark, 1);
 
         (event->proc)(event->data, event);
+        if (event->cond) {
+            mprSignalCond(event->cond);
+        }
 
         if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
             break;
@@ -10022,7 +10115,9 @@ PUBLIC void mprWakePendingDispatchers()
     MprEventService *es;
     int             mustWake;
 
-    es = MPR->eventService;
+    if ((es = MPR->eventService) == 0) {
+        return;
+    }
     lock(es);
     mustWake = es->pendingQ->next != es->pendingQ;
     unlock(es);
@@ -10351,7 +10446,9 @@ PUBLIC char *mprUriDecodeInSitu(char *inbuf)
     int     num, i, c;
 
     assert(inbuf);
-
+    if (!inbuf) {
+        return 0;
+    }
     for (op = ip = inbuf; ip && *ip; ip++, op++) {
         if (*ip == '+') {
             *op = ' ';
@@ -10929,17 +11026,28 @@ PUBLIC MprEvent *mprCreateEventQueue()
     Create and queue a new event for service. Period is used as the delay before running the event and as the period
     between events for continuous events.
 
-    WARNING: this routine is unique in that it may be called from a non-MPR thread. This means it may run in parallel with
-    the GC. So memory must be held until safely queued.
+    This routine is foreign thread-safe, i.e. it can be called by non-mpr threads where it runs in parallel with the GC.
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
     MprEvent    *event;
+    int         aflags;
 
-    /*
-        Create and hold the event object (immune from GC for foreign threads)
-     */
-    if ((event = mprAllocMem(sizeof(MprEvent), MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO | MPR_ALLOC_HOLD)) == 0) {
+    aflags = MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO;
+    if (flags & MPR_EVENT_FOREIGN) {
+        /*
+            Foreign threads cannot safely reference a dispatcher as it may be deleted anytime.
+         */
+        flags &= ~MPR_EVENT_DONT_QUEUE;
+        flags |= MPR_EVENT_QUICK;
+        dispatcher = 0;
+        /*
+            Hold memory for foreign threads to be immune from GC.
+            Supplied data should be static (non mpr) or be held via mprHold.
+         */
+        aflags |= MPR_ALLOC_HOLD | MPR_EVENT_STATIC_DATA;
+    }
+    if ((event = mprAllocMem(sizeof(MprEvent), aflags)) == 0) {
         return 0;
     }
     mprSetManager(event, (MprManager) manageEvent);
@@ -10949,38 +11057,31 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     }
     dispatcher->service->now = mprGetTicks();
     event->name = name;
-    event->timestamp = dispatcher->service->now;
     event->proc = proc;
-    event->period = period;
-    event->due = event->timestamp + period;
     event->data = data;
     event->dispatcher = dispatcher;
     event->next = event->prev = 0;
     event->flags = flags;
 
+    event->timestamp = dispatcher->service->now;
+    if (period < 0) {
+        period = -period;
+    } else if (period > MPR_EVENT_MAX_PERIOD) {
+        period = MPR_EVENT_MAX_PERIOD;
+    }
+    event->period = period;
+    event->due = event->timestamp + period;
+
     if (!(flags & MPR_EVENT_DONT_QUEUE)) {
         mprQueueEvent(dispatcher, event);
+        if (flags & MPR_EVENT_FOREIGN) {
+            mprRelease(event);
+            /* Warning: event may collected by GC here */
+            return 0;
+        }
     }
-    /* Unset eternal */
-    if (!(flags & MPR_EVENT_HOLD)) {
-        mprRelease(event);
-    }
-    /*
-        Warning: if invoked from a foreign (non-mpr) thread, the event may be collected prior to return
-     */
     return event;
 }
-
-
-#if DEPRECATE
-PUBLIC int mprCreateEventOutside(MprDispatcher *dispatcher, cchar *name, void *proc, void *data, int flags)
-{
-    if (mprCreateEvent(dispatcher, name, 0, proc, data, flags) == 0) {
-        return MPR_ERR_CANT_CREATE;
-    }
-    return 0;
-}
-#endif
 
 
 static void manageEvent(MprEvent *event, int flags)
@@ -10992,6 +11093,7 @@ static void manageEvent(MprEvent *event, int flags)
             mprMark(event->data);
         }
         mprMark(event->sock);
+        mprMark(event->cond);
     }
 }
 
@@ -11042,6 +11144,9 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
     MprEventService     *es;
     MprDispatcher       *dispatcher;
 
+    if (!event) {
+        return;
+    }
     dispatcher = event->dispatcher;
     if (dispatcher) {
         es = dispatcher->service;
@@ -11053,6 +11158,9 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
         event->flags &= ~MPR_EVENT_CONTINUOUS;
         if (event->due == es->willAwake && dispatcher->eventQ->next != dispatcher->eventQ) {
             mprScheduleDispatcher(dispatcher);
+        }
+        if (event->cond) {
+            mprSignalCond(event->cond);
         }
         unlock(es);
     }
@@ -11067,8 +11175,9 @@ PUBLIC void mprRescheduleEvent(MprEvent *event, MprTicks period)
 
     dispatcher = event->dispatcher;
 
-    es = dispatcher->service;
-
+    if ((es = dispatcher->service) == 0) {
+        return;
+    }
     lock(es);
     event->period = period;
     event->timestamp = es->now;
@@ -11119,7 +11228,9 @@ PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
     MprEventService     *es;
     MprEvent            *event, *next;
 
-    es = dispatcher->service;
+    if ((es = dispatcher->service) == 0) {
+        return 0;
+    }
     event = 0;
     lock(es);
     next = dispatcher->eventQ->next;
@@ -11171,6 +11282,9 @@ static void initEventQ(MprEvent *q, cchar *name)
 static void queueEvent(MprEvent *prior, MprEvent *event)
 {
     assert(prior);
+    if (!prior || !event) {
+        return;
+    }
     assert(event);
     assert(prior->next);
 
@@ -12139,7 +12253,7 @@ PUBLIC MprKey *mprAddKey(MprHash *hash, cvoid *key, cvoid *ptr)
         return 0;
     }
     sp->data = ptr;
-    if (!(hash->flags & MPR_HASH_STATIC_KEYS)) {
+    if (!(hash->flags & (MPR_HASH_MANAGED_KEYS | MPR_HASH_STATIC_KEYS))) {
         sp->key = dupKey(hash, key);
     } else {
         sp->key = (void*) key;
@@ -12195,7 +12309,7 @@ PUBLIC MprKey *mprAddDuplicateKey(MprHash *hash, cvoid *key, cvoid *ptr)
     }
     sp->type = 0;
     sp->data = ptr;
-    if (!(hash->flags & MPR_HASH_STATIC_KEYS)) {
+    if (!(hash->flags & (MPR_HASH_MANAGED_KEYS | MPR_HASH_STATIC_KEYS))) {
         sp->key = dupKey(hash, key);
     } else {
         sp->key = (void*) key;
@@ -12892,6 +13006,9 @@ static int gettok(MprJsonParser *parser)
     int     c, d, i, val;
 
     assert(parser);
+    if (!parser || !parser->input) {
+        return JTOK_EOF;
+    }
     assert(parser->input);
     mprFlushBuf(parser->buf);
 
@@ -13350,7 +13467,6 @@ PUBLIC int mprBlendJson(MprJson *dest, MprJson *src, int flags)
             /* Already present */
         } else {
             /* Examine each property for: MPR_JSON_APPEND (default) | MPR_JSON_REPLACE) */
-            pflags = flags;
             for (ITERATE_JSON(src, sp, si)) {
                 trimmedName = sp->name;
                 pflags = flags;
@@ -13536,15 +13652,21 @@ PUBLIC char *getNextTerm(MprJson *obj, char *str, char **rest, int *termType)
     char    *start, *end, *seps, *dot, *expr;
     ssize   i;
 
-    *termType = 0;
-    seps = ".[]";
-    start = (str || !rest) ? str : *rest;
-    if (start == 0) {
-        if (rest) {
-            *rest = 0;
-        }
+    assert(rest);
+    
+    if (!obj || !rest) {
         return 0;
     }
+    /* Clang resports *rest as a false positive */
+    start = str ? str : *rest;
+
+    if (start == 0) {
+        *rest = 0;
+        return 0;
+    }
+    *termType = 0;
+    seps = ".[]";
+    
     while (isspace((int) *start)) start++;
     if (termType && *start == '.') {
         *termType |= JSON_PROP_ELIPSIS;
@@ -13553,9 +13675,7 @@ PUBLIC char *getNextTerm(MprJson *obj, char *str, char **rest, int *termType)
         start += i;
     }
     if (*start == '\0') {
-        if (rest) {
-            *rest = 0;
-        }
+        *rest = 0;
         return 0;
     }
     if (*start == '*' && (start[1] == '\0' || start[1] == '.' || start[1] == ']')) {
@@ -13997,7 +14117,6 @@ static MprJson *queryCore(MprJson *obj, cchar *key, MprJson *value, int flags)
             if (value) {
                 child = mprCreateJson(termType & JSON_PROP_ARRAY ? MPR_JSON_ARRAY : MPR_JSON_OBJ);
                 setProperty(obj, sclone(property), child);
-                obj = (MprJson*) child;
             } else {
                 break;
             }
@@ -14400,7 +14519,9 @@ PUBLIC int mprNotifyOn(MprWaitHandler *wp, int mask)
     int             fd;
 
     assert(wp);
-    ws = wp->service;
+    if ((ws = wp->service) == 0) {
+        return 0;
+    }
     fd = wp->fd;
     assert(fd >= 0);
     kp = &interest[0];
@@ -14430,8 +14551,9 @@ PUBLIC int mprNotifyOn(MprWaitHandler *wp, int mask)
                 Reissue and get results. Test for broken pipe case.
              */
             if (mask) {
+                memset(interest, 0, sizeof(kevent));
                 int rc = kevent(ws->kq, interest, 1, interest, 1, NULL);
-                if (rc == 1 && interest[0].flags & EV_ERROR && interest[0].data == EPIPE) {
+                if (rc == 1 && (interest[0].flags & EV_ERROR) && (interest[0].data == EPIPE)) {
                     /* Broken PIPE - just ignore */
                 } else {
                     mprLog("error mpr event", 4, "Cannot issue notifier wakeup event, errno=%d", errno);
@@ -14693,18 +14815,20 @@ static void manageList(MprList *lp, int flags)
 
     if (flags & MPR_MANAGE_MARK) {
         mprMark(lp->mutex);
-        /* OPT - no need to lock as this is running solo */
-        lock(lp);
-        mprMark(lp->items);
-        if (!(lp->flags & MPR_LIST_STATIC_VALUES)) {
-            for (i = 0; i < lp->length; i++) {
+        if (lp->items) {
+            /* OPT - no need to lock as this is running solo */
+            lock(lp);
+            mprMark(lp->items);
+            if (!(lp->flags & MPR_LIST_STATIC_VALUES)) {
+                for (i = 0; i < lp->length; i++) {
 #if ME_DEBUG
-                assert(lp->items[i] == 0 || mprIsValid(lp->items[i]));
+                    assert(lp->items[i] == 0 || mprIsValid(lp->items[i]));
 #endif
-                mprMark(lp->items[i]);
+                    mprMark(lp->items[i]);
+                }
             }
+            unlock(lp);
         }
-        unlock(lp);
     }
 }
 
@@ -14832,6 +14956,9 @@ PUBLIC void *mprSetItem(MprList *lp, int index, cvoid *item)
     int     length;
 
     assert(lp);
+    if (!lp) {
+        return 0;
+    }
     assert(lp->size >= 0);
     assert(lp->length >= 0);
     assert(index >= 0);
@@ -14865,6 +14992,9 @@ PUBLIC int mprAddItem(MprList *lp, cvoid *item)
     int     index;
 
     assert(lp);
+    if (!lp) {
+        return MPR_ERR_BAD_ARGS;
+    }
     assert(lp->size >= 0);
     assert(lp->length >= 0);
 
@@ -14887,6 +15017,9 @@ PUBLIC int mprAddNullItem(MprList *lp)
     int     index;
 
     assert(lp);
+    if (!lp) {
+        return MPR_ERR_BAD_ARGS;
+    }
     assert(lp->size >= 0);
     assert(lp->length >= 0);
 
@@ -14918,6 +15051,9 @@ PUBLIC int mprInsertItemAtPos(MprList *lp, int index, cvoid *item)
     int     i;
 
     assert(lp);
+    if (!lp) {
+        return MPR_ERR_BAD_ARGS;
+    }
     assert(lp->size >= 0);
     assert(lp->length >= 0);
     assert(index >= 0);
@@ -14981,6 +15117,9 @@ PUBLIC int mprRemoveItem(MprList *lp, cvoid *item)
 PUBLIC int mprRemoveLastItem(MprList *lp)
 {
     assert(lp);
+    if (!lp) {
+        return MPR_ERR_BAD_ARGS;
+    }
     assert(lp->size > 0);
     assert(lp->length > 0);
 
@@ -15027,6 +15166,9 @@ PUBLIC int mprRemoveRangeOfItems(MprList *lp, int start, int end)
     int     i, count;
 
     assert(lp);
+    if (!lp) {
+        return MPR_ERR_BAD_ARGS;
+    }
     assert(lp->size > 0);
     assert(lp->length > 0);
     assert(start > end);
@@ -15127,7 +15269,7 @@ PUBLIC void *mprGetNextItem(MprList *lp, int *next)
     assert(next);
     assert(*next >= 0);
 
-    if (lp == 0) {
+    if (lp == 0 || lp->length == 0) {
         return 0;
     }
     lock(lp);
@@ -15149,11 +15291,11 @@ PUBLIC void *mprGetNextStableItem(MprList *lp, int *next)
     int     index;
 
     assert(next);
-    assert(*next >= 0);
-
-    if (lp == 0) {
+    if (!lp || lp->length == 0 || !next) {
         return 0;
     }
+    assert(*next >= 0);
+
     assert(lp->flags & MPR_LIST_STABLE);
     index = *next;
     if (index < lp->length) {
@@ -15172,7 +15314,7 @@ PUBLIC void *mprGetPrevItem(MprList *lp, int *next)
 
     assert(next);
 
-    if (lp == 0) {
+    if (lp == 0 || lp->length == 0) {
         return 0;
     }
     lock(lp);
@@ -15956,7 +16098,6 @@ PUBLIC void mprAssert(cchar *loc, cchar *msg)
 #else
         sprintf(buf, "Assertion %s, failed at %s", msg, loc);
 #endif
-        msg = buf;
     }
     mprLogProc("debug assert", 0, "%s", buf);
 #if ME_DEBUG_WATSON
@@ -17169,13 +17310,15 @@ PUBLIC MprModule *mprLookupModule(cchar *name)
     int                 next;
 
     assert(name && name);
-
+    if (!name) {
+        return 0;
+    }
     ms = MPR->moduleService;
     assert(ms);
 
     for (next = 0; (mp = mprGetNextItem(ms->modules, &next)) != 0; ) {
         assert(mp->name);
-        if (mp && strcmp(mp->name, name) == 0) {
+        if (mp && mp->name && strcmp(mp->name, name) == 0) {
             return mp;
         }
     }
@@ -19617,7 +19760,6 @@ PUBLIC void mprSetFilesLimit(int limit)
                 for (i = (limit >> 4) * 15; i > 0; i--) {
                     r.rlim_max = r.rlim_cur = limit + i;
                     if (setrlimit(RLIMIT_NOFILE, &r) == 0) {
-                        limit = 0;
                         break;
                     }
                 }
@@ -20001,6 +20143,9 @@ PUBLIC char *mprPrintfCore(char *buf, ssize maxsize, cchar *spec, va_list args)
     fmt.start = fmt.buf;
     fmt.end = fmt.buf;
     fmt.len = 0;
+    fmt.flags = 0;
+    fmt.width = 0;
+    fmt.precision = 0;
     *fmt.start = '\0';
 
     state = STATE_NORMAL;
@@ -21333,7 +21478,9 @@ static void hookSignal(int signo, MprSignal *sp)
     int                 rc;
 
     assert(0 < signo && signo < MPR_MAX_SIGNALS);
-    ssp = MPR->signalService;
+    if ((ssp = MPR->signalService) == 0) {
+        return;
+    }
     lock(ssp);
     rc = sigaction(signo, 0, &old);
     if (rc == 0 && old.sa_sigaction != signalHandler) {
@@ -21445,6 +21592,9 @@ static void signalEvent(MprSignal *sp, MprEvent *event)
     assert(sp);
     assert(event);
 
+    if (!sp) {
+        return;
+    }
     mprDebug("mpr signal", 5, "Received signal %d, flags %x", sp->signo, sp->flags);
 
     /*
@@ -21456,7 +21606,7 @@ static void signalEvent(MprSignal *sp, MprEvent *event)
     if (sp->flags & MPR_SIGNAL_BEFORE) {
         (sp->handler)(sp->data, sp);
     }
-    if (sp->sigaction && (sp->sigaction != SIG_IGN && sp->sigaction != SIG_DFL)) {
+    if (sp->sigaction && ((void*) sp->sigaction != SIG_IGN && (void*) sp->sigaction != SIG_DFL)) {
         /*
             Call the original (foreign) action handler. Cannot pass on siginfo, because there is no reliable and scalable
             way to save siginfo state when the signalHandler is reentrant across multiple threads.
@@ -21473,7 +21623,9 @@ static void linkSignalHandler(MprSignal *sp)
 {
     MprSignalService    *ssp;
 
-    ssp = MPR->signalService;
+    if ((ssp = MPR->signalService) == 0) {
+        return;
+    }
     lock(ssp);
     sp->next = ssp->signals[sp->signo];
     ssp->signals[sp->signo] = sp;
@@ -21486,7 +21638,9 @@ static void unlinkSignalHandler(MprSignal *sp)
     MprSignalService    *ssp;
     MprSignal           *np, *prev;
 
-    ssp = MPR->signalService;
+    if ((ssp = MPR->signalService) == 0) {
+        return;
+    }
     lock(ssp);
     for (prev = 0, np = ssp->signals[sp->signo]; np; np = np->next) {
         if (sp == np) {
@@ -21871,6 +22025,9 @@ static void manageSocket(MprSocket *sp, int flags)
  */
 static void resetSocket(MprSocket *sp)
 {
+    if (!sp) {
+        return;
+    }
     if (sp->fd != INVALID_SOCKET) {
         mprCloseSocket(sp, 0);
     }
@@ -21913,6 +22070,9 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
     cchar               *sip;
     int                 datagram, family, protocol, enable, rc;
 
+    if (!sp) {
+        return SOCKET_ERROR;
+    }
     lock(sp);
     resetSocket(sp);
 
@@ -22041,6 +22201,9 @@ PUBLIC MprWaitHandler *mprAddSocketHandler(MprSocket *sp, int mask, MprDispatche
     void *data, int flags)
 {
     assert(sp);
+    if (!sp) {
+        return 0;
+    }
     assert(sp->fd != INVALID_SOCKET);
     assert(proc);
 
@@ -22080,6 +22243,9 @@ PUBLIC void mprSetSocketDispatcher(MprSocket *sp, MprDispatcher *dispatcher)
 
 PUBLIC void mprHiddenSocketData(MprSocket *sp, ssize len, int dir)
 {
+    if (!sp) {
+        return;
+    }
     lock(sp);
     if (len > 0) {
         sp->flags |= (dir == MPR_READABLE) ? MPR_SOCKET_BUFFERED_READ : MPR_SOCKET_BUFFERED_WRITE;
@@ -22283,7 +22449,9 @@ static void closeSocket(MprSocket *sp, bool gracefully)
     MprTime             timesUp;
     char                buf[16];
 
-    ss = MPR->socketService;
+    if ((ss = MPR->socketService) == 0 || !sp) {
+        return;
+    }
 
     lock(sp);
     if (sp->flags & MPR_SOCKET_CLOSED) {
@@ -22332,7 +22500,9 @@ PUBLIC MprSocket *mprAcceptSocket(MprSocket *listen)
     Socket                      fd;
     int                         port, acceptPort;
 
-    ss = MPR->socketService;
+    if ((ss = MPR->socketService) == 0) {
+        return 0;
+    }
     addr = (struct sockaddr*) &addrStorage;
     addrlen = sizeof(addrStorage);
 
@@ -22410,6 +22580,9 @@ PUBLIC MprSocket *mprAcceptSocket(MprSocket *listen)
 PUBLIC ssize mprReadSocket(MprSocket *sp, void *buf, ssize bufsize)
 {
     assert(sp);
+    if (!sp) {
+        return 0;
+    }
     assert(buf);
     assert(bufsize > 0);
     assert(sp->provider);
@@ -22487,6 +22660,9 @@ again:
 PUBLIC ssize mprWriteSocket(MprSocket *sp, cvoid *buf, ssize bufsize)
 {
     assert(sp);
+    if (!sp || !buf) {
+        return 0;
+    }
     assert(buf);
     assert(bufsize > 0);
     assert(sp->provider);
@@ -22512,6 +22688,8 @@ static ssize writeSocket(MprSocket *sp, cvoid *buf, ssize bufsize)
     assert(buf);
     assert(bufsize >= 0);
     assert((sp->flags & MPR_SOCKET_CLOSED) == 0);
+    addr = 0;
+    addrlen = 0;
 
     lock(sp);
     if (sp->flags & (MPR_SOCKET_BROADCAST | MPR_SOCKET_DATAGRAM)) {
@@ -22523,7 +22701,6 @@ static ssize writeSocket(MprSocket *sp, cvoid *buf, ssize bufsize)
     if (sp->flags & MPR_SOCKET_EOF) {
         sofar = MPR_ERR_CANT_WRITE;
     } else {
-        errCode = 0;
         len = bufsize;
         sofar = 0;
         while (len > 0) {
@@ -22678,7 +22855,7 @@ PUBLIC MprOff mprSendFileToSocket(MprSocket *sock, MprFile *file, MprOff offset,
         }
     } else
 #else
-    if (1)
+    if (file)
 #endif
     {
         /* Either !MACOSX or no file */
@@ -22707,7 +22884,7 @@ PUBLIC MprOff mprSendFileToSocket(MprSocket *sock, MprFile *file, MprOff offset,
             }
         }
 
-        if (!done && toWriteFile > 0 && file->fd >= 0) {
+        if (!done && toWriteFile > 0 && file && file->fd >= 0) {
 #if LINUX && !__UCLIBC__ && ME_MPR_DISK
             off_t off = (off_t) offset;
 #endif
@@ -23032,6 +23209,9 @@ PUBLIC int mprGetSocketInfo(cchar *ip, int port, int *family, int *protocol, str
         unlock(ss);
         return MPR_ERR_CANT_OPEN;
     }
+    if (!res) {
+        return MPR_ERR_CANT_OPEN;
+    }
     /*
         Prefer IPv4 if IPv6 not requested
      */
@@ -23203,7 +23383,7 @@ static int ipv6(cchar *ip)
     If supplied an IPv6 address, the backets are stripped in the returned IP address.
     This routine parses any "https://" prefix.
  */
-PUBLIC int mprParseSocketAddress(cchar *address, char **pip, int *pport, int *psecure, int defaultPort)
+PUBLIC int mprParseSocketAddress(cchar *address, cchar **pip, int *pport, int *psecure, int defaultPort)
 {
     char    *ip, *cp;
     ssize   pos;
@@ -23334,6 +23514,7 @@ PUBLIC void mprSetSocketPrebindCallback(MprSocketPrebind callback)
 static void manageSsl(MprSsl *ssl, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
+        mprMark(ssl->alpn);
         mprMark(ssl->certFile);
         mprMark(ssl->caFile);
         mprMark(ssl->ciphers);
@@ -23342,9 +23523,7 @@ static void manageSsl(MprSsl *ssl, int flags)
         mprMark(ssl->hostname);
         mprMark(ssl->mutex);
         mprMark(ssl->revoke);
-#if DEPRECATE
         mprMark(ssl->caPath);
-#endif
     }
 }
 
@@ -23433,7 +23612,9 @@ PUBLIC int mprLoadSsl()
         return MPR_ERR_CANT_CREATE;
     }
     mprSslInit(MPR, mp);
-    mprLog("info ssl", 5, "Loaded %s SSL provider", ss->sslProvider->name);
+    if (ss->sslProvider) {
+        mprLog("info ssl", 6, "Loaded %s SSL provider", ss->sslProvider->name);
+    }
     ss->loaded++;
     mprGlobalUnlock();
     return 0;
@@ -23473,12 +23654,6 @@ PUBLIC int mprUpgradeSocket(MprSocket *sp, MprSsl *ssl, cchar *peerName)
 }
 
 
-PUBLIC void mprSetSslMatch(MprSsl *ssl, MprMatchSsl match)
-{
-    ssl->matchSsl = match;
-}
-
-
 PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
 {
     assert(ssl);
@@ -23488,6 +23663,18 @@ PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
         ssl->ciphers = sclone(ciphers);
     }
     ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslAlpn(MprSsl *ssl, cchar *protocols)
+{
+    char    *next, *protocol;
+
+    ssl->alpn = mprCreateList(0, 0);
+    next = sclone(protocols);
+    for (; (protocol = stok(next, ", \t", &next)) != 0; ) {
+        mprAddItem(ssl->alpn, sclone(protocol));
+    }
 }
 
 
@@ -23544,6 +23731,12 @@ PUBLIC void mprSetSslHostname(MprSsl *ssl, cchar *hostname)
     assert(ssl);
     ssl->hostname = (hostname && *hostname) ? sclone(hostname) : 0;
     ssl->changed = 1;
+}
+
+
+PUBLIC void mprSetSslMatch(MprSsl *ssl, MprMatchSsl match)
+{
+    ssl->matchSsl = match;
 }
 
 
@@ -23729,8 +23922,8 @@ PUBLIC char *scamel(cchar *str)
     if ((ptr = mprAlloc(size)) != 0) {
         memcpy(ptr, str, len);
         ptr[len] = '\0';
+        ptr[0] = (char) tolower((uchar) ptr[0]);
     }
-    ptr[0] = (char) tolower((uchar) ptr[0]);
     return ptr;
 }
 
@@ -23808,7 +24001,10 @@ PUBLIC ssize scopy(char *dest, ssize destMax, cchar *src)
 
     assert(src);
     assert(dest);
-    assert(0 < dest && destMax < MAXINT);
+    if (!src || !dest) {
+        return 0;
+    }
+    assert(0 < destMax && destMax < MAXINT);
 
     len = slen(src);
     /* Must ensure room for null */
@@ -24205,8 +24401,8 @@ PUBLIC char *stitle(cchar *str)
     if ((ptr = mprAlloc(size)) != 0) {
         memcpy(ptr, str, len);
         ptr[len] = '\0';
+        ptr[0] = (char) toupper((uchar) ptr[0]);
     }
-    ptr[0] = (char) toupper((uchar) ptr[0]);
     return ptr;
 }
 
@@ -24714,7 +24910,6 @@ PUBLIC MprList *stolist(cchar *src)
                 src++;
             } else if (*src == '"' || *src == '\'') {
                 if (*src == quote) {
-                    quote = 0;
                     src++;
                     break;
                 } else if (quote == 0) {
@@ -24894,22 +25089,6 @@ PUBLIC cchar *mprGetCurrentThreadName()
 }
 
 
-#if DEPRECATE
-/*
-    Return the current thread object
- */
-PUBLIC void mprSetCurrentThreadPriority(int pri)
-{
-    MprThread       *tp;
-
-    if ((tp = mprGetCurrentThread()) == 0) {
-        return;
-    }
-    mprSetThreadPriority(tp, pri);
-}
-#endif
-
-
 /*
     Create a main thread
  */
@@ -24918,7 +25097,9 @@ PUBLIC MprThread *mprCreateThread(cchar *name, void *entry, void *data, ssize st
     MprThreadService    *ts;
     MprThread           *tp;
 
-    ts = MPR->threadService;
+    if ((ts = MPR->threadService) == 0) {
+        return 0;
+    }
     tp = mprAllocObj(MprThread, manageThread);
     if (tp == 0) {
         return 0;
@@ -25021,6 +25202,9 @@ static void threadProc(MprThread *tp)
  */
 PUBLIC int mprStartThread(MprThread *tp)
 {
+    if (!tp) {
+        return MPR_ERR_BAD_ARGS;
+    }
     lock(tp);
 
 #if ME_WIN_LIKE
@@ -25082,47 +25266,6 @@ PUBLIC MprOsThread mprGetCurrentOsThread()
     return (MprOsThread) taskIdSelf();
 #endif
 }
-
-
-#if DEPRECATE
-PUBLIC void mprSetThreadPriority(MprThread *tp, int newPriority)
-{
-#if ME_WIN_LIKE || VXWORKS
-    int     osPri = mprMapMprPriorityToOs(newPriority);
-#endif
-    lock(tp);
-#if ME_WIN_LIKE
-    SetThreadPriority(tp->threadHandle, osPri);
-#elif VXWORKS
-    taskPrioritySet(tp->osThread, osPri);
-#elif ME_UNIX_LIKE && DISABLED
-    /*
-        Not worth setting thread priorities on linux
-     */
-    MprOsThread ost;
-    pthread_attr_t attr;
-    int policy = 0;
-    int max_prio_for_policy = 0;
-
-    ost = pthread_self();
-    pthread_attr_init(&attr);
-    pthread_attr_getschedpolicy(&attr, &policy);
-    max_prio_for_policy = sched_get_priority_max(policy);
-
-    pthread_setschedprio(ost, max_prio_for_policy);
-    pthread_attr_destroy(&thAttr);
-#elif DEPRECATE && DISABLED
-    /*
-        Don't set process priority
-     */
-    setpriority(PRIO_PROCESS, (int) tp->pid, osPri);
-#else
-    /* Nothing can be done */
-#endif
-    tp->priority = newPriority;
-    unlock(tp);
-}
-#endif
 
 
 static void manageThreadLocal(MprThreadLocal *tls, int flags)
@@ -25380,7 +25523,9 @@ PUBLIC void mprStopWorkers()
     MprWorker           *worker;
     int                 next;
 
-    ws = MPR->workerService;
+    if ((ws = MPR->workerService) == 0) {
+        return;
+    }
     lock(ws);
     if (ws->pruneTimer) {
         mprRemoveEvent(ws->pruneTimer);
@@ -25430,8 +25575,9 @@ PUBLIC void mprSetMaxWorkers(int n)
 {
     MprWorkerService  *ws;
 
-    ws = MPR->workerService;
-
+    if ((ws = MPR->workerService) == 0) {
+        return;
+    }
     lock(ws);
     ws->maxThreads = n;
     if (ws->numThreads > ws->maxThreads) {
@@ -25460,7 +25606,9 @@ PUBLIC MprWorker *mprGetCurrentWorker()
     MprThread           *thread;
     int                 next;
 
-    ws = MPR->workerService;
+    if ((ws = MPR->workerService) == 0) {
+        return 0;
+    }
     lock(ws);
     thread = mprGetCurrentThread();
     for (next = -1; (worker = (MprWorker*) mprGetPrevItem(ws->busyThreads, &next)) != 0; ) {
@@ -25500,8 +25648,9 @@ PUBLIC void mprGetWorkerStats(MprWorkerStats *stats)
     MprWorker           *wp;
     int                 next;
 
-    ws = MPR->workerService;
-
+    if ((ws = MPR->workerService) == 0) {
+        return;
+    }
     lock(ws);
     stats->max = ws->maxThreads;
     stats->min = ws->minThreads;
@@ -25527,6 +25676,7 @@ PUBLIC int mprAvailableWorkers()
     MprWorkerStats  wstats;
     int             activeWorkers, spareThreads, spareCores, result;
 
+    memset(&wstats, 0, sizeof(wstats));
     mprGetWorkerStats(&wstats);
     /*
         SpareThreads    == Threads that can be created up to max threads
@@ -25554,7 +25704,9 @@ PUBLIC int mprStartWorker(MprWorkerProc proc, void *data)
     MprWorkerService    *ws;
     MprWorker           *worker;
 
-    ws = MPR->workerService;
+    if ((ws = MPR->workerService) == 0) {
+        return MPR_ERR_BAD_ARGS;
+    }
     lock(ws);
     if (mprIsStopped()) {
         unlock(ws);
@@ -25672,6 +25824,7 @@ static MprWorker *createWorker(MprWorkerService *ws, ssize stackSize)
     mprLog("info mpr thread", 5, "Create %s, pool has %d workers. Limits %d-%d.", name, ws->numThreads + 1,
         ws->minThreads, ws->maxThreads);
     worker->thread = mprCreateThread(name, (MprThreadProc) workerMain, worker, stackSize);
+    worker->thread->isWorker = 1;
     return worker;
 }
 
@@ -25732,7 +25885,7 @@ static void workerMain(MprWorker *worker, MprThread *tp)
     worker->thread = 0;
     ws->numThreads--;
     unlock(ws);
-    mprLog("info mpr thread", 5, "Worker exiting. There are %d workers remaining in the pool.", ws->numThreads);
+    mprLog("info mpr thread", 6, "Worker exiting. There are %d workers remaining in the pool.", ws->numThreads);
 }
 
 
@@ -25748,6 +25901,9 @@ static void changeState(MprWorker *worker, int state)
     wakeIdle = wakeDispatchers = 0;
     lp = 0;
     ws = worker->workerService;
+    if (!ws) {
+        return;
+    }
     lock(ws);
 
     switch (worker->state) {
@@ -25810,7 +25966,9 @@ PUBLIC ssize mprGetBusyWorkerCount()
     MprWorkerService    *ws;
     ssize               count;
 
-    ws = MPR->workerService;
+    if ((ws = MPR->workerService) == 0) {
+        return 0;
+    }
     lock(ws);
     count = mprGetListLength(MPR->workerService->busyThreads);
     unlock(ws);
@@ -27253,7 +27411,9 @@ static int getNumOrSym(char **token, int sep, int kind, int *isAlpah)
     int     num;
 
     assert(token && *token);
-
+    if (!token) {
+        return 0;
+    }
     if (*token == 0) {
         return 0;
     }
@@ -27549,7 +27709,8 @@ static void validateTime(struct tm *tp, struct tm *defaults)
         tp->tm_sec = -1;
     }
 
-#if UNUSED
+#if KEEP
+    /* Not required */
     if (tp->tm_year != -MAXINT && tp->tm_mon >= 0 && tp->tm_mday >= 0 && tp->tm_hour >= 0) {
         /*  Everything defined */
         return;
@@ -28106,7 +28267,7 @@ static void manageWaitHandler(MprWaitHandler *wp, int flags)
 
 PUBLIC void mprRemoveWaitHandler(MprWaitHandler *wp)
 {
-    if (wp) {
+    if (wp && wp->service) {
         if (!mprIsStopped()) {
             /*
                 It needs special handling for the shutdown case when the locks have been removed
@@ -28166,6 +28327,9 @@ PUBLIC void mprQueueIOEvent(MprWaitHandler *wp)
 static void ioEvent(void *data, MprEvent *event)
 {
     assert(event);
+    if (!event) {
+        return;
+    }
     assert(event->handler);
 
     event->handler->event = 0;
@@ -28175,6 +28339,9 @@ static void ioEvent(void *data, MprEvent *event)
 
 PUBLIC void mprWaitOn(MprWaitHandler *wp, int mask)
 {
+    if (!wp->service) {
+        return;
+    }
     lock(wp->service);
     if (mask != wp->desiredMask) {
         if (wp->flags & MPR_WAIT_RECALL_HANDLER) {
@@ -28195,7 +28362,9 @@ PUBLIC void mprRecallWaitHandlerByFd(Socket fd)
     MprWaitHandler  *wp;
     int             index;
 
-    ws = MPR->waitService;
+    if ((ws = MPR->waitService) == 0) {
+        return;
+    }
     lock(ws);
     for (index = 0; (wp = (MprWaitHandler*) mprGetNextItem(ws->handlers, &index)) != 0; ) {
         if (wp->fd == fd) {
@@ -28215,11 +28384,13 @@ PUBLIC void mprRecallWaitHandler(MprWaitHandler *wp)
 
     if (wp) {
         ws = MPR->waitService;
-        lock(ws);
-        wp->flags |= MPR_WAIT_RECALL_HANDLER;
-        ws->needRecall = 1;
-        mprWakeEventService();
-        unlock(ws);
+        if (ws) {
+            lock(ws);
+            wp->flags |= MPR_WAIT_RECALL_HANDLER;
+            ws->needRecall = 1;
+            mprWakeEventService();
+            unlock(ws);
+        }
     }
 }
 
@@ -28232,6 +28403,9 @@ PUBLIC void mprDoWaitRecall(MprWaitService *ws)
     MprWaitHandler      *wp;
     int                 index;
 
+    if (!ws) {
+        return;
+    }
     lock(ws);
     ws->needRecall = 0;
     for (index = 0; (wp = (MprWaitHandler*) mprGetNextItem(ws->handlers, &index)) != 0; ) {
@@ -30315,6 +30489,9 @@ static int scanFor(MprXml *xp, char *pattern)
     int     c;
 
     assert(pattern);
+    if (!xp || !xp->tokBuf) {
+        return MPR_ERR_BAD_ARGS;
+    }
 
     tokBuf = xp->tokBuf;
     assert(tokBuf);

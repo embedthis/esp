@@ -1260,7 +1260,7 @@ static void serve(int argc, char **argv)
 {
     HttpEndpoint    *endpoint;
     cchar           *address;
-    char            *ip;
+    cchar           *ip;
     int             i, port;
 
     if (app->error) {

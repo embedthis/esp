@@ -2,7 +2,7 @@
     "name": "ssl",
     "description": "SSL Interface",
     "title": "SSL Interface",
-    "version": "0.9.4",
+    "version": "1.0.0",
     "keywords": [
         "me",
         "ssl"
