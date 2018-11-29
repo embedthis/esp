@@ -44,7 +44,7 @@ static char *DataTypeToSqlType[] = {
     "text":         "text",
     "time":         "time",
     "timestamp":    "datetime",
-    0, 0, 
+    0, 0,
 };
 #endif
 
@@ -103,9 +103,9 @@ static bool validName(cchar *str);
 
 static EdiProvider SdbProvider = {
     "sdb",
-    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete, 
-    sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery, 
-    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable, 
+    sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
+    sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
+    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
@@ -334,7 +334,7 @@ static MprList *sdbGetColumns(Edi *edi, cchar *tableName)
 
     assert(edi);
     assert(tableName && *tableName);
-    
+
     if ((schema = getSchema(edi, tableName)) == 0) {
         return 0;
     }
@@ -422,7 +422,7 @@ static int sdbGetTableDimensions(Edi *edi, cchar *tableName, int *numRows, int *
         return MPR_ERR_BAD_ARGS;
     }
     if (numRows) {
-        if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) { 
+        if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) {
             return MPR_ERR_BAD_STATE;
         }
         *numRows = grid->nrecords;
@@ -445,7 +445,7 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName)
     assert(edi);
     assert(tableName && *tableName);
     assert(fieldName && *fieldName);
-    
+
     if ((schema = getSchema(edi, tableName)) == 0) {
         return 0;
     }
@@ -511,7 +511,7 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value)
 {
     EdiGrid     *grid;
-    
+
     assert(tableName && *tableName);
 
     if (!validName(tableName)) {
@@ -791,7 +791,7 @@ static EdiGrid *queryv(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list var
                     sdbError(edi, "SDB: cannot bind to arg: %d, %s, error: %s", index + 1, argv[index], sqlite3_errmsg(db));
                     return 0;
                 }
-            } 
+            }
         }
         ncol = sqlite3_column_count(stmt);
         for (nrows = 0; ; nrows++) {
@@ -886,28 +886,19 @@ static EdiField makeRecField(cchar *value, cchar *name, int type)
 
 static void *allocBlock(int size)
 {
-    void    *ptr;
-
-    if ((ptr = mprAlloc(size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return palloc(size);
 }
 
 
 static void freeBlock(void *ptr)
 {
-    mprRelease(ptr);
+    pfree(ptr);
 }
 
 
 static void *reallocBlock(void *ptr, int size)
 {
-    mprRelease(ptr);
-    if ((ptr =  mprRealloc(ptr, size)) != 0) {
-        mprHold(ptr);
-    }
-    return ptr;
+    return prealloc(ptr, size);
 }
 
 
@@ -934,8 +925,8 @@ static void termAllocator(void *data)
 }
 
 
-struct sqlite3_mem_methods mem = {
-    allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL 
+struct sqlite3_mem_methods memMethods = {
+    allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL
 };
 
 
@@ -960,7 +951,7 @@ static int mapToEdiType(cchar *type)
 }
 
 
-static int mapSqliteTypeToEdiType(int type) 
+static int mapSqliteTypeToEdiType(int type)
 {
     if (type == SQLITE_INTEGER) {
         return EDI_TYPE_INT;
@@ -1021,7 +1012,7 @@ static void initSqlite()
 {
     mprGlobalLock();
     if (!sqliteInitialized) {
-        sqlite3_config(SQLITE_CONFIG_MALLOC, &mem);
+        sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
         sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
         if (sqlite3_initialize() != SQLITE_OK) {
             mprLog("error esp sdb", 0, "Cannot initialize SQLite");
