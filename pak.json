@@ -31,8 +31,8 @@
         }
     ],
     "dependencies": {
-        "http": "~6.3",
-        "mpr": "~6.3",
+        "http": "~6",
+        "mpr": "~6",
         "mpr-version": "~0.1",
         "osdep": "~1.0",
         "pcre": "~1.0"
