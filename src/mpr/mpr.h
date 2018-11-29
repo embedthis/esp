@@ -740,6 +740,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
     #ifndef ME_MPR_ALLOC_STACK
         #define ME_MPR_ALLOC_STACK     1                   /**< Monitor stack usage */
     #endif
+    #ifndef ME_MPR_ALLOC_TRACE
+        #define ME_MPR_ALLOC_TRACE     0                   /**< Trace to stdout */
+    #endif
 #else
     #ifndef ME_MPR_ALLOC_DEBUG
         #define ME_MPR_ALLOC_DEBUG     0
@@ -749,6 +752,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
     #endif
     #ifndef ME_MPR_ALLOC_STACK
         #define ME_MPR_ALLOC_STACK     0
+    #endif
+    #ifndef ME_MPR_ALLOC_TRACE
+        #define ME_MPR_ALLOC_TRACE     0                   /**< Trace to stdout */
     #endif
 #endif
 
@@ -1626,7 +1632,7 @@ PUBLIC bool mprEnableGC(bool on);
 
 /**
     Hold a memory block
-    @description This call will protect a memory block from freeing by the garbage collector. Call mprRelease to
+    @description This call will protect a memory block from freeing by the garbage collector. Call #mprRelease to
         allow the block to be collected.
     @param ptr Any memory block
     @ingroup MprMem
@@ -1637,7 +1643,7 @@ PUBLIC void mprHold(cvoid *ptr);
 /**
     Hold memory blocks
     @description This call will protect a set of memory blocks from freeing by the garbage collector.
-        Call mprReleaseBlocks to allow the blocks to be collected.
+        Call #mprReleaseBlocks to allow the blocks to be collected.
     @param ptr Any memory block
     @param ... Other memory blocks. Terminate the list with a NULL.
     @ingroup MprMem
@@ -1648,6 +1654,7 @@ PUBLIC void mprHoldBlocks(cvoid *ptr, ...);
 /**
     Release a memory block
     @description This call is used to allow a memory block to be freed by the garbage collector after calling mprHold.
+    You must NEVER use or access the memory block after calling mprRelease. The memory may be freed before the call returns, even when executing in an MPR thread.
     @param ptr Any memory block
     @ingroup MprMem
     @stability Stable.
@@ -1657,6 +1664,7 @@ PUBLIC void mprRelease(cvoid *ptr);
 /**
     Release a memory blocks
     @description This call is used to allow a memory blocks to be freed by the garbage collector after calling mprHoldBlocks.
+    You must NEVER use or access the memory blocks after calling mprRelease. The memory may be freed before the call returns, even when executing in an MPR thread.
     @param ptr Any memory block
     @param ... Other memory blocks. Terminate the list with a NULL.
     @ingroup MprMem
