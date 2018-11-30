@@ -271,6 +271,7 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_list_1gabf10109abc063c47702769c0e89442cf" class="nameRef">mprAddItem</a>(<a href="#group___mpr_list" class="ref">MprList</a> *list, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *item)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add an item to a list.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_key" class="ref">MprKey*</a></td><td><a href="#group___mpr_hash_1ga2567b7d48397b6059f76c8589978d654" class="nameRef">mprAddKey</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a symbol value into the hash table.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_key" class="ref">MprKey*</a></td><td><a href="#group___mpr_hash_1gaf80b863b16c88df91aad0193b746e4c7" class="nameRef">mprAddKeyFmt</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a key with a formatting value into the hash table.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#struct_mpr_key" class="ref">MprKey*</a></td><td><a href="#group___mpr_hash_1gaac7c9c4282e5fb0a5d91517bd7ba7a54" class="nameRef">mprAddKeyWithType</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr, int type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a symbol value into the hash table and set the key type.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_mime" class="ref">MprMime*</a></td><td><a href="#group___mpr_mime_1ga3eefe2cfee75a6ad3011ec9dde191399" class="nameRef">mprAddMime</a>(<a href="#group___mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *ext, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *mimeType)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a mime type to the mime type table.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_list_1ga8a5c06bd4458f58c9ed20d043b21bba3" class="nameRef">mprAddNullItem</a>(<a href="#group___mpr_list" class="ref">MprList</a> *list)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a null item to the list.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_buf_1ga159c096de4aec192e25b275f1f5e031d" class="nameRef">mprAddNullToBuf</a>(<a href="#group___mpr_buf" class="ref">MprBuf</a> *buf)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a null character to the buffer contents.</td></tr>
@@ -331,7 +332,7 @@
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_cond" class="ref">MprCond*</a></td><td><a href="#group___mpr_sync_1ga714208aa64aa1c38c486ba0ff8a9b0ad" class="nameRef">mprCreateCond</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a condition lock variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#mpr_8h_1ab609e9e7685d987a32bd0040f2ad6adf" class="ref">MprDiskFileSystem*</a></td><td><a href="#group___mpr_file_system_1ga5d33c9eaec3fef58119ed5f63d550cf2" class="nameRef">mprCreateDiskFileSystem</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create and initialize the disk FileSystem.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_dispatcher" class="ref">MprDispatcher*</a></td><td><a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="nameRef">mprCreateDispatcher</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new event dispatcher.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___mpr_event" class="ref">MprEvent*</a></td><td><a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="nameRef">mprCreateEvent</a>(<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new event.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___mpr_event" class="ref">MprEvent*</a></td><td><a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="nameRef">mprCreateEvent</a>(<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Queue an new event for service on a dispatcher.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___mpr_hash_1ga323fad2d21e620c4a8998aaf8b7f01ed" class="nameRef">mprCreateHash</a>(int hashSize, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a hash table.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___mpr_hash_1ga6925d347168958f1e488ca4054a6d7d9" class="nameRef">mprCreateHashFromWords</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *str)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a hash of words.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___mpr_json_1gaab7693a392b2f96800bf45d89d49b408" class="nameRef">mprCreateJson</a>(int type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a JSON object.</td></tr>
@@ -732,6 +733,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_socket_1gacff97154e7990fa91949ccdfbf34acbe" class="nameRef">mprSetSocketDispatcher</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the dispatcher to use for socket events.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_socket_1ga27866b4c10d6e45ffd96604b221cf314" class="nameRef">mprSetSocketEof</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> eof)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set an EOF condition on the socket.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_socket_1ga51594bafaa2003511990ffd804189a31" class="nameRef">mprSetSocketNoDelay</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> on)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the socket delay mode.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gac3a517628870edef01c2ee01c076822a" class="nameRef">mprSetSslAlpn</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *protocols)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the ALPN protocols for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577" class="nameRef">mprSetSslCaFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *caFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the client certificate file to use for SSL.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1gaadf254e5df954326a3f9bcd61e6a106b" class="nameRef">mprSetSslCaPath</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *caPath)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the path for the client certificate directory.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___mpr_ssl_1ga0eb821dce1b17ce08d83fa63b3ece658" class="nameRef">mprSetSslCertFile</a>(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *certFile)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set certificate to use for SSL.</td></tr>
@@ -1292,9 +1294,9 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>epoll_wait.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a34fa7676783bcd92c7e9a5ee88c9500d" class="nameRef">MPR_EVENT_HOLD</a>&nbsp;&nbsp;&nbsp;0x20</td>
+<td>#define</td><td><a href="#mpr_8h_1a3577aee82220ed1403c06b3a510e6c01" class="nameRef">MPR_EVENT_FOREIGN</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Hold the event object to prevent from GC.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Invoking from a foreign non-mpr thread.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a9cf11fdbc5ec554791085628014ce354" class="nameRef">MPR_EVENT_KQUEUE</a>&nbsp;&nbsp;&nbsp;3</td>
 </tr>
@@ -5066,7 +5068,7 @@ This waits for and collect the command exit status
     <tr><td class="param">timeout</td><td>Time in milliseconds to wait for the command to complete and exit. Set to -1 to wait forever.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Command exit status, or negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_cmd_1gac48a59b1bfc4f3944a88e152863c3d32" class="ref">mprCloseCmdFd</a>, <a href="#group___mpr_cmd_1ga48715863349e32b78002e6004a117ffb" class="ref">mprCreateCmd</a>, <a href="#group___mpr_cmd_1gaa6cedd25447b88aa144bc50fdcec6951" class="ref">mprDestroyCmd</a>, <a href="#group___mpr_cmd_1ga66cccaaaa550e9d2cf381ff8854c2d7a" class="ref">mprDisableCmdEvents</a>, <a href="#group___mpr_cmd_1ga7562126cafba57260cd73634f1ee4aed" class="ref">mprDisconnectCmd</a>, <a href="#group___mpr_cmd_1ga2fd38e2aaf8e7c2a1aed39aa1005155e" class="ref">mprEnableCmdEvents</a>, <a href="#group___mpr_cmd_1gac28276b68838d380698c4995fc9b1267" class="ref">mprFinalizeCmd</a>, <a href="#group___mpr_cmd_1ga68cf4226027c07ba3f3e5b30ecd48590" class="ref">mprGetCmdBuf</a>, <a href="#group___mpr_cmd_1gaf75f9ee1ad6ce783f18263761fde73c3" class="ref">mprGetCmdExitStatus</a>, <a href="#group___mpr_cmd_1gab286ce3b057579a16b84ec56997ae63f" class="ref">mprGetCmdFd</a>, <a href="#mpr_8h_1a265a266b3c9f354009c225c9a2f1c75d" class="ref">mprIsCmdComplete</a>, <a href="#group___mpr_cmd_1ga5ac545e5959e115b2cd633004f5d949b" class="ref">mprIsCmdRunning</a>, <a href="#group___mpr_cmd_1ga00910d0636480e6960ebbf46d58b5a2e" class="ref">mprReadCmd</a>, <a href="#group___mpr_cmd_1gaae5bd75d3750777971cfad687c0f9f15" class="ref">mprReapCmd</a>, <a href="#group___mpr_cmd_1gaea3178396a249792e696eb04ee9df3ba" class="ref">mprRunCmd</a>, <a href="#group___mpr_cmd_1ga40c6d3c5980dd3db76189fa6ee38874a" class="ref">mprRunCmdV</a>, <a href="#group___mpr_cmd_1ga8288e08dc7387c14e0536d214eba6049" class="ref">mprSetCmdCallback</a>, <a href="#group___mpr_cmd_1gaa0e753a2136410b79e480713aaf97b89" class="ref">mprSetCmdDir</a>, <a href="#group___mpr_cmd_1ga731bf3b3b53862f42249d5a771107363" class="ref">mprSetCmdEnv</a>, <a href="#group___mpr_cmd_1ga8810126341868790cc02a34e4a0833ec" class="ref">mprSetCmdSearchPath</a>, <a href="#group___mpr_cmd_1ga120e7a3a3a571b9520853e31d9ce6021" class="ref">mprStartCmd</a>, <a href="#group___mpr_cmd_1ga6a027763dead49cc62961a6e6b17c501" class="ref">mprStopCmd</a>, <a href="#group___mpr_cmd_1ga1e3fc2a672d14270f5a15f08b9a99409" class="ref">mprWaitForCmd</a>, <a href="#group___mpr_cmd_1gaa3c9a3297a496bc567acf3c09e71596e" class="ref">mprWriteCmd</a>, <a href="#group___mpr_cmd_1gac355af7d14d5b35fbcbf21e067b0104e" class="ref">mprWriteCmdBlock</a></dd></dl>
   </div>
@@ -5406,6 +5408,7 @@ Event service reference.
   </div>
   <div class="apiDetail">
 <p>Create a new event dispatcher.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Dispatchers are event queues that serialize the execution of work. Most of the MPR routines are not thread-safe and thus access to objects needs to be serialized by creating events to run on dispatchers. Resources such as connections will typically own a dispatcher that is used to serialize their work.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">name</td><td>Useful name for debugging.</td>
@@ -5601,6 +5604,9 @@ This removes the dispatcher from any dispatcher queues and allows it to be garba
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
+    <tr><td class="param"><a class="ref" href="#struct_mpr_cond">MprCond</a> *</td><td><td>cond</td><td>
+Wait for event to complete.
+</td>
     <tr><td class="param">void *</td><td><td>data</td><td>
 Event private data (managed|unmanged depending on flags).
 </td>
@@ -5651,8 +5657,9 @@ When was the event created.
 (<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)
   </div>
   <div class="apiDetail">
-<p>Create a new event.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Create a new event for service This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access to application memory.</dd></dl>
+<p>Queue an new event for service on a dispatcher.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Create an event to run a callback on an event dispatcher queue. The MPR serializes work in a thread-safe manner on dispatcher queues. Resources such as connections will typically own a dispatcher that is used to serialize their work. <br/><br/>
+ This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access to application memory.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">dispatcher</td><td>Dispatcher object created via mprCreateDispatcher Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock dispatcher. This should only be used for quick, non-block event callbacks. If using another dispatcher, it is essential that the dispatcher not be destroyed while this event is queued or running.</td>
@@ -5660,9 +5667,10 @@ When was the event created.
     <tr><td class="param">period</td><td>Time in milliseconds used by continuous events between firing of the event.</td>
     <tr><td class="param">proc</td><td>Function to invoke when the event is run.</td>
     <tr><td class="param">data</td><td>Data to associate with the event and stored in event-&gt;data. The data must be either an allocated memory object or MPR_EVENT_STATIC_DATA must be specified in flags.</td>
-    <tr><td class="param">flags</td><td>Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event which will be automatically rescheduled accoring to the specified period. Use MPR_EVENT_STATIC_DATA if the data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event without creating using a worker thread. This should only be used for quick non-blocking event callbacks. Set to MPR_EVENT_HOLD to call <a class="ref" href="#group___mpr_mem_1gaac8a75ae42130538e13d4e84ccb030f4">mprHold</a> on the event object before returning. The caller must then call <a class="ref" href="#group___mpr_mem_1ga4816868550ad8a21b914de2fbe720767">mprRelease</a> on the event object.</td>
+    <tr><td class="param">flags</td><td>Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event which will be automatically rescheduled according to the specified period. Use MPR_EVENT_STATIC_DATA if the data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks. <br/><br/>
+ When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>The event object if successful. Warning: the event callback may run to completion and the event object may be itself collected before this function returns (unless MPR_EVENT_HOLD has been specified). In this case, the return value will be non-zero, but the memory it points to may be freed or re-assigned.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The event object if successful. This routine may return before or after the even callback has run. If MPR_EVENT_FOREIGN is supplied, the return value is always zero.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a>, <a href="#group___mpr_event" class="ref">MprEvent</a>, <a href="#group___mpr_event_1ga780d2b4460347c6da009d21097f4f27d" class="ref">MprEventProc</a>, <a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="ref">mprCreateDispatcher</a>, <a href="#group___mpr_event_1ga3e92f13fc23a3f0ed2d730b077f61611" class="ref">mprCreateTimerEvent</a>, <a href="#group___mpr_dispatcher_1gafd35a965e3ebadc852b8b02aace7a08e" class="ref">mprDestroyDispatcher</a>, <a href="#group___mpr_event_1gac9e97afd0732f2d3612d911817357db5" class="ref">mprEnableContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga443960e2b8cc3fd9169b46dfb66ff0d3" class="ref">mprGetDispatcher</a>, <a href="#group___mpr_event_1ga9163bc8e37a8ff05c0c957cfcc86e02e" class="ref">mprRemoveEvent</a>, <a href="#group___mpr_event_1ga1919da044dd4f62d999526175f76bdc2" class="ref">mprRescheduleEvent</a>, <a href="#group___mpr_event_1ga6fa51ab06c56baaad50f1b4df7efc1d4" class="ref">mprRestartContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga205adaee3b45d0cc899afc89eb9f3b3d" class="ref">mprServiceEvents</a>, <a href="#group___mpr_dispatcher_1gac81ecb3239317f36c36c7d849d738540" class="ref">mprSignalDispatcher</a>, <a href="#group___mpr_event_1ga1f2c85a20242ec0c1e4830ccd25c7bb7" class="ref">mprStopContinuousEvent</a>, <a href="#group___mpr_dispatcher_1gaa523c291209f9419ad27f8b7be4e231d" class="ref">mprWaitForEvent</a></dd></dl>
@@ -6479,7 +6487,7 @@ Virtual write file routine.
   <div class="apiDetail">
 <p>Get the ROM file system data.</p>
     <dl><dt>Returns:</dt><dd>Returns a pointer to the list of ROM inodes.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_mpr_rom_inode" class="ref">MprRomInode</a>, <a href="#group___mpr_file_system_1gaace8a812b003454accd5f45079b8dd24" class="ref">mprAddFileSystem</a>, <a href="#group___mpr_file_system_1ga5d33c9eaec3fef58119ed5f63d550cf2" class="ref">mprCreateDiskFileSystem</a>, <a href="#group___mpr_file_system_1gac4d574bd66524a7bbd61bd6f97b6e6dd" class="ref">mprCreateRomFileSystem</a>, <a href="#group___mpr_file_system_1gae105ccdc8d64f1eab2e31afce29c22c2" class="ref">mprLookupFileSystem</a>, <a href="#group___mpr_file_system_1ga10d97267fcc49bb5126547b3a520d812" class="ref">mprSetPathNewline</a>, <a href="#group___mpr_file_system_1ga604f5f0da674b354c16dc30be6f058d2" class="ref">mprSetPathSeparators</a></dd></dl>
   </div>
@@ -6728,6 +6736,29 @@ Size of the buckets array.
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Integer count of the number of entries.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#struct_mpr_hash" class="ref">MprHash</a></dd></dl>
+  </div>
+</div>
+<a name="group___mpr_hash_1gaac7c9c4282e5fb0a5d91517bd7ba7a54"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#struct_mpr_key" class="ref">MprKey</a> *
+    mprAddKeyWithType
+(<a href="#struct_mpr_hash" class="ref">MprHash</a> *table, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *key, <a href="osdep.html#osdep_8h_1a5272042f7e0f5c53e2fd4b49ff47d92d" class="ref">cvoid</a> *ptr, int type)
+  </div>
+  <div class="apiDetail">
+<p>Add a symbol value into the hash table and set the key type.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Associate an arbitrary value with a string symbol key and insert into the symbol table.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">table</td><td>Symbol table returned via mprCreateHash.</td>
+    <tr><td class="param">key</td><td>String key of the symbol entry to delete.</td>
+    <tr><td class="param">ptr</td><td>Arbitrary pointer to associate with the key in the table.</td>
+    <tr><td class="param">type</td><td>Type of value.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>Added MprKey reference.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_mpr_hash" class="ref">MprHash</a></dd></dl>
   </div>
@@ -7032,7 +7063,7 @@ Property value - always strings.
  Without MPR_JSON_COMBINE or for properties without a prefix, the default is to blend objects by creating new properties if not already existing in the destination, and to treat overwrite arrays and strings. Use the MPR_JSON_OVERWRITE flag to override the default appending of objects and rather overwrite existing properties. Use the MPR_JSON_APPEND flag to override the default of overwriting arrays and strings and rather append to existing properties.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7048,7 +7079,7 @@ Property value - always strings.
 <p>Clone a JSON object.</p>
     <dl><dt><b>Description</b>:</dt><dd>This does a deep copy of a JSON object tree. This copies all properties and their sub-properties.</dd></dl>
     <dl><dt>Returns:</dt><dd>A new JSON object that replices the input object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7067,7 +7098,7 @@ Property value - always strings.
     <tr><td class="param">type</td><td>Set JSON object type to MPR_JSON_OBJ for an object, MPR_JSON_ARRAY for an array or MPR_JSON_VALUE for a value. Note: all values are stored as strings. Additional type information may be ored into the type for: MPR_JSON_NUMBER, MPR_JSON_TRUE, MPR_JSON_FALSE, MPR_JSON_NULL, MPR_JSON_UNDEFINED.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>JSON object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7087,7 +7118,7 @@ Property value - always strings.
     <tr><td class="param">type</td><td>Set JSON object type to MPR_JSON_OBJ for an object, MPR_JSON_ARRAY for an array or MPR_JSON_VALUE for a value. Note: all values are stored as strings. Additional type information may be ored into the type for: MPR_JSON_NUMBER, MPR_JSON_TRUE, MPR_JSON_FALSE, MPR_JSON_NULL, MPR_JSON_UNDEFINED.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>JSON object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7126,7 +7157,7 @@ Property value - always strings.
     <tr><td class="param">hash</td><td>Destination <a class="ref" href="#struct_mpr_hash">MprHash</a> object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7148,7 +7179,7 @@ This handles quotes and backquotes
     <tr><td class="param">flags</td><td>Serialization flags. Supported flags include MPR_JSON_QUOTES to always wrap property names in quotes.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7169,7 +7200,7 @@ This handles quotes and backquotes
     <tr><td class="param">value</td><td>JSON string value to format.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7192,7 +7223,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">flags</td><td>Serialization flags. Supported flags include MPR_JSON_STRINGS to emit values as quoted strings.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The supplied hash if successful. Otherwise null is returned.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7213,7 +7244,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">key</td><td>Property name to search for. This may include &quot;.&quot;. For example: &quot;settings.mode&quot;. See <a class="ref" href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3">mprQueryJson</a> for a full description of key formats.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>A string representation of the selected properties. If a single property is selected and its value is a string, that is returned. If the selected property is an array or object, or it matches more than one property, the result is a JSON string representation. If nothing is matched, null is returned.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7232,7 +7263,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">obj</td><td>Parsed JSON object returned by mprParseJson.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The number of direct dependent child properties.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7252,7 +7283,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">key</td><td>Property name to search for. This may include &quot;.&quot;. For example: &quot;settings.mode&quot;. See <a class="ref" href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3">mprQueryJson</a> for a full description of key formats.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The property value as an object, otherwise NULL if not found or not the correct type.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7271,7 +7302,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">hash</td><td><a class="ref" href="#struct_mpr_hash">MprHash</a> object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>An MprJson instance.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7290,7 +7321,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">json</td><td>JSON object tree.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>An <a class="ref" href="#struct_mpr_hash">MprHash</a> instance.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7311,7 +7342,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">flags</td><td>Serialization flags. Supported flags include MPR_JSON_PRETTY for a human-readable multiline format. MPR_JSON_QUOTES to wrap property names in quotes. Use MPR_JSON_STRINGS to emit all property values as quoted strings.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Returns a serialized JSON character string.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7330,7 +7361,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">path</td><td>Filename path containing a JSON string to load.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>JSON object tree.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7350,7 +7381,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">obj</td><td>Object to trace.</td>
     <tr><td class="param">fmt</td><td>Printf style format and args.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7477,7 +7508,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">name</td><td>Name of the property to lookup.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The property value as a string. Returns NULL if a matching property is not found. Note this is a reference to the actaul JSON property value and not a clone of the value.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7498,7 +7529,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">name</td><td>Name of the property to lookup.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The matching JSON object. Returns NULL if a matching property is not found. Note this is a reference to the actaul JSON object and not a clone of the object.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7519,7 +7550,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">value</td><td>Value to search for.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The JSON object or null if not found.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7539,7 +7570,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">key</td><td>Property name to remove for. This may include &quot;.&quot;. For example: &quot;settings.mode&quot;. See <a class="ref" href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3">mprQueryJson</a> for a full description of key formats.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Returns a JSON object array of all removed properties. Array will be empty if not qualifying properties were found and removed.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -7580,7 +7611,7 @@ This converts any JSON value to a string representation
     <tr><td class="param">flags</td><td>Same flags as for <a class="ref" href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e">mprJsonToString</a>: MPR_JSON_PRETTY, MPR_JSON_QUOTES, MPR_JSON_STRINGS.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_json_1gae916ca4eacb71b4fda228fa7cbb977d3" class="ref">mprBlendJson</a>, <a href="#group___mpr_json_1gae53853463c712ef0aee5a4d6f5c5d0f7" class="ref">mprGetJson</a>, <a href="#group___mpr_json_1ga96b8f4d7945990fc3f2a942af43cab32" class="ref">mprGetJsonLength</a>, <a href="#group___mpr_json_1ga4fbf57d20f3c98f6a52ecca4c3efac1c" class="ref">mprGetJsonObj</a>, <a href="#group___mpr_json_1gaa70ed39904cd618b52b664cfe82f028e" class="ref">mprJsonToString</a>, <a href="#group___mpr_json_1gac80cfb480ea726dfb7b8c3ec9266d33c" class="ref">mprLoadJson</a>, <a href="#group___mpr_json_1gaafb43ca094e5307a1570fbd6414eecff" class="ref">mprLogJson</a>, <a href="#group___mpr_json_1gac91edf84d85d99af3e18b36d5a9cf98b" class="ref">mprParseJson</a>, <a href="#group___mpr_json_1gaad2c682838cc45d3a164ed3f00d567ed" class="ref">mprParseJsonEx</a>, <a href="#group___mpr_json_1ga1d4fccd97769624263ddb8c600f4b015" class="ref">mprParseJsonInto</a>, <a href="#group___mpr_json_1ga17d213f7b2e26dde91c85f7fc8897cb3" class="ref">mprQueryJson</a>, <a href="#group___mpr_json_1gae1bb5b62e4050ac0445f8f6d6b7a1fcf" class="ref">mprReadJson</a>, <a href="#group___mpr_json_1gad5a8bb133d911d0fbdee71f80a6a7970" class="ref">mprRemoveJson</a>, <a href="#group___mpr_json_1gaa19ca22bc6745f7d28d295dfe8dffb15" class="ref">mprSetJson</a>, <a href="#group___mpr_json_1gab8853b1b41c99f12ebb4866ab41f09d3" class="ref">mprSetJsonError</a>, <a href="#group___mpr_json_1ga04c9228e3a21d19bc8780fab856eb8d2" class="ref">mprSetJsonObj</a>, <a href="#group___mpr_json_1ga569224eeaff8680b96b680e3ba5dc02a" class="ref">mprWriteJson</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a>, <a href="#group___mpr_json_1ga8db37813e63d921df8f5956cc453392c" class="ref">mprWriteJsonObj</a></dd></dl>
   </div>
@@ -8935,7 +8966,7 @@ Not the amount requested by the user which may be smaller. This is a 32-bit quan
     <tr><td class="param">flags</td><td>Flags to control the collection. Set flags to MPR_GC_FORCE to force a collection. Set to MPR_GC_DEFAULT to perform a conditional sweep where the sweep is only performed if there is sufficient garbage to warrant a collection. Set to MPR_GC_NO_BLOCK to run GC if necessary and return without yielding. Use MPR_GC_COMPLETE to force a GC and wait until the GC cycle fully completes including the sweep phase.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The number of blocks freed on the last GC sweep. If using MPR_GC_NO_BLOCK, this may be the result from a prior GC sweep.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_mpr_free_mem" class="ref">MprFreeMem</a>, <a href="#struct_mpr_heap" class="ref">MprHeap</a>, <a href="#group___mpr_mem_1gaacdb6d1a5cec32a0758f636353fff782" class="ref">MprManager</a>, <a href="#group___mpr_mem_1gab4363881401c3bc6f7703f65041c5f02" class="ref">MprMemNotifier</a>, <a href="#struct_mpr_region" class="ref">MprRegion</a>, <a href="#group___mpr_mem_1ga3b66bfcf86dc9f50510341e7b5490326" class="ref">mprAddRoot</a>, <a href="#group___mpr_mem_1ga1c64a2b782ccf3c39d0befa55a2fecd1" class="ref">mprAlloc</a>, <a href="#group___mpr_mem_1ga2d0dd74759a43f2a35e8c4d8f0e65460" class="ref">mprAllocMem</a>, <a href="#group___mpr_mem_1gae3b5d2bd89f53f1d28b1d6c7e299158a" class="ref">mprAllocObj</a>, <a href="#group___mpr_mem_1ga38cd3a3b91e522d48f2d9167f38a51e6" class="ref">mprAllocZeroed</a>, <a href="#group___mpr_mem_1ga68aa995754d9494d3df0f7877a71aba4" class="ref">mprCreateMemService</a>, <a href="#group___mpr_mem_1ga4e34537a9123922eb0bac5e9844c68b1" class="ref">mprEnableGC</a>, <a href="#group___mpr_mem_1ga4c9028aba8f82b48191035aa3a191d81" class="ref">mprGetBlockSize</a>, <a href="#group___mpr_mem_1ga279d76fb52ed630587e1e97612172a5c" class="ref">mprGetMem</a>, <a href="#group___mpr_mem_1ga0d0f56eef96d3a9d74fd1084168ddbd7" class="ref">mprGetMemStats</a>, <a href="#group___mpr_1ga56b11d9dbbe32a44a584d0a08278b204" class="ref">mprGetMpr</a>, <a href="#group___mpr_mem_1gae7c3778c00352aea0b3c0b6cfac662e8" class="ref">mprGetPageSize</a>, <a href="#group___mpr_mem_1ga88bd0a2f9a3d1fb30b5a2117375d00b3" class="ref">mprHasMemError</a>, <a href="#group___mpr_mem_1gaac8a75ae42130538e13d4e84ccb030f4" class="ref">mprHold</a>, <a href="#group___mpr_path_1gaf9bf23ba3a4c680f860f8d392b17576c" class="ref">mprIsPathContained</a>, <a href="#group___mpr_mem_1ga60f5c1f8065e2d164160fbc71275d300" class="ref">mprIsValid</a>, <a href="#mpr_8h_1ac1eebe67d99890d0156d6fdd7fc2c7c8" class="ref">mprMark</a>, <a href="#group___mpr_mem_1ga1e8d2072b9923ca7a579d9dabbad1ea3" class="ref">mprMemcmp</a>, <a href="#group___mpr_mem_1ga115724cd4423263288212f7a300f21d7" class="ref">mprMemcpy</a>, <a href="#group___mpr_mem_1ga9bdfbcc455be78a590f23f80b28c0e2b" class="ref">mprMemdup</a>, <a href="#group___mpr_mem_1gae5a3493548a457c179c0f7006d6171a9" class="ref">mprPrintMem</a>, <a href="#group___mpr_mem_1ga604effce58a9e2f4b31c44489d944343" class="ref">mprRealloc</a>, <a href="#group___mpr_mem_1ga4816868550ad8a21b914de2fbe720767" class="ref">mprRelease</a>, <a href="#group___mpr_mem_1ga369beaea43886e4fdd3d4549a2c13cb7" class="ref">mprRemoveRoot</a>, <a href="#group___mpr_mem_1ga0d6ef2dfceedfe111eb55bc88c4435ba" class="ref">mprResetMemError</a>, <a href="#group___mpr_mem_1gaf3bf4cede9edc8e7ee5b159db9347ba6" class="ref">mprSetManager</a>, <a href="#group___mpr_mem_1gae50c8f8027adb12b70482afa8b3b979f" class="ref">mprSetMemError</a>, <a href="#group___mpr_mem_1gab0b7e384d28606a450f21bc50a8b0c12" class="ref">mprSetMemLimits</a>, <a href="#group___mpr_mem_1ga32742d6a82477fabee9c821138ffd824" class="ref">mprSetMemNotifier</a>, <a href="#group___mpr_mem_1ga282926d76d53bde980ec5f5c5004a3b3" class="ref">mprSetMemPolicy</a>, <a href="#group___mpr_mem_1gafdfd96c56ccc80e5bccd634daaa7c47c" class="ref">mprVirtAlloc</a>, <a href="#group___mpr_mem_1ga6d3bd582a0bdcafa69428aa29c0279c8" class="ref">mprVirtFree</a></dd></dl>
   </div>
@@ -9045,7 +9076,7 @@ On Unix, this returns the total application memory size including code, stack, d
   </div>
   <div class="apiDetail">
 <p>Hold a memory block.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call will protect a memory block from freeing by the garbage collector. Call mprRelease to allow the block to be collected.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call will protect a memory block from freeing by the garbage collector. Call <a class="ref" href="#group___mpr_mem_1ga4816868550ad8a21b914de2fbe720767">mprRelease</a> to allow the block to be collected.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>
@@ -9064,7 +9095,7 @@ On Unix, this returns the total application memory size including code, stack, d
   </div>
   <div class="apiDetail">
 <p>Hold memory blocks.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call will protect a set of memory blocks from freeing by the garbage collector. Call mprReleaseBlocks to allow the blocks to be collected.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call will protect a set of memory blocks from freeing by the garbage collector. Call <a class="ref" href="#group___mpr_mem_1ga57e8bfb292529e6ce63b21aca0543fb3">mprReleaseBlocks</a> to allow the blocks to be collected.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>
@@ -9211,7 +9242,7 @@ This is used to test if a block has been dynamically allocated
   </div>
   <div class="apiDetail">
 <p>Release a memory block.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory block to be freed by the garbage collector after calling mprHold.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory block to be freed by the garbage collector after calling mprHold. You must not use or access the memory block after calling mprRelease. The memory may be freed even before the call returns. Even if the memory block is marked elsewhere via mprMark, it is unsafe to access the memory once this call is made.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>
@@ -12044,6 +12075,20 @@ Verify the peer verificate.
     </dd></dl>
   </div>
 </div>
+<a name="group___mpr_ssl_1gac3a517628870edef01c2ee01c076822a"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    mprSetSslAlpn
+(struct MprSsl *ssl, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *protocols)
+  </div>
+  <div class="apiDetail">
+<p>Set the ALPN protocols for SSL.</p>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
 <a name="group___mpr_ssl_1ga472960cd4ec2360bf05ab678e7cba577"></a>
 <div class="api">
   <div class="prototype">
@@ -12135,7 +12180,7 @@ Verify the peer verificate.
     <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
     <tr><td class="param">hostname</td><td>Name of the host when using SNI.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -12192,7 +12237,7 @@ Verify the peer verificate.
     <tr><td class="param">ssl</td><td>SSL configuration instance.</td>
     <tr><td class="param">match</td><td>MprMatchSsl callback.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -13949,8 +13994,11 @@ Data argument (managed).
     <tr><td class="param"><a class="ref" href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d">MprThreadProc</a></td><td><td>entry</td><td>
 Users thread entry point.
 </td>
-    <tr><td class="param">int</td><td><td>isMain</td><td>
+    <tr><td class="param">bool</td><td><td>isMain</td><td>
 Is the main thread.
+</td>
+    <tr><td class="param">bool</td><td><td>isWorker</td><td>
+Is a worker thread.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_mpr_mutex">MprMutex</a> *</td><td><td>mutex</td><td>
 Multi-thread locking.
@@ -13958,7 +14006,7 @@ Multi-thread locking.
     <tr><td class="param">char *</td><td><td>name</td><td>
 Name of thead for trace.
 </td>
-    <tr><td class="param">int</td><td><td>noyield</td><td>
+    <tr><td class="param">bool</td><td><td>noyield</td><td>
 Do not yield (temporary).
 </td>
     <tr><td class="param">MprOsThread</td><td><td>osThread</td><td>
@@ -13973,16 +14021,16 @@ Current priority.
     <tr><td class="param">ssize</td><td><td>stackSize</td><td>
 Only VxWorks implements.
 </td>
-    <tr><td class="param">int</td><td><td>stickyYield</td><td>
+    <tr><td class="param">bool</td><td><td>stickyYield</td><td>
 Yielded does not auto-clear after GC.
 </td>
-    <tr><td class="param">int</td><td><td>waitForSweeper</td><td>
+    <tr><td class="param">bool</td><td><td>waitForSweeper</td><td>
 Yield untill the GC sweeper is complete.
 </td>
     <tr><td class="param">int</td><td><td>waiting</td><td>
 Waiting in mprYield.
 </td>
-    <tr><td class="param">int</td><td><td>yielded</td><td>
+    <tr><td class="param">bool</td><td><td>yielded</td><td>
 Thread has yielded to GC.
 </td>
     </table></dd></dl>
@@ -15248,7 +15296,7 @@ A command is complete when the child has exited and all command output and error
   <div class="apiDetail">
 <p>Test if a thread should call mprYield.</p>
     <dl><dt><b>Description</b>:</dt><dd>This call tests if a thread should yield to the garbage collector.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
   </div>
 </div>
 <a name="mpr_8h_1ac3ea30ea8cd57eb5767f1d2ae87b13d2"></a>
@@ -16403,7 +16451,7 @@ Socket provider for non-SSL connections.
   <div class="prototype">MprSsl</div>
   <div class="apiDetail">
 <p>Callback function for SNI connections.</p>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">MprList *</td><td><td>alpn</td><td>

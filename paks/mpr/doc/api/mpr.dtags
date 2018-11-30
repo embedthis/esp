@@ -655,9 +655,9 @@
     </member>
     <member kind="define">
       <type>#define</type>
-      <name>MPR_EVENT_HOLD</name>
+      <name>MPR_EVENT_FOREIGN</name>
       <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a34fa7676783bcd92c7e9a5ee88c9500d</anchor>
+      <anchor>a3577aee82220ed1403c06b3a510e6c01</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -707,13 +707,6 @@
       <name>MPR_EVENT_TIME_SLICE</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>ac9caa92980fc78d01d0899c46ad35331</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
-      <name>MPR_EVENT_WAIT</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a923553c1d05ab693dc60d6b2dce948a4</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">

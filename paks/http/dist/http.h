@@ -126,6 +126,9 @@ struct HttpWebSocket;
 #ifndef ME_MAX_CONNECTIONS
     #define ME_MAX_CONNECTIONS      50                   /**< Maximum concurrent client endpoints */
 #endif
+#ifndef ME_MAX_HPACK_SIZE
+    #define ME_MAX_HPACK_SIZE       4096                 /**< Maximum size of the hpack table */
+#endif
 #ifndef ME_MAX_STREAMS
     #define ME_MAX_STREAMS          20                    /**< Maximum concurrent streams per connection */
 #endif
@@ -1400,6 +1403,7 @@ typedef struct HttpLimits {
 #endif
 #if ME_HTTP_HTTP2 || DOXYGEN
     int      frameSize;                 /**< HTTP/2 maximum frame size */
+    int      hpackMax;                  /**< HTTP/2 maximum size of the hpack header table */
     int      streamsMax;                /**< HTTP/2 maximum number of streams per connection */
     int      windowSize;                /**< HTTP/2 Initial rx window size (size willing to receive) */
 #endif

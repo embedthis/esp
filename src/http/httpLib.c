@@ -491,6 +491,7 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
         HTTP/2 parameters. Default frameSize must be 16K and windowSize 65535 by spec. Do not change.
      */
     limits->frameSize = HTTP2_DEFAULT_FRAME_SIZE;
+    limits->hpackMax = ME_MAX_HPACK_SIZE;
     limits->streamsMax = ME_MAX_STREAMS;
     limits->windowSize = HTTP2_DEFAULT_WINDOW;
 #endif
@@ -625,7 +626,6 @@ static void httpTimer(Http *http, MprEvent *event)
     int         next, active, abort, nextConn;
 
     updateCurrentDate();
-
     lock(http->networks);
 
     if (!mprGetDebugMode()) {
@@ -9272,14 +9272,27 @@ PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *valu
     ssize           len;
     int             index;
 
+    len = slen(key) + slen(value) + HTTP2_HEADER_OVERHEAD;
+    if (len > headers->max) {
+        return MPR_ERR_WONT_FIT;
+    }
     /*
         Make room for the new entry if required. Evict the oldest entries first.
      */
-    len = slen(key) + slen(value) + HTTP2_HEADER_OVERHEAD;
     while ((headers->size + len) >= headers->max) {
+        if (headers->list->length == 0) {
+            break;
+        }
         kp = mprPopItem(headers->list);
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
+        if (headers->size < 0) {
+            /* Should never happen */
+            assert(0);
+            return MPR_ERR_BAD_STATE;
+        }
     }
+    assert (headers->size >= 0 && (headers->size + len) < headers->max);
+
     /*
         New entries are inserted at the start of the table and all existing entries shuffle down
      */
@@ -9291,25 +9304,6 @@ PUBLIC int httpAddPackedHeader(HttpHeaderTable *headers, cchar *key, cchar *valu
     return index;
 }
 
-
-/*
-    Get a header at a specific index.
- */
-PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
-{
-    if (index <= 0 || index > (1 + HTTP2_STATIC_TABLE_ENTRIES + mprGetListLength(headers->list))) {
-        return 0;
-    }
-    if (--index < HTTP2_STATIC_TABLE_ENTRIES) {
-        return mprGetItem(HTTP->staticHeaders, index);
-    }
-    index = index - HTTP2_STATIC_TABLE_ENTRIES;
-    if (index >= mprGetListLength(headers->list)) {
-        assert(index < mprGetListLength(headers->list));
-        return 0;
-    }
-    return mprGetItem(headers->list, index);
-}
 
 
 /*
@@ -9328,10 +9322,37 @@ PUBLIC int httpSetPackedHeadersMax(HttpHeaderTable *headers, int max)
     }
     headers->max = max;
     while (headers->size >= max) {
+        if (headers->list->length == 0) {
+            break;
+        }
         kp = mprPopItem(headers->list);
         headers->size -= (slen(kp->key) + slen(kp->value) + HTTP2_HEADER_OVERHEAD);
+        if (headers->size < 0) {
+            /* Should never happen */
+            assert(0);
+            return MPR_ERR_BAD_STATE;
+        }
     }
     return 0;
+}
+
+/*
+    Get a header at a specific index.
+ */
+PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
+{
+    if (index <= 0 || index > (1 + HTTP2_STATIC_TABLE_ENTRIES + mprGetListLength(headers->list))) {
+        return 0;
+    }
+    if (--index < HTTP2_STATIC_TABLE_ENTRIES) {
+        return mprGetItem(HTTP->staticHeaders, index);
+    }
+    index = index - HTTP2_STATIC_TABLE_ENTRIES;
+    if (index >= mprGetListLength(headers->list)) {
+        /* Bad index */
+        return 0;
+    }
+    return mprGetItem(headers->list, index);
 }
 #endif /* ME_HTTP_HTTP2 */
 
@@ -9718,6 +9739,10 @@ static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet)
     if (smatch(httpGetHeader(conn, "transfer-encoding"), "chunked")) {
         httpInitChunking(conn);
     } else {
+        if (mprGetBufLength(packet->content) < 2) {
+            httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad header format");
+            return 0;
+        }
         mprAdjustBufStart(packet->content, 2);
     }
     httpSetState(conn, HTTP_STATE_PARSED);
@@ -10014,6 +10039,7 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
      */
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
         if ((frame = parseFrame(q, packet)) != 0) {
+            conn = frame->conn;
             if (net->goaway && conn && (net->lastStream && conn->stream >= net->lastStream)) {
                 /* Network is being closed. Continue to process existing streams but accept no new streams */
                 continue;
@@ -10021,11 +10047,9 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
             net->frame = frame;
             frameHandlers[frame->type](q, packet);
             net->frame = 0;
-            conn = frame->conn;
             if (conn && conn->disconnect && !conn->destroyed) {
                 sendReset(q, conn, HTTP2_INTERNAL_ERROR, "Stream request error %s", conn->errorMsg);
             }
-
         } else {
             break;
         }
@@ -10120,6 +10144,7 @@ static void outgoingHttp2Service(HttpQueue *q)
 
             if (packet->flags & HTTP_PACKET_DATA) {
 #if UNUSED
+                /* Already done above */
                 len = resizePacket(net->outputq, conn->outputq->max, packet, &done);
 #endif
                 conn->outputq->max -= len;
@@ -10355,6 +10380,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
 
         switch (field) {
         case HTTP2_HEADER_TABLE_SIZE_SETTING:
+            value = min((int) value, net->limits->hpackMax);
             httpSetPackedHeadersMax(net->txHeaders, value);
             break;
 
@@ -10403,6 +10429,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid setting packet length");
         return;
     }
+    mprFlushBuf(packet->content);
     sendFrame(q, defineFrame(q, packet, HTTP2_SETTINGS_FRAME, HTTP2_ACK_FLAG, 0));
 }
 
@@ -10501,13 +10528,13 @@ static HttpConn *getStream(HttpQueue *q, HttpPacket *packet)
             Servers create a new connection stream. Note: HttpConn is used for HTTP/2 streams (legacy).
          */
         if (mprGetListLength(net->connections) >= net->limits->requestsPerClientMax) {
-            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams: %s %d/%d", net->ip,
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams for IP: %s %d/%d", net->ip,
                 (int) mprGetListLength(net->connections), net->limits->requestsPerClientMax);
             return 0;
         }
         ///TODO httpMonitorEvent(conn, HTTP_COUNTER_REQUESTS, 1);
         if (mprGetListLength(net->connections) >= net->limits->streamsMax) {
-            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams: %s %d/%d", net->ip,
+            sendReset(q, conn, HTTP2_REFUSED_STREAM, "Too many streams for connection: %s %d/%d", net->ip,
                 (int) mprGetListLength(net->connections), net->limits->streamsMax);
             return 0;
         }
@@ -10588,6 +10615,7 @@ static void parsePingFrame(HttpQueue *q, HttpPacket *packet)
         return;
     }
     if (!(frame->flags & HTTP2_ACK_FLAG)) {
+        mprFlushBuf(packet->content);
         sendFrame(q, defineFrame(q, packet, HTTP2_PING_FRAME, HTTP2_ACK_FLAG, 0));
     }
 }
@@ -10682,15 +10710,17 @@ static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
  */
 static void parseHeaderFrames(HttpQueue *q, HttpConn *conn)
 {
+    HttpNet     *net;
     HttpPacket  *packet;
     HttpRx      *rx;
 
+    net = conn->net;
     rx = conn->rx;
     packet = rx->headerPacket;
-    while (httpGetPacketLength(packet) > 0 && !conn->error && !conn->net->error) {
+    while (httpGetPacketLength(packet) > 0 && !net->error && !net->goaway && !conn->error) {
         parseHeader(q, conn, packet);
     }
-    if (!q->net->goaway) {
+    if (!net->goaway) {
         if (!conn->error) {
             conn->state = HTTP_STATE_PARSED;
         }
@@ -10754,7 +10784,10 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
             return;
         }
         addHeader(conn, name, value);
-        httpAddPackedHeader(net->rxHeaders, name, value);
+        if (httpAddPackedHeader(net->rxHeaders, name, value) < 0) {
+            sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Cannot fit header in hpack table");
+            return;
+        }
 
     } else if ((ch >> 5) == 1) {
         /* Dynamic table max size update */
@@ -10900,14 +10933,14 @@ static bool validateHeader(cchar *key, cchar *value)
             continue;
         }
         if (c == '\0' || c == '\n' || c == '\r' || c == ':' || ('A' <= c && c <= 'Z')) {
-            mprLog("info http", 5, "Invalid header name %s", key);
+            // mprLog("info http", 5, "Invalid header name %s", key);
             return 0;
         }
     }
     for (cp = (uchar*) value; *cp; cp++) {
         c = *cp;
         if (c == '\0' || c == '\n' || c == '\r') {
-            mprLog("info http", 5, "Invalid header value %s", value);
+            // mprLog("info http", 5, "Invalid header value %s", value);
             return 0;
         }
     }
@@ -11030,6 +11063,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
     }
     va_start(ap, fmt);
     msg = sfmtv(fmt, ap);
+    //  MOB should be trace
     mprLog("info http2", 3, "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStream, status, msg);
     va_end(ap);
 
@@ -11098,14 +11132,15 @@ static void sendReset(HttpQueue *q, HttpConn *conn, int status, cchar *fmt, ...)
     }
     va_start(ap, fmt);
     msg = sfmtv(fmt, ap);
+    httpTrace(conn->trace, "http2.tx", "context", "Send stream reset, stream=%d, status=%d, msg='%s'", conn->stream, status, msg);
     va_end(ap);
 
     mprPutUint32ToBuf(packet->content, status);
-    mprLog("info http2", 3, "Send stream reset, stream=%d, status=%d, msg='%s'", conn->stream, status, msg);
     sendFrame(q, defineFrame(q, packet, HTTP2_RESET_FRAME, 0, conn->stream));
 
+    httpError(conn, HTTP_CODE_COMMS_ERROR, "%s", msg);
     conn->streamReset = 1;
-    resetConn(conn, msg, 0);
+    httpProcess(conn->inputq);
 }
 
 
@@ -11373,9 +11408,9 @@ static int decodeInt(HttpPacket *packet, uint bits)
     uint        mask, shift, value;
     int         done;
 
-    assert(0 < bits && bits <= 8);
-    assert(packet && httpGetPacketLength(packet) > 0);
-
+    if (bits < 0 || bits > 8 || !packet || httpGetPacketLength(packet) == 0) {
+        return MPR_ERR_BAD_STATE;
+    }
     buf = packet->content;
     bp = start = (uchar*) mprGetBufStart(buf);
     end = (uchar*) mprGetBufEnd(buf);
@@ -16258,9 +16293,10 @@ PUBLIC void httpProcess(HttpQueue *q)
 
         default:
             if (conn->error) {
-                httpSetState(conn, HTTP_STATE_COMPLETE);
+                httpSetState(conn, HTTP_STATE_FINALIZED);
+            } else {
+                more = 0;
             }
-            more = 0;
             break;
         }
         httpServiceQueues(conn->net, HTTP_BLOCK);
@@ -16828,9 +16864,9 @@ static void processFinalized(HttpQueue *q)
     rx = conn->rx;
     tx = conn->tx;
 
-    assert(tx->finalized);
-    assert(tx->finalizedOutput);
-    assert(tx->finalizedInput);
+    tx->finalized = 1;
+    tx->finalizedOutput = 1;
+    tx->finalizedInput = 1;
 
 #if ME_TRACE_MEM
     mprDebug(1, "Request complete, status %d, error %d, connError %d, %s%s, memsize %.2f MB",

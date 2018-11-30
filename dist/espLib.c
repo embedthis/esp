@@ -9789,7 +9789,7 @@ static void termAllocator(void *data)
 }
 
 
-struct sqlite3_mem_methods mem = {
+struct sqlite3_mem_methods memMethods = {
     allocBlock, freeBlock, reallocBlock, blockSize, roundBlockSize, initAllocator, termAllocator, NULL
 };
 
@@ -9876,7 +9876,7 @@ static void initSqlite()
 {
     mprGlobalLock();
     if (!sqliteInitialized) {
-        sqlite3_config(SQLITE_CONFIG_MALLOC, &mem);
+        sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
         sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
         if (sqlite3_initialize() != SQLITE_OK) {
             mprLog("error esp sdb", 0, "Cannot initialize SQLite");

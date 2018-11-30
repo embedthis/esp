@@ -271,6 +271,8 @@ PUBLIC Mpr *mprCreateMemService(MprManager manager, int flags)
         heap->regions = region;
     }
     heap->gcCond = mprCreateCond();
+
+    //  TODO - could just remove STATIC_VALUES
     heap->roots = mprCreateList(-1, MPR_LIST_STATIC_VALUES);
     mprAddRoot(MPR);
     return MPR;
@@ -461,7 +463,7 @@ static int initQueues()
     for (freeq = heap->freeq, qindex = 0; freeq < &heap->freeq[MPR_ALLOC_NUM_QUEUES]; freeq++, qindex++) {
         /* Size includes MprMem header */
         freeq->minSize = (MprMemSize) qtosize(qindex);
-#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && KEEP
+#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && MPR_ALLOC_TRACE
         printf("Queue: %d, usize %u  size %u\n",
             (int) (freeq - heap->freeq), (int) freeq->minSize - (int) sizeof(MprMem), (int) freeq->minSize);
 #endif
@@ -653,7 +655,7 @@ static MprMem *growHeap(size_t required)
      */
     if (heap->stats.bytesAllocated > heap->stats.bytesAllocatedPeak) {
         heap->stats.bytesAllocatedPeak = heap->stats.bytesAllocated;
-#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && KEEP
+#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && ME_MPR_ALLOC_TRACE
         printf("MPR: Heap new max %lld request %lu\n", heap->stats.bytesAllocatedPeak, required);
 #endif
     }
@@ -977,7 +979,7 @@ PUBLIC int mprGC(int flags)
     heap->freedBlocks = 0;
     if (!(flags & MPR_GC_NO_BLOCK)) {
         /*
-            Yield here, so the sweeper wont abort because this thread is not yielded
+            Yield here, so the sweeper can operate now
          */
         mprYield(MPR_YIELD_STICKY);
     }
@@ -1270,6 +1272,7 @@ static void markRoots()
     mprMark(heap->roots);
     mprMark(heap->gcCond);
 
+    //  TODO - could just remove STATIC_VALUES and remove this
     for (ITERATE_ITEMS(heap->roots, root, next)) {
         mprMark(root);
     }
@@ -1483,7 +1486,7 @@ static void sweep()
     }
     heap->stats.heapRegions = rcount;
     heap->stats.sweeps++;
-#if (ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG) && KEEP
+#if ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG && MPR_ALLOC_TRACE
     printf("GC: Marked %lld / %lld, Swept %lld / %lld, freed %lld, bytesFree %lld (prior %lld)\n"
                  "    WeightedCount %d / %d, allocated blocks %lld allocated bytes %lld\n"
                  "    Unpins %lld, Collections %lld\n",
@@ -1519,6 +1522,7 @@ PUBLIC void pfree(void *ptr)
 {
     if (ptr) {
         mprRelease(ptr);
+        /* Do not access ptr here - async sweeper() may have already run */
     }
 }
 
@@ -1526,12 +1530,17 @@ PUBLIC void pfree(void *ptr)
 PUBLIC void *prealloc(void *ptr, size_t size)
 {
     void    *mem;
+    size_t  oldSize;
 
+    oldSize = psize(ptr);
+    if (size <= oldSize) {
+        return ptr;
+    }
     if ((mem = mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO)) == 0) {
         return 0;
     }
     if (ptr) {
-        memcpy(mem, ptr, psize(ptr));
+        memcpy(mem, ptr, oldSize);
         mprRelease(ptr);
     }
     return mem;
@@ -27410,11 +27419,7 @@ static int getNumOrSym(char **token, int sep, int kind, int *isAlpah)
     char    *cp;
     int     num;
 
-    assert(token && *token);
-    if (!token) {
-        return 0;
-    }
-    if (*token == 0) {
+    if (!token || *token == '\0') {
         return 0;
     }
     if (isalpha((uchar) **token)) {
@@ -28200,11 +28205,8 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
         int             index;
 
         for (ITERATE_ITEMS(ws->handlers, op, index)) {
-            assert(op->fd >= 0);
             if (op->fd == fd) {
                 mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
-            } else if (op->fd < 0) {
-                mprLog("error mpr event", 0, "Invalid fd in wait handlers, probably forgot to call mprRemoveWaitHandler");
             }
         }
     }

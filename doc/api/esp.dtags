@@ -132,8 +132,8 @@
       <type>EspRoute *</type>
       <name>espRoute</name>
       <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>ga1f27d029ea92c75a16d2c67d31f64141</anchor>
-      <arglist>(HttpRoute *route)</arglist>
+      <anchor>ga4f34c72cee102cf5cb115e3908261013</anchor>
+      <arglist>(HttpRoute *route, bool create)</arglist>
     </member>
     <member kind="function">
       <type>int</type>

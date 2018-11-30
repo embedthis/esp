@@ -167,7 +167,7 @@
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_cond" class="ref">MprCond*</a></td><td><a href="#group___mpr_sync_1ga714208aa64aa1c38c486ba0ff8a9b0ad" class="nameRef">mprCreateCond</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a condition lock variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#mpr_8h_1ab609e9e7685d987a32bd0040f2ad6adf" class="ref">MprDiskFileSystem*</a></td><td><a href="#group___mpr_file_system_1ga5d33c9eaec3fef58119ed5f63d550cf2" class="nameRef">mprCreateDiskFileSystem</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create and initialize the disk FileSystem.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_dispatcher" class="ref">MprDispatcher*</a></td><td><a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="nameRef">mprCreateDispatcher</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new event dispatcher.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___mpr_event" class="ref">MprEvent*</a></td><td><a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="nameRef">mprCreateEvent</a>(<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new event.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___mpr_event" class="ref">MprEvent*</a></td><td><a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="nameRef">mprCreateEvent</a>(<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Queue an new event for service on a dispatcher.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___mpr_hash_1ga323fad2d21e620c4a8998aaf8b7f01ed" class="nameRef">mprCreateHash</a>(int hashSize, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a hash table.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___mpr_hash_1ga6925d347168958f1e488ca4054a6d7d9" class="nameRef">mprCreateHashFromWords</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *str)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a hash of words.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___mpr_json_1gaab7693a392b2f96800bf45d89d49b408" class="nameRef">mprCreateJson</a>(int type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a JSON object.</td></tr>
@@ -1129,9 +1129,9 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>epoll_wait.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a34fa7676783bcd92c7e9a5ee88c9500d" class="nameRef">MPR_EVENT_HOLD</a>&nbsp;&nbsp;&nbsp;0x20</td>
+<td>#define</td><td><a href="#mpr_8h_1a3577aee82220ed1403c06b3a510e6c01" class="nameRef">MPR_EVENT_FOREIGN</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Hold the event object to prevent from GC.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Invoking from a foreign non-mpr thread.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a9cf11fdbc5ec554791085628014ce354" class="nameRef">MPR_EVENT_KQUEUE</a>&nbsp;&nbsp;&nbsp;3</td>
 </tr>
@@ -1160,10 +1160,6 @@
 <td>#define</td><td><a href="#mpr_8h_1ac9caa92980fc78d01d0899c46ad35331" class="nameRef">MPR_EVENT_TIME_SLICE</a>&nbsp;&nbsp;&nbsp;20          /* 20 msec */</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Events.</td></tr>
-<tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a923553c1d05ab693dc60d6b2dce948a4" class="nameRef">MPR_EVENT_WAIT</a>&nbsp;&nbsp;&nbsp;0x40</td>
-</tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Wait untill the event is complete.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a68c871907199435842d3874d7b580240" class="nameRef">MPR_EXIT_ABORT</a>&nbsp;&nbsp;&nbsp;0x1</td>
 </tr>
@@ -5247,6 +5243,7 @@ Event service reference.
   </div>
   <div class="apiDetail">
 <p>Create a new event dispatcher.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Dispatchers are event queues that serialize the execution of work. Most of the MPR routines are not thread-safe and thus access to objects needs to be serialized by creating events to run on dispatchers. Resources such as connections will typically own a dispatcher that is used to serialize their work.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">name</td><td>Useful name for debugging.</td>
@@ -5495,8 +5492,9 @@ When was the event created.
 (<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)
   </div>
   <div class="apiDetail">
-<p>Create a new event.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Create a new event for service This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access to application memory.</dd></dl>
+<p>Queue an new event for service on a dispatcher.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Create an event to run a callback on an event dispatcher queue. The MPR serializes work in a thread-safe manner on dispatcher queues. Resources such as connections will typically own a dispatcher that is used to serialize their work. <br/><br/>
+ This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access to application memory.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">dispatcher</td><td>Dispatcher object created via mprCreateDispatcher Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock dispatcher. This should only be used for quick, non-block event callbacks. If using another dispatcher, it is essential that the dispatcher not be destroyed while this event is queued or running.</td>
@@ -5504,9 +5502,10 @@ When was the event created.
     <tr><td class="param">period</td><td>Time in milliseconds used by continuous events between firing of the event.</td>
     <tr><td class="param">proc</td><td>Function to invoke when the event is run.</td>
     <tr><td class="param">data</td><td>Data to associate with the event and stored in event-&gt;data. The data must be either an allocated memory object or MPR_EVENT_STATIC_DATA must be specified in flags.</td>
-    <tr><td class="param">flags</td><td>Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event which will be automatically rescheduled accoring to the specified period. Use MPR_EVENT_STATIC_DATA if the data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event without creating using a worker thread. This should only be used for quick non-blocking event callbacks. Set to MPR_EVENT_HOLD to call <a class="ref" href="#group___mpr_mem_1gaac8a75ae42130538e13d4e84ccb030f4">mprHold</a> on the event object before returning. The caller must then call <a class="ref" href="#group___mpr_mem_1ga4816868550ad8a21b914de2fbe720767">mprRelease</a> on the event object. Set to MPR_EVENT_WAIT for the mprCreateEvent call to wait until the event callback has been run and returned. This is useful if the data is transient (such as a local variable) and the stack must be preserved throughout the event call. NOTE: this will not wait if the caller is currently executing an event on the nominated dispatcher.</td>
+    <tr><td class="param">flags</td><td>Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event which will be automatically rescheduled according to the specified period. Use MPR_EVENT_STATIC_DATA if the data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks. <br/><br/>
+ When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>The event object if successful. Warning: the event callback may run to completion and the event object may be itself collected before this function returns (unless MPR_EVENT_HOLD has been specified). In this case, the return value will be non-zero, but the memory it points to may be freed or re-assigned.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The event object if successful. This routine may return before or after the even callback has run. If MPR_EVENT_FOREIGN is supplied, the return value is always zero.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a>, <a href="#group___mpr_event" class="ref">MprEvent</a>, <a href="#group___mpr_event_1ga780d2b4460347c6da009d21097f4f27d" class="ref">MprEventProc</a>, <a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="ref">mprCreateDispatcher</a>, <a href="#group___mpr_event_1ga3e92f13fc23a3f0ed2d730b077f61611" class="ref">mprCreateTimerEvent</a>, <a href="#group___mpr_dispatcher_1gafd35a965e3ebadc852b8b02aace7a08e" class="ref">mprDestroyDispatcher</a>, <a href="#group___mpr_event_1gac9e97afd0732f2d3612d911817357db5" class="ref">mprEnableContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga443960e2b8cc3fd9169b46dfb66ff0d3" class="ref">mprGetDispatcher</a>, <a href="#group___mpr_event_1ga9163bc8e37a8ff05c0c957cfcc86e02e" class="ref">mprRemoveEvent</a>, <a href="#group___mpr_event_1ga1919da044dd4f62d999526175f76bdc2" class="ref">mprRescheduleEvent</a>, <a href="#group___mpr_event_1ga6fa51ab06c56baaad50f1b4df7efc1d4" class="ref">mprRestartContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga205adaee3b45d0cc899afc89eb9f3b3d" class="ref">mprServiceEvents</a>, <a href="#group___mpr_dispatcher_1gac81ecb3239317f36c36c7d849d738540" class="ref">mprSignalDispatcher</a>, <a href="#group___mpr_event_1ga1f2c85a20242ec0c1e4830ccd25c7bb7" class="ref">mprStopContinuousEvent</a>, <a href="#group___mpr_dispatcher_1gaa523c291209f9419ad27f8b7be4e231d" class="ref">mprWaitForEvent</a></dd></dl>
@@ -8912,7 +8911,7 @@ On Unix, this returns the total application memory size including code, stack, d
   </div>
   <div class="apiDetail">
 <p>Hold a memory block.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call will protect a memory block from freeing by the garbage collector. Call mprRelease to allow the block to be collected.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call will protect a memory block from freeing by the garbage collector. Call <a class="ref" href="#group___mpr_mem_1ga4816868550ad8a21b914de2fbe720767">mprRelease</a> to allow the block to be collected.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>
@@ -8931,7 +8930,7 @@ On Unix, this returns the total application memory size including code, stack, d
   </div>
   <div class="apiDetail">
 <p>Hold memory blocks.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call will protect a set of memory blocks from freeing by the garbage collector. Call mprReleaseBlocks to allow the blocks to be collected.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call will protect a set of memory blocks from freeing by the garbage collector. Call <a class="ref" href="#group___mpr_mem_1ga57e8bfb292529e6ce63b21aca0543fb3">mprReleaseBlocks</a> to allow the blocks to be collected.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>
@@ -9078,7 +9077,7 @@ This is used to test if a block has been dynamically allocated
   </div>
   <div class="apiDetail">
 <p>Release a memory block.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory block to be freed by the garbage collector after calling mprHold.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory block to be freed by the garbage collector after calling mprHold. You must not use or access the memory block after calling mprRelease. The memory may be freed even before the call returns. Even if the memory block is marked elsewhere via mprMark, it is unsafe to access the memory once this call is made.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>

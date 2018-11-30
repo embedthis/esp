@@ -279,7 +279,7 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1ga2bc125ce68d2a8a8992228f0232c9b6f" class="nameRef">espRenderString</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *s)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a string of data to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gad0c3cc923d09313ed81476b74c32ab00" class="nameRef">espRenderVar</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the value of a request variable to the client.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gaef2c8a287bbbd155ceeb919f281e8e5b" class="nameRef">espRenderView</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *view, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an ESP view page to the client.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#group___esp_route_1ga1f27d029ea92c75a16d2c67d31f64141" class="nameRef">espRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Return the corresponding EspRoute for the given Route.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#group___esp_route_1ga4f34c72cee102cf5cb115e3908261013" class="nameRef">espRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> create)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Return the corresponding EspRoute for the given Route.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gacd7c962cf79038c3d7604c72dc43bbdb" class="nameRef">espSaveConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Save the in-memory ESP pak.json configuration to the default location for the ESP application defined by the specified route.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gaed0422d33553efa73195661fd80efaee" class="nameRef">espSendGrid</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a database grid as a JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1ga1ba6eef08895cd89005dd96262d1cd53" class="nameRef">espSendRec</a>(<a href="edi.html#http.html#group___http_conn" class="ref">HttpConn</a> *conn, <a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a database record as a JSON string.</td></tr>
@@ -3577,7 +3577,7 @@ Use httpReadBlock for more options to read data
   </div>
   <div class="apiDetail">
 <p>Render an ESP document.</p>
-    <dl><dt><b>Description</b>:</dt><dd>If the document is an ESP page, it will be rendered as a view via <a class="ref" href="#group___esp_req_1gaf20a43f48bfe4741cc6bb9f2877932b1">espRenderDocument</a>. Otherwise, it will be rendered using the fileHandler as a static document.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>If the document is an ESP page, it will be rendered as a view via <a class="ref" href="#group___esp_req_1gaf20a43f48bfe4741cc6bb9f2877932b1">espRenderDocument</a>. Otherwise, it will be rendered using the fileHandler as a static document. This routine may yield.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>Http connection object.</td>
@@ -3728,7 +3728,7 @@ If a request parameter is not found by the given name, consult the session store
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">conn</td><td>Http connection object.</td>
-    <tr><td class="param">view</td><td>View name. The view name is interpreted relative to the matching route documents directory and may omit an ESP extension.</td>
+    <tr><td class="param">view</td><td>View name. The view name is interpreted relative to the matching route documents directory and may omit an ESP extension. This routine may yield.</td>
     <tr><td class="param">flags</td><td>Reserved. Set to zero.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>True if a vew can be rendered.</dd></dl>
@@ -4781,12 +4781,12 @@ Windows SDK.
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_route_1ga1f27d029ea92c75a16d2c67d31f64141"></a>
+<a name="group___esp_route_1ga4f34c72cee102cf5cb115e3908261013"></a>
 <div class="api">
   <div class="prototype">
     <a href="#group___esp_route" class="ref">EspRoute</a> *
     espRoute
-(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)
+(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> create)
   </div>
   <div class="apiDetail">
 <p>Return the corresponding EspRoute for the given Route.</p>
@@ -4794,6 +4794,7 @@ Windows SDK.
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>Parent route from which to inherit configuration.</td>
+    <tr><td class="param">create</td><td>Set to true to create an EspRoute if a suitable one cannot be found.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The EspRoute object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
