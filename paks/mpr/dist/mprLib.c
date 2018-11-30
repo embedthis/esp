@@ -1522,12 +1522,17 @@ PUBLIC void pfree(void *ptr)
 PUBLIC void *prealloc(void *ptr, size_t size)
 {
     void    *mem;
+    size_t  oldSize;
 
+    oldSize = psize(ptr);
+    if (size <= oldSize) {
+        return ptr;
+    }
     if ((mem = mprAllocMem(size, MPR_ALLOC_HOLD | MPR_ALLOC_ZERO)) == 0) {
         return 0;
     }
     if (ptr) {
-        memcpy(mem, ptr, psize(ptr));
+        memcpy(mem, ptr, oldSize);
         mprRelease(ptr);
     }
     return mem;

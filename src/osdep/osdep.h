@@ -496,7 +496,8 @@
             /**
                 Boolean data type.
              */
-            #if _MSC_VER <= 1800
+            #if WINDOWS && (_MSC_VER <= 1800)
+                /* Bool introduced via stdbool in VS 2015 */
                 typedef char bool;
             #endif
         #endif

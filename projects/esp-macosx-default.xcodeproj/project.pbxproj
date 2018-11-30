@@ -969,7 +969,8 @@
 ../src/vcvars.bat
     			);
     			outputPaths = (
-    ../build/macosx-x64-default/bin
+    ../build/macosx-x64-default/bin/esp-compile.json,
+../build/macosx-x64-default/bin/vcvars.bat
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     			shellPath = /bin/bash;
@@ -997,7 +998,15 @@ cd ..
 ../src/certs/samples/test.key
     			);
     			outputPaths = (
-    ../build/macosx-x64-default/bin
+    ../build/macosx-x64-default/bin/ca.crt,
+../build/macosx-x64-default/bin/ca.key,
+../build/macosx-x64-default/bin/ec.crt,
+../build/macosx-x64-default/bin/ec.key,
+../build/macosx-x64-default/bin/roots.crt,
+../build/macosx-x64-default/bin/self.crt,
+../build/macosx-x64-default/bin/self.key,
+../build/macosx-x64-default/bin/test.crt,
+../build/macosx-x64-default/bin/test.key
     			);
     			runOnlyForDeploymentPostprocessing = 0;
     			shellPath = /bin/bash;
@@ -1498,7 +1507,7 @@ fi";
                     COMBINE_HIDPI_IMAGES = YES;
     				ALWAYS_SEARCH_USER_PATHS = NO;
                     ONLY_ACTIVE_ARCH = YES;
-                    CURRENT_PROJECT_VERSION = 6.2;
+                    CURRENT_PROJECT_VERSION = 6.3;
                     DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
                     DYLIB_CURRENT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 
@@ -1583,7 +1592,7 @@ ENABLE_TESTABILITY = YES;
                     COMBINE_HIDPI_IMAGES = YES;
     				ALWAYS_SEARCH_USER_PATHS = NO;
                     ONLY_ACTIVE_ARCH = YES;
-                    CURRENT_PROJECT_VERSION = 6.2;
+                    CURRENT_PROJECT_VERSION = 6.3;
                     DYLIB_COMPATIBILITY_VERSION = "$(CURRENT_PROJECT_VERSION)";
                     DYLIB_CURRENT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 
