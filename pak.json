@@ -44,7 +44,7 @@
         "mpr-openssl": "~1.0",
         "sqlite": "~3",
         "ssl": "~0.9",
-        "watchdog": "~0.2"
+        "watchdog": "~0.3"
     },
     "devDependencies": {
         "makeme": ">=1.0",
