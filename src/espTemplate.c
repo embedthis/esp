@@ -1297,7 +1297,9 @@ static cchar *getArPath(cchar *os, cchar *arch)
      */
     Http *http = MPR->httpService;
     cchar *path = espGetVisualStudio();
-    if (scontains(http->platform, "-x64-")) {
+    if (getenv("VSINSTALLDIR")) {
+        path = sclone("lib.exe");
+    } else if (scontains(http->platform, "-x64-")) {
         int is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
         if (is64BitSystem) {
             path = mprJoinPath(path, "VC/bin/amd64/lib.exe");
@@ -1323,7 +1325,9 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
      */
     Http *http = MPR->httpService;
     cchar *path = espGetVisualStudio();
-    if (scontains(http->platform, "-x64-")) {
+    if (getenv("VSINSTALLDIR")) {
+        path = sclone("cl.exe");
+    } else if (scontains(http->platform, "-x64-")) {
         int is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
         if (is64BitSystem) {
             path = mprJoinPath(path, "VC/bin/amd64/cl.exe");
