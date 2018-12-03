@@ -328,7 +328,9 @@
     #include    <process.h>
     #include    <windows.h>
     #include    <shlobj.h>
-    #include    <stdbool.h>
+    #if _MSC_VER >= 1800
+        #include    <stdbool.h>
+    #endif
     #if ME_DEBUG
         #include <crtdbg.h>
     #endif
@@ -496,7 +498,7 @@
             /**
                 Boolean data type.
              */
-            #if WINDOWS && (_MSC_VER <= 1800)
+            #if WINDOWS && (_MSC_VER < 1800) && !defined(bool)
                 /* Bool introduced via stdbool in VS 2015 */
                 typedef char bool;
             #endif

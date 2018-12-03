@@ -26,16 +26,16 @@ Me.load({
                         result.libraries = [ 'ssl', 'crypto' ]
 
                     } else if (Version(version).acceptable('<1.1')) {
-                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl/inc32']
+                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl']
                         result.includes.push('$(ME_COM_OPENSSL_PATH)/inc32')
                         result.libpaths = ['$(ME_COM_OPENSSL_PATH)/out32']
                         result.libraries = ['gdi32.lib', 'libeay32.lib', 'ssleay32.lib']
 
                     } else {
-                        result.libraries = [ 'ssl', 'crypto' ]
-                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl/include']
+                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl']
                         result.includes.push('$(ME_COM_OPENSSL_PATH)/include')
                         result.libpaths = ['$(ME_COM_OPENSSL_PATH)']
+                        result.libraries = [ 'libssl', 'libcrypto' ]
                     }
                     return result
                 }
