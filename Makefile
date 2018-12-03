@@ -18,7 +18,7 @@ PROFILE := default
 
 ifeq ($(ARCH),)
 	ifeq ($(OS),windows)
-		ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
+		ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 			ARCH?=x64
 		else
 			ARCH?=x86

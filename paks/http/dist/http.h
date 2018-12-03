@@ -3094,6 +3094,7 @@ typedef struct HttpNet {
     bool            goaway: 1;              /**< Closing network connection (sent or received a goAway frame) */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
     uint            protocol: 2;            /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
+    bool            receivedGoaway: 1;      /**< Received goaway frame */
     bool            ownDispatcher: 1;       /**< Using own the dispatcher and should destroy when closing connection */
     bool            push: 1;                /**< Receiver will accept push */
     bool            secure: 1;              /**< Using https */

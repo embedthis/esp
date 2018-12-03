@@ -35,7 +35,7 @@
         "mpr-mbedtls": "~2",
         "osdep": "~1.0",
         "pcre": "~1.0",
-        "ssl": "~0.9"
+        "ssl": "~1.0"
     },
     "optionalDependencies": {
         "mpr-openssl": "~1"

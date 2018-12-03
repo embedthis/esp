@@ -9945,7 +9945,7 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet);
 static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet);
 static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet);
 static cchar *parseHeaderField(HttpQueue *q, HttpConn *conn, HttpPacket *packet);
-static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet);
+static bool parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet);
 static void parseHeaderFrames(HttpQueue *q, HttpConn *conn);
 static void parsePriorityFrame(HttpQueue *q, HttpPacket *packet);
 static void parsePushFrame(HttpQueue *q, HttpPacket *packet);
@@ -10053,6 +10053,10 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
         } else {
             break;
         }
+        /*
+            Try to push out any pending responses here. This keeps the socketq packet count down.
+         */
+        httpServiceQueues(net, 0);
     }
     closeNetworkWhenDone(q);
 }
@@ -10370,7 +10374,7 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
     buf = packet->content;
     frame = packet->data;
 
-    if (frame->flags & HTTP2_ACK_FLAG) {
+    if (frame->flags & HTTP2_ACK_FLAG || net->goaway) {
         /* Nothing to do */
         return;
     }
@@ -10520,10 +10524,21 @@ static HttpConn *getStream(HttpQueue *q, HttpPacket *packet)
     assert(frame->stream);
 
     if (!conn && httpIsServer(net)) {
+        if (net->goaway) {
+            /*
+                Ignore new streams as the network is going away. Don't send a reset, just ignore.
+
+                sendReset(q, conn, HTTP2_REFUSED_STREAM, "Network is going away");
+             */
+            return 0;
+        }
         if ((conn = httpCreateConn(net)) == 0) {
             /* Memory error - centrally reported */
             return 0;
         }
+        frame->conn = conn;
+        conn->stream = frame->stream;
+
         /*
             Servers create a new connection stream. Note: HttpConn is used for HTTP/2 streams (legacy).
          */
@@ -10538,13 +10553,6 @@ static HttpConn *getStream(HttpQueue *q, HttpPacket *packet)
                 (int) mprGetListLength(net->connections), net->limits->streamsMax);
             return 0;
         }
-        frame->conn = conn;
-        conn->stream = frame->stream;
-    }
-    if (net->goaway) {
-        /* Ignore new streams as the network is going away */
-        sendReset(q, conn, HTTP2_REFUSED_STREAM, "Network is going away");
-        return 0;
     }
 #if FUTURE
     if (depend == frame->stream) {
@@ -10609,13 +10617,16 @@ static void parsePingFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpFrame   *frame;
 
+    if (q->net->goaway) {
+        return;
+    }
     frame = packet->data;
     if (frame->conn) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad stream in ping frame");
         return;
     }
     if (!(frame->flags & HTTP2_ACK_FLAG)) {
-        mprFlushBuf(packet->content);
+        /* Resend the ping payload with the acknowledgement */
         sendFrame(q, defineFrame(q, packet, HTTP2_PING_FRAME, HTTP2_ACK_FLAG, 0));
     }
 }
@@ -10649,25 +10660,28 @@ static void parseResetFrame(HttpQueue *q, HttpPacket *packet)
  */
 static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet)
 {
+    HttpNet     *net;
     HttpConn    *conn;
     MprBuf      *buf;
     cchar       *msg;
     ssize       len;
     int         error, lastStream, next;
 
+    net = q->net;
     buf = packet->content;
     lastStream = mprGetUint32FromBuf(buf) & HTTP_STREAM_MASK;
     error = mprGetUint32FromBuf(buf);
     len = mprGetBufLength(buf);
     msg = len ? snclone(buf->start, len) : "";
-    httpTrace(q->net->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d lastStream=%d", msg, error, lastStream);
+    httpTrace(net->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d lastStream=%d", msg, error, lastStream);
 
-    for (ITERATE_ITEMS(q->net->connections, conn, next)) {
+    for (ITERATE_ITEMS(net->connections, conn, next)) {
         if (conn->stream > lastStream) {
             resetConn(conn, "Stream reset by peer", HTTP2_REFUSED_STREAM);
         }
     }
-    q->net->goaway = 1;
+    net->goaway = 1;
+    net->receivedGoaway = 1;
 }
 
 
@@ -10718,7 +10732,10 @@ static void parseHeaderFrames(HttpQueue *q, HttpConn *conn)
     rx = conn->rx;
     packet = rx->headerPacket;
     while (httpGetPacketLength(packet) > 0 && !net->error && !net->goaway && !conn->error) {
-        parseHeader(q, conn, packet);
+        if (!parseHeader(q, conn, packet)) {
+            sendReset(q, conn, HTTP2_STREAM_CLOSED, "Cannot parse headers");
+            break;
+        }
     }
     if (!net->goaway) {
         if (!conn->error) {
@@ -10732,7 +10749,7 @@ static void parseHeaderFrames(HttpQueue *q, HttpConn *conn)
 /*
     Parse the next header item in the packet of headers
  */
-static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
+static bool parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
 {
     HttpNet     *net;
     MprBuf      *buf;
@@ -10758,7 +10775,7 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
         index = decodeInt(packet, 7);
         if ((kp = httpGetPackedHeader(net->rxHeaders, index)) == 0) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
-            return;
+            return 0;
         }
         addHeader(conn, kp->key, kp->value);
 
@@ -10768,11 +10785,11 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
          */
         if ((index = decodeInt(packet, 6)) < 0) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
-            return;
+            return 0;
         } else if (index > 0) {
             if ((kp = httpGetPackedHeader(net->rxHeaders, index)) == 0) {
                 sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Unknown header index");
-                return;
+                return 0;
             }
             name = kp->key;
         } else {
@@ -10781,12 +10798,12 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
         value = parseHeaderField(q, conn, packet);
         if (!name || !value) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header name/value");
-            return;
+            return 0;
         }
         addHeader(conn, name, value);
         if (httpAddPackedHeader(net->rxHeaders, name, value) < 0) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Cannot fit header in hpack table");
-            return;
+            return 0;
         }
 
     } else if ((ch >> 5) == 1) {
@@ -10794,18 +10811,18 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
         max = decodeInt(packet, 5);
         if (httpSetPackedHeadersMax(net->rxHeaders, max) < 0) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Cannot add indexed header");
-            return;
+            return 0;
         }
 
     } else /* if ((ch >> 4) == 1 || (ch >> 4) == 0)) */ {
         /* Literal header field without indexing */
         if ((index = decodeInt(packet, 4)) < 0) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
-            return;
+            return 0;
         } else if (index > 0) {
             if ((kp = httpGetPackedHeader(net->rxHeaders, index)) == 0) {
                 sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Unknown header index");
-                return;
+                return 0;
             }
             name = kp->key;
         } else {
@@ -10814,10 +10831,11 @@ static void parseHeader(HttpQueue *q, HttpConn *conn, HttpPacket *packet)
         value = parseHeaderField(q, conn, packet);
         if (!name || !value) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header name/value");
-            return;
+            return 0;
         }
         addHeader(conn, name, value);
     }
+    return 1;
 }
 
 
@@ -11062,9 +11080,8 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
         return;
     }
     va_start(ap, fmt);
-    msg = sfmtv(fmt, ap);
-    //  MOB should be trace
-    mprLog("info http2", 3, "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStream, status, msg);
+    net->errorMsg = msg = sfmtv(fmt, ap);
+    httpTrace(net->trace, "http2.tx", "error", "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStream, status, msg);
     va_end(ap);
 
     buf = packet->content;
@@ -11557,7 +11574,15 @@ static HttpPacket *defineFrame(HttpQueue *q, HttpPacket *packet, int type, uchar
  */
 static void sendFrame(HttpQueue *q, HttpPacket *packet)
 {
-    if (packet) {
+    HttpNet     *net;
+
+    net = q->net;
+#if KEEP
+    if (net->goaway || net->eof || net->error) {
+        print("ABORT");
+    }
+#endif
+    if (packet && !net->goaway && !net->eof && !net->error) {
         httpPutPacket(q->net->socketq, packet);
     }
 }
@@ -13563,7 +13588,7 @@ PUBLIC HttpAddress *httpMonitorAddress(HttpNet *net, int counterIndex)
     http = net->http;
     count = mprGetHashLength(http->addresses);
     if (count > net->limits->clientMax) {
-        mprLog("net erro", 0, "Too many concurrent clients, active: %d, max:%d", count, net->limits->clientMax);
+        mprLog("net info", 3, "Too many concurrent clients, active: %d, max:%d", count, net->limits->clientMax);
         return 0;
     }
     if (counterIndex <= 0) {
@@ -14342,7 +14367,6 @@ PUBLIC void httpUsePrimary(HttpNet *net)
 }
 
 
-//  TODO - legacy httpBorrowConn?
 PUBLIC void httpBorrowNet(HttpNet *net)
 {
     assert(!net->borrowed);
@@ -14353,7 +14377,6 @@ PUBLIC void httpBorrowNet(HttpNet *net)
 }
 
 
-//  TODO - legacy httpReturnConn?
 PUBLIC void httpReturnNet(HttpNet *net)
 {
     assert(net->borrowed);
@@ -14510,7 +14533,7 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
         return 0;
     }
     if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsMax) {
-        mprLog("net error", 0, "Too many concurrent connections, active: %d, max:%d", (int) value, limits->connectionsMax);
+        mprLog("net info", 3, "Too many concurrent connections, active: %d, max:%d", (int) value - 1, limits->connectionsMax);
         httpDestroyNet(net);
         return 0;
     }
@@ -14708,8 +14731,13 @@ PUBLIC int httpGetNetEventMask(HttpNet *net)
             eventMask |= MPR_WRITABLE;
         }
     }
-    if (!net->eof && (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max))) {
-        eventMask |= MPR_READABLE;
+    if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
+        /*
+            Don't read if writeBlocked to mitigate DOS attack via ping flood
+         */
+        if (mprSocketHandshaking(sock) || (!net->eof && !net->writeBlocked)) {
+            eventMask |= MPR_READABLE;
+        }
     }
     return eventMask;
 }
@@ -14787,6 +14815,26 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
 }
 
 
+static void checkLen(HttpQueue *q)
+{
+    HttpNet     *net;
+    HttpPacket  *packet;
+    static int maxCount = 0;
+    int count = 0;
+
+    net = q->net;
+    for (packet = q->first; packet; packet = packet->next) {
+        count++;
+    }
+    if (count > maxCount) {
+        maxCount = count;
+        if (maxCount > 50) {
+            print("Count %d, blocked %d, goaway %d, received goaway %d, eof %d", count, net->writeBlocked, net->goaway, net->receivedGoaway, net->eof);
+        }
+    }
+}
+
+
 static void netOutgoing(HttpQueue *q, HttpPacket *packet)
 {
     assert(q == q->net->socketq);
@@ -14794,6 +14842,7 @@ static void netOutgoing(HttpQueue *q, HttpPacket *packet)
     if (q->net->socketq) {
         httpPutForService(q->net->socketq, packet, HTTP_SCHEDULE_QUEUE);
     }
+    checkLen(q);
 }
 
 
