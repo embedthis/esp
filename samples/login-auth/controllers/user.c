@@ -10,7 +10,7 @@ static void loginUser() {
     /*
         We're using the "config" AuthStore so the passwords come from the esp.json config file.
      */
-    if (httpLogin(getConn(), param("username"), param("password"))) {
+    if (httpLogin(getStream(), param("username"), param("password"))) {
         redirect("/index.esp");
     } else {
         feedback("error", "Invalid Login");
@@ -22,7 +22,7 @@ static void loginUser() {
     Logout the user and redirect to the login page
  */
 static void logoutUser() {
-    httpLogout(getConn());
+    httpLogout(getStream());
     redirect("/public/login.esp");
 }
 

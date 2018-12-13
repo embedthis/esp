@@ -8,11 +8,11 @@
 /*
     Common base run for every request.
  */
-static void commonBase(HttpConn *conn)
+static void commonBase(HttpStream *stream)
 {
     cchar   *uri;
 
-    if (!httpIsAuthenticated(conn)) {
+    if (!httpIsAuthenticated(stream)) {
         /*
             Access to certain pages are permitted without authentication so the user can login and logout.
          */

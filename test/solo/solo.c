@@ -6,12 +6,12 @@
 /*
     Test streaming input
  */
-static void soloStreamCallback(HttpConn *conn, int event, int arg)
+static void soloStreamCallback(HttpStream *stream, int event, int arg)
 {
     HttpPacket      *packet;
 
     if (event == HTTP_EVENT_READABLE) {
-        while ((packet = httpGetPacket(conn->readq)) != 0) {
+        while ((packet = httpGetPacket(stream->readq)) != 0) {
             if (packet->flags & HTTP_PACKET_END) {
                 render("-done-");
                 finalize();
@@ -22,7 +22,7 @@ static void soloStreamCallback(HttpConn *conn, int event, int arg)
 
 static void soloStream() {
     dontAutoFinalize();
-    espSetNotifier(getConn(), soloStreamCallback);
+    espSetNotifier(getStream(), soloStreamCallback);
 }
 
 

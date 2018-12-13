@@ -332,7 +332,7 @@
 <tr class="apiDef"><td class="apiType"><a href="#struct_mpr_cond" class="ref">MprCond*</a></td><td><a href="#group___mpr_sync_1ga714208aa64aa1c38c486ba0ff8a9b0ad" class="nameRef">mprCreateCond</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a condition lock variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#mpr_8h_1ab609e9e7685d987a32bd0040f2ad6adf" class="ref">MprDiskFileSystem*</a></td><td><a href="#group___mpr_file_system_1ga5d33c9eaec3fef58119ed5f63d550cf2" class="nameRef">mprCreateDiskFileSystem</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create and initialize the disk FileSystem.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_dispatcher" class="ref">MprDispatcher*</a></td><td><a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="nameRef">mprCreateDispatcher</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new event dispatcher.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___mpr_event" class="ref">MprEvent*</a></td><td><a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="nameRef">mprCreateEvent</a>(<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Queue an new event for service on a dispatcher.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___mpr_event" class="ref">MprEvent*</a></td><td><a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="nameRef">mprCreateEvent</a>(<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Queue an new event on a dispatcher.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___mpr_hash_1ga323fad2d21e620c4a8998aaf8b7f01ed" class="nameRef">mprCreateHash</a>(int hashSize, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a hash table.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___mpr_hash_1ga6925d347168958f1e488ca4054a6d7d9" class="nameRef">mprCreateHashFromWords</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *str)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a hash of words.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___mpr_json_1gaab7693a392b2f96800bf45d89d49b408" class="nameRef">mprCreateJson</a>(int type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a JSON object.</td></tr>
@@ -941,6 +941,10 @@
 <td>#define</td><td><a href="#mpr_8h_1af821420781729d00310228b21dc11aea" class="nameRef">ME_MAX_EVENTS</a>&nbsp;&nbsp;&nbsp;32</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Maximum number of notifier events.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1a436e5e0d6abaa12fa9d768f1b88fb46c" class="nameRef">ME_MPR_ALLOC_TRACE</a>&nbsp;&nbsp;&nbsp;0</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Trace to stdout.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1af8ebacbfd3978c3b12cef8c9f7b7db11" class="nameRef">ME_MPR_LOGGING</a>&nbsp;&nbsp;&nbsp;1</td>
 </tr>
@@ -5657,13 +5661,13 @@ When was the event created.
 (<a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> period, void *proc, void *data, int flags)
   </div>
   <div class="apiDetail">
-<p>Queue an new event for service on a dispatcher.</p>
+<p>Queue an new event on a dispatcher.</p>
     <dl><dt><b>Description</b>:</dt><dd>Create an event to run a callback on an event dispatcher queue. The MPR serializes work in a thread-safe manner on dispatcher queues. Resources such as connections will typically own a dispatcher that is used to serialize their work. <br/><br/>
- This API may be also called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access to application memory.</dd></dl>
+ This API may be called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole access to application memory.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">dispatcher</td><td>Dispatcher object created via mprCreateDispatcher Set to NULL for the MPR dispatcher. Use MPR_EVENT_QUICK in the flags to run the event on the events nonBlock dispatcher. This should only be used for quick, non-block event callbacks. If using another dispatcher, it is essential that the dispatcher not be destroyed while this event is queued or running.</td>
-    <tr><td class="param">name</td><td>Static string name of the event.</td>
+    <tr><td class="param">name</td><td>Static string name of the event used for debugging.</td>
     <tr><td class="param">period</td><td>Time in milliseconds used by continuous events between firing of the event.</td>
     <tr><td class="param">proc</td><td>Function to invoke when the event is run.</td>
     <tr><td class="param">data</td><td>Data to associate with the event and stored in event-&gt;data. The data must be either an allocated memory object or MPR_EVENT_STATIC_DATA must be specified in flags.</td>
@@ -8625,14 +8629,15 @@ This uses the specified join string between the elements
 <p>Write a message to the error log file.</p>
     <dl><dt><b>Description</b>:</dt><dd>Send a message to the MPR error logging subsystem. The purpose of the error log is to record essential configuration and error conditions. Per-request trace typically is sent to a separate trace log. <br/><br/>
  By default, error log messages are sent to the standard error output. Applications may redirect output by installing a log handler using <a class="ref" href="#mpr_8h_1a834e7ceec5efa68d0d73eb45c3c69780">mprSetLogHandler</a>. <br/><br/>
- Log messages should be a single text line to facilitate machine processing of log files. Descriptive tag words may be provided to indicate a severity level and to classifiy messages. By convention, tags may include one of the severity levels defined in RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;. Messages using the &quot;error&quot;, &quot;critical&quot; tags should use a level of zero. Tags should be space separated. <br/><br/>
+ Log messages should be a single text line to facilitate machine processing of log files. Descriptive tag words may be provided to indicate a severity level and to classifiy messages. By convention, tags may include one of the severity levels defined in RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;. Messages using the &quot;error&quot;, &quot;critical&quot; tags should use a level of zero. Tags should be space separated. By convention, specify the RFC tag name first in a list of tags. <br/><br/>
+ The default log handler emits messages in three formats depending on whether MPR_LOG_DETAILED is provided to <a class="ref" href="#group___mpr_log_1ga8497fae7134238ba1b5f22680b1fd344">mprStartLogging</a> and the value of the tags parameter. If MPR_LOG_DETAILED and tags are supplied, the format is: &quot;MM/DD/YY HH:MM:SS LEVEL TAGS, Message&quot;. Otherwise a a simplified output format is used: &quot;Name: severity: message&quot;, where severity is set to &quot;error&quot; for level 0 messages. This is useful for utility programs. If tags are null, the message is output raw, without any any prefixes. <br/><br/>
  Logging typically is enabled in both debug and release builds and may be controlled via the build define ME_MPR_LOGGING which is typically set via the MakeMe setting &quot;logging: true&quot;. <br/><br/>
  The <a class="ref" href="#group___mpr_log_1ga08742c4a5b8340886661acd20827b12c">mprDebug</a> API may be used to emit log messages only in debug builds. <br/><br/>
  If level zero is used, the message is also sent to any relevant operating system logging facility such as syslog or the Windows event database. <br/><br/>
  It is good practice to only include debug trace at levels above level 2 so that essential error messages are clearly visible in the error log and are not swamped by debug messages.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param">tags</td><td>Descriptive space separated tag words to classify this message. The default log handler emits messages in three formats depending on whether MPR_LOG_DETAILED is provided to <a class="ref" href="#group___mpr_log_1ga8497fae7134238ba1b5f22680b1fd344">mprStartLogging</a> and the value of the tags parameter. If MPR_LOG_DETAILED and tags are supplied, the format is: &quot;MM/DD/YY HH:MM:SS LEVEL TAGS, Message&quot;. Otherwise a a simplified output format is used: &quot;Name: severity: message&quot;, where severity is set to &quot;error&quot; for level 0 messages. This is useful for utility programs. If tags are null, the message is output raw, without any any prefixes.</td>
+    <tr><td class="param">tags</td><td>Descriptive space separated tag words to classify this message. Tag words may be provided to indicate a severity level and to classifiy messages. By convention, tags may include one of the severity levels defined in RFC 5424: &quot;debug&quot;, &quot;info&quot;, &quot;notice&quot;, &quot;warn&quot;, &quot;error&quot;, &quot;critical&quot;. Messages using the &quot;error&quot;, &quot;critical&quot; tags should use a level of zero. Tags should be space separated. By convention, specify the RFC tag name first in a list of tags.</td>
     <tr><td class="param">level</td><td>Logging level for this message. The level is 0-5 with five being the most verbose.</td>
     <tr><td class="param">fmt</td><td>Printf style format string. Variable number of arguments to print.</td>
     <tr><td class="param">...</td><td>Variable number of arguments for printf data.</td>
@@ -8832,7 +8837,8 @@ Not the amount requested by the user which may be smaller. This is a 32-bit quan
   </div>
   <div class="apiDetail">
 <p>Allocate a block of memory.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This is the lowest level of memory allocation routine. Memory is freed via the garbage collector. To protect an active memory block memory block from being reclaimed, it must have a reference to it. Memory blocks can specify a manager routine via <a class="ref" href="#group___mpr_mem_1gae3b5d2bd89f53f1d28b1d6c7e299158a">mprAllocObj</a>. The manager is is invoked by the garbage collector to &quot;mark&quot; dependant active blocks. Marked blocks will not be reclaimed by the garbage collector. This function can be called by foreign (non Mpr) threads provided you use the MPR_ALLOC_HOLD flag so that the memory will be preserved until you call mprRelease on the memory block. This is important as without the MPR_ALLOC_HOLD flag, the garbage collector could run immediately after calling mprAlloc and collect the memory. When used in an Mpr thread, the garbage collector cannot run unless you call mprYield and so the memory is safe from immediate collection.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This is the lowest level of memory allocation routine. Memory is freed via the garbage collector. To protect an active memory block memory block from being reclaimed, it must have a reference to it. Memory blocks can specify a manager routine via <a class="ref" href="#group___mpr_mem_1gae3b5d2bd89f53f1d28b1d6c7e299158a">mprAllocObj</a>. The manager is is invoked by the garbage collector to &quot;mark&quot; dependant active blocks. Marked blocks will not be reclaimed by the garbage collector. <br/><br/>
+ This function can be called by foreign (non Mpr) threads provided you use the MPR_ALLOC_HOLD flag so that the memory will be preserved until you call mprRelease on the memory block. This is important, as without the MPR_ALLOC_HOLD flag, the garbage collector could run immediately after calling mprAlloc and collect the memory. When used in an Mpr thread, the garbage collector cannot run until your thread calls <a class="ref" href="#mpr_8h_1af140a2fda18b2e8461236cc44c0a2cc4">mprYield</a> and so the memory is safe from immediate collection.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">size</td><td>Size of the memory block to allocate.</td>
@@ -9242,7 +9248,7 @@ This is used to test if a block has been dynamically allocated
   </div>
   <div class="apiDetail">
 <p>Release a memory block.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory block to be freed by the garbage collector after calling mprHold. You must not use or access the memory block after calling mprRelease. The memory may be freed even before the call returns. Even if the memory block is marked elsewhere via mprMark, it is unsafe to access the memory once this call is made.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory block to be freed by the garbage collector after calling mprHold. You must NEVER use or access the memory block after calling mprRelease. The memory may be freed before the call returns, even when executing in an MPR thread.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>
@@ -9261,7 +9267,7 @@ This is used to test if a block has been dynamically allocated
   </div>
   <div class="apiDetail">
 <p>Release a memory blocks.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory blocks to be freed by the garbage collector after calling mprHoldBlocks.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call is used to allow a memory blocks to be freed by the garbage collector after calling mprHoldBlocks. You must NEVER use or access the memory blocks after calling mprRelease. The memory may be freed before the call returns, even when executing in an MPR thread.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">ptr</td><td>Any memory block.</td>

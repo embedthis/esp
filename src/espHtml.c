@@ -11,22 +11,22 @@
 
 /************************************* Local **********************************/
 
-static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options);
-static cchar *map(HttpConn *conn, MprHash *options);
+static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options);
+static cchar *map(HttpStream *stream, MprHash *options);
 
 /************************************* Code ***********************************/
 
 PUBLIC void input(cchar *field, cchar *optionString)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     MprHash     *choices, *options;
     MprKey      *kp;
     EdiRec      *rec;
     cchar       *rows, *cols, *etype, *value, *checked, *style, *error, *errorMsg;
     int         type, flags;
 
-    conn = getConn();
-    rec = conn->record;
+    stream = getStream();
+    rec = stream->record;
     if (ediGetColumnSchema(rec->edi, rec->tableName, field, &type, &flags, NULL) < 0) {
         type = -1;
     }
@@ -38,17 +38,17 @@ PUBLIC void input(cchar *field, cchar *optionString)
     switch (type) {
     case EDI_TYPE_BOOL:
         choices = httpGetOptions("{off: 0, on: 1}");
-        value = getValue(conn, field, options);
+        value = getValue(stream, field, options);
         for (kp = 0; (kp = mprGetNextKey(choices, kp)) != 0; ) {
             checked = (smatch(kp->data, value)) ? " checked" : "";
-            espRender(conn, "%s <input type='radio' name='%s' value='%s'%s%s class='%s'/>\r\n",
-                stitle(kp->key), field, kp->data, checked, map(conn, options), style);
+            espRender(stream, "%s <input type='radio' name='%s' value='%s'%s%s class='%s'/>\r\n",
+                stitle(kp->key), field, kp->data, checked, map(stream, options), style);
         }
         break;
         /* Fall through */
     case EDI_TYPE_BINARY:
     default:
-        httpError(conn, 0, "espInput: unknown field type %d", type);
+        httpError(stream, 0, "espInput: unknown field type %d", type);
         /* Fall through */
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_TEXT:
@@ -60,9 +60,9 @@ PUBLIC void input(cchar *field, cchar *optionString)
             httpSetOption(options, "rows", "10");
         }
         etype = "text";
-        value = getValue(conn, field, options);
+        value = getValue(stream, field, options);
         if (value == 0 || *value == '\0') {
-            value = espGetParam(conn, field, "");
+            value = espGetParam(stream, field, "");
         }
         if (httpGetOption(options, "password", 0)) {
             etype = "password";
@@ -71,14 +71,14 @@ PUBLIC void input(cchar *field, cchar *optionString)
         }
         if ((rows = httpGetOption(options, "rows", 0)) != 0) {
             cols = httpGetOption(options, "cols", "60");
-            espRender(conn, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
-                field, etype, cols, rows, map(conn, options), style, value);
+            espRender(stream, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
+                field, etype, cols, rows, map(stream, options), style, value);
         } else {
-            espRender(conn, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
-                map(conn, options), style);
+            espRender(stream, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
+                map(stream, options), style);
         }
         if (error) {
-            espRenderString(conn, error);
+            espRenderString(stream, error);
         }
         break;
     }
@@ -91,21 +91,21 @@ PUBLIC void input(cchar *field, cchar *optionString)
  */
 PUBLIC void inputSecurityToken()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    espRender(conn, "    <input name='%s' type='hidden' value='%s' />\r\n", ME_XSRF_PARAM, httpGetSecurityToken(conn, 0));
+    stream = getStream();
+    espRender(stream, "    <input name='%s' type='hidden' value='%s' />\r\n", ME_XSRF_PARAM, httpGetSecurityToken(stream, 0));
 }
 
 
 /**************************************** Support *************************************/ 
 
-static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options)
+static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options)
 {
     EdiRec      *record;
     cchar       *value;
 
-    record = conn->record;
+    record = stream->record;
     value = 0;
     if (record) {
         value = ediGetFieldValue(record, fieldName);
@@ -123,7 +123,7 @@ static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options)
 /*
     Map options to an attribute string.
  */
-static cchar *map(HttpConn *conn, MprHash *options)
+static cchar *map(HttpStream *stream, MprHash *options)
 {
     MprKey      *kp;
     MprBuf      *buf;

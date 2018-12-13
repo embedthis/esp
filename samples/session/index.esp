@@ -14,7 +14,7 @@
 <body>
     <h3>Session Details</h3>
         <table border="1">
-            <tr><td>Session ID</td><td><pre><%= httpGetSessionID(getConn()) %></pre></td></tr>
+            <tr><td>Session ID</td><td><pre><%= httpGetSessionID(getStream()) %></pre></td></tr>
             <tr><td>Session Data</td><td><pre><%= session("data") %></pre></td></tr>
         </table>
 

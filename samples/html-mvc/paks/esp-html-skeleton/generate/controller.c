@@ -82,7 +82,7 @@ static void redirect${UCONTROLLER}() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void common${UCONTROLLER}(HttpConn *conn) {
+static void common${UCONTROLLER}(HttpStream *stream) {
 }
 
 /*

@@ -7,7 +7,7 @@
     Action to login a user. Redirects to /public/login.esp if login fails
  */
 static void loginUser() {
-    if (httpLogin(getConn(), param("username"), param("password"))) {
+    if (httpLogin(getStream(), param("username"), param("password"))) {
         redirect("/index.esp");
     } else {
         feedback("error", "Invalid Login");
@@ -19,7 +19,7 @@ static void loginUser() {
     Logout the user and redirect to the login page
  */
 static void logoutUser() {
-    httpLogout(getConn());
+    httpLogout(getStream());
     redirect("/public/login.esp");
 }
 

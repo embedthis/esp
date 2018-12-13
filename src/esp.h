@@ -51,7 +51,7 @@ extern "C" {
     @ingroup Esp
     @stability Stable
  */
-typedef void (*EspProc)(HttpConn *conn);
+typedef void (*EspProc)(HttpStream *stream);
 
 #define ESP_CONTENT_MARKER  "${_ESP_CONTENT_MARKER_}"       /* Layout content marker */
 
@@ -455,7 +455,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *viewProc);
             <li>VS - Path to Visual Studio</li>
         </ul>
     @param route HttpRoute object
-    @param command Http connection object
+    @param command Command to run
     @param source ESP web page source pathname
     @param module Output module pathname
     @return An expanded command line
@@ -524,13 +524,13 @@ PUBLIC int espSetConfig(HttpRoute *route, cchar *key, cchar *value);
 
 /**
     Set a private data reference for the current request
-    @param conn HttpConn object
+    @param stream HttpStream object
     @param data Data object to associate with the current request. This must be a managed reference.
     @return Reference to private data
     @ingroup Esp
     @stability prototype
  */
-PUBLIC void espSetData(HttpConn *conn, void *data);
+PUBLIC void espSetData(HttpStream *stream, void *data);
 
 /**
     Test if a configuration property from the ESP pak.json has a desired value.
@@ -555,11 +555,11 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
 /********************************** Requests **********************************/
 /**
     View procedure callback.
-    @param conn Http connection object
+    @param stream Http stream object
     @ingroup EspReq
     @stability Stable
  */
-typedef void (*EspViewProc)(HttpConn *conn);
+typedef void (*EspViewProc)(HttpStream *stream);
 
 /**
     ESP Action
@@ -582,7 +582,7 @@ typedef struct EspReq {
     Esp             *esp;                   /**< Convenient esp reference */
     MprHash         *feedback;              /**< Feedback messages */
     MprHash         *lastFeedback;          /**< Feedback messages from the last request */
-    HttpNotifier    notifier;               /**< Connection Http state change notification callback */
+    HttpNotifier    notifier;               /**< Http state change notification callback */
     void            *data;                  /**< Custom data for request (managed) */
     void            *staticData;            /**< Custom data for request (unmanaged) */
     cchar           *commandLine;           /**< Command line for compile/link */
@@ -595,7 +595,7 @@ typedef struct EspReq {
 /**
     Add a header to the transmission using a format string.
     @description Add a header if it does not already exist.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
@@ -604,12 +604,12 @@ typedef struct EspReq {
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
+PUBLIC void espAddHeader(HttpStream *stream, cchar *key, cchar *fmt, ...);
 
 /**
     Add a header to the transmission.
     @description Add a header if it does not already exist.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param value Value to set for the header
     @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already
@@ -617,51 +617,51 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAddHeaderString(HttpConn *conn, cchar *key, cchar *value);
+PUBLIC void espAddHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Add a request parameter value if it is not already defined.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value);
+PUBLIC void espAddParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Append a transmission header.
     @description Set the header if it does not already exist. Append with a ", " separator if the header already exists.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
+PUBLIC void espAppendHeader(HttpStream *stream, cchar *key, cchar *fmt, ...);
 
 /**
     Append a transmission header string.
     @description Set the header if it does not already exist. Append with a ", " separator if the header already exists.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param value Value to set for the header
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAppendHeaderString(HttpConn *conn, cchar *key, cchar *value);
+PUBLIC void espAppendHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Auto-finalize transmission of the http request.
     @description If auto-finalization is enabled via #espSetAutoFinalizing, this call will finalize writing Http response
     data by writing the final chunk trailer if required. If using chunked transfers, a null chunk trailer is required
     to signify the end of write data.  If the request is already finalized, this call does nothing.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espAutoFinalize(HttpConn *conn);
+PUBLIC void espAutoFinalize(HttpStream *stream);
 
 /**
     Create a session state object.
@@ -669,26 +669,26 @@ PUBLIC void espAutoFinalize(HttpConn *conn);
     If a session has not already been created, this call will create a new session.
     It will create a response cookie containing a session ID that will be sent to the client
     with the response. Note: Objects are stored in the session state using JSON serialization.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Session ID string
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espCreateSession(HttpConn *conn);
+PUBLIC cchar *espCreateSession(HttpStream *stream);
 
 /**
     Destroy a session state object.
     @description This will destroy the server-side session state and
         emit an expired cookie to the client to force it to erase the session cookie.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espDestroySession(HttpConn *conn);
+PUBLIC void espDestroySession(HttpStream *stream);
 
 /**
     Send mail using sendmail
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param to Message recipient
     @param from Message sender
     @param subject Message subject
@@ -699,7 +699,7 @@ PUBLIC void espDestroySession(HttpConn *conn);
     @return Zero if the email is successfully sent.
     @stability Evolving
  */
-PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
+PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
     cchar *message, MprList *files);
 
 /**
@@ -714,20 +714,20 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
         means the application has fully processed the request including reading all the input data it wishes to read
         and has generated all the output that will be generated. A fully finalized request has both HttpTx.finalized
         and HttpTx.finalizedConnector true.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espFinalize(HttpConn *conn);
+PUBLIC void espFinalize(HttpStream *stream);
 
 /**
     Flush transmit data.
-    @description This writes any buffered data.
-    @param conn HttpConn connection object
+    @description This writes any buffered data and initiates writing to the peer. This will not block.
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espFlush(HttpConn *conn);
+PUBLIC void espFlush(HttpStream *stream);
 
 /**
     Get the current route HttpAuth object.
@@ -738,65 +738,65 @@ PUBLIC void espFlush(HttpConn *conn);
 PUBLIC HttpAuth *espGetAuth();
 
 /**
-    Get the current request connection.
-    @return The HttpConn connection object
+    Get the current request stream.
+    @return The HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpConn *espGetConn();
+PUBLIC HttpStream *espGetStream();
 
 /**
     Get the receive body content length.
     @description Get the length of the receive body content (if any). This is used in servers to get the length of posted
         data and, in clients, to get the response body length.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A count of the response content data in bytes.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprOff espGetContentLength(HttpConn *conn);
+PUBLIC MprOff espGetContentLength(HttpStream *stream);
 
 /**
     Get the receive body content type.
     @description Get the content mime type of the receive body content (if any).
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Mime type of any receive content. Set to NULL if not posted data.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetContentType(HttpConn *conn);
+PUBLIC cchar *espGetContentType(HttpStream *stream);
 
 /**
     Get a request cookie.
     @description Get the cookie for the given name.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Cookie name to retrieve
     @return Return the cookie value
         Return null if the cookie is not defined.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetCookie(HttpConn *conn, cchar *name);
+PUBLIC cchar *espGetCookie(HttpStream *stream, cchar *name);
 
 /**
     Get the request cookies.
     @description Get the cookies defined in the current request. This returns the HTTP cookies header with all
         cookies in one string.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Return a string containing the cookies sent in the Http header of the last request
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetCookies(HttpConn *conn);
+PUBLIC cchar *espGetCookies(HttpStream *stream);
 
 /**
     Get the private data reference for the current request set via #setData
-    @param conn HttpConn object
+    @param stream HttpStream object
     @return Reference to private data
     @ingroup EspReq
     @stability prototype
  */
-PUBLIC void *espGetData(HttpConn *conn);
+PUBLIC void *espGetData(HttpStream *stream);
 
 /**
     Get the current database instance.
@@ -806,7 +806,7 @@ PUBLIC void *espGetData(HttpConn *conn);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC Edi *espGetDatabase(HttpConn *conn);
+PUBLIC Edi *espGetDatabase(HttpStream *stream);
 
 /**
     Get the current extended route information.
@@ -814,27 +814,27 @@ PUBLIC Edi *espGetDatabase(HttpConn *conn);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC EspRoute *espGetEspRoute(HttpConn *conn);
+PUBLIC EspRoute *espGetEspRoute(HttpStream *stream);
 
 /**
     Get the default documents directory for the request route.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A directory path name
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetDocuments(HttpConn *conn);
+PUBLIC cchar *espGetDocuments(HttpStream *stream);
 
 /**
     Get a feedback message defined via #feedback
-    @param conn HttpConn object
+    @param stream HttpStream object
     @param type type of feedback message to retrieve. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @return Reference to the feedback message
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *type);
+PUBLIC cchar *espGetFeedback(HttpStream *stream, cchar *type);
 
 /**
     Get the current database grid.
@@ -844,118 +844,118 @@ PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *type);
     @stability Deprecated
     @internal
  */
-PUBLIC EdiGrid *espGetGrid(HttpConn *conn);
+PUBLIC EdiGrid *espGetGrid(HttpStream *stream);
 
 /**
     Get an rx http header.
     @description Get a http response header for a given header key.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection"
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetHeader(HttpConn *conn, cchar *key);
+PUBLIC cchar *espGetHeader(HttpStream *stream, cchar *key);
 
 /**
     Get the hash table of rx Http headers.
     @description Get the internal hash table of rx headers
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return Hash table. See MprHash for how to access the hash table.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprHash *espGetHeaderHash(HttpConn *conn);
+PUBLIC MprHash *espGetHeaderHash(HttpStream *stream);
 
 /**
     Get all the request http headers.
     @description Get all the rx headers. The returned string formats all the headers in the form:
         key: value\\nkey2: value2\\n...
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return String containing all the headers. The caller must free this returned string.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC char *espGetHeaders(HttpConn *conn);
+PUBLIC char *espGetHeaders(HttpStream *stream);
 
 /**
     Get a request pararmeter as an integer.
     @description Get the value of a named request parameter as an integer. Form variables are defined via
         www-urlencoded query or post data contained in the request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
     @return Integer containing the request parameter's value
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC int espGetIntParam(HttpConn *conn, cchar *var, int defaultValue);
+PUBLIC int espGetIntParam(HttpStream *stream, cchar *var, int defaultValue);
 
 /**
     Get the HTTP method.
     @description This is a convenience API to return the Http method
-    @return The HttpConn.rx.method property
+    @return The HttpStream.rx.method property
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetMethod(HttpConn *conn);
+PUBLIC cchar *espGetMethod(HttpStream *stream);
 
 /**
     Get a request parameter.
     @description Get the value of a named request parameter. Form variables are defined via www-urlencoded query or post
         data contained in the request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
     @return String containing the request parameter's value. Caller should not free.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue);
+PUBLIC cchar *espGetParam(HttpStream *stream, cchar *var, cchar *defaultValue);
 
 /**
     Get the request parameter hash table.
     @description This call gets the params hash table for the current request.
         Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding.
         Use #mprLookupKey to retrieve data from the table.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return MprJson instance containing the request parameters
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprJson *espGetParams(HttpConn *conn);
+PUBLIC MprJson *espGetParams(HttpStream *stream);
 
 /**
     Get the request URI path string.
     @description This is a convenience API to return the request URI path. This is the request URI path after removing
         query parameters. It does not include the application route prefix.
-    @return The espGetConn()->rx->pathInfo
+    @return The espGetStream()->rx->pathInfo
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetPath(HttpConn *conn);
+PUBLIC cchar *espGetPath(HttpStream *stream);
 
 /**
     Get the request query string.
     @description Get query string sent with the current request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return String containing the request query string. Caller should not free.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetQueryString(HttpConn *conn);
+PUBLIC cchar *espGetQueryString(HttpStream *stream);
 
 /**
     Get the referring URI.
     @description This returns the referring URI as described in the HTTP "referer" (yes the HTTP specification does
         spell it incorrectly) header. If this header is not defined, this routine will return the home URI as returned
         by uri("~").
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return String URI back to the referring URI. If no referrer is defined, refers to the home URI.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetReferrer(HttpConn *conn);
+PUBLIC cchar *espGetReferrer(HttpStream *stream);
 
 /**
     Get the current route HttpRoute object.
@@ -977,66 +977,66 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route);
 /**
     Get a route variable
     @description Get the value of a request route variable.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to retrieve
     @return String containing the route variable value. Caller should not free.
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var);
+PUBLIC cchar *espGetRouteVar(HttpStream *stream, cchar *var);
 
 /**
     Get the session state ID.
     @description This will get the session and return the session ID. This will create a new session state storage area if
         create is true and one does not already exist. This can be used to test if the session state exists for this
-        connection.
-    @param conn HttpConn connection object
+        stream.
+    @param stream HttpStream stream object
     @param create Set to true to create a new session if one does not already exist.
     @return The session state identifier string.
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espGetSessionID(HttpConn *conn, int create);
+PUBLIC cchar *espGetSessionID(HttpStream *stream, int create);
 
 /**
     Get the response status.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return An integer Http response code. Typically 200 is success.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC int espGetStatus(HttpConn *conn);
+PUBLIC int espGetStatus(HttpStream *stream);
 
 /**
     Get the Http response status message.
     @description The HTTP status message is supplied on the first line of the HTTP response.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @returns A Http status message.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetStatusMessage(HttpConn *conn);
+PUBLIC cchar *espGetStatusMessage(HttpStream *stream);
 
 /**
     Get the uploaded files.
     @description Get the list of uploaded files.
         This list entries are HttpUploadFile objects.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A list of HttpUploadFile objects.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC MprList *espGetUploads(HttpConn *conn);
+PUBLIC MprList *espGetUploads(HttpStream *stream);
 
 /**
     Get the request URI string.
     @description This is a convenience API to return the request URI. This is the request URI after removing
         query parameters. It includes any application route prefix.
-    @return The espGetConn()->rx->uri
+    @return The espGetStream()->rx->uri
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC cchar *espGetUri(HttpConn *conn);
+PUBLIC cchar *espGetUri(HttpStream *stream);
 
 /**
     Test if a current grid has been defined.
@@ -1045,7 +1045,7 @@ PUBLIC cchar *espGetUri(HttpConn *conn);
     @stability Deprecated
     @internal
  */
-PUBLIC bool espHasGrid(HttpConn *conn);
+PUBLIC bool espHasGrid(HttpStream *stream);
 
 /**
     Test if a current record has been defined and save to the database.
@@ -1056,192 +1056,193 @@ PUBLIC bool espHasGrid(HttpConn *conn);
     @stability Deprecated
     @internal
  */
-PUBLIC bool espHasRec(HttpConn *conn);
+PUBLIC bool espHasRec(HttpStream *stream);
 
 /**
-    Test if the connection is being made on behalf of the current, single authenticated user.
+    Test if the request is being made on behalf of the current, single authenticated user.
     @description Set esp.login.single to true to enable current session tracking.
     @return true if the
     @stability Evolving
     @ingroup EspReq
  */
-PUBLIC bool espIsCurrentSession(HttpConn *conn);
+PUBLIC bool espIsCurrentSession(HttpStream *stream);
 
 /**
     Test if the receive input stream is at end-of-file.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return "True" if there is no more receive data to read
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espIsEof(HttpConn *conn);
+PUBLIC bool espIsEof(HttpStream *stream);
 
 /**
-    Test if the connection is using SSL and is secure.
-    @param conn HttpConn connection object
-    @return "True" if the connection is using SSL.
+    Test if the stream is using SSL and is secure.
+    @param stream HttpStream stream object
+    @return "True" if the stream is using SSL.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espIsSecure(HttpConn *conn);
+PUBLIC bool espIsSecure(HttpStream *stream);
 
 /**
     Test if the request has been finalized.
     @description This tests if #espFinalize or #httpFinalize has been called for a request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return "True" if the request has been finalized.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espIsFinalized(HttpConn *conn);
+PUBLIC bool espIsFinalized(HttpStream *stream);
 
 /**
     Match a request parameter with an expected value.
     @description Compare a request parameter and return "true" if it exists and its value matches.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter
     @param value Expected value to match
     @return "True" if the value matches
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espMatchParam(HttpConn *conn, cchar *var, cchar *value);
+PUBLIC bool espMatchParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Read receive body content.
         Use httpReadBlock for more options to read data.
     @description Read body content from the client. This call does not block.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param buf Buffer to accept content data
     @param size Size of the buffer
     @return A count of bytes read into the buffer
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espReceive(HttpConn *conn, char *buf, ssize size);
+PUBLIC ssize espReceive(HttpStream *stream, char *buf, ssize size);
 
 /**
     Redirect the client.
     @description Redirect the client to a new uri.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param status Http status code to send with the response
     @param target New target uri for the client
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRedirect(HttpConn *conn, int status, cchar *target);
+PUBLIC void espRedirect(HttpStream *stream, int status, cchar *target);
 
 /**
     Redirect the client back to the referrer
     @description Redirect the client to the referring URI.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRedirectBack(HttpConn *conn);
+PUBLIC void espRedirectBack(HttpStream *stream);
 
 /**
     Remove a cookie
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Cookie name
     @ingroup EspReq
     @stability Stable
 */
-PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name);
+PUBLIC void espRemoveCookie(HttpStream *stream, cchar *name);
 
 /**
     Remove a header from the transmission
     @description Remove a header if present.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @return Zero if successful, otherwise a negative MPR error code.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC int espRemoveHeader(HttpConn *conn, cchar *key);
+PUBLIC int espRemoveHeader(HttpStream *stream, cchar *key);
 
 /**
     Remove a session state variable
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Variable name to set
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *name);
+PUBLIC void espRemoveSessionVar(HttpStream *stream, cchar *name);
 
 /**
     Render a formatted string.
     @description Render a formatted string of data into packets to the client. Data packets will be created
-        as required to store the write data. This call may block waiting for data to drain to the client.
-    @param conn HttpConn connection object
+        as required to store the write data. This call may block waiting for data to drain to the client and
+        may yield to the garbage collector.
+    @param stream HttpStream stream object
     @param fmt Printf style formatted string
     @param ... Arguments for fmt
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...);
+PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...);
 
 /**
     Render the client configuration string in JSON
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability PRototype
  */
-PUBLIC ssize espRenderConfig(HttpConn *conn);
+PUBLIC ssize espRenderConfig(HttpStream *stream);
 
 /**
     Render a block of data to the client.
-    @description Render a block of data to the client. Data packets will be created as required to store the write data.
-    @param conn HttpConn connection object
+    @description Render a block of data to the client. Data packets will be created as required to store the write data. This call may block waiting for the client to absorb the data.
+    @param stream HttpStream stream object
     @param buf Buffer containing the write data
     @param size Size of the data in buf
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size);
+PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size);
 
 /**
     Render cached content.
     @description Render the saved, cached response from a prior request to this URI. This is useful if the caching
         mode has been set to "manual".
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderCached(HttpConn *conn);
+PUBLIC ssize espRenderCached(HttpStream *stream);
 
 /**
     Render an ESP document
     @description If the document is an ESP page, it will be rendered as a view via #espRenderDocument.
         Otherwise, it will be rendered using the fileHandler as a static document. This routine may yield.
-    @param conn Http connection object
+    @param stream Http stream object
     @param path Relative pathname from route->documents to the document to render.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *path);
+PUBLIC void espRenderDocument(HttpStream *stream, cchar *path);
 
 /**
     Render an error message back to the client and finalize the request. The output is Html escaped for security.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param status Http status code
     @param fmt Printf style message format
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
+PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...);
 
 /**
     Render feedback messages.
     @description Feedback messages for one-time messages that are sent to the client. For HTML clients, feedback
     messages use the session state store and persist for only one request. For smart/thick clients, feedback messages
     are sent as JSON responses via the espSendFeedback API. See #espSetFeedback for how to define feedback messages.
-    @param conn Http connection object
+    @param stream Http stream object
     @param types Types of feedback message to retrieve. Set to "*" to retrieve all types of feedback.
         This may be set to any word, but the following feedback types are typically supported as per
         RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
@@ -1250,81 +1251,81 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...);
     @stability Deprecated
     @internal
  */
-PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *types);
+PUBLIC ssize espRenderFeedback(HttpStream *stream, cchar *types);
 
 /**
     Render the contents of a file back to the client.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param path File path name
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path);
+PUBLIC ssize espRenderFile(HttpStream *stream, cchar *path);
 
 /**
     Read a table from the current database
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param tableName Database table name
     @return An EDI grid containing data for the table.
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC EdiGrid *espReadTable(HttpConn *conn, cchar *tableName);
+PUBLIC EdiGrid *espReadTable(HttpStream *stream, cchar *tableName);
 
 /**
     Render a formatted string after HTML escaping
     @description Render a formatted string of data and then HTML escape. Data packets will be created
         as required to store the write data. This call may block waiting for data to drain to the client.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param fmt Printf style formatted string
     @param ... Arguments for fmt
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
 */
-PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...);
+PUBLIC ssize espRenderSafe(HttpStream *stream, cchar *fmt, ...);
 
 /**
     Render a safe string of data to the client.
     @description HTML escape a string and then write the string of data to the client.
         Data packets will be created as required to store the write data. This call may block waiting for the data to
         the client to drain.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param s String containing the data to write
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderSafeString(HttpConn *conn, cchar *s);
+PUBLIC ssize espRenderSafeString(HttpStream *stream, cchar *s);
 
 /**
     Render a string of data to the client
     @description Render a string of data to the client. Data packets will be created
         as required to store the write data. This call may block waiting for data to drain to the client.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param s String containing the data to write
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderString(HttpConn *conn, cchar *s);
+PUBLIC ssize espRenderString(HttpStream *stream, cchar *s);
 
 /**
     Render the value of a request variable to the client.
     If a request parameter is not found by the given name, consult the session store for a variable the same name.
     @description This writes the value of a request variable after HTML escaping its value.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Form variable name
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
+PUBLIC ssize espRenderVar(HttpStream *stream, cchar *name);
 
 /**
     Render an ESP view page to the client
-    @param conn Http connection object
+    @param stream Http stream object
     @param view View name. The view name is interpreted relative to the matching route documents directory and may omit
         an ESP extension. This routine may yield.
     @param flags Reserved. Set to zero.
@@ -1332,31 +1333,31 @@ PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC bool espRenderView(HttpConn *conn, cchar *view, int flags);
+PUBLIC bool espRenderView(HttpStream *stream, cchar *view, int flags);
 
 /**
     Send a database grid as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param grid EDI grid
     @param flags Reserved. Set to zero.
     @return Number of bytes rendered
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags);
+PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags);
 
 /**
     Send a database record as a JSON string
     @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param rec EDI record
     @param flags Reserved. Set to zero.
     @return Number of bytes rendered
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags);
+PUBLIC ssize espSendRec(HttpStream *stream, EdiRec *rec, int flags);
 
 /**
     Send a JSON response result
@@ -1365,46 +1366,46 @@ PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags);
     The format of the response is:
         "{ success: STATUS, feedback: {messages}, fieldErrors: {messages}}" wrapper.
     The feedback messages are created via the espSetFeedback API. Field errors are created by ESP validations.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param success True if the operation was a success.
     @return Number of bytes sent.
     @ingroup EspReq
     @stability Evolving
   */
-PUBLIC ssize espSendResult(HttpConn *conn, bool success);
+PUBLIC ssize espSendResult(HttpStream *stream, bool success);
 
 /**
     Enable auto-finalizing for this request
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param on Set to "true" to enable auto-finalizing.
     @return "True" if auto-finalizing was enabled prior to this call
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espSetAutoFinalizing(HttpConn *conn, bool on);
+PUBLIC bool espSetAutoFinalizing(HttpStream *stream, bool on);
 
 /**
-    Set the current request connection.
-    @param conn The HttpConn connection object to define
+    Set the current request stream.
+    @param stream The HttpStream stream object to define
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetConn(HttpConn *conn);
+PUBLIC void espSetStream(HttpStream *stream);
 
 /**
     Define a content length header in the transmission.
     @description This will define a "Content-Length: NNN" request header.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param length Numeric value for the content length header.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
+PUBLIC void espSetContentLength(HttpStream *stream, MprOff length);
 
 /**
     Set a cookie in the transmission
     @description Define a cookie to send in the transmission Http header
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param name Cookie name
     @param value Cookie value
     @param path URI path to which the cookie applies
@@ -1413,22 +1414,22 @@ PUBLIC void espSetContentLength(HttpConn *conn, MprOff length);
     Some browsers will accept cookies without the initial ".", but the spec: (RFC 2109) requires it.
     @param lifespan Duration for the cookie to persist in msec. Set to a negative number to delete a cookie. Set to
         zero for a "session" cookie that lives only for the user's session.
-    @param isSecure Set to "true" if the cookie only applies for SSL based connections
+    @param isSecure Set to "true" if the cookie only applies for SSL based connections.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
+PUBLIC void espSetCookie(HttpStream *stream, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan,
     bool isSecure);
 
 /**
     Set the transmission (response) content mime type
     @description Set the mime type Http header in the transmission
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param mimeType Mime type string
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType);
+PUBLIC void espSetContentType(HttpStream *stream, cchar *mimeType);
 
 /**
     Set this authenticated session as the current session.
@@ -1437,31 +1438,31 @@ PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType);
     @stability Evolving
     @ingroup EspReq
  */
-PUBLIC void espSetCurrentSession(HttpConn *conn);
+PUBLIC void espSetCurrentSession(HttpStream *stream);
 
 /**
     Clear the current authenticated session
     @stability Evolving
     @ingroup EspReq
  */
-PUBLIC void espClearCurrentSession(HttpConn *conn);
+PUBLIC void espClearCurrentSession(HttpStream *stream);
 
 /**
     Set a feedback message
     @description Feedback messages are a convenient way to aggregate messages state information in the response.
         Feedback messages are removed at the completion of the request.
-    @param conn Http connection object
+    @param stream Http stream object
     @param type type of feedback message. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @param fmt Printf style formatted string to use as the message
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetFeedback(HttpConn *conn, cchar *type, cchar *fmt, ...);
+PUBLIC void espSetFeedback(HttpStream *stream, cchar *type, cchar *fmt, ...);
 
 /**
     Send a feedback message
-    @param conn Http connection object
+    @param stream Http stream object
     @param type type of feedback message. This may be set to any word, but the following feedback types
         are typically supported as per RFC 5424: "debug", "info", "notice", "warn", "error", "critical".
     @param fmt Printf style formatted string to use as the message
@@ -1470,7 +1471,7 @@ PUBLIC void espSetFeedback(HttpConn *conn, cchar *type, cchar *fmt, ...);
     @stability Internal
     @internal
  */
-PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *type, cchar *fmt, va_list args);
+PUBLIC void espSetFeedbackv(HttpStream *stream, cchar *type, cchar *fmt, va_list args);
 
 /**
     Set the current database grid
@@ -1478,45 +1479,45 @@ PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *type, cchar *fmt, va_list arg
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC EdiGrid *espSetGrid(HttpConn *conn, EdiGrid *grid);
+PUBLIC EdiGrid *espSetGrid(HttpStream *stream, EdiGrid *grid);
 
 /**
     Set a transmission header
     @description Set a Http header to send with the request. If the header already exists, its value is overwritten.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...);
+PUBLIC void espSetHeader(HttpStream *stream, cchar *key, cchar *fmt, ...);
 
 /**
     Set a simple key/value transmission header
     @description Set a Http header to send with the request. If the header already exists, its value is overwritten.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param key Http response header key
     @param value String value for the key
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetHeaderString(HttpConn *conn, cchar *key, cchar *value);
+PUBLIC void espSetHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Set an integer request parameter value
     @description Set the value of a named request parameter to an integer value. Form variables are defined via
         www-urlencoded query or post data contained in the request.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value);
+PUBLIC void espSetIntParam(HttpStream *stream, cchar *var, int value);
 
 /**
-    Define a notifier callback for this connection.
+    Define a notifier callback for this stream.
     @description The notifier callback will be invoked for state changes and I/O events as requests are processed.
     The supported events are:
     <ul>
@@ -1528,86 +1529,86 @@ PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value);
     <li>HTTP_EVENT_READABLE &mdash; There is data available to read</li>
     <li>HTTP_EVENT_WRITABLE &mdash; The outgoing pipeline can absorb more data</li>
     <li>HTTP_EVENT_ERROR &mdash; The request has encountered an error</li>
-    <li>HTTP_EVENT_DESTROY &mdash; The connection structure is about to be destoyed</li>
+    <li>HTTP_EVENT_DESTROY &mdash; The stream structure is about to be destoyed</li>
     <li>HTTP_EVENT_OPEN &mdash; The application layer is now open</li>
     <li>HTTP_EVENT_CLOSE &mdash; The application layer is now closed</li>
     </ul>
-    Before the notifier is invoked, espSetConn is called to set the connection object in the thread local storage.
+    Before the notifier is invoked, espSetStream is called to set the stream object in the thread local storage.
     This enables the ESP Abbreviated API.
-    @param conn HttpConn connection object created via #httpCreateConn
+    @param stream HttpStream stream object created via #httpCreateStream
     @param notifier Notifier function.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetNotifier(HttpConn *conn, HttpNotifier notifier);
+PUBLIC void espSetNotifier(HttpStream *stream, HttpNotifier notifier);
 
 /**
     Set the current database record
     @description The current record is used to supply data to various abbreviated controls, such as: text(), input(),
         checkbox and dropdown()
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param rec Record object to define as the current record.
     @return The grid instance. This permits chaining.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC EdiRec *espSetRec(HttpConn *conn, EdiRec *rec);
+PUBLIC EdiRec *espSetRec(HttpStream *stream, EdiRec *rec);
 
 /**
     Set a request parameter value
     @description Set the value of a named request parameter to a string value. Parameters are defined via
         requeset POST data or request URI queries. This API permits these initial request parameters to be set or
         modified.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param var Name of the request parameter to set
     @param value Value to set.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetParam(HttpConn *conn, cchar *var, cchar *value);
+PUBLIC void espSetParam(HttpStream *stream, cchar *var, cchar *value);
 
 /**
     Set a Http response status.
     @description Set the Http response status for the request. This defaults to 200 (OK).
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param status Http status code.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetStatus(HttpConn *conn, int status);
+PUBLIC void espSetStatus(HttpStream *stream, int status);
 
 /**
     Set a session variable.
     @description
-    @param conn Http connection object
+    @param stream Http stream object
     @param name Variable name to set
     @param value Variable value to use
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup HttpSession
     @stability Stable
  */
-PUBLIC int espSetSessionVar(HttpConn *conn, cchar *name, cchar *value);
+PUBLIC int espSetSessionVar(HttpStream *stream, cchar *name, cchar *value);
 
 /**
     Show request details
     @description This e request details back to the client. This is useful as a debugging tool.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espShowRequest(HttpConn *conn);
+PUBLIC void espShowRequest(HttpStream *stream);
 
 /**
     Update the cached content for a request
     @description Save the given content for future requests. This is useful if the caching mode has been set to "manual".
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param uri Request URI to cache for
     @param data Data to cache
     @param lifesecs Time in seconds to cache the data
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs);
+PUBLIC void espUpdateCache(HttpStream *stream, cchar *uri, cchar *data, int lifesecs);
 
 /**
     Write a record to the database
@@ -1615,13 +1616,13 @@ PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs
         fail to pass, the record will not be written and error details can be retrieved via #ediGetRecErrors.
         If the record is a new record and the "id" column is EDI_AUTO_INC, then the "id" will be assigned
         prior to saving the record.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param rec Record to write to the database.
     @return "true" if the record can be successfully written.
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
+PUBLIC bool espUpdateRec(HttpStream *stream, EdiRec *rec);
 
 /**
     Create a URI.
@@ -1630,7 +1631,7 @@ PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
     are supplied using the current request and route tables. The resulting URI is a normalized, server-local
     URI (that begins with "/"). The URI will include any defined route prefix, but will not include scheme, host or
     port components.
-    @param conn HttpConn connection object
+    @param stream HttpStream stream object
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
         If the target has an absolute URI path, that path is used directly after tokenization. If the target begins with
@@ -1668,31 +1669,31 @@ PUBLIC bool espUpdateRec(HttpConn *conn, EdiRec *rec);
             <li>route String Route name to use for the URI template</li>
         </ul>
     @return A normalized, server-local Uri string.
-    @example espUri(conn, "http://example.com/index.html", 0); \n
-    espUri(conn, "/path/to/index.html", 0); \n
-    espUri(conn, "../images/splash.png", 0); \n
-    espUri(conn, "~/client/images/splash.png", 0); \n
-    espUri(conn, "${app}/client/images/splash.png", 0); \n
-    espUri(conn, "@controller/checkout", 0); \n
-    espUri(conn, "@controller/") \n
-    espUri(conn, "@init") \n
-    espUri(conn, "@") \n
-    espUri(conn, "{ action: '@post/create' }", 0); \n
-    espUri(conn, "{ action: 'checkout' }", 0); \n
-    espUri(conn, "{ action: 'logout', controller: 'admin' }", 0); \n
-    espUri(conn, "{ action: 'admin/logout'", 0); \n
-    espUri(conn, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); \n
-    espUri(conn, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); \n
-    espUri(conn, "{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
+    @example espUri(stream, "http://example.com/index.html", 0); \n
+    espUri(stream, "/path/to/index.html", 0); \n
+    espUri(stream, "../images/splash.png", 0); \n
+    espUri(stream, "~/client/images/splash.png", 0); \n
+    espUri(stream, "${app}/client/images/splash.png", 0); \n
+    espUri(stream, "@controller/checkout", 0); \n
+    espUri(stream, "@controller/") \n
+    espUri(stream, "@init") \n
+    espUri(stream, "@") \n
+    espUri(stream, "{ action: '@post/create' }", 0); \n
+    espUri(stream, "{ action: 'checkout' }", 0); \n
+    espUri(stream, "{ action: 'logout', controller: 'admin' }", 0); \n
+    espUri(stream, "{ action: 'admin/logout'", 0); \n
+    espUri(stream, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); \n
+    espUri(stream, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); \n
+    espUri(stream, "{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *espUri(HttpConn *conn, cchar *target);
+PUBLIC cchar *espUri(HttpStream *stream, cchar *target);
 
 /***************************** Abbreviated Controls ***************************/
 /**
     Abbreviated ESP API.
-    @description This is a short-form API that uses the current HttpConn connection object.
+    @description This is a short-form API that uses the current HttpStream stream object.
         These APIs are designed to be terse and highly readable. Consequently, they are not prefixed with "esp".
     @see espAlert
     @defgroup EspAbbrev EspAbbrev
@@ -1846,14 +1847,20 @@ PUBLIC MprList *getColumns(EdiRec *rec);
 PUBLIC cchar *getCookies();
 
 /**
-    Get the connection object
-    @description Before a view or controller is run, the current connection object for the request is saved in thread
-    local data. Most EspAbbrev APIs take an HttpConn object as an argument.
-    @return HttpConn connection instance object.
+    Get the HttpStream object
+    @description Before a view or controller is run, the current stream object for the request is saved in thread
+    local data. Most EspAbbrev APIs take an HttpStream object as an argument.
+    @return HttpStream stream instance object.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC HttpConn *getConn();
+PUBLIC HttpStream *getStream();
+
+/*
+    LEGACY redefinitions
+ */
+#define getConn() getStream()
+#define setConn(stream) setStream(stream)
 
 /**
     Get the receive body content length
@@ -1883,8 +1890,8 @@ PUBLIC cchar *getContentType();
 PUBLIC void *getData();
 
 /**
-    Get the connection dispatcher object
-    @return MprDispatcher connection dispatcher instance object.
+    Get the stream dispatcher object
+    @return MprDispatcher stream dispatcher instance object.
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -1948,7 +1955,7 @@ PUBLIC EdiGrid *getGrid();
 /**
     Get an rx http header.
     @description Get a http response header for a given header key.
-    @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection"
+    @param key Name of the header to retrieve. This should be a lower case header name. For example: "Connection".
     @return Value associated with the header key or null if the key did not exist in the response.
     @ingroup EspAbbrev
     @stability Evolving
@@ -1958,7 +1965,7 @@ PUBLIC cchar *getHeader(cchar *key);
 /**
     Get the HTTP method
     @description This is a convenience API to return the Http method
-    @return The HttpConn.rx.method property
+    @return The HttpStream.rx.method property
     @ingroup EspReq
     @stability Evolving
  */
@@ -1967,7 +1974,7 @@ PUBLIC cchar *getMethod();
 /**
     Get the HTTP URI query string
     @description This is a convenience API to return the query string for the current request.
-    @return The espGetConn()->rx->parsedUri->query property
+    @return The espGetStream()->rx->parsedUri->query property
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -1986,7 +1993,7 @@ PUBLIC cchar *getReferrer();
 
 /**
     Get the ESP request object
-    @return EspReq connection instance object.
+    @return EspReq request instance object.
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -2041,7 +2048,7 @@ PUBLIC cchar *getFieldError(cchar *field);
     Get the request URI path string
     @description This is a convenience API to return the request URI path. This is the portion after the application/route
         prefix.
-    @return The espGetConn()->rx->pathInfo
+    @return The espGetStream()->rx->pathInfo
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -2076,7 +2083,7 @@ PUBLIC MprList *getUploads();
 /**
     Get the request URI string
     @description This is a convenience API to return the request URI.
-    @return The espGetConn()->rx->uri
+    @return The espGetStream()->rx->uri
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -2134,8 +2141,8 @@ PUBLIC bool isEof();
 PUBLIC bool isFinalized();
 
 /**
-    Test if the connection is using SSL and is secure
-    @return "true" if the connection is using SSL.
+    Test if the stream is using SSL and is secure
+    @return "true" if the stream is using SSL.
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -2644,19 +2651,19 @@ PUBLIC cchar *session(cchar *name);
         For example: domain: .example.com
         Some browsers will accept cookies without the initial ".", but the spec: (RFC 2109) requires it.
     @param lifespan Lifespan of the cookie in seconds.
-    @param isSecure Boolean Set to "true" if the cookie only applies for SSL based connections
+    @param isSecure Boolean Set to "true" if the cookie only applies for SSL based connections.
     @ingroup EspAbbrev
     @stability Evolving
 */
 PUBLIC void setCookie(cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, bool isSecure);
 
 /**
-    Set the current request connection.
-    @param conn The HttpConn connection object to define
+    Set the current request stream.
+    @param stream The HttpStream stream object to define
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void setConn(HttpConn *conn);
+PUBLIC void setStream(HttpStream *stream);
 
 /**
     Set the transmission (response) content mime type
@@ -2734,9 +2741,8 @@ PUBLIC void setHeader(cchar *key, cchar *fmt, ...);
 PUBLIC void setIntParam(cchar *name, int value);
 
 /**
-    Set a notifier callback for the connection.
-    This wraps httpSetConnNotifier and calls espSetConn before invoking the notifier for
-    connection events.
+    Set a notifier callback for the stream.
+    This wraps the streamNotifier and calls espSetStream before invoking the notifier for stream events.
     @param notifier Callback function
     @ingroup EspAbbrev
     @stability Evolving
@@ -2946,15 +2952,21 @@ PUBLIC cchar *uri(cchar *target, ...);
  */
 PUBLIC cchar *absuri(cchar *target, ...);
 
+/*
+    LEGACY redefines
+ */
+#define espGetConn espGetStream
+#define espSetConn espSetStream
+
 #if DEPRECATED || 1
 
-#define espGetFlash(conn, type) espGetFeedback(conn, type)
-#define espRenderFlash(conn, types) espRenderFeedback(conn, types)
-#define espSetFlashv(conn, type, fmt, args) espSetFeedbackv(conn, type, fmt, args)
+#define espGetFlash(stream, type) espGetFeedback(stream, type)
+#define espRenderFlash(stream, types) espRenderFeedback(stream, types)
+#define espSetFlashv(stream, type, fmt, args) espSetFeedbackv(stream, type, fmt, args)
 #define getFlash(type) getFeedback(type)
 #define renderFlash(types) renderFeedback(types)
 
-PUBLIC void espSetFlash(HttpConn *conn, cchar *type, cchar *fmt, ...);
+PUBLIC void espSetFlash(HttpStream *stream, cchar *type, cchar *fmt, ...);
 PUBLIC void flash(cchar *type, cchar *fmt, ...);
 #endif /* DEPRECATED */
 

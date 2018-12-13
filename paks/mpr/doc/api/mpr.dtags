@@ -39,6 +39,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>ME_MPR_ALLOC_TRACE</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a436e5e0d6abaa12fa9d768f1b88fb46c</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>ME_MPR_LOGGING</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>af8ebacbfd3978c3b12cef8c9f7b7db11</anchor>

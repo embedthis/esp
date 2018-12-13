@@ -427,9 +427,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         /*
             Windows leaves intermediate object in the current directory
          */
-        cchar   *path;
-//  MOB - csource may be freed here
-        path = mprReplacePathExt(mprGetPathBase(csource), "obj");
+        cchar *path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
         }
@@ -684,29 +682,29 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
                 fmt = ssplit(token, ": \t\r\n", &token);
                 /* Default without format is safe. If users want a format and safe, use %S or renderSafe() */
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRender(conn, \"%s\", %s);\n", fmt, token);
+                mprPutToBuf(body, "  espRender(stream, \"%s\", %s);\n", fmt, token);
             } else {
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRenderSafeString(conn, %s);\n", token);
+                mprPutToBuf(body, "  espRenderSafeString(stream, %s);\n", token);
             }
             break;
 
         case ESP_TOK_VAR:
             /* %!var -- string variable */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderString(conn, %s);\n", token);
+            mprPutToBuf(body, "  espRenderString(stream, %s);\n", token);
             break;
 
         case ESP_TOK_FIELD:
             /* %#field -- field in the current record */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderSafeString(conn, getField(getRec(), \"%s\"));\n", token);
+            mprPutToBuf(body, "  espRenderSafeString(stream, getField(getRec(), \"%s\"));\n", token);
             break;
 
         case ESP_TOK_PARAM:
             /* %$param -- variable in (param || session) - Safe render */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderVar(conn, \"%s\");\n", token);
+            mprPutToBuf(body, "  espRenderVar(stream, \"%s\");\n", token);
             break;
 
         case ESP_TOK_HOME:
@@ -714,7 +712,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             if (parse.next[0] && parse.next[0] != '/' && parse.next[0] != '\'' && parse.next[0] != '"') {
                 mprLog("esp warn", 0, "Using %%~ without following / in %s\n", path);
             }
-            mprPutToBuf(body, "  espRenderString(conn, httpGetRouteTop(conn));");
+            mprPutToBuf(body, "  espRenderString(stream, httpGetRouteTop(stream));");
             break;
 
 #if DEPRECATED || 1
@@ -722,13 +720,13 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
         case ESP_TOK_SERVER:
             /* @| Server URL */
             mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page: %s", path);
-            mprPutToBuf(body, "  espRenderString(conn, sjoin(conn->rx->route->prefix ? conn->rx->route->prefix : \"\", conn->rx->route->serverPrefix, NULL));");
+            mprPutToBuf(body, "  espRenderString(stream, sjoin(stream->rx->route->prefix ? stream->rx->route->prefix : \"\", stream->rx->route->serverPrefix, NULL));");
             break;
 #endif
 
         case ESP_TOK_LITERAL:
             line = joinLine(token, &len);
-            mprPutToBuf(body, "  espRenderBlock(conn, \"%s\", %zd);\n", line, len);
+            mprPutToBuf(body, "  espRenderBlock(stream, \"%s\", %zd);\n", line, len);
             break;
 
         default:
@@ -773,7 +771,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "/*\n   Generated from %s\n */\n"\
             "#include \"esp.h\"\n"\
             "%s\n"\
-            "static void %s(HttpConn *conn) {\n"\
+            "static void %s(HttpStream *stream) {\n"\
             "%s%s%s"\
             "}\n\n"\
             "%s int esp_%s(HttpRoute *route) {\n"\

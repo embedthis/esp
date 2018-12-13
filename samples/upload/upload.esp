@@ -1,7 +1,7 @@
 <html><head><title>upload.esp</title></head>
 <body>
     <pre><% {
-        HttpConn        *conn;
+        HttpStream        *stream;
         HttpUploadFile  *file;
         int             index;
 
@@ -19,8 +19,8 @@
             If you specify "renameUploads: true" in the esp.json, then the filename
             will be renamed to that supplied by the client before this page is run.
          */
-        conn = getConn();
-        for (ITERATE_ITEMS(conn->rx->files, file, index)) {
+        stream = getStream();
+        for (ITERATE_ITEMS(stream->rx->files, file, index)) {
             render("NAME %s\n", file->name);
             render("FILENAME %s\n", file->filename);
             render("CLIENT_NAME %s\n", file->clientFilename);

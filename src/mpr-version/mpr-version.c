@@ -34,10 +34,10 @@ static char *completeVersion(cchar *version, cchar *fill);
 static bool inRange(MprVersion *vp, cchar *expr);
 static cchar *numberToVersion(uint64 num);
 static int partCount(cchar *version);
-static void semVerInit();
+static void semVerInit(void);
 static void *srcompile(cchar *pattern);
 static int srmatch(cchar *s, void *pattern, ...);
-static void versionTerminate();
+static void versionTerminate(void);
 static int64 versionToNumber(cchar *version);
 
 /*********************************** Methods **********************************/

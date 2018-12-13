@@ -8,7 +8,7 @@
     this is bound to the /user/login URI.
  */
 static void loginUser() {
-    if (httpLogin(getConn(), param("username"), param("password"))) {
+    if (httpLogin(getStream(), param("username"), param("password"))) {
         redirect("/index.esp");
     } else {
         feedback("error", "Invalid Login");
@@ -21,7 +21,7 @@ static void loginUser() {
     this is bound to the /user/logout URI.
  */
 static void logoutUser() {
-    httpLogout(getConn());
+    httpLogout(getStream());
     redirect("/public/login.esp");
 }
 

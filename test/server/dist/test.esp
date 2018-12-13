@@ -8,7 +8,7 @@
     <h3>Product Name: <%= mprGetAppName() %></h3>
     <h3>Since Boot: <% 
         { 
-            MprTime elapsed = (mprGetTime() - conn->http->booted) / 1000;
+            MprTime elapsed = (mprGetTime() - stream->http->booted) / 1000;
             render("%02d:%02d:%02d", elapsed / 3600, (elapsed / 60) % 60, elapsed % 60);
         }
     %></h3>

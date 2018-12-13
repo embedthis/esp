@@ -7,11 +7,11 @@
 /*
     Common base run for every request.
  */
-static void commonBase(HttpConn *conn)
+static void commonBase(HttpStream *stream)
 {
     cchar   *uri;
 
-    if (!httpIsAuthenticated(conn)) {
+    if (!httpIsAuthenticated(stream)) {
         /*
             Access to certain pages are permitted without authentication so the user can login and logout.
          */
@@ -27,22 +27,22 @@ static void commonBase(HttpConn *conn)
 /*
     Callback from httpLogin to verify credentials using the password defined in the database.
  */
-static bool verifyUser(HttpConn *conn, cchar *username, cchar *password)
+static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
 {
     HttpAuth    *auth;
     HttpUser    *user;
     HttpRx      *rx;
     EdiRec      *urec;
 
-    rx = conn->rx;
+    rx = stream->rx;
     auth = rx->route->auth;
 
     if ((urec = readRecWhere("user", "username", "==", username)) == 0) {
-        httpTrace(conn->trace, "auth.login.error", "error", "msg: 'Cannot verify user', username: '%s'", username);
+        httpTrace(stream->trace, "auth.login.error", "error", "msg: 'Cannot verify user', username: '%s'", username);
         return 0;
     }
     if (!mprCheckPassword(password, getField(urec, "password"))) {
-        httpTrace(conn->trace, "auth.login.error", "error", "msg: 'Password failed to authenticate', username: '%s'", username);
+        httpTrace(stream->trace, "auth.login.error", "error", "msg: 'Password failed to authenticate', username: '%s'", username);
         mprSleep(500);
         return 0;
     }
@@ -56,9 +56,9 @@ static bool verifyUser(HttpConn *conn, cchar *username, cchar *password)
     /*
         Define this as the authenticated and authorized user for this session
      */
-    httpSetConnUser(conn, user);
+    httpSetStreamUser(stream, user);
 
-    httpTrace(conn->trace, "auth.login.authenticated", "context", "msg: 'User authenticated', username: '%s'", username);
+    httpTrace(stream->trace, "auth.login.authenticated", "context", "msg: 'User authenticated', username: '%s'", username);
     return 1;
 }
 

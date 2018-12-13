@@ -82,7 +82,7 @@ static void redirectPost() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void commonPost(HttpConn *conn) {
+static void commonPost(HttpStream *stream) {
 }
 
 /*

@@ -1644,7 +1644,7 @@ PUBLIC void addHeader(cchar *key, cchar *fmt, ...)
 
     va_start(args, fmt);
     value = sfmtv(fmt, args);
-    espAddHeaderString(getConn(), key, value);
+    espAddHeaderString(getStream(), key, value);
     va_end(args);
 }
 
@@ -1659,10 +1659,10 @@ PUBLIC void addParam(cchar *key, cchar *value)
 
 PUBLIC bool canUser(cchar *abilities, bool warn)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    if (httpCanUser(conn, abilities)) {
+    stream = getStream();
+    if (httpCanUser(stream, abilities)) {
         return 1;
     }
     if (warn) {
@@ -1690,7 +1690,7 @@ PUBLIC bool createRecFromParams(cchar *table)
  */
 PUBLIC cchar *createSession()
 {
-    return espCreateSession(getConn());
+    return espCreateSession(getStream());
 }
 
 
@@ -1700,13 +1700,13 @@ PUBLIC cchar *createSession()
  */
 PUBLIC void destroySession()
 {
-    httpDestroySession(getConn());
+    httpDestroySession(getStream());
 }
 
 
 PUBLIC void dontAutoFinalize()
 {
-    espSetAutoFinalizing(getConn(), 0);
+    espSetAutoFinalizing(getStream(), 0);
 }
 
 
@@ -1715,7 +1715,7 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getStream(), kind, fmt, args);
     va_end(args);
 
     /*
@@ -1727,7 +1727,7 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
 
 PUBLIC void finalize()
 {
-    espFinalize(getConn());
+    espFinalize(getStream());
 }
 
 
@@ -1737,7 +1737,7 @@ PUBLIC void flash(cchar *kind, cchar *fmt, ...)
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getStream(), kind, fmt, args);
     va_end(args);
 }
 #endif
@@ -1745,13 +1745,13 @@ PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 
 PUBLIC void flush()
 {
-    espFlush(getConn());
+    espFlush(getStream());
 }
 
 
 PUBLIC HttpAuth *getAuth()
 {
-    return espGetAuth(getConn());
+    return espGetAuth(getStream());
 }
 
 
@@ -1771,7 +1771,7 @@ PUBLIC cchar *getConfig(cchar *field)
     HttpRoute   *route;
     cchar       *value;
 
-    route = getConn()->rx->route;
+    route = getStream()->rx->route;
     if ((value = mprGetJson(route->config, field)) == 0) {
         return "";
     }
@@ -1779,75 +1779,75 @@ PUBLIC cchar *getConfig(cchar *field)
 }
 
 
-PUBLIC HttpConn *getConn()
+PUBLIC HttpStream *getStream()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = mprGetThreadData(((Esp*) MPR->espService)->local);
-    if (conn == 0) {
-        mprLog("error esp", 0, "Connection is not defined in thread local storage.\n"
-        "If using a callback, make sure you invoke espSetConn with the connection before using the ESP abbreviated API");
+    stream = mprGetThreadData(((Esp*) MPR->espService)->local);
+    if (stream == 0) {
+        mprLog("error esp", 0, "Stream is not defined in thread local storage.\n"
+        "If using a callback, make sure you invoke espSetStream with the connection before using the ESP abbreviated API");
     }
-    return conn;
+    return stream;
 }
 
 
 PUBLIC cchar *getCookies()
 {
-    return espGetCookies(getConn());
+    return espGetCookies(getStream());
 }
 
 
 PUBLIC MprOff getContentLength()
 {
-    return espGetContentLength(getConn());
+    return espGetContentLength(getStream());
 }
 
 
 PUBLIC cchar *getContentType()
 {
-    return getConn()->rx->mimeType;
+    return getStream()->rx->mimeType;
 }
 
 
 PUBLIC void *getData()
 {
-    return espGetData(getConn());
+    return espGetData(getStream());
 }
 
 
 PUBLIC Edi *getDatabase()
 {
-    return espGetDatabase(getConn());
+    return espGetDatabase(getStream());
 }
 
 
 PUBLIC MprDispatcher *getDispatcher()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    if ((conn = getConn()) == 0) {
+    if ((stream = getStream()) == 0) {
         return 0;
     }
-    return conn->dispatcher;
+    return stream->dispatcher;
 }
 
 
 PUBLIC cchar *getDocuments()
 {
-    return getConn()->rx->route->documents;
+    return getStream()->rx->route->documents;
 }
 
 
 PUBLIC EspRoute *getEspRoute()
 {
-    return espGetEspRoute(getConn());
+    return espGetEspRoute(getStream());
 }
 
 
 PUBLIC cchar *getFeedback(cchar *kind)
 {
-    return espGetFeedback(getConn(), kind);
+    return espGetFeedback(getStream(), kind);
 }
 
 
@@ -1865,55 +1865,55 @@ PUBLIC cchar *getFieldError(cchar *field)
 
 PUBLIC EdiGrid *getGrid()
 {
-    return getConn()->grid;
+    return getStream()->grid;
 }
 
 
 PUBLIC cchar *getHeader(cchar *key)
 {
-    return espGetHeader(getConn(), key);
+    return espGetHeader(getStream(), key);
 }
 
 
 PUBLIC cchar *getMethod()
 {
-    return espGetMethod(getConn());
+    return espGetMethod(getStream());
 }
 
 
 PUBLIC cchar *getQuery()
 {
-    return getConn()->rx->parsedUri->query;
+    return getStream()->rx->parsedUri->query;
 }
 
 
 PUBLIC EdiRec *getRec()
 {
-    return getConn()->record;
+    return getStream()->record;
 }
 
 
 PUBLIC cchar *getReferrer()
 {
-    return espGetReferrer(getConn());
+    return espGetReferrer(getStream());
 }
 
 
 PUBLIC EspReq *getReq()
 {
-    return getConn()->data;
+    return getStream()->data;
 }
 
 
 PUBLIC HttpRoute *getRoute()
 {
-    return espGetRoute(getConn());
+    return espGetRoute(getStream());
 }
 
 
 PUBLIC cchar *getSecurityToken()
 {
-    return httpGetSecurityToken(getConn(), 0);
+    return httpGetSecurityToken(getStream(), 0);
 }
 
 
@@ -1922,61 +1922,61 @@ PUBLIC cchar *getSecurityToken()
  */
 PUBLIC cchar *getSessionID()
 {
-    return espGetSessionID(getConn(), 1);
+    return espGetSessionID(getStream(), 1);
 }
 
 
 PUBLIC cchar *getSessionVar(cchar *key)
 {
-    return httpGetSessionVar(getConn(), key, 0);
+    return httpGetSessionVar(getStream(), key, 0);
 }
 
 
 PUBLIC cchar *getPath()
 {
-    return espGetPath(getConn());
+    return espGetPath(getStream());
 }
 
 
 PUBLIC MprList *getUploads()
 {
-    return espGetUploads(getConn());
+    return espGetUploads(getStream());
 }
 
 
 PUBLIC cchar *getUri()
 {
-    return espGetUri(getConn());
+    return espGetUri(getStream());
 }
 
 
 PUBLIC bool hasGrid()
 {
-    return espHasGrid(getConn());
+    return espHasGrid(getStream());
 }
 
 
 PUBLIC bool hasRec()
 {
-    return espHasRec(getConn());
+    return espHasRec(getStream());
 }
 
 
 PUBLIC bool isEof()
 {
-    return httpIsEof(getConn());
+    return httpIsEof(getStream());
 }
 
 
 PUBLIC bool isFinalized()
 {
-    return espIsFinalized(getConn());
+    return espIsFinalized(getStream());
 }
 
 
 PUBLIC bool isSecure()
 {
-    return espIsSecure(getConn());
+    return espIsSecure(getStream());
 }
 
 
@@ -2018,7 +2018,7 @@ PUBLIC EdiRec *makeRec(cchar *contents)
 
 PUBLIC cchar *makeUri(cchar *target)
 {
-    return espUri(getConn(), target);
+    return espUri(getStream(), target);
 }
 
 
@@ -2032,7 +2032,7 @@ PUBLIC bool modeIs(cchar *kind)
 {
     HttpRoute   *route;
 
-    route = getConn()->rx->route;
+    route = getStream()->rx->route;
     return smatch(route->mode, kind);
 }
 
@@ -2045,19 +2045,19 @@ PUBLIC cchar *nonce()
 
 PUBLIC cchar *param(cchar *key)
 {
-    return espGetParam(getConn(), key, 0);
+    return espGetParam(getStream(), key, 0);
 }
 
 
 PUBLIC MprJson *params()
 {
-    return espGetParams(getConn());
+    return espGetParams(getStream());
 }
 
 
 PUBLIC ssize receive(char *buf, ssize len)
 {
-    return httpRead(getConn(), buf, len);
+    return httpRead(getStream(), buf, len);
 }
 
 
@@ -2096,19 +2096,19 @@ PUBLIC EdiGrid *readTable(cchar *tableName)
 
 PUBLIC void redirect(cchar *target)
 {
-    espRedirect(getConn(), 302, target);
+    espRedirect(getStream(), 302, target);
 }
 
 
 PUBLIC void redirectBack()
 {
-    espRedirectBack(getConn());
+    espRedirectBack(getStream());
 }
 
 
 PUBLIC void removeCookie(cchar *name)
 {
-    espRemoveCookie(getConn(), name);
+    espRemoveCookie(getStream(), name);
 }
 
 
@@ -2125,7 +2125,7 @@ PUBLIC bool removeRec(cchar *tableName, cchar *key)
 
 PUBLIC void removeSessionVar(cchar *key)
 {
-    httpRemoveSessionVar(getConn(), key);
+    httpRemoveSessionVar(getStream(), key);
 }
 
 
@@ -2137,7 +2137,7 @@ PUBLIC ssize render(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-    count = espRenderString(getConn(), msg);
+    count = espRenderString(getStream(), msg);
     va_end(args);
     return count;
 }
@@ -2145,13 +2145,13 @@ PUBLIC ssize render(cchar *fmt, ...)
 
 PUBLIC ssize renderCached()
 {
-    return espRenderCached(getConn());;
+    return espRenderCached(getStream());;
 }
 
 
 PUBLIC ssize renderConfig()
 {
-    return espRenderConfig(getConn());;
+    return espRenderConfig(getStream());;
 }
 
 
@@ -2162,20 +2162,20 @@ PUBLIC void renderError(int status, cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmt(fmt, args);
-    espRenderError(getConn(), status, "%s", msg);
+    espRenderError(getStream(), status, "%s", msg);
     va_end(args);
 }
 
 
 PUBLIC ssize renderFile(cchar *path)
 {
-    return espRenderFile(getConn(), path);
+    return espRenderFile(getStream(), path);
 }
 
 
 PUBLIC void renderFeedback(cchar *kind)
 {
-    espRenderFeedback(getConn(), kind);
+    espRenderFeedback(getStream(), kind);
 }
 
 
@@ -2187,7 +2187,7 @@ PUBLIC ssize renderSafe(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-    count = espRenderSafeString(getConn(), msg);
+    count = espRenderSafeString(getStream(), msg);
     va_end(args);
     return count;
 }
@@ -2195,13 +2195,13 @@ PUBLIC ssize renderSafe(cchar *fmt, ...)
 
 PUBLIC ssize renderString(cchar *s)
 {
-    return espRenderString(getConn(), s);
+    return espRenderString(getStream(), s);
 }
 
 
 PUBLIC void renderView(cchar *view)
 {
-    espRenderDocument(getConn(), view);
+    espRenderDocument(getStream(), view);
 }
 
 
@@ -2227,49 +2227,49 @@ PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprT
  */
 PUBLIC void securityToken()
 {
-    httpAddSecurityToken(getConn(), 0);
+    httpAddSecurityToken(getStream(), 0);
 }
 
 
 PUBLIC ssize sendGrid(EdiGrid *grid)
 {
-    return espSendGrid(getConn(), grid, 0);
+    return espSendGrid(getStream(), grid, 0);
 }
 
 
 PUBLIC ssize sendRec(EdiRec *rec)
 {
-    return espSendRec(getConn(), rec, 0);
+    return espSendRec(getStream(), rec, 0);
 }
 
 
 PUBLIC void sendResult(bool status)
 {
-    espSendResult(getConn(), status);
+    espSendResult(getStream(), status);
 }
 
 
-PUBLIC void setConn(HttpConn *conn)
+PUBLIC void setStream(HttpStream *stream)
 {
-    espSetConn(conn);
+    espSetStream(stream);
 }
 
 
 PUBLIC void setContentType(cchar *mimeType)
 {
-    espSetContentType(getConn(), mimeType);
+    espSetContentType(getStream(), mimeType);
 }
 
 
 PUBLIC void setCookie(cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan, bool isSecure)
 {
-    espSetCookie(getConn(), name, value, path, cookieDomain, lifespan, isSecure);
+    espSetCookie(getStream(), name, value, path, cookieDomain, lifespan, isSecure);
 }
 
 
 PUBLIC void setData(void *data)
 {
-    espSetData(getConn(), data);
+    espSetData(getStream(), data);
 }
 
 
@@ -2287,7 +2287,7 @@ PUBLIC EdiRec *setFields(EdiRec *rec, MprJson *params)
 
 PUBLIC EdiGrid *setGrid(EdiGrid *grid)
 {
-    getConn()->grid = grid;
+    getStream()->grid = grid;
     return grid;
 }
 
@@ -2299,44 +2299,44 @@ PUBLIC void setHeader(cchar *key, cchar *fmt, ...)
 
     va_start(args, fmt);
     value = sfmtv(fmt, args);
-    espSetHeaderString(getConn(), key, value);
+    espSetHeaderString(getStream(), key, value);
     va_end(args);
 }
 
 
 PUBLIC void setIntParam(cchar *key, int value)
 {
-    espSetIntParam(getConn(), key, value);
+    espSetIntParam(getStream(), key, value);
 }
 
 
 PUBLIC void setNotifier(HttpNotifier notifier)
 {
-    espSetNotifier(getConn(), notifier);
+    espSetNotifier(getStream(), notifier);
 }
 
 
 PUBLIC void setParam(cchar *key, cchar *value)
 {
-    espSetParam(getConn(), key, value);
+    espSetParam(getStream(), key, value);
 }
 
 
 PUBLIC EdiRec *setRec(EdiRec *rec)
 {
-    return espSetRec(getConn(), rec);
+    return espSetRec(getStream(), rec);
 }
 
 
 PUBLIC void setSessionVar(cchar *key, cchar *value)
 {
-    httpSetSessionVar(getConn(), key, value);
+    httpSetSessionVar(getStream(), key, value);
 }
 
 
 PUBLIC void setStatus(int status)
 {
-    espSetStatus(getConn(), status);
+    espSetStatus(getStream(), status);
 }
 
 
@@ -2348,13 +2348,13 @@ PUBLIC cchar *session(cchar *key)
 
 PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data)
 {
-    mprCreateEvent(getConn()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
+    mprCreateEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
 }
 
 
 PUBLIC void showRequest()
 {
-    espShowRequest(getConn());
+    espShowRequest(getStream());
 }
 
 
@@ -2366,7 +2366,7 @@ PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
 
 PUBLIC void updateCache(cchar *uri, cchar *data, int lifesecs)
 {
-    espUpdateCache(getConn(), uri, data, lifesecs);
+    espUpdateCache(getStream(), uri, data, lifesecs);
 }
 
 
@@ -2419,7 +2419,7 @@ PUBLIC cchar *uri(cchar *target, ...)
     va_start(args, target);
     uri = sfmtv(target, args);
     va_end(args);
-    return httpLink(getConn(), uri);
+    return httpLink(getStream(), uri);
 }
 
 
@@ -2431,7 +2431,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
     va_start(args, target);
     uri = sfmtv(target, args);
     va_end(args);
-    return httpLinkAbs(getConn(), uri);
+    return httpLinkAbs(getStream(), uri);
 }
 
 
@@ -2443,7 +2443,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
  */
 PUBLIC void stylesheets(cchar *patterns)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -2451,8 +2451,8 @@ PUBLIC void stylesheets(cchar *patterns)
     cchar       *filename, *ext, *uri, *path, *kind, *version, *clientDir;
     int         next;
 
-    conn = getConn();
-    rx = conn->rx;
+    stream = getStream();
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     patterns = httpExpandRouteVars(route, patterns);
@@ -2502,12 +2502,12 @@ PUBLIC void stylesheets(cchar *patterns)
         }
         for (ITERATE_ITEMS(files, path, next)) {
             path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-            uri = httpLink(conn, path);
+            uri = httpLink(stream, path);
             kind = mprGetPathExt(path);
             if (smatch(kind, "css")) {
-                espRender(conn, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
+                espRender(stream, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
             } else {
-                espRender(conn, "<link rel='stylesheet/%s' type='text/css' href='%s' />\n", kind, uri);
+                espRender(stream, "<link rel='stylesheet/%s' type='text/css' href='%s' />\n", kind, uri);
             }
         }
     }
@@ -2521,7 +2521,7 @@ PUBLIC void stylesheets(cchar *patterns)
  */
 PUBLIC void scripts(cchar *patterns)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -2530,8 +2530,8 @@ PUBLIC void scripts(cchar *patterns)
     cchar       *uri, *path, *version;
     int         next, ci;
 
-    conn = getConn();
-    rx = conn->rx;
+    stream = getStream();
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     patterns = httpExpandRouteVars(route, patterns);
@@ -2556,7 +2556,7 @@ PUBLIC void scripts(cchar *patterns)
         }
         return;
     }
-    if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 || 
+    if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 ||
             mprGetListLength(files) == 0) {
         files = mprCreateList(0, 0);
         mprAddItem(files, patterns);
@@ -2566,8 +2566,8 @@ PUBLIC void scripts(cchar *patterns)
             path = stemplateJson(path, route->config);
         }
         path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-        uri = httpLink(conn, path);
-        espRender(conn, "<script src='%s' type='text/javascript'></script>\n", uri);
+        uri = httpLink(stream, path);
+        espRender(stream, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }
 
@@ -3056,7 +3056,7 @@ PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version)
 /*
     Add a http header if not already defined
  */
-PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
+PUBLIC void espAddHeader(HttpStream *stream, cchar *key, cchar *fmt, ...)
 {
     va_list     vargs;
 
@@ -3064,7 +3064,7 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     assert(fmt && *fmt);
 
     va_start(vargs, fmt);
-    httpAddHeaderString(conn, key, sfmt(fmt, vargs));
+    httpAddHeaderString(stream, key, sfmt(fmt, vargs));
     va_end(vargs);
 }
 
@@ -3072,16 +3072,16 @@ PUBLIC void espAddHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
 /*
     Add a header string if not already defined
  */
-PUBLIC void espAddHeaderString(HttpConn *conn, cchar *key, cchar *value)
+PUBLIC void espAddHeaderString(HttpStream *stream, cchar *key, cchar *value)
 {
-    httpAddHeaderString(conn, key, value);
+    httpAddHeaderString(stream, key, value);
 }
 
 
-PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC void espAddParam(HttpStream *stream, cchar *var, cchar *value)
 {
-    if (!httpGetParam(conn, var, 0)) {
-        httpSetParam(conn, var, value);
+    if (!httpGetParam(stream, var, 0)) {
+        httpSetParam(stream, var, value);
     }
 }
 
@@ -3090,7 +3090,7 @@ PUBLIC void espAddParam(HttpConn *conn, cchar *var, cchar *value)
    Append a header. If already defined, the value is catenated to the pre-existing value after a ", " separator.
    As per the HTTP/1.1 spec.
  */
-PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
+PUBLIC void espAppendHeader(HttpStream *stream, cchar *key, cchar *fmt, ...)
 {
     va_list     vargs;
 
@@ -3098,7 +3098,7 @@ PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     assert(fmt && *fmt);
 
     va_start(vargs, fmt);
-    httpAppendHeaderString(conn, key, sfmt(fmt, vargs));
+    httpAppendHeaderString(stream, key, sfmt(fmt, vargs));
     va_end(vargs);
 }
 
@@ -3107,19 +3107,19 @@ PUBLIC void espAppendHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
    Append a header string. If already defined, the value is catenated to the pre-existing value after a ", " separator.
    As per the HTTP/1.1 spec.
  */
-PUBLIC void espAppendHeaderString(HttpConn *conn, cchar *key, cchar *value)
+PUBLIC void espAppendHeaderString(HttpStream *stream, cchar *key, cchar *value)
 {
-    httpAppendHeaderString(conn, key, value);
+    httpAppendHeaderString(stream, key, value);
 }
 
 
-PUBLIC void espAutoFinalize(HttpConn *conn)
+PUBLIC void espAutoFinalize(HttpStream *stream)
 {
     EspReq  *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->autoFinalize) {
-        httpFinalize(conn);
+        httpFinalize(stream);
     }
 }
 
@@ -3131,11 +3131,11 @@ PUBLIC int espCache(HttpRoute *route, cchar *uri, int lifesecs, int flags)
 }
 
 
-PUBLIC cchar *espCreateSession(HttpConn *conn)
+PUBLIC cchar *espCreateSession(HttpStream *stream)
 {
     HttpSession *session;
 
-    if ((session = httpCreateSession(getConn())) != 0) {
+    if ((session = httpCreateSession(getStream())) != 0) {
         return session->id;
     }
     return 0;
@@ -3220,27 +3220,27 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
 }
 
 
-PUBLIC void espDestroySession(HttpConn *conn)
+PUBLIC void espDestroySession(HttpStream *stream)
 {
-    httpDestroySession(conn);
+    httpDestroySession(stream);
 }
 
 
-PUBLIC void espFinalize(HttpConn *conn)
+PUBLIC void espFinalize(HttpStream *stream)
 {
-    httpFinalize(conn);
+    httpFinalize(stream);
 }
 
 
-PUBLIC void espFlush(HttpConn *conn)
+PUBLIC void espFlush(HttpStream *stream)
 {
-    httpFlush(conn);
+    httpFlush(stream);
 }
 
 
-PUBLIC HttpAuth *espGetAuth(HttpConn *conn)
+PUBLIC HttpAuth *espGetAuth(HttpStream *stream)
 {
-    return conn->rx->route->auth;
+    return stream->rx->route->auth;
 }
 
 
@@ -3258,48 +3258,48 @@ PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue)
 }
 
 
-PUBLIC MprOff espGetContentLength(HttpConn *conn)
+PUBLIC MprOff espGetContentLength(HttpStream *stream)
 {
-    return httpGetContentLength(conn);
+    return httpGetContentLength(stream);
 }
 
 
-PUBLIC cchar *espGetContentType(HttpConn *conn)
+PUBLIC cchar *espGetContentType(HttpStream *stream)
 {
-    return conn->rx->mimeType;
+    return stream->rx->mimeType;
 }
 
 
-PUBLIC cchar *espGetCookie(HttpConn *conn, cchar *name)
+PUBLIC cchar *espGetCookie(HttpStream *stream, cchar *name)
 {
-    return httpGetCookie(conn, name);
+    return httpGetCookie(stream, name);
 }
 
 
-PUBLIC cchar *espGetCookies(HttpConn *conn)
+PUBLIC cchar *espGetCookies(HttpStream *stream)
 {
-    return httpGetCookies(conn);
+    return httpGetCookies(stream);
 }
 
 
-PUBLIC void *espGetData(HttpConn *conn)
+PUBLIC void *espGetData(HttpStream *stream)
 {
     EspReq  *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     return req->data;
 }
 
 
-PUBLIC Edi *espGetDatabase(HttpConn *conn)
+PUBLIC Edi *espGetDatabase(HttpStream *stream)
 {
     HttpRx      *rx;
     EspReq      *req;
     EspRoute    *eroute;
     Edi         *edi;
 
-    rx = conn->rx;
-    req = conn->reqData;
+    rx = stream->rx;
+    req = stream->reqData;
     edi = req ? req->edi : 0;
     if (edi == 0 && rx && rx->route) {
         if ((eroute = rx->route->eroute) != 0) {
@@ -3307,32 +3307,32 @@ PUBLIC Edi *espGetDatabase(HttpConn *conn)
         }
     }
     if (edi == 0) {
-        httpError(conn, 0, "Cannot get database instance");
+        httpError(stream, 0, "Cannot get database instance");
         return 0;
     }
     return edi;
 }
 
 
-PUBLIC cchar *espGetDocuments(HttpConn *conn)
+PUBLIC cchar *espGetDocuments(HttpStream *stream)
 {
-    return conn->rx->route->documents;
+    return stream->rx->route->documents;
 }
 
 
-PUBLIC EspRoute *espGetEspRoute(HttpConn *conn)
+PUBLIC EspRoute *espGetEspRoute(HttpStream *stream)
 {
-    return conn->rx->route->eroute;
+    return stream->rx->route->eroute;
 }
 
 
-PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *kind)
+PUBLIC cchar *espGetFeedback(HttpStream *stream, cchar *kind)
 {
     EspReq      *req;
     MprKey      *kp;
     cchar       *msg;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (kind == 0 || req == 0 || req->feedback == 0 || mprGetHashLength(req->feedback) == 0) {
         return 0;
     }
@@ -3347,78 +3347,78 @@ PUBLIC cchar *espGetFeedback(HttpConn *conn, cchar *kind)
 }
 
 
-PUBLIC EdiGrid *espGetGrid(HttpConn *conn)
+PUBLIC EdiGrid *espGetGrid(HttpStream *stream)
 {
-    return conn->grid;
+    return stream->grid;
 }
 
 
-PUBLIC cchar *espGetHeader(HttpConn *conn, cchar *key)
+PUBLIC cchar *espGetHeader(HttpStream *stream, cchar *key)
 {
-    return httpGetHeader(conn, key);
+    return httpGetHeader(stream, key);
 }
 
 
-PUBLIC MprHash *espGetHeaderHash(HttpConn *conn)
+PUBLIC MprHash *espGetHeaderHash(HttpStream *stream)
 {
-    return httpGetHeaderHash(conn);
+    return httpGetHeaderHash(stream);
 }
 
 
-PUBLIC char *espGetHeaders(HttpConn *conn)
+PUBLIC char *espGetHeaders(HttpStream *stream)
 {
-    return httpGetHeaders(conn);
+    return httpGetHeaders(stream);
 }
 
 
-PUBLIC int espGetIntParam(HttpConn *conn, cchar *var, int defaultValue)
+PUBLIC int espGetIntParam(HttpStream *stream, cchar *var, int defaultValue)
 {
-    return httpGetIntParam(conn, var, defaultValue);
+    return httpGetIntParam(stream, var, defaultValue);
 }
 
 
-PUBLIC cchar *espGetMethod(HttpConn *conn)
+PUBLIC cchar *espGetMethod(HttpStream *stream)
 {
-    return conn->rx->method;
+    return stream->rx->method;
 }
 
 
-PUBLIC cchar *espGetParam(HttpConn *conn, cchar *var, cchar *defaultValue)
+PUBLIC cchar *espGetParam(HttpStream *stream, cchar *var, cchar *defaultValue)
 {
-    return httpGetParam(conn, var, defaultValue);
+    return httpGetParam(stream, var, defaultValue);
 }
 
 
-PUBLIC MprJson *espGetParams(HttpConn *conn)
+PUBLIC MprJson *espGetParams(HttpStream *stream)
 {
-    return httpGetParams(conn);
+    return httpGetParams(stream);
 }
 
 
-PUBLIC cchar *espGetPath(HttpConn *conn)
+PUBLIC cchar *espGetPath(HttpStream *stream)
 {
-    return conn->rx->pathInfo;
+    return stream->rx->pathInfo;
 }
 
 
-PUBLIC cchar *espGetQueryString(HttpConn *conn)
+PUBLIC cchar *espGetQueryString(HttpStream *stream)
 {
-    return httpGetQueryString(conn);
+    return httpGetQueryString(stream);
 }
 
 
-PUBLIC cchar *espGetReferrer(HttpConn *conn)
+PUBLIC cchar *espGetReferrer(HttpStream *stream)
 {
-    if (conn->rx->referrer) {
-        return conn->rx->referrer;
+    if (stream->rx->referrer) {
+        return stream->rx->referrer;
     }
-    return httpLink(conn, "~");
+    return httpLink(stream, "~");
 }
 
 
-PUBLIC HttpRoute *espGetRoute(HttpConn *conn)
+PUBLIC HttpRoute *espGetRoute(HttpStream *stream)
 {
-    return conn->rx->route;
+    return stream->rx->route;
 }
 
 
@@ -3434,44 +3434,44 @@ PUBLIC Edi *espGetRouteDatabase(HttpRoute *route)
 }
 
 
-PUBLIC cchar *espGetRouteVar(HttpConn *conn, cchar *var)
+PUBLIC cchar *espGetRouteVar(HttpStream *stream, cchar *var)
 {
-    return httpGetRouteVar(conn->rx->route, var);
+    return httpGetRouteVar(stream->rx->route, var);
 }
 
 
-PUBLIC cchar *espGetSessionID(HttpConn *conn, int create)
+PUBLIC cchar *espGetSessionID(HttpStream *stream, int create)
 {
     HttpSession *session;
 
-    if ((session = httpGetSession(getConn(), create)) != 0) {
+    if ((session = httpGetSession(getStream(), create)) != 0) {
         return session->id;
     }
     return 0;
 }
 
 
-PUBLIC int espGetStatus(HttpConn *conn)
+PUBLIC int espGetStatus(HttpStream *stream)
 {
-    return httpGetStatus(conn);
+    return httpGetStatus(stream);
 }
 
 
-PUBLIC cchar *espGetStatusMessage(HttpConn *conn)
+PUBLIC cchar *espGetStatusMessage(HttpStream *stream)
 {
-    return httpGetStatusMessage(conn);
+    return httpGetStatusMessage(stream);
 }
 
 
-PUBLIC MprList *espGetUploads(HttpConn *conn)
+PUBLIC MprList *espGetUploads(HttpStream *stream)
 {
-    return conn->rx->files;
+    return stream->rx->files;
 }
 
 
-PUBLIC cchar *espGetUri(HttpConn *conn)
+PUBLIC cchar *espGetUri(HttpStream *stream)
 {
-    return conn->rx->uri;
+    return stream->rx->uri;
 }
 
 
@@ -3484,69 +3484,69 @@ PUBLIC bool espHasPak(HttpRoute *route, cchar *name)
 #endif
 
 
-PUBLIC bool espHasGrid(HttpConn *conn)
+PUBLIC bool espHasGrid(HttpStream *stream)
 {
-    return conn->grid != 0;
+    return stream->grid != 0;
 }
 
 
-PUBLIC bool espHasRec(HttpConn *conn)
+PUBLIC bool espHasRec(HttpStream *stream)
 {
     EdiRec  *rec;
 
-    rec = conn->record;
+    rec = stream->record;
     return (rec && rec->id) ? 1 : 0;
 }
 
 
-PUBLIC bool espIsEof(HttpConn *conn)
+PUBLIC bool espIsEof(HttpStream *stream)
 {
-    return httpIsEof(conn);
+    return httpIsEof(stream);
 }
 
 
-PUBLIC bool espIsFinalized(HttpConn *conn)
+PUBLIC bool espIsFinalized(HttpStream *stream)
 {
-    return httpIsFinalized(conn);
+    return httpIsFinalized(stream);
 }
 
 
-PUBLIC bool espIsSecure(HttpConn *conn)
+PUBLIC bool espIsSecure(HttpStream *stream)
 {
-    return conn->secure;
+    return stream->secure;
 }
 
 
-PUBLIC bool espMatchParam(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC bool espMatchParam(HttpStream *stream, cchar *var, cchar *value)
 {
-    return httpMatchParam(conn, var, value);
+    return httpMatchParam(stream, var, value);
 }
 
 
 /*
     Read rx data in non-blocking mode. Use standard connection timeouts.
  */
-PUBLIC ssize espReceive(HttpConn *conn, char *buf, ssize len)
+PUBLIC ssize espReceive(HttpStream *stream, char *buf, ssize len)
 {
-    return httpRead(conn, buf, len);
+    return httpRead(stream, buf, len);
 }
 
 
-PUBLIC void espRedirect(HttpConn *conn, int status, cchar *target)
+PUBLIC void espRedirect(HttpStream *stream, int status, cchar *target)
 {
-    httpRedirect(conn, status, target);
+    httpRedirect(stream, status, target);
 }
 
 
-PUBLIC void espRedirectBack(HttpConn *conn)
+PUBLIC void espRedirectBack(HttpStream *stream)
 {
-    if (conn->rx->referrer) {
-        espRedirect(conn, HTTP_CODE_MOVED_TEMPORARILY, conn->rx->referrer);
+    if (stream->rx->referrer) {
+        espRedirect(stream, HTTP_CODE_MOVED_TEMPORARILY, stream->rx->referrer);
     }
 }
 
 
-PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...)
+PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 {
     va_list     vargs;
     char        *buf;
@@ -3554,19 +3554,19 @@ PUBLIC ssize espRender(HttpConn *conn, cchar *fmt, ...)
     va_start(vargs, fmt);
     buf = sfmtv(fmt, vargs);
     va_end(vargs);
-    return espRenderString(conn, buf);
+    return espRenderString(stream, buf);
 }
 
 
-PUBLIC ssize espRenderBlock(HttpConn *conn, cchar *buf, ssize size)
+PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
-    return httpWriteBlock(conn->writeq, buf, size, HTTP_BUFFER);
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
 }
 
 
-PUBLIC ssize espRenderCached(HttpConn *conn)
+PUBLIC ssize espRenderCached(HttpStream *stream)
 {
-    return httpWriteCached(conn);
+    return httpWriteCached(stream);
 }
 
 
@@ -3598,18 +3598,18 @@ static void copyMappings(HttpRoute *route, MprJson *dest, MprJson *obj)
 }
 
 
-static cchar *getClientConfig(HttpConn *conn)
+static cchar *getClientConfig(HttpStream *stream)
 {
     HttpRoute   *route;
     MprJson     *mappings, *obj;
 
-    conn = getConn();
-    for (route = conn->rx->route; route; route = route->parent) {
+    stream = getStream();
+    for (route = stream->rx->route; route; route = route->parent) {
         if (route->clientConfig) {
             return route->clientConfig;
         }
     }
-    route = conn->rx->route;
+    route = stream->rx->route;
     if ((obj = mprGetJsonObj(route->config, "esp.mappings")) != 0) {
         mappings = mprCreateJson(MPR_JSON_OBJ);
         copyMappings(route, mappings, obj);
@@ -3620,18 +3620,18 @@ static cchar *getClientConfig(HttpConn *conn)
 }
 
 
-PUBLIC ssize espRenderConfig(HttpConn *conn)
+PUBLIC ssize espRenderConfig(HttpStream *stream)
 {
     cchar       *config;
 
-    if ((config = getClientConfig(conn)) != 0) {
+    if ((config = getClientConfig(stream)) != 0) {
         return renderString(config);
     }
     return 0;
 }
 
 
-PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
+PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
 {
     va_list     args;
     HttpRx      *rx;
@@ -3640,14 +3640,14 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
 
     va_start(args, fmt);
 
-    rx = conn->rx;
+    rx = stream->rx;
     if (rx->route->json) {
         mprLog("warn esp", 0, "Calling espRenderFeedback in JSON app");
         return 0 ;
     }
     written = 0;
 
-    if (!httpIsFinalized(conn)) {
+    if (!httpIsFinalized(stream)) {
         if (status == 0) {
             status = HTTP_CODE_INTERNAL_SERVER_ERROR;
         }
@@ -3661,10 +3661,10 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
                 "    <p>To prevent errors being displayed in the browser, " \
                 "       set <b>http.showErrors off</b> in the JSON configuration file.</p>\r\n" \
                 "</body>\r\n</html>\r\n", title, title, msg);
-            httpSetContentType(conn, "text/html");
-            written += espRenderString(conn, text);
-            espFinalize(conn);
-            httpTrace(conn->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpSetContentType(stream, "text/html");
+            written += espRenderString(stream, text);
+            espFinalize(stream);
+            httpTrace(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -3672,7 +3672,7 @@ PUBLIC ssize espRenderError(HttpConn *conn, int status, cchar *fmt, ...)
 }
 
 
-PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path)
+PUBLIC ssize espRenderFile(HttpStream *stream, cchar *path)
 {
     MprFile     *from;
     ssize       count, written, nbytes;
@@ -3683,7 +3683,7 @@ PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path)
     }
     written = 0;
     while ((count = mprReadFile(from, buf, sizeof(buf))) > 0) {
-        if ((nbytes = espRenderBlock(conn, buf, count)) < 0) {
+        if ((nbytes = espRenderBlock(stream, buf, count)) < 0) {
             return nbytes;
         }
         written += nbytes;
@@ -3693,14 +3693,14 @@ PUBLIC ssize espRenderFile(HttpConn *conn, cchar *path)
 }
 
 
-PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *kinds)
+PUBLIC ssize espRenderFeedback(HttpStream *stream, cchar *kinds)
 {
     EspReq      *req;
     MprKey      *kp;
     cchar       *msg;
     ssize       written;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->route->json) {
         mprLog("warn esp", 0, "Calling espRenderFeedback in JSON app");
         return 0;
@@ -3713,14 +3713,14 @@ PUBLIC ssize espRenderFeedback(HttpConn *conn, cchar *kinds)
         msg = kp->data;
         //  DEPRECATE "all"
         if (strstr(kinds, kp->key) || strstr(kinds, "all") || strstr(kinds, "*")) {
-            written += espRender(conn, "<span class='feedback-%s animate'>%s</span>", kp->key, msg);
+            written += espRender(stream, "<span class='feedback-%s animate'>%s</span>", kp->key, msg);
         }
     }
     return written;
 }
 
 
-PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...)
+PUBLIC ssize espRenderSafe(HttpStream *stream, cchar *fmt, ...)
 {
     va_list     args;
     cchar       *s;
@@ -3728,88 +3728,88 @@ PUBLIC ssize espRenderSafe(HttpConn *conn, cchar *fmt, ...)
     va_start(args, fmt);
     s = mprEscapeHtml(sfmtv(fmt, args));
     va_end(args);
-    return espRenderBlock(conn, s, slen(s));
+    return espRenderBlock(stream, s, slen(s));
 }
 
 
-PUBLIC ssize espRenderSafeString(HttpConn *conn, cchar *s)
+PUBLIC ssize espRenderSafeString(HttpStream *stream, cchar *s)
 {
     s = mprEscapeHtml(s);
-    return espRenderBlock(conn, s, slen(s));
+    return espRenderBlock(stream, s, slen(s));
 }
 
 
-PUBLIC ssize espRenderString(HttpConn *conn, cchar *s)
+PUBLIC ssize espRenderString(HttpStream *stream, cchar *s)
 {
-    return espRenderBlock(conn, s, slen(s));
+    return espRenderBlock(stream, s, slen(s));
 }
 
 
 /*
     Render a request variable. If a param by the given name is not found, consult the session.
  */
-PUBLIC ssize espRenderVar(HttpConn *conn, cchar *name)
+PUBLIC ssize espRenderVar(HttpStream *stream, cchar *name)
 {
     cchar   *value;
 
-    if ((value = espGetParam(conn, name, 0)) == 0) {
-        value = httpGetSessionVar(conn, name, "");
+    if ((value = espGetParam(stream, name, 0)) == 0) {
+        value = httpGetSessionVar(stream, name, "");
     }
-    return espRenderSafeString(conn, value);
+    return espRenderSafeString(stream, value);
 }
 
 
-PUBLIC int espRemoveHeader(HttpConn *conn, cchar *key)
+PUBLIC int espRemoveHeader(HttpStream *stream, cchar *key)
 {
     assert(key && *key);
-    if (conn->tx == 0) {
+    if (stream->tx == 0) {
         return MPR_ERR_CANT_ACCESS;
     }
-    return mprRemoveKey(conn->tx->headers, key);
+    return mprRemoveKey(stream->tx->headers, key);
 }
 
 
-PUBLIC void espRemoveSessionVar(HttpConn *conn, cchar *var)
+PUBLIC void espRemoveSessionVar(HttpStream *stream, cchar *var)
 {
-    httpRemoveSessionVar(conn, var);
+    httpRemoveSessionVar(stream, var);
 }
 
 
-PUBLIC void espRemoveCookie(HttpConn *conn, cchar *name)
+PUBLIC void espRemoveCookie(HttpStream *stream, cchar *name)
 {
     HttpRoute   *route;
     cchar       *url;
 
-    route = conn->rx->route;
+    route = stream->rx->route;
     url = (route->prefix && *route->prefix) ? route->prefix : "/";
-    httpSetCookie(conn, name, "", url, NULL, 0, 0);
+    httpSetCookie(stream, name, "", url, NULL, 0, 0);
 }
 
 
-PUBLIC void espSetConn(HttpConn *conn)
+PUBLIC void espSetStream(HttpStream *stream)
 {
-    mprSetThreadData(((Esp*) MPR->espService)->local, conn);
+    mprSetThreadData(((Esp*) MPR->espService)->local, stream);
 }
 
 
-static void espNotifier(HttpConn *conn, int event, int arg)
+static void espNotifier(HttpStream *stream, int event, int arg)
 {
     EspReq      *req;
 
-    if ((req = conn->reqData) != 0) {
-        espSetConn(conn);
-        (req->notifier)(conn, event, arg);
+    if ((req = stream->reqData) != 0) {
+        espSetStream(stream);
+        (req->notifier)(stream, event, arg);
     }
 }
 
 
-PUBLIC void espSetNotifier(HttpConn *conn, HttpNotifier notifier)
+PUBLIC void espSetNotifier(HttpStream *stream, HttpNotifier notifier)
 {
     EspReq      *req;
 
-    if ((req = conn->reqData) != 0) {
+    if ((req = stream->reqData) != 0) {
         req->notifier = notifier;
-        httpSetConnNotifier(conn, espNotifier);
+        httpSetStreamNotifier(stream, espNotifier);
     }
 }
 
@@ -3828,53 +3828,53 @@ PUBLIC int espSaveConfig(HttpRoute *route)
 #endif
 
 
-PUBLIC ssize espSendGrid(HttpConn *conn, EdiGrid *grid, int flags)
+PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
 {
-    if (conn->rx->route->json) {
-        httpSetContentType(conn, "application/json");
+    if (stream->rx->route->json) {
+        httpSetContentType(stream, "application/json");
         if (grid) {
-            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n", ediGridAsJson(grid, flags),
+            return espRender(stream, "{\n  \"data\": %s, \"schema\": %s}\n", ediGridAsJson(grid, flags),
                 ediGetGridSchemaAsJson(grid));
         }
-        return espRender(conn, "{}");
+        return espRender(stream, "{}");
     }
     return 0;
 }
 
 
-PUBLIC ssize espSendRec(HttpConn *conn, EdiRec *rec, int flags)
+PUBLIC ssize espSendRec(HttpStream *stream, EdiRec *rec, int flags)
 {
-    if (conn->rx->route->json) {
-        httpSetContentType(conn, "application/json");
+    if (stream->rx->route->json) {
+        httpSetContentType(stream, "application/json");
         if (rec) {
-            return espRender(conn, "{\n  \"data\": %s, \"schema\": %s}\n",
+            return espRender(stream, "{\n  \"data\": %s, \"schema\": %s}\n",
                 ediRecAsJson(rec, flags), ediGetRecSchemaAsJson(rec));
         }
-        return espRender(conn, "{}");
+        return espRender(stream, "{}");
     }
     return 0;
 }
 
 
-PUBLIC ssize espSendResult(HttpConn *conn, bool success)
+PUBLIC ssize espSendResult(HttpStream *stream, bool success)
 {
     EspReq      *req;
     EdiRec      *rec;
     ssize       written;
 
-    req = conn->reqData;
+    req = stream->reqData;
     written = 0;
     if (req->route->json) {
         rec = getRec();
         if (rec && rec->errors) {
-            written = espRender(conn, "{\"error\": %d, \"feedback\": %s, \"fieldErrors\": %s}", !success,
+            written = espRender(stream, "{\"error\": %d, \"feedback\": %s, \"fieldErrors\": %s}", !success,
                 req->feedback ? mprSerialize(req->feedback, MPR_JSON_QUOTES) : "{}",
                 mprSerialize(rec->errors, MPR_JSON_QUOTES));
         } else {
-            written = espRender(conn, "{\"error\": %d, \"feedback\": %s}", !success,
+            written = espRender(stream, "{\"error\": %d, \"feedback\": %s}", !success,
                 req->feedback ? mprSerialize(req->feedback, MPR_JSON_QUOTES) : "{}");
         }
-        espFinalize(conn);
+        espFinalize(stream);
     } else {
         /* Noop */
     }
@@ -3882,12 +3882,12 @@ PUBLIC ssize espSendResult(HttpConn *conn, bool success)
 }
 
 
-PUBLIC bool espSetAutoFinalizing(HttpConn *conn, bool on)
+PUBLIC bool espSetAutoFinalizing(HttpStream *stream, bool on)
 {
     EspReq  *req;
     bool    old;
 
-    req = conn->reqData;
+    req = stream->reqData;
     old = req->autoFinalize;
     req->autoFinalize = on;
     return old;
@@ -3900,57 +3900,57 @@ PUBLIC int espSetConfig(HttpRoute *route, cchar *key, cchar *value)
 }
 
 
-PUBLIC void espSetContentLength(HttpConn *conn, MprOff length)
+PUBLIC void espSetContentLength(HttpStream *stream, MprOff length)
 {
-    httpSetContentLength(conn, length);
+    httpSetContentLength(stream, length);
 }
 
 
-PUBLIC void espSetCookie(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan,
+PUBLIC void espSetCookie(HttpStream *stream, cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan,
         bool isSecure)
 {
-    httpSetCookie(conn, name, value, path, cookieDomain, lifespan, isSecure);
+    httpSetCookie(stream, name, value, path, cookieDomain, lifespan, isSecure);
 }
 
 
-PUBLIC void espSetContentType(HttpConn *conn, cchar *mimeType)
+PUBLIC void espSetContentType(HttpStream *stream, cchar *mimeType)
 {
-    httpSetContentType(conn, mimeType);
+    httpSetContentType(stream, mimeType);
 }
 
 
-PUBLIC void espSetData(HttpConn *conn, void *data)
+PUBLIC void espSetData(HttpStream *stream, void *data)
 {
     EspReq  *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->data = data;
 }
 
 
-PUBLIC void espSetFeedback(HttpConn *conn, cchar *kind, cchar *fmt, ...)
+PUBLIC void espSetFeedback(HttpStream *stream, cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(conn, kind, fmt, args);
+    espSetFeedbackv(stream, kind, fmt, args);
     va_end(args);
 }
 
 
-PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *kind, cchar *fmt, va_list args)
+PUBLIC void espSetFeedbackv(HttpStream *stream, cchar *kind, cchar *fmt, va_list args)
 {
     EspReq      *req;
     cchar       *msg;
 
-    if ((req = conn->reqData) == 0) {
+    if ((req = stream->reqData) == 0) {
         return;
     }
     if (!req->route->json) {
         /*
             Create a session as early as possible so a Set-Cookie header can be omitted.
          */
-        httpGetSession(conn, 1);
+        httpGetSession(stream, 1);
     }
     if (req->feedback == 0) {
         req->feedback = mprCreateHash(0, MPR_HASH_STABLE);
@@ -3974,27 +3974,27 @@ PUBLIC void espSetFeedbackv(HttpConn *conn, cchar *kind, cchar *fmt, va_list arg
 
 
 #if DEPRECATED || 1
-PUBLIC void espSetFlash(HttpConn *conn, cchar *kind, cchar *fmt, ...)
+PUBLIC void espSetFlash(HttpStream *stream, cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(conn, kind, fmt, args);
+    espSetFeedbackv(stream, kind, fmt, args);
     va_end(args);
 }
 #endif
 
 
-PUBLIC EdiGrid *espSetGrid(HttpConn *conn, EdiGrid *grid)
+PUBLIC EdiGrid *espSetGrid(HttpStream *stream, EdiGrid *grid)
 {
-    return conn->grid = grid;
+    return stream->grid = grid;
 }
 
 
 /*
     Set a http header. Overwrite if present.
  */
-PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
+PUBLIC void espSetHeader(HttpStream *stream, cchar *key, cchar *fmt, ...)
 {
     va_list     vargs;
 
@@ -4002,48 +4002,48 @@ PUBLIC void espSetHeader(HttpConn *conn, cchar *key, cchar *fmt, ...)
     assert(fmt && *fmt);
 
     va_start(vargs, fmt);
-    httpSetHeaderString(conn, key, sfmtv(fmt, vargs));
+    httpSetHeaderString(stream, key, sfmtv(fmt, vargs));
     va_end(vargs);
 }
 
 
-PUBLIC void espSetHeaderString(HttpConn *conn, cchar *key, cchar *value)
+PUBLIC void espSetHeaderString(HttpStream *stream, cchar *key, cchar *value)
 {
-    httpSetHeaderString(conn, key, value);
+    httpSetHeaderString(stream, key, value);
 }
 
 
-PUBLIC void espSetIntParam(HttpConn *conn, cchar *var, int value)
+PUBLIC void espSetIntParam(HttpStream *stream, cchar *var, int value)
 {
-    httpSetIntParam(conn, var, value);
+    httpSetIntParam(stream, var, value);
 }
 
 
-PUBLIC void espSetParam(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC void espSetParam(HttpStream *stream, cchar *var, cchar *value)
 {
-    httpSetParam(conn, var, value);
+    httpSetParam(stream, var, value);
 }
 
 
-PUBLIC EdiRec *espSetRec(HttpConn *conn, EdiRec *rec)
+PUBLIC EdiRec *espSetRec(HttpStream *stream, EdiRec *rec)
 {
-    return conn->record = rec;
+    return stream->record = rec;
 }
 
 
-PUBLIC int espSetSessionVar(HttpConn *conn, cchar *var, cchar *value)
+PUBLIC int espSetSessionVar(HttpStream *stream, cchar *var, cchar *value)
 {
-    return httpSetSessionVar(conn, var, value);
+    return httpSetSessionVar(stream, var, value);
 }
 
 
-PUBLIC void espSetStatus(HttpConn *conn, int status)
+PUBLIC void espSetStatus(HttpStream *stream, int status)
 {
-    httpSetStatus(conn, status);
+    httpSetStatus(stream, status);
 }
 
 
-PUBLIC void espShowRequest(HttpConn *conn)
+PUBLIC void espShowRequest(HttpStream *stream)
 {
     MprHash     *env;
     MprJson     *params, *param;
@@ -4052,61 +4052,61 @@ PUBLIC void espShowRequest(HttpConn *conn)
     HttpRx      *rx;
     int         i;
 
-    rx = conn->rx;
-    httpAddHeaderString(conn, "Cache-Control", "no-cache");
-    httpCreateCGIParams(conn);
-    espRender(conn, "\r\n");
+    rx = stream->rx;
+    httpAddHeaderString(stream, "Cache-Control", "no-cache");
+    httpCreateCGIParams(stream);
+    espRender(stream, "\r\n");
 
     /*
         Query
      */
     for (ITERATE_JSON(rx->params, jkey, i)) {
-        espRender(conn, "PARAMS %s=%s\r\n", jkey->name, jkey->value ? jkey->value : "null");
+        espRender(stream, "PARAMS %s=%s\r\n", jkey->name, jkey->value ? jkey->value : "null");
     }
-    espRender(conn, "\r\n");
+    espRender(stream, "\r\n");
 
     /*
         Http Headers
      */
-    env = espGetHeaderHash(conn);
+    env = espGetHeaderHash(stream);
     for (ITERATE_KEYS(env, kp)) {
-        espRender(conn, "HEADER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
+        espRender(stream, "HEADER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
     }
-    espRender(conn, "\r\n");
+    espRender(stream, "\r\n");
 
     /*
         Server vars
      */
-    for (ITERATE_KEYS(conn->rx->svars, kp)) {
-        espRender(conn, "SERVER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
+    for (ITERATE_KEYS(stream->rx->svars, kp)) {
+        espRender(stream, "SERVER %s=%s\r\n", kp->key, kp->data ? kp->data: "null");
     }
-    espRender(conn, "\r\n");
+    espRender(stream, "\r\n");
 
     /*
         Form vars
      */
-    if ((params = espGetParams(conn)) != 0) {
+    if ((params = espGetParams(stream)) != 0) {
         for (ITERATE_JSON(params, param, i)) {
-            espRender(conn, "FORM %s=%s\r\n", param->name, param->value);
+            espRender(stream, "FORM %s=%s\r\n", param->name, param->value);
         }
-        espRender(conn, "\r\n");
+        espRender(stream, "\r\n");
     }
 
 #if KEEP
     /*
         Body
      */
-    q = conn->readq;
+    q = stream->readq;
     if (q->first && rx->bytesRead > 0 && scmp(rx->mimeType, "application/x-www-form-urlencoded") == 0) {
         buf = q->first->content;
         mprAddNullToBuf(buf);
         if ((numKeys = getParams(&keys, mprGetBufStart(buf), (int) mprGetBufLength(buf))) > 0) {
             for (i = 0; i < (numKeys * 2); i += 2) {
                 value = keys[i+1];
-                espRender(conn, "BODY %s=%s\r\n", keys[i], value ? value: "null");
+                espRender(stream, "BODY %s=%s\r\n", keys[i], value ? value: "null");
             }
         }
-        espRender(conn, "\r\n");
+        espRender(stream, "\r\n");
     }
 #endif
 }
@@ -4123,19 +4123,19 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired)
 }
 
 
-PUBLIC void espUpdateCache(HttpConn *conn, cchar *uri, cchar *data, int lifesecs)
+PUBLIC void espUpdateCache(HttpStream *stream, cchar *uri, cchar *data, int lifesecs)
 {
-    httpUpdateCache(conn, uri, data, lifesecs * TPS);
+    httpUpdateCache(stream, uri, data, lifesecs * TPS);
 }
 
 
-PUBLIC cchar *espUri(HttpConn *conn, cchar *target)
+PUBLIC cchar *espUri(HttpStream *stream, cchar *target)
 {
-    return httpLink(conn, target);
+    return httpLink(stream, target);
 }
 
 
-PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
+PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, MprTime date, cchar *mime,
     cchar *message, MprList *files)
 {
     MprList         *lines;
@@ -4194,22 +4194,22 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
     mprAddItem(lines, sfmt("%s--", boundary));
 
     body = mprListToString(lines, "\n");
-    httpTrace(conn->trace, "esp.email", "context", "%s", body);
+    httpTrace(stream->trace, "esp.email", "context", "%s", body);
 
-    cmd = mprCreateCmd(conn->dispatcher);
+    cmd = mprCreateCmd(stream->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, -1, 0) < 0) {
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
-        httpTrace(conn->trace, "esp.email.error", "error",
+        httpTrace(stream->trace, "esp.email.error", "error",
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
-        httpTrace(conn->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        httpTrace(stream->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
@@ -4218,13 +4218,13 @@ PUBLIC int espEmail(HttpConn *conn, cchar *to, cchar *from, cchar *subject, MprT
 }
 
 
-PUBLIC void espClearCurrentSession(HttpConn *conn)
+PUBLIC void espClearCurrentSession(HttpStream *stream)
 {
     EspRoute    *eroute;
 
-    eroute = conn->rx->route->eroute;
+    eroute = stream->rx->route->eroute;
     if (eroute->currentSession) {
-        httpTrace(conn->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
+        httpTrace(stream->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
     }
     eroute->currentSession = 0;
 }
@@ -4233,26 +4233,26 @@ PUBLIC void espClearCurrentSession(HttpConn *conn)
 /*
     Remember this connections session as the current session. Use for single login tracking.
  */
-PUBLIC void espSetCurrentSession(HttpConn *conn)
+PUBLIC void espSetCurrentSession(HttpStream *stream)
 {
     EspRoute    *eroute;
 
-    eroute = conn->rx->route->eroute;
-    eroute->currentSession = httpGetSessionID(conn);
-    httpTrace(conn->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
+    eroute = stream->rx->route->eroute;
+    eroute->currentSession = httpGetSessionID(stream);
+    httpTrace(stream->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
 }
 
 
 /*
     Test if this connection is the current session. Use for single login tracking.
  */
-PUBLIC bool espIsCurrentSession(HttpConn *conn)
+PUBLIC bool espIsCurrentSession(HttpStream *stream)
 {
     EspRoute    *eroute;
 
-    eroute = conn->rx->route->eroute;
+    eroute = stream->rx->route->eroute;
     if (eroute->currentSession) {
-        if (smatch(httpGetSessionID(conn), eroute->currentSession)) {
+        if (smatch(httpGetSessionID(stream), eroute->currentSession)) {
             return 1;
         }
         if (httpLookupSessionID(eroute->currentSession)) {
@@ -4288,22 +4288,22 @@ PUBLIC bool espIsCurrentSession(HttpConn *conn)
 
 /************************************* Local **********************************/
 
-static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options);
-static cchar *map(HttpConn *conn, MprHash *options);
+static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options);
+static cchar *map(HttpStream *stream, MprHash *options);
 
 /************************************* Code ***********************************/
 
 PUBLIC void input(cchar *field, cchar *optionString)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     MprHash     *choices, *options;
     MprKey      *kp;
     EdiRec      *rec;
     cchar       *rows, *cols, *etype, *value, *checked, *style, *error, *errorMsg;
     int         type, flags;
 
-    conn = getConn();
-    rec = conn->record;
+    stream = getStream();
+    rec = stream->record;
     if (ediGetColumnSchema(rec->edi, rec->tableName, field, &type, &flags, NULL) < 0) {
         type = -1;
     }
@@ -4315,17 +4315,17 @@ PUBLIC void input(cchar *field, cchar *optionString)
     switch (type) {
     case EDI_TYPE_BOOL:
         choices = httpGetOptions("{off: 0, on: 1}");
-        value = getValue(conn, field, options);
+        value = getValue(stream, field, options);
         for (kp = 0; (kp = mprGetNextKey(choices, kp)) != 0; ) {
             checked = (smatch(kp->data, value)) ? " checked" : "";
-            espRender(conn, "%s <input type='radio' name='%s' value='%s'%s%s class='%s'/>\r\n",
-                stitle(kp->key), field, kp->data, checked, map(conn, options), style);
+            espRender(stream, "%s <input type='radio' name='%s' value='%s'%s%s class='%s'/>\r\n",
+                stitle(kp->key), field, kp->data, checked, map(stream, options), style);
         }
         break;
         /* Fall through */
     case EDI_TYPE_BINARY:
     default:
-        httpError(conn, 0, "espInput: unknown field type %d", type);
+        httpError(stream, 0, "espInput: unknown field type %d", type);
         /* Fall through */
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_TEXT:
@@ -4337,9 +4337,9 @@ PUBLIC void input(cchar *field, cchar *optionString)
             httpSetOption(options, "rows", "10");
         }
         etype = "text";
-        value = getValue(conn, field, options);
+        value = getValue(stream, field, options);
         if (value == 0 || *value == '\0') {
-            value = espGetParam(conn, field, "");
+            value = espGetParam(stream, field, "");
         }
         if (httpGetOption(options, "password", 0)) {
             etype = "password";
@@ -4348,14 +4348,14 @@ PUBLIC void input(cchar *field, cchar *optionString)
         }
         if ((rows = httpGetOption(options, "rows", 0)) != 0) {
             cols = httpGetOption(options, "cols", "60");
-            espRender(conn, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
-                field, etype, cols, rows, map(conn, options), style, value);
+            espRender(stream, "<textarea name='%s' type='%s' cols='%s' rows='%s'%s class='%s'>%s</textarea>", 
+                field, etype, cols, rows, map(stream, options), style, value);
         } else {
-            espRender(conn, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
-                map(conn, options), style);
+            espRender(stream, "<input name='%s' type='%s' value='%s'%s class='%s'/>", field, etype, value, 
+                map(stream, options), style);
         }
         if (error) {
-            espRenderString(conn, error);
+            espRenderString(stream, error);
         }
         break;
     }
@@ -4368,21 +4368,21 @@ PUBLIC void input(cchar *field, cchar *optionString)
  */
 PUBLIC void inputSecurityToken()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    espRender(conn, "    <input name='%s' type='hidden' value='%s' />\r\n", ME_XSRF_PARAM, httpGetSecurityToken(conn, 0));
+    stream = getStream();
+    espRender(stream, "    <input name='%s' type='hidden' value='%s' />\r\n", ME_XSRF_PARAM, httpGetSecurityToken(stream, 0));
 }
 
 
 /**************************************** Support *************************************/ 
 
-static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options)
+static cchar *getValue(HttpStream *stream, cchar *fieldName, MprHash *options)
 {
     EdiRec      *record;
     cchar       *value;
 
-    record = conn->record;
+    record = stream->record;
     value = 0;
     if (record) {
         value = ediGetFieldValue(record, fieldName);
@@ -4400,7 +4400,7 @@ static cchar *getValue(HttpConn *conn, cchar *fieldName, MprHash *options)
 /*
     Map options to an attribute string.
  */
-static cchar *map(HttpConn *conn, MprHash *options)
+static cchar *map(HttpStream *stream, MprHash *options)
 {
     MprKey      *kp;
     MprBuf      *buf;
@@ -4454,14 +4454,14 @@ static Esp *esp;
 
 /************************************ Forward *********************************/
 
-static int cloneDatabase(HttpConn *conn);
+static int cloneDatabase(HttpStream *stream);
 static void closeEsp(HttpQueue *q);
 static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
 static int openEsp(HttpQueue *q);
-static int runAction(HttpConn *conn);
+static int runAction(HttpStream *stream);
 static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
@@ -4541,7 +4541,7 @@ static int unloadEsp(MprModule *mp)
  */
 static int openEsp(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *rp, *route;
     EspRoute    *eroute;
@@ -4549,15 +4549,15 @@ static int openEsp(HttpQueue *q)
     char        *cookie;
     int         next;
 
-    conn = q->conn;
-    rx = conn->rx;
+    stream = q->stream;
+    rx = stream->rx;
     route = rx->route;
 
     if ((req = mprAllocObj(EspReq, manageReq)) == 0) {
-        httpMemoryError(conn);
+        httpMemoryError(stream);
         return MPR_ERR_MEMORY;
     }
-    conn->reqData = req;
+    stream->reqData = req;
 
     /*
         If unloading a module, this lock will cause a wait here while ESP applications are reloaded.
@@ -4650,28 +4650,28 @@ static bool espUnloadModule(cchar *module, MprTicks timeout)
 /*
     Not used
  */
-PUBLIC void espClearFeedback(HttpConn *conn)
+PUBLIC void espClearFeedback(HttpStream *stream)
 {
     EspReq      *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->feedback = 0;
 }
 
 
-static void setupFeedback(HttpConn *conn)
+static void setupFeedback(HttpStream *stream)
 {
     EspReq      *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->lastFeedback = 0;
     if (req->route->json) {
         req->feedback = mprCreateHash(0, MPR_HASH_STABLE);
     } else {
-        if (httpGetSession(conn, 0)) {
-            req->feedback = httpGetSessionObj(conn, ESP_FEEDBACK_VAR);
+        if (httpGetSession(stream, 0)) {
+            req->feedback = httpGetSessionObj(stream, ESP_FEEDBACK_VAR);
             if (req->feedback) {
-                httpRemoveSessionVar(conn, ESP_FEEDBACK_VAR);
+                httpRemoveSessionVar(stream, ESP_FEEDBACK_VAR);
                 req->lastFeedback = mprCloneHash(req->feedback);
             }
         }
@@ -4679,12 +4679,12 @@ static void setupFeedback(HttpConn *conn)
 }
 
 
-static void finalizeFeedback(HttpConn *conn)
+static void finalizeFeedback(HttpStream *stream)
 {
     EspReq  *req;
     MprKey  *kp, *lp;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->feedback) {
         if (req->route->json) {
             if (req->lastFeedback) {
@@ -4699,7 +4699,7 @@ static void finalizeFeedback(HttpConn *conn)
                     If the session does not exist, this will create one. However, must not have
                     emitted the headers, otherwise cannot inform the client of the session cookie.
                 */
-                httpSetSessionObj(conn, ESP_FEEDBACK_VAR, req->feedback);
+                httpSetSessionObj(stream, ESP_FEEDBACK_VAR, req->feedback);
             }
         }
     }
@@ -4714,33 +4714,33 @@ static void finalizeFeedback(HttpConn *conn)
  */
 static void startEsp(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     EspReq      *req;
 
-    conn = q->conn;
-    rx = conn->rx;
-    req = conn->reqData;
+    stream = q->stream;
+    rx = stream->rx;
+    req = stream->reqData;
 
 #if ME_WIN_LIKE
     rx->target = mprGetPortablePath(rx->target);
 #endif
 
     if (req) {
-        mprSetThreadData(req->esp->local, conn);
+        mprSetThreadData(req->esp->local, stream);
         /* WARNING: GC yield */
-        if (runAction(conn)) {
-            if (!conn->error && req->autoFinalize) {
-                if (!conn->tx->responded) {
+        if (runAction(stream)) {
+            if (!stream->error && req->autoFinalize) {
+                if (!stream->tx->responded) {
                     /* WARNING: GC yield */
-                    espRenderDocument(conn, rx->target);
+                    espRenderDocument(stream, rx->target);
                 }
                 if (req->autoFinalize) {
-                    espFinalize(conn);
+                    espFinalize(stream);
                 }
             }
         }
-        finalizeFeedback(conn);
+        finalizeFeedback(stream);
         mprSetThreadData(req->esp->local, NULL);
     }
 }
@@ -4749,7 +4749,7 @@ static void startEsp(HttpQueue *q)
 /*
     Yields
  */
-static bool loadController(HttpConn *conn)
+static bool loadController(HttpStream *stream)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -4758,7 +4758,7 @@ static bool loadController(HttpConn *conn)
     cchar       *errMsg, *controllers, *controller;
     bool        loaded;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->actions, rx->target))) {
@@ -4771,13 +4771,13 @@ static bool loadController(HttpConn *conn)
 
         /* May yield */
         route->source = controller;
-        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
+        if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
-                httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+                httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
             }
         } else if (loaded) {
-            httpTrace(conn->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpTrace(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -4785,24 +4785,24 @@ static bool loadController(HttpConn *conn)
 }
 
 
-static bool setToken(HttpConn *conn)
+static bool setToken(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpRoute   *route;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
 
     if (route->flags & HTTP_ROUTE_XSRF && !(rx->flags & HTTP_GET)) {
-        if (!httpCheckSecurityToken(conn)) {
-            httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
+        if (!httpCheckSecurityToken(stream)) {
+            httpSetStatus(stream, HTTP_CODE_UNAUTHORIZED);
             if (route->json) {
-                httpTrace(conn->trace, "esp.xsrf.error", "error", 0);
-                espRenderString(conn,
+                httpTrace(stream->trace, "esp.xsrf.error", "error", 0);
+                espRenderString(stream,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
-                espFinalize(conn);
+                espFinalize(stream);
             } else {
-                httpError(conn, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
+                httpError(stream, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
             }
             return 0;
         }
@@ -4814,7 +4814,7 @@ static bool setToken(HttpConn *conn)
 /*
     Run an action (may yield)
  */
-static int runAction(HttpConn *conn)
+static int runAction(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpRoute   *route;
@@ -4822,41 +4822,41 @@ static int runAction(HttpConn *conn)
     EspReq      *req;
     EspAction   action;
 
-    rx = conn->rx;
-    req = conn->reqData;
+    rx = stream->rx;
+    req = stream->reqData;
     route = rx->route;
     eroute = route->eroute;
     assert(eroute);
 
     if (eroute->edi && eroute->edi->flags & EDI_PRIVATE) {
-        cloneDatabase(conn);
+        cloneDatabase(stream);
     } else {
         req->edi = eroute->edi;
     }
     if (route->sourceName == 0 || *route->sourceName == '\0') {
         if (eroute->commonController) {
-            (eroute->commonController)(conn);
+            (eroute->commonController)(stream);
         }
         return 1;
     }
     /* May yield */
-    if (!loadController(conn)) {
+    if (!loadController(stream)) {
         return 0;
     }
-    if (!setToken(conn)) {
+    if (!setToken(stream)) {
         return 0;
     }
-    httpAuthenticate(conn);
+    httpAuthenticate(stream);
     if (eroute->commonController) {
-        (eroute->commonController)(conn);
+        (eroute->commonController)(stream);
     }
     assert(eroute->top);
     action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
-        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
-        setupFeedback(conn);
-        if (!httpIsFinalized(conn)) {
-            (action)(conn);
+        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+        setupFeedback(stream);
+        if (!httpIsFinalized(stream)) {
+            (action)(stream);
         }
     }
     return 1;
@@ -4866,7 +4866,7 @@ static int runAction(HttpConn *conn)
 /*
     May yield
  */
-static bool loadView(HttpConn *conn, cchar *target)
+static bool loadView(HttpStream *stream, cchar *target)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -4875,18 +4875,18 @@ static bool loadView(HttpConn *conn, cchar *target)
     bool        loaded;
     cchar       *errMsg, *path;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     assert(eroute);
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
         path = mprJoinPath(route->documents, target);
-        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
         /* May yield */
         route->source = path;
-        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg, &loaded) < 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+        if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
+            httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             return 0;
         }
     }
@@ -4897,35 +4897,35 @@ static bool loadView(HttpConn *conn, cchar *target)
 /*
     WARNING: this can yield
  */
-PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
+PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
 {
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
     EspViewProc viewProc;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
 
     /* WARNING: may yield */
-    if (!loadView(conn, target)) {
+    if (!loadView(stream, target)) {
         return 0;
     }
     if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
             getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
         return 0;
     }
     if (!(flags & ESP_DONT_RENDER)) {
         if (route->flags & HTTP_ROUTE_XSRF) {
             /* Add a new unique security token */
-            httpAddSecurityToken(conn, 1);
+            httpAddSecurityToken(stream, 1);
         }
-        httpSetContentType(conn, "text/html");
-        httpSetFilename(conn, mprJoinPath(route->documents, target), 0);
+        httpSetContentType(stream, "text/html");
+        httpSetFilename(stream, mprJoinPath(route->documents, target), 0);
         /* WARNING: may yield */
-        (viewProc)(conn);
+        (viewProc)(stream);
     }
     return 1;
 }
@@ -4934,7 +4934,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 /*
     Check if the target/filename.ext is registered as an esp view
  */
-static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
+static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, cchar *ext)
 {
     HttpRx      *rx;
     HttpRoute   *route;
@@ -4942,7 +4942,7 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
 
     assert(target);
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
 
@@ -4992,8 +4992,8 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     /*
         If target exists as a mapped / compressed view
      */
-    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(conn, path);
+    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
+        path = httpMapContent(stream, path);
         if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
             return target;
         }
@@ -5023,23 +5023,23 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     Otherwise relay to the fileHandler.
     May yield.
  */
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
+PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
 {
     HttpUri     *up;
     MprKey      *kp;
     cchar       *dest;
 
     if (!target) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find document");
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find document");
         return;
     }
     if (*target) {
-        for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
+        for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
-                if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
-                    httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
+                    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
                     /* May yield */
-                    espRenderView(conn, dest, 0);
+                    espRenderView(stream, dest, 0);
                     return;
                 }
             }
@@ -5048,19 +5048,19 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     /*
         Check for index
      */
-    if ((dest = checkView(conn, target, "index", "esp")) != 0) {
+    if ((dest = checkView(stream, target, "index", "esp")) != 0) {
         /*
             Must do external redirect first if URL does not end with "/"
          */
-        if (!sends(conn->rx->parsedUri->path, "/")) {
-            up = conn->rx->parsedUri;
-            httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host,
+        if (!sends(stream->rx->parsedUri->path, "/")) {
+            up = stream->rx->parsedUri;
+            httpRedirect(stream, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host,
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
         /* May yield */
-        espRenderView(conn, dest, 0);
+        espRenderView(stream, dest, 0);
         return;
     }
 
@@ -5075,22 +5075,22 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     /*
         If target exists as a mapped / compressed document
      */
-    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(conn, path);
+    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
+        path = httpMapContent(stream, path);
         if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
             target = path;
         }
     }
 #endif
 
-    httpTrace(conn->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
-    conn->rx->target = (char*) &conn->rx->pathInfo[1];
-    httpMapFile(conn);
-    if (conn->tx->fileInfo.isDir) {
-        httpHandleDirectory(conn);
+    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    stream->rx->target = (char*) &stream->rx->pathInfo[1];
+    httpMapFile(stream);
+    if (stream->tx->fileInfo.isDir) {
+        httpHandleDirectory(stream);
     }
-    if (!conn->tx->finalized) {
-        httpSetFileHandler(conn, 0);
+    if (!stream->tx->finalized) {
+        httpSetFileHandler(stream, 0);
     }
 }
 
@@ -5119,15 +5119,15 @@ static void pruneDatabases(Esp *esp)
 /*
     This clones a database to give a private view per user.
  */
-static int cloneDatabase(HttpConn *conn)
+static int cloneDatabase(HttpStream *stream)
 {
     Esp         *esp;
     EspRoute    *eroute;
     EspReq      *req;
     cchar       *id;
 
-    req = conn->reqData;
-    eroute = conn->rx->route->eroute;
+    req = stream->reqData;
+    eroute = stream->rx->route->eroute;
     assert(eroute->edi);
     assert(eroute->edi->flags & EDI_PRIVATE);
 
@@ -5143,8 +5143,8 @@ static int cloneDatabase(HttpConn *conn)
     /*
         If the user is logging in or out, this will create a redundant session here.
      */
-    httpGetSession(conn, 1);
-    id = httpGetSessionID(conn);
+    httpGetSession(stream, 1);
+    id = httpGetSessionID(stream);
     if ((req->edi = mprLookupKey(esp->databases, id)) == 0) {
         if ((req->edi = ediClone(eroute->edi)) == 0) {
             mprLog("error esp", 0, "Cannot clone database: %s", eroute->edi->path);
@@ -5307,7 +5307,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
     if (!minfo.valid) {
         if ((mp = mprLookupModule(source)) != 0) {
             if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("error esp", 0, "Cannot unload module %s. Connections still open. Continue using old version.",
+                mprLog("error esp", 0, "Cannot unload module %s. Streams still open. Continue using old version.",
                     source);
                 return 0;
             }
@@ -5323,7 +5323,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         if (sinfo.valid && sinfo.mtime > minfo.mtime) {
             if ((mp = mprLookupModule(source)) != 0) {
                 if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                    mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                    mprLog("warn esp", 4, "Cannot unload module %s. Streams still open. Continue using old version.",
                         source);
                     return 0;
                 }
@@ -5337,7 +5337,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         if (minfo.mtime > mp->modified) {
             /* Module file has been updated */
             if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                mprLog("warn esp", 4, "Cannot unload module %s. Streams still open. Continue using old version.",
                     source);
                 return 0;
             }
@@ -6351,9 +6351,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         /*
             Windows leaves intermediate object in the current directory
          */
-        cchar   *path;
-//  MOB - csource may be freed here
-        path = mprReplacePathExt(mprGetPathBase(csource), "obj");
+        cchar *path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
         }
@@ -6608,29 +6606,29 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
                 fmt = ssplit(token, ": \t\r\n", &token);
                 /* Default without format is safe. If users want a format and safe, use %S or renderSafe() */
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRender(conn, \"%s\", %s);\n", fmt, token);
+                mprPutToBuf(body, "  espRender(stream, \"%s\", %s);\n", fmt, token);
             } else {
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRenderSafeString(conn, %s);\n", token);
+                mprPutToBuf(body, "  espRenderSafeString(stream, %s);\n", token);
             }
             break;
 
         case ESP_TOK_VAR:
             /* %!var -- string variable */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderString(conn, %s);\n", token);
+            mprPutToBuf(body, "  espRenderString(stream, %s);\n", token);
             break;
 
         case ESP_TOK_FIELD:
             /* %#field -- field in the current record */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderSafeString(conn, getField(getRec(), \"%s\"));\n", token);
+            mprPutToBuf(body, "  espRenderSafeString(stream, getField(getRec(), \"%s\"));\n", token);
             break;
 
         case ESP_TOK_PARAM:
             /* %$param -- variable in (param || session) - Safe render */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderVar(conn, \"%s\");\n", token);
+            mprPutToBuf(body, "  espRenderVar(stream, \"%s\");\n", token);
             break;
 
         case ESP_TOK_HOME:
@@ -6638,7 +6636,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             if (parse.next[0] && parse.next[0] != '/' && parse.next[0] != '\'' && parse.next[0] != '"') {
                 mprLog("esp warn", 0, "Using %%~ without following / in %s\n", path);
             }
-            mprPutToBuf(body, "  espRenderString(conn, httpGetRouteTop(conn));");
+            mprPutToBuf(body, "  espRenderString(stream, httpGetRouteTop(stream));");
             break;
 
 #if DEPRECATED || 1
@@ -6646,13 +6644,13 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
         case ESP_TOK_SERVER:
             /* @| Server URL */
             mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page: %s", path);
-            mprPutToBuf(body, "  espRenderString(conn, sjoin(conn->rx->route->prefix ? conn->rx->route->prefix : \"\", conn->rx->route->serverPrefix, NULL));");
+            mprPutToBuf(body, "  espRenderString(stream, sjoin(stream->rx->route->prefix ? stream->rx->route->prefix : \"\", stream->rx->route->serverPrefix, NULL));");
             break;
 #endif
 
         case ESP_TOK_LITERAL:
             line = joinLine(token, &len);
-            mprPutToBuf(body, "  espRenderBlock(conn, \"%s\", %zd);\n", line, len);
+            mprPutToBuf(body, "  espRenderBlock(stream, \"%s\", %zd);\n", line, len);
             break;
 
         default:
@@ -6697,7 +6695,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "/*\n   Generated from %s\n */\n"\
             "#include \"esp.h\"\n"\
             "%s\n"\
-            "static void %s(HttpConn *conn) {\n"\
+            "static void %s(HttpStream *stream) {\n"\
             "%s%s%s"\
             "}\n\n"\
             "%s int esp_%s(HttpRoute *route) {\n"\

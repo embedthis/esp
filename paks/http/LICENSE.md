@@ -35,7 +35,7 @@ documentation and/or software.
 
 ### Nginx License
 
-Portions of hpack.c used for the http/2 supp rt.
+Portions of hpack.c used for HTTP/2 support.
 
 Copyright (C) 2002-2018 Igor Sysoev
 Copyright (C) 2011-2018 Nginx, Inc.

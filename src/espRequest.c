@@ -21,14 +21,14 @@ static Esp *esp;
 
 /************************************ Forward *********************************/
 
-static int cloneDatabase(HttpConn *conn);
+static int cloneDatabase(HttpStream *stream);
 static void closeEsp(HttpQueue *q);
 static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
 static int openEsp(HttpQueue *q);
-static int runAction(HttpConn *conn);
+static int runAction(HttpStream *stream);
 static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
@@ -108,7 +108,7 @@ static int unloadEsp(MprModule *mp)
  */
 static int openEsp(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *rp, *route;
     EspRoute    *eroute;
@@ -116,15 +116,15 @@ static int openEsp(HttpQueue *q)
     char        *cookie;
     int         next;
 
-    conn = q->conn;
-    rx = conn->rx;
+    stream = q->stream;
+    rx = stream->rx;
     route = rx->route;
 
     if ((req = mprAllocObj(EspReq, manageReq)) == 0) {
-        httpMemoryError(conn);
+        httpMemoryError(stream);
         return MPR_ERR_MEMORY;
     }
-    conn->reqData = req;
+    stream->reqData = req;
 
     /*
         If unloading a module, this lock will cause a wait here while ESP applications are reloaded.
@@ -217,28 +217,28 @@ static bool espUnloadModule(cchar *module, MprTicks timeout)
 /*
     Not used
  */
-PUBLIC void espClearFeedback(HttpConn *conn)
+PUBLIC void espClearFeedback(HttpStream *stream)
 {
     EspReq      *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->feedback = 0;
 }
 
 
-static void setupFeedback(HttpConn *conn)
+static void setupFeedback(HttpStream *stream)
 {
     EspReq      *req;
 
-    req = conn->reqData;
+    req = stream->reqData;
     req->lastFeedback = 0;
     if (req->route->json) {
         req->feedback = mprCreateHash(0, MPR_HASH_STABLE);
     } else {
-        if (httpGetSession(conn, 0)) {
-            req->feedback = httpGetSessionObj(conn, ESP_FEEDBACK_VAR);
+        if (httpGetSession(stream, 0)) {
+            req->feedback = httpGetSessionObj(stream, ESP_FEEDBACK_VAR);
             if (req->feedback) {
-                httpRemoveSessionVar(conn, ESP_FEEDBACK_VAR);
+                httpRemoveSessionVar(stream, ESP_FEEDBACK_VAR);
                 req->lastFeedback = mprCloneHash(req->feedback);
             }
         }
@@ -246,12 +246,12 @@ static void setupFeedback(HttpConn *conn)
 }
 
 
-static void finalizeFeedback(HttpConn *conn)
+static void finalizeFeedback(HttpStream *stream)
 {
     EspReq  *req;
     MprKey  *kp, *lp;
 
-    req = conn->reqData;
+    req = stream->reqData;
     if (req->feedback) {
         if (req->route->json) {
             if (req->lastFeedback) {
@@ -266,7 +266,7 @@ static void finalizeFeedback(HttpConn *conn)
                     If the session does not exist, this will create one. However, must not have
                     emitted the headers, otherwise cannot inform the client of the session cookie.
                 */
-                httpSetSessionObj(conn, ESP_FEEDBACK_VAR, req->feedback);
+                httpSetSessionObj(stream, ESP_FEEDBACK_VAR, req->feedback);
             }
         }
     }
@@ -281,33 +281,33 @@ static void finalizeFeedback(HttpConn *conn)
  */
 static void startEsp(HttpQueue *q)
 {
-    HttpConn    *conn;
+    HttpStream  *stream;
     HttpRx      *rx;
     EspReq      *req;
 
-    conn = q->conn;
-    rx = conn->rx;
-    req = conn->reqData;
+    stream = q->stream;
+    rx = stream->rx;
+    req = stream->reqData;
 
 #if ME_WIN_LIKE
     rx->target = mprGetPortablePath(rx->target);
 #endif
 
     if (req) {
-        mprSetThreadData(req->esp->local, conn);
+        mprSetThreadData(req->esp->local, stream);
         /* WARNING: GC yield */
-        if (runAction(conn)) {
-            if (!conn->error && req->autoFinalize) {
-                if (!conn->tx->responded) {
+        if (runAction(stream)) {
+            if (!stream->error && req->autoFinalize) {
+                if (!stream->tx->responded) {
                     /* WARNING: GC yield */
-                    espRenderDocument(conn, rx->target);
+                    espRenderDocument(stream, rx->target);
                 }
                 if (req->autoFinalize) {
-                    espFinalize(conn);
+                    espFinalize(stream);
                 }
             }
         }
-        finalizeFeedback(conn);
+        finalizeFeedback(stream);
         mprSetThreadData(req->esp->local, NULL);
     }
 }
@@ -316,7 +316,7 @@ static void startEsp(HttpQueue *q)
 /*
     Yields
  */
-static bool loadController(HttpConn *conn)
+static bool loadController(HttpStream *stream)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -325,7 +325,7 @@ static bool loadController(HttpConn *conn)
     cchar       *errMsg, *controllers, *controller;
     bool        loaded;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->actions, rx->target))) {
@@ -338,13 +338,13 @@ static bool loadController(HttpConn *conn)
 
         /* May yield */
         route->source = controller;
-        if (espLoadModule(route, conn->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
+        if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
-                httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+                httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
                 return 0;
             }
         } else if (loaded) {
-            httpTrace(conn->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpTrace(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -352,24 +352,24 @@ static bool loadController(HttpConn *conn)
 }
 
 
-static bool setToken(HttpConn *conn)
+static bool setToken(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpRoute   *route;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
 
     if (route->flags & HTTP_ROUTE_XSRF && !(rx->flags & HTTP_GET)) {
-        if (!httpCheckSecurityToken(conn)) {
-            httpSetStatus(conn, HTTP_CODE_UNAUTHORIZED);
+        if (!httpCheckSecurityToken(stream)) {
+            httpSetStatus(stream, HTTP_CODE_UNAUTHORIZED);
             if (route->json) {
-                httpTrace(conn->trace, "esp.xsrf.error", "error", 0);
-                espRenderString(conn,
+                httpTrace(stream->trace, "esp.xsrf.error", "error", 0);
+                espRenderString(stream,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
-                espFinalize(conn);
+                espFinalize(stream);
             } else {
-                httpError(conn, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
+                httpError(stream, HTTP_CODE_UNAUTHORIZED, "Security token is stale. Please reload page.");
             }
             return 0;
         }
@@ -381,7 +381,7 @@ static bool setToken(HttpConn *conn)
 /*
     Run an action (may yield)
  */
-static int runAction(HttpConn *conn)
+static int runAction(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpRoute   *route;
@@ -389,41 +389,41 @@ static int runAction(HttpConn *conn)
     EspReq      *req;
     EspAction   action;
 
-    rx = conn->rx;
-    req = conn->reqData;
+    rx = stream->rx;
+    req = stream->reqData;
     route = rx->route;
     eroute = route->eroute;
     assert(eroute);
 
     if (eroute->edi && eroute->edi->flags & EDI_PRIVATE) {
-        cloneDatabase(conn);
+        cloneDatabase(stream);
     } else {
         req->edi = eroute->edi;
     }
     if (route->sourceName == 0 || *route->sourceName == '\0') {
         if (eroute->commonController) {
-            (eroute->commonController)(conn);
+            (eroute->commonController)(stream);
         }
         return 1;
     }
     /* May yield */
-    if (!loadController(conn)) {
+    if (!loadController(stream)) {
         return 0;
     }
-    if (!setToken(conn)) {
+    if (!setToken(stream)) {
         return 0;
     }
-    httpAuthenticate(conn);
+    httpAuthenticate(stream);
     if (eroute->commonController) {
-        (eroute->commonController)(conn);
+        (eroute->commonController)(stream);
     }
     assert(eroute->top);
     action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
-        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
-        setupFeedback(conn);
-        if (!httpIsFinalized(conn)) {
-            (action)(conn);
+        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+        setupFeedback(stream);
+        if (!httpIsFinalized(stream)) {
+            (action)(stream);
         }
     }
     return 1;
@@ -433,7 +433,7 @@ static int runAction(HttpConn *conn)
 /*
     May yield
  */
-static bool loadView(HttpConn *conn, cchar *target)
+static bool loadView(HttpStream *stream, cchar *target)
 {
 #if !ME_STATIC
     HttpRx      *rx;
@@ -442,18 +442,18 @@ static bool loadView(HttpConn *conn, cchar *target)
     bool        loaded;
     cchar       *errMsg, *path;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     assert(eroute);
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
         path = mprJoinPath(route->documents, target);
-        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
         /* May yield */
         route->source = path;
-        if (espLoadModule(route, conn->dispatcher, "view", path, &errMsg, &loaded) < 0) {
-            httpError(conn, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+        if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
+            httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
             return 0;
         }
     }
@@ -464,35 +464,35 @@ static bool loadView(HttpConn *conn, cchar *target)
 /*
     WARNING: this can yield
  */
-PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
+PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
 {
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
     EspViewProc viewProc;
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
 
     /* WARNING: may yield */
-    if (!loadView(conn, target)) {
+    if (!loadView(stream, target)) {
         return 0;
     }
     if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
             getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
         return 0;
     }
     if (!(flags & ESP_DONT_RENDER)) {
         if (route->flags & HTTP_ROUTE_XSRF) {
             /* Add a new unique security token */
-            httpAddSecurityToken(conn, 1);
+            httpAddSecurityToken(stream, 1);
         }
-        httpSetContentType(conn, "text/html");
-        httpSetFilename(conn, mprJoinPath(route->documents, target), 0);
+        httpSetContentType(stream, "text/html");
+        httpSetFilename(stream, mprJoinPath(route->documents, target), 0);
         /* WARNING: may yield */
-        (viewProc)(conn);
+        (viewProc)(stream);
     }
     return 1;
 }
@@ -501,7 +501,7 @@ PUBLIC bool espRenderView(HttpConn *conn, cchar *target, int flags)
 /*
     Check if the target/filename.ext is registered as an esp view
  */
-static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *ext)
+static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, cchar *ext)
 {
     HttpRx      *rx;
     HttpRoute   *route;
@@ -509,7 +509,7 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
 
     assert(target);
 
-    rx = conn->rx;
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
 
@@ -559,8 +559,8 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     /*
         If target exists as a mapped / compressed view
      */
-    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(conn, path);
+    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
+        path = httpMapContent(stream, path);
         if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
             return target;
         }
@@ -590,23 +590,23 @@ static cchar *checkView(HttpConn *conn, cchar *target, cchar *filename, cchar *e
     Otherwise relay to the fileHandler.
     May yield.
  */
-PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
+PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
 {
     HttpUri     *up;
     MprKey      *kp;
     cchar       *dest;
 
     if (!target) {
-        httpError(conn, HTTP_CODE_NOT_FOUND, "Cannot find document");
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find document");
         return;
     }
     if (*target) {
-        for (ITERATE_KEYS(conn->rx->route->extensions, kp)) {
+        for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
-                if ((dest = checkView(conn, target, 0, kp->key)) != 0) {
-                    httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
+                    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
                     /* May yield */
-                    espRenderView(conn, dest, 0);
+                    espRenderView(stream, dest, 0);
                     return;
                 }
             }
@@ -615,19 +615,19 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     /*
         Check for index
      */
-    if ((dest = checkView(conn, target, "index", "esp")) != 0) {
+    if ((dest = checkView(stream, target, "index", "esp")) != 0) {
         /*
             Must do external redirect first if URL does not end with "/"
          */
-        if (!sends(conn->rx->parsedUri->path, "/")) {
-            up = conn->rx->parsedUri;
-            httpRedirect(conn, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host,
+        if (!sends(stream->rx->parsedUri->path, "/")) {
+            up = stream->rx->parsedUri;
+            httpRedirect(stream, HTTP_CODE_MOVED_PERMANENTLY, httpFormatUri(up->scheme, up->host,
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpTrace(conn->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
         /* May yield */
-        espRenderView(conn, dest, 0);
+        espRenderView(stream, dest, 0);
         return;
     }
 
@@ -642,22 +642,22 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     /*
         If target exists as a mapped / compressed document
      */
-    if (route->map && !(conn->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(conn, path);
+    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
+        path = httpMapContent(stream, path);
         if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
             target = path;
         }
     }
 #endif
 
-    httpTrace(conn->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
-    conn->rx->target = (char*) &conn->rx->pathInfo[1];
-    httpMapFile(conn);
-    if (conn->tx->fileInfo.isDir) {
-        httpHandleDirectory(conn);
+    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    stream->rx->target = (char*) &stream->rx->pathInfo[1];
+    httpMapFile(stream);
+    if (stream->tx->fileInfo.isDir) {
+        httpHandleDirectory(stream);
     }
-    if (!conn->tx->finalized) {
-        httpSetFileHandler(conn, 0);
+    if (!stream->tx->finalized) {
+        httpSetFileHandler(stream, 0);
     }
 }
 
@@ -686,15 +686,15 @@ static void pruneDatabases(Esp *esp)
 /*
     This clones a database to give a private view per user.
  */
-static int cloneDatabase(HttpConn *conn)
+static int cloneDatabase(HttpStream *stream)
 {
     Esp         *esp;
     EspRoute    *eroute;
     EspReq      *req;
     cchar       *id;
 
-    req = conn->reqData;
-    eroute = conn->rx->route->eroute;
+    req = stream->reqData;
+    eroute = stream->rx->route->eroute;
     assert(eroute->edi);
     assert(eroute->edi->flags & EDI_PRIVATE);
 
@@ -710,8 +710,8 @@ static int cloneDatabase(HttpConn *conn)
     /*
         If the user is logging in or out, this will create a redundant session here.
      */
-    httpGetSession(conn, 1);
-    id = httpGetSessionID(conn);
+    httpGetSession(stream, 1);
+    id = httpGetSessionID(stream);
     if ((req->edi = mprLookupKey(esp->databases, id)) == 0) {
         if ((req->edi = ediClone(eroute->edi)) == 0) {
             mprLog("error esp", 0, "Cannot clone database: %s", eroute->edi->path);
@@ -874,7 +874,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
     if (!minfo.valid) {
         if ((mp = mprLookupModule(source)) != 0) {
             if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("error esp", 0, "Cannot unload module %s. Connections still open. Continue using old version.",
+                mprLog("error esp", 0, "Cannot unload module %s. Streams still open. Continue using old version.",
                     source);
                 return 0;
             }
@@ -890,7 +890,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         if (sinfo.valid && sinfo.mtime > minfo.mtime) {
             if ((mp = mprLookupModule(source)) != 0) {
                 if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                    mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                    mprLog("warn esp", 4, "Cannot unload module %s. Streams still open. Continue using old version.",
                         source);
                     return 0;
                 }
@@ -904,7 +904,7 @@ PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int
         if (minfo.mtime > mp->modified) {
             /* Module file has been updated */
             if (!espUnloadModule(source, ME_ESP_RELOAD_TIMEOUT)) {
-                mprLog("warn esp", 4, "Cannot unload module %s. Connections still open. Continue using old version.",
+                mprLog("warn esp", 4, "Cannot unload module %s. Streams still open. Continue using old version.",
                     source);
                 return 0;
             }

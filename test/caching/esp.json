@@ -14,7 +14,7 @@
         },
         limits: {
             rxBody: 'unlimited',
-            cacheItem: '100k',
+            cacheItem: '200k',
         },
         "log": {
             "location": "error.log",

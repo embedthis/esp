@@ -4,7 +4,7 @@
 #include "esp.h"
 
 /*
-    This is a reference to a thread safe list of client connections
+    This is a reference to a thread safe list of clients.
  */
 static MprList  *clients;
 
@@ -12,7 +12,7 @@ static MprList  *clients;
     Hold a message destined for clients
  */
 typedef struct Msg {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpPacket  *packet;
 } Msg;
 
@@ -23,49 +23,49 @@ typedef struct Msg {
 static void manageMsg(Msg *msg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(msg->conn);
+        mprMark(msg->stream);
         mprMark(msg->packet);
     }
 }
 
 /*
-    Send message to a connection
-    This is the callback function invoked from the connection event dispatcher.
+    Send message to a client
+    This is the callback function invoked from the stream event dispatcher.
  */
 static void chat(Msg *msg)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpPacket  *packet;
 
-    conn = msg->conn;
+    stream = msg->stream;
     packet = msg->packet;
-    httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+    httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
 }
 
 /*
     Event callback. Invoked for incoming web socket messages and other events of interest.
-    Running on the connection event dispatcher using an Mpr worker thread.
+    Running on the stream event dispatcher using an Mpr worker thread.
  */
-static void chat_callback(HttpConn *conn, int event, int arg)
+static void chat_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
-    HttpConn    *client;
+    HttpStream    *client;
     Msg         *msg;
     int         flags, next;
 
     if (event == HTTP_EVENT_READABLE) {
-        packet = httpGetPacket(conn->readq);
+        packet = httpGetPacket(stream->readq);
         if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
             for (ITERATE_ITEMS(clients, client, next)) {
                 /*
-                    Send the message to each connection. This must be done using each connections event dispatcher
-                    to ensure we don't conflict with other activity on the connection that may happen on another worker
+                    Send the message to each client. This must be done using each streams event dispatcher
+                    to ensure we don't conflict with other activity on the stream that may happen on another worker
                     thread at the same time. Set flags = MPR_EVENT_WAIT if calling mprCreateEvent from a non-esp thread and
                     you want to wait until the event has completed before returning.
                     This will then wait till the event is run before returning.
                  */
                 msg = mprAllocObj(Msg, manageMsg);
-                msg->conn = client;
+                msg->stream = client;
                 msg->packet = packet;
                 flags = 0;
                 mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, flags);
@@ -76,13 +76,13 @@ static void chat_callback(HttpConn *conn, int event, int arg)
             This event is in response to a web sockets close event
          */
         mprLog("chat info", 0, "Close event. Status status %d, orderly closed %d, reason %s", arg,
-        httpWebSocketOrderlyClosed(conn), httpGetWebSocketCloseReason(conn));
+        httpWebSocketOrderlyClosed(stream), httpGetWebSocketCloseReason(stream));
 
     } else if (event == HTTP_EVENT_DESTROY) {
         /*
-            This is invoked when the client connection is closed. This API is thread safe.
+            This is invoked when the client disconnects. This API is thread safe.
          */
-        mprRemoveItem(clients, conn);
+        mprRemoveItem(clients, stream);
     }
 }
 
@@ -91,23 +91,23 @@ static void chat_callback(HttpConn *conn, int event, int arg)
  */
 static void chat_action()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
     /*
-        Add the client connect to the list of clients. This API is thread-safe.
+        Add the client to the list of clients. This API is thread-safe.
      */
-    conn = getConn();
-    mprAddItem(clients, conn);
+    stream = getStream();
+    mprAddItem(clients, stream);
 
     /*
-        Don't automatically finalize (complete) the request when this routine returns. This keeps the connection open.
+        Don't automatically finalize (complete) the request when this routine returns. This keeps the stream open.
      */
     dontAutoFinalize();
 
     /*
-        Establish the event callback that will be called for I/O events of interest for all connections.
+        Establish the event callback that will be called for I/O events of interest for all streams.
      */
-    espSetNotifier(conn, chat_callback);
+    espSetNotifier(stream, chat_callback);
 }
 
 
@@ -117,7 +117,7 @@ static void chat_action()
 ESP_EXPORT int esp_controller_websockets_chat(HttpRoute *route)
 {
     /*
-        Create a list of client connections. Add as a root object to preserve from GC.
+        Create a list of clients. Add as a root object to preserve from GC.
      */
     clients = mprCreateList(0, 0);
     mprAddRoot(clients);
