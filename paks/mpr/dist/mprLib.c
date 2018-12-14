@@ -12939,9 +12939,7 @@ static MprJson *jsonParse(MprJsonParser *parser, MprJson *obj)
                         return obj;
                     }
                 }
-                if (obj->type & MPR_JSON_OBJ) {
-                    parser->state = MPR_JSON_STATE_NAME;
-                }
+                parser->state = (obj->type & MPR_JSON_OBJ) ? MPR_JSON_STATE_NAME : MPR_JSON_STATE_VALUE;
             } else if (tokid == JTOK_RBRACE || parser->tokid == JTOK_RBRACKET || tokid == JTOK_EOF) {
                 return obj;
             } else {
