@@ -354,7 +354,7 @@ static bool isIdle(bool traceRequests)
 {
     Http            *http;
     HttpNet         *net;
-    HttpStream        *stream;
+    HttpStream      *stream;
     MprTicks        now;
     static MprTicks lastTrace = 0;
     int             next, nextConn;
@@ -603,11 +603,13 @@ PUBLIC void httpSetListenCallback(HttpListenCallback fn)
 static void httpTimer(Http *http, MprEvent *event)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpStage   *stage;
     HttpLimits  *limits;
     MprModule   *module;
     int         next, active, abort, nextConn;
+
+    active = 0;
 
     updateCurrentDate();
     lock(http->networks);
@@ -2318,7 +2320,7 @@ static int matchCacheHandler(HttpStream *stream, HttpRoute *route, int dir)
 
 static void readyCacheHandler(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     cchar       *data;
 
@@ -2351,7 +2353,7 @@ static int matchCacheFilter(HttpStream *stream, HttpRoute *route, int dir)
 static void outgoingCacheFilterService(HttpQueue *q)
 {
     HttpPacket  *packet, *data;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     MprKey      *kp;
     cchar       *cachedData;
@@ -2387,7 +2389,7 @@ static void outgoingCacheFilterService(HttpQueue *q)
                     Using X-SendCache. Discard the packet.
                  */
                 continue;
-                
+
             } else if (tx->cacheBuffer) {
                 /*
                     Save the response packet to the cache buffer. Will write below in saveCachedResponse.
@@ -2817,8 +2819,7 @@ PUBLIC void httpInitChunking(HttpStream *stream)
 
 static void incomingChunk(HttpQueue *q, HttpPacket *packet)
 {
-    HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpPacket  *tail;
     HttpRx      *rx;
     MprBuf      *buf;
@@ -2827,7 +2828,6 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
     int         bad;
 
     stream = q->stream;
-    net = q->net;
     rx = stream->rx;
 
     if (rx->chunkState == HTTP_CHUNK_UNCHUNKED) {
@@ -2949,7 +2949,7 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
 
 static void outgoingChunkService(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpPacket  *packet, *finalChunk;
     HttpTx      *tx;
 
@@ -2992,7 +2992,7 @@ static void outgoingChunkService(HttpQueue *q)
 
 static bool needChunking(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     cchar       *value;
 
@@ -3232,14 +3232,12 @@ static void setDefaultHeaders(HttpStream *stream)
 PUBLIC bool httpNeedRetry(HttpStream *stream, cchar **url)
 {
     HttpRx          *rx;
-    HttpTx          *tx;
     HttpAuthType    *authType;
 
     assert(stream->rx);
 
     *url = 0;
     rx = stream->rx;
-    tx = stream->tx;
 
     if (stream->error || stream->state < HTTP_STATE_FIRST) {
         return 0;
@@ -3425,7 +3423,7 @@ PUBLIC char *httpReadString(HttpStream *stream)
 PUBLIC HttpStream *httpRequest(cchar *method, cchar *uri, cchar *data, int protocol, char **err)
 {
     HttpNet         *net;
-    HttpStream        *stream;
+    HttpStream      *stream;
     MprDispatcher   *dispatcher;
 
     assert(err);
@@ -6181,7 +6179,7 @@ PUBLIC bool httpShouldRenderDirListing(HttpStream *stream)
  */
 static void startDir(HttpQueue *q)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpTx          *tx;
     HttpRx          *rx;
     MprList         *list;
@@ -6540,7 +6538,7 @@ static void outputLine(HttpQueue *q, MprDirEntry *ep, cchar *path, int nameSize)
 
 static void outputFooter(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     MprSocket   *sock;
     HttpDir     *dir;
 
@@ -7190,7 +7188,7 @@ static cchar *formatErrorv(HttpStream *stream, int status, cchar *fmt, va_list a
 PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
 {
     va_list     args;
-    HttpStream    *stream;
+    HttpStream  *stream;
     cchar       *msg;
     int         next;
 
@@ -7510,7 +7508,7 @@ static int openFileHandler(HttpQueue *q)
 {
     HttpRx      *rx;
     HttpTx      *tx;
-    HttpStream    *stream;
+    HttpStream  *stream;
     MprPath     *info;
     char        *date, dbuf[16];
     MprHash     *dateCache;
@@ -7612,7 +7610,7 @@ static void closeFileHandler(HttpQueue *q)
  */
 static void startFileHandler(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     HttpPacket  *packet;
 
@@ -7665,7 +7663,7 @@ static void readyFileHandler(HttpQueue *q)
  */
 static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize size)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     ssize       nbytes;
 
@@ -7702,7 +7700,7 @@ static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize si
  */
 static void outgoingFileService(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpPacket  *data, *packet;
     ssize       size, nbytes;
 
@@ -7800,7 +7798,7 @@ static void outgoingFileService(HttpQueue *q)
  */
 static void incomingFile(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     HttpRx      *rx;
     HttpRange   *range;
@@ -7850,7 +7848,7 @@ static void incomingFile(HttpQueue *q, HttpPacket *packet)
  */
 static void handlePutRequest(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     MprFile     *file;
     cchar       *path;
@@ -7894,7 +7892,7 @@ static void handlePutRequest(HttpQueue *q)
 
 static void handleDeleteRequest(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
 
     stream = q->stream;
@@ -8760,7 +8758,7 @@ PUBLIC int httpOpenHttp1Filter()
  */
 static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
 
     stream = findStream(q);
 
@@ -8798,7 +8796,7 @@ static void outgoingHttp1(HttpQueue *q, HttpPacket *packet)
 
 static void outgoingHttp1Service(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpPacket  *packet;
 
     stream = q->stream;
@@ -8840,17 +8838,13 @@ static void tracePacket(HttpQueue *q, HttpPacket *packet)
 
 static HttpPacket *parseHeaders(HttpQueue *q, HttpPacket *packet)
 {
-    HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
-    HttpLimits  *limits;
 
     stream = q->stream;
-    net = stream->net;
     assert(stream->rx);
     assert(stream->tx);
     rx = stream->rx;
-    limits = stream->limits;
 
     if (!monitorActiveRequests(stream)) {
         return 0;
@@ -8911,7 +8905,7 @@ static cchar *eatBlankLines(HttpPacket *packet)
 
 static bool gotHeaders(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpLimits  *limits;
     cchar       *end, *start;
     ssize       len;
@@ -8942,19 +8936,15 @@ static bool gotHeaders(HttpQueue *q, HttpPacket *packet)
  */
 static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpLimits  *limits;
-    MprBuf      *content;
-    char        *method, *uri, *protocol, *start;
+    char        *method, *uri, *protocol;
     ssize       len;
 
     stream = q->stream;
     rx = stream->rx;
     limits = stream->limits;
-
-    content = packet->content;
-    start = content->start;
 
     method = getToken(packet, NULL);
     rx->originalMethod = rx->method = supper(method);
@@ -8999,7 +8989,7 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
 static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
     char        *protocol, *status;
@@ -9048,19 +9038,16 @@ static void parseResponseLine(HttpQueue *q, HttpPacket *packet)
  */
 static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
-    HttpTx      *tx;
     HttpLimits  *limits;
     char        *key, *value;
-    int         count, keepAliveHeader;
+    int         count;
 
     stream = q->stream;
     rx = stream->rx;
-    tx = stream->tx;
 
     limits = stream->limits;
-    keepAliveHeader = 0;
 
     for (count = 0; packet->content->start[0] != '\r' && !stream->error; count++) {
         if (count >= limits->headerMax) {
@@ -9144,7 +9131,7 @@ static char *getToken(HttpPacket *packet, cchar *delim)
 PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
 {
     Http        *http;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     HttpUri     *parsedUri;
     MprKey      *kp;
@@ -9226,7 +9213,7 @@ PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
 
 static HttpStream *findStream(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
 
     if (!q->stream) {
         if ((stream = httpCreateStream(q->net, 1)) == 0) {
@@ -9376,7 +9363,7 @@ PUBLIC int httpOpenHttp2Filter()
 static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpFrame   *frame;
 
     net = q->net;
@@ -9421,10 +9408,8 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
  */
 static void outgoingHttp2(HttpQueue *q, HttpPacket *packet)
 {
-    HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
 
-    net = q->net;
     stream = packet->stream;
     checkSendSettings(q);
 
@@ -9451,7 +9436,7 @@ static void outgoingHttp2(HttpQueue *q, HttpPacket *packet)
 static void outgoingHttp2Service(HttpQueue *q)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpPacket  *packet;
     HttpTx      *tx;
     ssize       len;
@@ -9533,7 +9518,7 @@ static void outgoingHttp2Service(HttpQueue *q)
 static int getFrameFlags(HttpQueue *q, HttpPacket *packet)
 {
     HttpPacket  *first;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     int         flags;
 
@@ -9809,12 +9794,12 @@ static void parseSettingsFrame(HttpQueue *q, HttpPacket *packet)
 static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpFrame   *frame;
     MprBuf      *buf;
     bool        padded, priority;
     ssize       size, frameLen;
-    int         depend, dword, excl, weight, padLen;
+    int         padLen;
 
     net = q->net;
     buf = packet->content;
@@ -9843,9 +9828,8 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         }
         mprAdjustBufEnd(buf, -padLen);
     }
-    /*
-        Dependencies, weights and priorities are parsed, but ignored
-     */
+#if FUTURE
+    int depend, dword, excl;
     depend = 0;
     weight = HTTP2_DEFAULT_WEIGHT;
     if (priority) {
@@ -9854,6 +9838,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         excl = dword >> 31;
         weight = mprGetCharFromBuf(buf) + 1;
     }
+#endif
     if ((frame->streamID % 2) != 1 || (net->lastStreamID && frame->streamID <= net->lastStreamID)) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad sesssion");
         return;
@@ -9878,7 +9863,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
 static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpFrame   *frame;
 
@@ -9956,6 +9941,7 @@ static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
  */
 static void parsePriorityFrame(HttpQueue *q, HttpPacket *packet)
 {
+#if FUTURE
     MprBuf  *buf;
     int     dep, exclusive, weight;
 
@@ -9964,6 +9950,7 @@ static void parsePriorityFrame(HttpQueue *q, HttpPacket *packet)
     exclusive = dep & (1 << 31);
     dep &= (1U << 31) - 1;
     weight = mprGetCharFromBuf(buf);
+#endif
 }
 
 
@@ -10026,7 +10013,7 @@ static void parseResetFrame(HttpQueue *q, HttpPacket *packet)
 static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     MprBuf      *buf;
     cchar       *msg;
     ssize       len;
@@ -10057,7 +10044,7 @@ static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet)
 static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpFrame   *frame;
     int         increment;
 
@@ -10210,14 +10197,10 @@ static bool parseHeader(HttpQueue *q, HttpStream *stream, HttpPacket *packet)
  */
 static cchar *parseHeaderField(HttpQueue *q, HttpStream *stream, HttpPacket *packet)
 {
-    HttpNet     *net;
-    HttpFrame   *frame;
     MprBuf      *buf;
     cchar       *value;
     int         huff, len;
 
-    net = stream->net;
-    frame = packet->data;
     buf = packet->content;
 
     huff = ((uchar) mprLookAtNextCharInBuf(buf)) >> 7;
@@ -10339,7 +10322,7 @@ static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
     HttpFrame   *frame;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpLimits  *limits;
     MprBuf      *buf;
     ssize       len, padLen, frameLen;
@@ -10411,7 +10394,7 @@ static void parseDataFrame(HttpQueue *q, HttpPacket *packet)
 static void processDataFrame(HttpQueue *q, HttpPacket *packet)
 {
     HttpFrame   *frame;
-    HttpStream    *stream;
+    HttpStream  *stream;
 
     frame = packet->data;
     stream = frame->stream;
@@ -10434,7 +10417,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
 {
     HttpNet     *net;
     HttpPacket  *packet;
-    HttpStream    *stream;
+    HttpStream  *stream;
     MprBuf      *buf;
     va_list     ap;
     cchar       *msg;
@@ -10563,10 +10546,8 @@ static void checkSendSettings(HttpQueue *q)
  */
 static void sendPreface(HttpQueue *q)
 {
-    HttpNet     *net;
     HttpPacket  *packet;
 
-    net = q->net;
     if ((packet = httpCreatePacket(HTTP2_PREFACE_SIZE)) == 0) {
         return;
     }
@@ -10635,7 +10616,7 @@ static void sendWindowFrame(HttpQueue *q, int stream, ssize inc)
  */
 PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     MprKey      *kp;
 
@@ -10957,7 +10938,7 @@ static void sendFrame(HttpQueue *q, HttpPacket *packet)
  */
 static HttpStream *findStreamObj(HttpNet *net, int streamID)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     int         next;
 
     for (ITERATE_ITEMS(net->streams, stream, next)) {
@@ -13262,7 +13243,7 @@ static void emailRemedy(MprHash *args)
 
 static void httpRemedy(MprHash *args)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     cchar       *uri, *msg, *method;
     char        *err;
     int         status;
@@ -13440,7 +13421,7 @@ PUBLIC HttpNet *httpCreateNet(MprDispatcher *dispatcher, HttpEndpoint *endpoint,
  */
 PUBLIC void httpDestroyNet(HttpNet *net)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     int         next;
 
     if (!net->destroyed && !net->borrowed) {
@@ -13609,7 +13590,7 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
 
 PUBLIC void httpNetClosed(HttpNet *net)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     int         next;
 
     for (ITERATE_ITEMS(net->streams, stream, next)) {
@@ -14193,12 +14174,10 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask)
 
 static void checkLen(HttpQueue *q)
 {
-    HttpNet     *net;
     HttpPacket  *packet;
-    static int maxCount = 0;
-    int count = 0;
+    static int  maxCount = 0;
+    int         count = 0;
 
-    net = q->net;
     for (packet = q->first; packet; packet = packet->next) {
         count++;
     }
@@ -14326,7 +14305,7 @@ static void addToNetVector(HttpQueue *q, char *ptr, ssize bytes)
 static void freeNetPackets(HttpQueue *q, ssize bytes)
 {
     HttpPacket  *packet;
-    HttpStream    *stream;
+    HttpStream  *stream;
     ssize       len;
 
     assert(q->count >= 0);
@@ -15159,7 +15138,7 @@ PUBLIC int httpOpenPassHandler()
 
 static void startPass(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
 
     stream = q->stream;
 
@@ -15267,7 +15246,6 @@ PUBLIC void httpCreatePipeline(HttpStream *stream)
 
 PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
 {
-    Http        *http;
     HttpTx      *tx;
     HttpRx      *rx;
     HttpQueue   *q;
@@ -15277,7 +15255,6 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
     assert(stream);
     assert(route);
 
-    http = stream->http;
     rx = stream->rx;
     tx = stream->tx;
 
@@ -15439,7 +15416,7 @@ static void openPipeQueues(HttpStream *stream, HttpQueue *qhead)
 static int loadQueue(HttpQueue *q, ssize chunkSize)
 {
     Http        *http;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpStage   *stage;
     MprModule   *module;
 
@@ -15516,10 +15493,8 @@ PUBLIC void httpClosePipeline(HttpStream *stream)
 PUBLIC void httpStartPipeline(HttpStream *stream)
 {
     HttpQueue   *qhead, *q, *prevQ, *nextQ;
-    HttpTx      *tx;
     HttpRx      *rx;
 
-    tx = stream->tx;
     rx = stream->rx;
     assert(stream->net->endpoint);
 
@@ -15701,7 +15676,7 @@ PUBLIC void httpProcess(HttpQueue *q)
  */
 static void processHttp(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     bool        more;
     int         count;
 
@@ -15759,7 +15734,7 @@ static void processHttp(HttpQueue *q)
 static void processFirst(HttpQueue *q)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
 
     net = q->net;
@@ -15801,10 +15776,9 @@ static void processFirst(HttpQueue *q)
 static void processHeaders(HttpQueue *q)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
-    HttpLimits  *limits;
     MprKey      *kp;
     char        *cp, *key, *value, *tok;
     int         keepAliveHeader;
@@ -15813,7 +15787,6 @@ static void processHeaders(HttpQueue *q)
     stream = q->stream;
     rx = stream->rx;
     tx = stream->tx;
-    limits = stream->limits;
     keepAliveHeader = 0;
 
     for (ITERATE_KEYS(rx->headers, kp)) {
@@ -16124,15 +16097,13 @@ static void processHeaders(HttpQueue *q)
 static void processParsed(HttpQueue *q)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
-    HttpTx      *tx;
     cchar       *hostname;
 
     net = q->net;
     stream = q->stream;
     rx = stream->rx;
-    tx = stream->tx;
 
     if (httpServerStream(stream)) {
         hostname = rx->hostHeader;
@@ -16200,9 +16171,6 @@ static void processParsed(HttpQueue *q)
 
 static void routeRequest(HttpStream *stream)
 {
-    HttpRx      *rx;
-
-    rx = stream->rx;
     httpRouteRequest(stream);
     httpCreatePipeline(stream);
     httpStartPipeline(stream);
@@ -16212,7 +16180,7 @@ static void routeRequest(HttpStream *stream)
 
 static bool pumpOutput(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     HttpQueue   *wq;
     ssize       count;
@@ -16237,7 +16205,7 @@ static bool pumpOutput(HttpQueue *q)
 
 static bool processContent(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpPacket  *packet;
 
@@ -16274,7 +16242,7 @@ static bool processContent(HttpQueue *q)
  */
 static void processReady(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
 
     stream = q->stream;
     httpReadyHandler(stream);
@@ -16287,7 +16255,7 @@ static void processReady(HttpQueue *q)
 
 static bool processRunning(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
 
     stream = q->stream;
@@ -16303,7 +16271,7 @@ static bool processRunning(HttpQueue *q)
 
 static void processFinalized(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
 
@@ -16350,7 +16318,7 @@ static void processFinalized(HttpQueue *q)
 
 static bool processCompletion(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
 
     stream = q->stream;
     if (stream->http->requestCallback) {
@@ -16362,7 +16330,7 @@ static bool processCompletion(HttpQueue *q)
 
 static void measureRequest(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
     MprTicks    elapsed;
@@ -16391,7 +16359,7 @@ static void measureRequest(HttpQueue *q)
 
 static void prepErrorDoc(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpTx      *tx;
 
@@ -16462,10 +16430,8 @@ PUBLIC ssize httpGetReadCount(HttpStream *stream)
 PUBLIC cchar *httpGetBodyInput(HttpStream *stream)
 {
     HttpQueue   *q;
-    HttpRx      *rx;
     MprBuf      *content;
 
-    rx = stream->rx;
     if (!stream->rx->eof) {
         return 0;
     }
@@ -16621,7 +16587,7 @@ static void parseUri(HttpStream *stream)
  */
 static int sendContinue(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     cchar       *response;
     int         mode;
 
@@ -16647,9 +16613,9 @@ PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers)
     buf = mprCreateBuf(0, 0);
     for (ITERATE_KEYS(headers, kp)) {
         if (*kp->key == '=') {
-            mprPutToBuf(buf, ":%s: %s\n", &kp->key[1], kp->data);
+            mprPutToBuf(buf, ":%s: %s\n", &kp->key[1], (char*) kp->data);
         } else {
-            mprPutToBuf(buf, "%s: %s\n", kp->key, kp->data);
+            mprPutToBuf(buf, "%s: %s\n", kp->key, (char*) kp->data);
         }
     }
     mprAddNullToBuf(buf);
@@ -16887,7 +16853,7 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
 PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     MprTicks    timeout;
     int         events;
 
@@ -17290,7 +17256,7 @@ static int matchRange(HttpStream *stream, HttpRoute *route, int dir)
 
 static void startRange(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
 
     stream = q->stream;
@@ -17316,7 +17282,7 @@ static void startRange(HttpQueue *q)
 static void outgoingRangeService(HttpQueue *q)
 {
     HttpPacket  *packet;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
 
     stream = q->stream;
@@ -17356,14 +17322,14 @@ static void outgoingRangeService(HttpQueue *q)
 static HttpPacket *selectBytes(HttpQueue *q, HttpPacket *packet)
 {
     HttpRange   *range;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     MprOff      endPacket, length, gap, span;
     ssize       count;
 
     stream = q->stream;
     tx = stream->tx;
-    
+
     if ((range = tx->currentRange) == 0) {
         return 0;
     }
@@ -22100,7 +22066,7 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
 {
     Http        *http;
     HttpQueue   *q;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpLimits  *limits;
     HttpHost    *host;
     HttpRoute   *route;
@@ -22765,7 +22731,7 @@ PUBLIC int httpOpenTailFilter()
 
 static void incomingTail(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
 
     stream = q->stream;
@@ -22787,7 +22753,7 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
 static void outgoingTail(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     HttpPacket  *headers, *tail;
 
@@ -22821,7 +22787,7 @@ static void outgoingTail(HttpQueue *q, HttpPacket *packet)
 
 static bool streamCanAbsorb(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpQueue   *nextQ;
     ssize       room, size;
 
@@ -22861,10 +22827,7 @@ static bool streamCanAbsorb(HttpQueue *q, HttpPacket *packet)
 
 static void outgoingTailService(HttpQueue *q)
 {
-    HttpStream    *stream;
     HttpPacket  *packet;
-
-    stream = q->stream;
 
     for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
         if (!streamCanAbsorb(q, packet)) {
@@ -23587,8 +23550,6 @@ static void manageTx(HttpTx *tx, int flags);
 
 PUBLIC HttpTx *httpCreateTx(HttpStream *stream, MprHash *headers)
 {
-    Http        *http;
-    HttpNet     *net;
     HttpTx      *tx;
 
     assert(stream);
@@ -23597,8 +23558,6 @@ PUBLIC HttpTx *httpCreateTx(HttpStream *stream, MprHash *headers)
     if ((tx = mprAllocObj(HttpTx, manageTx)) == 0) {
         return 0;
     }
-    http = stream->http;
-    net = stream->net;
     stream->tx = tx;
     tx->stream = stream;
     tx->status = HTTP_CODE_OK;
@@ -24207,10 +24166,6 @@ static void setCorsHeaders(HttpStream *stream)
 
 PUBLIC HttpPacket *httpCreateHeaders(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
-
-    stream = q->stream;
-
     if (!packet) {
         packet = httpCreateHeaderPacket();
         packet->stream = q->stream;
@@ -24461,7 +24416,7 @@ PUBLIC bool httpFileExists(HttpStream *stream)
 PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize len, int flags)
 {
     HttpPacket  *packet;
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpTx      *tx;
     ssize       totalWritten, packetSize, thisWrite;
 
@@ -24638,7 +24593,7 @@ PUBLIC int httpOpenUploadFilter()
  */
 static Upload *allocUpload(HttpQueue *q)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     Upload      *up;
     cchar       *uploadDir;
@@ -24734,7 +24689,7 @@ static void startUpload(HttpQueue *q)
  */
 static void incomingUpload(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     MprBuf      *content;
     Upload      *up;
@@ -24842,7 +24797,7 @@ static void incomingUpload(HttpQueue *q, HttpPacket *packet)
  */
 static int processUploadBoundary(HttpQueue *q, char *line)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     Upload      *up;
 
     stream = q->stream;
@@ -24871,15 +24826,13 @@ static int processUploadBoundary(HttpQueue *q, char *line)
  */
 static int processUploadHeader(HttpQueue *q, char *line)
 {
-    HttpStream        *stream;
-    HttpRx          *rx;
+    HttpStream      *stream;
     HttpUploadFile  *file;
     Upload          *up;
     cchar           *uploadDir;
     char            *key, *headerTok, *rest, *nextPair, *value;
 
     stream = q->stream;
-    rx = stream->rx;
     up = q->queueData;
 
     if (line[0] == '\0') {
@@ -24991,7 +24944,7 @@ static void manageHttpUploadFile(HttpUploadFile *file, int flags)
 
 static void defineFileFields(HttpQueue *q, Upload *up)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpUploadFile  *file;
     char            *key;
 
@@ -25019,7 +24972,7 @@ static void defineFileFields(HttpQueue *q, Upload *up)
 
 static int writeToFile(HttpQueue *q, char *data, ssize len)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpUploadFile  *file;
     HttpLimits      *limits;
     Upload          *up;
@@ -25063,7 +25016,7 @@ static int writeToFile(HttpQueue *q, char *data, ssize len)
  */
 static int processUploadData(HttpQueue *q)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpPacket      *packet;
     MprBuf          *content;
     Upload          *up;
@@ -27085,7 +27038,7 @@ static int matchWebSock(HttpStream *stream, HttpRoute *route, int dir)
  */
 static int openWebSock(HttpQueue *q)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpWebSocket   *ws;
 
     assert(q);
@@ -27149,7 +27102,7 @@ static void readyWebSock(HttpQueue *q)
 
 static void incomingWebSockData(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpWebSocket   *ws;
     HttpPacket      *tail;
     HttpLimits      *limits;
@@ -27373,7 +27326,7 @@ static void incomingWebSockData(HttpQueue *q, HttpPacket *packet)
 
 static int processFrame(HttpQueue *q, HttpPacket *packet)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpRx          *rx;
     HttpWebSocket   *ws;
     HttpLimits      *limits;
@@ -27706,7 +27659,7 @@ PUBLIC ssize httpSendClose(HttpStream *stream, int status, cchar *reason)
  */
 static void outgoingWebSockService(HttpQueue *q)
 {
-    HttpStream        *stream;
+    HttpStream      *stream;
     HttpPacket      *packet, *tail;
     HttpWebSocket   *ws;
     char            *ep, *fp, *prefix, dataMask[4];

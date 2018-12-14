@@ -914,11 +914,9 @@ static void threadMain(void *data, MprThread *thread)
 
 static Request *createRequest(ThreadData *td, HttpStream *stream)
 {
-    HttpNet     *net;
     Request     *request;
     cchar       *path;
 
-    net = stream->net;
     request = stream->data = allocRequest(stream);
     request->threadData = td;
 
@@ -967,7 +965,6 @@ static void startRequest(Request *request)
 {
     HttpNet     *net;
     HttpStream  *stream;
-    cchar       *authType;
 
     stream = request->stream;
     net = stream->net;
@@ -977,8 +974,10 @@ static void startRequest(Request *request)
     }
     request->written = 0;
 
+#if FUTURE
     //  TODO - review
-    authType = stream->authType;
+    cchar *authType = stream->authType;
+#endif
 
     app->url = request->redirect ? request->redirect : app->url;
     request->redirect = 0;
@@ -1008,9 +1007,6 @@ static void startRequest(Request *request)
  */
 static void notifier(HttpStream *stream, int event, int arg)
 {
-    Request     *request;
-
-    request = stream->data;
     switch (event) {
     case HTTP_EVENT_STATE:
         checkRequestState(stream);
@@ -1181,13 +1177,11 @@ static int processResponse(HttpStream *stream)
 {
     HttpNet     *net;
     HttpRx      *rx;
-    Request     *request;
     MprOff      bytesRead;
     cchar       *msg, *responseHeaders, *sep;
     int         status;
 
     net = stream->net;
-    request = stream->data;
 
     if (!stream->rx) {
         return 0;
@@ -1378,10 +1372,8 @@ static ssize writeBody(HttpStream *stream)
 static void finishRequest(Request *request)
 {
     ThreadData  *td;
-    HttpStream  *stream;
 
     if (request) {
-        stream = request->stream;
         td = request->threadData;
         mprLock(app->mutex);
         if (--td->activeRequests <= 0) {
