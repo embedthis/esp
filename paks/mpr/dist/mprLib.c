@@ -22809,6 +22809,8 @@ PUBLIC MprOff mprSendFileToSocket(MprSocket *sock, MprFile *file, MprOff offset,
     int             done;
 
     rc = 0;
+    written = 0;
+    done = 0;
 
 #if MACOSX && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
     def.hdr_cnt = (int) beforeCount;
@@ -22831,8 +22833,6 @@ PUBLIC MprOff mprSendFileToSocket(MprSocket *sock, MprFile *file, MprOff offset,
 #endif
     {
         /* Either !MACOSX or no file */
-        done = 0;
-        written = 0;
         for (i = toWriteBefore = 0; i < beforeCount; i++) {
             toWriteBefore += beforeVec[i].len;
         }
