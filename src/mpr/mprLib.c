@@ -9541,7 +9541,7 @@ static void manageEventService(MprEventService *es, int flags)
         mprMark(es->mutex);
 
         /*
-            Special case: must lock because mprCreateEventOutside may queue events while marking
+            Special case: must lock because mprCreateEvent may queue events while marking
          */
         lock(es);
         for (dp = es->runQ->next; dp != es->runQ; dp = dp->next) {
@@ -12860,7 +12860,10 @@ static MprJson *jsonParse(MprJsonParser *parser, MprJson *obj)
                 if (name && parser->callback.checkBlock(parser, name, 0) < 0) {
                     return 0;
                 }
-                child = jsonParse(parser, parser->callback.createObj(parser, MPR_JSON_OBJ));
+                child = parser->callback.createObj(parser, MPR_JSON_OBJ);
+                if (peektok(parser) != JTOK_RBRACE) {
+                    child = jsonParse(parser, child);
+                }
                 if (gettok(parser) != JTOK_RBRACE) {
                     mprSetJsonError(parser, "Missing closing brace");
                     return 0;
@@ -13661,7 +13664,7 @@ PUBLIC char *getNextTerm(MprJson *obj, char *str, char **rest, int *termType)
     ssize   i;
 
     assert(rest);
-    
+
     if (!obj || !rest) {
         return 0;
     }
@@ -13674,7 +13677,7 @@ PUBLIC char *getNextTerm(MprJson *obj, char *str, char **rest, int *termType)
     }
     *termType = 0;
     seps = ".[]";
-    
+
     while (isspace((int) *start)) start++;
     if (termType && *start == '.') {
         *termType |= JSON_PROP_ELIPSIS;
@@ -16170,18 +16173,18 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
 {
     MprFile     *file;
     char        tbuf[128];
-    static int  check = 0;
+    static int  length = 0;
 
     if ((file = MPR->logFile) == 0 || msg == 0 || *msg == '\0') {
         return;
     }
-    if (MPR->logBackup && MPR->logSize && (check++ % 1000) == 0) {
+    if (MPR->logBackup && MPR->logSize && length >= MPR->logSize) {
         backupLog();
     }
     if (tags && *tags) {
         if (MPR->flags & MPR_LOG_DETAILED) {
             fmt(tbuf, sizeof(tbuf), "%s %d %s, ", mprGetDate(MPR_LOG_DATE), level, tags);
-            mprWriteFileString(file, tbuf);
+            length += mprWriteFileString(file, tbuf);
         } else if (MPR->flags & MPR_LOG_TAGGED) {
             if (schr(tags, ' ')) {
                 tags = ssplit(sclone(tags), " ", NULL);
@@ -16189,12 +16192,12 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
             if (!isupper((uchar) *tags)) {
                 tags = stitle(tags);
             }
-            mprWriteFileFmt(file, "%12s ", sfmt("[%s]", tags));
+            length += mprWriteFileFmt(file, "%12s ", sfmt("[%s]", tags));
         }
     }
-    mprWriteFileString(file, msg);
+    length += mprWriteFileString(file, msg);
     if (*msg && msg[slen(msg) - 1] != '\n') {
-        mprWriteFileString(file, "\n");
+        length += mprWriteFileString(file, "\n");
     }
 #if ME_MPR_OSLOG
     if (level == 0) {
