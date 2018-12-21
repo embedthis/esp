@@ -344,7 +344,7 @@ static bool loadController(HttpStream *stream)
                 return 0;
             }
         } else if (loaded) {
-            httpTrace(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -364,7 +364,7 @@ static bool setToken(HttpStream *stream)
         if (!httpCheckSecurityToken(stream)) {
             httpSetStatus(stream, HTTP_CODE_UNAUTHORIZED);
             if (route->json) {
-                httpTrace(stream->trace, "esp.xsrf.error", "error", 0);
+                httpLog(stream->trace, "esp.xsrf.error", "error", 0);
                 espRenderString(stream,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
                 espFinalize(stream);
@@ -420,7 +420,7 @@ static int runAction(HttpStream *stream)
     assert(eroute->top);
     action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
-        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
         setupFeedback(stream);
         if (!httpIsFinalized(stream)) {
             (action)(stream);
@@ -449,7 +449,7 @@ static bool loadView(HttpStream *stream, cchar *target)
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
         path = mprJoinPath(route->documents, target);
-        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
         /* May yield */
         route->source = path;
         if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
@@ -604,7 +604,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
         for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
                 if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
-                    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    httpLog(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
                     /* May yield */
                     espRenderView(stream, dest, 0);
                     return;
@@ -625,7 +625,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
         /* May yield */
         espRenderView(stream, dest, 0);
         return;
@@ -650,7 +650,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
     }
 #endif
 
-    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     stream->rx->target = (char*) &stream->rx->pathInfo[1];
     httpMapFile(stream);
     if (stream->tx->fileInfo.isDir) {
