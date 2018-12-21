@@ -27,8 +27,6 @@ for /l %%v in (14, -1, 9) do (
 :done
 
 @echo.
-@echo Ran: "%PROGRAMFILES(x86)%\Microsoft Visual Studio\%%v\%%e\VC\Auxiliary\Build\vcvarsall.bat" %1
-@echo.
 @echo Using Visual Studio %VS% (v%VisualStudioVersion%) from %VSINSTALLDIR%
 @echo.
 @echo %2 %3 %4 %5 %6 %7 %8 %9
