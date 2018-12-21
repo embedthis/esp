@@ -5625,7 +5625,7 @@ static bool preload(HttpRoute *route)
     eroute = route->eroute;
     if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
-            /* Must be pre-compiled if combined */
+            /* Must be a cache/appname.c */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
             route->source = source;
             if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
@@ -5649,12 +5649,18 @@ static bool preload(HttpRoute *route)
                     }
                 }
             } else {
+                /*
+                    DEPRECATE - load a src/app.c
+                 */
                 source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
-                /* May yield */
-                route->source = source;
-                if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                    mprLog("error esp", 0, "%s", errMsg);
-                    return 0;
+                if (mprPathExists(source, R_OK)) {
+                    /* May yield */
+                    route->source = source;
+                    mprLog("info esp", 0, "Specify app.c in esp.app.source: ['app.c']");
+                    if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                        mprLog("error esp", 0, "%s", errMsg);
+                        return 0;
+                    }
                 }
             }
         }
