@@ -480,8 +480,7 @@ PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
         return 0;
     }
     if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
-        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
-            getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find view %s", target);
         return 0;
     }
     if (!(flags & ESP_DONT_RENDER)) {
@@ -1193,8 +1192,13 @@ static bool preload(HttpRoute *route)
     eroute = route->eroute;
     if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
-            /* Must be pre-compiled if combined */
+            /* Must be a cache/appname.c */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
+            route->source = source;
+            if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                mprLog("error esp", 0, "%s", errMsg);
+                return 0;
+            }
         } else {
             if ((sources = mprGetJsonObj(route->config, "esp.app.source")) != 0) {
                 for (ITERATE_JSON(sources, si, index)) {
@@ -1206,21 +1210,21 @@ static bool preload(HttpRoute *route)
                         /* May yield */
                         route->source = source;
                         if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                            //  TODO - why test combine?
-                            if (eroute->combine || 1) {
-                                mprLog("error esp", 0, "%s", errMsg);
-                                return 0;
-                            }
+                            mprLog("error esp", 0, "%s", errMsg);
+                            return 0;
                         }
                     }
                 }
             } else {
+                /*
+                    DEPRECATE - load a src/app.c
+                 */
                 source = mprJoinPaths(route->home, httpGetDir(route, "SRC"), "app.c", NULL);
-                /* May yield */
-                route->source = source;
-                if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                    //  TODO - why test combine?
-                    if (eroute->combine) {
+                if (mprPathExists(source, R_OK)) {
+                    /* May yield */
+                    route->source = source;
+                    mprLog("info esp", 0, "Specify app.c in esp.app.source: ['app.c']");
+                    if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
                         mprLog("error esp", 0, "%s", errMsg);
                         return 0;
                     }
