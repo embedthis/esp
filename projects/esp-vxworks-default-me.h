@@ -121,7 +121,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.0.2"
+    #define ME_VERSION "8.0.3"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "espman"
@@ -177,7 +177,7 @@
     #define ME_VAPP_PREFIX "deploy"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "/usr/src/esp-8.0.2"
+    #define ME_SRC_PREFIX "/usr/src/esp-8.0.3"
 #endif
 
 /* Suffixes */
@@ -219,10 +219,10 @@
     #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 2
+    #define ME_PATCH_VERSION 3
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 800000002
+    #define ME_VNUM 800000003
 #endif
 
 /* Components */
