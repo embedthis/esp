@@ -637,7 +637,7 @@ PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
             httpSetContentType(stream, "text/html");
             written += espRenderString(stream, text);
             espFinalize(stream);
-            httpTrace(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpLog(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -1167,7 +1167,7 @@ PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, 
     mprAddItem(lines, sfmt("%s--", boundary));
 
     body = mprListToString(lines, "\n");
-    httpTrace(stream->trace, "esp.email", "context", "%s", body);
+    httpLog(stream->trace, "esp.email", "context", "%s", body);
 
     cmd = mprCreateCmd(stream->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, -1, 0) < 0) {
@@ -1175,14 +1175,14 @@ PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, 
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
-        httpTrace(stream->trace, "esp.email.error", "error",
+        httpLog(stream->trace, "esp.email.error", "error",
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
-        httpTrace(stream->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        httpLog(stream->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
@@ -1197,7 +1197,7 @@ PUBLIC void espClearCurrentSession(HttpStream *stream)
 
     eroute = stream->rx->route->eroute;
     if (eroute->currentSession) {
-        httpTrace(stream->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
+        httpLog(stream->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
     }
     eroute->currentSession = 0;
 }
@@ -1212,7 +1212,7 @@ PUBLIC void espSetCurrentSession(HttpStream *stream)
 
     eroute = stream->rx->route->eroute;
     eroute->currentSession = httpGetSessionID(stream);
-    httpTrace(stream->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
+    httpLog(stream->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
 }
 
 

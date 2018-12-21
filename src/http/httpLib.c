@@ -1538,7 +1538,7 @@ PUBLIC bool httpAuthenticate(HttpStream *stream)
                 return 0;
             }
         }
-        httpTrace(stream->trace, "auth.login.authenticated", "context",
+        httpLog(stream->trace, "auth.login.authenticated", "context",
             "msg: 'Using cached authentication data', username:'%s'", username);
         stream->username = username;
         rx->authenticated = 1;
@@ -1682,7 +1682,7 @@ PUBLIC bool httpLogin(HttpStream *stream, cchar *username, cchar *password)
     rx = stream->rx;
     auth = rx->route->auth;
     if (!username || !*username) {
-        httpTrace(stream->trace, "auth.login.error", "error", "msg:'missing username'");
+        httpLog(stream->trace, "auth.login.error", "error", "msg:'missing username'");
         return 0;
     }
     if (!auth->store) {
@@ -2027,7 +2027,7 @@ static bool configVerifyUser(HttpStream *stream, cchar *username, cchar *passwor
     rx = stream->rx;
     auth = rx->route->auth;
     if (!stream->user && (stream->user = mprLookupKey(auth->userCache, username)) == 0) {
-        httpTrace(stream->trace, "auth.login.error", "error", "msg: 'Unknown user', username:'%s'", username);
+        httpLog(stream->trace, "auth.login.error", "error", "msg: 'Unknown user', username:'%s'", username);
         return 0;
     }
     if (password) {
@@ -2048,9 +2048,9 @@ static bool configVerifyUser(HttpStream *stream, cchar *username, cchar *passwor
             success = smatch(password, requiredPassword);
         }
         if (success) {
-            httpTrace(stream->trace, "auth.login.authenticated", "context", "msg:'User authenticated', username:'%s'", username);
+            httpLog(stream->trace, "auth.login.authenticated", "context", "msg:'User authenticated', username:'%s'", username);
         } else {
-            httpTrace(stream->trace, "auth.login.error", "error", "msg:'Password failed to authenticate', username:'%s'", username);
+            httpLog(stream->trace, "auth.login.error", "error", "msg:'Password failed to authenticate', username:'%s'", username);
         }
         return success;
     }
@@ -2166,7 +2166,7 @@ PUBLIC void httpBasicLogin(HttpStream *stream)
     } else {
         httpSetHeader(stream, "WWW-Authenticate", "Basic realm=\"%s\"", auth->realm);
         httpError(stream, HTTP_CODE_UNAUTHORIZED, "Access Denied. Login required");
-        httpTrace(stream->trace, "auth.basic.error", "error", "msg:'Access denied, Login required'");
+        httpLog(stream->trace, "auth.basic.error", "error", "msg:'Access denied, Login required'");
     }
 }
 
@@ -2373,7 +2373,7 @@ static void outgoingCacheFilterService(HttpQueue *q)
      */
     if (mprLookupKey(stream->tx->headers, "X-SendCache") != 0) {
         if (fetchCachedResponse(stream)) {
-            httpTrace(stream->trace, "cache.sendcache", "context", "msg:'Using cached content'");
+            httpLog(stream->trace, "cache.sendcache", "context", "msg:'Using cached content'");
             cachedData = setHeadersFromCache(stream, tx->cachedContent);
             tx->length = slen(cachedData);
         }
@@ -2410,7 +2410,7 @@ static void outgoingCacheFilterService(HttpQueue *q)
                     tx->cacheBufferLength += size;
                 } else {
                     tx->cacheBuffer = 0;
-                    httpTrace(stream->trace, "cache.big", "context", "msg:'Item too big to cache',size:%zu,limit:%u",
+                    httpLog(stream->trace, "cache.big", "context", "msg:'Item too big to cache',size:%zu,limit:%u",
                         tx->cacheBufferLength + size, stream->limits->cacheItemSize);
                 }
             }
@@ -2484,7 +2484,7 @@ static bool fetchCachedResponse(HttpStream *stream)
     key = makeCacheKey(stream);
     if ((value = httpGetHeader(stream, "Cache-Control")) != 0 &&
             (scontains(value, "max-age=0") == 0 || scontains(value, "no-cache") == 0)) {
-        httpTrace(stream->trace, "cache.reload", "context", "msg:'Client reload'");
+        httpLog(stream->trace, "cache.reload", "context", "msg:'Client reload'");
 
     } else if ((tx->cachedContent = mprReadCache(stream->host->responseCache, key, &modified, 0)) != 0) {
         /*
@@ -2511,14 +2511,14 @@ static bool fetchCachedResponse(HttpStream *stream)
             }
         }
         status = (canUseClientCache && cacheOk) ? HTTP_CODE_NOT_MODIFIED : HTTP_CODE_OK;
-        httpTrace(stream->trace, "cache.cached", "context", "msg:'Use cached content',key:'%s',status:%d", key, status);
+        httpLog(stream->trace, "cache.cached", "context", "msg:'Use cached content',key:'%s',status:%d", key, status);
         httpSetStatus(stream, status);
         httpSetHeaderString(stream, "Etag", mprGetMD5(key));
         httpSetHeaderString(stream, "Last-Modified", mprFormatUniversalTime(MPR_HTTP_DATE, modified));
         httpRemoveHeader(stream, "Content-Encoding");
         return 1;
     }
-    httpTrace(stream->trace, "cache.none", "context", "msg:'No cached content',key:'%s'", key);
+    httpLog(stream->trace, "cache.none", "context", "msg:'No cached content',key:'%s'", key);
     return 0;
 }
 
@@ -2553,10 +2553,10 @@ PUBLIC ssize httpWriteCached(HttpStream *stream)
     }
     cacheKey = makeCacheKey(stream);
     if ((content = mprReadCache(stream->host->responseCache, cacheKey, &modified, 0)) == 0) {
-        httpTrace(stream->trace, "cache.none", "context", "msg:'No response data in cache', key:'%s'", cacheKey);
+        httpLog(stream->trace, "cache.none", "context", "msg:'No response data in cache', key:'%s'", cacheKey);
         return 0;
     }
-    httpTrace(stream->trace, "cache.cached", "context", "msg:'Used cached response', key:'%s'", cacheKey);
+    httpLog(stream->trace, "cache.cached", "context", "msg:'Used cached response', key:'%s'", cacheKey);
     data = setHeadersFromCache(stream, content);
     httpSetHeaderString(stream, "Etag", mprGetMD5(cacheKey));
     httpSetHeaderString(stream, "Last-Modified", mprFormatUniversalTime(MPR_HTTP_DATE, modified));
@@ -3155,7 +3155,7 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
             net->sock = 0;
 
         } else if (canUse(net, stream, uri, ssl, ip, port)) {
-            httpTrace(net->trace, "client.connection.reuse", "context", "reuse:%d", stream->keepAliveCount);
+            httpLog(net->trace, "client.connection.reuse", "context", "reuse:%d", stream->keepAliveCount);
 
         } else {
             if (net->protocol >= 2) {
@@ -3190,7 +3190,7 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
     setDefaultHeaders(stream);
     httpSetState(stream, HTTP_STATE_CONNECTED);
     protocol = net->protocol < 2 ? "HTTP/1.1" : "HTTP/2";
-    httpTrace(net->trace, "client.request", "request", "method='%s', url='%s', protocol='%s'", tx->method, url, protocol);
+    httpLog(net->trace, "client.request", "request", "method='%s', url='%s', protocol='%s'", tx->method, url, protocol);
     return 0;
 }
 
@@ -5907,19 +5907,19 @@ PUBLIC int httpDigestParse(HttpStream *stream, cchar **username, cchar **passwor
         when = 0;
         parseDigestNonce(dp->nonce, &secret, &realm, &when);
         if (!smatch(stream->http->secret, secret)) {
-            httpTrace(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce mismatch'");
+            httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce mismatch'");
             return MPR_ERR_BAD_STATE;
 
         } else if (!smatch(realm, rx->route->auth->realm)) {
-            httpTrace(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Realm mismatch'");
+            httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Realm mismatch'");
             return MPR_ERR_BAD_STATE;
 
         } else if (dp->qop && !smatch(dp->qop, "auth")) {
-            httpTrace(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Bad qop'");
+            httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Bad qop'");
             return MPR_ERR_BAD_STATE;
 
         } else if ((when + (5 * 60)) < time(0)) {
-            httpTrace(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce is stale'");
+            httpLog(stream->trace, "auth.digest.error", "error", "msg:'Access denied, Nonce is stale'");
             return MPR_ERR_BAD_STATE;
         }
         rx->passwordDigest = calcDigest(stream, dp, *username);
@@ -7333,7 +7333,7 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
         stream->error = 1;
         httpOmitBody(stream);
         stream->errorMsg = formatErrorv(stream, status, fmt, args);
-        httpTrace(stream->trace, "error", "error", "msg:'%s'", stream->errorMsg);
+        httpLog(stream->trace, "error", "error", "msg:'%s'", stream->errorMsg);
         HTTP_NOTIFY(stream, HTTP_EVENT_ERROR, 0);
         if (httpServerStream(stream)) {
             if (status == HTTP_CODE_NOT_FOUND) {
@@ -7554,7 +7554,7 @@ static int openFileHandler(HttpQueue *q)
             httpOmitBody(stream);
         }
         if (!tx->fileInfo.isReg && !tx->fileInfo.isLink) {
-            httpTrace(stream->trace, "fileHandler.error", "error", "msg:'Document is not a regular file',filename:'%s'",
+            httpLog(stream->trace, "fileHandler.error", "error", "msg:'Document is not a regular file',filename:'%s'",
                 tx->filename);
             httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot serve document");
 
@@ -7572,10 +7572,10 @@ static int openFileHandler(HttpQueue *q)
                 tx->file = mprOpenFile(tx->filename, O_RDONLY | O_BINARY, 0);
                 if (tx->file == 0) {
                     if (rx->referrer && *rx->referrer) {
-                        httpTrace(stream->trace, "fileHandler.error", "error", "msg:'Cannot open document',filename:'%s',referrer:'%s'",
+                        httpLog(stream->trace, "fileHandler.error", "error", "msg:'Cannot open document',filename:'%s',referrer:'%s'",
                             tx->filename, rx->referrer);
                     } else {
-                        httpTrace(stream->trace, "fileHandler.error", "error", "msg:'Cannot open document',filename:'%s'", tx->filename);
+                        httpLog(stream->trace, "fileHandler.error", "error", "msg:'Cannot open document',filename:'%s'", tx->filename);
                     }
                     httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot open document");
                 }
@@ -8739,7 +8739,7 @@ static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet);
 static HttpPacket *parseHeaders(HttpQueue *q, HttpPacket *packet);
 static void parseRequestLine(HttpQueue *q, HttpPacket *packet);
 static void parseResponseLine(HttpQueue *q, HttpPacket *packet);
-static void tracePacket(HttpQueue *q, HttpPacket *packet);
+static void LogPacket(HttpQueue *q, HttpPacket *packet);
 
 /*********************************** Code *************************************/
 /*
@@ -8776,7 +8776,7 @@ static void incomingHttp1(HttpQueue *q, HttpPacket *packet)
 
     for (packet = httpGetPacket(q); packet && !stream->error; packet = httpGetPacket(q)) {
         if (httpTracing(q->net)) {
-            httpTracePacket(q->net->trace, "http1.rx", "packet", 0, packet, NULL);
+            httpLogPacket(q->net->trace, "http1.rx", "packet", 0, packet, NULL);
         }
         if (stream->state < HTTP_STATE_PARSED) {
             if ((packet = parseHeaders(q, packet)) != 0) {
@@ -8812,7 +8812,7 @@ static void outgoingHttp1Service(HttpQueue *q)
             httpPutBackPacket(q, packet);
             return;
         }
-        tracePacket(q, packet);
+        LogPacket(q, packet);
         httpPutPacket(q->net->socketq, packet);
         if (stream && q->count <= q->low && (stream->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
             httpResumeQueue(stream->outputq);
@@ -8821,7 +8821,7 @@ static void outgoingHttp1Service(HttpQueue *q)
 }
 
 
-static void tracePacket(HttpQueue *q, HttpPacket *packet)
+static void LogPacket(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
     cchar       *type;
@@ -8832,13 +8832,13 @@ static void tracePacket(HttpQueue *q, HttpPacket *packet)
     len = httpGetPacketLength(packet) + mprGetBufLength(packet->prefix);
     if (httpTracing(net) && !net->skipTrace) {
         if (net->bytesWritten >= net->trace->maxContent) {
-            httpTrace(net->trace, "http1.tx", "packet", "msg: 'Abbreviating packet trace'");
+            httpLog(net->trace, "http1.tx", "packet", "msg: 'Abbreviating packet trace'");
             net->skipTrace = 1;
         } else {
-            httpTracePacket(net->trace, "http1.tx", "packet", HTTP_TRACE_HEX, packet, "type=%s, length=%zd,", type, len);
+            httpLogPacket(net->trace, "http1.tx", "packet", HTTP_TRACE_HEX, packet, "type=%s, length=%zd,", type, len);
         }
     } else {
-        httpTrace(net->trace, "http1.tx", "packet", "type=%s, length=%zd,", type, len);
+        httpLog(net->trace, "http1.tx", "packet", "type=%s, length=%zd,", type, len);
     }
 }
 
@@ -9673,7 +9673,7 @@ static HttpFrame *parseFrame(HttpQueue *q, HttpPacket *packet)
     if (httpTracing(q->net)) {
         typeStr = (type < HTTP2_MAX_FRAME) ? packetTypes[type] : "unknown";
         mprAdjustBufStart(packet->content, -HTTP2_FRAME_OVERHEAD);
-        httpTracePacket(q->net->trace, "http2.rx", "packet", HTTP_TRACE_HEX, packet,
+        httpLogPacket(q->net->trace, "http2.rx", "packet", HTTP_TRACE_HEX, packet,
             "frame=%s flags=%x stream=%d length=%zd", typeStr, frame->flags, frame->streamID, httpGetPacketLength(packet));
         mprAdjustBufStart(packet->content, HTTP2_FRAME_OVERHEAD);
     }
@@ -10028,7 +10028,7 @@ static void parseGoAwayFrame(HttpQueue *q, HttpPacket *packet)
     error = mprGetUint32FromBuf(buf);
     len = mprGetBufLength(buf);
     msg = len ? snclone(buf->start, len) : "";
-    httpTrace(net->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d lastStream=%d", msg, error, lastStreamID);
+    httpLog(net->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d lastStream=%d", msg, error, lastStreamID);
 
     for (ITERATE_ITEMS(net->streams, stream, next)) {
         if (stream->streamID > lastStreamID) {
@@ -10435,7 +10435,7 @@ static void sendGoAway(HttpQueue *q, int status, cchar *fmt, ...)
     }
     va_start(ap, fmt);
     net->errorMsg = msg = sfmtv(fmt, ap);
-    httpTrace(net->trace, "http2.tx", "error", "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStreamID, status, msg);
+    httpLog(net->trace, "http2.tx", "error", "Send network goAway, lastStream=%d, status=%d, msg='%s'", net->lastStreamID, status, msg);
     va_end(ap);
 
     buf = packet->content;
@@ -10503,7 +10503,7 @@ static void sendReset(HttpQueue *q, HttpStream *stream, int status, cchar *fmt, 
     }
     va_start(ap, fmt);
     msg = sfmtv(fmt, ap);
-    httpTrace(stream->trace, "http2.tx", "context", "Send stream reset, stream=%d, status=%d, msg='%s'", stream->streamID, status, msg);
+    httpLog(stream->trace, "http2.tx", "context", "Send stream reset, stream=%d, status=%d, msg='%s'", stream->streamID, status, msg);
     va_end(ap);
 
     mprPutUint32ToBuf(packet->content, status);
@@ -10520,7 +10520,7 @@ static void sendReset(HttpQueue *q, HttpStream *stream, int status, cchar *fmt, 
  */
 static void resetStream(HttpStream *stream, cchar *msg, int error)
 {
-    httpTrace(stream->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d", msg, error);
+    httpLog(stream->trace, "http2.rx", "context", "msg='Receive GoAway. %s' error=%d", msg, error);
     if (error) {
         httpError(stream, HTTP_CODE_COMMS_ERROR, "%s", msg);
     }
@@ -10635,7 +10635,7 @@ PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet)
     httpPrepareHeaders(stream);
     definePseudoHeaders(stream, packet);
     if (httpTracing(q->net)) {
-        httpTrace(stream->trace, "http2.tx", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
+        httpLog(stream->trace, "http2.tx", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
     }
 
     /*
@@ -10909,14 +10909,14 @@ static HttpPacket *defineFrame(HttpQueue *q, HttpPacket *packet, int type, uchar
     typeStr = (type < HTTP2_MAX_FRAME) ? packetTypes[type] : "unknown";
     if (httpTracing(net) && !net->skipTrace) {
         if (net->bytesWritten >= net->trace->maxContent) {
-            httpTrace(net->trace, "http2.tx", "packet", "msg: 'Abbreviating packet trace'");
+            httpLog(net->trace, "http2.tx", "packet", "msg: 'Abbreviating packet trace'");
             net->skipTrace = 1;
         } else {
-            httpTracePacket(net->trace, "http2.tx", "packet", HTTP_TRACE_HEX, packet,
+            httpLogPacket(net->trace, "http2.tx", "packet", HTTP_TRACE_HEX, packet,
                 "frame=%s, flags=%x, stream=%d, length=%zd,", typeStr, flags, stream, length);
         }
     } else {
-        httpTrace(net->trace, "http2.tx", "packet", "frame=%s, flags=%x, stream=%d, length=%zd,", typeStr, flags, stream, length);
+        httpLog(net->trace, "http2.tx", "packet", "frame=%s, flags=%x, stream=%d, length=%zd,", typeStr, flags, stream, length);
     }
     return packet;
 }
@@ -12679,7 +12679,7 @@ static void invokeDefenses(HttpMonitor *monitor, MprHash *args)
                 sd->suppressUntil = http->now + defense->suppressPeriod;
             }
         }
-        httpTrace(http->trace, "monitor.defense.invoke", "context", "defense:'%s', remedy:'%s'", defense->name, defense->remedy);
+        httpLog(http->trace, "monitor.defense.invoke", "context", "defense:'%s', remedy:'%s'", defense->name, defense->remedy);
 
         /*  WARNING: yields */
         remedyProc(args);
@@ -12715,7 +12715,7 @@ static void checkCounter(HttpMonitor *monitor, HttpCounter *counter, cchar *ip)
         period = monitor->period / 1000;
         address = ip ? sfmt(" %s", ip) : "";
         msg = sfmt(fmt, address, monitor->counterName, counter->value, period, monitor->limit);
-        httpTrace(HTTP->trace, "monitor.check", "context", "msg:'%s'", msg);
+        httpLog(HTTP->trace, "monitor.check", "context", "msg:'%s'", msg);
 
         subject = sfmt("Monitor %s Alert", monitor->counterName);
         args = mprDeserialize(
@@ -12744,7 +12744,7 @@ PUBLIC void httpPruneMonitors()
     lock(http->addresses);
     for (ITERATE_KEY_DATA(http->addresses, kp, address)) {
         if (address->banUntil && address->banUntil < http->now) {
-            httpTrace(http->trace, "monitor.ban.stop", "context", "client:'%s'", kp->key);
+            httpLog(http->trace, "monitor.ban.stop", "context", "client:'%s'", kp->key);
             address->banUntil = 0;
         }
         if ((address->updated + period) < http->now && address->banUntil == 0) {
@@ -13126,7 +13126,7 @@ PUBLIC int httpBanClient(cchar *ip, MprTicks period, int status, cchar *msg)
         return MPR_ERR_CANT_FIND;
     }
     if (address->banUntil < http->now) {
-        httpTrace(http->trace, "monitor.ban.start", "error", "client:'%s', duration:%lld", ip, period / 1000);
+        httpLog(http->trace, "monitor.ban.start", "error", "client:'%s', duration:%lld", ip, period / 1000);
     }
     banUntil = http->now + period;
     address->banUntil = max(banUntil, address->banUntil);
@@ -13188,14 +13188,14 @@ static void cmdRemedy(MprHash *args)
     cmd->stdoutBuf = mprCreateBuf(ME_BUFSIZE, -1);
     cmd->stderrBuf = mprCreateBuf(ME_BUFSIZE, -1);
 
-    httpTrace(HTTP->trace, "monitor.remedy.cmd", "context", "remedy:'%s'", command);
+    httpLog(HTTP->trace, "monitor.remedy.cmd", "context", "remedy:'%s'", command);
     if (mprStartCmd(cmd, argc, argv, NULL, MPR_CMD_DETACH | MPR_CMD_IN) < 0) {
-        httpTrace(HTTP->trace, "monitor.rememdy.cmd.error", "error", "msg:'Cannot start command. %s'", command);
+        httpLog(HTTP->trace, "monitor.rememdy.cmd.error", "error", "msg:'Cannot start command. %s'", command);
         return;
     }
     if (data) {
         if (mprWriteCmdBlock(cmd, MPR_CMD_STDIN, data, -1) < 0) {
-            httpTrace(HTTP->trace, "monitor.remedy.cmd.error", "error", "msg:'Cannot write to command. %s'", command);
+            httpLog(HTTP->trace, "monitor.remedy.cmd.error", "error", "msg:'Cannot write to command. %s'", command);
             return;
         }
     }
@@ -13204,7 +13204,7 @@ static void cmdRemedy(MprHash *args)
         rc = mprWaitForCmd(cmd, ME_HTTP_REMEDY_TIMEOUT);
         status = mprGetCmdExitStatus(cmd);
         if (rc < 0 || status != 0) {
-            httpTrace(HTTP->trace, "monitor.remedy.cmd.error", "error", "msg:'Remedy failed. %s. %s', command: '%s'",
+            httpLog(HTTP->trace, "monitor.remedy.cmd.error", "error", "msg:'Remedy failed. %s. %s', command: '%s'",
                 mprGetBufStart(cmd->stderrBuf), mprGetBufStart(cmd->stdoutBuf), command);
             return;
         }
@@ -13228,7 +13228,7 @@ static void delayRemedy(MprHash *args)
             address->delayUntil = max(delayUntil, address->delayUntil);
             delay = (int) lookupTicks(args, "DELAY", ME_HTTP_DELAY);
             address->delay = max(delay, address->delay);
-            httpTrace(http->trace, "monitor.delay.start", "context", "client:'%s', delay:%d", ip, address->delay);
+            httpLog(http->trace, "monitor.delay.start", "context", "client:'%s', delay:%d", ip, address->delay);
         }
     }
 }
@@ -13257,12 +13257,12 @@ static void httpRemedy(MprHash *args)
     }
     msg = smatch(method, "POST") ? mprLookupKey(args, "MESSAGE") : 0;
     if ((stream = httpRequest(method, uri, msg, HTTP_1_1, &err)) == 0) {
-        httpTrace(HTTP->trace, "monitor.remedy.http.error", "error", "msg:'%s'", err);
+        httpLog(HTTP->trace, "monitor.remedy.http.error", "error", "msg:'%s'", err);
         return;
     }
     status = httpGetStatus(stream);
     if (status != HTTP_CODE_OK) {
-        httpTrace(HTTP->trace, "monitor.remedy.http.error", "error", "status:%d, uri:'%s'", status, uri);
+        httpLog(HTTP->trace, "monitor.remedy.http.error", "error", "status:%d, uri:'%s'", status, uri);
     }
 }
 
@@ -13530,7 +13530,7 @@ PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl)
     if (ssl) {
         secureNet(net, ssl, ip);
     }
-    httpTrace(net->trace, "net.peer", "context", "peer:'%s:%d'", net->ip, net->port);
+    httpLog(net->trace, "net.peer", "context", "peer:'%s:%d'", net->ip, net->port);
     return 0;
 }
 
@@ -13545,7 +13545,7 @@ static void secureNet(HttpNet *net, MprSsl *ssl, cchar *peerName)
         httpNetError(net, "Cannot perform SSL upgrade. %s", sock->errorMsg);
 
     } else if (sock->peerCert) {
-        httpTrace(net->trace, "net.ssl", "context",
+        httpLog(net->trace, "net.ssl", "context",
             "msg:'Connection secured with peer certificate', " \
             "secure:true,cipher:'%s',peerName:'%s',subject:'%s',issuer:'%s'",
             sock->cipher, sock->peerName, sock->peerCert, sock->peerCertIssuer);
@@ -13986,7 +13986,7 @@ static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
     } else {
         mprAdjustBufStart(buf, strlen(HTTP2_PREFACE));
         protocol = 2;
-        httpTrace(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
+        httpLog(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
     }
     return protocol;
 #else
@@ -14014,11 +14014,11 @@ static HttpPacket *readPacket(HttpNet *net)
             net->secure = 1;
             sock = net->sock;
             if (sock->peerCert) {
-                httpTrace(net->trace, "net.ssl", "context",
+                httpLog(net->trace, "net.ssl", "context",
                     "msg:'Connection secured', cipher:'%s', peerName:'%s', subject:'%s', issuer:'%s', session:'%s'",
                     sock->cipher, sock->peerName, sock->peerCert, sock->peerCertIssuer, sock->session);
             } else {
-                httpTrace(net->trace, "net.ssl", "context", "msg:'Connection secured', cipher:'%s', session:'%s'", sock->cipher, sock->session);
+                httpLog(net->trace, "net.ssl", "context", "msg:'Connection secured', cipher:'%s', session:'%s'", sock->cipher, sock->session);
             }
             if (mprGetLogLevel() >= 5) {
                 mprLog("info http ssl", 6, "SSL State: %s", mprGetSocketState(sock));
@@ -14112,11 +14112,11 @@ static bool netBanned(HttpNet *net)
                 Defensive counter measure - go slow
              */
             mprCreateEvent(net->dispatcher, "delayConn", net->delay, resumeEvents, net, 0);
-            httpTrace(net->trace, "monitor.delay.stop", "context", "msg:'Suspend I/O',client:'%s'", net->ip);
+            httpLog(net->trace, "monitor.delay.stop", "context", "msg:'Suspend I/O',client:'%s'", net->ip);
             return 1;
         } else {
             address->delay = 0;
-            httpTrace(net->trace, "monitor.delay.stop", "context", "msg:'Resume I/O',client:'%s'", net->ip);
+            httpLog(net->trace, "monitor.delay.stop", "context", "msg:'Resume I/O',client:'%s'", net->ip);
         }
     }
     return 0;
@@ -15357,7 +15357,7 @@ PUBLIC void httpCreateTxPipeline(HttpStream *stream, HttpRoute *route)
         httpAssignQueueCallbacks(stream->writeq, tx->handler, HTTP_QUEUE_TX);
     }
     if (net->endpoint) {
-        httpTrace(stream->trace, "pipeline", "context",
+        httpLog(stream->trace, "pipeline", "context",
             "route:'%s', handler:'%s', target:'%s', endpoint:'%s:%d', host:'%s', referrer:'%s', filename:'%s'",
             rx->route->pattern, tx->handler->name, rx->route->targetRule, net->endpoint->ip, net->endpoint->port,
             stream->host->name ? stream->host->name : "default", rx->referrer ? rx->referrer : "",
@@ -15767,10 +15767,10 @@ static void processFirst(HttpQueue *q)
     }
 
     if (httpTracing(net) && httpIsServer(net)) {
-        httpTrace(stream->trace, "http.rx.headers", "request", "method:'%s', uri:'%s', protocol:'%d'",
+        httpLog(stream->trace, "http.rx.headers", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
         if (net->protocol >= 2) {
-            httpTrace(stream->trace, "http.rx.headers", "context", "\n%s", httpTraceHeaders(q, stream->rx->headers));
+            httpLog(stream->trace, "http.rx.headers", "context", "\n%s", httpTraceHeaders(q, stream->rx->headers));
         }
     }
 }
@@ -16308,7 +16308,7 @@ static void processFinalized(HttpQueue *q)
         if (!stream->errorMsg) {
             stream->errorMsg = stream->sock->errorMsg ? stream->sock->errorMsg : sclone("Server close");
         }
-        httpTrace(stream->trace, "http.connection.close", "network", "msg:'%s'", stream->errorMsg);
+        httpLog(stream->trace, "http.connection.close", "network", "msg:'%s'", stream->errorMsg);
     }
     if (tx->errorDocument && !smatch(tx->errorDocument, rx->uri)) {
         prepErrorDoc(q);
@@ -16349,11 +16349,11 @@ static void measureRequest(HttpQueue *q)
         status = httpServerStream(stream) ? tx->status : rx->status;
         received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
 #if MPR_HIGH_RES_TIMER
-        httpTraceData(stream->trace,
+        httpLogData(stream->trace,
             "http.completion", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
             status, stream->error, elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
 #else
-        httpTraceData(stream->trace, "http.completion", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, received:%lld, sent:%lld",
+        httpLogData(stream->trace, "http.completion", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, received:%lld, sent:%lld",
             status, stream->error, elapsed, received, tx->bytesWritten);
 #endif
     }
@@ -16372,7 +16372,7 @@ static void prepErrorDoc(HttpQueue *q)
     if (!rx->headerPacket || stream->errorDoc) {
         return;
     }
-    httpTrace(stream->trace, "http.errordoc", "context", "location:'%s', status:%d", tx->errorDocument, tx->status);
+    httpLog(stream->trace, "http.errordoc", "context", "location:'%s', status:%d", tx->errorDocument, tx->status);
 
     httpClosePipeline(stream);
     httpDiscardData(stream, HTTP_QUEUE_RX);
@@ -16415,7 +16415,7 @@ static bool mapMethod(HttpStream *stream)
     rx = stream->rx;
     if (rx->flags & HTTP_POST && (method = httpGetParam(stream, "-http-method-", 0)) != 0) {
         if (!scaselessmatch(method, rx->method)) {
-            httpTrace(stream->trace, "http.mapMethod", "context", "originalMethod:'%s', method:'%s'", rx->method, method);
+            httpLog(stream->trace, "http.mapMethod", "context", "originalMethod:'%s', method:'%s'", rx->method, method);
             httpSetMethod(stream, method);
             return 1;
         }
@@ -18206,7 +18206,7 @@ PUBLIC cchar *httpMapContent(HttpStream *stream, cchar *filename)
                     path = sjoin(filename, ext, NULL);
                 }
                 if (mprGetPathInfo(path, &info) == 0) {
-                    httpTrace(stream->trace, "route.map", "context", "originalFilename:'%s', filename:'%s'", filename, path);
+                    httpLog(stream->trace, "route.map", "context", "originalFilename:'%s', filename:'%s'", filename, path);
                     filename = path;
                     if (zipped) {
                         httpSetHeader(stream, "Content-Encoding", "gzip");
@@ -19699,7 +19699,7 @@ static int authCondition(HttpStream *stream, HttpRoute *route, HttpRouteOp *op)
         }
     }
     if (!httpCanUser(stream, NULL)) {
-        httpTrace(stream->trace, "auth.check", "error", "msg:'Access denied, user is not authorized for access'");
+        httpLog(stream->trace, "auth.check", "error", "msg:'Access denied, user is not authorized for access'");
         if (!stream->tx->finalized) {
             httpError(stream, HTTP_CODE_FORBIDDEN, "Access denied. User is not authorized for access.");
             /* Request has been denied and a response generated. So OK to accept this route. */
@@ -19875,11 +19875,11 @@ static int cmdUpdate(HttpStream *stream, HttpRoute *route, HttpRouteOp *op)
 
     command = expandTokens(stream, op->details);
     cmd = mprCreateCmd(stream->dispatcher);
-    httpTrace(stream->trace, "route.run", "context", "command:'%s'", command);
+    httpLog(stream->trace, "route.run", "context", "command:'%s'", command);
     if ((status = mprRunCmd(cmd, command, NULL, NULL, &out, &err, -1, 0)) != 0) {
         /* Don't call httpError, just set errorMsg which can be retrieved via: ${request:error} */
         stream->errorMsg = sfmt("Command failed: %s\nStatus: %d\n%s\n%s", command, status, out, err);
-        httpTrace(stream->trace, "route.run.error", "error", "command:'%s', error:'%s'", command, stream->errorMsg);
+        httpLog(stream->trace, "route.run.error", "error", "command:'%s', error:'%s'", command, stream->errorMsg);
         /* Continue */
     }
     mprDestroyCmd(cmd);
@@ -21632,7 +21632,7 @@ PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
             lifespan = (route->flags & HTTP_ROUTE_PERSIST_COOKIE) ? rx->session->lifespan : 0;
             url = (route->prefix && *route->prefix) ? route->prefix : "/";
             httpSetCookie(stream, cookie, rx->session->id, url, NULL, lifespan, flags);
-            httpTrace(stream->trace, "session.create", "context", "cookie:'%s', session:'%s'", cookie, rx->session->id);
+            httpLog(stream->trace, "session.create", "context", "cookie:'%s', session:'%s'", cookie, rx->session->id);
 
             if ((route->flags & HTTP_ROUTE_XSRF) && rx->securityToken) {
                 httpSetSessionVar(stream, ME_XSRF_COOKIE, rx->securityToken);
@@ -21877,14 +21877,14 @@ PUBLIC bool httpCheckSecurityToken(HttpStream *stream)
         if (!requestToken) {
             requestToken = httpGetParam(stream, ME_XSRF_PARAM, 0);
             if (!requestToken) {
-                httpTrace(stream->trace, "session.xsrf.error", "error", "msg:'Missing security token in request'");
+                httpLog(stream->trace, "session.xsrf.error", "error", "msg:'Missing security token in request'");
             }
         }
         if (!smatch(sessionToken, requestToken)) {
             /*
                 Potential CSRF attack. Deny request. Re-create a new security token so legitimate clients can retry.
              */
-            httpTrace(stream->trace, "session.xsrf.error", "error",
+            httpLog(stream->trace, "session.xsrf.error", "error",
                 "msg:'Security token in request does not match session token',xsrf:'%s',sessionXsrf:'%s'",
                 requestToken, sessionToken);
             httpAddSecurityToken(stream, 1);
@@ -22434,7 +22434,7 @@ static void connTimeout(HttpStream *stream, MprEvent *mprEvent)
     }
     if (stream->state < HTTP_STATE_FIRST) {
         if (msg) {
-            httpTrace(stream->trace, event, "error", "msg:'%s'", msg);
+            httpLog(stream->trace, event, "error", "msg:'%s'", msg);
             stream->errorMsg = msg;
         }
         httpDisconnectStream(stream);
@@ -22656,14 +22656,14 @@ PUBLIC bool httpRequestExpired(HttpStream *stream, MprTicks timeout)
 
     if (mprGetRemainingTicks(stream->started, requestTimeout) < 0) {
         if (requestTimeout != timeout) {
-            httpTrace(stream->trace, "timeout.duration", "error",
+            httpLog(stream->trace, "timeout.duration", "error",
                 "msg:'Request cancelled exceeded max duration',timeout:%lld", requestTimeout / 1000);
         }
         return 1;
     }
     if (mprGetRemainingTicks(stream->lastActivity, inactivityTimeout) < 0) {
         if (inactivityTimeout != timeout) {
-            httpTrace(stream->trace, "timeout.inactivity", "error",
+            httpLog(stream->trace, "timeout.inactivity", "error",
                 "msg:'Request cancelled due to inactivity',timeout:%lld", inactivityTimeout / 1000);
         }
         return 1;
@@ -22966,7 +22966,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent)
          */
         trace->size = HTTP_TRACE_MAX_SIZE;
         trace->maxContent = MAXINT;
-        trace->formatter = httpDetailTraceFormatter;
+        trace->formatter = httpDetailFormatter;
         trace->logger = httpWriteTraceLogFile;
         trace->mutex = mprCreateLock();
     }
@@ -23018,7 +23018,7 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name)
             return;
         }
         mprAddKey(trace->events, "result", ITOP(0));
-        formatter = httpCommonTraceFormatter;
+        formatter = httpCommonFormatter;
 
 #if FUTURE
     } else if (smatch(name, "simple")) {
@@ -23026,7 +23026,7 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name)
 #endif
 
     } else {
-       formatter = httpDetailTraceFormatter;
+       formatter = httpDetailFormatter;
     }
     httpSetTraceFormatter(trace, formatter);
 }
@@ -23050,7 +23050,7 @@ PUBLIC void httpSetTraceLogger(HttpTrace *trace, HttpTraceLogger callback)
 
 
 /*
-    Inner routine for httpTrace()
+    Inner routine for httpLog()
  */
 PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...)
 {
@@ -23066,7 +23066,7 @@ PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, 
 }
 
 
-PUBLIC bool httpTracePacket(HttpTrace *trace, cchar *event, cchar *type, int flags, HttpPacket *packet, cchar *fmt, ...)
+PUBLIC bool httpLogPacket(HttpTrace *trace, cchar *event, cchar *type, int flags, HttpPacket *packet, cchar *fmt, ...)
 {
     va_list     args;
     int         level;
@@ -23086,11 +23086,10 @@ PUBLIC bool httpTracePacket(HttpTrace *trace, cchar *event, cchar *type, int fla
     return 1;
 }
 
-
 /*
     Trace request body data
  */
-PUBLIC bool httpTraceData(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, ...)
+PUBLIC bool httpLogData(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, ...)
 {
     Http        *http;
     va_list     args;
@@ -23109,6 +23108,21 @@ PUBLIC bool httpTraceData(HttpTrace *trace, cchar *event, cchar *type, int flags
     }
     va_start(args, fmt);
     httpFormatTrace(trace, event, type, flags, buf, len, fmt, args);
+    va_end(args);
+    return 1;
+}
+
+
+//  LEGACY
+PUBLIC bool httpTrace(HttpStream *stream, cchar *event, cchar *type, cchar *fmt, ...)
+{
+    va_list     args;
+
+    assert(event && *event);
+    assert(type && *type);
+
+    va_start(args, fmt);
+    httpFormatTrace(stream->trace, event, type, 0, NULL, 0, fmt, args);
     va_end(args);
     return 1;
 }
@@ -23135,7 +23149,7 @@ PUBLIC void httpWriteTrace(HttpTrace *trace, cchar *buf, ssize len)
 /*
     Format a detailed request message
  */
-PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *data, ssize len, cchar *fmt, va_list args)
+PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *data, ssize len, cchar *fmt, va_list args)
 {
     HttpPacket  *packet;
     MprBuf      *buf;
@@ -23239,7 +23253,7 @@ PUBLIC void httpSimpleTraceFormatter(HttpTrace *trace, cchar *event, cchar *type
     Common Log Formatter (NCSA)
     This formatter only emits messages only for connections at their complete event.
  */
-PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, cchar *type, cchar *event, int flags, cchar *data, ssize len, cchar *msg, va_list args)
+PUBLIC void httpCommonFormatter(HttpTrace *trace, cchar *type, cchar *event, int flags, cchar *data, ssize len, cchar *msg, va_list args)
 {
     HttpStream  *stream;
     HttpRx      *rx;
@@ -24055,7 +24069,7 @@ PUBLIC void httpRedirect(HttpStream *stream, int status, cchar *targetUri)
             "<html><head><title>%s</title></head>\r\n"
             "<body><h1>%s</h1>\r\n<p>The document has moved <a href=\"%s\">here</a>.</p></body></html>\r\n",
             msg, msg, targetUri);
-        httpTrace(stream->trace, "http.redirect", "context", "status:%d,location:'%s'", status, targetUri);
+        httpLog(stream->trace, "http.redirect", "context", "status:%d,location:'%s'", status, targetUri);
     } else {
         httpFormatResponse(stream,
             "<!DOCTYPE html>\r\n"
@@ -24403,7 +24417,7 @@ PUBLIC bool httpSetFilename(HttpStream *stream, cchar *filename, int flags)
 
     if (tx->flags & HTTP_TX_PIPELINE) {
         /* Filename being revised after pipeline created */
-        httpTrace(stream->trace, "http.document", "context", "filename:'%s'", tx->filename);
+        httpLog(stream->trace, "http.document", "context", "filename:'%s'", tx->filename);
     }
     return info->valid;
 }
@@ -24935,7 +24949,7 @@ static int processUploadHeader(HttpQueue *q, char *line)
                         "Cannot create upload temp file %s. Check upload temp dir %s", up->tmpPath, uploadDir);
                     return MPR_ERR_CANT_OPEN;
                 }
-                httpTrace(stream->trace, "upload.file", "context", "clientFilename:'%s', filename:'%s'",
+                httpLog(stream->trace, "upload.file", "context", "clientFilename:'%s', filename:'%s'",
                     up->clientFilename, up->tmpPath);
 
                 up->file = mprOpenFile(up->tmpPath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
@@ -27158,7 +27172,7 @@ static void incomingWebSockData(HttpQueue *q, HttpPacket *packet)
          */
         httpJoinPacketForService(q, packet, 0);
     }
-    httpTracePacket(stream->trace, "request.websockets.data", "packet", 0, packet, "state:%d, frame:%d, length:%zu",
+    httpLogPacket(stream->trace, "request.websockets.data", "packet", 0, packet, "state:%d, frame:%d, length:%zu",
         ws->state, ws->frameState, httpGetPacketLength(packet));
 
     if (packet->flags & HTTP_PACKET_END) {
@@ -27379,12 +27393,12 @@ static int processFrame(HttpQueue *q, HttpPacket *packet)
     assert(content);
 
     mprAddNullToBuf(content);
-    httpTrace(stream->trace, "websockets.rx.packet", "context", "wsSeq:%d, wsTypeName:'%s', wsType:%d, wsLast:%d, wsLength:%zu",
+    httpLog(stream->trace, "websockets.rx.packet", "context", "wsSeq:%d, wsTypeName:'%s', wsType:%d, wsLast:%d, wsLength:%zu",
          ws->rxSeq++, codetxt[packet->type], packet->type, packet->last, mprGetBufLength(content));
 
     switch (packet->type) {
     case WS_MSG_TEXT:
-        httpTracePacket(stream->trace, "websockets.rx.data", "packet", 0, packet, 0);
+        httpLogPacket(stream->trace, "websockets.rx.data", "packet", 0, packet, 0);
         /* Fall through */
 
     case WS_MSG_BINARY:
@@ -27486,7 +27500,7 @@ static int processFrame(HttpQueue *q, HttpPacket *packet)
                 }
             }
         }
-        httpTrace(stream->trace, "websockets.rx.close", "context",
+        httpLog(stream->trace, "websockets.rx.close", "context",
             "wsCloseStatus:%d, wsCloseReason:'%s', wsClosing:%d", ws->closeStatus, ws->closeReason, ws->closing);
         if (ws->closing) {
             httpDisconnectStream(stream);
@@ -27681,7 +27695,7 @@ PUBLIC ssize httpSendClose(HttpStream *stream, int status, cchar *reason)
     if (reason) {
         scopy(&msg[2], len - 2, reason);
     }
-    httpTrace(stream->trace, "websockets.tx.close", "context", "wsCloseStatus:%d, wsCloseReason:'%s'", status, reason);
+    httpLog(stream->trace, "websockets.tx.close", "context", "wsCloseStatus:%d, wsCloseReason:'%s'", status, reason);
     return httpSendBlock(stream, WS_MSG_CLOSE, msg, len, HTTP_BUFFER);
 }
 
@@ -27752,7 +27766,7 @@ static void outgoingWebSockService(HttpQueue *q)
             }
             *prefix = '\0';
             mprAdjustBufEnd(packet->prefix, prefix - packet->prefix->start);
-            httpTracePacket(stream->trace, "websockets.tx.packet", "packet", 0, packet,
+            httpLogPacket(stream->trace, "websockets.tx.packet", "packet", 0, packet,
                 "wsSeqno:%d, wsTypeName:\"%s\", wsType:%d, wsLast:%d, wsLength:%zd",
                 ws->txSeq++, codetxt[packet->type], packet->type, packet->last, httpGetPacketLength(packet));
         }
@@ -28032,7 +28046,7 @@ static void traceErrorProc(HttpStream *stream, cchar *fmt, ...)
     ws->errorMsg = sfmtv(fmt, args);
     va_end(args);
 
-    httpTrace(stream->trace, "websockets.tx.error", "error", "msg:'%s'", ws->errorMsg);
+    httpLog(stream->trace, "websockets.tx.error", "error", "msg:'%s'", ws->errorMsg);
 }
 
 #endif /* ME_HTTP_WEB_SOCKETS */

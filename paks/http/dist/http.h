@@ -555,7 +555,7 @@ PUBLIC HttpAddress *httpMonitorAddress(struct HttpNet *net, int counterIndex);
 
 /********************************** HttpTrace *********************************/
 
-#define HTTP_TRACE_MAX_SIZE         (10 * 1024) /**< Default maximum body size to trace */
+#define HTTP_TRACE_MAX_SIZE         (10 * 1024) /**< Default maximum body size to log */
 #define HTTP_TRACE_MIN_LOG_SIZE     (10 * 1024) /**< Minimum log file size */
 
 /*
@@ -602,7 +602,7 @@ typedef struct HttpTrace {
     MprFile             *file;                          /**< Trace logger file object */
     int                 backupCount;                    /**< Trace logger backup count */
     int                 flags;                          /**< Trace control flags (append|anew) */
-    MprOff              size;                           /**< Max trace log size */
+    MprOff              size;                           /**< Max log size */
     ssize               maxContent;                     /**< Maximum content size to trace */
     MprHash             *events;                        /**< Configuration of events */
     HttpTraceFormatter  formatter;                      /**< Trace formatter */
@@ -635,7 +635,7 @@ PUBLIC int httpBackupTraceLogFile(HttpTrace *trace);
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC void httpCommonTraceFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
+PUBLIC void httpCommonFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
 /**
     Create a trace object.
@@ -661,7 +661,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
+PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
 /**
     Simple log trace formatter for debugging
@@ -677,7 +677,7 @@ PUBLIC void httpDetailTraceFormatter(HttpTrace *trace, cchar *event, cchar *type
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC void httpSimpleTraceFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
+PUBLIC void httpSimpleFormatter(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args);
 
 /**
     Convenience routine to format trace via the configured formatter
@@ -823,7 +823,7 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
 
 #if DOXYGEN
 /**
-    Trace an event of interest
+    Log (trace) an event of interest
     @description The Http trace log is for operational request and server messages and should be used in preference to
     the MPR error log which should be used only for configuration and hard system-wide errors.
     @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
@@ -845,9 +845,9 @@ PUBLIC int httpStartTracing(cchar *traceSpec);
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC bool httpTrace(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...);
+PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...);
 #else
-    #define httpTrace(trace, event, type, ...) \
+    #define httpLog(trace, event, type, ...) \
         if (trace && HTTP->traceLevel > 0) { \
             int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
             if (__tlevel >= 0 && __tlevel <= HTTP->traceLevel) { \
@@ -860,9 +860,9 @@ PUBLIC bool httpTrace(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, .
 PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...) PRINTF_ATTRIBUTE(5,6);
 
 /**
-    Trace with data buffer
-    @description This is similar to #httpTrace but will also trace the contents of a data buffer.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be traced up
+    Log with data buffer
+    @description This is similar to #httpLog but will also log the contents of a data buffer.
+    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
     to the maximum size defined via #httpSetTraceLogFile.
     @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
     @param event Event to trace
@@ -876,31 +876,31 @@ PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, 
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC bool httpTraceData(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, ...) PRINTF_ATTRIBUTE(7,8);
+PUBLIC bool httpLogData(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, ...) PRINTF_ATTRIBUTE(7,8);
 
 /**
     Trace request packet
-    @description This is similar to #httpTraceData but accepts a packet as a parameter.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be traced up
+    @description This is similar to #httpLogData but accepts a packet as a parameter.
+    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
     to the maximum size defined via #httpSetTraceLogFile.
     @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event to trace
-    @param type Event type to trace
+    @param event Event to log
+    @param type Event type to log
     @param flags Output formatting flags
-    @param packet Packet to trace.
+    @param packet Packet to log.
     @param values Formatted comma separated key=value pairs
     @param ... Arguments for fmt
-    @return True if the event was traced
+    @return True if the event was logged
     @ingroup HttpTrace
     @stability Evolving
  */
-PUBLIC bool httpTracePacket(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
+PUBLIC bool httpLogPacket(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
 
 /**
-    Convenience routine to write trace to the trace logger. Should only be used by formatters.
+    Convenience routine to write data to the trace logger. Should only be used by formatters.
     @param trace HttpTrace object
     @param buf Trace message to write
-    @param len Length of trace message
+    @param len Length of message
     @ingroup HttpTrace
     @stability Evolving
  */
@@ -3771,29 +3771,6 @@ PUBLIC int httpGetKeepAliveCount(HttpStream *stream);
  */
 PUBLIC ssize httpGetWriteQueueCount(HttpStream *stream);
 
-#if DOXYGEN
-/**
-    Test if the connection is a server-side connection
-    @param stream HttpStream stream object created via #httpCreateStream
-    @return true if the connection is server-side
-    @ingroup HttpStream
-    @stability Stable
-  */
-PUBLIC bool httpServerStream(HttpStream *stream);
-
-/**
-    Test if the connection is a client-side connection
-    @param stream HttpStream stream object created via #httpCreateStream
-    @return true if the connection is client-side
-    @ingroup HttpStream
-    @stability Stable
-  */
-PUBLIC bool httpClientStream(HttpStream *stream);
-#else
-#define httpServerStream(stream) (stream && stream->net && stream->net->endpoint)
-#define httpClientStream(stream) (stream && stream->net && !stream->net->endpoint)
-#endif
-
 /**
     Match the HttpHost object that should serve this request
     @description This selects the appropriate host object for this request. If no suitable host can be found, #httpError
@@ -3861,6 +3838,29 @@ PUBLIC void httpResetClientStream(HttpStream *stream, bool keepHeaders);
     @stability Internal
  */
 PUBLIC void httpReadyHandler(HttpStream *stream);
+
+#if DOXYGEN
+/**
+    Test if the connection is a server-side connection
+    @param stream HttpStream stream object created via #httpCreateStream
+    @return true if the connection is server-side
+    @ingroup HttpStream
+    @stability Stable
+  */
+PUBLIC bool httpServerStream(HttpStream *stream);
+
+/**
+    Test if the connection is a client-side connection
+    @param stream HttpStream stream object created via #httpCreateStream
+    @return true if the connection is client-side
+    @ingroup HttpStream
+    @stability Stable
+  */
+PUBLIC bool httpClientStream(HttpStream *stream);
+#else
+#define httpServerStream(stream) (stream && stream->net && stream->net->endpoint)
+#define httpClientStream(stream) (stream && stream->net && !stream->net->endpoint)
+#endif
 
 /**
     Test if a directory listing should be rendered for the request.
@@ -4077,6 +4077,9 @@ PUBLIC void httpStartHandler(HttpStream *stream);
     @stability Internal
  */
 PUBLIC void httpCreatePipeline(HttpStream *stream);
+
+//  LEGACY
+PUBLIC bool httpTrace(HttpStream *stream, cchar *event, cchar *type, cchar *fmt, ...);
 
 /**
     Verify the server handshake
