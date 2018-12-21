@@ -105,9 +105,9 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>httpCommonTraceFormatter</name>
+      <name>httpCommonFormatter</name>
       <anchorfile>group___http_trace.html</anchorfile>
-      <anchor>gad39b0a37b239d01453c2c7d04d4117f4</anchor>
+      <anchor>ga74692525d72d2bdc9e830295aa8617f5</anchor>
       <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args)</arglist>
     </member>
     <member kind="function">
@@ -119,9 +119,9 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>httpDetailTraceFormatter</name>
+      <name>httpDetailFormatter</name>
       <anchorfile>group___http_trace.html</anchorfile>
-      <anchor>gaebd8de0b3d25fe3194f8e79661b54e70</anchor>
+      <anchor>ga1ecac0c63f0745721195d26a85d1bc55</anchor>
       <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args)</arglist>
     </member>
     <member kind="function">
@@ -137,6 +137,27 @@
       <anchorfile>group___http_trace.html</anchorfile>
       <anchor>ga2994b1a1c2aa3a54ecce4aa75abaae7d</anchor>
       <arglist>(void)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>httpLog</name>
+      <anchorfile>group___http_trace.html</anchorfile>
+      <anchor>gab583cf8939e3ade8bc9c52bf88dfab8e</anchor>
+      <arglist>(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool bool</type>
+      <name>httpLogData</name>
+      <anchorfile>group___http_trace.html</anchorfile>
+      <anchor>gabf1008f4ee77c6533afa68406cc60973</anchor>
+      <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt,...) PRINTF_ATTRIBUTE(7</arglist>
+    </member>
+    <member kind="function">
+      <type>bool bool bool</type>
+      <name>httpLogPacket</name>
+      <anchorfile>group___http_trace.html</anchorfile>
+      <anchor>gada905f6089e734ee63af053764e91173</anchor>
+      <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values,...) PRINTF_ATTRIBUTE(6</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -196,9 +217,9 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>httpSimpleTraceFormatter</name>
+      <name>httpSimpleFormatter</name>
       <anchorfile>group___http_trace.html</anchorfile>
-      <anchor>ga7ddd3334eb76e0a3b35f731b0c0dbc6a</anchor>
+      <anchor>gac075fd39cd6dabf2024fffef5f80ed5a</anchor>
       <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt, va_list args)</arglist>
     </member>
     <member kind="function">
@@ -207,27 +228,6 @@
       <anchorfile>group___http_trace.html</anchorfile>
       <anchor>gacf198f252c9c854bc36d7db737b0309d</anchor>
       <arglist>(cchar *traceSpec)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>httpTrace</name>
-      <anchorfile>group___http_trace.html</anchorfile>
-      <anchor>ga5f8b026696d0a7285da9a60046483348</anchor>
-      <arglist>(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt,...)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool bool</type>
-      <name>httpTraceData</name>
-      <anchorfile>group___http_trace.html</anchorfile>
-      <anchor>gae680ae8485a5eabac4467a4d4a640ea7</anchor>
-      <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *buf, ssize len, cchar *fmt,...) PRINTF_ATTRIBUTE(7</arglist>
-    </member>
-    <member kind="function">
-      <type>bool bool bool</type>
-      <name>httpTracePacket</name>
-      <anchorfile>group___http_trace.html</anchorfile>
-      <anchor>ga484d95676d3efc07a2747ac1e511ac64</anchor>
-      <arglist>(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values,...) PRINTF_ATTRIBUTE(6</arglist>
     </member>
     <member kind="function">
       <type>bool bool bool void</type>
@@ -1237,7 +1237,7 @@
       <type>bool</type>
       <name>httpServiceNetQueues</name>
       <anchorfile>group___http_net.html</anchorfile>
-      <anchor>ga0af7e6412cbdce0fdf1b731096162685</anchor>
+      <anchor>ga70dadad66259917f3f643ee19be11b6f</anchor>
       <arglist>(HttpNet *net, int flags)</arglist>
     </member>
     <member kind="function">
@@ -1321,13 +1321,6 @@
       <anchorfile>group___http_stream.html</anchorfile>
       <anchor>ga0065e552553caf322b18519842a57c66</anchor>
       <arglist>)(struct HttpStream *stream)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>httpAfterEvent</name>
-      <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>gaffd3b7d030eba1fe3a08e41744c1d547</anchor>
-      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void void void</type>
@@ -2426,6 +2419,13 @@
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>ga48a8b6e95ed34d5d0872bca393849141</anchor>
       <arglist>(HttpRoute *route, int enable)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpSetRouteCookieSame</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga282fd734081126b30430de2a68305675</anchor>
+      <arglist>(HttpRoute *route, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

@@ -3664,7 +3664,7 @@ PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
             httpSetContentType(stream, "text/html");
             written += espRenderString(stream, text);
             espFinalize(stream);
-            httpTrace(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpLog(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -4194,7 +4194,7 @@ PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, 
     mprAddItem(lines, sfmt("%s--", boundary));
 
     body = mprListToString(lines, "\n");
-    httpTrace(stream->trace, "esp.email", "context", "%s", body);
+    httpLog(stream->trace, "esp.email", "context", "%s", body);
 
     cmd = mprCreateCmd(stream->dispatcher);
     if (mprRunCmd(cmd, "sendmail -t", NULL, body, &out, &err, -1, 0) < 0) {
@@ -4202,14 +4202,14 @@ PUBLIC int espEmail(HttpStream *stream, cchar *to, cchar *from, cchar *subject, 
         return MPR_ERR_CANT_OPEN;
     }
     if (mprWaitForCmd(cmd, ME_ESP_EMAIL_TIMEOUT) < 0) {
-        httpTrace(stream->trace, "esp.email.error", "error",
+        httpLog(stream->trace, "esp.email.error", "error",
             "msg=\"Timeout waiting for command to complete\", timeout=%d, command=\"%s\"",
             ME_ESP_EMAIL_TIMEOUT, cmd->argv[0]);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_COMPLETE;
     }
     if ((status = mprGetCmdExitStatus(cmd)) != 0) {
-        httpTrace(stream->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
+        httpLog(stream->trace, "esp.email.error", "error", "msg=\"Sendmail failed\", status=%d, error=\"%s\"", status, err);
         mprDestroyCmd(cmd);
         return MPR_ERR_CANT_WRITE;
     }
@@ -4224,7 +4224,7 @@ PUBLIC void espClearCurrentSession(HttpStream *stream)
 
     eroute = stream->rx->route->eroute;
     if (eroute->currentSession) {
-        httpTrace(stream->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
+        httpLog(stream->trace, "esp.singular.clear", "context", "session=%s", eroute->currentSession);
     }
     eroute->currentSession = 0;
 }
@@ -4239,7 +4239,7 @@ PUBLIC void espSetCurrentSession(HttpStream *stream)
 
     eroute = stream->rx->route->eroute;
     eroute->currentSession = httpGetSessionID(stream);
-    httpTrace(stream->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
+    httpLog(stream->trace, "esp.singular.set", "context", "msg=\"Set singluar user\", session=%s", eroute->currentSession);
 }
 
 
@@ -4777,7 +4777,7 @@ static bool loadController(HttpStream *stream)
                 return 0;
             }
         } else if (loaded) {
-            httpTrace(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -4797,7 +4797,7 @@ static bool setToken(HttpStream *stream)
         if (!httpCheckSecurityToken(stream)) {
             httpSetStatus(stream, HTTP_CODE_UNAUTHORIZED);
             if (route->json) {
-                httpTrace(stream->trace, "esp.xsrf.error", "error", 0);
+                httpLog(stream->trace, "esp.xsrf.error", "error", 0);
                 espRenderString(stream,
                     "{\"retry\": true, \"success\": 0, \"feedback\": {\"error\": \"Security token is stale. Please retry.\"}}");
                 espFinalize(stream);
@@ -4853,7 +4853,7 @@ static int runAction(HttpStream *stream)
     assert(eroute->top);
     action = mprLookupKey(eroute->top->actions, rx->target);
     if (action) {
-        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
         setupFeedback(stream);
         if (!httpIsFinalized(stream)) {
             (action)(stream);
@@ -4882,7 +4882,7 @@ static bool loadView(HttpStream *stream, cchar *target)
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
         path = mprJoinPath(route->documents, target);
-        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
         /* May yield */
         route->source = path;
         if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
@@ -4913,8 +4913,7 @@ PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
         return 0;
     }
     if ((viewProc = mprLookupKey(eroute->top->views, target)) == 0) {
-        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find function %s for %s",
-            getCacheName(route, "view", mprJoinPath(route->documents, target)), target);
+        httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot find view %s", target);
         return 0;
     }
     if (!(flags & ESP_DONT_RENDER)) {
@@ -5037,7 +5036,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
         for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
                 if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
-                    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    httpLog(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
                     /* May yield */
                     espRenderView(stream, dest, 0);
                     return;
@@ -5058,7 +5057,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpTrace(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpLog(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
         /* May yield */
         espRenderView(stream, dest, 0);
         return;
@@ -5083,7 +5082,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
     }
 #endif
 
-    httpTrace(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     stream->rx->target = (char*) &stream->rx->pathInfo[1];
     httpMapFile(stream);
     if (stream->tx->fileInfo.isDir) {
@@ -5628,6 +5627,11 @@ static bool preload(HttpRoute *route)
         if (eroute->combine) {
             /* Must be pre-compiled if combined */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
+            route->source = source;
+            if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
+                mprLog("error esp", 0, "%s", errMsg);
+                return 0;
+            }
         } else {
             if ((sources = mprGetJsonObj(route->config, "esp.app.source")) != 0) {
                 for (ITERATE_JSON(sources, si, index)) {
@@ -5639,11 +5643,8 @@ static bool preload(HttpRoute *route)
                         /* May yield */
                         route->source = source;
                         if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                            //  TODO - why test combine?
-                            if (eroute->combine || 1) {
-                                mprLog("error esp", 0, "%s", errMsg);
-                                return 0;
-                            }
+                            mprLog("error esp", 0, "%s", errMsg);
+                            return 0;
                         }
                     }
                 }
@@ -5652,11 +5653,8 @@ static bool preload(HttpRoute *route)
                 /* May yield */
                 route->source = source;
                 if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
-                    //  TODO - why test combine?
-                    if (eroute->combine) {
-                        mprLog("error esp", 0, "%s", errMsg);
-                        return 0;
-                    }
+                    mprLog("error esp", 0, "%s", errMsg);
+                    return 0;
                 }
             }
         }
