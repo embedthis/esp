@@ -159,39 +159,39 @@
     <div class="content">
 
             <h1>ESP Pages</h1>
-            <p>ESP Pages are HTML pages with embedded <em>C</em> code that renders what is sent to the client at runtime. 
-            Whereas static HTML pages must be fixed at development time, ESP pages can generate HTML and data at 
-            runtime and on a per-user basis. ESP provides one of the easiest and most powerful web frameworks 
+            <p>ESP Pages are HTML pages with embedded <em>C</em> code that renders what is sent to the client at runtime.
+            Whereas static HTML pages must be fixed at development time, ESP pages can generate HTML and data at
+            runtime and on a per-user basis. ESP provides one of the easiest and most powerful web frameworks
             without compromising speed or memory footprint.</p>
 
             <a id="embedded"></a>
             <h2>Embedded C Code </h2>
-            <p>ESP pages are in essence, HTML pages with embedded <em>C</em> code. They are parsed into pure 
+            <p>ESP pages are in essence, HTML pages with embedded <em>C</em> code. They are parsed into pure
             <em>C</em> code and then compiled into native machine binary for exceptionally fast execution. </p>
-            
+
             <pre class="code">
 &lt;h1&gt;Hello World&lt;/h1&gt;
 &lt;h2&gt;Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;/h2&gt;
 </pre>
-            
+
             <h3>Why C?</h3>
-            <p>Why <em>C</em> code, you may ask? Because <em>C</em> enables ESP to provide the ultimate in speed and 
-            efficiency. <em>C</em> is the fastest, closest to the hardware, language available. By using 
-            <em>C</em>, invoking device APIs and other system APIs are easy, fast and compact. There is no 
+            <p>Why <em>C</em> code, you may ask? Because <em>C</em> enables ESP to provide the ultimate in speed and
+            efficiency. <em>C</em> is the fastest, closest to the hardware, language available. By using
+            <em>C</em>, invoking device APIs and other system APIs are easy, fast and compact. There is no
             translation or coupling required getting into and out of another language.</p>
 
             <h3>Transparent Compiling</h3>
-            <p>However, ESP is not a traditional low-level environment. When a client request for an ESP page 
-            is received, the ESP page is transparently parsed, converted into <em>C</em> code, compiled and saved as 
+            <p>However, ESP is not a traditional low-level environment. When a client request for an ESP page
+            is received, the ESP page is transparently parsed, converted into <em>C</em> code, compiled and saved as
             a native code shared library. Once loaded, subsequent requests will use the in-memory
-            code without any access to the original ESP page. If the system is rebooted, the on-disk cached module 
+            code without any access to the original ESP page. If the system is rebooted, the on-disk cached module
             will be loaded without recompilation.</p>
-            
+
             <img class="ui centered image" src="../images/esp/template/compile.jpg" alt="compile">
-            <p>The compilation of ESP pages happens automatically and quickly in the background when in development mode. 
-            If the original web page is modified, the page is transparently recompiled and re-cached. For production, 
-            pages can be pre-compiled, and locked-down without recompiling in the field. This updating behavior can 
-            be controlled by the 
+            <p>The compilation of ESP pages happens automatically and quickly in the background when in development mode.
+            If the original web page is modified, the page is transparently recompiled and re-cached. For production,
+            pages can be pre-compiled, and locked-down without recompiling in the field. This updating behavior can
+            be controlled by the
             <em><a href="config.html">http.update</a></em> configuration directive.</p>
             <p>Alternatively, ESP pages can be precompiled via the <em>esp</em> generator program. For example:</p>
 
@@ -201,8 +201,8 @@
             In this mode, all the ESP pages, controllers and source code can be compiled into a single, manageable
             flexible library file.</p>
             <h3>Garbage Collection</h3>
-            <p>ESP uses <a href="../ref/memory.html#collector">Garbage Collection</a> 
-            for managing memory. This makes working with ESP pages 
+            <p>ESP uses <a href="../ref/memory.html#collector">Garbage Collection</a>
+            for managing memory. This makes working with ESP pages
             and embedded <em>C</em> code simpler and more secure. Any memory allocated by ESP is automatically
             managed by the garbage collector. You do not need to free such memory. You can still use the normal
             malloc and free APIs if you wish. Just don't mix the two kinds of memory.</p>
@@ -214,7 +214,7 @@
 
             <p>This joins the directory with an upper-case of "name" and appends a "jpg" extension if one is not already
             in the name. All allocated memory is automatically freed ensuring no memory leaks.</p>
-            
+
             <a id="directives"></a>
             <h2>ESP Page Directives</h2>
             <p>ESP pages support a suite of page directives to control how embedded <em>C</em> code will be processed and at
@@ -284,7 +284,7 @@
                 </tbody>
             </table>
             <h3>&lt;&#37;^ include "file" &#37;&gt;</h3>
-            <p>This directive can be used to include other HTML or ESP files at this location. The included 
+            <p>This directive can be used to include other HTML or ESP files at this location. The included
                 contents will be parsed as an ESP page and the results substituted at this location. ESP include
                 directives can be nested to an arbitrary depth.</p>
 
@@ -300,7 +300,7 @@
                 generated function for the template.</p>
             <h3>&lt;&#37;= expression &#37;&gt;</h3>
             <p>Use this directive to embed the result of a <em>C</em> expression. The result must be a null-terminated string.
-            This example below calls the 
+            This example below calls the
             <a href="../ref/api/mpr.html#mpr_8h_1a8ecdc6cb45d8758203e09764faaf5e2d">mprGetDate</a>
             function which returns the local date and time as a string.</p>
 
@@ -310,12 +310,12 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 
             <h3>&lt;&#37; statements &#37;&gt;</h3>
             <p>Use this directive to run <em>C</em> code statements. No value is substituted back into the page in
-            place of the directive. If you need to write data inside a statement block, use the 
+            place of the directive. If you need to write data inside a statement block, use the
             
             render API.</p>
 
             <pre class="code">
-&lt;&#37; 
+&lt;&#37;
     for (i = 0; i &lt; 10; i++) {
         render("I is &#37;d &lt;br/&gt;\n", i);
     }
@@ -323,7 +323,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 </pre>
             
             <p><em>Security Note</em>: you should never use <em>render</em> to write back user data that has not been
-            validated. If you 
+            validated. If you
             must render user input data, use <em>renderSafe</em> which will escape any HTML sequences. This is essential
             to avoid XSS and other security issues.</p>
             <p>You can also iterate over regular HTML code. The following code will display <b>Hello World</b> ten
@@ -336,7 +336,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
 </pre>
             <h3>&#37;&#36;variables</h3>
             <p>ESP provides a shorthand for accessing request parameters. Request parameters are a collection of
-            query variables, posted form fields, routing tokens, session variables and any explicitly set parameters. 
+            query variables, posted form fields, routing tokens, session variables and any explicitly set parameters.
             These are stored in a params table and in session data stores and are accessible via the
             <a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">param</a>,
             <a href="../ref/api/esp.html#group___esp_req_1ga98e63a9a924ec667a3c1b540e56792d3">espGetParam</a> and
@@ -370,7 +370,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <p>ESP provides a shorthand for accessing field data in the current database record. Controllers will
             often setup the environment for a view by defining a "current" database record.
             The <em>&#37;#field</em> directive provides an easy way to access any field in the current record. </p>
-            <p>If a controller defined a current "<em>user</em>" record, this example below would extract the 
+            <p>If a controller defined a current "<em>user</em>" record, this example below would extract the
             "<em>name</em>" field for display.</p>
 
             <pre class="code">
@@ -380,10 +380,10 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <h2>Request Context </h2>
             <p>The full HTTP request context is provided by a set of objects. These include:</p>
             <ul>
-                <li>Request 
+                <li>Request
                     <a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">Params</a> &mdash; Request query and form data</li>
                 <li><a href="../ref/api/esp.html#group___esp_abbrev_1ga45c8bf65c9eacac2512533dbc006db2b">Session</a> Data &mdash; Persistent session data saved across requests</li>
-                <li><a href="../ref/api/http.html#group___http_conn">HttpConn</a> &mdash; Connection object. Holds data pertaining to the socket connection.</li>
+                <li><a href="../ref/api/http.html#group___http_stream">HttpStream</a> &mdash; Connection object. Holds data pertaining to the socket connection.</li>
                 <li><a href="../ref/api/http.html#group___http_rx">HttpRx</a> &mdash; Receive object. Holds data pertaining to this HTTP request.</li>
                 <li><a href="../ref/api/http.html#group___http_tx">HttpTx</a> &mdash; Transmit object. Holds data pertaining to the response for this request.</li>
                 <li><a href="../ref/api/http.html#group___http_host">HttpHost</a> &mdash; Host object. Holds data for the host/virtual host serving the request.</li>
@@ -391,20 +391,20 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
                 <li><a href="../ref/api/esp.html#group___esp_route">EspRoute</a> &mdash; Additional ESP specific route state</li>
                 <li><a href="../ref/api/esp.html#group___esp_req">EspReq</a> &mdash; Additional ESP specific request state</li>
             </ul>
-            <p>The Rx, Tx, Host, Route, EspRoute and EspReq objects are all addressable from the HttpConn object. 
+            <p>The Rx, Tx, Host, Route, EspRoute and EspReq objects are all addressable from the HttpStream object.
             Here is a collection of especially useful context items:</p>
             <table class="ui table" title="items">
                 <thead>
                     <tr><th>Item<th>Description</tr>
                 </thead>
                 <tbody>
-                <tr><td>getConn()<td>Get the current HttpConn object. Can be used inside controllers and 
+                <tr><td>getStream()<td>Get the current HttpStream object. Can be used inside controllers and
                     template web pages</tr>
-                <tr><td>conn-&gt;rx<td>Request object</td>
-                <tr><td>conn-&gt;tx<td>Transmit object</td>
-                <tr><td>conn-&gt;host<td>Host object</td>
-                <tr><td>conn-&gt;rx-&gt;route<td>Route object</td>
-                <tr><td class="nowrap">conn-&gt;rx-&gt;route-&gt;eroute<td>ESP Extended Route object</td>
+                <tr><td>stream-&gt;rx<td>Request object</td>
+                <tr><td>stream-&gt;tx<td>Transmit object</td>
+                <tr><td>stream-&gt;host<td>Host object</td>
+                <tr><td>stream-&gt;rx-&gt;route<td>Route object</td>
+                <tr><td class="nowrap">stream-&gt;rx-&gt;route-&gt;eroute<td>ESP Extended Route object</td>
                 <tr><td>rx-&gt;method<td>HTTP method string</td>
                 <tr><td>rx-&gt;uri<td>Request URI</td>
                 <tr><td>rx-&gt;pathInfo<td>Request path information after the scriptName</td>
@@ -418,7 +418,7 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             </table>
             <p>See the <a href="../ref/native.html">Native APIs</a> document for more details about the available
             APIs. See the <a href="command.html">ESP Generator</a> documentation for full details.</p>
-            
+
             <h2>Common Tasks</h2>
             <h3>Writing Data</h3>
             <p>ESP provides a set of rendering APIs to send formatted and unformatted data in the response.
@@ -442,20 +442,20 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
                     a status result with feedback as JSON.</li>
             </ul>
             <h3>Redirecting</h3>
-            <p>To redirect the client to a new URL, use the 
+            <p>To redirect the client to a new URL, use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga79cf206805a9595395af14e7c35f289d">redirect</a> API. For
             example:</p>
 
             <pre class="code">redirect("checkout.html");</pre>
 
-            <p>For more control over the HTTP status code, use 
-            <a href="../ref/api/esp.html#group___esp_req_1ga2b1dc5b4a688fc1062395d6420e85ef9">espRedirect</a> API. For 
+            <p>For more control over the HTTP status code, use
+            <a href="../ref/api/esp.html#group___esp_req_1ga2b1dc5b4a688fc1062395d6420e85ef9">espRedirect</a> API. For
             example:</p>
 
-            <pre class="code">espRedirect(getConn(), 302, "checkout.html");</pre>
+            <pre class="code">espRedirect(getStream(), 302, "checkout.html");</pre>
 
             <h3>Setting the HTTP Response Code</h3>
-            <p>Use the 
+            <p>Use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga63470999d986c7d2d064dc44cdc2fcac">setStatus</a> API to
             set the HTTP status response code. For example:</p>
 
@@ -465,17 +465,17 @@ Today is &lt;&#37;= mprGetDate(0); &#37;&gt;&lt;
             <p>To add a custom HTTP response header, use the
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaf4cbdf3eef410884ed0928066d0503f2">setHeader</a> API.
             For example:</p>
-            
+
             <pre class="code">setHeader("X-ACCESS_CODE", "42");</pre>
-           
+
             <a id="debugging"></a>
             <h2>Debugging</h2>
             <p>You can inject debugging code into your views to trace data to the esp log file or back to the client's
-            browser. The <a href="../ref/api/mpr.html#group___mpr_log_1ga21fa2199e7f70707c1fb3b63daed6ecf">mprLog</a> 
-            function will print its arguments to esp log file. 
+            browser. The <a href="../ref/api/mpr.html#group___mpr_log_1ga21fa2199e7f70707c1fb3b63daed6ecf">mprLog</a>
+            function will print its arguments to esp log file.
 
             <p>To send trace to the browser, use the <em>
-            <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a></em> function 
+            <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a></em> function
             to write data back to the browser. </p>
 
     </div>

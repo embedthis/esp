@@ -1235,7 +1235,7 @@
     </member>
     <member kind="function">
       <type>bool</type>
-      <name>httpServiceQueues</name>
+      <name>httpServiceNetQueues</name>
       <anchorfile>group___http_net.html</anchorfile>
       <anchor>ga0af7e6412cbdce0fdf1b731096162685</anchor>
       <arglist>(HttpNet *net, int flags)</arglist>

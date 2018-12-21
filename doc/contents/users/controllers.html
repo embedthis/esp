@@ -5,10 +5,10 @@
     ],
 }
         <h1>Controllers and Actions</h1>
-        <p>ESP <em>controllers</em> are the conductors of the application and they orchestrate the application's 
-        logic and responses to client requests. Via <em>action</em> functions, they receive client requests and 
+        <p>ESP <em>controllers</em> are the conductors of the application and they orchestrate the application's
+        logic and responses to client requests. Via <em>action</em> functions, they receive client requests and
         generate appropriate responses, mutating the applications data model as required.</p>
-        <p>An ESP controller is a "C" source file that contains action functions to receive to incoming client 
+        <p>An ESP controller is a "C" source file that contains action functions to receive to incoming client
         requests and manage the applications response. The controller may be part of an ESP MVC application or it
         may be a stand-alone controller.</p>
 
@@ -19,11 +19,11 @@
         <pre class="code">
 #include "esp.h"
 
-static void hello() { 
+static void hello() {
     render("Hello World\n");
 }
 
-ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route) 
+ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
 {
     espDefineAction(route, "greeting-hello", hello);
     return 0;
@@ -33,7 +33,7 @@ ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
         <pre class="code">http://localhost/greeting/hello</pre>
         <p>ESP will compile the greeting.c controller and then load the controller and
         run the <em>hello</em> function which will respond to the client with "Hello World\n".</p>
- 
+
         <a id="flow"></a>
         <h2>Controller Processing</h2>
         <p>ESP process requests in stages:</p>
@@ -42,16 +42,16 @@ ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
             <li>Route an incoming request to the ESP request handler</li>
             <li>If the request is for a controller, load the controller and run the requested action</li>
             <li>Run the specified controller action determined by the request route pattern</li>
-            <li>If the request is for a web page or if the controller did not render a response 
+            <li>If the request is for a web page or if the controller did not render a response
                 look for a matching web page and run that to render a response</li>
         </ol>
-  
+
         <a id="routing"></a>
         <h2>Routing Requests</h2>
         <p>At the heart of understanding how controllers are loaded and actions are run, is understanding request
-        routing. When the HTTP server inside <em>esp</em>receives a client request, it examines each of the 
-        configured request routes. These may are configured via the <em>esp.json</em> file. 
-        Esp then searches the route table, until it finds a matching route for the request URI. The 
+        routing. When the HTTP server inside <em>esp</em>receives a client request, it examines each of the
+        configured request routes. These may are configured via the <em>esp.json</em> file.
+        Esp then searches the route table, until it finds a matching route for the request URI. The
         selected route will then break the URI into tokens and save the token values as request parameters.</p>
         <p>For example: consider the URI format:</p>
         <pre class="code">
@@ -64,8 +64,8 @@ http://example.com/APP/CONTROLLER/ACTION/ID
 
         <h3>Restful Routes</h3>
         <p>ESP applications will typically use a collection of Restful routes.
-        Restful routes are a simple, readable, and familiar pattern for many developers and users. 
-        They map common <a href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a> 
+        Restful routes are a simple, readable, and familiar pattern for many developers and users.
+        They map common <a href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a>
         operations to specific URIs and controller actions.</p>
         <p>ESP will create a initial set of Restful routes depending on the <em>esp.server.routes</em> configuration.</p>
 <table class="ui table" title="routes">
@@ -92,12 +92,12 @@ http://example.com/APP/CONTROLLER/ACTION/ID
             <a id="actions"></a>
             <h2>Actions</h2>
             <p>Actions are where the controller does its work. In ESP, actions are simple "C" functions and thus
-            they need to be registered with ESP before use. This is done in the controller module initialization function. 
-            The initialization function is named: <em>esp_controller_NAME</em>, where NAME is the unique 
+            they need to be registered with ESP before use. This is done in the controller module initialization function.
+            The initialization function is named: <em>esp_controller_NAME</em>, where NAME is the unique
             name of the controller. The first time the controller is invoked, the controller
-            module will be loaded and the initialization function will be run. Typically, the initialization function 
+            module will be loaded and the initialization function will be run. Typically, the initialization function
             will then call
-            <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espDefineAction</a> 
+            <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espDefineAction</a>
             to bind action functions to route actions.</p>
 <pre class="code">
 #include "esp.h"
@@ -108,7 +108,7 @@ static FUNCTION() {
 /*
     Controller module initialization routine
  */
-ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route) 
+ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
 {
     espDefineAction(route, "NAME-ACTION", FUNCTION);
     return 0;
@@ -123,9 +123,9 @@ ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
             <pre class="code">espBindProc(route, "/do/something", callback);</pre>
             <h3>Missing Actions</h3>
             <p>When responding to a request, if the required controller and action is not found, ESP will look for a
-            corresponding ESP page of the same name. If that is not defined, ESP will respond with an HTTP 404 
+            corresponding ESP page of the same name. If that is not defined, ESP will respond with an HTTP 404
             error indicating that the required action and page could not be found.</p>
-            
+
             <a id="processing"></a>
             <h3>Processing the Request</h3>
             <p>The controller action can perform any processing it desires. There are no real restrictions except you don't
@@ -133,19 +133,19 @@ ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
             block. In that case, the server will continue to run and serve other requests. However, note that threads
             are a limited resource. It may be better to use non-blocking techniques such as async processing.</p>
             <h3>Async Processing</h3>
-            <p>An action may service a long-running request without blocking, by responding in pieces. 
+            <p>An action may service a long-running request without blocking, by responding in pieces.
             An action function may return without completing the request. Normally, ESP will automatically finalize
-            the request when the action returns. To prevent this, call 
+            the request when the action returns. To prevent this, call
             <a href="../ref/api/esp.html#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2">
             dontAutoFinalize</a> to tell ESP not to finalize the request and to keep the connection and
-                response open. At anytime and from any other code, you may then call 
+                response open. At anytime and from any other code, you may then call
                 <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">finalize</a>
-                to complete the request. To force output to the client, without finalizing, use 
+                to complete the request. To force output to the client, without finalizing, use
                 <a href="../ref/api/esp.html#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c">flush</a>.</p>
             <p>For example:</p>
 <pre class="code">
-static void second(HttpConn *conn) {
-    setConn(conn);
+static void second(HttpStream *stream) {
+    setConn(stream);
     render("World\n");
     finalize();
 }
@@ -153,17 +153,17 @@ static void first() {
     dontAutoFinalize();
     render("Hello ");
     flush();
-    <b>setTimeout(second, 5000, getConn());</b>
+    <b>setTimeout(second, 5000, getStream());</b>
 }
 </pre>
             <p>This example will print "Hello ", then wait five seconds and then print "World". Note that the request
             is held open, but ESP is not blocked in any thread. The call to <em>setTimeout</em> will arrange to have
-            the ESP event loop invoke <em>second</em> after five seconds have elapsed. This pattern is a 
+            the ESP event loop invoke <em>second</em> after five seconds have elapsed. This pattern is a
             highly efficient in its use of system resources and scales very well.</p>
 
             <h3>Request Timeout Limits</h3>
             <p>ESP has a request timeout and a request inactivity timeout. If a request duration exceeds the limit
-            defined via the <em>timeouts.request</em> directive in <em>esp.json</em>, the request will be aborted. 
+            defined via the <em>timeouts.request</em> directive in <em>esp.json</em>, the request will be aborted.
             If the request does no I/O for more than the limit specified by the <em>timeouts.inactivity</em>
             it will be similarly aborted. These limits can be set per route in <em>esp.json</em>.</p>
 
@@ -190,8 +190,8 @@ static void first() {
 
             <a id="context"></a>
             <h2>Controller Context</h2>
-            <p>ESP establishes a request context for the controller before invoking the controller action. The top level 
-            of the context is represented by the <a href="../ref/api/http.html#group___http_conn">HttpConn</a> 
+            <p>ESP establishes a request context for the controller before invoking the controller action. The top level
+            of the context is represented by the <a href="../ref/api/http.html#group___http_stream">HttpStream</a>
             connection object. From this, all other request information can be reached, including the:</p>
             <ul>
                 <li>HttpRx object &mdash; describes the client HTTP request.</li>
@@ -201,29 +201,29 @@ static void first() {
                 <li>session state object &mdash; session state information.</li>
             </ul>
             <h3>ESP Short-Form API</h3>
-            <p>ESP defines a terse, short-form, 
+            <p>ESP defines a terse, short-form,
             <a href="../ref/api/esp.html#group___esp_abbrev">API</a> that uses the current connection object to
-            provide context for the API. When using this API, explicit access to the connection object should not 
+            provide context for the API. When using this API, explicit access to the connection object should not
             typically be required. The ESP short-form API should cover 95% of requirements for action processing.</p>
-            
+
             <h3>Explicit Connection Access</h3>
             <p>If explicit access to the connection object is required, action functions may
-            define a connection argument as 
+            define a connection argument as
             which is passed into all actions.</p>
-<pre class="code">static void ACTION(HttpConn *conn) {
-    /* Use the conn reference here */
-}</pre> 
+<pre class="code">static void ACTION(HttpStream *stream) {
+    /* Use the stream reference here */
+}</pre>
             <p>Alternatively, the connection object can can be retrieved using the <a
                 href="../ref/api/esp.html#group___esp_abbrev_1gabe448b3542b4d1391e80e74192a09cb3">
-                getConn</a> API.</p>
+                getStream</a> API.</p>
             <h3>Navigating the Connection Object</h3>
-            <p>The <a href="../ref/api/http.html#group___http_conn">HttpConn</a> object represents the current
+            <p>The <a href="../ref/api/http.html#group___http_stream">HttpStream</a> object represents the current
             TCP/IP connection. By using HTTP KeepAlive, the connection may be utilized for multiple requests. The fields
-            of the HttpConn object are public and can be accessed and
-            navigated.</p> 
+            of the HttpStream object are public and can be accessed and
+            navigated.</p>
             <table class="table ui" title="properties">
                 <thead>
-                    <tr><th>HttpConn Property</th><th>Purpose</th></tr>
+                    <tr><th>HttpStream Property</th><th>Purpose</th></tr>
                 </thead>
                 <tbody>
                     <tr><td>rx</td><td>Reference to the HttpRx receive object</td></tr>
@@ -239,7 +239,7 @@ static void first() {
             <h3>Navigating the Receive Object</h3>
             <p>The <a href="../ref/api/http.html#group___http_rx">HttpRx</a> object represents the receive side of the
             HTTP protocol. On the server, it holds state regarding the client HTTP request. The fields of the HttpRx
-            object are public and can be accessed and navigated.</p> 
+            object are public and can be accessed and navigated.</p>
             <table class="table ui" title="fields">
                 <thead>
                     <tr><th>HttpRx Property</th><th>Purpose</th></tr>
@@ -258,7 +258,7 @@ static void first() {
             <h3>Navigating the Tx Object</h3>
             <p>The <a href="../ref/api/http.html#group___http_tx">HttpTx</a> object represents the transmit side of the
             HTTP protocol. On the server, it holds state regarding the response to the client. The fields of the HttpTx
-            object are public and can be accessed and navigated.</p> 
+            object are public and can be accessed and navigated.</p>
             <table class="table ui" title="state">
                 <thead>
                     <tr><th>HttpTx Property</th><th>Purpose</th></tr>
@@ -272,7 +272,7 @@ static void first() {
                     <tr><td>headers</td><td>Response HTTP headers</td></tr>
                 </tbody>
             </table>
-            
+
             <a id="models"></a>
             <h3>Sample of ESP API</h3>
             <p>Here are a few of the ESP APIs that may be used inside controller actions:</p>
@@ -361,25 +361,25 @@ static void first() {
                     </tr>
                 </tbody>
             </table>
-            
+
             <a id="parameters"></a>
             <h2>Request Parameters</h2>
             <p>ESP will collect request query, form data and route parameters into one
-            <em>params</em> object which is accessible to actions via the 
+            <em>params</em> object which is accessible to actions via the
             <a href="../ref/api/esp.html#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c">param</a> API. Each query key/value pair and all
             request form elements posted by the client will become a properties of the <em>params</em> object.
             When routing the request, ESP will tokenize the URI and create parameters for each positional token in
-            the URI. The Controller name and Action are defined as the parameters: <em>controller</em> and 
+            the URI. The Controller name and Action are defined as the parameters: <em>controller</em> and
             <em>token</em>.</p>
             <a id="views"></a>
             <h3>Rendering Views</h3>
-            <p>After processing the request, the controller is responsible for rendering a response back to the client. 
+            <p>After processing the request, the controller is responsible for rendering a response back to the client.
             The controller can choose how to respond. It may explicitly create the response body by calling
             <a href="../ref/api/esp.html#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593">render</a> to generate HTML.
-            Alternatively, the action may call 
-            <a href="../ref/api/esp.html#group___esp_abbrev_1gaf0db430f850378bd83c514a0dda77fb9">renderView</a> to 
+            Alternatively, the action may call
+            <a href="../ref/api/esp.html#group___esp_abbrev_1gaf0db430f850378bd83c514a0dda77fb9">renderView</a> to
             response with a view web page.
-            
+
             If the action method does not explicitly generate any response, ESP will invoke a view with the same name as
             the action method.</p>
 
@@ -390,10 +390,10 @@ static void first() {
             <pre class="code">
 esp generate controller name [actions...]
 </pre>
-            <p><em>name</em> is the controller name. <em>actions...</em> are the names of the action functions you 
-            want to generate. This command will create the controller source file under the <em>controllers</em> directory. 
-            <p>If no actions are requested when generating, <em>esp</em> will create a controller with 
-            an initialization function but without any actions. If actions are specified, <em>esp</em> 
+            <p><em>name</em> is the controller name. <em>actions...</em> are the names of the action functions you
+            want to generate. This command will create the controller source file under the <em>controllers</em> directory.
+            <p>If no actions are requested when generating, <em>esp</em> will create a controller with
+            an initialization function but without any actions. If actions are specified, <em>esp</em>
             will create an empty action method for each specified action. You can safely edit the
             controller source to meet your needs.</p>
 
@@ -401,7 +401,7 @@ esp generate controller name [actions...]
 
             <pre class="code">$ <b>esp generate controller admin edit login logout command</b></pre>
 
-            <p>The following controller code will be generated. There is one function generated for each action 
+            <p>The following controller code will be generated. There is one function generated for each action
             and a call to <em>espDefineAction</em> is added to register the controller. The <em>esp_controller_admin</em>
             initialization function is invoked once when the controller is first loaded.</p>
 
@@ -412,7 +412,7 @@ static void login() {}
 static void logout() {}
 static void command() {}
 
-ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route) 
+ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route)
 {
     espDefineAction(route, "admin/edit", edit);
     espDefineAction(route, "admin/login", login);
