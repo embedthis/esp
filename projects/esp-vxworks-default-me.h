@@ -21,6 +21,9 @@
 #ifndef ME_COMPANY
     #define ME_COMPANY "embedthis"
 #endif
+#ifndef ME_COMPAT
+    #define ME_COMPAT 1
+#endif
 #ifndef ME_COMPATIBLE
     #define ME_COMPATIBLE "8.0"
 #endif
