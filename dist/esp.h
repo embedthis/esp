@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "8.0.0"
+    #define ESP_VERSION "8.0.1"
 #endif
 
 /*
@@ -3029,11 +3029,13 @@ PUBLIC cchar *getCookies();
  */
 PUBLIC HttpStream *getStream();
 
+#if ME_COMPAT
 /*
     LEGACY redefinitions
  */
 #define getConn() getStream()
 #define setConn(stream) setStream(stream)
+#endif
 
 /**
     Get the receive body content length

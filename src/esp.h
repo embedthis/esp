@@ -1856,11 +1856,13 @@ PUBLIC cchar *getCookies();
  */
 PUBLIC HttpStream *getStream();
 
+#if ME_COMPAT
 /*
     LEGACY redefinitions
  */
 #define getConn() getStream()
 #define setConn(stream) setStream(stream)
+#endif
 
 /**
     Get the receive body content length
