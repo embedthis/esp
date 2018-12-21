@@ -1408,7 +1408,7 @@ typedef struct HttpLimits {
     int      frameSize;                 /**< HTTP/2 maximum frame size */
     int      hpackMax;                  /**< HTTP/2 maximum size of the hpack header table */
     int      streamsMax;                /**< HTTP/2 maximum number of streams per connection (both peer and self initiated) */
-    int      txStreamsMax;                 /**< HTTP/2 maximum number of streams the peer will permit per connection */
+    int      txStreamsMax;              /**< HTTP/2 maximum number of streams the peer will permit per connection */
     int      window;                    /**< HTTP/2 Initial rx window size (size willing to receive) */
 #endif
 } HttpLimits;
@@ -2107,12 +2107,15 @@ typedef struct HttpQueue {
     void                *queueData;             /**< Stage instance data - must be a managed reference */
     void                *staticData;            /**< Stage instance data - must be an unmanaged reference */
 
-    ssize               window;                 /**< HTTP/2 flow control window size */
     ssize               max;                    /**< Advisory maxiumum queue size */
     ssize               low;                    /**< Low water mark for flow control */
     ssize               packetSize;             /**< Maximum acceptable packet size */
     int                 servicing;              /**< Currently being serviced */
     int                 direction;              /**< Flow direction */
+
+#if ME_HTTP_HTTP2 || DOXYGEN
+    ssize               window;                 /**< HTTP/2 flow control window size */
+#endif
 
     /*
         Connector instance data
@@ -3045,7 +3048,7 @@ typedef void (*HttpIOCallback)(struct HttpNet *net, MprEvent *event);
     Control object for the network connection. A network connection may multiplex many HttpStream objects that represent
     logical streams over the connection.
     @defgroup HttpNet HttpNet
-    @see HttpNet httpCreateNet httpDestroyNet httpIOEvent httpNetError httpServiceQueues httpSetIOCallback httpSetNetContext httpStealSocket httpStealSocketHandle httpEnableNetEvents httpNetTimeout httpGetProtocol httpGetAsync httpSetAsync httpConnectNet
+    @see HttpNet httpCreateNet httpDestroyNet httpIOEvent httpNetError httpServiceNetQueues httpSetIOCallback httpSetNetContext httpStealSocket httpStealSocketHandle httpEnableNetEvents httpNetTimeout httpGetProtocol httpGetAsync httpSetAsync httpConnectNet
     @stability Internal
  */
 typedef struct HttpNet {
@@ -3141,7 +3144,7 @@ typedef struct HttpNet {
     \n\n
     @param net HttpNet object created via #httpCreateNet
     @ingroup HttpNet
-    @stability Prototype
+    @stability Internal
  */
 PUBLIC void httpBorrowNet(HttpNet *net);
 
@@ -3282,7 +3285,7 @@ PUBLIC void httpNetTimeout(HttpNet *net);
     \n\n
     @param net HttpNet object created via #httpCreateNet
     @ingroup HttpNet
-    @stability Prototype
+    @stability Internal
  */
 PUBLIC void httpReturnNet(HttpNet *net);
 
@@ -3296,7 +3299,7 @@ PUBLIC void httpReturnNet(HttpNet *net);
     @ingroup HttpNet
     @stability Evolving
  */
-PUBLIC bool httpServiceQueues(HttpNet *net, int flags);
+PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags);
 
 /**
     Define an I/O callback for network connections
@@ -3354,11 +3357,9 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol);
     networks's socket object. The network retains ownership of the original MprSocket object -- sans the socket handle.
     This is done to preserve the HttpNetwork.sock object but remove the socket handle from its management.
     \n\n
-    Note: The current request is aborted and queue data is discarded.
+    Note: All current streams are aborted and queue data is discarded.
     After calling, the normal Appweb request and inactivity timeouts will not apply to the returned socket object.
     It is the callers responsibility to call mprCloseSocket on the returned MprSocket when ready.
-    \n\n
-    An alternative to this routine is #httpBorrowNet which temporarily loans the network socket and secures it from destruction.
     @param net HttpNet object created via #httpCreateNet
     @return A clone of the network's MprSocket object with the socket handle.
     @ingroup HttpNet
@@ -3479,8 +3480,7 @@ PUBLIC void httpSetHeadersCallback(struct HttpStream *stream, HttpHeadersCallbac
         HttpRx HttpStage HttpTx HtttpListenCallback httpCallEvent httpFinalizeConnector httpStreamTimeout
         httpCreateStream httpCreateRxPipeline httpCreateTxPipeline httpDestroyStream httpClosePipeline httpDiscardData
         httpDisconnect httpEnableUpload httpError httpGetChunkSize httpGetStreamContext
-        httpGetStreamHost httpGetError httpGetExt httpGetKeepAliveCount httpGetWriteQueueCount httpMatchHost httpMemoryError
-        httpAfterEvent httpResetClientConn httpResetCredentials httpRouteRequest httpRunHandlerReady httpService
+        httpGetStreamHost httpGetError httpGetExt httpGetKeepAliveCount httpGetWriteQueueCount httpMatchHost httpMemoryError httpResetClientConn httpResetCredentials httpRouteRequest httpRunHandlerReady httpService
         httpSetChunkSize httpSetStreamContext httpSetStreamHost httpSetStreamNotifier httpSetCredentials
         httpSetFileHandler httpSetKeepAliveCount httpSetNetProtocol httpSetRetries httpSetState
         httpSetTimeout httpSetTimestamp httpStartPipeline
@@ -3564,29 +3564,6 @@ typedef struct HttpStream {
     HttpHeadersCallback headersCallback;    /**< Callback to fill headers */
     void            *headersCallbackArg;    /**< Arg to fillHeaders */
 } HttpStream;
-
-/*
-    LEGACY redefines
- */
-#define HttpConn HttpStream
-#define httpCreateConn httpCreateStream
-#define httpDestroyConn httpDestoryStream
-#define httpDisconnectConn httpDisconnectStream
-#define httpResetClientConn httpResetClientStream
-#define httpPrepClientConn httpPrepClientStream
-
-#define httpGetConnContext httpGetStreamContext
-#define httpGetConnEventMask httpGetStreamEventMask
-#define httpGetConnHost httpGetStreamHost
-#define httpSetConnContext httpSetStreamContext
-#define httpSetConnHost httpSetStreamHost
-#define httpSetConnData httpSetStreamData
-#define httpSetConnNotifier httpSetStreamNotifier
-#define httpSetConnUser httpSetStreamUser
-
-#define httpClientConn(stream) httpClientStream(stream)
-#define httpServerConn(stream) httpServerStream(stream)
-#define httpDisconnect(stream) httpDisconnectStream(stream)
 
 /**
     Destroy the request pipeline.
@@ -3867,14 +3844,6 @@ PUBLIC void httpNotify(HttpStream *stream, int event, int arg);
     } else
 
 /**
-    Do setup after an I/O event to receive future events.
-    @param stream HttpStream object created via #httpCreateStream
-    @ingroup HttpStream
-    @stability Internal
- */
-PUBLIC void httpAfterEvent(HttpStream *stream);
-
-/**
     Prepare a client connection for a new request.
     @param stream HttpStream object created via #httpCreateStream
     @param keepHeaders If true, keep the headers already defined on the stream object
@@ -4124,6 +4093,7 @@ PUBLIC void httpParseMethod(HttpStream *stream);
 PUBLIC void httpResetServerStream(HttpStream *stream);
 PUBLIC HttpLimits *httpSetUniqueStreamLimits(HttpStream *stream);
 PUBLIC void httpInitChunking(HttpStream *stream);
+PUBLIC bool httpServiceQueues(HttpStream *stream, int flags);
 
 /********************************** HttpAuthStore *********************************/
 /**
@@ -4862,6 +4832,8 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_PERSIST_COOKIE       0x40000     /**< Persist session cookie to disk */
 #define HTTP_ROUTE_OWN_LISTEN           0x80000     /**< Override listening endpoints */
 #define HTTP_ROUTE_UTILITY              0x100000    /**< Route hosted by a utility */
+#define HTTP_ROUTE_LAX_COOKIE           0x200000    /**< Session cookie is SameSite=lax */
+#define HTTP_ROUTE_STRICT_COOKIE        0x400000    /**< Session cookie is SameSite=strict */
 
 /**
     Route Control
@@ -5925,6 +5897,15 @@ PUBLIC void httpSetRouteCookie(HttpRoute *route, cchar *cookie);
     @stability Evolving
  */
 PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable);
+
+/**
+    Set the session cookie SameSite property.
+    @param route Route to modify
+    @param value Set to "lax", "strict" or NULL/empty.
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC void httpSetRouteCookieSame(HttpRoute *route, cchar *value);
 
 /**
     Set the route pattern
@@ -7381,7 +7362,8 @@ PUBLIC ssize httpFormatResponseBody(HttpStream *stream, cchar *title, cchar *fmt
 PUBLIC cchar *httpGetTxHeader(HttpStream *stream, cchar *key);
 
 /**
-    Get the queue data for the connection
+    Get the queue data for the connection.
+    @description The queue data is stored on the stream->writeq.
     @param stream HttpStream stream object created via #httpCreateStream
     @return the private queue data object
  */
@@ -8522,6 +8504,35 @@ PUBLIC void httpRemoveOption(MprHash *options, cchar *field);
     @stability Evolving
  */
 PUBLIC void httpSetOption(MprHash *options, cchar *field, cchar *value);
+
+/********************************* Compat **************************************/
+/*
+    LEGACY redefines for compatibility with http versions 4-7
+ */
+#if ME_COMPAT
+#define conn stream
+#define HttpConn HttpStream
+#define httpCreateConn httpCreateStream
+#define httpDestroyConn httpDestoryStream
+#define httpDisconnectConn httpDisconnectStream
+#define httpResetClientConn httpResetClientStream
+#define httpPrepClientConn httpPrepClientStream
+
+#define httpGetConnContext httpGetStreamContext
+#define httpGetConnEventMask httpGetStreamEventMask
+#define httpGetConnHost httpGetStreamHost
+#define httpSetConnContext httpSetStreamContext
+#define httpSetConnHost httpSetStreamHost
+#define httpSetConnData httpSetStreamData
+#define httpSetConnNotifier httpSetStreamNotifier
+#define httpSetConnUser httpSetStreamUser
+
+#define httpEnableConnEvents(stream) httpEnableNetEvents(stream->net)
+#define httpClientConn(stream) httpClientStream(stream)
+#define httpServerConn(stream) httpServerStream(stream)
+#define httpDisconnect(stream) httpDisconnectStream(stream)
+
+#endif
 
 #ifdef __cplusplus
 } /* extern C */

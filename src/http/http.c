@@ -453,7 +453,12 @@ static int parseArgs(int argc, char **argv)
             app->protocol = 1;
 
         } else if (smatch(argp, "--http2") || smatch(argp, "--h2")) {
+#if ME_HTTP_HTTP2
             app->protocol = 2;
+#else
+            mprLog("error http", 0, "HTTP/2 not supported in this build");
+            return MPR_ERR_BAD_STATE;
+#endif
 
         } else if (smatch(argp, "--iterations") || smatch(argp, "-i")) {
             if (nextArg >= argc) {
@@ -525,7 +530,12 @@ static int parseArgs(int argc, char **argv)
                 } else if (scaselessmatch(value, "HTTP/1.1") || smatch(value, "1")) {
                     app->protocol = 1;
                 } else if (scaselessmatch(value, "HTTP/2") || smatch(value, "2")) {
+#if ME_HTTP_HTTP2
                     app->protocol = 2;
+#else
+                    mprLog("error http", 0, "HTTP/2 not supported in this build");
+                    return MPR_ERR_BAD_STATE;
+#endif
                 }
             }
 
@@ -744,7 +754,6 @@ static int initSettings()
         mprLog("error http", 0, "Cannot use multiple streams except with HTTP/2 protocol");
         return MPR_ERR_BAD_ARGS;
     }
-
     limits = HTTP->clientLimits;
     if (app->timeout) {
         limits->inactivityTimeout = app->timeout;
@@ -783,7 +792,9 @@ static int showUsage()
         "  --header 'key: value' # Add a custom request header.\n"
         "  --host hostName       # Host name or IP address for unqualified URLs.\n"
         "  --http1               # Alias for --protocol HTTP/1 (default HTTP/1.1).\n"
+#if ME_HTTP_HTTP2
         "  --http2               # Alias for --protocol HTTP/2 (default HTTP/1.1).\n"
+#endif
         "  --iterations count    # Number of times to fetch the URLs per thread (default 1).\n"
         "  --key file            # Private key file.\n"
         "  --log logFile:level   # Log to the file at the verbosity level.\n"
@@ -998,7 +1009,7 @@ static void startRequest(Request *request)
         return;
     }
     httpEnableNetEvents(net);
-    httpServiceQueues(net, 0);
+    httpServiceNetQueues(net, 0);
 }
 
 

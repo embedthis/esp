@@ -4073,6 +4073,12 @@ static void parseAuthSessionCookiePersist(HttpRoute *route, cchar *key, MprJson 
 }
 
 
+static void parseAuthSessionCookieSame(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetRouteCookieSame(route, prop->value);
+}
+
+
 static void parseAuthSessionEnable(HttpRoute *route, cchar *key, MprJson *prop)
 {
     httpSetAuthSession(route->auth, 0);
@@ -4434,7 +4440,7 @@ static void parseLimitsClients(HttpRoute *route, cchar *key, MprJson *prop)
 
 static void parseLimitsConnections(HttpRoute *route, cchar *key, MprJson *prop)
 {
-    route->limits->streamsMax = httpGetInt(prop->value);
+    route->limits->connectionsMax = httpGetInt(prop->value);
 }
 
 
@@ -5557,6 +5563,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.session", httpParseAll);
     httpAddConfig("http.auth.session.cookie", parseAuthSessionCookie);
     httpAddConfig("http.auth.session.persist", parseAuthSessionCookiePersist);
+    httpAddConfig("http.auth.session.same", parseAuthSessionCookieSame);
     httpAddConfig("http.auth.session.enable", parseAuthSessionEnable);
     httpAddConfig("http.auth.session.visible", parseAuthSessionVisible);
     httpAddConfig("http.auth.store", parseAuthStore);
@@ -9397,7 +9404,7 @@ static void incomingHttp2(HttpQueue *q, HttpPacket *packet)
         /*
             Try to push out any pending responses here. This keeps the socketq packet count down.
          */
-        httpServiceQueues(net, 0);
+        httpServiceNetQueues(net, 0);
     }
     closeNetworkWhenDone(q);
 }
@@ -9799,7 +9806,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
     MprBuf      *buf;
     bool        padded, priority;
     ssize       size, frameLen;
-    int         padLen;
+    int         padLen, depend, dword, excl, weight;
 
     net = q->net;
     buf = packet->content;
@@ -9828,8 +9835,6 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         }
         mprAdjustBufEnd(buf, -padLen);
     }
-#if FUTURE
-    int depend, dword, excl;
     depend = 0;
     weight = HTTP2_DEFAULT_WEIGHT;
     if (priority) {
@@ -9838,7 +9843,6 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         excl = dword >> 31;
         weight = mprGetCharFromBuf(buf) + 1;
     }
-#endif
     if ((frame->streamID % 2) != 1 || (net->lastStreamID && frame->streamID <= net->lastStreamID)) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad sesssion");
         return;
@@ -9871,7 +9875,6 @@ static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
     frame = packet->data;
     stream = frame->stream;
     frame = packet->data;
-    assert(frame->stream);
 
     if (!stream && httpIsServer(net)) {
         if (net->goaway) {
@@ -13692,8 +13695,6 @@ static void netTimeout(HttpNet *net, MprEvent *mprEvent)
 }
 
 
-
-//  TODO - review all these
 /*
     Used by ejs
  */
@@ -13709,7 +13710,6 @@ PUBLIC void httpUseWorker(HttpNet *net, MprDispatcher *dispatcher, MprEvent *eve
 }
 
 
-//  TODO comment?
 PUBLIC void httpUsePrimary(HttpNet *net)
 {
     lock(net->http);
@@ -13752,12 +13752,18 @@ PUBLIC void httpReturnNet(HttpNet *net)
 PUBLIC MprSocket *httpStealSocket(HttpNet *net)
 {
     MprSocket   *sock;
+    HttpStream  *stream;
+    int         next;
 
     assert(net->sock);
     assert(!net->destroyed);
 
     if (!net->destroyed && !net->borrowed) {
         lock(net->http);
+        for (ITERATE_ITEMS(net->streams, stream, next)) {
+            httpDestroyStream(stream);
+            next--;
+        }
         sock = mprCloneSocket(net->sock);
         (void) mprStealSocketHandle(net->sock);
         mprRemoveSocketHandler(net->sock);
@@ -13832,10 +13838,7 @@ static void netOutgoing(HttpQueue *q, HttpPacket *packet);
 static void netOutgoingService(HttpQueue *q);
 static HttpPacket *readPacket(HttpNet *net);
 static void resumeEvents(HttpNet *net, MprEvent *event);
-
-#if ME_HTTP_HTTP2
 static int sleuthProtocol(HttpNet *net, HttpPacket *packet);
-#endif
 
 /*********************************** Code *************************************/
 /*
@@ -13945,17 +13948,15 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
         packet = readPacket(net);
     }
     if (packet) {
-#if ME_HTTP_HTTP2
         if (!net->protocol) {
             int protocol = sleuthProtocol(net, packet);
             httpSetNetProtocol(net, protocol);
         }
-#endif
         if (net->protocol) {
             httpPutPacket(net->inputq, packet);
         }
     }
-    httpServiceQueues(net, 0);
+    httpServiceNetQueues(net, 0);
 
     if (httpIsServer(net) && (net->error || net->eof)) {
         httpDestroyNet(net);
@@ -13967,9 +13968,9 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
 }
 
 
-#if ME_HTTP_HTTP2
 static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
 {
+#if ME_HTTP_HTTP2
     MprBuf      *buf;
     ssize       len;
     int         protocol;
@@ -13988,8 +13989,10 @@ static int sleuthProtocol(HttpNet *net, HttpPacket *packet)
         httpTrace(net->trace, "net.rx", "context", "msg:'Detected HTTP/2 preface'");
     }
     return protocol;
-}
+#else
+    return 1;
 #endif
+}
 
 
 /*
@@ -15719,7 +15722,7 @@ static void processHttp(HttpQueue *q)
             }
             break;
         }
-        httpServiceQueues(stream->net, HTTP_BLOCK);
+        httpServiceNetQueues(stream->net, HTTP_BLOCK);
     }
     if (stream->complete && httpServerStream(stream)) {
         if (stream->keepAliveCount <= 0 || stream->net->protocol >= 2) {
@@ -16763,13 +16766,16 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
     if (low < 0) {
         low = q->packetSize;
     }
-    if (window < 0) {
-        window = limits->window;
-    }
     q->packetSize = packetSize;
     q->max = max;
     q->low = low;
+    
+#if ME_HTTP_HTTP2
+    if (window < 0) {
+        window = limits->window;
+    }
     q->window = window;
+#endif
 }
 
 
@@ -16864,7 +16870,7 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
         Initiate flushing. For HTTP/2 we must process incoming window update frames, so run any pending IO events.
      */
     httpScheduleQueue(q);
-    httpServiceQueues(net, flags);
+    httpServiceNetQueues(net, flags);
     mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
 
     if (net->error) {
@@ -16879,7 +16885,7 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
                 net->lastActivity = net->http->now;
                 httpResumeQueue(net->socketq);
                 httpScheduleQueue(net->socketq);
-                httpServiceQueues(net, flags);
+                httpServiceNetQueues(net, flags);
             }
             /*
                 Process HTTP/2 window update messages for flow control
@@ -17043,11 +17049,17 @@ static void serviceQueue(HttpQueue *q)
 }
 
 
+PUBLIC bool httpServiceQueues(HttpStream *stream, int flags)
+{
+    return httpServiceNetQueues(stream->net, flags);
+}
+
+
 /*
     Run the queue service routines until there is no more work to be done.
     If flags & HTTP_BLOCK, this routine may block while yielding.  Return true if actual work was done.
  */
-PUBLIC bool httpServiceQueues(HttpNet *net, int flags)
+PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags)
 {
     HttpQueue   *q;
     bool        workDone;
@@ -18889,6 +18901,17 @@ PUBLIC void httpSetRouteCookiePersist(HttpRoute *route, int enable)
     route->flags &= ~HTTP_ROUTE_PERSIST_COOKIE;
     if (enable) {
         route->flags |= HTTP_ROUTE_PERSIST_COOKIE;
+    }
+}
+
+
+PUBLIC void httpSetRouteCookieSame(HttpRoute *route, cchar *value)
+{
+    route->flags &= ~(HTTP_ROUTE_LAX_COOKIE | HTTP_ROUTE_STRICT_COOKIE);
+    if (smatch(value, "lax")) {
+        route->flags |= HTTP_ROUTE_LAX_COOKIE;
+    } else if (smatch(value, "strict")) {
+        route->flags |= HTTP_ROUTE_STRICT_COOKIE;
     }
 }
 
@@ -21600,7 +21623,11 @@ PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
             if (stream->secure) {
                 flags |= HTTP_COOKIE_SECURE;
             }
-            flags |= HTTP_COOKIE_SAME_LAX;
+            if (route->flags & HTTP_ROUTE_LAX_COOKIE) {
+                flags |= HTTP_COOKIE_SAME_LAX;
+            } else if (route->flags & HTTP_ROUTE_STRICT_COOKIE) {
+                flags |= HTTP_COOKIE_SAME_STRICT;
+            }
             cookie = route->cookie ? route->cookie : HTTP_SESSION_COOKIE;
             lifespan = (route->flags & HTTP_ROUTE_PERSIST_COOKIE) ? rx->session->lifespan : 0;
             url = (route->prefix && *route->prefix) ? route->prefix : "/";
@@ -22105,11 +22132,13 @@ PUBLIC HttpStream *httpCreateStream(HttpNet *net, bool peerCreated)
     }
     limits = stream->limits;
 
+#if ME_HTTP_HTTP2
     if (!peerCreated && ((net->ownStreams >= limits->txStreamsMax) || (net->ownStreams >= limits->streamsMax))) {
         httpNetError(net, "Attempting to create too many streams for network connection: %d/%d/%d", net->ownStreams,
             limits->txStreamsMax, limits->streamsMax);
         return 0;
     }
+#endif
 
     stream->keepAliveCount = (net->protocol >= 2) ? 0 : stream->limits->keepAliveMax;
     stream->dispatcher = net->dispatcher;
@@ -22798,7 +22827,11 @@ static bool streamCanAbsorb(HttpQueue *q, HttpPacket *packet)
     /*
         Get the maximum the output stream can absorb that is less than the downstream queue packet size.
      */
+#if ME_HTTP_HTTP2
     room = min(nextQ->packetSize, stream->outputq->window);
+#else
+    room = min(nextQ->packetSize, stream->outputq->max);
+#endif
     if (size <= room) {
         return 1;
     }
@@ -23960,7 +23993,7 @@ PUBLIC void *httpGetQueueData(HttpStream *stream)
     HttpQueue     *q;
 
     q = stream->writeq;
-    return q->nextQ->queueData;
+    return q->queueData;
 }
 
 

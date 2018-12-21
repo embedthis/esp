@@ -16171,9 +16171,9 @@ static void backupLog()
  */
 PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
 {
-    MprFile     *file;
-    char        tbuf[128];
-    static int  length = 0;
+    MprFile         *file;
+    char            tbuf[128];
+    static ssize    length = 0;
 
     if ((file = MPR->logFile) == 0 || msg == 0 || *msg == '\0') {
         return;
