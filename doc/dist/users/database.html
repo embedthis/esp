@@ -407,7 +407,7 @@ ediSetField(product, "description", "458 Spider");
             call in the load initialization routine for a controller. This happens when the controller is
             first loaded and after that database has been opened.
             <pre class="code">
-ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
+ESP_EXPORT int esp_controller_post(EspRoute *eroute)
 {
     Edi     *edi = eroute-&gt;edi;
 <b>

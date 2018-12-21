@@ -299,7 +299,7 @@ controllers/post.c=46:28: error: expected ';' after expression
             <em>controllers/post.c</em> file and add calls to <a
             href="../ref/api/edi.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944">ediAddValidation</a>.</p>
             <pre class="code">
-ESP_EXPORT int esp_controller_post(EspRoute *eroute, MprModule *module)
+ESP_EXPORT int esp_controller_post(EspRoute *eroute)
 {
     <b>Edi *edi;</b>
     /* Existing code */

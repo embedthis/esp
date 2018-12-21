@@ -6,7 +6,7 @@
 }
             <h1>Building ESP Applications</h1>
             <p>ESP applications are comprised of ESP layouts, content pages, partial pages, stylesheets, client-side
-            Javascripts, images, databases and server-side controllers. To build an ESP application involves 
+            Javascripts, images, databases and server-side controllers. To build an ESP application involves
             selecting, preparing and processing each of these elements into their final form.</p>
 
             <p>The essential steps in building ESP applications are:</p>
@@ -20,14 +20,14 @@
             </ul>
 
             <h2>One Step Building</h2>
-            <p>The ESP web framework provides an integrated way to easily build ESP applications with a one step command. 
+            <p>The ESP web framework provides an integrated way to easily build ESP applications with a one step command.
             If you started your application with an ESP skeleton, you will be already configured to use the
             <a href="https://embedthis.com/expansive">Expansive</a> web site manager to build your ESP application.
-            Expansive provides comprehensive support for all the steps required to build a web or ESP application.</p> 
+            Expansive provides comprehensive support for all the steps required to build a web or ESP application.</p>
 
-            <p>You do not have to use Expansive to build if you do not wish to. There are other 3rd party 
-            web tooling programs that can be used. You can use these tools and then invoke the <em>esp compile</em> 
-            command to compile the ESP pages and controllers in your web application. However, the ESP 
+            <p>You do not have to use Expansive to build if you do not wish to. There are other 3rd party
+            web tooling programs that can be used. You can use these tools and then invoke the <em>esp compile</em>
+            command to compile the ESP pages and controllers in your web application. However, the ESP
             skeletons are created and configured to use Expansive by default to render the site.</p>
 
             <p>To build an ESP application using <a href="https://embedthis.com/expansive">Expansive</a>, use the
@@ -47,25 +47,25 @@
 
             <h2>Compiling</h2>
             <a id="compiling"></a>
-            <p> During development ESP will automatically compile controllers and web pages in response to 
-            client requests &mdash; this happens transparently. Despite the fact that ESP pages and controllers are 
-            <em>C</em> code, ESP will deliver "script-like" functionality and if ESP pages or controllers are modified, 
-            they will be quickly and automatically recompiled and reloaded. For production releases, however, you 
+            <p> During development ESP will automatically compile controllers and web pages in response to
+            client requests &mdash; this happens transparently. Despite the fact that ESP pages and controllers are
+            <em>C</em> code, ESP will deliver "script-like" functionality and if ESP pages or controllers are modified,
+            they will be quickly and automatically recompiled and reloaded. For production releases, however, you
             typically want to pre-build the application to eliminate the cost of compiling.</p>
 
-            <p>The <em>esp</em> command builds the application's ESP pages and controllers via 
+            <p>The <em>esp</em> command builds the application's ESP pages and controllers via
             <em>esp compile</em>. This will compile the ESP controllers and web pages and save as machine code
-            binary in shared libraries. When the application is run, it will load the shared libraries for the 
+            binary in shared libraries. When the application is run, it will load the shared libraries for the
             relevant controllers or web pages from the <em>cache</em> directory without delay.</p>
 
             <pre class="code">$ <b>esp compile</b></pre>
 
             <p>This will compile and link all controllers and pages and save the generated shared libraries (DLLs)
-            in the <em>cache</em> directory. If you are using Expansive, you will normally not need to run 
+            in the <em>cache</em> directory. If you are using Expansive, you will normally not need to run
             <em>esp compile</em> as <em>expansive</em> will do that for you.</p>
 
             <h3>Compile Filters</h3>
-            <p>If <em>esp compile</em> is run with one or more paths on the command line, these paths will act as 
+            <p>If <em>esp compile</em> is run with one or more paths on the command line, these paths will act as
             filters such that only the designated paths will be compiled. For example:</p>
 
             <pre class="code">
@@ -76,8 +76,8 @@ $ <b>esp compile /path/to/my/app</b>
 $ <b>esp compile /directory/of/apps</b>
 </pre>
             <p>These paths are interpreted as filenames relative to the current directory.
-            If a controller, web page filename is provided, only that resource will be compiled. If a directory that 
-            is part of an MVC application is provided, then all resources under that directory will be compiled. 
+            If a controller, web page filename is provided, only that resource will be compiled. If a directory that
+            is part of an MVC application is provided, then all resources under that directory will be compiled.
             If a directory that is a parent directory of ESP applications or web pages, then all those
             resources contained by that directory will be compiled.</p>
 
@@ -97,7 +97,7 @@ $ <b>esp compile /directory/of/apps</b>
             <h3>Static Linking</h3>
             <p>When using dynamic linking, ESP automatically invokes the necessary initializers when running
             ESP pages or invoking ESP controllers. However, if you are using static linking, you need to take some
-            extra manual steps. If you are using static linking, use the <em>--static</em> switch to generate 
+            extra manual steps. If you are using static linking, use the <em>--static</em> switch to generate
             archive libraries instead of shared libraries. You must then manually call the ESP initializers for pages
             and controllers. You can generate the necessary initialization calls via the esp <em>--genlink
             slink.c</em> switch. The generated code should be linked with your main program replacing the default
@@ -108,8 +108,8 @@ $ <b>esp compile /directory/of/apps</b>
 
             <a id="rules"></a>
             <h2>Compilation Rules</h2>
-            <p>ESP includes a pre-configured set of compilation commands for major operating systems. 
-            These are represented as compile and link templates in the <em>/usr/local/lib/esp/*/esp-compile.json</em>. 
+            <p>ESP includes a pre-configured set of compilation commands for major operating systems.
+            These are represented as compile and link templates in the <em>/usr/local/lib/esp/*/esp-compile.json</em>.
             This file is located at <em>/Program Files/Embedthis ESP/bin</em> on windows. If you need to use
             different compilation options, you can modify this file. Here is a portion:</p>
 
@@ -121,7 +121,7 @@ $ <b>esp compile /directory/of/apps</b>
     }
 }
 </pre>
-            <p>A better approach than modifying the standard file is to copy it and specify the new file in 
+            <p>A better approach than modifying the standard file is to copy it and specify the new file in
             the <em>esp.compile</em> property in your application's <em>esp.json</em> file. For example:</p>
             <pre class="code">
 {
@@ -134,11 +134,11 @@ $ <b>esp compile /directory/of/apps</b>
             configuration file has conditional sections for Windows, Mac OS X, Linux and VxWorks.</p>
 
             <h3>Keep Source</h3>
-            <p>When compiling ESP pages, the <em>http.keep</em> property in the <em>esp.json</em> file directive 
-            will determine if the generated <em>C</em> source code for ESP pages is preserved after compilation. 
-            This can sometimes be helpful for debugging. You also preserve the generated source via the 
-            <em>esp --keep compile</em> option.</p> 
-            
+            <p>When compiling ESP pages, the <em>http.keep</em> property in the <em>esp.json</em> file directive
+            will determine if the generated <em>C</em> source code for ESP pages is preserved after compilation.
+            This can sometimes be helpful for debugging. You also preserve the generated source via the
+            <em>esp --keep compile</em> option.</p>
+
             <a name="target"></a>
             <h2>Building for Target Systems</h2>
             <p>If your target production system is of a different machine architecture or operating system to that
@@ -150,30 +150,30 @@ $ <b>esp compile /directory/of/apps</b>
 
             <h3>Compiling on the Target</h3>
             <p>You can re-compile a built ESP application on the target by invoking <em>esp compile</em> on the
-            target. This will compile all ESP controllers and pages for the target architecture. 
+            target. This will compile all ESP controllers and pages for the target architecture.
             If using Appweb, remember to use <em>appweb-esp compile</em>.</p>
 
             <h3>Cross-compiling</h3>
             <p>If cross-compiling, you must specify the target platform architecture when compiling ESP pages
             and controllers and then link against a cross-compiled version of ESP for the required target
-            architecture. This means you must build ESP from source for that target, and when compiling ESP 
+            architecture. This means you must build ESP from source for that target, and when compiling ESP
             applications you can specify the target platform via the <em>--platform</em> switch. For example:</p>
 
             <pre class="code">$ <b>esp --platform vxworks-arm-debug compile</b></pre>
 
-            <p>This will compile the application for VxWorks on Arm. Of course, the resulting module cannot be 
-            run on the development system if cross-compiling. You should issue the compile command from the esp 
+            <p>This will compile the application for VxWorks on Arm. Of course, the resulting module cannot be
+            run on the development system if cross-compiling. You should issue the compile command from the esp
             application directory.</p>
 
-            <p>If using Appweb, you should issue the <em>appweb-esp</em> command from the 
+            <p>If using Appweb, you should issue the <em>appweb-esp</em> command from the
             Appweb home directory. It is essential that the relative path from the Appweb home directory to the
-            esp application or directory containing the esp pages be identical on the target system to that on 
+            esp application or directory containing the esp pages be identical on the target system to that on
             the development system when the esp assets were compiled.</p>
-            
-            <p>The <em>--platform</em> option will search the current directory and parent directories for an ESP 
-            platform directory of the same name. You can provide a full path name as an argument to the 
+
+            <p>The <em>--platform</em> option will search the current directory and parent directories for an ESP
+            platform directory of the same name. You can provide a full path name as an argument to the
             <em>--platform</em> switch if your application is outside the ESP source tree.</p>
-            
+
             <p>If using Expansive to build, you can define the <em>services.compile-esp.command</em> property in the
             <em>expansive.json</em> file to set the compilation command used by <em>esp</em>. For example:</p>
             <pre class="code">{
@@ -184,9 +184,9 @@ $ <b>esp compile /directory/of/apps</b>
   }
 }</pre>
         <h2>Debugging and Optimizing</h2>
-        <p>When development, you often want ESP controllers and pages to be compiled with symbolic debug 
+        <p>When development, you often want ESP controllers and pages to be compiled with symbolic debug
         information. However, for production release, you want compilation to be optimized without debug symbols.
-        The optimization setting can be controlled via the <em>esp.optimize</em> property in <em>esp.json</em>. 
+        The optimization setting can be controlled via the <em>esp.optimize</em> property in <em>esp.json</em>.
         Set this to <em>true</em> to enable optimization for a production release. Set to <em>false</em> to
         compile with symbolic debug symbols. Defaults to <em>false</em>.</p>
 
@@ -196,7 +196,7 @@ $ <b>esp compile /directory/of/apps</b>
 
         <h2>Bundling and Packaging</h2>
         <p>For deployment in a production environment, it optimal to compile the entire application including
-        all controllers, views and web pages into a single library. This is referred to as <em>combining</em> 
+        all controllers, views and web pages into a single library. This is referred to as <em>combining</em>
         the application and is enabled by setting the <em>esp.combine</em> property in <em>esp.json</em> to true.</p>
 
         <code class="inverted">esp: {
@@ -207,9 +207,9 @@ $ <b>esp compile /directory/of/apps</b>
         <em>esp_app_NAME_combine</em> that will register all your controller actions and view pages. If you are using
         static linking, you must call this function from your main program. For example:</p>
         <pre class="code">
-ESP_EXPORT int esp_app_kickstart_combine(HttpRoute *route, MprModule *module) {
-    esp_controller_kickstart_port(route, module);
-    esp_view_b839216b9138e38baf8851c81761c2d5(route, module);
+ESP_EXPORT int esp_app_kickstart_combine(HttpRoute *route) {
+    esp_controller_kickstart_port(route);
+    esp_view_b839216b9138e38baf8851c81761c2d5(route);
     return 0;
 }
 </pre>
@@ -219,5 +219,3 @@ ESP_EXPORT int esp_app_kickstart_combine(HttpRoute *route, MprModule *module) {
             <p>To clean files under the cache directory:</p>
 
             <pre class="code">$ <b>esp clean</b></pre>
-
-  
