@@ -32,6 +32,7 @@
     ],
     "dependencies": {
         "http": "~8",
+        "me-win": "~0.1",
         "mpr": "~8",
         "mpr-version": "~0.1",
         "osdep": "~1.0",
