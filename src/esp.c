@@ -453,6 +453,9 @@ static int parseArgs(int argc, char **argv)
             usageError();
         }
     }
+    if (argind > argc) {
+        argind = argc;
+    }
     parseCommand(argc - argind, &argv[argind]);
     return argind;
 }
@@ -465,13 +468,14 @@ static void parseCommand(int argc, char **argv)
     if (app->error) {
         return;
     }
-    cmd = argv[0];
-
-    if (argc == 0) {
+    if (argc <= 0) {
         /* Run */
         app->require = REQ_SERVE;
+        return;
+    }
+    cmd = argv[0];
 
-    } else if (smatch(cmd, "config")) {
+    if (smatch(cmd, "config")) {
         app->require = 0;
 
     } else if (smatch(cmd, "clean")) {
