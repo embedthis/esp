@@ -3,7 +3,7 @@
 #
 
 NAME                  := esp
-VERSION               := 7.1.0
+VERSION               := 7.1.1
 PROFILE               ?= default
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
 CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
@@ -28,7 +28,7 @@ ME_COM_OPENSSL        ?= 0
 ME_COM_OSDEP          ?= 1
 ME_COM_PCRE           ?= 1
 ME_COM_SQLITE         ?= 1
-ME_COM_SSL            ?= 0
+ME_COM_SSL            ?= 1
 ME_COM_VXWORKS        ?= 0
 
 ME_COM_OPENSSL_PATH   ?= "/path/to/openssl"

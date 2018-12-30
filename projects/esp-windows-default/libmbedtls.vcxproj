@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
     <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+      <ItemDefinitionGroup>
+        <ClCompile>
+          <PreprocessorDefinitions>ME_DEBUG=1;MBEDTLS_USER_CONFIG_FILE="embedtls.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+          <AdditionalIncludeDirectories>/Users/mob/dev/esp/build/windows-x64-default/inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+          <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+          <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+          <SubSystem>Console</SubSystem>
+    </Link>
+      </ItemDefinitionGroup>
+
       <PropertyGroup Label="Globals">
-        <ProjectGuid>{c29b740d-1a14-47b8-8d2d-55b7ccd461b6}</ProjectGuid>
+        <ProjectGuid>{aa579bae-5acb-48d5-b42e-ae12f30f3b77}</ProjectGuid>
         <RootNamespace />
         <Keyword>Win32Proj</Keyword>
       </PropertyGroup>
@@ -27,22 +39,22 @@
   </ItemGroup>
     
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-        <ConfigurationType></ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-        <ConfigurationType></ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-        <ConfigurationType></ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-        <ConfigurationType></ConfigurationType>
+        <ConfigurationType>StaticLibrary</ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
         <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
@@ -76,45 +88,53 @@
         <_ProjectFileVersion>10</_ProjectFileVersion>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ObjDir)\libmbedtls\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ObjDir)\libmbedtls\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ObjDir)\libmbedtls\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PreBuildEvent</CustomBuildBeforeTargets>
 
         <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(BinDir)\</OutDir>
-        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\prep\</IntDir>
+        <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ObjDir)\libmbedtls\</IntDir>
         <CustomBuildBeforeTargets Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PreBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
+  
+      <ItemGroup>
+    <ClCompile Include="..\..\src\mbedtls\mbedtls.c" />
+  </ItemGroup>
+
+      <ItemGroup>
+    <ClInclude Include="$(IncDir)\embedtls.h" />
+  </ItemGroup>
+
+      <ItemGroup>
+    <ClInclude Include="$(IncDir)\mbedtls-config.h" />
+  </ItemGroup>
+
+      <ItemGroup>
+    <ClInclude Include="$(IncDir)\mbedtls.h" />
+  </ItemGroup>
 
       <ItemDefinitionGroup>
         
 
+      <Link>
+        <AdditionalDependencies>;%(AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalLibraryDirectories>$(OutDir);build\$(Cfg)\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      </Link>
+
       <CustomBuildStep>
-        <Command>cd .
-if not exist "$(ObjDir)" md "$(ObjDir)"
-if not exist "$(BinDir)" md "$(BinDir)"
-if not exist "$(IncDir)" md "$(IncDir)"
-if not exist "$(IncDir)\me.h" copy "..\esp-windows-default-me.h" "$(IncDir)\me.h"
-copy /Y /B ..\..\src\edi.h $(IncDir)
-copy /Y /B ..\..\src\mbedtls\embedtls.h $(IncDir)
-copy /Y /B ..\..\src\esp.h $(IncDir)
-copy /Y /B ..\..\src\http\http.h $(IncDir)
-copy /Y /B ..\..\src\mbedtls\mbedtls-config.h $(IncDir)
-copy /Y /B ..\..\src\mbedtls\mbedtls.h $(IncDir)
-copy /Y /B ..\..\src\mdb.h $(IncDir)
-copy /Y /B ..\..\src\mpr-version\mpr-version.h $(IncDir)
-copy /Y /B ..\..\src\mpr\mpr.h $(IncDir)
-copy /Y /B ..\..\src\osdep\osdep.h $(IncDir)
-copy /Y /B ..\..\src\pcre\pcre.h $(IncDir)
-copy /Y /B ..\..\src\sqlite\sqlite3.h $(IncDir)
-cd .</Command>
-        <Outputs>always</Outputs>
+        <Command>cd ..\..\src\mbedtls
+copy /Y /B embedtls.h $(IncDir)
+copy /Y /B mbedtls-config.h $(IncDir)
+copy /Y /B mbedtls.h $(IncDir)
+cd ..\..\projects\esp-windows-default</Command>
+        <Outputs>$(BinDir)\libmbedtls.lib</Outputs>
       </CustomBuildStep>
   </ItemDefinitionGroup>
 
