@@ -20,6 +20,7 @@
         #define SPECSTRING_SUPP_H
     #endif
 #endif
+#define SQLITE_SHELL_IS_UTF8 1
 #endif
 
 
