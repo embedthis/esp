@@ -1,0 +1,42 @@
+{
+    "name": "me-win",
+    "description": "Windows build support",
+    "title": "Windows Build Support",
+    "version": "0.1.0",
+    "keywords": [
+        "me"
+    ],
+    "author": {
+        "name": "Embedthis Software",
+        "email": "dev@embedthis.com",
+        "url": "https://embedthis.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/me-win.git"
+    },
+    "bugs": {
+        "url": "http://github.com/embedthis/me-win/issues"
+    },
+    "licenses": [
+        {
+            "type": "GPL",
+            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
+        },
+        {
+            "type": "Commercial",
+            "url": "https://embedthis.com/licensing/"
+        }
+    ],
+    "export": [
+        {
+            "from": "windows.bat",
+            "to": "../projects"
+        },
+        {
+            "from": "make.bat",
+            "to": ".."
+        }
+    ],
+    "origin": "embedthis/me-win"
+}
