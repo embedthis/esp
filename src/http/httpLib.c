@@ -8739,7 +8739,7 @@ static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet);
 static HttpPacket *parseHeaders(HttpQueue *q, HttpPacket *packet);
 static void parseRequestLine(HttpQueue *q, HttpPacket *packet);
 static void parseResponseLine(HttpQueue *q, HttpPacket *packet);
-static void LogPacket(HttpQueue *q, HttpPacket *packet);
+static void logPacket(HttpQueue *q, HttpPacket *packet);
 
 /*********************************** Code *************************************/
 /*
@@ -8812,7 +8812,7 @@ static void outgoingHttp1Service(HttpQueue *q)
             httpPutBackPacket(q, packet);
             return;
         }
-        LogPacket(q, packet);
+        logPacket(q, packet);
         httpPutPacket(q->net->socketq, packet);
         if (stream && q->count <= q->low && (stream->outputq->flags & HTTP_QUEUE_SUSPENDED)) {
             httpResumeQueue(stream->outputq);
@@ -8821,7 +8821,7 @@ static void outgoingHttp1Service(HttpQueue *q)
 }
 
 
-static void LogPacket(HttpQueue *q, HttpPacket *packet)
+static void logPacket(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
     cchar       *type;
@@ -9806,7 +9806,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
     MprBuf      *buf;
     bool        padded, priority;
     ssize       size, frameLen;
-    int         padLen, depend, dword, excl, weight;
+    int         padLen, weight;
 
     net = q->net;
     buf = packet->content;
@@ -9835,13 +9835,15 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         }
         mprAdjustBufEnd(buf, -padLen);
     }
-    depend = 0;
     weight = HTTP2_DEFAULT_WEIGHT;
     if (priority) {
-        dword = mprGetUint32FromBuf(buf);
-        depend = dword & 0x7fffffff;
-        excl = dword >> 31;
-        weight = mprGetCharFromBuf(buf) + 1;
+        /* Priorities and weights are not yet implemented */
+        // dword = mprGetUint32FromBuf(buf);
+        // depend = dword & 0x7fffffff;
+        // excl = dword >> 31;
+        // weight = mprGetCharFromBuf(buf) + 1;
+        mprGetUint32FromBuf(buf);
+        mprGetCharFromBuf(buf);
     }
     if ((frame->streamID % 2) != 1 || (net->lastStreamID && frame->streamID <= net->lastStreamID)) {
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad sesssion");
@@ -14072,36 +14074,6 @@ static HttpPacket *getPacket(HttpNet *net, ssize *lenp)
 }
 
 
-PUBLIC int httpGetNetEventMask(HttpNet *net)
-{
-    MprSocket   *sock;
-    int         eventMask;
-
-    if ((sock = net->sock) == 0) {
-        return 0;
-    }
-    eventMask = 0;
-
-    if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
-            (net->socketq && (net->socketq->count > 0 || net->socketq->ioCount > 0))) {
-        if (!mprSocketHandshaking(sock)) {
-            /* Must wait to write until handshaking is complete */
-            eventMask |= MPR_WRITABLE;
-        }
-    }
-    if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
-        /*
-            TODO - how to mitigate against a ping flood?
-            Was testing if !writeBlocked before adding MPR_READABLE, but this is always required for HTTP/2 to read window frames.
-         */
-        if (mprSocketHandshaking(sock) || !net->eof) {
-            eventMask |= MPR_READABLE;
-        }
-    }
-    return eventMask;
-}
-
-
 static bool netBanned(HttpNet *net)
 {
     HttpAddress     *address;
@@ -14130,6 +14102,36 @@ static void resumeEvents(HttpNet *net, MprEvent *event)
 {
     net->delay = 0;
     mprCreateEvent(net->dispatcher, "resumeConn", 0, httpEnableNetEvents, net, 0);
+}
+
+
+PUBLIC int httpGetNetEventMask(HttpNet *net)
+{
+    MprSocket   *sock;
+    int         eventMask;
+
+    if ((sock = net->sock) == 0) {
+        return 0;
+    }
+    eventMask = 0;
+
+    if (httpQueuesNeedService(net) || mprSocketHasBufferedWrite(sock) ||
+            (net->socketq && (net->socketq->count > 0 || net->socketq->ioCount > 0))) {
+        if (!mprSocketHandshaking(sock)) {
+            /* Must wait to write until handshaking is complete */
+            eventMask |= MPR_WRITABLE;
+        }
+    }
+    if (mprSocketHasBufferedRead(sock) || !net->inputq || (net->inputq->count < net->inputq->max)) {
+        /*
+            TODO - how to mitigate against a ping flood?
+            Was testing if !writeBlocked before adding MPR_READABLE, but this is always required for HTTP/2 to read window frames.
+         */
+        if (mprSocketHandshaking(sock) || !net->eof) {
+            eventMask |= MPR_READABLE;
+        }
+    }
+    return eventMask;
 }
 
 
@@ -14243,6 +14245,9 @@ static void netOutgoingService(HttpQueue *q)
             /* Socket full or SSL negotiate */
             break;
         }
+    }
+    if ((q->first || q->ioIndex) && net->writeBlocked && !(net->eventMask & MPR_WRITABLE)) {
+        httpEnableNetEvents(net);
     }
 }
 
@@ -22423,7 +22428,7 @@ static void connTimeout(HttpStream *stream, MprEvent *mprEvent)
         event = "timeout.parse";
 
     } else if (stream->timeout == HTTP_INACTIVITY_TIMEOUT) {
-        if (httpClientStream(stream)) {
+        if (httpClientStream(stream) || (stream->rx && stream->rx->uri)) {
             msg = sfmt("%s exceeded inactivity timeout of %lld sec", prefix, limits->inactivityTimeout / 1000);
             event = "timeout.inactivity";
         }
@@ -22440,7 +22445,7 @@ static void connTimeout(HttpStream *stream, MprEvent *mprEvent)
         httpDisconnectStream(stream);
 
     } else {
-        httpError(stream, HTTP_CODE_REQUEST_TIMEOUT, "%s", msg);
+        httpError(stream, HTTP_CODE_REQUEST_TIMEOUT, "%s", msg ? msg : "Timeout");
     }
 }
 

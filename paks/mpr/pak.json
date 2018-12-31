@@ -30,6 +30,7 @@
         }
     ],
     "dependencies": {
+        "me-win": "~0.1",
         "osdep": "~1"
     },
     "optionalDependencies": {
