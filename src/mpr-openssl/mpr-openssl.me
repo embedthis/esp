@@ -11,7 +11,6 @@ Me.load({
                 let os = me.platform.os
                 let version = (me.settings.openssl || {}).version || '1.0'
                 if (me.options.gen) {
-                    let v1_0 = true
                     let result = {
                         /*
                             Static configuration to work for standard installations under /usr/lib and /usr/include
