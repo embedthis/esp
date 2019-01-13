@@ -12,10 +12,7 @@
         "email": "dev@embedthis.com",
         "url": "https://embedthis.com"
     },
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/embedthis/mpr.git"
-    },
+    "repository": "embedthis/mpr",
     "bugs": {
         "url": "http://github.com/embedthis/mpr/issues"
     },

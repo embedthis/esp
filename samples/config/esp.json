@@ -109,5 +109,24 @@
             Enable updating via reloading controllers, modules and views
          */
         update: true,
-    }
+    },
+    http: {
+        headers: {
+            set: {
+                'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+            }
+        },
+        server: {
+            listen: [
+                'http://:80',
+                'https://:443',
+            ],
+        },
+        ssl: {
+            certificate: 'crt/self.crt',
+            key: 'crt/self.key'
+        },
+        showErrors: true
+    },
+
 }

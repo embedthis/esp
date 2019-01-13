@@ -30,6 +30,7 @@
         }
     ],
     "dependencies": {
+        "assist": "~0.1",
         "certs": "~0.1",
         "me-win": "~0.1",
         "mpr": "~8",
