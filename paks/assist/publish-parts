@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+#   publish-parts - Publish parts of a product
+#
+
+function publishParts() {
+    unset CDPATH
+    local PARTS="web, app"
+    while [[ $# -gt 0 ]] ; do
+        arg="$1"
+        case ${arg} in
+            -p|--parts)
+                PARTS=${2}
+                shift ; shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    PARTS=$(echo ${PARTS} | tr ',' ' ')
+
+    for part in ${PARTS} ; do
+        [ ! -d "${part}" ] && continue
+
+        cd "./${part}"
+        echo -e "\nPublish ${part} $*"
+        if [ -f gulpfile.ts ] ; then
+            gulp publish $*
+        elif [ -f main.me ] ; then
+            me publish
+        elif [ -f Makefile ] ; then
+            make publish
+        fi
+        [ $? != 0 ] && exit 2
+        cd ..
+    done
+}
+
+publishParts

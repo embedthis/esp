@@ -1,0 +1,42 @@
+#
+#   gitlab-website.yml - Template CI/CD for gulp
+#
+#   Inputs:
+#       AWS_ACCOUNT     mobsense
+#       PROFILE         dev, release, prod, ...
+#       WEB             "web"
+#   Outputs
+#       build/web/      rendered pages
+#
+
+stages:
+    - build
+    - publish
+
+#cache:
+#    key: ${CI_COMMIT_REF_SLUG}
+#    paths:
+#        - ${WEB}/node_modules/
+
+before_script:
+    - ./configure --profile ${PROFILE}
+    - npm link gulp
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_ACCOUNT}" get)
+
+build-website:
+    stage: build
+    script:
+        - ./paks/assist/build-parts --profile "${PROFILE}"
+    artifacts:
+        expire_in: 1 hour
+        name: "rendered"
+        paths:
+            - ${WEB}/build/
+    tags: ['macosx']
+
+publish-website:
+    stage: publish
+    script:
+        - ./paks/assist/publish-parts --profile "${PROFILE}"
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    tags: ['macosx']

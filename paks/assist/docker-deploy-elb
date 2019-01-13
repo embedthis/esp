@@ -1,0 +1,354 @@
+#!/bin/bash
+#
+#   docker-deploy-elb - Deploy docker image to containers behind and ELB
+#
+
+while [[ $# -gt 0 ]] ; do
+    arg="$1"
+    case ${arg} in
+        -n|--name)
+            NAME=${2}
+            shift ; shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+eval $(../paks/assist/json2env config/keys.json product.json ../pak.json)
+IMAGE=${APP_NAME:-${NAME}}
+
+. $(dirname ${BASH_SOURCE[0]})/common
+. $(dirname ${BASH_SOURCE[0]})/docker-login
+. $(dirname ${BASH_SOURCE[0]})/remote-access
+
+SGROUP="prod-remote"
+DPORT=2375
+
+echo -e "\nDeploy container \"${IMAGE}:${VERSION}\" to Load Balancer \"${AWS_PROXY}\" Group \"${AWS_GROUP}\"\n"
+
+getGroups() {
+    local groups arn
+    groups=""
+    for arn in $(aws elbv2 describe-target-groups --names ${AWS_GROUP} --output text --query 'TargetGroups[].TargetGroupArn')
+    do
+        if [ "${arn}" = "${arn/\/${AWS_GROUP}\//}" ] ; then
+            continue
+        fi
+        groups="${groups} ${arn}"
+    done
+    echo ${groups}
+}
+
+getTargets() {
+    local arn
+    arn=$1
+    aws elbv2 describe-target-health --target-group-arn ${arn} --output text --query 'TargetHealthDescriptions[].Target.Id'
+    if [ $? != 0 ] ; then
+        echo "Cannot get target health"
+        exit 255
+    fi
+}
+
+getHost() {
+    local target
+    target=$1
+    aws ec2 describe-instances --instance-ids ${target} --output text --query Reservations[0].Instances[0].PublicIpAddress
+}
+
+checkTargets() {
+    local arn targets tcount
+    allTargets=$(aws ec2 describe-instances \
+        --filter "Name=tag:aws:autoscaling:groupName,Values=${AWS_PROXY}" --output text \
+        --query 'Reservations[].Instances[].InstanceId')
+    if [ $? != 0 ] ; then
+        echo "Cannot describe instances"
+        exit 255
+    fi
+    if [ "${allTargets}" = "" ] ; then
+        echo "No targets found in autoscale group ${AWS_PROXY}"
+        exit 255
+    fi
+    echo "Check targets are registered with proxy"
+    for arn in $(getGroups)
+    do
+        targets=$(getTargets ${arn})
+        tcount=0
+        for target in ${allTargets}
+        do
+            if [ "${allTargets/${target}/}" = "${allTargets}" ] ; then
+                echo "Repair target ${target} missing from proxy"
+                aws elbv2 register-targets --target-group-arn ${arn} --targets Id=${target}
+                if [ $? != 0 ] ; then
+                    echo "Cannot register ${target} with load balancer ${AWS_PROXY}"
+                    continue
+                fi
+            else
+                echo "Target ${target} is registered in proxy"
+                tcount=$((tcount+1))
+            fi
+        done
+    done
+    echo "${NAME} has ${tcount} targets in target group"
+}
+
+pullImage() {
+    local i
+    i=0
+    while [ $i -lt 5 ]
+    do
+        echo Pull image ${IMAGE_PATH}:${VERSION}
+        output=$(docker pull ${IMAGE_PATH}:${VERSION})
+        if [ $? = 0 ] ; then
+            echo "Image pulled"
+            echo ${output} | egrep -v 'Already exists|Pulling|Waiting|Verifying|Download complete|Pull complete|Digest:'
+            return 0
+        fi
+        echo ${output}
+        echo "Cannot pull image, retry in 5 seconds. (${i})"
+        sleep 5
+        i=$((i+1))
+    done
+    return 1
+}
+
+validate() {
+    local host i
+    host=$1
+    echo "Validate application at http://${host}${AWS_VALIDATE}"
+    i=0
+    while [ $i -lt 5 ]
+    do
+        code=$(curl -s -o /dev/null --retry 10 --retry-delay 1 --retry-max-time 15 \
+            -I -w "%{http_code}" http://${host}${AWS_VALIDATE})
+        if [ "${code}" = 200 ] ; then
+            echo "PASSED: Health check successful"
+            return 0
+        fi
+        echo "Continue to wait for application, retry in 5 seconds. (${i})"
+        sleep 5
+        i=$((i+1))
+    done
+    echo "FAILED: Cannot validate application, status ${code}"
+    return 1
+}
+
+waitForDrain() {
+    local i state target
+    target=$1
+    echo "Wait for elb to drain target ${target}"
+    i=0
+    while [ $i -lt 30 ]
+    do
+        state=$(aws elbv2 describe-target-health --target-group-arn "${arn}" --output text --query "TargetHealthDescriptions[?Target.Id=='${target}'].TargetHealth.State")
+        if [ $? != 0 ] ; then
+            echo "Cannot get target health for ${target}"
+            exit 255
+        fi
+        if [ "${state}" = "" ] ; then
+            echo Target ${target} now removed from elb.
+            return 0
+        fi
+        echo Waiting for ${target} to drain. State: ${state}.
+        sleep 1
+        i=$((i+1))
+    done
+    echo "FAILED: Cannot drain instance ${target} state ${state}"
+    return 1
+}
+
+waitForReady() {
+    local i state target
+    target=$1
+    echo "Wait for elb to enable target ${target}"
+    i=0
+    while [ $i -lt 30 ]
+    do
+        state=$(aws elbv2 describe-target-health --target-group-arn "${arn}" --output text --query "TargetHealthDescriptions[?Target.Id=='${target}'].TargetHealth.State")
+        if [ $? != 0 ] ; then
+            echo "Cannot get target health for ${target}"
+            exit 255
+        fi
+        if [ "${state}" = "healthy" ] ; then
+            echo Target ${target} now ${state}.
+            return 0
+        fi
+        echo Waiting for ${target} to become healthy. State: ${state}.
+        sleep 1
+        i=$((i+1))
+    done
+    echo "FAILED: Instance not ready ${target} state ${state}"
+    return 1
+}
+
+#
+#   Currently 1-1 correspondence between target group and application
+#
+count=0
+passed=0
+checkTargets
+for arn in $(getGroups)
+do
+    for target in $(getTargets ${arn})
+    do
+        fail=
+        count=$((count+1))
+
+        URI=$(dockerLogin)
+        IMAGE_PATH=${URI}/${IMAGE}
+
+        grantAccess ${SGROUP} ${DPORT}
+        host=$(getHost ${target})
+        export DOCKER_HOST=tcp://${host}:${DPORT}
+
+        if ! pullImage ; then
+            echo "Cannot pull ${IMAGE}:${VERSION} on ${target}"
+            continue
+        fi
+
+        echo
+        echo "----------------------------------------------------------------------------------"
+        echo "Deploy to instance ${target} at ${host}"
+        echo "----------------------------------------------------------------------------------"
+
+        curret=$(docker ps --filter ancestor=${IMAGE}:${VERSION} --format '{{.ID}}')
+        if [ $? != 0 ] ; then
+            echo "Cannot talk to docker on ${target}"
+            fail=1
+            continue
+        fi
+        if [ "${current}" != "" ] ; then
+            echo "Target ${target} already running version ${IMAGE}:${VERSION}"
+            if [ "${FORCE}" = "" ] ; then
+                passed=$((passed+1))
+                continue
+            fi
+        fi
+
+        #
+        #   Deregister. After deregister, we must ALWAYS reregister below.
+        #
+        echo "Deregister instance ${target} from load balancer"
+        aws elbv2 deregister-targets --target-group-arn ${arn} --targets Id=${target}
+        if [ $? != 0 ] ; then
+            echo "Cannot deregister ${target} from target group ${AWS_GROUP}"
+            fail=1
+            # Keep going
+        fi
+
+        #
+        #   AWS seems to require at least a 10-15 second deregistration delay. It seems to deregister targets, but
+        #   continues to route requests to them for up to 15 seconds. Ugh!
+        #
+        delay=$(aws elbv2 describe-target-group-attributes --target-group-arn ${arn} \
+            --output text --query "Attributes[?Key=='deregistration_delay.timeout_seconds'].Value")
+        echo Waiting for the deregistration delay ${delay}
+        # This seems to need to be >= the deregistration delay for the target group
+        sleep ${delay}
+
+        #
+        #   Gracefully stop containers
+        #
+        containers=$(docker ps --filter "name=${NAME}" --format '{{.ID}}')
+        if [ "${containers}" != "" ] ; then
+            echo "Gracefully stop traffic on ${NAME}"
+
+            #
+            #   The ELB should have stopped sending requests by now.
+            #   The quit instructs the container to do what it can to gracefully clean up current requests.
+            #
+            startQuit=$(date +%s)
+            echo "docker kill -s SIGQUIT ${NAME}"
+            docker kill -s SIGQUIT ${NAME}
+
+            #
+            #   Wait for instance to be fully removed from the elb
+            #
+            if ! waitForDrain "${target}" ; then
+                echo "Cannot drain ${target}, force kill"
+                # keep going - should not happen - best to upgrade
+            fi
+
+            #
+            #   Wait for the app drain timeout
+            #
+            period=$((10 - $(date +%s) + ${startQuit}))
+            if [ "${period}" -gt 0 ] ; then
+                echo sleep ${period}
+                sleep ${period}
+            fi
+
+            echo "Stopping container ${NAME} ${containers}"
+            docker stop ${NAME}
+            if [ $? != 0 ] ; then
+                echo "Cannot stop container ${container} on ${target}, continuing ..."
+                # May not be running, continue
+            fi
+        fi
+
+        #
+        #   Remove existing containers
+        #
+        echo "Remove container ${NAME} ${containers}"
+        docker rm ${NAME} >/dev/null 2>&1
+
+        #
+        #   Start new container
+        #
+        COMMAND=$(echo ${AWS_DEPLOY} | sed "s/-d/-d -e HOST=${host}/" | sed "s^${IMAGE}:${VERSION}^${URI}/${IMAGE}:${VERSION}^")
+        echo "${COMMAND}"
+        ${COMMAND}
+        if [ $? != 0 ] ; then
+            echo "Cannot start container ${IMAGE}:${VERSION} on ${target}"
+            echo "WARNING: target ${target} is not registered with load balancer, skip further deployments."
+            fail=1
+        fi
+
+        #
+        #   Register with load balancer
+        #
+        echo "Register instance ${target} with load balancer"
+        aws elbv2 register-targets --target-group-arn ${arn} --targets Id=${target}
+        if [ $? != 0 ] ; then
+            echo "Cannot register ${target} with target group ${AWS_GROUP}"
+            continue
+        fi
+
+        #
+        #   Validate
+        #
+        if [ "${fail}" = "" ] ; then
+            echo -n "Started: "
+            docker ps --filter "ancestor=${IMAGE}:${VERSION}" --format '{{.ID}}, {{.Image}}, {{.Status}}'
+            if ! validate ${host} ; then
+                echo "Could not validate target ${target}"
+                break
+            fi
+        fi
+
+        #
+        #   Wait for instance to be recognized by elb
+        #
+        if ! waitForReady "${target}" ; then
+            echo "Target ${target} did not become ready. Halting deploy."
+            break
+        fi
+        dockerLogout
+        revokeAccess ${SGROUP} ${DPORT}
+        passed=$((passed+1))
+    done
+done
+
+if [ "${passed}" != "${count}" ] ; then
+    echo "FAILED, upgraded ${passed} instances of ${count} with ${IMAGE}:${VERSION}"
+    exit 1
+fi
+
+echo -e "\nPASSED, all ${count} instances running ${IMAGE}:${VERSION}"
+
+echo -e "\nRunning docker garbage collection"
+docker system prune -f >/dev/null
+DOCKER_HOST= docker system prune -f >/dev/null
+
+exit 0

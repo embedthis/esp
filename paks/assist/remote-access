@@ -1,0 +1,40 @@
+#
+#   remote-access - Setup remote access to the prod-farm security group
+#
+#   grantAccess sg-group-name port
+#   revokeAccess sg-group-name port
+#
+grantAccess() {
+    local data ip prior sgroup
+    local GROUP_NAME="$1"
+    local PORT="$2"
+    
+    ip=$(curl -s ipecho.net/plain)
+    data=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=${GROUP_NAME}")
+    [ $? != 0 ] && exit 1
+
+    sgroup=$(echo $data | jq -r ".SecurityGroups[].GroupId")
+    existing=$(echo $data | jq -r ".SecurityGroups[].IpPermissions[] | select( (.FromPort == ${PORT})).IpRanges[].CidrIp")
+    if [[ "${existing}" != *"${ip}"* ]] ; then
+        aws ec2 revoke-security-group-ingress --group-id ${sgroup} --protocol tcp --port ${PORT} --cidr ${ip}/32 >/dev/null 2>&1
+        aws ec2 authorize-security-group-ingress --group-id ${sgroup} --protocol tcp --port ${PORT} --cidr ${ip}/32
+        [ $? != 0 ] && exit 1
+    fi
+}
+
+
+revokeAccess() {
+    local data ip prior sgroup
+    local GROUP_NAME="$1"
+    local PORT="$2"
+    ip=$(curl -s ipecho.net/plain)
+    data=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=${GROUP_NAME}")
+    [ $? != 0 ] && exit 1
+
+    sgroup=$(echo $data | jq -r ".SecurityGroups[].GroupId")
+    existing=$(echo $data | jq -r ".SecurityGroups[].IpPermissions[] | select( (.FromPort == ${PORT})).IpRanges[].CidrIp")
+    if [[ "${existing}" != *"${ip}"* ]] ; then
+        aws ec2 revoke-security-group-ingress --group-id ${sgroup} --protocol tcp --port 22 --cidr ${ip}/32
+        [ $? != 0 ] && exit 1
+    fi
+}

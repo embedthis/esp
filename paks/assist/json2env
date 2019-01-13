@@ -1,0 +1,212 @@
+#!/usr/bin/env node
+/*
+    Usage: js2on2env keyFile context-files...
+*/
+
+var fs = require('fs')
+
+global.dump = (...args) => { for (let item of args) print(JSON.stringify(item, null, 4)) }
+global.print = (...args) => console.log(...args)
+
+/*
+    js-blend - Blend objects
+ */
+
+function clone(src) {
+    var result
+
+    if (Array.isArray(src)) {
+        result = src.slice(0)
+    } else if (typeof src == 'object' && !(src instanceof Date || src instanceof RegExp || src == null)) {
+        result = Object.create(Object.getPrototypeOf(src))
+        var i, descriptor, keys = Object.getOwnPropertyNames(src)
+        for (i = 0; i < keys.length; i ++) {
+            descriptor = Object.getOwnPropertyDescriptor(src, keys[ i ])
+            if (descriptor.value && typeof descriptor.value === 'object') {
+                descriptor.value = clone(descriptor.value)
+            }
+            Object.defineProperty(result, keys[i], descriptor)
+        }
+    } else {
+        result = src
+    }
+    return result
+}
+
+function blend(dest, src, combine = '') {
+    if (!src) {
+        return dest
+    }
+    if (!dest || typeof dest != 'object' || Array.isArray(dest)) {
+        return dest
+    }
+    for (let key of Object.getOwnPropertyNames(src)) {
+        let property = key
+        let op = key[0]
+        if (op == '+') {
+            property = key.slice(1)
+        } else if (op == '-') {
+            property = key.slice(1)
+        } else if (op == '?') {
+            property = key.slice(1)
+        } else if (op == '=') {
+            property = key.slice(1)
+        } else if (combine) {
+            op = combine
+        } else {
+            /* Default is to blend */
+            op = ''
+        }
+        let s = src[key]
+        if (!dest.hasOwnProperty(property)) {
+            if (op == '-') {
+                continue
+            }
+            dest[property] = clone(s)
+            continue
+        } else if (op == '?') {
+            continue
+        }
+        let d = dest[property]
+        if (Array.isArray(d)) {
+            if (op == '+') {
+                if (Array.isArray(s)) {
+                    for (let item of s) {
+                        if (d.indexOf(s) < 0) d.push(item)
+                    }
+                } else {
+                    d.push(s)
+                }
+            } else if (op == '-') {
+                if (Array.isArray(s)) {
+                    for (let item of s) {
+                        let index = d.indexOf(item)
+                        if (index >= 0) d.slice(index, 1)
+                    }
+                } else {
+                    let index = d.indexOf(s)
+                    if (index >= 0) d.slice(index, 1)
+                }
+            } else {
+                /* op == '=' */
+                dest[property] = clone(s)
+            }
+        } else if (typeof d == 'object' && d !== null && d !== undefined) {
+            if (op == '=') {
+                dest[property] = clone(s)
+            } else if (op == '-') {
+                delete dest[property]
+            } else if (typeof s == 'object') {
+                blend(d, s, op)
+            }
+        } else if (typeof d == 'string') {
+            if (op == '+') {
+                dest[property] += ' ' + s
+            } else if (op == '-') {
+                if (d == s) {
+                    delete dest[property]
+                } else {
+                    dest[property] = d.replace(s, '')
+                }
+            } else {
+                /* op == '=' */
+                dest[property] = s
+            }
+        } else if (typeof d == 'number') {
+            if (op == '+') {
+                dest[property] += s
+            } else if (op == '-') {
+                dest[property] -= s
+            } else {
+                /* op == '=' */
+                dest[property] = s
+            }
+        } else {
+            if (op == '=') {
+                dest[property] = s
+            } else if (op == '-') {
+                delete dest[property]
+            } else {
+                dest[property] = s
+            }
+        }
+    }
+    return dest
+}
+
+function expand(v, ...contexts) {
+    let json = JSON.stringify(v)
+    for (let context of contexts) {
+        json = template(json, context)
+    }
+    return JSON.parse(json)
+}
+
+function template(v, context) {
+    let text = v.toString()
+    let matches = text.match(/\$\{[^}]*}/gm)
+    if (matches) {
+        // context = clone(context)
+        for (let name of matches) {
+            let word = name.slice(2).slice(0, -1)
+            if (context[word] == undefined) {
+                context[word] = '${' + word + '}'
+            }
+        }
+        //  MOB - better to replace with code that does not eval
+        let fn = Function('_context_', 'with (_context_) { return `' + text + '`}')
+        return fn(context)
+    }
+    return text
+}
+
+function mapEnv(obj, prefix = '', vars = {}) {
+    for (let name of Object.keys(obj)) {
+        let value = obj[name]
+        if (name == 'profiles') {
+            continue
+        }
+        if (typeof value == 'object') {
+            mapEnv(value, prefix + name.toUpperCase() + '_', vars)
+        } else {
+            name = (prefix + name).toUpperCase().replace(/\./g, '_').replace(/-/g, '_')
+            vars[name] = value
+        }
+    }
+    return vars
+}
+
+function getEnv(obj, context = {}) {
+    let vars = mapEnv(obj)
+    for (let [index, v] of Object.entries(vars)) {
+        vars[index] = expand(v, context)
+    }
+    return vars
+}
+
+let file = process.argv[2]
+if (!fs.existsSync(file)) {
+    process.stderr.write(`Cannot locate ${file}\n`)
+    process.exit(1)
+}
+let data = fs.readFileSync(file)
+let obj = eval('(' + data + ')')
+
+let context = blend({}, obj)
+for (let i = 3; i < process.argv.length; i++) {
+    let path = process.argv[i]
+    if (fs.existsSync(path)) {
+        data = fs.readFileSync(path)
+        let ctx = eval('(' + data + ')')
+        context = blend(context, ctx)
+    }
+}
+
+if (context.profile && context.profiles && context.profiles[context.profile]) {
+    blend(context, context.profiles[context.profile])
+}
+
+let env = getEnv(obj, context)
+for (let [key,value] of Object.entries(env)) {
+    print('export ' + key + '="' + value + '"')
+}

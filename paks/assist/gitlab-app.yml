@@ -1,0 +1,52 @@
+#
+#   gitlab-app.yml - Template CI/CD for gulp
+#
+#   Inputs:
+#       APP             "app"
+#       AWS_ACCOUNT     mobsense
+#       PROFILE         dev, release, prod, ...
+#   Outputs
+#       build/app/      rendered pages
+#
+
+stages:
+    - build
+    - publish
+    - deploy
+
+#cache:
+#    key: ${CI_COMMIT_REF_SLUG}
+#    paths:
+#        - ${APP}/node_modules/
+#        - .decrypted
+
+before_script:
+    - ./configure --profile ${PROFILE}
+    - npm link gulp
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_ACCOUNT}" get)
+
+build-app:
+    stage: build
+    script:
+        - ./paks/assist/build-parts --profile "${PROFILE}"
+    artifacts:
+        expire_in: 1 hour
+        name: "rendered"
+        paths:
+            - ${APP}/build/
+    tags: ['macosx']
+
+publish-app:
+    stage: publish
+    script:
+        - ./paks/assist/publish-parts --profile "${PROFILE}"
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    tags: ['macosx']
+
+deploy-app:
+    stage: deploy
+    script:
+        - ./paks/assist/deploy-parts --profile "${PROFILE}"
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    tags: ['macosx']
+    when: manual

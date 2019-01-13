@@ -1,0 +1,11 @@
+#
+#   gitlab-ci.yml -- GitLab CI/CD build instructions
+#
+
+image: runner:current
+
+variables:
+    AWS_ACCOUNT: "embedthis"
+    PROFILE: "release"
+
+include: "paks/assist/gitlab-makeme.yml"

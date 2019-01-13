@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+#   docker-publish - Publish docker image to the ECR repository
+#
+#   usage: docker-publish image profile region [primary]
+#
+IMAGE=${1}
+AWS_PROFILE=${2}
+AWS_DEFAULT_REGION=${3}
+: ${PRIMARY:=${4}}
+
+VERSION=$(pak --dir .. edit version)
+
+. $(dirname ${BASH_SOURCE[0]})/common
+. $(dirname ${BASH_SOURCE[0]})/docker-login
+
+echo "Docker login for ${AWS_PROFILE} at ${AWS_DEFAULT_REGION}"
+URI=$(dockerLogin)
+IMAGE_PATH=${URI}/${IMAGE}
+
+echo "Tagging image: docker tag ${IMAGE} ${IMAGE_PATH}:${VERSION}"
+docker tag ${IMAGE} ${IMAGE_PATH}:${VERSION}
+if [ $? != 0 ] ; then
+    echo "Cannot tag ${IMAGE} as ${IMAGE_PATH}:${VERSION}"
+    exit 1
+fi
+
+echo "Pushing: docker push ${IMAGE_PATH}:${VERSION}"
+docker push ${IMAGE_PATH}:${VERSION} | egrep -v 'Layer already exists|Waiting|Preparing|Pushed|digest:'
+if [ $? != 0 ] ; then
+    echo "Cannot push ${IMAGE}:${VERSION}"
+    exit 1
+fi
+
+if [ "${PRIMARY}" != "" ] ; then
+    echo "Tagging current: docker tag ${IMAGE} ${IMAGE_PATH}:current"
+    docker tag ${IMAGE} ${IMAGE_PATH}:current
+    if [ $? != 0 ] ; then
+        echo "Cannot tag ${IMAGE}:current"
+        exit 1
+    fi
+    echo "Pushing: docker push ${IMAGE_PATH}:current"
+    docker push ${IMAGE_PATH}:current | egrep -v 'Layer already exists|Waiting|Preparing'
+    if [ $? != 0 ] ; then
+        echo "Cannot push ${IMAGE_PATH}:current"
+        exit 1
+    fi
+    # docker rmi -f ${IMAGE_PATH}:${VERSION}
+else
+    echo "Not pushing to ${IMAGE}:current"
+fi
+
+dockerLogout

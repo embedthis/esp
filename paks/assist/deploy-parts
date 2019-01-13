@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+#   deploy-parts - Deploy parts of an application
+#
+#   usage: deploy-parts --parts "app, web"
+#
+#   Parts defaults to "web, app". Missing parts are silently ignored.
+#   Parses keys.json and expands tokens using product.json and pak.json.
+#   Calls bin/deploy if present, lese docker-deploy-elb if AWS_PROXY is defined, else docker-deploy-instance.
+#   Invokes deploy script with same args as passed in.
+#
+
+function deployParts() {
+    unset CDPATH
+    local PARTS="web, app"
+    while [[ $# -gt 0 ]] ; do
+        arg="$1"
+        case ${arg} in
+            -p|--parts)
+                PARTS=${2}
+                shift ; shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    PARTS=$(echo ${PARTS} | tr ',' ' ')
+
+    for part in ${PARTS} ; do
+        [ ! -d "${part}" ] && continue
+        echo -e "\nDeploying ${PART} ..."
+        eval $(paks/assist/json2env app/config/keys.json app/product.json pak.json)
+
+        cd "./${part}"
+        if [ -f bin/deploy ] ; then
+            bin/deploy $*
+        elif [ "${AWS_PROXY}" != "" ] ; then
+            ../paks/assist/docker-deploy-elb $*
+        else
+            ../paks/assist/docker-deploy-instance $*
+        fi
+        [ $? != 0 ] && exit 2
+        cd ..
+    done
+}
+
+deployParts

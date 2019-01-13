@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+#   configure - Configure a product
+#
+#   Usage: PARTS="parts" GPG_PASSWORD="password" configure ..
+#
+#   Manages git-crypt files, submodules and parts
+#
+
+GPG_PASSFILE=/etc/farm/gpg.key
+
+PARTS=$(echo ${PARTS} | tr ',' ' ')
+
+#
+#   Decrypt secrets
+#
+if [ -x ".git-crypt" -a ! -f .decrypted ] ; then
+    echo "Decrypt secrets"
+    if [ -z "${GPG_PASSWORD}" -a -f ${GPG_PASSFILE} ] ; then
+        GPG_PASSWORD=$(cat ${GPG_PASSFILE})
+    fi
+    if [ "${GPG_PASSWORD}" != "" ] ; then
+        gpg --pinentry-mode loopback --no-tty --passphrase "${GPG_PASSWORD}" --yes \
+            --output .git-crypt/keys/default/0/decrypted.key \
+            --decrypt .git-crypt/keys/default/0/*.gpg
+        git-crypt unlock .git-crypt/keys/default/0/decrypted.key
+    else
+        git-crypt unlock
+    fi
+    if [ $? != 0 ] ; then
+        echo "Git unlock failed"
+        exit 1
+    fi
+    >.decrypted
+fi
+
+git submodule update --init --recursive
+
+for PART in ${PARTS}
+do
+    cd ./${PART}
+    if [ -f configure ] ; then
+        echo -e "\nConfigure ${PART}"
+        PART=${PART} ./configure $*
+    fi
+    [ $? != 0 ] && exit 2
+    cd ..
+done

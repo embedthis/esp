@@ -1,0 +1,23 @@
+#
+#   docker-login - Docker login support
+#
+#   Will login to the AWS ECR docker repository using AWS_DEFAULT_REGION and AWS_PROFILE env vars
+#
+
+dockerLogin() {
+    LOGIN=$(aws ecr get-login --no-include-email --region "${AWS_DEFAULT_REGION}")
+    [ $? != 0 ] && exit 1
+    TOKEN=$(echo ${LOGIN} | sed 's/.*-p //' | sed 's/ https.*//')
+    URI=$(echo ${LOGIN} | sed 's/.* https...//')
+    output=$(echo ${TOKEN} | docker login -u AWS --password-stdin ${URI} 2>&1)
+    if [ $? != 0 ] ; then
+        echo "Cannot login for docker"
+        echo "${output}"
+        exit 1
+    fi
+    echo ${URI}
+}
+
+dockerLogout() {
+    DOCKER_HOST= docker logout >/dev/null
+}

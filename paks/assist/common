@@ -1,0 +1,10 @@
+#
+#   common - Common functions for build assist functions
+#
+
+if [ "${TRACE}" != "" ] ; then
+    env | sort
+    export PS4=""
+    set -x
+fi
+unset CDPATH

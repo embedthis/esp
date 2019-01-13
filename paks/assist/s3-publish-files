@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+#   s3-publish-files - Deploy files to S3
+#
+#   usage: s3-publish-files src dst distribution-id aws-profile
+#
+
+SRC=$1
+DST=$2
+DISTRIBUTION=$3
+AWS_PROFILE=$4
+
+if [ "${SRC}" = "" ] ; then
+    echo "SRC is not provided"
+    exit 255
+fi
+if [ "${DST}" = "" ] ; then
+    echo "DST is not provided"
+    exit 255
+fi
+if [ "${AWS_PROFILE}" = "" ] ; then
+    export AWS_ACCESS_KEY_ID=${PUBLISH_KEYS_AWS_ACCESS}
+    export AWS_SECRET_ACCESS_KEY=${PUBLISH_KEYS_AWS_SECRET}
+    export AWS_DEFAULT_REGION=${PUBLISH_KEYS_AWS_REGION}
+    export AWS_DEFAULT_PROFILE=${PUBLISH_KEYS_AWS_PROFILE}
+    if [ "${AWS_ACCESS_KEY_ID}" = "" ] ; then
+        echo "PUBLISH_KEYS_AWS_ACCESS is not defined"
+        exit 255
+    fi
+fi
+. $(dirname ${BASH_SOURCE[0]})/common
+
+aws s3 sync --no-progress ${SRC} "s3://${DST}/" --delete --profile "${AWS_PROFILE}"
+if [ $? != 0 ] ; then
+    echo "Cannot copy to S3"
+    exit 255
+fi
+
+aws configure set preview.cloudfront true
+aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION} --paths '/*' --profile "${AWS_PROFILE}"
+if [ $? != 0 ] ; then
+    echo "Cannot create invalidation for distribution ${DISTRIBUTION} profile ${AWS_PROFILE}"
+    exit 255
+fi
+exit 0
+

@@ -31,6 +31,7 @@
         }
     ],
     "dependencies": {
+        "assist": "~0.1",
         "http": "~8",
         "me-win": "~0.1",
         "mpr": "~8",
