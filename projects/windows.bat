@@ -1,3 +1,4 @@
+@setlocal
 @echo off
 REM
 REM   Set VS vars and run a command
