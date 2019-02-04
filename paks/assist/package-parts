@@ -5,12 +5,12 @@
 
 function packageParts() {
     unset CDPATH
-    local PARTS="web, app"
+    local PARTS="api, app, ui, web"
     while [[ $# -gt 0 ]] ; do
         arg="$1"
         case ${arg} in
-            -p|--parts)
-                PARTS=${2}
+            --parts)
+                PARTS="${2}"
                 shift ; shift
                 ;;
             *)
@@ -23,7 +23,6 @@ function packageParts() {
 
     for part in ${PARTS} ; do
         [ ! -d "${part}" ] && continue
-
         echo -e "\nPackage ${part} $*"
         cd "./${part}"
         if [ -f gulpfile.ts ] ; then

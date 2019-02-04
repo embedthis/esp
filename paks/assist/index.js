@@ -5,13 +5,13 @@
 import * as fs from 'fs'
 import * as json5 from 'json5'
 import * as gulp from 'gulp'
-import * as util from 'gulp-util'
+import * as log from 'fancy-log'
 import {blend} from './blend'
 
 /*
     Polyfills
  */
-global.print = (...args) => util.log(...args)
+global.print = (...args) => log(...args)
 global.dump = (...args) => { for (let item of args) print(JSON.stringify(item, null, 4)) }
 
 /*
@@ -34,31 +34,39 @@ for (let file of files) {
         blend(config, json)
     }
 }
+if (fs.existsSync('../CONFIG/terraform.json')) {
+    config.terraform = {}
+    blend(config.terraform, json5.parse(fs.readFileSync('../CONFIG/terraform.json')))
+}
+
+/*
+    Support --profile and other '-' switches. Convert --args into config.NAME = value.
+ */
+let args = {}
 for (let i = 2; i < argv.length; i++) {
     let arg = argv[i]
     if (arg.indexOf('--') == 0) {
         arg = arg.slice(2)
-        config[arg] = argv[++i] || true
+        args[arg] = argv[++i] || true
     } else if (arg.indexOf('-') == 0) {
         arg = arg.slice(1)
-        config[arg] = true
+        args[arg] = true
     }
 }
 
 /*
     Set sensible defaults: Default to profile == dev, debug == true if dev.
  */
-config.profile = config.profile || process.env.PROFILE || 'dev'
-if (config.debug == 'true') {
-    config.debug = true
-}
-if (config.debug !== true) {
-    config.debug = (config.profile == 'dev') ? true : false
-}
-util.log(`Using profile "${config.profile}"`)
+config.profile = args.profile || process.env.PROFILE || 'dev'
+
 if (config.profiles && config.profile && config.profiles[config.profile]) {
     blend(config, config.profiles[config.profile])
 }
+config.debug = args.debug || config.debug
+if (config.debug == 'true') {
+    config.debug = true
+}
+
 
 /*
     Patch version from ../pak.json
@@ -87,7 +95,6 @@ function template(v, context) {
     let text = v.toString()
     let matches = text.match(/\$\{[^}]*}/gm)
     if (matches) {
-        // context = clone(context)
         for (let name of matches) {
             let word = name.slice(2).slice(0, -1)
             if (context[word] == undefined) {
@@ -101,6 +108,9 @@ function template(v, context) {
     return text
 }
 
+/*
+    Map configuration hash into env var format. Uppercase with dots and "-" converted to "_".
+ */
 function mapEnv(obj, prefix = '', vars = {}) {
     for (let name of Object.keys(obj)) {
         let value = obj[name]
@@ -125,5 +135,6 @@ global.getEnv = function(obj, context) {
     let env = blend({}, process.env)
     return blend(env, vars)
 }
+
 
 export default config

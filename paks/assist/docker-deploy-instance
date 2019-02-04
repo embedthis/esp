@@ -1,9 +1,13 @@
 #!/bin/bash
 #
+#   UNUSED - NOT YET UPGRADED
 #   docker-deploy - Deploy docker image to an instance
 #
 #   usage: docker-deploy
 #
+echo UNUSED - NOT YET UPGRADED
+exit 255
+
 IMAGE=${NAME}
 
 UPART=$(echo ${PART} | tr '[:lower:]' '[:upper:]')

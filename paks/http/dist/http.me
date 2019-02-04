@@ -28,6 +28,12 @@ Me.load({
                 `,
             },
         },
+        
+        server: {
+            type: 'exe',
+            depends: [ 'libhttp' ],
+            sources: [ 'server.c' ],
+        },
 
         httpcmd: {
             pname:   'http',

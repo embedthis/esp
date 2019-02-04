@@ -3,7 +3,7 @@
 #
 #   Inputs:
 #       APP             "app"
-#       AWS_ACCOUNT     mobsense
+#       AWS_PROFILE     mobsense
 #       PROFILE         dev, release, prod, ...
 #   Outputs
 #       build/app/      rendered pages
@@ -14,21 +14,18 @@ stages:
     - publish
     - deploy
 
-#cache:
-#    key: ${CI_COMMIT_REF_SLUG}
-#    paths:
-#        - ${APP}/node_modules/
-#        - .decrypted
+variables:
+    APP: "app"
 
 before_script:
     - ./configure --profile ${PROFILE}
-    - npm link gulp
-    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_ACCOUNT}" get)
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_PROFILE}" get)
 
 build-app:
     stage: build
     script:
         - ./paks/assist/build-parts --profile "${PROFILE}"
+        - mkdir -p ${APP}/build
     artifacts:
         expire_in: 1 hour
         name: "rendered"
@@ -41,6 +38,9 @@ publish-app:
     script:
         - ./paks/assist/publish-parts --profile "${PROFILE}"
     only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
     tags: ['macosx']
 
 deploy-app:
@@ -48,5 +48,8 @@ deploy-app:
     script:
         - ./paks/assist/deploy-parts --profile "${PROFILE}"
     only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
     tags: ['macosx']
     when: manual

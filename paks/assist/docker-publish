@@ -2,14 +2,41 @@
 #
 #   docker-publish - Publish docker image to the ECR repository
 #
-#   usage: docker-publish image profile region [primary]
+#   usage: docker-publish [--primary] [--aws-profile profile] [--region region] image
 #
-IMAGE=${1}
-AWS_PROFILE=${2}
-AWS_DEFAULT_REGION=${3}
-: ${PRIMARY:=${4}}
 
 VERSION=$(pak --dir .. edit version)
+
+while [[ $# -gt 0 ]] ; do
+    arg="$1"
+    case ${arg} in
+        --aws-profile)
+            AWS_PROFILE=${2}
+            shift ; shift
+            ;;
+        --primary)
+            PRIMARY=${2}
+            shift ; shift
+            ;;
+        --region)
+            AWS_DEFAULT_REGION=${2}
+            shift ; shift
+            ;;
+        --version)
+            VERSION=${2}
+            shift ; shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+IMAGE=${1}
+if [ "${IMAGE}" = "" -o "${AWS_DEFAULT_REGION}" = "" ] ; then
+    echo "usage: docker-publish [--primary] [--aws-profile profile] [--region region] image"
+    exit 255
+fi
 
 . $(dirname ${BASH_SOURCE[0]})/common
 . $(dirname ${BASH_SOURCE[0]})/docker-login

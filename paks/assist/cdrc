@@ -19,12 +19,12 @@ if [ -z "${CI}" ] ; then
         echo "${PROFILE}" >.profile
         echo "Using default profile \"${PROFILE}\". Edit \".profile\" to change."
     fi
-
     export PROFILE
     export AWS_DEFAULT_REGION=us-east-1
     export AWS_PROFILE=mobsense
 
-    export TF_VAR_profile=${PROFILE}
+    # export TF_VAR_profile=${PROFILE}
+    export TF_VAR_profile=prod
     export TF_VAR_aws_profile=${AWS_PROFILE}
     export TF_VAR_region=${AWS_DEFAULT_REGION}
 fi

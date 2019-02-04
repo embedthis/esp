@@ -2,12 +2,34 @@
 #
 #   configure - Configure a product
 #
-#   Usage: PARTS="parts" GPG_PASSWORD="password" configure ..
+#   Usage: configure --parts "app, web" --password "password" --passfile path ...
 #
-#   Manages git-crypt files, submodules and parts
+#   Manages git-crypt files, submodules and parts. Defaults to --passfile /etc/farm/gpg.key
 #
 
 GPG_PASSFILE=/etc/farm/gpg.key
+
+PARTS="app, ui, web"
+while [[ $# -gt 0 ]] ; do
+    arg="$1"
+    case ${arg} in
+        --passfile)
+            GPG_PASSFILE="${2}"
+            shift ; shift
+            ;;
+        --password)
+            GPG_PASSWORD="${2}"
+            shift ; shift
+            ;;
+        --parts)
+            PARTS="${2}"
+            shift ; shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
 
 PARTS=$(echo ${PARTS} | tr ',' ' ')
 
@@ -38,6 +60,7 @@ git submodule update --init --recursive
 
 for PART in ${PARTS}
 do
+    [ ! -d ${PART} ] && continue
     cd ./${PART}
     if [ -f configure ] ; then
         echo -e "\nConfigure ${PART}"

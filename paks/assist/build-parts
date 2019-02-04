@@ -5,12 +5,12 @@
 
 function buildParts() {
     unset CDPATH
-    local PARTS="app, web"
+    local PARTS="api, app, ui, web"
     while [[ $# -gt 0 ]] ; do
         arg="$1"
         case ${arg} in
-            -p|--parts)
-                PARTS=${2}
+            --parts)
+                PARTS="${2}"
                 shift ; shift
                 ;;
             *)

@@ -1,9 +1,11 @@
 #
-#   remote-access - Setup remote access to the prod-farm security group
+#   remote-access - Setup remote access to the name ${1} security group for the ${2} port
 #
-#   grantAccess sg-group-name port
-#   revokeAccess sg-group-name port
+#   usage:
+#       grantAccess name port
+#       revokeAccess name port
 #
+
 grantAccess() {
     local data ip prior sgroup
     local GROUP_NAME="$1"

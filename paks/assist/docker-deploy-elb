@@ -2,12 +2,52 @@
 #
 #   docker-deploy-elb - Deploy docker image to containers behind and ELB
 #
+#   usage: docker-deploy --aws-profile profile --deploy cmd --group group --proxy proxy --region region \
+#          --validate page --version 1.2.3 IMAGE
+
+REMOTE_SGROUP="remote-prod"
+DPORT=2375
+
+#
+#   Source configuration and define as env vars
+#
+#files=""
+#for f in ../CONFIG/keys.json CONFIG/keys.json product.json ../pak.json ; do
+#    [ -f ${f} ] && files="${files} ${f}"
+#done
+#eval $(../paks/assist/json2env ${files})
+
+VERSION=$(pak --dir .. edit version)
 
 while [[ $# -gt 0 ]] ; do
     arg="$1"
     case ${arg} in
-        -n|--name)
-            NAME=${2}
+        --aws-profile)
+            AWS_PROFILE=${2}
+            shift ; shift
+            ;;
+        --deploy)
+            AWS_DEPLOY=${2}
+            shift ; shift
+            ;;
+        --group)
+            AWS_GROUP=${2}
+            shift ; shift
+            ;;
+        --proxy)
+            AWS_PROXY=${2}
+            shift ; shift
+            ;;
+        --region)
+            AWS_DEFAULT_REGION=${2}
+            shift ; shift
+            ;;
+        --validate)
+            AWS_VALIDATE=${2}
+            shift ; shift
+            ;;
+        --version)
+            VERSION=${2}
             shift ; shift
             ;;
         *)
@@ -16,15 +56,20 @@ while [[ $# -gt 0 ]] ; do
     esac
 done
 
-eval $(../paks/assist/json2env config/keys.json product.json ../pak.json)
-IMAGE=${APP_NAME:-${NAME}}
+IMAGE="${1}"
+NAME="${IMAGE}"
+if [ "${IMAGE}" = "" -o "${AWS_DEFAULT_REGION}" = "" ] ; then
+    echo "usage: docker-publish [--primary] [--aws-profile profile] [--region region] image"
+    exit 255
+fi
+export AWS_PROFILE AWS_DEFAULT_REGION
 
+#
+#   Source functions
+#
 . $(dirname ${BASH_SOURCE[0]})/common
 . $(dirname ${BASH_SOURCE[0]})/docker-login
 . $(dirname ${BASH_SOURCE[0]})/remote-access
-
-SGROUP="prod-remote"
-DPORT=2375
 
 echo -e "\nDeploy container \"${IMAGE}:${VERSION}\" to Load Balancer \"${AWS_PROXY}\" Group \"${AWS_GROUP}\"\n"
 
@@ -198,7 +243,7 @@ do
         URI=$(dockerLogin)
         IMAGE_PATH=${URI}/${IMAGE}
 
-        grantAccess ${SGROUP} ${DPORT}
+        grantAccess ${REMOTE_SGROUP} ${DPORT}
         host=$(getHost ${target})
         export DOCKER_HOST=tcp://${host}:${DPORT}
 
@@ -335,7 +380,7 @@ do
             break
         fi
         dockerLogout
-        revokeAccess ${SGROUP} ${DPORT}
+        revokeAccess ${REMOTE_SGROUP} ${DPORT}
         passed=$((passed+1))
     done
 done
