@@ -34,10 +34,10 @@ static char *completeVersion(cchar *version, cchar *fill);
 static bool inRange(MprVersion *vp, cchar *expr);
 static cchar *numberToVersion(uint64 num);
 static int partCount(cchar *version);
-static void semVerInit();
+static void semVerInit(void);
 static void *srcompile(cchar *pattern);
 static int srmatch(cchar *s, void *pattern, ...);
-static void versionTerminate();
+static void versionTerminate(void);
 static int64 versionToNumber(cchar *version);
 
 /*********************************** Methods **********************************/
@@ -542,7 +542,7 @@ static void *srcompile(cchar *pattern)
 
     options = PCRE_JAVASCRIPT_COMPAT;
     if ((pp = pcre_compile2(pattern, options, 0, &err, &column, NULL)) == 0) {
-        mprLog("error ejscript", 0, "Cannot compile pattern %s. Error %s at column %d", pattern, err, column);
+        mprLog("error version", 0, "Cannot compile pattern %s. Error %s at column %d", pattern, err, column);
         return 0;
     }
     return pp;

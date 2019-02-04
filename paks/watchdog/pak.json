@@ -2,7 +2,7 @@
     "name": "watchdog",
     "description": "Embedthis Watchdog",
     "title": "Embedthis Watchdog",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "keywords": [
         "watchdog",
         "mpr"
@@ -30,11 +30,11 @@
         }
     ],
     "dependencies": {
-        "mpr": "~7"
+        "mpr": "~8"
     },
     "devDependencies": {
-        "makeme": ">=0.9.0",
-        "pak": ">=0.11.0"
+        "makeme": ">=1.0",
+        "pak": ">=1.0"
     },
     "files": [
         "dist/**",

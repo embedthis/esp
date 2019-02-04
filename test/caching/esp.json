@@ -11,14 +11,14 @@
             listen: [
                 'http://127.0.0.1:7300',
             ],
-            "log": {
-                "location": "error.log",
-                "level": 4
-            }
         },
         limits: {
             rxBody: 'unlimited',
-            cacheItem: '100k',
+            cacheItem: '200k',
+        },
+        "log": {
+            "location": "error.log",
+            "level": 4
         },
         "trace": {
             "location": "trace.log",

@@ -1,15 +1,16 @@
 {
-    "name": "login-custom",
-    "description": "login-custom",
+    "name": "login-database",
+    "description": "login-database",
     "version": "1.0.0",
     "esp": {
-        "app": true,
+        app: {
+            source: [ "app.c" ]
+        }
     },
     "http": {
         "auth": {
             "store": "app",
-            "type": "form",
-            "login": "https:///public/login.esp"
+            "type": "app",
         },
         "database": "mdb://login.mdb",
         "server": {
@@ -22,13 +23,12 @@
             "certificate": "../../src/certs/samples/self.crt",
             "key": "../../src/certs/samples/self.key"
         },
+        "redirect": "secure",
         "routes": [
             {
                 "pattern": "/user/{action}",
-                "redirect": "secure",
                 "source": "user.c",
                 "target": "user/${action}",
-                "auth": "none"
             }, {
                 "pattern": "/public",
                 "auth": "none",

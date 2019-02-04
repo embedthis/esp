@@ -1,12 +1,15 @@
 /*
     mpr-openssl.me -- OpenSSL Component for the MPR
  */
+require ejs.version
 
 Me.load({ 
     targets: {
         openssl: {
             description: 'OpenSSL Support',
             config: function (target) {
+                let os = me.platform.os
+                let version = (me.settings.openssl || {}).version || '1.0'
                 if (me.options.gen) {
                     let result = {
                         /*
@@ -14,34 +17,54 @@ Me.load({
                             and in a custom user directory.
                          */
                         includes: [ me.dir.inc ],
-                        libraries: me.platform.os == 'windows' ? 
-                            ([ 'gdi32', 'libeay32', 'ssleay32' ]) : ([ 'ssl', 'crypto' ]),
                     }
-                    if (me.options.gen == 'make') {
-                        result.defines = ['ME_COM_OPENSSL_PATH=/usr/lib']
-                    } else if (me.options.gen == 'nmake') {
-                        result.defines = ['ME_COM_OPENSSL_PATH=']
-                    }
-                    if (me.options.gen == 'make' || me.options.gen == 'nmake' || me.options.gen == 'xcode') {
+                    if (os != 'windows') {
+                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl']
                         result.includes.push('$(ME_COM_OPENSSL_PATH)/include')
                         result.libpaths = ['$(ME_COM_OPENSSL_PATH)']
+                        result.libraries = [ 'ssl', 'crypto' ]
+
+                    } else if (Version(version).acceptable('<1.1')) {
+                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl']
+                        result.includes.push('$(ME_COM_OPENSSL_PATH)/inc32')
+                        result.libpaths = ['$(ME_COM_OPENSSL_PATH)/out32']
+                        result.libraries = ['gdi32.lib', 'libeay32.lib', 'ssleay32.lib']
+
+                    } else {
+                        result.defines = ['ME_COM_OPENSSL_PATH=/path/to/openssl']
+                        result.includes.push('$(ME_COM_OPENSSL_PATH)/include')
+                        result.libpaths = ['$(ME_COM_OPENSSL_PATH)']
+                        result.libraries = [ 'libssl', 'libcrypto' ]
                     }
                     return result
                 }
+
                 let lib, libraries, libpaths, imports, includes, path
                 let search = getComponentSearch(target, 'openssl')
                 if (me.platform.os == 'windows') {
-                    search = search.map(function(p:Path) p.join('out32')) + 
+                    search = search.map(function(p:Path) p) + 
+                             search.map(function(p:Path) p.join('out32')) + 
                              search.map(function(p:Path) p.join('out32dll'))
-                    lib = probe('libeay32.lib', {fullpath: true, search: search, nopath: true})
-                    path = lib.dirname.parent
-                    libpaths =  [ lib.parent ]
-                    libraries = [ 'gdi32', 'libeay32', 'ssleay32' ]
-                    imports =   [ lib.parent.join('libeay32.lib'), lib.parent.join('ssleay32.lib') ]
-                    if (lib.dirname == 'out32dll') {
-                        imports += [ lib.parent.join('libeay32.dll'), lib.parent.join('ssleay32.dll') ]
+                    lib = probe('libeay32.lib', {fullpath: true, search: search, nopath: true, nothrow: true})
+                    if (!lib) {
+                        lib = probe('libssl.lib', {fullpath: true, search: search, nopath: true})
+                        libraries = [ 'gdi32', 'libssl', 'libcrypto' ]
+                        imports =   [ lib.parent.join('libssl.lib'), lib.parent.join('libcrypto.lib') ]
+                        /* Need to import the DLLs for OpenSSL >= 1.1.1 */
+                        let isearch = [ lib.dirname.join('include') ]
+                        inc = probe('openssl/ssl.h', {search: isearch})
+                        includes = [ inc ]
+                        path = lib.dirname.parent
+                    } else {
+                        libraries = [ 'gdi32', 'libeay32', 'ssleay32' ]
+                        imports =   [ lib.parent.join('libeay32.lib'), lib.parent.join('ssleay32.lib') ]
+                        if (lib.dirname == 'out32dll') {
+                            imports += [ lib.parent.join('libeay32.dll'), lib.parent.join('ssleay32.dll') ]
+                        }
+                        path = lib.dirname.parent
+                        includes = [ probe('openssl/ssl.h', {search: [path.join('inc32')]}) ]
                     }
-                    includes = [ probe('openssl/ssl.h', {search: [path.join('inc32')]}) ]
+                    libpaths =  [ lib.parent ]
 
                 } else {
                     let opt = {fullpath: true, search: search, nopath: true}
@@ -77,7 +100,6 @@ Me.load({
                     libraries,  libraries,
                 }
             },
-
             ifdef:     [ 'ssl' ],
             conflicts: [ 'mbedtls', 'matrixssl', 'nanossl' ],
             depends:   [ 'libmpr-openssl' ],
@@ -93,7 +115,6 @@ Me.load({
             postresolve: `
                 let target = me.target
                 let openssl = me.targets.openssl
-
                 target.includes += openssl.includes
                 target.libpaths += openssl.libpaths
                 target.libraries += openssl.libraries
@@ -110,7 +131,7 @@ Me.load({
                         me.targets.libmpr.libraries += [ 'zlib' ]
                     }
                 }
-            `
+            `,
         }
     }
 })

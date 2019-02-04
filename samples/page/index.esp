@@ -36,6 +36,6 @@
 
 <%^end 
     /* These declarations are moved to the end of the generated page function */
-    espSetStatus(conn, 200); 
+    espSetStatus(stream, 200); 
 %>
 </html>

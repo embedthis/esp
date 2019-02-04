@@ -1,0 +1,42 @@
+/*
+    esp.json - ESP configuration file
+ */
+{
+    name: 'websockets',
+    description: 'WebSockets chat sample',
+    version: '0.2.0',
+    esp: {
+        app: true,
+    },
+    http: {
+        server: {
+            listen: [ "http://127.0.0.1:4000" ]
+        },
+        routes: [
+            {
+                pattern: '^/ws/{controller}/{action}$',
+                prefix: '/ws',
+                source: 'chat.c',
+                target: '$1/$2',
+                pipeline: {
+                    filters: [ 'webSocketFilter' ],
+                    handlers: 'espHandler',
+                },
+                limits: {
+                    webSockets: 20,
+                    webSocketsMessage: '40MB',
+                    webSocketsPacket: '40MB',
+                    webSocketsProtocol: 'chat',
+                    requestTimeout: 'unlimited',
+                    inactivityTimeout: 'unlimited',
+                    rxBody: 'unlimited',
+                    txBody: 'unlimited',
+                },
+                timeouts: {
+                    inactivity: '10mins',
+                    request: 'never',
+                },
+            }
+        ]
+    }
+}

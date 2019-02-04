@@ -31,8 +31,8 @@ static void medium() {
 
 static void big() {
     int     i;
-    //  This will emit ~39K (under the item limit)
-    for (i = 0; i < 500; i++) {
+    //  This will emit ~80K (under the item limit)
+    for (i = 0; i < 1000; i++) {
         render("Line: %05d %s", i, "aaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccccddddddd<br/>\r\n");
         mprYield(0);
     }
@@ -40,7 +40,7 @@ static void big() {
 
 static void huge() { 
     int     i;
-    //  This will emit ~390K (over the item limit)
+    //  This will emit ~800K (over the item limit)
     for (i = 0; i < 10000; i++) {
         render("Line: %05d %s", i, "aaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccccddddddd<br/>\r\n");
         mprYield(0);
@@ -49,12 +49,12 @@ static void huge() {
 }
 
 static void clear() { 
-    espUpdateCache(getConn(), "/caching/manual", 0, 0);
-    espUpdateCache(getConn(), "/caching/big", 0, 0);
-    espUpdateCache(getConn(), "/caching/medium", 0, 0);
-    espUpdateCache(getConn(), "/caching/small", 0, 0);
-    espUpdateCache(getConn(), "/caching/api", 0, 0);
-    espUpdateCache(getConn(), "/caching/api", 0, 0);
+    espUpdateCache(getStream(), "/caching/manual", 0, 0);
+    espUpdateCache(getStream(), "/caching/big", 0, 0);
+    espUpdateCache(getStream(), "/caching/medium", 0, 0);
+    espUpdateCache(getStream(), "/caching/small", 0, 0);
+    espUpdateCache(getStream(), "/caching/api", 0, 0);
+    espUpdateCache(getStream(), "/caching/api", 0, 0);
     render("cleared");
 }
 
@@ -66,14 +66,14 @@ static void manual() {
     if (smatch(getQuery(), "send")) {
         setHeader("X-SendCache", "true");
         finalize();
-    } else if (!espRenderCached(getConn())) {
+    } else if (!espRenderCached(getStream())) {
         render("{ when: %lld, uri: '%s', query: '%s' }\r\n", mprGetTicks(), getUri(), getQuery());
     }
 }
 
 static void update() { 
     cchar   *data = sfmt("{ when: %lld, uri: '%s', query: '%s' }\r\n", mprGetTicks(), getUri(), getQuery());
-    espUpdateCache(getConn(), "/caching/manual", data, 86400);
+    espUpdateCache(getStream(), "/caching/manual", data, 86400);
     render("done");
 }
 

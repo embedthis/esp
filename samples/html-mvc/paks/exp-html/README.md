@@ -33,4 +33,4 @@ Provides the 'html' service to minify HTML files.
 
 ### Get Pak from
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/)
+[https://www.embedthis.com/pak/](https://www.embedthis.com/pak/)

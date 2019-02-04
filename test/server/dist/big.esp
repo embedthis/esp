@@ -2,7 +2,7 @@
     {
         int i;
         for (i = 0; i < 800; i++) {
-            espRender(conn, "Line: %05d %s", i, "aaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccccddddddd<br/>\r\n");
+            espRender(stream, "Line: %05d %s", i, "aaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccccddddddd<br/>\r\n");
         } 
     }
 %>

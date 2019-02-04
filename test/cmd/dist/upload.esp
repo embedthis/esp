@@ -1,13 +1,13 @@
 <html><head><title>upload.esp</title></head>
 <body>
     <pre><% {
-        HttpConn        *conn;
+        HttpStream      *stream;
         HttpUploadFile  *file;
         char            *path;
         int             index;
 
-        conn = getConn();
-        for (ITERATE_ITEMS(conn->rx->files, file, index)) {
+        stream = getStream();
+        for (ITERATE_ITEMS(stream->rx->files, file, index)) {
             mprLog("trace", "FILE %x\n", file);
             render("NAME %s\n", file->name);
             render("FILENAME %s\n", file->filename);
@@ -21,9 +21,9 @@
                 We are being lazy and using one route for uploads to *.html and *.esp.
                 HTML needs renameUploads and ESP does not.
              */
-            conn->rx->renameUploads = 0;
+            stream->rx->renameUploads = 0;
         }
-        if (conn->rx->files->length > 0) {
+        if (stream->rx->files->length > 0) {
             render("Upload Complete");
         }
     } %></pre>

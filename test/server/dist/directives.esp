@@ -7,8 +7,8 @@
     char    *msg = "Hello World";
     int     x = 42; 
 
-    espSetParam(conn, "message", msg);
-    espSetIntParam(conn, "number", x);
+    espSetParam(stream, "message", msg);
+    espSetIntParam(stream, "number", x);
 -%>
     <h1>ESP Directives</h1>
     Today's Message: %$message
@@ -22,4 +22,4 @@
 </body>
 </html>
 
-<%^end espSetStatus(conn, 200); %>
+<%^end espSetStatus(stream, 200); %>

@@ -8,7 +8,7 @@
 /*
     This base for controllers is called before processing each request
  */
-static void base(HttpConn *conn) {
+static void base(HttpStream *stream) {
 }
 
 ESP_EXPORT int esp_app_${APP}(HttpRoute *route, MprModule *module) {

@@ -27,4 +27,4 @@ Provides the 'canon' service which creates canonical links for index pages to as
 
 ### Get Pak from
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/)
+[https://www.embedthis.com/pak/](https://www.embedthis.com/pak/)

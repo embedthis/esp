@@ -12,10 +12,10 @@
             listen: [
                 'http://127.0.0.1:7300',
             ],
-            "log": {
-                "location": "error.log",
-                "level": 4
-            },
+        },
+        "log": {
+            "location": "error.log",
+            "level": 4
         },
         "trace": {
             "location": "trace.log",

@@ -20,7 +20,7 @@ ttrue(http.response.contains("Line: 00499 aaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbcccc
 http.get(HTTP + "/caching/big")
 ttrue(http.status == 200)
 ttrue(!http.header("Transfer-Encoding"))
-ttrue(http.header("Content-Length") == 39000)
+ttrue(http.header("Content-Length") == 78000)
 ttrue(http.response.contains("Line: 00499 aaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccccddddddd<br/>"))
 
 http.close()

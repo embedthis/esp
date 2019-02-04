@@ -37,8 +37,17 @@ typedef struct EspParse {
     MprBuf  *token;                         /**< Input token */
 } EspParse;
 
+
+typedef struct CompileContext {
+    cchar   *csource;
+    cchar   *source;
+    cchar   *module;
+    cchar   *cache;
+} CompileContext;
+
 /************************************ Forwards ********************************/
 
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache);
 static int getEspToken(EspParse *parse);
 static cchar *getDebug(EspRoute *eroute);
 static cchar *getEnvString(HttpRoute *route, cchar *key, cchar *defaultValue);
@@ -52,6 +61,7 @@ static cchar *getLibs(cchar *os);
 static cchar *getMappedArch(cchar *arch);
 static cchar *getObjExt(cchar *os);
 static cchar *getVxCPU(cchar *arch);
+static void manageContext(CompileContext *context, int flags);
 static bool matchToken(cchar **str, cchar *token);
 
 #if ME_WIN_LIKE
@@ -62,13 +72,14 @@ static cchar *getWinVer(HttpRoute *route);
 /************************************* Code ***********************************/
 /*
     Tokens:
-    AR          Library archiver (ar)   
+    APPINC      Application include directory
+    AR          Library archiver (ar)
     ARLIB       Archive library extension (.a, .lib)
     ARCH        Build architecture (64)
     CC          Compiler (cc)
     DEBUG       Debug compilation options (-g, -Zi -Od)
     GCC_ARCH    ARCH mapped to gcc -arch switches (x86_64)
-    INC         Include directory out/inc
+    INC         Include directory build/platform/inc
     LIBPATH     Library search path
     LIBS        Libraries required to link with ESP
     OBJ         Name of compiled source (out/lib/view-MD5.o)
@@ -87,7 +98,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
     EspRoute    *eroute;
     cchar       *cp, *outputModule, *os, *arch, *profile, *srcDir;
     char        *tmp;
-    
+
     if (command == 0) {
         return 0;
     }
@@ -116,15 +127,16 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
                 if ((srcDir = httpGetDir(route, "SRC")) == 0) {
                     srcDir = ".";
                 }
+                srcDir = getEnvString(route, "APPINC", srcDir);
                 mprPutStringToBuf(buf, srcDir);
 
             } else if (matchToken(&cp, "${INC}")) {
                 /* Include directory for the configuration */
-                mprPutStringToBuf(buf, mprJoinPath(http->platformDir, "inc")); 
+                mprPutStringToBuf(buf, mprJoinPath(http->platformDir, "inc"));
 
             } else if (matchToken(&cp, "${LIBPATH}")) {
                 /* Library directory for Appweb libraries for the target */
-                mprPutStringToBuf(buf, mprJoinPath(http->platformDir, "bin")); 
+                mprPutStringToBuf(buf, mprJoinPath(http->platformDir, "bin"));
 
             } else if (matchToken(&cp, "${LIBS}")) {
                 /* Required libraries to link. These may have nested ${TOKENS} */
@@ -176,7 +188,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
 
             /*
                 These vars can be also be configured from environment variables.
-                NOTE: the default esp.conf includes "esp->vxworks.conf" which has EspEnv definitions for the 
+                NOTE: the default esp.conf includes "esp->vxworks.conf" which has EspEnv definitions for the
                 configured VxWorks toolchain.
              */
             } else if (matchToken(&cp, "${AR}")) {
@@ -230,7 +242,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
 }
 
 
-static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module, 
+static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *command, cchar *csource, cchar *module,
     char **errMsg)
 {
     MprCmd      *cmd;
@@ -239,7 +251,6 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     EspRoute    *eroute;
     cchar       **env, *commandLine;
     char        *err, *out;
-    int         rc;
 
     *errMsg = 0;
     eroute = route->eroute;
@@ -265,18 +276,14 @@ static int runCommand(HttpRoute *route, MprDispatcher *dispatcher, cchar *comman
     /*
         WARNING: GC will run here
      */
-    mprHold((void*) commandLine);
-    rc = mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0);
-    mprRelease((void*) commandLine);
-
-    if (rc != 0) {
+    if (mprRunCmd(cmd, commandLine, env, NULL, &out, &err, -1, 0) != 0) {
         if (err == 0 || *err == '\0') {
             /* Windows puts errors to stdout Ugh! */
             err = out;
         }
-        mprLog("error esp", 0, "Cannot run command: %s, error %s", commandLine, err);
+        mprLog("error esp", 0, "Cannot run command: %s, error %s", command, err);
         if (route->flags & HTTP_ROUTE_SHOW_ERRORS) {
-            *errMsg = sfmt("Cannot run command: %s, error %s", commandLine, err);
+            *errMsg = sfmt("Cannot run command: %s, error %s", command, err);
         } else {
             *errMsg = "Cannot compile view";
         }
@@ -316,16 +323,17 @@ PUBLIC int espLoadCompilerRules(HttpRoute *route)
     source      ESP source file name
     module      Module file name
 
-    WARNING: this routine blocks and runs GC. All parameters must be retained.
+    WARNING: this routine yields and runs GC. All parameters must be retained by the caller.
  */
-PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName, 
+PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *source, cchar *module, cchar *cacheName,
     int isView, char **errMsg)
 {
-    MprFile     *fp;
-    EspRoute    *eroute;
-    cchar       *csource, *layoutsDir;
-    char        *layout, *script, *page, *err;
-    ssize       len;
+    MprFile         *fp;
+    EspRoute        *eroute;
+    CompileContext  *context;
+    cchar           *csource, *layoutsDir;
+    char            *layout, *script, *page, *err;
+    ssize           len;
 
     eroute = route->eroute;
     assert(eroute->compile);
@@ -391,15 +399,20 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         return 0;
     }
 
-    /* 
-        Run compiler: WARNING: GC yield here 
+    context = allocContext(source, csource, module, cacheName);
+    mprAddRoot(context);
+
+    /*
+        Run compiler: WARNING: GC yield here
      */
     if (runCommand(route, dispatcher, eroute->compileCmd, csource, module, errMsg) != 0) {
+        mprRemoveRoot(context);
         return 0;
     }
     if (eroute->linkCmd) {
         /* WARNING: GC yield here */
         if (runCommand(route, dispatcher, eroute->linkCmd, csource, module, errMsg) != 0) {
+            mprRemoveRoot(context);
             return 0;
         }
 #if !MACOSX
@@ -414,8 +427,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
         /*
             Windows leaves intermediate object in the current directory
          */
-        cchar   *path;
-        path = mprReplacePathExt(mprGetPathBase(csource), "obj");
+        cchar *path = mprReplacePathExt(mprGetPathBase(csource), "obj");
         if (mprPathExists(path, F_OK)) {
             mprDeletePath(path);
         }
@@ -424,6 +436,7 @@ PUBLIC bool espCompile(HttpRoute *route, MprDispatcher *dispatcher, cchar *sourc
     if (!eroute->keep && isView) {
         mprDeletePath(csource);
     }
+    mprRemoveRoot(context);
     return 1;
 }
 
@@ -525,7 +538,7 @@ static char *joinLine(cchar *str, ssize *lenp)
         <%^ start           Put esp code at the start of the function
         <%^ end             Put esp code at the end of the function
 
-        %!var               Substitue the value of a parameter. 
+        %!var               Substitue the value of a parameter.
         %$param             Substitue the value of a request parameter.
         %#field             Lookup the current record for the value of the field.
         %~                  Home URL for the application
@@ -536,7 +549,7 @@ static char *joinLine(cchar *str, ssize *lenp)
  */
 
 //  DEPRECATED layout
-PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *cacheName, cchar *layout, 
+PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *cacheName, cchar *layout,
         EspState *state, char **err)
 {
     EspState    top;
@@ -669,29 +682,29 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
                 fmt = ssplit(token, ": \t\r\n", &token);
                 /* Default without format is safe. If users want a format and safe, use %S or renderSafe() */
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRender(conn, \"%s\", %s);\n", fmt, token);
+                mprPutToBuf(body, "  espRender(stream, \"%s\", %s);\n", fmt, token);
             } else {
                 token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-                mprPutToBuf(body, "  espRenderSafeString(conn, %s);\n", token);
+                mprPutToBuf(body, "  espRenderSafeString(stream, %s);\n", token);
             }
             break;
 
         case ESP_TOK_VAR:
             /* %!var -- string variable */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderString(conn, %s);\n", token);
+            mprPutToBuf(body, "  espRenderString(stream, %s);\n", token);
             break;
 
         case ESP_TOK_FIELD:
             /* %#field -- field in the current record */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderSafeString(conn, getField(getRec(), \"%s\"));\n", token);
+            mprPutToBuf(body, "  espRenderSafeString(stream, getField(getRec(), \"%s\"));\n", token);
             break;
 
         case ESP_TOK_PARAM:
             /* %$param -- variable in (param || session) - Safe render */
             token = strim(token, " \t\r\n;", MPR_TRIM_BOTH);
-            mprPutToBuf(body, "  espRenderVar(conn, \"%s\");\n", token);
+            mprPutToBuf(body, "  espRenderVar(stream, \"%s\");\n", token);
             break;
 
         case ESP_TOK_HOME:
@@ -699,7 +712,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             if (parse.next[0] && parse.next[0] != '/' && parse.next[0] != '\'' && parse.next[0] != '"') {
                 mprLog("esp warn", 0, "Using %%~ without following / in %s\n", path);
             }
-            mprPutToBuf(body, "  espRenderString(conn, httpGetRouteTop(conn));");
+            mprPutToBuf(body, "  espRenderString(stream, httpGetRouteTop(stream));");
             break;
 
 #if DEPRECATED || 1
@@ -707,13 +720,13 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
         case ESP_TOK_SERVER:
             /* @| Server URL */
             mprLog("esp warn", 0, "Using deprecated \"|\" server URL directive in esp page: %s", path);
-            mprPutToBuf(body, "  espRenderString(conn, sjoin(conn->rx->route->prefix ? conn->rx->route->prefix : \"\", conn->rx->route->serverPrefix, NULL));");
+            mprPutToBuf(body, "  espRenderString(stream, sjoin(stream->rx->route->prefix ? stream->rx->route->prefix : \"\", stream->rx->route->serverPrefix, NULL));");
             break;
 #endif
 
         case ESP_TOK_LITERAL:
             line = joinLine(token, &len);
-            mprPutToBuf(body, "  espRenderBlock(conn, \"%s\", %zd);\n", line, len);
+            mprPutToBuf(body, "  espRenderBlock(stream, \"%s\", %zd);\n", line, len);
             break;
 
         default:
@@ -758,14 +771,14 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "/*\n   Generated from %s\n */\n"\
             "#include \"esp.h\"\n"\
             "%s\n"\
-            "static void %s(HttpConn *conn) {\n"\
+            "static void %s(HttpStream *stream) {\n"\
             "%s%s%s"\
             "}\n\n"\
-            "%s int esp_%s(HttpRoute *route, MprModule *module) {\n"\
+            "%s int esp_%s(HttpRoute *route) {\n"\
             "   espDefineView(route, \"%s\", %s);\n"\
             "   return 0;\n"\
             "}\n",
-            mprGetRelPath(path, route->home), mprGetBufStart(state->global), cacheName, 
+            mprGetRelPath(path, route->home), mprGetBufStart(state->global), cacheName,
                 mprGetBufStart(state->start), bodyCode, mprGetBufStart(state->end),
             ESP_EXPORT_STRING, cacheName, mprGetPortablePath(mprGetRelPath(path, route->documents)), cacheName);
         mprDebug("esp", 5, "Create ESP script: \n%s\n", bodyCode);
@@ -851,7 +864,7 @@ static int getEspToken(EspParse *parse)
                             <%^ control
                          */
                         if (*next == '@') {
-                            mprLog("esp warn", 0, "Using deprecated \"%%%c\" control directive in esp page: %s", 
+                            mprLog("esp warn", 0, "Using deprecated \"%%%c\" control directive in esp page: %s",
                                 *next, parse->path);
                         }
                         tid = ESP_TOK_CONTROL;
@@ -862,7 +875,7 @@ static int getEspToken(EspParse *parse)
                                 return ESP_TOK_ERR;
                             }
                         }
-                        
+
                     } else {
                         tid = ESP_TOK_CODE;
                         while (next < end && !(*next == '%' && next[1] == '>' && (next[-1] != '\\' && next[-1] != '%'))) {
@@ -885,7 +898,7 @@ static int getEspToken(EspParse *parse)
             } else {
                 if (!addChar(parse, c)) {
                     return ESP_TOK_ERR;
-                }                
+                }
             }
             break;
 
@@ -991,6 +1004,11 @@ static cchar *getEnvString(HttpRoute *route, cchar *key, cchar *defaultValue)
     cchar       *value;
 
     eroute = route->eroute;
+    if (route->config) {
+        if ((value = mprGetJson(route->config, sfmt("esp.app.tokens.%s", key))) != 0) {
+            return value;
+        }
+    }
     if (!eroute || !eroute->env || (value = mprLookupKey(eroute->env, key)) == 0) {
         if ((value = getenv(key)) == 0) {
             if (defaultValue) {
@@ -1122,7 +1140,7 @@ static cchar *getDebug(EspRoute *eroute)
     } else if (eroute->compileMode == ESP_COMPILE_OPTIMIZED) {
         symbols = 0;
     } else {
-        symbols = sends(http->platform, "-debug") || sends(http->platform, "-xcode") || 
+        symbols = sends(http->platform, "-debug") || sends(http->platform, "-xcode") ||
             sends(http->platform, "-mine") || sends(http->platform, "-vsdebug");
     }
     if (scontains(http->platform, "windows-")) {
@@ -1140,9 +1158,9 @@ static cchar *getLibs(cchar *os)
         libs = "\"${LIBPATH}\\libesp${SHLIB}\" \"${LIBPATH}\\libhttp.lib\" \"${LIBPATH}\\libmpr.lib\"";
     } else {
 #if LINUX
-        /* 
+        /*
             Fedora interprets $ORIGN relative to the shared library and not the application executable
-            So loading compiled apps fails to locate libesp.so. 
+            So loading compiled apps fails to locate libesp.so.
             Since building a shared library, can omit libs and resolve at load time.
          */
         libs = "";
@@ -1192,11 +1210,11 @@ static cchar *getWinSDK(HttpRoute *route)
     EspRoute *eroute;
 
     /*
-        MS has made a huge mess of where and how the windows SDKs are installed. The registry key at 
+        MS has made a huge mess of where and how the windows SDKs are installed. The registry key at
         HKLM/Software/Microsoft/Microsoft SDKs/Windows/CurrentInstallFolder cannot be trusted and often
         points to the old 7.X SDKs even when 8.X is installed and active. MS have also moved the 8.X
         SDK to Windows Kits, while still using the old folder for some bits. So the old-reliable
-        CurrentInstallFolder registry key is now unusable. So we must scan for explicit SDK versions 
+        CurrentInstallFolder registry key is now unusable. So we must scan for explicit SDK versions
         listed above. Ugh!
      */
     cchar   *path, *key, *version;
@@ -1207,7 +1225,7 @@ static cchar *getWinSDK(HttpRoute *route)
     if (eroute->winsdk) {
         return eroute->winsdk;
     }
-    /* 
+    /*
         General strategy is to find an "include" directory in the highest version Windows SDK.
         First search the registry key: Windows Kits/InstalledRoots/KitsRoot*
      */
@@ -1225,7 +1243,7 @@ static cchar *getWinSDK(HttpRoute *route)
         }
     }
     if (!path) {
-        /* 
+        /*
             Next search the registry keys at Windows SDKs/Windows/ * /InstallationFolder
          */
         key = sfmt("HKLM\\SOFTWARE%s\\Microsoft\\Microsoft SDKs\\Windows", (ME_64) ? "\\Wow6432Node" : "");
@@ -1272,12 +1290,14 @@ static cchar *getWinVer(HttpRoute *route)
 static cchar *getArPath(cchar *os, cchar *arch)
 {
 #if WINDOWS
-    /* 
+    /*
         Get the real system architecture (32 or 64 bit)
      */
     Http *http = MPR->httpService;
     cchar *path = espGetVisualStudio();
-    if (scontains(http->platform, "-x64-")) {
+    if (getenv("VSINSTALLDIR")) {
+        path = sclone("lib.exe");
+    } else if (scontains(http->platform, "-x64-")) {
         int is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
         if (is64BitSystem) {
             path = mprJoinPath(path, "VC/bin/amd64/lib.exe");
@@ -1298,12 +1318,14 @@ static cchar *getArPath(cchar *os, cchar *arch)
 static cchar *getCompilerPath(cchar *os, cchar *arch)
 {
 #if WINDOWS
-    /* 
+    /*
         Get the real system architecture (32 or 64 bit)
      */
     Http *http = MPR->httpService;
     cchar *path = espGetVisualStudio();
-    if (scontains(http->platform, "-x64-")) {
+    if (getenv("VSINSTALLDIR")) {
+        path = sclone("cl.exe");
+    } else if (scontains(http->platform, "-x64-")) {
         int is64BitSystem = smatch(getenv("PROCESSOR_ARCHITECTURE"), "AMD64") || getenv("PROCESSOR_ARCHITEW6432");
         if (is64BitSystem) {
             path = mprJoinPath(path, "VC/bin/amd64/cl.exe");
@@ -1318,6 +1340,35 @@ static cchar *getCompilerPath(cchar *os, cchar *arch)
 #else
     return getCompilerName(os, arch);
 #endif
+}
+
+
+static CompileContext* allocContext(cchar *source, cchar *csource, cchar *module, cchar *cache)
+{
+    CompileContext *context;
+
+    if ((context = mprAllocObj(CompileContext, manageContext)) == 0) {
+        return 0;
+    }
+    /*
+        Use actual references to ensure we retain the memory
+     */
+    context->csource = csource;
+    context->source = source;
+    context->module = module;
+    context->cache = cache;
+    return context;
+}
+
+
+static void manageContext(CompileContext *context, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(context->csource);
+        mprMark(context->source);
+        mprMark(context->module);
+        mprMark(context->cache);
+    }
 }
 
 /*

@@ -16,8 +16,12 @@ This sample uses:
 * Automatic session creation and management
 * Blowfish encryption for secure password hashing
 
+The same is configured in esp.json for the "app" Auth Store which means passwords are stored in the app.
+It is configured for the "form" Auth Type which means a web form captures the passwords which are submitted
+via HTTP form POST requests.
+
 Notes:
-* This sample keeps the passwords in an application database esp.json. The test password was created 
+* This sample keeps the passwords in an application database esp.json. The test password was created
     by using mprMakePassword in the database migration under db/migrations.
 
 * Session cookies are created to manage server-side session state storage and to optimize authentication.
@@ -26,16 +30,18 @@ Notes:
     does not employ authentication. A default route that requires authentication for web content. And an
     action route for the login controller that processes the login and logout requests.
 
+* All non-HTTPs traffic is redirected over HTTPs for security.
+
 Requirements
 ---
-* [Download ESP](https://embedthis.com/esp/download.html)
+* [Download ESP](https://www.embedthis.com/esp/download.html)
 
 To run:
 ---
     esp
 
-The server listens on port 4000 for HTTP traffic and 4443 for SSL. Browse to: 
- 
+The server listens on port 4000 for HTTP traffic and 4443 for SSL. Browse to:
+
      http://localhost:4000/
 
 This will redirect to SSL (you will get a warning due to the self-signed certificate).
@@ -45,6 +51,7 @@ Continue and you will be prompted to login. The test username/password is:
 
 Code:
 ---
+* app.c - Application code managing authentication
 * cache - Directory for cached ESP pages
 * controllers - Directory for controllers
 * db/login.mdb - Database
@@ -59,5 +66,5 @@ Code:
 Documentation:
 ---
 
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP Configuration](https://embedthis.com/esp/doc/users/config.html)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP Configuration](https://www.embedthis.com/esp/doc/users/config.html)

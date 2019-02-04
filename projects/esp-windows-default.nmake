@@ -3,7 +3,7 @@
 #
 
 NAME                  = esp
-VERSION               = 7.0.2
+VERSION               = 8.0.3
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)
@@ -73,14 +73,14 @@ ME_COM_RC             = 1
 ME_COM_SQLITE         = 1
 !ENDIF
 !IF "$(ME_COM_SSL)" == ""
-ME_COM_SSL            = 0
+ME_COM_SSL            = 1
 !ENDIF
 !IF "$(ME_COM_VXWORKS)" == ""
 ME_COM_VXWORKS        = 0
 !ENDIF
 
-!IF "$(ME_COM_OPENSSL)" == ""
-ME_COM_OPENSSL_PATH   = ""
+!IF "$(ME_COM_OPENSSL_PATH)" == ""
+ME_COM_OPENSSL_PATH   = "/path/to/openssl"
 !ENDIF
 
 !IF "$(ME_COM_LIB)" == "1"
@@ -110,7 +110,7 @@ RC                    = rc
 CFLAGS                = -nologo -GR- -W3 -Zi -Od -MDd
 DFLAGS                = -DME_DEBUG=1 -DME_COM_COMPILER=$(ME_COM_COMPILER) -DME_COM_HTTP=$(ME_COM_HTTP) -DME_COM_LIB=$(ME_COM_LIB) -DME_COM_LINK=$(ME_COM_LINK) -DME_COM_MATRIXSSL=$(ME_COM_MATRIXSSL) -DME_COM_MBEDTLS=$(ME_COM_MBEDTLS) -DME_COM_MDB=$(ME_COM_MDB) -DME_COM_MPR=$(ME_COM_MPR) -DME_COM_NANOSSL=$(ME_COM_NANOSSL) -DME_COM_OPENSSL=$(ME_COM_OPENSSL) -DME_COM_OSDEP=$(ME_COM_OSDEP) -DME_COM_PCRE=$(ME_COM_PCRE) -DME_COM_RC=$(ME_COM_RC) -DME_COM_SQLITE=$(ME_COM_SQLITE) -DME_COM_SSL=$(ME_COM_SSL) -DME_COM_VXWORKS=$(ME_COM_VXWORKS) 
 IFLAGS                = -Ibuild\$(CONFIG)\inc
-LDFLAGS               = -nologo -incremental:no -debug -machine:$(ARCH)
+LDFLAGS               = -nologo -incremental:no -dynamicbase -highentropyva -nxcompat -debug -machine:x64
 LIBPATHS              = "-libpath:$(BUILD)\bin"
 LIBS                  = ws2_32.lib advapi32.lib user32.lib kernel32.lib oldnames.lib shell32.lib
 
@@ -386,7 +386,7 @@ DEPS_18 = $(DEPS_18) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\edi.obj: \
     src\edi.c $(DEPS_18)
 	@echo .. [Compile] build\$(CONFIG)\obj\edi.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\edi.obj -Fd$(BUILD)\obj\edi.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\edi.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\edi.obj -Fd$(BUILD)\obj\edi.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\edi.c $(LOG)
 
 #
 #   esp.h
@@ -403,7 +403,7 @@ DEPS_20 = $(DEPS_20) build\$(CONFIG)\inc\mpr-version.h
 build\$(CONFIG)\obj\esp.obj: \
     src\esp.c $(DEPS_20)
 	@echo .. [Compile] build\$(CONFIG)\obj\esp.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\esp.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\esp.obj -Fd$(BUILD)\obj\esp.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\esp.c $(LOG)
 
 #
 #   espAbbrev.obj
@@ -413,7 +413,7 @@ DEPS_21 = $(DEPS_21) src\esp.h
 build\$(CONFIG)\obj\espAbbrev.obj: \
     src\espAbbrev.c $(DEPS_21)
 	@echo .. [Compile] build\$(CONFIG)\obj\espAbbrev.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espAbbrev.obj -Fd$(BUILD)\obj\espAbbrev.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espAbbrev.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espAbbrev.obj -Fd$(BUILD)\obj\espAbbrev.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\espAbbrev.c $(LOG)
 
 #
 #   espConfig.obj
@@ -423,7 +423,7 @@ DEPS_22 = $(DEPS_22) src\esp.h
 build\$(CONFIG)\obj\espConfig.obj: \
     src\espConfig.c $(DEPS_22)
 	@echo .. [Compile] build\$(CONFIG)\obj\espConfig.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espConfig.obj -Fd$(BUILD)\obj\espConfig.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espConfig.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espConfig.obj -Fd$(BUILD)\obj\espConfig.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\espConfig.c $(LOG)
 
 #
 #   espFramework.obj
@@ -433,7 +433,7 @@ DEPS_23 = $(DEPS_23) src\esp.h
 build\$(CONFIG)\obj\espFramework.obj: \
     src\espFramework.c $(DEPS_23)
 	@echo .. [Compile] build\$(CONFIG)\obj\espFramework.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espFramework.obj -Fd$(BUILD)\obj\espFramework.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espFramework.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espFramework.obj -Fd$(BUILD)\obj\espFramework.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\espFramework.c $(LOG)
 
 #
 #   espHtml.obj
@@ -444,7 +444,7 @@ DEPS_24 = $(DEPS_24) src\edi.h
 build\$(CONFIG)\obj\espHtml.obj: \
     src\espHtml.c $(DEPS_24)
 	@echo .. [Compile] build\$(CONFIG)\obj\espHtml.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espHtml.obj -Fd$(BUILD)\obj\espHtml.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espHtml.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espHtml.obj -Fd$(BUILD)\obj\espHtml.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\espHtml.c $(LOG)
 
 #
 #   espRequest.obj
@@ -454,7 +454,7 @@ DEPS_25 = $(DEPS_25) src\esp.h
 build\$(CONFIG)\obj\espRequest.obj: \
     src\espRequest.c $(DEPS_25)
 	@echo .. [Compile] build\$(CONFIG)\obj\espRequest.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espRequest.obj -Fd$(BUILD)\obj\espRequest.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espRequest.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espRequest.obj -Fd$(BUILD)\obj\espRequest.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\espRequest.c $(LOG)
 
 #
 #   espTemplate.obj
@@ -464,7 +464,7 @@ DEPS_26 = $(DEPS_26) src\esp.h
 build\$(CONFIG)\obj\espTemplate.obj: \
     src\espTemplate.c $(DEPS_26)
 	@echo .. [Compile] build\$(CONFIG)\obj\espTemplate.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\espTemplate.obj -Fd$(BUILD)\obj\espTemplate.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\espTemplate.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\espTemplate.obj -Fd$(BUILD)\obj\espTemplate.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\espTemplate.c $(LOG)
 
 #
 #   http.h
@@ -491,7 +491,7 @@ DEPS_29 = $(DEPS_29) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\httpLib.obj: \
     src\http\httpLib.c $(DEPS_29)
 	@echo .. [Compile] build\$(CONFIG)\obj\httpLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\http\httpLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\httpLib.obj -Fd$(BUILD)\obj\httpLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\httpLib.c $(LOG)
 
 #
 #   mbedtls.h
@@ -526,7 +526,7 @@ DEPS_33 = $(DEPS_33) build\$(CONFIG)\inc\pcre.h
 build\$(CONFIG)\obj\mdb.obj: \
     src\mdb.c $(DEPS_33)
 	@echo .. [Compile] build\$(CONFIG)\obj\mdb.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mdb.obj -Fd$(BUILD)\obj\mdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mdb.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mdb.obj -Fd$(BUILD)\obj\mdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mdb.c $(LOG)
 
 #
 #   mpr-mbedtls.obj
@@ -546,7 +546,7 @@ DEPS_35 = $(DEPS_35) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\mpr-openssl.obj: \
     src\mpr-openssl\mpr-openssl.c $(DEPS_35)
 	@echo .. [Compile] build\$(CONFIG)\obj\mpr-openssl.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mpr-openssl.obj -Fd$(BUILD)\obj\mpr-openssl.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\mpr-openssl\mpr-openssl.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mpr-openssl.obj -Fd$(BUILD)\obj\mpr-openssl.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) "-I$(BUILD)\inc" "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mpr-openssl\mpr-openssl.c $(LOG)
 
 #
 #   mpr-version.h
@@ -579,7 +579,7 @@ DEPS_39 = $(DEPS_39) src\mpr\mpr.h
 build\$(CONFIG)\obj\mprLib.obj: \
     src\mpr\mprLib.c $(DEPS_39)
 	@echo .. [Compile] build\$(CONFIG)\obj\mprLib.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\mpr\mprLib.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\mprLib.obj -Fd$(BUILD)\obj\mprLib.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\mpr\mprLib.c $(LOG)
 
 #
 #   pcre.h
@@ -607,7 +607,7 @@ DEPS_42 = $(DEPS_42) src\edi.h
 build\$(CONFIG)\obj\sdb.obj: \
     src\sdb.c $(DEPS_42)
 	@echo .. [Compile] build\$(CONFIG)\obj\sdb.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\sdb.obj -Fd$(BUILD)\obj\sdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\sdb.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\sdb.obj -Fd$(BUILD)\obj\sdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\sdb.c $(LOG)
 
 #
 #   sqlite3.h
@@ -649,7 +649,7 @@ DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\mpr.h
 build\$(CONFIG)\obj\watchdog.obj: \
     src\watchdog\watchdog.c $(DEPS_46)
 	@echo .. [Compile] build\$(CONFIG)\obj\watchdog.obj
-	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" $(IFLAGS) src\watchdog\watchdog.c $(LOG)
+	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\watchdog\watchdog.c $(LOG)
 
 !IF "$(ME_COM_SQLITE)" == "1"
 #
@@ -660,7 +660,7 @@ DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\sqlite3.obj
 
 build\$(CONFIG)\bin\libsql.dll: $(DEPS_47)
 	@echo ..... [Link] build\$(CONFIG)\bin\libsql.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libsql.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\sqlite3.obj" $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libsql.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\sqlite3.obj" $(LIBS)  $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
@@ -729,13 +729,28 @@ LIBS_51 = $(LIBS_51) libmbedtls.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_51 = $(LIBS_51) libmpr-openssl.lib
 !ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_51 = $(LIBS_51) gdi32.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_51 = $(LIBS_51) libeay32.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_51 = $(LIBS_51) ssleay32.lib
+LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_51 = $(LIBS_51) libmpr-openssl.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_51 = $(LIBS_51) libmpr-mbedtls.lib
 !ENDIF
 
 build\$(CONFIG)\bin\libmpr.dll: $(DEPS_51)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS_51) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS)  $(LOG)
 
 !IF "$(ME_COM_PCRE)" == "1"
 #
@@ -746,7 +761,7 @@ DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\pcre.obj
 
 build\$(CONFIG)\bin\libpcre.dll: $(DEPS_52)
 	@echo ..... [Link] build\$(CONFIG)\bin\libpcre.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libpcre.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\pcre.obj" $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libpcre.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\pcre.obj" $(LIBS)  $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_HTTP)" == "1"
@@ -772,7 +787,22 @@ LIBS_53 = $(LIBS_53) libmbedtls.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_53 = $(LIBS_53) libmpr-openssl.lib
 !ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_53 = $(LIBS_53) gdi32.lib
+LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_53 = $(LIBS_53) libeay32.lib
+LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_53 = $(LIBS_53) ssleay32.lib
+LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
 LIBS_53 = $(LIBS_53) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_53 = $(LIBS_53) libmpr-openssl.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_53 = $(LIBS_53) libmpr-mbedtls.lib
 !ENDIF
@@ -786,7 +816,7 @@ LIBS_53 = $(LIBS_53) libmpr.lib
 
 build\$(CONFIG)\bin\libhttp.dll: $(DEPS_53)
 	@echo ..... [Link] build\$(CONFIG)\bin\libhttp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS_53) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS)  $(LOG)
 !ENDIF
 
 #
@@ -837,7 +867,22 @@ LIBS_55 = $(LIBS_55) libmbedtls.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_55 = $(LIBS_55) libmpr-openssl.lib
 !ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_55 = $(LIBS_55) gdi32.lib
+LIBPATHS_55 = $(LIBPATHS_55) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_55 = $(LIBS_55) libeay32.lib
+LIBPATHS_55 = $(LIBPATHS_55) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_55 = $(LIBS_55) ssleay32.lib
+LIBPATHS_55 = $(LIBPATHS_55) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
 LIBS_55 = $(LIBS_55) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_55 = $(LIBS_55) libmpr-openssl.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_55 = $(LIBS_55) libmpr-mbedtls.lib
 !ENDIF
@@ -862,7 +907,7 @@ LIBS_55 = $(LIBS_55) libsql.lib
 
 build\$(CONFIG)\bin\libesp.dll: $(DEPS_55)
 	@echo ..... [Link] build\$(CONFIG)\bin\libesp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:$(ENTRY) $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\edi.obj" "$(BUILD)\obj\espAbbrev.obj" "$(BUILD)\obj\espConfig.obj" "$(BUILD)\obj\espFramework.obj" "$(BUILD)\obj\espHtml.obj" "$(BUILD)\obj\espRequest.obj" "$(BUILD)\obj\espTemplate.obj" "$(BUILD)\obj\mdb.obj" "$(BUILD)\obj\sdb.obj" $(LIBPATHS_55) $(LIBS_55) $(LIBS_55) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\edi.obj" "$(BUILD)\obj\espAbbrev.obj" "$(BUILD)\obj\espConfig.obj" "$(BUILD)\obj\espFramework.obj" "$(BUILD)\obj\espHtml.obj" "$(BUILD)\obj\espRequest.obj" "$(BUILD)\obj\espTemplate.obj" "$(BUILD)\obj\mdb.obj" "$(BUILD)\obj\sdb.obj" $(LIBPATHS_55) $(LIBS_55) $(LIBS)  $(LOG)
 
 #
 #   espcmd
@@ -888,7 +933,22 @@ LIBS_56 = $(LIBS_56) libmbedtls.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_56 = $(LIBS_56) libmpr-openssl.lib
 !ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_56 = $(LIBS_56) gdi32.lib
+LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_56 = $(LIBS_56) libeay32.lib
+LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_56 = $(LIBS_56) ssleay32.lib
+LIBPATHS_56 = $(LIBPATHS_56) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
 LIBS_56 = $(LIBS_56) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_56 = $(LIBS_56) libmpr-openssl.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_56 = $(LIBS_56) libmpr-mbedtls.lib
 !ENDIF
@@ -914,7 +974,7 @@ LIBS_56 = $(LIBS_56) libsql.lib
 
 build\$(CONFIG)\bin\esp.exe: $(DEPS_56)
 	@echo ..... [Link] build\$(CONFIG)\bin\esp.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\esp.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS_56) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\esp.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS)  $(LOG)
 
 #
 #   extras
@@ -948,7 +1008,22 @@ LIBS_58 = $(LIBS_58) libmbedtls.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_58 = $(LIBS_58) libmpr-openssl.lib
 !ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_58 = $(LIBS_58) gdi32.lib
+LIBPATHS_58 = $(LIBPATHS_58) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_58 = $(LIBS_58) libeay32.lib
+LIBPATHS_58 = $(LIBPATHS_58) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_58 = $(LIBS_58) ssleay32.lib
+LIBPATHS_58 = $(LIBPATHS_58) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
 LIBS_58 = $(LIBS_58) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_58 = $(LIBS_58) libmpr-openssl.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_58 = $(LIBS_58) libmpr-mbedtls.lib
 !ENDIF
@@ -963,7 +1038,7 @@ LIBS_58 = $(LIBS_58) libmpr.lib
 
 build\$(CONFIG)\bin\http.exe: $(DEPS_58)
 	@echo ..... [Link] build\$(CONFIG)\bin\http.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_58) $(LIBS_58) $(LIBS_58) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_58) $(LIBS_58) $(LIBS)  $(LOG)
 !ENDIF
 
 #
@@ -1011,14 +1086,29 @@ LIBS_60 = $(LIBS_60) libmbedtls.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
 LIBS_60 = $(LIBS_60) libmpr-openssl.lib
 !ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_60 = $(LIBS_60) gdi32.lib
+LIBPATHS_60 = $(LIBPATHS_60) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_60 = $(LIBS_60) libeay32.lib
+LIBPATHS_60 = $(LIBPATHS_60) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_60 = $(LIBS_60) ssleay32.lib
+LIBPATHS_60 = $(LIBPATHS_60) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
 LIBS_60 = $(LIBS_60) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_60 = $(LIBS_60) libmpr-openssl.lib
+!ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
 LIBS_60 = $(LIBS_60) libmpr-mbedtls.lib
 !ENDIF
 
 build\$(CONFIG)\bin\espman.exe: $(DEPS_60)
 	@echo ..... [Link] build\$(CONFIG)\bin\espman.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_60) $(LIBS_60) $(LIBS_60) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_60) $(LIBS_60) $(LIBS)  $(LOG)
 
 #
 #   installPrep

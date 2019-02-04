@@ -1,12 +1,12 @@
 login-roles Sample
 ===
 
-This sample shows how to configure a simple form-based login using ESP and control
-access based on user roles.
+This sample shows how to configure a simple form-based login using ESP and control access based on user roles.
+This sample uses the a web form for entering username and password credentials and application logic
+for controlling the authentication process.
 
 This sample uses:
 
-* Per-user roles defined in the pak.json
 * Https for encryption of traffic for login forms
 * Redirection to a login page and logged out page
 * Redirection to use https for login forms and http once logged in
@@ -15,14 +15,15 @@ This sample uses:
 * Automatic session creation and management
 * Username / password validation using the "config" file-based authentication store.
 * Blowfish encryption for secure password hashing
+* Per-user roles defined in the esp.json
 
 Notes:
-* This sample keeps the passwords in the pak.json. The test password was created via:
+* This sample keeps the passwords in the esp.json. The test password was created via:
 
     esp user add joshua pass1
     esp user add mary pass2
 
-* The sample is setup to use the "config" auth store which keeps the passwords in the pak.json file.
+* The sample is setup to use the "config" auth store which keeps the passwords in the esp.json file.
     Set this to "system" if you wish to use passwords in the system password database (linux or macosx only).
 
 * Session cookies are created to manage server-side session state storage and to optimize authentication.
@@ -34,7 +35,7 @@ Notes:
 
 Requirements
 ---
-* [Download ESP](https://embedthis.com/esp/download.html)
+* [Download ESP](https://www.embedthis.com/esp/download.html)
 
 To run:
 ---
@@ -63,5 +64,5 @@ Code:
 Documentation:
 ---
 
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP Configuration](https://embedthis.com/esp/doc/users/config.html)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP Configuration](https://www.embedthis.com/esp/doc/users/config.html)

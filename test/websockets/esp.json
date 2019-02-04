@@ -14,10 +14,10 @@
                 'http://127.0.0.1:7300',
                 'https://127.0.0.1:7543',
             ],
-            "log": {
-                "location": "error.log",
-                "level": 4
-            },
+        },
+        "log": {
+            "location": "error.log",
+            "level": 4
         },
         ssl: {
             key: '${BIN_DIR}/test.key',
@@ -27,7 +27,7 @@
             "location": "trace.log",
             "level": 4
         },
-        routes: [ 
+        routes: [
             {
                 pattern: '^/websockets/{controller}/{action}$',
                 prefix: '/websockets',

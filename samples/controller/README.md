@@ -6,7 +6,7 @@ service.c. It registers one action that is run in response to the URI: /test/hel
 
 Requirements
 ---
-* [ESP](https://embedthis.com/esp/download.html)
+* [ESP](https://www.embedthis.com/esp/download.html)
 
 To run:
 ---
@@ -27,12 +27,12 @@ Code:
 
 Documentation:
 ---
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP Tour](https://embedthis.com/esp/doc/start/tour.html)
-* [ESP Controllers](https://embedthis.com/esp/doc/users/controllers.html)
-* [ESP APIs](https://embedthis.com/esp/doc/ref/api/esp.html)
-* [ESP Guide](https://embedthis.com/esp/doc/users/index.html)
-* [ESP Overview](https://embedthis.com/esp/doc/users/using.html)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP Tour](https://www.embedthis.com/esp/doc/start/tour.html)
+* [ESP Controllers](https://www.embedthis.com/esp/doc/users/controllers.html)
+* [ESP APIs](https://www.embedthis.com/esp/doc/ref/api/esp.html)
+* [ESP Guide](https://www.embedthis.com/esp/doc/users/index.html)
+* [ESP Overview](https://www.embedthis.com/esp/doc/users/using.html)
 
 See Also:
 ---

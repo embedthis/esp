@@ -1,25 +1,9 @@
 {
-    "name": "test",
-    "description": "test",
+    "name": "upload",
+    "description": "upload",
     "version": "1.0.0",
-    "directories": {
-        "controllers": ".",
-    },
     "http": {
-        "pipeline": {
-            filters: [{
-                name: 'uploadFilter',
-                extensions: [ '*' ]
-            }],
-            "handlers": "espHandler"
-        },
-        "routes": [{
-            "handler": "espHandler",
-            "pattern": "^/test/{action}$",
-            "source": "./service.c",
-            "target": "$1",
-            deleteUploads: false,
-            renameUploads: true,
-        }]
+        deleteUploads: true,
+        renameUploads: false,
     }
 }

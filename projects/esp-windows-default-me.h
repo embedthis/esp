@@ -1,5 +1,5 @@
 /*
-    me.h -- MakeMe Configure Header for windows-x86-default
+    me.h -- MakeMe Configure Header for windows-x64-default
 
     This header is created by Me during configuration. To change settings, re-run
     configure or define variables in your Makefile to override these default values.
@@ -21,8 +21,11 @@
 #ifndef ME_COMPANY
     #define ME_COMPANY "embedthis"
 #endif
+#ifndef ME_COMPAT
+    #define ME_COMPAT 1
+#endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.0"
+    #define ME_COMPATIBLE "8.0"
 #endif
 #ifndef ME_COMPILER_HAS_ATOMIC
     #define ME_COMPILER_HAS_ATOMIC 0
@@ -66,6 +69,9 @@
 #ifndef ME_DESCRIPTION
     #define ME_DESCRIPTION "Embedthis ESP, the amazingly fast C-Language web framework"
 #endif
+#ifndef ME_HTTP_HTTP2
+    #define ME_HTTP_HTTP2 1
+#endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
 #endif
@@ -97,10 +103,10 @@
     #define ME_TITLE "Embedthis ESP"
 #endif
 #ifndef ME_TUNE
-    #define ME_TUNE "speed"
+    #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.2"
+    #define ME_VERSION "8.0.3"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "espman"
@@ -181,7 +187,7 @@
 
 /* Profile */
 #ifndef ME_CONFIG_CMD
-    #define ME_CONFIG_CMD "me -d -q -platform windows-x86-default -configure . -without ssl -gen vs"
+    #define ME_CONFIG_CMD "me -d -q -platform windows-x64-default -configure . -gen vs"
 #endif
 #ifndef ME_ESP_PRODUCT
     #define ME_ESP_PRODUCT 1
@@ -189,22 +195,22 @@
 #ifndef ME_PROFILE
     #define ME_PROFILE "default"
 #endif
-#ifndef ME_TUNE_SPEED
-    #define ME_TUNE_SPEED 1
+#ifndef ME_TUNE_SIZE
+    #define ME_TUNE_SIZE 1
 #endif
 
 /* Miscellaneous */
 #ifndef ME_MAJOR_VERSION
-    #define ME_MAJOR_VERSION 7
+    #define ME_MAJOR_VERSION 8
 #endif
 #ifndef ME_MINOR_VERSION
     #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 2
+    #define ME_PATCH_VERSION 3
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000002
+    #define ME_VNUM 800000003
 #endif
 
 /* Components */
@@ -220,14 +226,23 @@
 #ifndef ME_COM_LINK
     #define ME_COM_LINK 1
 #endif
+#ifndef ME_COM_MATRIXSSL
+    #define ME_COM_MATRIXSSL 0
+#endif
 #ifndef ME_COM_MBEDTLS
-    #define ME_COM_MBEDTLS 0
+    #define ME_COM_MBEDTLS 1
 #endif
 #ifndef ME_COM_MDB
     #define ME_COM_MDB 1
 #endif
 #ifndef ME_COM_MPR
     #define ME_COM_MPR 1
+#endif
+#ifndef ME_COM_NANOSSL
+    #define ME_COM_NANOSSL 0
+#endif
+#ifndef ME_COM_OPENSSL
+    #define ME_COM_OPENSSL 0
 #endif
 #ifndef ME_COM_OSDEP
     #define ME_COM_OSDEP 1
@@ -242,7 +257,7 @@
     #define ME_COM_SQLITE 1
 #endif
 #ifndef ME_COM_SSL
-    #define ME_COM_SSL 0
+    #define ME_COM_SSL 1
 #endif
 #ifndef ME_COM_VXWORKS
     #define ME_COM_VXWORKS 0

@@ -8,7 +8,7 @@ let http: Http = new Http
 if (thas('ME_DEBUG')) {
     //  First get
     let path = new Path("dist/reload.esp")
-    path.write('<html><body><% espRender(conn, "First", -1); %></body></html>')
+    path.write('<html><body><% espRender(stream, "First", -1); %></body></html>')
     http.get(HTTP + "/reload.esp")
     ttrue(http.status == 200)
     ttrue(http.response.contains("First"))
@@ -18,7 +18,7 @@ if (thas('ME_DEBUG')) {
     App.sleep(1100);
 
     //  Create a new file and do a second get
-    path.write('<html><body><% espRender(conn, "Second", -1); %></body></html>')
+    path.write('<html><body><% espRender(stream, "Second", -1); %></body></html>')
     http.get(HTTP + "/reload.esp")
     ttrue(http.status == 200)
     ttrue(http.response.contains("Second"))

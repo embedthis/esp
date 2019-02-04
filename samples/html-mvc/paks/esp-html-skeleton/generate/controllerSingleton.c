@@ -68,7 +68,7 @@ static void update${UCONTROLLER}() {
     }
 }
 
-static void common${UCONTROLLER}(HttpConn *conn) {
+static void common${UCONTROLLER}(HttpStream *stream) {
 }
 
 

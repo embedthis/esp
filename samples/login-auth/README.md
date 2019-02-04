@@ -1,8 +1,9 @@
-login-form Sample
+login-auth Sample
 ===
 
-This sample shows how to configure a simple form-based login using ESP.
-This sample uses the a web form for entering username and password credentials.
+This sample shows how to configure a simple app-based login using ESP.
+This sample uses the a web form for entering username and password credentials and application logic
+for controlling the authentication process.
 
 This sample uses:
 
@@ -16,12 +17,15 @@ This sample uses:
 * Blowfish encryption for secure password hashing
 
 Notes:
-* This sample keeps the passwords in the pak.json. The test password was created via:
+* This sample keeps the passwords in the esp.json. The test password was created via:
 
     esp user add joshua pass1
 
-* The sample is setup to use the "config" auth store which keeps the passwords in the pak.json file.
-    Set this to "system" if you wish to use passwords in the system password database (linux or macosx only).
+  You can use "esp user [add|compute|remove|show] username" to manage the user and password.
+
+* The sample is setup to use the "config" auth store which keeps the passwords in the esp.json file. Note: the passwords
+    are statically defined and cannot be changed at runtime. Use the "app" authentication store and see the login-database
+    sample to enable modifying users and passwords at runtime. Alternatively, set the store to "system" if you wish to use passwords in the system password database (linux or macosx only).
 
 * Session cookies are created to manage server-side session state storage and to optimize authentication.
 
@@ -31,7 +35,7 @@ Notes:
 
 Requirements
 ---
-* [Download ESP](https://embedthis.com/esp/download.html)
+* [Download ESP](https://www.embedthis.com/esp/download.html)
 
 To run:
 ---
@@ -48,6 +52,7 @@ Continue and you will be prompted to login. The test username/password is:
 
 Code:
 ---
+* app.c - Application code managing authentication
 * cache - Directory for cached ESP pages
 * controllers - Directory for controllers
 * documents/public - Web pages and resources accessible without authentication
@@ -60,5 +65,5 @@ Code:
 Documentation:
 ---
 
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP Configuration](https://embedthis.com/esp/doc/users/config.html)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP Configuration](https://www.embedthis.com/esp/doc/users/config.html)

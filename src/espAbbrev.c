@@ -17,7 +17,7 @@ PUBLIC void addHeader(cchar *key, cchar *fmt, ...)
 
     va_start(args, fmt);
     value = sfmtv(fmt, args);
-    espAddHeaderString(getConn(), key, value);
+    espAddHeaderString(getStream(), key, value);
     va_end(args);
 }
 
@@ -32,10 +32,10 @@ PUBLIC void addParam(cchar *key, cchar *value)
 
 PUBLIC bool canUser(cchar *abilities, bool warn)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    if (httpCanUser(conn, abilities)) {
+    stream = getStream();
+    if (httpCanUser(stream, abilities)) {
         return 1;
     }
     if (warn) {
@@ -63,7 +63,7 @@ PUBLIC bool createRecFromParams(cchar *table)
  */
 PUBLIC cchar *createSession()
 {
-    return espCreateSession(getConn());
+    return espCreateSession(getStream());
 }
 
 
@@ -73,13 +73,13 @@ PUBLIC cchar *createSession()
  */
 PUBLIC void destroySession()
 {
-    httpDestroySession(getConn());
+    httpDestroySession(getStream());
 }
 
 
 PUBLIC void dontAutoFinalize()
 {
-    espSetAutoFinalizing(getConn(), 0);
+    espSetAutoFinalizing(getStream(), 0);
 }
 
 
@@ -88,7 +88,7 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getStream(), kind, fmt, args);
     va_end(args);
 
     /*
@@ -100,7 +100,7 @@ PUBLIC bool feedback(cchar *kind, cchar *fmt, ...)
 
 PUBLIC void finalize()
 {
-    espFinalize(getConn());
+    espFinalize(getStream());
 }
 
 
@@ -110,7 +110,7 @@ PUBLIC void flash(cchar *kind, cchar *fmt, ...)
     va_list     args;
 
     va_start(args, fmt);
-    espSetFeedbackv(getConn(), kind, fmt, args);
+    espSetFeedbackv(getStream(), kind, fmt, args);
     va_end(args);
 }
 #endif
@@ -118,13 +118,13 @@ PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 
 PUBLIC void flush()
 {
-    espFlush(getConn());
+    espFlush(getStream());
 }
 
 
 PUBLIC HttpAuth *getAuth()
 {
-    return espGetAuth(getConn());
+    return espGetAuth(getStream());
 }
 
 
@@ -144,7 +144,7 @@ PUBLIC cchar *getConfig(cchar *field)
     HttpRoute   *route;
     cchar       *value;
 
-    route = getConn()->rx->route;
+    route = getStream()->rx->route;
     if ((value = mprGetJson(route->config, field)) == 0) {
         return "";
     }
@@ -152,75 +152,75 @@ PUBLIC cchar *getConfig(cchar *field)
 }
 
 
-PUBLIC HttpConn *getConn()
+PUBLIC HttpStream *getStream()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = mprGetThreadData(((Esp*) MPR->espService)->local);
-    if (conn == 0) {
-        mprLog("error esp", 0, "Connection is not defined in thread local storage.\n"
-        "If using a callback, make sure you invoke espSetConn with the connection before using the ESP abbreviated API");
+    stream = mprGetThreadData(((Esp*) MPR->espService)->local);
+    if (stream == 0) {
+        mprLog("error esp", 0, "Stream is not defined in thread local storage.\n"
+        "If using a callback, make sure you invoke espSetStream with the connection before using the ESP abbreviated API");
     }
-    return conn;
+    return stream;
 }
 
 
 PUBLIC cchar *getCookies()
 {
-    return espGetCookies(getConn());
+    return espGetCookies(getStream());
 }
 
 
 PUBLIC MprOff getContentLength()
 {
-    return espGetContentLength(getConn());
+    return espGetContentLength(getStream());
 }
 
 
 PUBLIC cchar *getContentType()
 {
-    return getConn()->rx->mimeType;
+    return getStream()->rx->mimeType;
 }
 
 
 PUBLIC void *getData()
 {
-    return espGetData(getConn());
+    return espGetData(getStream());
 }
 
 
 PUBLIC Edi *getDatabase()
 {
-    return espGetDatabase(getConn());
+    return espGetDatabase(getStream());
 }
 
 
 PUBLIC MprDispatcher *getDispatcher()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    if ((conn = getConn()) == 0) {
+    if ((stream = getStream()) == 0) {
         return 0;
     }
-    return conn->dispatcher;
+    return stream->dispatcher;
 }
 
 
 PUBLIC cchar *getDocuments()
 {
-    return getConn()->rx->route->documents;
+    return getStream()->rx->route->documents;
 }
 
 
 PUBLIC EspRoute *getEspRoute()
 {
-    return espGetEspRoute(getConn());
+    return espGetEspRoute(getStream());
 }
 
 
 PUBLIC cchar *getFeedback(cchar *kind)
 {
-    return espGetFeedback(getConn(), kind);
+    return espGetFeedback(getStream(), kind);
 }
 
 
@@ -238,55 +238,55 @@ PUBLIC cchar *getFieldError(cchar *field)
 
 PUBLIC EdiGrid *getGrid()
 {
-    return getConn()->grid;
+    return getStream()->grid;
 }
 
 
 PUBLIC cchar *getHeader(cchar *key)
 {
-    return espGetHeader(getConn(), key);
+    return espGetHeader(getStream(), key);
 }
 
 
 PUBLIC cchar *getMethod()
 {
-    return espGetMethod(getConn());
+    return espGetMethod(getStream());
 }
 
 
 PUBLIC cchar *getQuery()
 {
-    return getConn()->rx->parsedUri->query;
+    return getStream()->rx->parsedUri->query;
 }
 
 
 PUBLIC EdiRec *getRec()
 {
-    return getConn()->record;
+    return getStream()->record;
 }
 
 
 PUBLIC cchar *getReferrer()
 {
-    return espGetReferrer(getConn());
+    return espGetReferrer(getStream());
 }
 
 
 PUBLIC EspReq *getReq()
 {
-    return getConn()->data;
+    return getStream()->data;
 }
 
 
 PUBLIC HttpRoute *getRoute()
 {
-    return espGetRoute(getConn());
+    return espGetRoute(getStream());
 }
 
 
 PUBLIC cchar *getSecurityToken()
 {
-    return httpGetSecurityToken(getConn(), 0);
+    return httpGetSecurityToken(getStream(), 0);
 }
 
 
@@ -295,61 +295,61 @@ PUBLIC cchar *getSecurityToken()
  */
 PUBLIC cchar *getSessionID()
 {
-    return espGetSessionID(getConn(), 1);
+    return espGetSessionID(getStream(), 1);
 }
 
 
 PUBLIC cchar *getSessionVar(cchar *key)
 {
-    return httpGetSessionVar(getConn(), key, 0);
+    return httpGetSessionVar(getStream(), key, 0);
 }
 
 
 PUBLIC cchar *getPath()
 {
-    return espGetPath(getConn());
+    return espGetPath(getStream());
 }
 
 
 PUBLIC MprList *getUploads()
 {
-    return espGetUploads(getConn());
+    return espGetUploads(getStream());
 }
 
 
 PUBLIC cchar *getUri()
 {
-    return espGetUri(getConn());
+    return espGetUri(getStream());
 }
 
 
 PUBLIC bool hasGrid()
 {
-    return espHasGrid(getConn());
+    return espHasGrid(getStream());
 }
 
 
 PUBLIC bool hasRec()
 {
-    return espHasRec(getConn());
+    return espHasRec(getStream());
 }
 
 
 PUBLIC bool isEof()
 {
-    return httpIsEof(getConn());
+    return httpIsEof(getStream());
 }
 
 
 PUBLIC bool isFinalized()
 {
-    return espIsFinalized(getConn());
+    return espIsFinalized(getStream());
 }
 
 
 PUBLIC bool isSecure()
 {
-    return espIsSecure(getConn());
+    return espIsSecure(getStream());
 }
 
 
@@ -391,7 +391,7 @@ PUBLIC EdiRec *makeRec(cchar *contents)
 
 PUBLIC cchar *makeUri(cchar *target)
 {
-    return espUri(getConn(), target);
+    return espUri(getStream(), target);
 }
 
 
@@ -405,7 +405,7 @@ PUBLIC bool modeIs(cchar *kind)
 {
     HttpRoute   *route;
 
-    route = getConn()->rx->route;
+    route = getStream()->rx->route;
     return smatch(route->mode, kind);
 }
 
@@ -418,19 +418,19 @@ PUBLIC cchar *nonce()
 
 PUBLIC cchar *param(cchar *key)
 {
-    return espGetParam(getConn(), key, 0);
+    return espGetParam(getStream(), key, 0);
 }
 
 
 PUBLIC MprJson *params()
 {
-    return espGetParams(getConn());
+    return espGetParams(getStream());
 }
 
 
 PUBLIC ssize receive(char *buf, ssize len)
 {
-    return httpRead(getConn(), buf, len);
+    return httpRead(getStream(), buf, len);
 }
 
 
@@ -469,19 +469,19 @@ PUBLIC EdiGrid *readTable(cchar *tableName)
 
 PUBLIC void redirect(cchar *target)
 {
-    espRedirect(getConn(), 302, target);
+    espRedirect(getStream(), 302, target);
 }
 
 
 PUBLIC void redirectBack()
 {
-    espRedirectBack(getConn());
+    espRedirectBack(getStream());
 }
 
 
 PUBLIC void removeCookie(cchar *name)
 {
-    espRemoveCookie(getConn(), name);
+    espRemoveCookie(getStream(), name);
 }
 
 
@@ -498,7 +498,7 @@ PUBLIC bool removeRec(cchar *tableName, cchar *key)
 
 PUBLIC void removeSessionVar(cchar *key)
 {
-    httpRemoveSessionVar(getConn(), key);
+    httpRemoveSessionVar(getStream(), key);
 }
 
 
@@ -510,7 +510,7 @@ PUBLIC ssize render(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-    count = espRenderString(getConn(), msg);
+    count = espRenderString(getStream(), msg);
     va_end(args);
     return count;
 }
@@ -518,13 +518,13 @@ PUBLIC ssize render(cchar *fmt, ...)
 
 PUBLIC ssize renderCached()
 {
-    return espRenderCached(getConn());;
+    return espRenderCached(getStream());;
 }
 
 
 PUBLIC ssize renderConfig()
 {
-    return espRenderConfig(getConn());;
+    return espRenderConfig(getStream());;
 }
 
 
@@ -535,20 +535,20 @@ PUBLIC void renderError(int status, cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmt(fmt, args);
-    espRenderError(getConn(), status, "%s", msg);
+    espRenderError(getStream(), status, "%s", msg);
     va_end(args);
 }
 
 
 PUBLIC ssize renderFile(cchar *path)
 {
-    return espRenderFile(getConn(), path);
+    return espRenderFile(getStream(), path);
 }
 
 
 PUBLIC void renderFeedback(cchar *kind)
 {
-    espRenderFeedback(getConn(), kind);
+    espRenderFeedback(getStream(), kind);
 }
 
 
@@ -560,7 +560,7 @@ PUBLIC ssize renderSafe(cchar *fmt, ...)
 
     va_start(args, fmt);
     msg = sfmtv(fmt, args);
-    count = espRenderSafeString(getConn(), msg);
+    count = espRenderSafeString(getStream(), msg);
     va_end(args);
     return count;
 }
@@ -568,13 +568,13 @@ PUBLIC ssize renderSafe(cchar *fmt, ...)
 
 PUBLIC ssize renderString(cchar *s)
 {
-    return espRenderString(getConn(), s);
+    return espRenderString(getStream(), s);
 }
 
 
 PUBLIC void renderView(cchar *view)
 {
-    espRenderDocument(getConn(), view);
+    espRenderDocument(getStream(), view);
 }
 
 
@@ -600,49 +600,49 @@ PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprT
  */
 PUBLIC void securityToken()
 {
-    httpAddSecurityToken(getConn(), 0);
+    httpAddSecurityToken(getStream(), 0);
 }
 
 
 PUBLIC ssize sendGrid(EdiGrid *grid)
 {
-    return espSendGrid(getConn(), grid, 0);
+    return espSendGrid(getStream(), grid, 0);
 }
 
 
 PUBLIC ssize sendRec(EdiRec *rec)
 {
-    return espSendRec(getConn(), rec, 0);
+    return espSendRec(getStream(), rec, 0);
 }
 
 
 PUBLIC void sendResult(bool status)
 {
-    espSendResult(getConn(), status);
+    espSendResult(getStream(), status);
 }
 
 
-PUBLIC void setConn(HttpConn *conn)
+PUBLIC void setStream(HttpStream *stream)
 {
-    espSetConn(conn);
+    espSetStream(stream);
 }
 
 
 PUBLIC void setContentType(cchar *mimeType)
 {
-    espSetContentType(getConn(), mimeType);
+    espSetContentType(getStream(), mimeType);
 }
 
 
 PUBLIC void setCookie(cchar *name, cchar *value, cchar *path, cchar *cookieDomain, MprTicks lifespan, bool isSecure)
 {
-    espSetCookie(getConn(), name, value, path, cookieDomain, lifespan, isSecure);
+    espSetCookie(getStream(), name, value, path, cookieDomain, lifespan, isSecure);
 }
 
 
 PUBLIC void setData(void *data)
 {
-    espSetData(getConn(), data);
+    espSetData(getStream(), data);
 }
 
 
@@ -660,7 +660,7 @@ PUBLIC EdiRec *setFields(EdiRec *rec, MprJson *params)
 
 PUBLIC EdiGrid *setGrid(EdiGrid *grid)
 {
-    getConn()->grid = grid;
+    getStream()->grid = grid;
     return grid;
 }
 
@@ -672,44 +672,44 @@ PUBLIC void setHeader(cchar *key, cchar *fmt, ...)
 
     va_start(args, fmt);
     value = sfmtv(fmt, args);
-    espSetHeaderString(getConn(), key, value);
+    espSetHeaderString(getStream(), key, value);
     va_end(args);
 }
 
 
 PUBLIC void setIntParam(cchar *key, int value)
 {
-    espSetIntParam(getConn(), key, value);
+    espSetIntParam(getStream(), key, value);
 }
 
 
 PUBLIC void setNotifier(HttpNotifier notifier)
 {
-    espSetNotifier(getConn(), notifier);
+    espSetNotifier(getStream(), notifier);
 }
 
 
 PUBLIC void setParam(cchar *key, cchar *value)
 {
-    espSetParam(getConn(), key, value);
+    espSetParam(getStream(), key, value);
 }
 
 
 PUBLIC EdiRec *setRec(EdiRec *rec)
 {
-    return espSetRec(getConn(), rec);
+    return espSetRec(getStream(), rec);
 }
 
 
 PUBLIC void setSessionVar(cchar *key, cchar *value)
 {
-    httpSetSessionVar(getConn(), key, value);
+    httpSetSessionVar(getStream(), key, value);
 }
 
 
 PUBLIC void setStatus(int status)
 {
-    espSetStatus(getConn(), status);
+    espSetStatus(getStream(), status);
 }
 
 
@@ -721,13 +721,13 @@ PUBLIC cchar *session(cchar *key)
 
 PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data)
 {
-    mprCreateEvent(getConn()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
+    mprCreateEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
 }
 
 
 PUBLIC void showRequest()
 {
-    espShowRequest(getConn());
+    espShowRequest(getStream());
 }
 
 
@@ -739,7 +739,7 @@ PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder)
 
 PUBLIC void updateCache(cchar *uri, cchar *data, int lifesecs)
 {
-    espUpdateCache(getConn(), uri, data, lifesecs);
+    espUpdateCache(getStream(), uri, data, lifesecs);
 }
 
 
@@ -792,7 +792,7 @@ PUBLIC cchar *uri(cchar *target, ...)
     va_start(args, target);
     uri = sfmtv(target, args);
     va_end(args);
-    return httpLink(getConn(), uri);
+    return httpLink(getStream(), uri);
 }
 
 
@@ -804,7 +804,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
     va_start(args, target);
     uri = sfmtv(target, args);
     va_end(args);
-    return httpLinkAbs(getConn(), uri);
+    return httpLinkAbs(getStream(), uri);
 }
 
 
@@ -816,7 +816,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
  */
 PUBLIC void stylesheets(cchar *patterns)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -824,8 +824,8 @@ PUBLIC void stylesheets(cchar *patterns)
     cchar       *filename, *ext, *uri, *path, *kind, *version, *clientDir;
     int         next;
 
-    conn = getConn();
-    rx = conn->rx;
+    stream = getStream();
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     patterns = httpExpandRouteVars(route, patterns);
@@ -875,12 +875,12 @@ PUBLIC void stylesheets(cchar *patterns)
         }
         for (ITERATE_ITEMS(files, path, next)) {
             path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-            uri = httpLink(conn, path);
+            uri = httpLink(stream, path);
             kind = mprGetPathExt(path);
             if (smatch(kind, "css")) {
-                espRender(conn, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
+                espRender(stream, "<link rel='stylesheet' type='text/css' href='%s' />\n", uri);
             } else {
-                espRender(conn, "<link rel='stylesheet/%s' type='text/css' href='%s' />\n", kind, uri);
+                espRender(stream, "<link rel='stylesheet/%s' type='text/css' href='%s' />\n", kind, uri);
             }
         }
     }
@@ -894,7 +894,7 @@ PUBLIC void stylesheets(cchar *patterns)
  */
 PUBLIC void scripts(cchar *patterns)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -903,8 +903,8 @@ PUBLIC void scripts(cchar *patterns)
     cchar       *uri, *path, *version;
     int         next, ci;
 
-    conn = getConn();
-    rx = conn->rx;
+    stream = getStream();
+    rx = stream->rx;
     route = rx->route;
     eroute = route->eroute;
     patterns = httpExpandRouteVars(route, patterns);
@@ -929,7 +929,7 @@ PUBLIC void scripts(cchar *patterns)
         }
         return;
     }
-    if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 || 
+    if ((files = mprGlobPathFiles(httpGetDir(route, "client"), patterns, MPR_PATH_RELATIVE)) == 0 ||
             mprGetListLength(files) == 0) {
         files = mprCreateList(0, 0);
         mprAddItem(files, patterns);
@@ -939,8 +939,8 @@ PUBLIC void scripts(cchar *patterns)
             path = stemplateJson(path, route->config);
         }
         path = sjoin("~/", strim(path, ".gz", MPR_TRIM_END), NULL);
-        uri = httpLink(conn, path);
-        espRender(conn, "<script src='%s' type='text/javascript'></script>\n", uri);
+        uri = httpLink(stream, path);
+        espRender(stream, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }
 

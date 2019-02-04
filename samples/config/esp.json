@@ -15,8 +15,21 @@
     esp: {
         /*
             Enable ESP MVC application with default directories for MVC and default espHandler
+            Can also set the app property to true for defaults.
          */
-        app: true,
+        app: {
+            source: [
+                /*
+                    List of source files to build
+                 */
+                'src/app.c',
+            ],
+            tokens: [
+                APPINC: './include',
+                CFLAGS: '-DMYDEF=42',
+                LDFLAGS: '-lmyLib',
+            ],
+        },
 
         /*
             Load external esp applications. Can also use string or [prefix+config] property form.

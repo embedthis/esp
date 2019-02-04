@@ -8,7 +8,7 @@ layout page: layouts/default.esp, provides the common look and feel.
 
 Requirements
 ---
-* [ESP](https://embedthis.com/esp/download.html)
+* [ESP](https://www.embedthis.com/esp/download.html)
 
 To build:
 ---
@@ -16,13 +16,13 @@ To build:
 
 To run:
 ---
-    esp -4
+    esp -v
 
-or 
+or
     expansive
 
-The server listens on port 4000. Browse to: 
- 
+The server listens on port 4000. Browse to:
+
      http://localhost:4000/index.esp
 
 Code:
@@ -32,11 +32,11 @@ Code:
 
 Documentation:
 ---
-* [ESP Documentation](https://embedthis.com/esp/doc/index.html)
-* [ESP APIs](https://embedthis.com/esp/doc/ref/api/esp.html)
-* [ESP Guide](https://embedthis.com/esp/doc/users/index.html)
-* [ESP Overview](https://embedthis.com/esp/doc/users/using.html)
-* [Expansive](https://embedthis.com/expansive/)
+* [ESP Documentation](https://www.embedthis.com/esp/doc/index.html)
+* [ESP APIs](https://www.embedthis.com/esp/doc/ref/api/esp.html)
+* [ESP Guide](https://www.embedthis.com/esp/doc/users/index.html)
+* [ESP Overview](https://www.embedthis.com/esp/doc/users/using.html)
+* [Expansive](https://www.embedthis.com/expansive/)
 
 See Also:
 ---

@@ -29,22 +29,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
         <ConfigurationType></ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
         <ConfigurationType></ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
         <ConfigurationType></ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
         <ConfigurationType></ConfigurationType>
         <CharacterSet>NotSet</CharacterSet>
-        <PlatformToolset>v120</PlatformToolset>
+        <PlatformToolset>v141</PlatformToolset>
       </PropertyGroup>
 
       <Import Project="$(VCTargetsPath)Microsoft.Cpp.Default.props" />
@@ -100,10 +100,10 @@
 
       <CustomBuildStep>
         <Command>cd ..\..\src
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y esp-compile.json $(BinDir)
-if exist $(BinDir) del /Q $(BinDir)
-copy /Y vcvars.bat $(BinDir)
+if exist $(BinDir)\esp-compile.json del /Q $(BinDir)\esp-compile.json
+copy /Y esp-compile.json $(BinDir)\esp-compile.json
+if exist $(BinDir)\vcvars.bat del /Q $(BinDir)\vcvars.bat
+copy /Y vcvars.bat $(BinDir)\vcvars.bat
 cd ..\projects\esp-windows-default</Command>
         <Outputs>$(BinDir)</Outputs>
       </CustomBuildStep>

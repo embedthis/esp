@@ -132,8 +132,8 @@
       <type>EspRoute *</type>
       <name>espRoute</name>
       <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>ga1f27d029ea92c75a16d2c67d31f64141</anchor>
-      <arglist>(HttpRoute *route)</arglist>
+      <anchor>ga4f34c72cee102cf5cb115e3908261013</anchor>
+      <arglist>(HttpRoute *route, bool create)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -172,85 +172,85 @@
       <type>void(*</type>
       <name>EspViewProc</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga4645d40178e3548fd0e6ad13fec1b5ed</anchor>
-      <arglist>)(HttpConn *conn)</arglist>
+      <anchor>ga36c7632f31238cf472b80f1676146ade</anchor>
+      <arglist>)(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espAddHeader</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaae88740666af5ee9b21ad39648857db8</anchor>
-      <arglist>(HttpConn *conn, cchar *key, cchar *fmt,...)</arglist>
+      <anchor>ga4f8a144e4388122909991a0402b92550</anchor>
+      <arglist>(HttpStream *stream, cchar *key, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espAddHeaderString</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gad772b64162b7f4eb80ef1a3a1795175d</anchor>
-      <arglist>(HttpConn *conn, cchar *key, cchar *value)</arglist>
+      <anchor>ga98fdeb62e229b97f5fe8049298d5c7fc</anchor>
+      <arglist>(HttpStream *stream, cchar *key, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espAddParam</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga9e1210b2a79fcbf13a85d2f78ccdb0bd</anchor>
-      <arglist>(HttpConn *conn, cchar *var, cchar *value)</arglist>
+      <anchor>ga3824ffbe5db5e46d872aeb0adfdbaf65</anchor>
+      <arglist>(HttpStream *stream, cchar *var, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espAppendHeader</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaa50588be6fe69e04738fc0276d7afbbb</anchor>
-      <arglist>(HttpConn *conn, cchar *key, cchar *fmt,...)</arglist>
+      <anchor>ga3a999dbd5209ab0507ec697bb452eba9</anchor>
+      <arglist>(HttpStream *stream, cchar *key, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espAppendHeaderString</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gacb696dcdff91355fc9df37f5c7171a01</anchor>
-      <arglist>(HttpConn *conn, cchar *key, cchar *value)</arglist>
+      <anchor>gadc294b278fde028e375f3a43e8da4ffc</anchor>
+      <arglist>(HttpStream *stream, cchar *key, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espAutoFinalize</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gab6aeea9bb5cb500eabf3e1cfd1745f03</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga343d565150be797bbcfbf67a3ef98bb5</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espClearCurrentSession</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gad47b01dcb2ca01085b18fce4636a8a8d</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gadeac99cba2f4655c6ae0e8c108646e90</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espCreateSession</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gafa8b3b579ec913aa905ec9c173571059</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga133ce6a404cb05682846cbe3f478b7da</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espDestroySession</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaf6d82157def054f3c2c38b96f15872ce</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga49dfd97fc85a367ccf7d146454b52cbc</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espFinalize</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gac142434246bc5558dfe73a78ded7a7f0</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gafa8c60c6ae199dd31fa92c4dbbaa7c2d</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espFlush</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gadf50b51bf7ab10d828e85be140c005c5</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga117d4806f7e97f74d2803065bb7f69f3</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>HttpAuth *</type>
@@ -260,151 +260,144 @@
       <arglist>()</arglist>
     </member>
     <member kind="function">
-      <type>HttpConn *</type>
-      <name>espGetConn</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga41a42035766ff5d2fd0fd74588e167ea</anchor>
-      <arglist>()</arglist>
-    </member>
-    <member kind="function">
       <type>MprOff</type>
       <name>espGetContentLength</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga3cb308121f5659d48f58c217959c3800</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga8428a4283b20243796432100eba44e58</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetContentType</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gadf281290e500c98b3c7214c410b32599</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gada38f3320f81f64a5e3250db87eae7c4</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetCookie</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga355cd184340dfdc35d7ab291e75e56e7</anchor>
-      <arglist>(HttpConn *conn, cchar *name)</arglist>
+      <anchor>ga58fe058c2f98531f1e887d0517ca9fb2</anchor>
+      <arglist>(HttpStream *stream, cchar *name)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetCookies</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga1c47b7c05e41bc39b9f3426134c1bf7c</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga62702b72ab28805a10e91b950068cdd8</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void *</type>
       <name>espGetData</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga65d11f787b22a5deda37f8d53f479c56</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga10da3225d0d7f71c043431e25352d80e</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>Edi *</type>
       <name>espGetDatabase</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gadb72373974f7f4d05a8dbbdf966c6496</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga19f1a34c4dbdd8ba13d9f1b99f8a0087</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetDocuments</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaf694aade2329f4c9dcb7c6d5a77e62c1</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gaba7484ddb4b23310c96f3edd0ba175bb</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>EspRoute *</type>
       <name>espGetEspRoute</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaefe462fb7ee0c6fa6a0c7842b973de3c</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga99b7cd967b2ce48dc76b44127f974143</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetFeedback</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga307d1d071150431efd74a1450ed095ce</anchor>
-      <arglist>(HttpConn *conn, cchar *type)</arglist>
+      <anchor>gab8ed249d83c30f6f8271dae1bb5113d4</anchor>
+      <arglist>(HttpStream *stream, cchar *type)</arglist>
     </member>
     <member kind="function">
       <type>EdiGrid *</type>
       <name>espGetGrid</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga440de6fba35ad0513c2925f11a0f3710</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga13b7685ae21d2ca2d17841c3aaf7844a</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetHeader</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaddf870926cbeee2779b687522d5db0aa</anchor>
-      <arglist>(HttpConn *conn, cchar *key)</arglist>
+      <anchor>ga1b44acef67c3b77b5d971dae568f04c9</anchor>
+      <arglist>(HttpStream *stream, cchar *key)</arglist>
     </member>
     <member kind="function">
       <type>MprHash *</type>
       <name>espGetHeaderHash</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga8daa40cd83a356ad1b1b940751b1df00</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga6933802a04a50e59f7c603357e5259cd</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
       <name>espGetHeaders</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga8b03cbaba01462fb4a7349c9d02fddf3</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gaa9c7f9f80957d3381e8f3c5186923da7</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
       <name>espGetIntParam</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga91bd6b5ad25cefe913aa6ebfe43fa928</anchor>
-      <arglist>(HttpConn *conn, cchar *var, int defaultValue)</arglist>
+      <anchor>ga8c516f5c15f5610e38c7a2c8f37f28cc</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetMethod</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga4c81c8e4e35c7a3001473462ccd3bbf6</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gac7b85335ce670c20417ca85abc2a7cbc</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetParam</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga98e63a9a924ec667a3c1b540e56792d3</anchor>
-      <arglist>(HttpConn *conn, cchar *var, cchar *defaultValue)</arglist>
+      <anchor>ga4cbe8eba43dbb755ee5e383c2834c225</anchor>
+      <arglist>(HttpStream *stream, cchar *var, cchar *defaultValue)</arglist>
     </member>
     <member kind="function">
       <type>MprJson *</type>
       <name>espGetParams</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga32cf20e26c01dd271c2ae52d16796154</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gaa4ae5df79b9c4d8321ecb2cd15d44d88</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetPath</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaf5c02acc34944a568e7959bbe321e85a</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga38effdaea7a82a291a25429b27615ae5</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetQueryString</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaf84aa1df39869744c4e0ac87e99f1a89</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gaff49a2cdac7305eff44fd5b880af0375</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>espGetReferrer</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga400095fc3f1743660baedac7c95ff53c</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga245c96379910e75e222361c7da8bf7a7</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>HttpRoute *</type>
@@ -424,386 +417,393 @@
       <type>cchar *</type>
       <name>espGetRouteVar</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga6517bb2ea40e6c3725c3b689f66894c8</anchor>
-      <arglist>(HttpConn *conn, cchar *var)</arglist>
+      <anchor>ga76d41fbdcef5bb1e55bb0ce775f9b9c2</anchor>
+      <arglist>(HttpStream *stream, cchar *var)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetSessionID</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga63a13780299e2781dca728d4087165bb</anchor>
-      <arglist>(HttpConn *conn, int create)</arglist>
+      <anchor>ga0b83d3dc52626e002247af6df4ef7d74</anchor>
+      <arglist>(HttpStream *stream, int create)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
       <name>espGetStatus</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga4323100f7ccf0a198b0ee2593749fe5e</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gac69ab5a3aefeb52ee610c97a782f5be8</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>char *</type>
+      <type>cchar *</type>
       <name>espGetStatusMessage</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gad4631deeb02544938b8590806ae8bb8e</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga59410743c09731439663be5f50e1d60b</anchor>
+      <arglist>(HttpStream *stream)</arglist>
+    </member>
+    <member kind="function">
+      <type>HttpStream *</type>
+      <name>espGetStream</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>gacae6982e378c61364b63b7ec06962098</anchor>
+      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>MprList *</type>
       <name>espGetUploads</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga71aeaa3e8171c1cc2cdfe7d7b872156b</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga72875560f986b06bc26f40a991dc8fbb</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espGetUri</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaba2676d2009310d3fca8f22a16efbf60</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gadfc219b6afc94969548fdef4d651ecee</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espHasGrid</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gacfd0fe0f0edb952cd670564ac47febc4</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gadb37c44514aa605a811280e2fdee9329</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espHasRec</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga0f7bf9745f2331aebb05069bba6ba356</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga1b26f1c2f8e1f78024f076464c1483dc</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espIsCurrentSession</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gab41302669720bac29959211f2560797a</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga87aa523e2a34d6c1db9355d16746ba83</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espIsEof</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gac50e125f397c0dce5072fab8f551cd32</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga911251b3456386c09a53a33c2f063c07</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espIsFinalized</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga610467cde893472908e6c25bde472fc4</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga1a37202ca271308e8742ad69af29443b</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espIsSecure</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gab216150d5432ef9465462e8e69f5f31f</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gaad694d30c39f736bfd07a4e89facd407</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espMatchParam</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gacc2fb39132dab5f624a0f026d2e73440</anchor>
-      <arglist>(HttpConn *conn, cchar *var, cchar *value)</arglist>
+      <anchor>ga9de5abcd3d4052efaa3d3e410ebbf6c9</anchor>
+      <arglist>(HttpStream *stream, cchar *var, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>EdiGrid *</type>
       <name>espReadTable</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga84d7deb907925e1de92294aad5a57ee8</anchor>
-      <arglist>(HttpConn *conn, cchar *tableName)</arglist>
+      <anchor>gaaf3880bbe3fffa1b95483b006f5075f6</anchor>
+      <arglist>(HttpStream *stream, cchar *tableName)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espReceive</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga64f9ab9cb2c3c8b0f7f580cb22e45ce5</anchor>
-      <arglist>(HttpConn *conn, char *buf, ssize size)</arglist>
+      <anchor>ga855352588dacdb979a50caae379b736e</anchor>
+      <arglist>(HttpStream *stream, char *buf, ssize size)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espRedirect</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga2b1dc5b4a688fc1062395d6420e85ef9</anchor>
-      <arglist>(HttpConn *conn, int status, cchar *target)</arglist>
+      <anchor>gad40cb0d52cde0cfa28a6040c5bc035e3</anchor>
+      <arglist>(HttpStream *stream, int status, cchar *target)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espRedirectBack</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaaf5114ed096b363628229ea0ae0f94c3</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga8b565b1563e5dda7271549a1e2b96139</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espRemoveCookie</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga5a80980e6392bbc981cb03f5a4f59cd6</anchor>
-      <arglist>(HttpConn *conn, cchar *name)</arglist>
+      <anchor>ga3dc70abb6ffc559b812d3199aa4238db</anchor>
+      <arglist>(HttpStream *stream, cchar *name)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
       <name>espRemoveHeader</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga8743524e4c8aff73135e0ad6f2d44d7c</anchor>
-      <arglist>(HttpConn *conn, cchar *key)</arglist>
+      <anchor>gaa89cbec1f573b93990587fb190efe6bb</anchor>
+      <arglist>(HttpStream *stream, cchar *key)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espRemoveSessionVar</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaa0ec215ce461623736d45abb44697fba</anchor>
-      <arglist>(HttpConn *conn, cchar *name)</arglist>
+      <anchor>ga2ca5f0bbfd91449ba14ec1368c3731fb</anchor>
+      <arglist>(HttpStream *stream, cchar *name)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRender</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaa833750f16375fa479d0fcc22dfc2169</anchor>
-      <arglist>(HttpConn *conn, cchar *fmt,...)</arglist>
+      <anchor>ga740f0e3af771eb0b256cd7221e4bb4df</anchor>
+      <arglist>(HttpStream *stream, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderBlock</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gae1fa564a4b89afb64df3d9681973e1bf</anchor>
-      <arglist>(HttpConn *conn, cchar *buf, ssize size)</arglist>
+      <anchor>gab1ae06f7d01f771d47e06a97d6eb9a48</anchor>
+      <arglist>(HttpStream *stream, cchar *buf, ssize size)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderCached</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga94594750521ce6621691dcec43a2d670</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga48248f6e2da9c63d14de1acfea49f0fb</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderConfig</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga0089c449429cb9e4021acbc82ee80177</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gafa3a630f74ad5bd46445737d204745b4</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espRenderDocument</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaf20a43f48bfe4741cc6bb9f2877932b1</anchor>
-      <arglist>(HttpConn *conn, cchar *path)</arglist>
+      <anchor>ga321591a7772d9555f93d8804513c0707</anchor>
+      <arglist>(HttpStream *stream, cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderError</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaf5951884b79343ba98eb53b8c2d28a4f</anchor>
-      <arglist>(HttpConn *conn, int status, cchar *fmt,...)</arglist>
+      <anchor>ga97dcf0c01a210b1190bbaf6ddec55626</anchor>
+      <arglist>(HttpStream *stream, int status, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderFile</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga543bb9b12ee3f064a730a47164feac0d</anchor>
-      <arglist>(HttpConn *conn, cchar *path)</arglist>
+      <anchor>ga679268b7235fa3a44c66bc5ccf9d334a</anchor>
+      <arglist>(HttpStream *stream, cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderSafe</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga53ad9ef2ea042b04db7307acde5ebf02</anchor>
-      <arglist>(HttpConn *conn, cchar *fmt,...)</arglist>
+      <anchor>ga73989d22b93eb4f2bd0e57f5312d7070</anchor>
+      <arglist>(HttpStream *stream, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderSafeString</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga743eec6372aeb305a939bc9b0026281e</anchor>
-      <arglist>(HttpConn *conn, cchar *s)</arglist>
+      <anchor>gac13211295b015088127ac10684933f19</anchor>
+      <arglist>(HttpStream *stream, cchar *s)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderString</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga2bc125ce68d2a8a8992228f0232c9b6f</anchor>
-      <arglist>(HttpConn *conn, cchar *s)</arglist>
+      <anchor>ga08cb7d6bbbb06131994b6033ea99b5ad</anchor>
+      <arglist>(HttpStream *stream, cchar *s)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espRenderVar</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gad0c3cc923d09313ed81476b74c32ab00</anchor>
-      <arglist>(HttpConn *conn, cchar *name)</arglist>
+      <anchor>ga38422504736e4bd4d5a9af9a76345885</anchor>
+      <arglist>(HttpStream *stream, cchar *name)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espRenderView</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaef2c8a287bbbd155ceeb919f281e8e5b</anchor>
-      <arglist>(HttpConn *conn, cchar *view, int flags)</arglist>
+      <anchor>ga6b235109ed8caa6ff411df4160630ba9</anchor>
+      <arglist>(HttpStream *stream, cchar *view, int flags)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espSendGrid</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaed0422d33553efa73195661fd80efaee</anchor>
-      <arglist>(HttpConn *conn, EdiGrid *grid, int flags)</arglist>
+      <anchor>gabd3396f92f086163b3f873ab8f4ef68f</anchor>
+      <arglist>(HttpStream *stream, EdiGrid *grid, int flags)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espSendRec</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga1ba6eef08895cd89005dd96262d1cd53</anchor>
-      <arglist>(HttpConn *conn, EdiRec *rec, int flags)</arglist>
+      <anchor>ga6ad553215efae37b30624cc189f8ec93</anchor>
+      <arglist>(HttpStream *stream, EdiRec *rec, int flags)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>espSendResult</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gabc11971fcd5d12fe7a9907b2c564781b</anchor>
-      <arglist>(HttpConn *conn, bool success)</arglist>
+      <anchor>gab58e0600c271a9cd45d9b71f7946eb92</anchor>
+      <arglist>(HttpStream *stream, bool success)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espSetAutoFinalizing</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga54f5ce21966922b0883d1942ccbeae8d</anchor>
-      <arglist>(HttpConn *conn, bool on)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>espSetConn</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga6ea189a01c1c680e3f5d77396b3bd3a8</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gade4f16e9df197e729243386fb4adf9b5</anchor>
+      <arglist>(HttpStream *stream, bool on)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetContentLength</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gae9b3e3ddb3bf784d77cba59045dfeb81</anchor>
-      <arglist>(HttpConn *conn, MprOff length)</arglist>
+      <anchor>ga9159e247a36c454bc3e0840051b7233a</anchor>
+      <arglist>(HttpStream *stream, MprOff length)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetContentType</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga7bb7c062a2fb64c1756c93dc79481c2c</anchor>
-      <arglist>(HttpConn *conn, cchar *mimeType)</arglist>
+      <anchor>gabed006452ae09b7a3c387755876429df</anchor>
+      <arglist>(HttpStream *stream, cchar *mimeType)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetCookie</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga58039e1fafe24481848bf1b47a2d444f</anchor>
-      <arglist>(HttpConn *conn, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, bool isSecure)</arglist>
+      <anchor>ga5b14b36d8775d67665900c6c241c01e0</anchor>
+      <arglist>(HttpStream *stream, cchar *name, cchar *value, cchar *path, cchar *domain, MprTicks lifespan, bool isSecure)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetCurrentSession</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga3311af6602f80872182db7112b832f5e</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>ga7716b0e1e8129914f1ef94585c37673a</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetFeedback</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga12f466c3ea4ae6e7eb2692c80e03a45b</anchor>
-      <arglist>(HttpConn *conn, cchar *type, cchar *fmt,...)</arglist>
+      <anchor>ga771dab7992d00940e83a27d47c4fbeec</anchor>
+      <arglist>(HttpStream *stream, cchar *type, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetFeedbackv</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga7508b46ff71aa46719836d2720840047</anchor>
-      <arglist>(HttpConn *conn, cchar *type, cchar *fmt, va_list args)</arglist>
+      <anchor>gad86d75d3f1de8522aa232e023cfdde73</anchor>
+      <arglist>(HttpStream *stream, cchar *type, cchar *fmt, va_list args)</arglist>
     </member>
     <member kind="function">
       <type>EdiGrid *</type>
       <name>espSetGrid</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga6e09b2658067694a86d1535bf56aebae</anchor>
-      <arglist>(HttpConn *conn, EdiGrid *grid)</arglist>
+      <anchor>gad7e02f7b23d165704a2440bb3c9423a1</anchor>
+      <arglist>(HttpStream *stream, EdiGrid *grid)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetHeader</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga66c536436b8a99612b1ce571c315b39b</anchor>
-      <arglist>(HttpConn *conn, cchar *key, cchar *fmt,...)</arglist>
+      <anchor>gac60ee82bf1ce6b09cfe9ebe669062af0</anchor>
+      <arglist>(HttpStream *stream, cchar *key, cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetHeaderString</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gafcb200922fb98165c0485348ea640d01</anchor>
-      <arglist>(HttpConn *conn, cchar *key, cchar *value)</arglist>
+      <anchor>gad13e6dc837686a7b820105374750ed4f</anchor>
+      <arglist>(HttpStream *stream, cchar *key, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetIntParam</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga3d21ff0ee522ae25885378e8cb55d1e9</anchor>
-      <arglist>(HttpConn *conn, cchar *var, int value)</arglist>
+      <anchor>ga4c96cdd5564f1344c52e18b80a1da475</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetNotifier</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga0ea346bbee09c401e90f0b908e7476ba</anchor>
-      <arglist>(HttpConn *conn, HttpNotifier notifier)</arglist>
+      <anchor>ga6696ab81bed4cdd5031cf535e614e726</anchor>
+      <arglist>(HttpStream *stream, HttpNotifier notifier)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetParam</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga491fdeaf71f15fb950d54245b7de865b</anchor>
-      <arglist>(HttpConn *conn, cchar *var, cchar *value)</arglist>
+      <anchor>ga0363bac2a708d5185f9335fcfbffa510</anchor>
+      <arglist>(HttpStream *stream, cchar *var, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
       <name>espSetRec</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gaab0d7914afa7352d5708048c021f1ee1</anchor>
-      <arglist>(HttpConn *conn, EdiRec *rec)</arglist>
+      <anchor>gab0cd421bde770ea19f09fe8cc52859d6</anchor>
+      <arglist>(HttpStream *stream, EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espSetStatus</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga3151f73107b752661efecbacf9011894</anchor>
-      <arglist>(HttpConn *conn, int status)</arglist>
+      <anchor>ga5b28e98f9f6b7c9932dfe72f8afaa86d</anchor>
+      <arglist>(HttpStream *stream, int status)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>espSetStream</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>ga0f123fdd3a6adf76ecc8eb0a27cd7605</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espShowRequest</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga4ed2f95cccb206fc9069c0a77c5c1e62</anchor>
-      <arglist>(HttpConn *conn)</arglist>
+      <anchor>gacfda1021dede1225a27d384584f066ad</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>espUpdateCache</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga2d10fdd68ab00d306d344c815f7655e7</anchor>
-      <arglist>(HttpConn *conn, cchar *uri, cchar *data, int lifesecs)</arglist>
+      <anchor>gab4ece9543d64a835a54c225d2e5e49a3</anchor>
+      <arglist>(HttpStream *stream, cchar *uri, cchar *data, int lifesecs)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>espUpdateRec</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga585c648e2d4b3b6183bf22cc976b7d4b</anchor>
-      <arglist>(HttpConn *conn, EdiRec *rec)</arglist>
+      <anchor>ga30c12797ca0400feda759dbc26485b56</anchor>
+      <arglist>(HttpStream *stream, EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>espUri</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga47475da9d7a9da33d0d07cd2a8211b8d</anchor>
-      <arglist>(HttpConn *conn, cchar *target)</arglist>
+      <anchor>ga47472c968efbe0ba27b1b158887da6c1</anchor>
+      <arglist>(HttpStream *stream, cchar *target)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -949,13 +949,6 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga9647d3deb6392c55c9c1a144da45f797</anchor>
       <arglist>(cchar *field)</arglist>
-    </member>
-    <member kind="function">
-      <type>HttpConn *</type>
-      <name>getConn</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gabe448b3542b4d1391e80e74192a09cb3</anchor>
-      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>MprOff</type>
@@ -1110,6 +1103,13 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga241f0cd4f5d49f8a137f1024415b2674</anchor>
       <arglist>(cchar *name)</arglist>
+    </member>
+    <member kind="function">
+      <type>HttpStream *</type>
+      <name>getStream</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga2cf1d30ceeae743cdacc3f4b8b512c8c</anchor>
+      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>MprList *</type>
@@ -1407,13 +1407,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>setConn</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga3a877e198637c1ec75ff2a53dc8d7ebd</anchor>
-      <arglist>(HttpConn *conn)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>setContentType</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>gafe8d897ff436eabc6fc275f76222a5c3</anchor>
@@ -1502,6 +1495,13 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga63470999d986c7d2d064dc44cdc2fcac</anchor>
       <arglist>(int status)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setStream</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga1487b30d79697bba676f039a03ff744b</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

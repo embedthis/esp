@@ -161,58 +161,58 @@
             <h1>Memory Allocation</h1>
             <a id="overview"></a>
             <h2>Overview</h2>
-            <p>ESP provides an application-specific memory allocator to use instead of malloc. This allocator is 
+            <p>ESP provides an application-specific memory allocator to use instead of malloc. This allocator is
             part of the Multithreaded Portable Runtime (MPR) and is tailored to the needs of embedded applications.
-            It is faster than most general purpose malloc allocators for these workloads. It is deterministic and 
-            allocates and frees memory in constant time O(1). It exhibits very low fragmentation and accurate 
+            It is faster than most general purpose malloc allocators for these workloads. It is deterministic and
+            allocates and frees memory in constant time O(1). It exhibits very low fragmentation and accurate
             coalescing.</p>
-            <p>The allocator uses a garbage collector (GC) for locating unused memory. The collector is a generational, 
-            cooperative and non-compacting collector.  The use of a garbage collector is somewhat unusual in a C program. 
+            <p>The allocator uses a garbage collector (GC) for locating unused memory. The collector is a generational,
+            cooperative and non-compacting collector.  The use of a garbage collector is somewhat unusual in a C program.
             However, garbage collection is especially well suited for long running applications like a web server,
             as it eliminates most memory leaks. Unlike traditional memory allocation where <em>free</em> must be called
-            to release memory, ESP uses the opposite approach. Memory that must be retained, must be actively managed to 
+            to release memory, ESP uses the opposite approach. Memory that must be retained, must be actively managed to
             prevent garbage collection. This means that a <em>managed reference</em> must be held for all active memory.</p>
             <p>In practice there are thus two kinds of memory:</p>
             <ul>
-                <li>Managed memory &mdash; This is memory allocated via the MPR which is actively managed by the 
-                garbage collector. The user is responsible for marking the memory as being active via the mprMark API. 
+                <li>Managed memory &mdash; This is memory allocated via the MPR which is actively managed by the
+                garbage collector. The user is responsible for marking the memory as being active via the mprMark API.
                 The collector will automatically reclaim the memory when it is no longer marked as being actively used.</li>
                 <li>Malloc memory &mdash; This is memory allocated directly or indirectly by malloc, and is not managed
-                by the garbage collector. The user is responsible for explicitly calling free() when the memory is 
+                by the garbage collector. The user is responsible for explicitly calling free() when the memory is
                 no longer required. You must not call mprMark() on such memory.</li>
             </ul>
             <a id="allocator"></a>
             <h2>Allocator</h2>
-            <p>The allocator is optimized for frequent allocations of small blocks (&lt; 4K). It 
-            uses a scheme of free queues for fast allocation. Memory allocations are aligned on 16 byte boundaries on 64-bit 
+            <p>The allocator is optimized for frequent allocations of small blocks (&lt; 4K). It
+            uses a scheme of free queues for fast allocation. Memory allocations are aligned on 16 byte boundaries on 64-bit
             systems and otherwise on 8 byte boundaries. It will return chunks of unused memory back to the O/S.</p>
             <a id="errors"></a>
             <h2>Error Handling</h2>
             <p> It is difficult for programmers to consistently
-            check the result of every API call that can fail due to memory allocation errors. Calls such as strdup and 
+            check the result of every API call that can fail due to memory allocation errors. Calls such as strdup and
             asprintf are often assumed to succeed, but they can, and do fail when memory is depleted.</p>
             <p>A better approach is to proactively detect and handle memory allocation errors in one place.
-            The MPR allocator handles memory allocation errors globally. It 
-            has a configurable memory redline limit and a memory depletion policy handler. 
-            ESP configures this memory limit so that memory depletion can be proactively detected and 
+            The MPR allocator handles memory allocation errors globally. It
+            has a configurable memory redline limit and a memory depletion policy handler.
+            ESP configures this memory limit so that memory depletion can be proactively detected and
             handled before memory allocations actually fail.
-            When memory usage exceeds a pre-configured redline value, the depletion handler is invoked. 
-            The application can then determine what action to take. Typically, ESP will restart in such 
+            When memory usage exceeds a pre-configured redline value, the depletion handler is invoked.
+            The application can then determine what action to take. Typically, ESP will restart in such
             circumstances.</p>
             <a id="collector"></a>
             <h2>Garbage Collection</h2>
-            <p>The MPR garbage collector will run periodically to reclaim unused memory and potentially return 
+            <p>The MPR garbage collector will run periodically to reclaim unused memory and potentially return
             that memory to the
-            Operating System. The collector runs in its own thread, but is cooperative, in that each thread must 
+            Operating System. The collector runs in its own thread, but is cooperative, in that each thread must
             yield to the collector before memory can be reclaimed. Worker threads yield to the collector
             by calling the <em>mprYield</em> API.
-            This strategy permits worker threads to allocate temporary memory without fear. The memory will not be 
-            prematurely collected until the worker explicitly acknowledges and yields to the collector by 
+            This strategy permits worker threads to allocate temporary memory without fear. The memory will not be
+            prematurely collected until the worker explicitly acknowledges and yields to the collector by
             calling <em>mprYield</em>. ESP will ensure threads call mprYield when waiting for I/O or when a request
             is complete. Users only need to explicitly call mprYield when they are doing a long-blocking operation.</p>
-            <p>To prevent collection of a memory block and retain the block over a yield point, the application must 
-            hold a managed reference for the block. A managed reference, is a reference to an allocated block that 
-            will be marked as active by mprMark() during a collection cycle by the parent block's manager function. 
+            <p>To prevent collection of a memory block and retain the block over a yield point, the application must
+            hold a managed reference for the block. A managed reference, is a reference to an allocated block that
+            will be marked as active by mprMark() during a collection cycle by the parent block's manager function.
             Manager functions are defined when allocating blocks that will hold managed references. See below for more
             details.</p>
             <a id="yielding"></a>
@@ -252,24 +252,24 @@
                 <li>mprYield</li>
             </ul>
             <p>When calling any of these routines, you must be prepared for the GC to run and so you must have
-            secured all temporary allocations.</p> 
+            secured all temporary allocations.</p>
             <a id="phases"></a>
             <h3>Collection Phases</h3>
             <p>The collector reclaims memory in three phases: Wait, Mark and Sweep. The Wait phase waits for all
-            threads to yield. This quiesces the system for reliable collection. NOTE: this does not mean that all 
-            request activity must cease. Rather, pre-determined rendezvous yield points are inserted in key locations 
+            threads to yield. This quiesces the system for reliable collection. NOTE: this does not mean that all
+            request activity must cease. Rather, pre-determined rendezvous yield points are inserted in key locations
             in the ESP HTTP processing engine.</p>
-            <p>The Mark phase traverses memory and marks all blocks that are 
+            <p>The Mark phase traverses memory and marks all blocks that are
             currently being used. The Sweep phase finally reclaims all blocks that are not marked.</p>
             <a id="marking"></a>
             <h3>Marking Blocks</h3>
-            <p>The Mark phase beings with a set of known root memory blocks. The ultimate root is the Mpr object 
-            returned from the <em>mprCreate</em> API. However, other roots can be added at any time 
+            <p>The Mark phase beings with a set of known root memory blocks. The ultimate root is the Mpr object
+            returned from the <em>mprCreate</em> API. However, other roots can be added at any time
             via <em>mprAddRoot</em>. For each root,
             the collector invokes the manager function defined when the block was allocated. It is the responsibility of
-            that manager function to call <em>mprMark</em> on every managed reference owned by the block. 
+            that manager function to call <em>mprMark</em> on every managed reference owned by the block.
             The mprMark function will then invoke the manager for these managed references and so on.
-            In this manner, managed memory forms a tree from the roots to the leaves and the mark phase visits every 
+            In this manner, managed memory forms a tree from the roots to the leaves and the mark phase visits every
             managed block currently in use.</p>
             <a id="alloc"></a>
             <h3>Allocating Memory</h3>
@@ -285,7 +285,7 @@ MyBlock *blk = mprAllocObj(MyBlock, manageBlock);
 blk-&gt;managedString = sclone("Hello World");
 blk-&gt;privateMalloc = malloc(1024);
 </pre>
-            <p>This will allocate a new structure and define manageBlock as the manager function for the structure. 
+            <p>This will allocate a new structure and define manageBlock as the manager function for the structure.
             If you need to keep the allocated structure, you must ensure the <em>blk</em> reference will be marked
             during the garbage collector mark phase. To do this, you must ensure the reference is marked via mprMark
             during some other object's manager function. Alternatively, you can call mprAddRoot to specify that this
@@ -295,18 +295,18 @@ blk-&gt;privateMalloc = malloc(1024);
             <p>If you only require the allocated structure temporarily, you do not need to retain a reference or call
             mprAddRoot. In this manner, the memory will be automatically collected during the next garbage collection
             sweep because there will not be a managed (marked) reference to the block.</p>
-            <p>The mprAllocMem may be used to allocate a block of memory and reserve room for a manager function. 
+            <p>The mprAllocMem may be used to allocate a block of memory and reserve room for a manager function.
            Then use mprSetManager to define a manager function.</p>
-           
+
             <a id="managers"></a>
             <h3>Managers</h3>
             <p>A manager function is invoked by the collector during each collector Mark phase of the collection cycle and
             also during the Sweep phase if the block is actually being freed. When called,
             the manager is passed a reference to the block and a flags word. The flags are set to either MPR_MANAGE_MARK
-            during the Mark phase and to MPR_MANAGE_FREE during the sweep phase if the collector determines the block 
-            is to be freed.</p> 
+            during the Mark phase and to MPR_MANAGE_FREE during the sweep phase if the collector determines the block
+            is to be freed.</p>
 <pre class="code">
-void manageBlock(MyBlock *blk, int flags) 
+void manageBlock(MyBlock *blk, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(blk-&gt;managedString);
@@ -319,9 +319,9 @@ void manageBlock(MyBlock *blk, int flags)
             <p>When the manager is invoked during the Mark phase, all MPR threads are stopped &mdash; so the system is
             effectively single threaded. You should NOT do anything other than call mprMark at this time.</p>
             <p>When the manager is invoked during the sweep phase, other threads are resumed and running, i.e. the sweeper
-            thread runs in parallel with the application. So you must take care not to call locking primitives 
+            thread runs in parallel with the application. So you must take care not to call locking primitives
             or block at this time.</p>
-            <p>When sweeping, the block to be freed should have no remaining references and thus be fully isolated 
+            <p>When sweeping, the block to be freed should have no remaining references and thus be fully isolated
             from the application &mdash;
             so there is typically little to do during the collection/free phase other than close and release external
             resources. Note that it is safe to call mprMark with NULL reference. This is a convenient pattern so you do not
@@ -329,20 +329,20 @@ void manageBlock(MyBlock *blk, int flags)
             <h3>Order of Invocation</h3>
             <p>During the mark phase, managers are called recursively from parent calls to mprMark. Thus the blocks are
             visited top down. During the sweep phase, managers are called in any order, i.e. children may be visited before
-            their parents. It is important to write manager free code to handle this. Note: the actual memory for the 
+            their parents. It is important to write manager free code to handle this. Note: the actual memory for the
             blocks to be freed will only be unpinned once all managers have been invoked. So whether the child or parent
             is visited last, the memory for both will be accessible until the end of the sweep phase when all freed blocks
             are released.</p>
             <h2>Convenient References</h2>
             <p>ESP defines two empty fields that can be used by request handlers to hold managed references. The
-            <em>HttpConn.data</em> field is marked by the HttpConn manager. A handler can store a managed-memory reference
-            in this field. The HttpConn manager will then call mprMark(conn-&gt;data) to mark the reference as active and 
+            <em>HttpStream.data</em> field is marked by the HttpStream manager. A handler can store a managed-memory reference
+            in this field. The HttpStream manager will then call mprMark(conn-&gt;data) to mark the reference as active and
             required.</p>
-            <p>Similarly, <em>HttpQueue.queueData</em> field is marked by the HttpQueue manager. A queue stage 
+            <p>Similarly, <em>HttpQueue.queueData</em> field is marked by the HttpQueue manager. A queue stage
             (filter or handler) can store a managed-memory reference
-            in this field. The HttpQueue manager will then call mprMark(q-&gt;queueData) to mark the reference as active and 
+            in this field. The HttpQueue manager will then call mprMark(q-&gt;queueData) to mark the reference as active and
             required.</p>
-            <p>ESP defines two fields that can be used to store un-managed memory references: HttpConn.staticData and HttpQueue.staticData. Use these to store references to memory allocated by malloc.</p>
+            <p>ESP defines two fields that can be used to store un-managed memory references: HttpStream.staticData and HttpQueue.staticData. Use these to store references to memory allocated by malloc.</p>
             <p>Another common technique it to define a top level application structure which will be the root memory block
             for the entire application. Store top level managed references in this block and call mprAddRoot to define
             it as a root block.</p>

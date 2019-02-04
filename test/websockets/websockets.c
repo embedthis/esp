@@ -6,7 +6,7 @@
 /*
     Diagnostic trace for tests
  */
-static void traceEvent(HttpConn *conn, int event, int arg)
+static void traceEvent(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
 
@@ -15,7 +15,7 @@ static void traceEvent(HttpConn *conn, int event, int arg)
             Peek at the readq rather than doing httpGetPacket()
             The last frame in a message has packet->last == true
          */
-        packet = conn->readq->first;
+        packet = stream->readq->first;
         mprDebug("webock test", 5, "read %s event, last %d", packet->type == WS_MSG_TEXT ? "text" : "binary", 
             packet->last);
         mprDebug("webock test", 5, "read: (start of data only) \"%s\"", 
@@ -23,40 +23,40 @@ static void traceEvent(HttpConn *conn, int event, int arg)
 
     } else if (event == HTTP_EVENT_APP_CLOSE) {
         mprDebug("webock test", 5, "close event. Status status %d, orderly closed %d, reason %s", arg,
-            httpWebSocketOrderlyClosed(conn), httpGetWebSocketCloseReason(conn));
+            httpWebSocketOrderlyClosed(stream), httpGetWebSocketCloseReason(stream));
 
     } else if (event == HTTP_EVENT_ERROR) {
         mprDebug("webock test", 2, "error event");
     }
 }
 
-static void dummy_callback(HttpConn *conn, int event, int arg)
+static void dummy_callback(HttpStream *stream, int event, int arg)
 {
 }
 
 static void dummy_action() { 
     dontAutoFinalize();
-    espSetNotifier(getConn(), dummy_callback);
+    espSetNotifier(getStream(), dummy_callback);
 }
 
-static void len_callback(HttpConn *conn, int event, int arg)
+static void len_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket      *packet;
     HttpWebSocket   *ws;
 
-    traceEvent(conn, event, arg);
+    traceEvent(stream, event, arg);
     if (event == HTTP_EVENT_READABLE) {
         /*
             Get and discard the packet. traceEvent will have traced it for us.
          */
-        packet = httpGetPacket(conn->readq);
+        packet = httpGetPacket(stream->readq);
         assert(packet);
         /* 
             Ignore precedding packets and just respond and echo the last 
          */
         if (packet->last) {
-            ws = conn->rx->webSocket;
-            httpSend(conn, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->last,
+            ws = stream->rx->webSocket;
+            httpSend(stream, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->last,
                 ws->messageLength, snclone(mprGetBufStart(packet->content), 10));
         }
     }
@@ -64,7 +64,7 @@ static void len_callback(HttpConn *conn, int event, int arg)
 
 static void len_action() { 
     dontAutoFinalize();
-    espSetNotifier(getConn(), len_callback);
+    espSetNotifier(getStream(), len_callback);
 }
 
 
@@ -73,21 +73,21 @@ static void len_action() {
     Must configure LimitWebSocketsPacket to be larger than the biggest expected message so we receive complete messages.
     Otherwise, we need to buffer and aggregate messages here.
  */
-static void echo_callback(HttpConn *conn, int event, int arg)
+static void echo_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
 
     if (event == HTTP_EVENT_READABLE) {
-        packet = httpGetPacket(conn->readq);
+        packet = httpGetPacket(stream->readq);
         if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
-            httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+            httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
         }
     }
 }
 
 static void echo_action() { 
     dontAutoFinalize();
-    espSetNotifier(getConn(), echo_callback);
+    espSetNotifier(getStream(), echo_callback);
 }
 
 
@@ -96,8 +96,8 @@ static void echo_action() {
  */
 static void empty_response() 
 {
-    httpSendBlock(getConn(), WS_MSG_TEXT, "", 0, 0);
-    httpSendClose(getConn(), WS_STATUS_OK, "OK");
+    httpSendBlock(getStream(), WS_MSG_TEXT, "", 0, 0);
+    httpSendClose(getStream(), WS_STATUS_OK, "OK");
 }
 
 
@@ -106,15 +106,15 @@ static void empty_response()
  */
 static void big_response() 
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     MprBuf      *buf;
     ssize       wrote;
     int         i, count;
 
-    conn = getConn();
+    stream = getStream();
     /*
         First message is big, but in a single send. The middleware should break this into frames unless you call:
-            httpSetWebSocketPreserveFrames(conn, 1);
+            httpSetWebSocketPreserveFrames(stream, 1);
         This will regard each call to httpSendBlock as a frame.
         NOTE: this is not an ideal pattern (so don't copy it).
      */
@@ -128,17 +128,17 @@ static void big_response()
     mprRemoveRoot(buf);
     mprAddNullToBuf(buf);
     /* Retain just for GC */
-    httpSetWebSocketData(conn, buf);
+    httpSetWebSocketData(stream, buf);
     
     /*
-        Note: this will block while writing the entire message. It may be quicker to use HTTP_BUFFER but will use more memory.
-        Not point using HTTP_NON_BLOCK as we need to close after sending the message.
+        Note: this will block while writing the entire message. It may be quicker to use HTTP_BUFFER but will 
+        use more memory.  Not point using HTTP_NON_BLOCK as we need to close after sending the message.
      */
-    if ((wrote = httpSendBlock(conn, WS_MSG_TEXT, mprGetBufStart(buf), mprGetBufLength(buf), HTTP_BLOCK)) < 0) {
-        httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot send big message");
+    if ((wrote = httpSendBlock(stream, WS_MSG_TEXT, mprGetBufStart(buf), mprGetBufLength(buf), HTTP_BLOCK)) < 0) {
+        httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot send big message");
         return;
     }
-    httpSendClose(conn, WS_STATUS_OK, "OK");
+    httpSendClose(stream, WS_STATUS_OK, "OK");
 }
 
 /*
@@ -148,22 +148,22 @@ static void big_response()
  */
 static void frames_response() 
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     cchar       *str;
     int         i, more, count;
 
-    conn = getConn();
+    stream = getStream();
     count = 1000;
 
     for (i = 0; i < count; i++) {
         str = sfmt("%8d: Hello\n", i);
         more = (i < (count - 1)) ? HTTP_MORE : 0;
-        if (httpSendBlock(conn, WS_MSG_TEXT, str, slen(str), HTTP_BUFFER | more) < 0) {
-            httpError(conn, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot send message: %d", i);
+        if (httpSendBlock(stream, WS_MSG_TEXT, str, slen(str), HTTP_BUFFER | more) < 0) {
+            httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot send message: %d", i);
             return;
         }
     }
-    httpSendClose(conn, WS_STATUS_OK, "OK");
+    httpSendClose(stream, WS_STATUS_OK, "OK");
 }
 
 
@@ -173,53 +173,53 @@ static void frames_response()
 static MprList  *clients;
 
 typedef struct Msg {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpPacket  *packet;
 } Msg;
 
 static void manageMsg(Msg *msg, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(msg->conn);
+        mprMark(msg->stream);
         mprMark(msg->packet);
     }
 }
 
 static void chat(Msg *msg)
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
     HttpPacket  *packet;
 
-    conn = msg->conn;
+    stream = msg->stream;
     packet = msg->packet;
-    httpSendBlock(conn, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
+    httpSendBlock(stream, packet->type, httpGetPacketStart(packet), httpGetPacketLength(packet), 0);
 }
 
 
 /*
     Event callback. Invoked for incoming web socket messages and other events of interest.
  */
-static void chat_callback(HttpConn *conn, int event, int arg)
+static void chat_callback(HttpStream *stream, int event, int arg)
 {
     HttpPacket  *packet;
-    HttpConn    *client;
+    HttpStream    *client;
     Msg         *msg;
     int         next;
 
     if (event == HTTP_EVENT_READABLE) {
-        packet = httpGetPacket(conn->readq);
+        packet = httpGetPacket(stream->readq);
         if (packet->type == WS_MSG_TEXT || packet->type == WS_MSG_BINARY) {
             for (ITERATE_ITEMS(clients, client, next)) {
                 msg = mprAllocObj(Msg, manageMsg);
-                msg->conn = client;
+                msg->stream = client;
                 msg->packet = packet;
                 mprCreateEvent(client->dispatcher, "chat", 0, chat, msg, 0);
             }
         }
     } else if (event == HTTP_EVENT_APP_CLOSE) {
         mprDebug("websock", 5, "close event. Status status %d, orderly closed %d, reason %s", arg,
-        httpWebSocketOrderlyClosed(conn), httpGetWebSocketCloseReason(conn));
-        mprRemoveItem(clients, conn);
+        httpWebSocketOrderlyClosed(stream), httpGetWebSocketCloseReason(stream));
+        mprRemoveItem(clients, stream);
     }
 }
 
@@ -229,12 +229,12 @@ static void chat_callback(HttpConn *conn, int event, int arg)
  */
 static void chat_action()
 {
-    HttpConn    *conn;
+    HttpStream    *stream;
 
-    conn = getConn();
-    mprAddItem(clients, conn);
+    stream = getStream();
+    mprAddItem(clients, stream);
     dontAutoFinalize();
-    espSetNotifier(getConn(), chat_callback);
+    espSetNotifier(getStream(), chat_callback);
 }
 
 

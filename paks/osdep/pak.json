@@ -1,14 +1,14 @@
 {
     "name": "osdep",
     "description": "O/S Dependent Layer",
-    "version": "0.9.4",
+    "version": "1.0.0",
     "keywords": [
         "osdep",
         "me"
     ],
     "author": {
         "name": "Michael O'Brien",
-        "email": "mob@emobrien.com"
+        "email": "mob@embedthis.com"
     },
     "repository": {
         "type": "git",

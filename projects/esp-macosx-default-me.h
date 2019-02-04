@@ -21,8 +21,11 @@
 #ifndef ME_COMPANY
     #define ME_COMPANY "embedthis"
 #endif
+#ifndef ME_COMPAT
+    #define ME_COMPAT 1
+#endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "7.0"
+    #define ME_COMPATIBLE "8.0"
 #endif
 #ifndef ME_COMPILER_HAS_ATOMIC
     #define ME_COMPILER_HAS_ATOMIC 1
@@ -81,6 +84,9 @@
 #ifndef ME_DESCRIPTION
     #define ME_DESCRIPTION "Embedthis ESP, the amazingly fast C-Language web framework"
 #endif
+#ifndef ME_HTTP_HTTP2
+    #define ME_HTTP_HTTP2 1
+#endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
 #endif
@@ -112,10 +118,10 @@
     #define ME_TITLE "Embedthis ESP"
 #endif
 #ifndef ME_TUNE
-    #define ME_TUNE "speed"
+    #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "7.0.2"
+    #define ME_VERSION "8.0.3"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "espman"
@@ -138,7 +144,7 @@
     #define ME_APP_PREFIX "/usr/local/lib/esp"
 #endif
 #ifndef ME_VAPP_PREFIX
-    #define ME_VAPP_PREFIX "/usr/local/lib/esp/7.0.2"
+    #define ME_VAPP_PREFIX "/usr/local/lib/esp/8.0.3"
 #endif
 #ifndef ME_BIN_PREFIX
     #define ME_BIN_PREFIX "/usr/local/bin"
@@ -171,7 +177,7 @@
     #define ME_CACHE_PREFIX "/var/spool/esp/cache"
 #endif
 #ifndef ME_SRC_PREFIX
-    #define ME_SRC_PREFIX "esp-7.0.2"
+    #define ME_SRC_PREFIX "esp-8.0.3"
 #endif
 
 /* Suffixes */
@@ -201,22 +207,22 @@
 #ifndef ME_PROFILE
     #define ME_PROFILE "default"
 #endif
-#ifndef ME_TUNE_SPEED
-    #define ME_TUNE_SPEED 1
+#ifndef ME_TUNE_SIZE
+    #define ME_TUNE_SIZE 1
 #endif
 
 /* Miscellaneous */
 #ifndef ME_MAJOR_VERSION
-    #define ME_MAJOR_VERSION 7
+    #define ME_MAJOR_VERSION 8
 #endif
 #ifndef ME_MINOR_VERSION
     #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
-    #define ME_PATCH_VERSION 2
+    #define ME_PATCH_VERSION 3
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 700000002
+    #define ME_VNUM 800000003
 #endif
 
 /* Components */

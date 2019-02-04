@@ -1,25 +1,21 @@
 {
-    "name": "login-form",
-    "description": "login-form",
+    "name": "login_roles",
+    "description": "login roles",
     "version": "1.0.0",
     "esp": {
-        "app": true,
+        app: {
+            source: [ "app.c" ]
+        }
     },
     "http": {
         "auth": {
-            "login": "https:///public/login.esp",
+            "store": "config",
+            "type": "app",
             "realm": "example.com",
             "roles": {
-                "user": [
-                    "view"
-                ],
-                "administrator": [
-                    "view",
-                    "edit"
-                ]
+                "user": [ "view" ],
+                "administrator": [ "view", "edit" ],
             },
-            "store": "config",
-            "type": "form",
             "users": {
                 "joshua": {
                     "password": "BF1:00128:5RdIPYT33dz2Mq7D:0YQi7BNN2ZdEHQPYS4ZPtQIfnIZxEQ00",
@@ -31,6 +27,7 @@
                 }
             }
         },
+        "redirect": "secure",
         "server": {
             "listen": [
                 "http://127.0.0.1:4000",
@@ -44,15 +41,11 @@
         "routes": [
             {
                 "pattern": "/user/{action}",
-                "redirect": "secure",
                 "source": "user.c",
                 "target": "user/${action}",
-                "auth": "none",
             },
             {
                 "pattern": "/public",
-                "prefix": "/public",
-                "documents": "documents/public",
                 "auth": "none",
             },
             {
