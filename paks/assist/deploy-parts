@@ -46,4 +46,4 @@ function deployParts() {
     done
 }
 
-deployParts
+deployParts $*

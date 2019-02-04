@@ -5,7 +5,7 @@
 image: runner:current
 
 variables:
-    AWS_ACCOUNT: "embedthis"
+    AWS_PROFILE: "embedthis"
     PROFILE: "release"
 
 include: "paks/assist/gitlab-makeme.yml"

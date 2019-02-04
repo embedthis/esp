@@ -37,4 +37,4 @@ function buildParts() {
     done
 }
 
-buildParts
+buildParts $*

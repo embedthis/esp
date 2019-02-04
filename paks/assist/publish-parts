@@ -38,4 +38,4 @@ function publishParts() {
     done
 }
 
-publishParts
+publishParts $*
