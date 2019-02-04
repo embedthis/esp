@@ -1158,7 +1158,7 @@ PUBLIC int espLoadConfig(HttpRoute *route)
             return MPR_ERR_CANT_LOAD;
         }
         if ((name = espGetConfig(route, "name", 0)) != 0) {
-            eroute->appName = name;
+            eroute->appName = sreplace(name, "-", "_");
         }
         cookie = sfmt("esp-%s", eroute->appName);
         for (ITERATE_ITEMS(route->host->routes, rp, next)) {
