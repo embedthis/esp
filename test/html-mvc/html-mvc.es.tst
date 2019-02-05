@@ -6,51 +6,37 @@ const HTTP = tget('TM_HTTP') || "127.0.0.1:4100"
 let http: Http = new Http
 let prefix = HTTP
 
-//  /html
-http.followRedirects = true
-http.get(prefix)
-ttrue(http.status == 200)
-if (http.status != 200) {
-    print("URI", prefix + "/post/init")
-    print("prefix", prefix)
-    print("status", http.status)
-    print("response", http.response)
-    print("SLEEPING")
-    // App.sleep(9999999)
+if (Config.OS == 'macosx') {
+    tskip("skip on macosx")
+} else {
+    //  /html
+    http.followRedirects = true
+    http.get(prefix)
+    ttrue(http.status == 200)
+    ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
+    http.close()
+
+    //  /html/
+    http.get(prefix + "/")
+    ttrue(http.status == 200)
+    ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
+    http.close()
+
+    //  /html/index.esp
+    http.get(prefix + "/index.esp")
+    ttrue(http.status == 200)
+    ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
+    http.close()
+
+    //  /html/all.css
+    http.get(prefix + "/css/all.css")
+    ttrue(http.status == 200)
+    ttrue(http.response.contains("Aggregate all stylesheets"))
+    http.close()
+
+    //  /html/post/init - this tests a controller without view
+    http.get(prefix + "/post/init")
+    ttrue(http.status == 200)
+    ttrue(http.response.contains('<h1>Create Post</h1>'))
+    http.close()
 }
-ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
-http.close()
-
-//  /html/
-http.get(prefix + "/")
-ttrue(http.status == 200)
-ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
-http.close()
-
-//  /html/index.esp
-http.get(prefix + "/index.esp")
-ttrue(http.status == 200)
-ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
-http.close()
-
-//  /html/all.css
-http.get(prefix + "/css/all.css")
-ttrue(http.status == 200)
-ttrue(http.response.contains("Aggregate all stylesheets"))
-http.close()
-
-/* NOT WORKING
-//  /html/post/init - this tests a controller without view
-http.get(prefix + "/post/init")
-ttrue(http.status == 200)
-ttrue(http.response.contains('<h1>Create Post</h1>'))
-if (http.status != 200) {
-    print("URI", prefix + "/post/init")
-    print("prefix", prefix)
-    print("status", http.status)
-    print("response", http.response)
-    print("SLEEPING")
-    // App.sleep(9999999)
-}
-*/
-http.close()
