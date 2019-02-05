@@ -10,6 +10,14 @@ let prefix = HTTP
 http.followRedirects = true
 http.get(prefix)
 ttrue(http.status == 200)
+if (http.status != 200) {
+    print("URI", prefix + "/post/init")
+    print("prefix", prefix)
+    print("status", http.status)
+    print("response", http.response)
+    print("SLEEPING")
+    // App.sleep(9999999)
+}
 ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
 http.close()
 

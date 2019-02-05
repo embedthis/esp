@@ -11,5 +11,4 @@ let sslEndpoint = json.http.server.listen[1]
 tset('TM_HTTP', httpEndpoint)
 tset('TM_HTTPS', sslEndpoint)
 
-print("START", httpEndpoint, sslEndpoint)
 startStopService('esp', {address: httpEndpoint})
