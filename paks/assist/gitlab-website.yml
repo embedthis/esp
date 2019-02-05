@@ -17,8 +17,9 @@ variables:
     WEB: "web"
 
 before_script:
+    - set -e
     - ./configure --profile ${PROFILE}
-    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_PROFILE}" get)
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_PROFILE}" get || echo exit 2)
 
 build-website:
     stage: build

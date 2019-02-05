@@ -30,12 +30,14 @@ if [ "${AWS_PROFILE}" = "" ] ; then
 fi
 . $(dirname ${BASH_SOURCE[0]})/common
 
+echo aws s3 sync --no-progress ${SRC} "s3://${DST}/" --delete --profile "${AWS_PROFILE}"
 aws s3 sync --no-progress ${SRC} "s3://${DST}/" --delete --profile "${AWS_PROFILE}"
 if [ $? != 0 ] ; then
     echo "Cannot copy to S3"
     exit 255
 fi
 
+echo aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION} --paths '/*' --profile "${AWS_PROFILE}"
 aws configure set preview.cloudfront true
 aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION} --paths '/*' --profile "${AWS_PROFILE}"
 if [ $? != 0 ] ; then

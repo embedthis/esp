@@ -5597,6 +5597,7 @@ typedef int (*MprModuleProc)(struct MprModule *mp);
  */
 #define MPR_MODULE_STARTED     0x1     /**< Module stared **/
 #define MPR_MODULE_STOPPED     0x2     /**< Module stopped */
+#define MPR_MODULE_LOADED      0x4     /**< Dynamic module loaded */
 
 /**
     Loadable Module Service

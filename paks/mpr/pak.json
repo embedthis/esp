@@ -27,6 +27,7 @@
         }
     ],
     "dependencies": {
+        "assist": "~0.1",
         "me-win": "~0.1",
         "osdep": "~1"
     },
