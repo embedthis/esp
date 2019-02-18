@@ -1,2 +1,3 @@
-samples/html-mvc/dist
+/samples/html-mvc/dist
+/samples/**/cache
 /start.me
