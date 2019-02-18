@@ -29,7 +29,7 @@ before_script:
 .publish: &publish
     stage: publish
     script:
-        - me publish
+        - AWS_PROFILE="${AWS_PROFILE}" BUCKET="${BUCKET}" me publish
     only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
     environment:
         name: ${PROFILE}
