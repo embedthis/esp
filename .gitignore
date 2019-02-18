@@ -1,2 +1,5 @@
 samples/html-mvc/dist
 /start.me
+/test/server/cache
+/test/caching/cache
+/test/cmd/cache

@@ -6,6 +6,7 @@ image: runner:current
 
 variables:
     AWS_PROFILE: "embedthis"
-    PROFILE: "release"
+    BUCKET:      "embedthis.software"
+    PROFILE:     "release"
 
 include: "paks/assist/gitlab-makeme.yml"
