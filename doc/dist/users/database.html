@@ -161,10 +161,9 @@
             <h1>Embedded Database Interface</h1>
             <p>ESP includes powerful relational database support. The Embedded Database Interface (EDI) is an
             ESP database interface above configurable database backends. ESP supports a variety of database
-            backends including: SQLite, MySQL and MDB to cover various scale requirements.
+            backends including: SQLite and MDB to cover various scale requirements.
             The MDB database is a tiny, in-memory database &mdash; great for embedded applications. SQLite is a
-            full SQL implementation for embedded applications, while MySQL is an enterprise class SQL server.
-            MDB is the smallest and fastest, but has the least features.</p>
+            full SQL implementation for embedded applications, while MDB is the smallest and fastest, but has the least features.</p>
             <p>The EDI interface provides a consistent way to interface with database data, without worrying about
             the specifics of the chosen database backend. EDI provides functions for the typical Create, Read,
             Update and Delete (CRUD) semantics. It also provides functions to manage and manipulate database schema.</p>
@@ -254,7 +253,6 @@ ediUpdateRec(db, product);</b>
                         <th>EDI Type</th>
                         <th>MDB Type</th>
                         <th>SQLite Type</th>
-                        <th>MySQL</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -262,22 +260,18 @@ ediUpdateRec(db, product);</b>
                         <td>Blob</td>
                         <td>Blob</td>
                         <td></td>
-                        <td></td>
                     </tr>
                     <tr>
                         <td>Boolean</td>
                         <td>Boolean</td>
                         <td>Tinyint</td>
-                        <td>Tinyint</td>
                     </tr>
                     <tr>
                         <td>Date</td>
                         <td>Date</td>
                         <td>Date</td>
-                        <td>Date</td>
                     </tr>
                     <tr>
-                        <td>Float</td>
                         <td>Float</td>
                         <td>Float</td>
                         <td>Float</td>
@@ -286,16 +280,13 @@ ediUpdateRec(db, product);</b>
                         <td>Integer</td>
                         <td>Integer</td>
                         <td>Real</td>
-                        <td>Decimal, Real</td>
                     </tr>
                     <tr>
                         <td>String</td>
                         <td>String</td>
                         <td>Text</td>
-                        <td>Text</td>
                     </tr>
                     <tr>
-                        <td>Text</td>
                         <td>Text</td>
                         <td>Text</td>
                         <td>Text</td>
