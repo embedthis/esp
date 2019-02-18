@@ -4456,7 +4456,6 @@ static Esp *esp;
 
 static int cloneDatabase(HttpStream *stream);
 static void closeEsp(HttpQueue *q);
-static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static void ifConfigModified(HttpRoute *route, cchar *path, bool *modified);
 static void manageEsp(Esp *esp, int flags);
 static void manageReq(EspReq *req, int flags);
@@ -4466,6 +4465,7 @@ static void startEsp(HttpQueue *q);
 static int unloadEsp(MprModule *mp);
 
 #if !ME_STATIC
+static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *source);
 static int espLoadModule(HttpRoute *route, MprDispatcher *dispatcher, cchar *kind, cchar *source, cchar **errMsg, bool *loaded);
 static cchar *getModuleName(HttpRoute *route, cchar *kind, cchar *target);
 static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cache);
@@ -5155,6 +5155,7 @@ static int cloneDatabase(HttpStream *stream)
 }
 
 
+#if !ME_STATIC
 static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
 {
     EspRoute    *eroute;
@@ -5174,7 +5175,6 @@ static cchar *getCacheName(HttpRoute *route, cchar *kind, cchar *target)
 }
 
 
-#if !ME_STATIC
 static char *getModuleEntry(EspRoute *eroute, cchar *kind, cchar *source, cchar *cache)
 {
     char    *cp, *entry;

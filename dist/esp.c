@@ -2087,12 +2087,15 @@ static void compileCombined(HttpRoute *route)
         if (runEspCommand(route, eroute->compileCmd, app->combinePath, app->module) < 0) {
             return;
         }
+#if UNUSED
+        /* Must not link when building combined */
         if (eroute->linkCmd) {
             trace("Link", "%s", mprGetRelPath(mprTrimPathExt(app->module), NULL));
             if (runEspCommand(route, eroute->linkCmd, app->combinePath, app->module) < 0) {
                 return;
             }
         }
+#endif
     }
     app->combineItems = 0;
     app->combineFile = 0;
