@@ -9194,6 +9194,9 @@ PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
     }
     mprPutStringToBuf(buf, "\r\n");
 
+    if (httpTracing(q->net)) {
+        httpLog(stream->trace, "http.tx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
+    }
     /*
         Output headers
      */
@@ -10639,7 +10642,7 @@ PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet)
     httpPrepareHeaders(stream);
     definePseudoHeaders(stream, packet);
     if (httpTracing(q->net)) {
-        httpLog(stream->trace, "http2.tx", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
+        httpLog(stream->trace, "http2.tx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
     }
 
     /*
@@ -15774,11 +15777,9 @@ static void processFirst(HttpQueue *q)
     }
 
     if (httpTracing(net) && httpIsServer(net)) {
-        httpLog(stream->trace, "http.rx.headers", "request", "method:'%s', uri:'%s', protocol:'%d'",
+        httpLog(stream->trace, "http.rx.request", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
-        if (net->protocol >= 2) {
-            httpLog(stream->trace, "http.rx.headers", "context", "\n%s", httpTraceHeaders(q, stream->rx->headers));
-        }
+        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->rx->headers));
     }
 }
 
@@ -16357,10 +16358,10 @@ static void measureRequest(HttpQueue *q)
         received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
 #if MPR_HIGH_RES_TIMER
         httpLogData(stream->trace,
-            "http.completion", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
+            "http.tx.complete", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
             status, stream->error, elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
 #else
-        httpLogData(stream->trace, "http.completion", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, received:%lld, sent:%lld",
+        httpLogData(stream->trace, "http.tx.complete", "result", 0, (void*) stream, 0, "status:%d, error:%d, elapsed:%llu, received:%lld, sent:%lld",
             status, stream->error, elapsed, received, tx->bytesWritten);
 #endif
     }
@@ -22916,8 +22917,8 @@ static HttpPacket *createAltBodyPacket(HttpQueue *q)
 
     Event types and trace levels:
     0: debug
-    1: request
-    2: error, result
+    1: request, result, error
+    2: headers
     3: context
     4: packet
     5: detail
@@ -22962,8 +22963,9 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent)
         }
         mprAddKey(trace->events, "debug", ITOP(0));
         mprAddKey(trace->events, "request", ITOP(1));
-        mprAddKey(trace->events, "error", ITOP(2));
-        mprAddKey(trace->events, "result", ITOP(2));
+        mprAddKey(trace->events, "error", ITOP(1));
+        mprAddKey(trace->events, "result", ITOP(1));
+        mprAddKey(trace->events, "headers", ITOP(2));
         mprAddKey(trace->events, "context", ITOP(3));
         mprAddKey(trace->events, "packet", ITOP(4));
         mprAddKey(trace->events, "detail", ITOP(5));
