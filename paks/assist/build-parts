@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+#   build-parts - Build parts of a product
+#
+
+function buildParts() {
+    unset CDPATH
+    local PARTS="api, app, ui, web"
+    while [[ $# -gt 0 ]] ; do
+        arg="$1"
+        case ${arg} in
+            --parts)
+                PARTS="${2}"
+                shift ; shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    PARTS=$(echo ${PARTS} | tr ',' ' ')
+
+    for part in ${PARTS} ; do
+        [ ! -d "${part}" ] && continue
+        echo -e "\nBuild ${part} $*"
+        cd "./${part}"
+        if [ -f gulpfile.ts ] ; then
+            gulp build $*
+        elif [ -f main.me ] ; then
+            me
+        elif [ -f Makefile ] ; then
+            make
+        fi
+        [ $? != 0 ] && exit 2
+        cd ..
+    done
+}
+
+buildParts $*

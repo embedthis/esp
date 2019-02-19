@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+#   package-parts - Package parts of a product
+#
+
+function packageParts() {
+    unset CDPATH
+    local PARTS="api, app, ui, web"
+    while [[ $# -gt 0 ]] ; do
+        arg="$1"
+        case ${arg} in
+            --parts)
+                PARTS="${2}"
+                shift ; shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    PARTS=$(echo ${PARTS} | tr ',' ' ')
+
+    for part in ${PARTS} ; do
+        [ ! -d "${part}" ] && continue
+        echo -e "\nPackage ${part} $*"
+        cd "./${part}"
+        if [ -f gulpfile.ts ] ; then
+            gulp package $*
+        elif [ -f main.me ] ; then
+            me package
+        elif [ -f Makefile ] ; then
+            make package
+        fi
+        [ $? != 0 ] && exit 2
+        cd ..
+    done
+}
+
+packageParts $*

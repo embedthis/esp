@@ -1,0 +1,56 @@
+#
+#   gitlab-app.yml - Template CI/CD for gulp
+#
+#   Inputs:
+#       APP             "app"
+#       AWS_PROFILE     mobsense
+#       PROFILE         dev, release, prod, ...
+#   Outputs
+#       build/app/      rendered pages
+#
+
+stages:
+    - build
+    - publish
+    - deploy
+
+variables:
+    APP: "app"
+
+before_script:
+    - set -e
+    - ./configure --profile ${PROFILE}
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_PROFILE}" get || echo exit 2)
+
+build-app:
+    stage: build
+    script:
+        - ./paks/assist/build-parts --profile "${PROFILE}"
+        - mkdir -p ${APP}/build
+    artifacts:
+        expire_in: 1 hour
+        name: "rendered"
+        paths:
+            - ${APP}/build/
+    tags: ['macosx']
+
+publish-app:
+    stage: publish
+    script:
+        - ./paks/assist/publish-parts --profile "${PROFILE}"
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
+    tags: ['macosx']
+
+deploy-app:
+    stage: deploy
+    script:
+        - ./paks/assist/deploy-parts --profile "${PROFILE}"
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
+    tags: ['macosx']
+    when: manual

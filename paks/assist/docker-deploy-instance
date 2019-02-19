@@ -1,0 +1,178 @@
+#!/bin/bash
+#
+#   UNUSED - NOT YET UPGRADED
+#   docker-deploy - Deploy docker image to an instance
+#
+#   usage: docker-deploy
+#
+echo UNUSED - NOT YET UPGRADED
+exit 255
+
+IMAGE=${NAME}
+
+UPART=$(echo ${PART} | tr '[:lower:]' '[:upper:]')
+eval DEPLOY_VALIDATE=\${DEPLOY_${UPART}_VALIDATE}
+eval DEPLOY_GROUP=\${DEPLOY_${UPART}_GROUP}
+eval DEPLOY_COMMAND=\${DEPLOY_${UPART}_COMMAND}
+eval DEPLOY_TAG=\${DEPLOY_${UPART}_TAG}
+
+export AWS_ACCESS_KEY_ID=${DEPLOY_KEYS_AWS_ACCESS}
+export AWS_SECRET_ACCESS_KEY=${DEPLOY_KEYS_AWS_SECRET}
+export AWS_DEFAULT_REGION=${DEPLOY_AWS_REGION}
+
+. $(dirname ${BASH_SOURCE[0]})/common
+
+echo -e "\nDeploy container ${IMAGE}:${VERSION}\n"
+
+getTargets() {
+    local arn targets tcount tag value
+    tag="${DEPLOY_TAG/=*}"
+    value="${DEPLOY_TAG/*=}"
+    aws ec2 describe-instances --filter "Name=tag:${tag},Values=${value}" \
+        --output text --query 'Reservations[].Instances[].InstanceId'
+    if [ $? != 0 ] ; then
+        echo "Cannot describe instances"
+        exit 255
+    fi
+}
+
+getHost() {
+    local target
+    target=$1
+    aws ec2 describe-instances --instance-ids ${target} --output text --query Reservations[0].Instances[0].PrivateIpAddress
+}
+
+pullImage() {
+    local i
+    i=0
+    while [ $i -lt 12 ]
+    do
+        echo Pull image ${IMAGE}:${VERSION}
+        docker pull ${IMAGE}:${VERSION} | \
+            egrep -v 'Already exists|Pulling|Waiting|Verifying|Download complete|Pull complete|Digest:'
+        if [ $? = 0 ] ; then
+            return 0
+        fi
+        echo "Cannot pull image, retry in 5 seconds. (${i})"
+        sleep 5
+        i=$((i+1))
+    done
+    return 1
+}
+
+validate() {
+    local host i
+    host=$1
+    echo "Validate application at http://${host}${DEPLOY_VALIDATE}"
+    i=0
+    while [ $i -lt 5 ]
+    do
+        code=$(curl -s -o /dev/null --retry 10 --retry-delay 1 --retry-max-time 15 \
+            -I -w "%{http_code}" http://${host}${DEPLOY_VALIDATE})
+        if [ "${code}" = 200 ] ; then
+            echo "PASSED: Health check successful"
+            return 0
+        fi
+        echo "Continue to wait for application, retry in 5 seconds. (${i})"
+        sleep 5
+        i=$((i+1))
+    done
+    echo "FAILED: Cannot validate application, status ${code}"
+    return 1
+}
+
+dockerLogin
+
+count=0
+passed=0
+for target in $(getTargets)
+do
+    fail=
+    count=$((count+1))
+
+    host=$(getHost ${target})
+    export DOCKER_HOST=tcp://${host}:2375
+    if ! pullImage ; then
+        echo "Cannot pull ${IMAGE}:${VERSION} on ${target}"
+        continue
+    fi
+    echo
+    echo "----------------------------------------------------------------------------------"
+    echo "Deploy to instance ${target} at ${host}"
+    echo "----------------------------------------------------------------------------------"
+
+    current=$(docker ps --filter ancestor=${IMAGE}:${VERSION} --format '{{.ID}}')
+    if [ $? != 0 ] ; then
+        echo "Cannot talk to docker on ${target}"
+        fail=1
+        continue
+    fi
+    if [ "${current}" != "" ] ; then
+        echo "Target ${target} already running version ${IMAGE}:${VERSION}"
+        if [ "${FORCE}" = "" ] ; then
+            passed=$((passed+1))
+            continue
+        fi
+    fi
+    #
+    #   Gracefully stop containers
+    #
+    containers=$(docker ps --filter "name=${NAME}" --format '{{.ID}}')
+    if [ "${containers}" != "" ] ; then
+        echo "Gracefully stop traffic on ${NAME}"
+
+        # MOB - these SIGQUITs don't seem to be getting through to the container. Explicit kill signals work though on the process.
+        echo "docker kill -s SIGQUIT ${NAME}"
+        docker kill -s SIGQUIT ${NAME}
+
+        echo "Stopping container ${NAME} ${containers}"
+        docker stop ${NAME}
+        if [ $? != 0 ] ; then
+            echo "Cannot stop container ${container} on ${target}, continuing ..."
+            # May not be running, continue
+        fi
+    fi
+    #
+    #   Remove existing containers
+    #
+    echo "Remove container ${NAME} ${containers}"
+    docker rm ${NAME} >/dev/null 2>&1
+
+    #
+    #   Start new container
+    #
+    COMMAND=`echo ${DEPLOY_COMMAND} | sed "s/-d/-d -e HOST=${host}/"`
+    echo "Start ${COMMAND}"
+    ${COMMAND}
+    if [ $? != 0 ] ; then
+        echo "Cannot start container ${IMAGE}:${VERSION} on ${target}"
+        echo "WARNING: target ${target} is not registered with load balancer, skip further deployments."
+        fail=1
+    fi
+    #
+    #   Validate
+    #
+    if [ "${fail}" = "" ] ; then
+        echo -n "Started: "
+        docker ps --filter "ancestor=${IMAGE}:${VERSION}" --format '{{.ID}}, {{.Image}}, {{.Status}}'
+        if validate ${host} ; then
+            passed=$((passed+1))
+        fi
+    fi
+    dockerLogout
+done
+
+if [ "${passed}" != "${count}" ] ; then
+    echo "FAILED, upgraded ${passed} instances of ${count} with ${IMAGE}:${VERSION}"
+    exit 1
+fi
+
+echo -e "\nPASSED, all ${count} instances running ${IMAGE}:${VERSION}"
+
+echo -e "\nRunning docker garbage collection"
+docker system prune -f >/dev/null
+DOCKER_HOST= docker system prune -f >/dev/null
+
+)
+
+exit 0

@@ -1,0 +1,43 @@
+#
+#   gitlab-ui.yml - Template CI/CD for building a UI hosted in S3
+#
+#   Inputs:
+#       AWS_PROFILE     mobsense
+#       PROFILE         dev, release, prod, ...
+#       UI              "ui"
+#   Outputs
+#       build/ui/       rendered pages
+#
+
+stages:
+    - build
+    - publish
+
+variables:
+    UI: 'ui'
+
+before_script:
+    - set -e
+    - ./configure --profile ${PROFILE}
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_PROFILE}" get || echo exit 2)
+
+build-ui:
+    stage: build
+    script:
+        - ./paks/assist/build-parts --profile "${PROFILE}"
+    artifacts:
+        expire_in: 1 hour
+        name: "rendered"
+        paths:
+            - ${UI}/build/
+    tags: ['macosx']
+
+publish-ui:
+    stage: publish
+    script:
+        - ./paks/assist/publish-parts --profile "${PROFILE}"
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
+    tags: ['macosx']

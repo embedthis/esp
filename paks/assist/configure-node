@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+#   configure - Configure a node application
+#
+
+if [ -f package.json ] ; then
+    echo 'yarn install ...'
+    output=$(yarn install --ignore-optional --silent --no-progress --mutex file:/tmp/.yarn-mutex 2>&1)
+    if [ $? = 0 ] ; then
+        echo ${output} | perl -pe 's/\e([^\[\]]|\[.*?[a-zA-Z]|\].*?\a)//g' | egrep -v 'Waiting for the other'
+    else
+        echo "Yarn failed"
+        echo ${output}
+        exit 1
+    fi
+fi
+
+if [ -f typings.json ] ; then
+    echo 'typings install ...'
+    output=$(typings install >/dev/null 2>&1)
+    if [ $? = 0 ] ; then
+        echo ${output} | grep -v deprecated
+    else
+        echo "Typings failed"
+        echo ${output}
+        exit 1
+    fi
+fi

@@ -1,0 +1,74 @@
+#
+#   gitlab-makeme.yml - Template building with MakeMe
+#
+#   Inputs:
+#       AWS_PROFILE     mobsense
+#       PROFILE         dev, release, ...
+#   Outputs
+#       build/*/img/    built images
+#
+
+stages:
+    - build
+    - publish
+
+before_script:
+    - set -e
+    - ./configure --profile ${PROFILE}
+    - eval $(paks/assist/secrets --env '' --profile "${PROFILE}" --aws-profile "${AWS_PROFILE}" get || echo exit 2)
+
+.build: &build
+    stage: build
+    script:
+        - me build test package
+    artifacts:
+        name: "images"
+        paths:
+            - build/*/img/*-*-*.*
+
+.publish: &publish
+    stage: publish
+    script:
+        - AWS_PROFILE="${AWS_PROFILE}" BUCKET="${BUCKET}" me publish
+    only: [ 'tags', 'triggers', 'schedules', 'web', 'api' ]
+    environment:
+        name: ${PROFILE}
+        url: https://www.embedthis.com/${CI_PROJECT_NAME}/download.html
+
+build-linux:
+    extends: .build
+    tags: ['linux']
+
+build-macosx:
+    extends: .build
+    tags: ['macosx']
+
+build-windows:
+    extends: .build
+    tags: ['windows']
+    when: manual
+
+publish-linux:
+    extends: .publish
+    dependencies: ['build-linux']
+    tags: ['linux']
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
+
+publish-macosx:
+    extends: .publish
+    dependencies: ['build-macosx']
+    tags: ['macosx']
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
+
+publish-windows:
+    extends: .publish
+    dependencies: ['build-windows']
+    tags: ['windows']
+    except:
+        variables:
+            - $DEPLOY =~ /no-deploy/
+    when: manual

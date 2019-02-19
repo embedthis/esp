@@ -5682,7 +5682,7 @@ PUBLIC HttpConn *httpCreateConn(HttpEndpoint *endpoint, MprDispatcher *dispatche
     conn->port = -1;
     conn->retries = HTTP_RETRIES;
     conn->endpoint = endpoint;
-    conn->lastActivity = HTTP->now;
+    conn->lastActivity = HTTP->now = mprGetTicks();
     conn->ioCallback = httpIOEvent;
 
     if (endpoint) {
@@ -5888,7 +5888,7 @@ static void commonPrep(HttpConn *conn)
         mprRemoveEvent(conn->timeoutEvent);
         conn->timeoutEvent = 0;
     }
-    conn->lastActivity = conn->http->now;
+    conn->lastActivity = conn->http->now = mprGetTicks();
     conn->error = 0;
     conn->errorMsg = 0;
     conn->state = 0;
