@@ -675,7 +675,7 @@ DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\mbedtls.obj
 
 build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_48)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmbedtls.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
@@ -687,7 +687,7 @@ DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\mpr-mbedtls.obj
 
 build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_49)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-mbedtls.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_OPENSSL)" == "1"
@@ -698,7 +698,7 @@ DEPS_50 = $(DEPS_50) build\$(CONFIG)\obj\mpr-openssl.obj
 
 build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_50)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-openssl.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
 !ENDIF
 
 #
@@ -827,7 +827,7 @@ DEPS_54 = $(DEPS_54) build\$(CONFIG)\obj\mpr-version.obj
 
 build\$(CONFIG)\bin\libmpr-version.lib: $(DEPS_54)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-version.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
 
 #
 #   libesp
