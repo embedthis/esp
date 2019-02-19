@@ -17417,11 +17417,10 @@ PUBLIC int mprUnloadModule(MprModule *mp)
         return MPR_ERR_NOT_READY;
     }
 #if ME_COMPILER_HAS_DYN_LOAD
-    if (mp->handle) {
+    if (mp->flags & MPR_MODULE_LOADED) {
         if (mprUnloadNativeModule(mp) != 0) {
             mprLog("error mpr", 0, "Cannot unload module %s", mp->name);
         }
-        mp->handle = 0;
     }
 #endif
     mprRemoveItem(MPR->moduleService->modules, mp);
@@ -19680,6 +19679,7 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
             return MPR_ERR_CANT_OPEN;
         }
         mp->handle = handle;
+        mp->flags |= MPR_MODULE_LOADED;
 #endif /* !ME_STATIC */
 
     } else if (mp->entry) {
@@ -19689,12 +19689,12 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
         if ((fn = (MprModuleEntry) dlsym(handle, mp->entry)) != 0) {
             if ((fn)(mp->moduleData, mp) < 0) {
                 mprLog("error mpr", 0, "Initialization for module %s failed", mp->name);
-                dlclose(handle);
+                mprUnloadNativeModule(mp);
                 return MPR_ERR_CANT_INITIALIZE;
             }
         } else {
             mprLog("error mpr", 0, "Cannot load module %s, reason: cannot find function \"%s\"", mp->path, mp->entry);
-            dlclose(handle);
+            mprUnloadNativeModule(mp);
             return MPR_ERR_CANT_READ;
         }
     }
@@ -19704,7 +19704,11 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
 
 PUBLIC int mprUnloadNativeModule(MprModule *mp)
 {
-    return dlclose(mp->handle);
+    if (mp->flags & MPR_MODULE_LOADED) {
+        mp->flags &= ~MPR_MODULE_LOADED;
+        return dlclose(mp->handle);
+    }
+    return MPR_ERR_BAD_STATE;
 }
 #endif
 
@@ -19758,22 +19762,15 @@ PUBLIC void mprWriteToOsLog(cchar *message, int level)
 PUBLIC void mprSetFilesLimit(int limit)
 {
     struct rlimit r;
-    int           i;
 
     if (limit == 0 || limit == MAXINT) {
         /*
             We need to determine a reasonable maximum possible limit value.
-            There is no #define we can use for this, so we test to determine it empirically
+            There is no #define we can use for this, so we test to determine it empirically.
          */
         for (limit = 0x40000000; limit > 0; limit >>= 1) {
             r.rlim_cur = r.rlim_max = limit;
             if (setrlimit(RLIMIT_NOFILE, &r) == 0) {
-                for (i = (limit >> 4) * 15; i > 0; i--) {
-                    r.rlim_max = r.rlim_cur = limit + i;
-                    if (setrlimit(RLIMIT_NOFILE, &r) == 0) {
-                        break;
-                    }
-                }
                 break;
             }
         }
@@ -27925,6 +27922,7 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
         }
         close(fd);
         mp->handle = handle;
+        mp->flags |= MPR_MODULE_LOADED;
 
     } else if (mp->entry) {
         mprLog("info mpr", 2, "Activating module %s", mp->name);
@@ -27932,10 +27930,12 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
     if (mp->entry) {
         if (mprFindVxSym(sysSymTbl, entry, (char**) (void*) &fn) == -1) {
             mprLog("error mpr", 0, "Cannot find symbol %s when loading %s", entry, mp->path);
+            mprUnloadNativeModule(mp);
             return MPR_ERR_CANT_READ;
         }
         if ((fn)(mp->moduleData, mp) < 0) {
             mprLog("error mpr", 0, "Initialization for %s failed.", mp->path);
+            mprUnloadNativeModule(mp);
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -27945,8 +27945,12 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
 
 PUBLIC int mprUnloadNativeModule(MprModule *mp)
 {
-    unldByModuleId((MODULE_ID) mp->handle, 0);
-    return 0;
+    if (mp->flags & MPR_MODULE_LOADED) {
+        mp->flags &= ~MPR_MODULE_LOADED;
+        unldByModuleId((MODULE_ID) mp->handle, 0);
+        return 0;
+    }
+    return MPR_ERR_BAD_STATE;
 }
 
 
@@ -29581,6 +29585,8 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
             return MPR_ERR_CANT_READ;
         }
         mp->handle = handle;
+        mp->flags |= MPR_MODULE_LOADED;
+
 #endif /* !ME_STATIC */
 
     } else if (mp->entry) {
@@ -29589,12 +29595,12 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
     if (mp->entry) {
         if ((fn = (MprModuleEntry) GetProcAddress((HINSTANCE) handle, mp->entry)) == 0) {
             mprLog("error mpr", 0, "Cannot load module %s, cannot find function \"%s\"", mp->name, mp->entry);
-            FreeLibrary((HINSTANCE) handle);
+            mprUnloadNativeModule(mp);
             return MPR_ERR_CANT_ACCESS;
         }
         if ((fn)(mp->moduleData, mp) < 0) {
             mprLog("error mpr", 0, "Initialization for module %s failed", mp->name);
-            FreeLibrary((HINSTANCE) handle);
+            mprUnloadNativeModule(mp);
             return MPR_ERR_CANT_INITIALIZE;
         }
     }
@@ -29604,12 +29610,14 @@ PUBLIC int mprLoadNativeModule(MprModule *mp)
 
 PUBLIC int mprUnloadNativeModule(MprModule *mp)
 {
-    assert(mp->handle);
-
-    if (FreeLibrary((HINSTANCE) mp->handle) == 0) {
-        return MPR_ERR_ABORTED;
+    if (mp->flags & MPR_MODULE_LOADED) {
+        mp->flags &= ~MPR_MODULE_LOADED;
+        if (FreeLibrary((HINSTANCE) mp->handle) == 0) {
+            return MPR_ERR_ABORTED;
+        }
+        return 0;
     }
-    return 0;
+    return MPR_ERR_BAD_STATE;
 }
 
 
