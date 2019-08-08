@@ -5,6 +5,7 @@
 import * as gulp from 'gulp'
 import * as log from 'fancy-log'
 import config from 'assist'
+import {blend} from 'assist/blend'
 import buildPackage from './package'
 import deploy from './deploy'
 import publish from './publish'
@@ -12,6 +13,7 @@ import run from './run'
 
 function setProd(done) {
     config.profile = 'prod'
+    blend(config, config.profiles[config.profile])
     done()
 }
 

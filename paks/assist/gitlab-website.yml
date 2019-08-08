@@ -2,7 +2,7 @@
 #   gitlab-website.yml - Template CI/CD for gulp
 #
 #   Inputs:
-#       AWS_PROFILE     mobsense
+#       AWS_PROFILE     ACCOUNT
 #       PROFILE         dev, release, prod, ...
 #       WEB             "web"
 #   Outputs

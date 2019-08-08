@@ -3,7 +3,7 @@
 #
 #   Inputs:
 #       APP             "app"
-#       AWS_PROFILE     mobsense
+#       AWS_PROFILE     ACCOUNT
 #       PROFILE         dev, release, prod, ...
 #   Outputs
 #       build/app/      rendered pages

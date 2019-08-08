@@ -1227,6 +1227,13 @@
       <arglist>(HttpNet *net)</arglist>
     </member>
     <member kind="function">
+      <type>bool</type>
+      <name>httpReadIO</name>
+      <anchorfile>group___http_net.html</anchorfile>
+      <anchor>ga7bec0d5ca3a66252272e631c56eae55b</anchor>
+      <arglist>(HttpNet *net)</arglist>
+    </member>
+    <member kind="function">
       <type>void</type>
       <name>httpReturnNet</name>
       <anchorfile>group___http_net.html</anchorfile>
@@ -1295,6 +1302,13 @@
       <arglist>)(struct HttpStream *stream)</arglist>
     </member>
     <member kind="typedef">
+      <type>void(*</type>
+      <name>HttpEventProc</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>gada027f72dcd04430260b5721517b374c</anchor>
+      <arglist>)(HttpStream *stream, void *data)</arglist>
+    </member>
+    <member kind="typedef">
       <type>int(*</type>
       <name>HttpHeadersCallback</name>
       <anchorfile>group___http_stream.html</anchorfile>
@@ -1342,6 +1356,13 @@
       <anchorfile>group___http_stream.html</anchorfile>
       <anchor>ga4c52ee2ada2352607f114d0d34f86636</anchor>
       <arglist>(HttpStream *stream)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpCreateEvent</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>ga3c4c181b6ea23fe6062a4bd8bc25cb25</anchor>
+      <arglist>(uint64 streamSeqno, HttpEventProc callback, void *data)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

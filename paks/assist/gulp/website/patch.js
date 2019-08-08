@@ -5,6 +5,9 @@
 import * as gulp from 'gulp'
 import * as exec from 'gulp-exec'
 
+/*
+    patchVersion -- Patch pak.json and package.json version from ../pak.json
+ */
 function patchVersion() {
     return gulp.src('package.json')
         .pipe(exec('../paks/assist/gulp/website/patchVersion.sh', {continueOnError: false, pipeStdout: false}))

@@ -30,7 +30,13 @@ let files = [
 for (let file of files) {
     file = process.cwd() + '/' + file
     if (fs.existsSync(file)) {
-        let json = json5.parse(fs.readFileSync(file))
+        let json
+        try {
+            json = json5.parse(fs.readFileSync(file))
+        } catch (e) {
+            print(`Cannot parse ${file}`)
+            throw e
+        }
         blend(config, json)
     }
 }
@@ -69,7 +75,7 @@ if (config.debug == 'true') {
 
 
 /*
-    Patch version from ../pak.json
+    Get version from ../pak.json or ./pak.json
  */
 try {
     var parent = json5.parse(fs.readFileSync(process.cwd() + '/../pak.json'))
@@ -101,7 +107,6 @@ function template(v, context) {
                 context[word] = '${' + word + '}'
             }
         }
-        //  MOB - better to replace with code that does not eval
         let fn = Function('_context_', 'with (_context_) { return `' + text + '`}')
         return fn(context)
     }

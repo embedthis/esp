@@ -135,6 +135,7 @@ ME_SRC_PREFIX         = $(ME_VAPP_PREFIX)\src
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\esp.exe
 TARGETS               = $(TARGETS) build\$(CONFIG)\.extras-modified
 TARGETS               = $(TARGETS) build\$(CONFIG)\.install-certs-modified
+TARGETS               = $(TARGETS) build\$(CONFIG)\bin\server.exe
 TARGETS               = $(TARGETS) build\$(CONFIG)\bin\espman.exe
 
 !IFNDEF SHOW
@@ -185,6 +186,7 @@ clean:
 	if exist "build\$(CONFIG)\obj\mprLib.obj" del /Q "build\$(CONFIG)\obj\mprLib.obj"
 	if exist "build\$(CONFIG)\obj\pcre.obj" del /Q "build\$(CONFIG)\obj\pcre.obj"
 	if exist "build\$(CONFIG)\obj\sdb.obj" del /Q "build\$(CONFIG)\obj\sdb.obj"
+	if exist "build\$(CONFIG)\obj\server.obj" del /Q "build\$(CONFIG)\obj\server.obj"
 	if exist "build\$(CONFIG)\obj\sqlite.obj" del /Q "build\$(CONFIG)\obj\sqlite.obj"
 	if exist "build\$(CONFIG)\obj\sqlite3.obj" del /Q "build\$(CONFIG)\obj\sqlite3.obj"
 	if exist "build\$(CONFIG)\obj\watchdog.obj" del /Q "build\$(CONFIG)\obj\watchdog.obj"
@@ -217,6 +219,10 @@ clean:
 	if exist "build\$(CONFIG)\bin\libsql.lib" del /Q "build\$(CONFIG)\bin\libsql.lib"
 	if exist "build\$(CONFIG)\bin\libsql.pdb" del /Q "build\$(CONFIG)\bin\libsql.pdb"
 	if exist "build\$(CONFIG)\bin\libsql.exp" del /Q "build\$(CONFIG)\bin\libsql.exp"
+	if exist "build\$(CONFIG)\bin\server.exe" del /Q "build\$(CONFIG)\bin\server.exe"
+	if exist "build\$(CONFIG)\bin\server.lib" del /Q "build\$(CONFIG)\bin\server.lib"
+	if exist "build\$(CONFIG)\bin\server.pdb" del /Q "build\$(CONFIG)\bin\server.pdb"
+	if exist "build\$(CONFIG)\bin\server.exp" del /Q "build\$(CONFIG)\bin\server.exp"
 	if exist "build\$(CONFIG)\bin\espman.exe" del /Q "build\$(CONFIG)\bin\espman.exe"
 	if exist "build\$(CONFIG)\bin\espman.lib" del /Q "build\$(CONFIG)\bin\espman.lib"
 	if exist "build\$(CONFIG)\bin\espman.pdb" del /Q "build\$(CONFIG)\bin\espman.pdb"
@@ -610,44 +616,54 @@ build\$(CONFIG)\obj\sdb.obj: \
 	"$(CC)" -c -Fo$(BUILD)\obj\sdb.obj -Fd$(BUILD)\obj\sdb.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\sdb.c $(LOG)
 
 #
+#   server.obj
+#
+DEPS_43 = $(DEPS_43) src\http\http.h
+
+build\$(CONFIG)\obj\server.obj: \
+    src\http\server.c $(DEPS_43)
+	@echo .. [Compile] build\$(CONFIG)\obj\server.obj
+	"$(CC)" -c -Fo$(BUILD)\obj\server.obj -Fd$(BUILD)\obj\server.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\http\server.c $(LOG)
+
+#
 #   sqlite3.h
 #
 
-src\sqlite\sqlite3.h: $(DEPS_43)
+src\sqlite\sqlite3.h: $(DEPS_44)
 
 #
 #   sqlite.obj
 #
-DEPS_44 = $(DEPS_44) build\$(CONFIG)\inc\me.h
-DEPS_44 = $(DEPS_44) src\sqlite\sqlite3.h
-DEPS_44 = $(DEPS_44) build\$(CONFIG)\inc\windows.h
+DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\me.h
+DEPS_45 = $(DEPS_45) src\sqlite\sqlite3.h
+DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\windows.h
 
 build\$(CONFIG)\obj\sqlite.obj: \
-    src\sqlite\sqlite.c $(DEPS_44)
+    src\sqlite\sqlite.c $(DEPS_45)
 	@echo .. [Compile] build\$(CONFIG)\obj\sqlite.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\sqlite.obj -Fd$(BUILD)\obj\sqlite.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\sqlite\sqlite.c $(LOG)
 
 #
 #   sqlite3.obj
 #
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\me.h
-DEPS_45 = $(DEPS_45) src\sqlite\sqlite3.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\config.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\windows.h
-DEPS_45 = $(DEPS_45) build\$(CONFIG)\inc\sqlite3rtree.h
+DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\me.h
+DEPS_46 = $(DEPS_46) src\sqlite\sqlite3.h
+DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\config.h
+DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\windows.h
+DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\sqlite3rtree.h
 
 build\$(CONFIG)\obj\sqlite3.obj: \
-    src\sqlite\sqlite3.c $(DEPS_45)
+    src\sqlite\sqlite3.c $(DEPS_46)
 	@echo .. [Compile] build\$(CONFIG)\obj\sqlite3.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\sqlite3.obj -Fd$(BUILD)\obj\sqlite3.pdb $(CFLAGS) $(DFLAGS) $(IFLAGS) src\sqlite\sqlite3.c $(LOG)
 
 #
 #   watchdog.obj
 #
-DEPS_46 = $(DEPS_46) build\$(CONFIG)\inc\mpr.h
+DEPS_47 = $(DEPS_47) build\$(CONFIG)\inc\mpr.h
 
 build\$(CONFIG)\obj\watchdog.obj: \
-    src\watchdog\watchdog.c $(DEPS_46)
+    src\watchdog\watchdog.c $(DEPS_47)
 	@echo .. [Compile] build\$(CONFIG)\obj\watchdog.obj
 	"$(CC)" -c -Fo$(BUILD)\obj\watchdog.obj -Fd$(BUILD)\obj\watchdog.pdb $(CFLAGS) $(DFLAGS) -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)\inc32" src\watchdog\watchdog.c $(LOG)
 
@@ -655,10 +671,10 @@ build\$(CONFIG)\obj\watchdog.obj: \
 #
 #   libsql
 #
-DEPS_47 = $(DEPS_47) build\$(CONFIG)\inc\sqlite3.h
-DEPS_47 = $(DEPS_47) build\$(CONFIG)\obj\sqlite3.obj
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\sqlite3.h
+DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\sqlite3.obj
 
-build\$(CONFIG)\bin\libsql.dll: $(DEPS_47)
+build\$(CONFIG)\bin\libsql.dll: $(DEPS_48)
 	@echo ..... [Link] build\$(CONFIG)\bin\libsql.dll
 	"$(LD)" -dll -out:$(BUILD)\bin\libsql.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\sqlite3.obj" $(LIBS)  $(LOG)
 !ENDIF
@@ -667,99 +683,99 @@ build\$(CONFIG)\bin\libsql.dll: $(DEPS_47)
 #
 #   libmbedtls
 #
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\osdep.h
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\embedtls.h
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\mbedtls-config.h
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\inc\mbedtls.h
-DEPS_48 = $(DEPS_48) build\$(CONFIG)\obj\mbedtls.obj
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\inc\osdep.h
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\inc\embedtls.h
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\inc\mbedtls-config.h
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\inc\mbedtls.h
+DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\mbedtls.obj
 
-build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_48)
+build\$(CONFIG)\bin\libmbedtls.lib: $(DEPS_49)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmbedtls.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmbedtls.lib "$(BUILD)\obj\mbedtls.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
 #
 #   libmpr-mbedtls
 #
-DEPS_49 = $(DEPS_49) build\$(CONFIG)\bin\libmbedtls.lib
-DEPS_49 = $(DEPS_49) build\$(CONFIG)\obj\mpr-mbedtls.obj
+DEPS_50 = $(DEPS_50) build\$(CONFIG)\bin\libmbedtls.lib
+DEPS_50 = $(DEPS_50) build\$(CONFIG)\obj\mpr-mbedtls.obj
 
-build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_49)
+build\$(CONFIG)\bin\libmpr-mbedtls.lib: $(DEPS_50)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-mbedtls.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-mbedtls.lib "$(BUILD)\obj\mpr-mbedtls.obj" $(LOG)
 !ENDIF
 
 !IF "$(ME_COM_OPENSSL)" == "1"
 #
 #   libmpr-openssl
 #
-DEPS_50 = $(DEPS_50) build\$(CONFIG)\obj\mpr-openssl.obj
+DEPS_51 = $(DEPS_51) build\$(CONFIG)\obj\mpr-openssl.obj
 
-build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_50)
+build\$(CONFIG)\bin\libmpr-openssl.lib: $(DEPS_51)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-openssl.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-openssl.lib "$(BUILD)\obj\mpr-openssl.obj" $(LOG)
 !ENDIF
 
 #
 #   libmpr
 #
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\inc\osdep.h
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\osdep.h
 !IF "$(ME_COM_MBEDTLS)" == "1"
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmpr-mbedtls.lib
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\bin\libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmbedtls.lib
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\bin\libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\bin\libmpr-openssl.lib
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\bin\libmpr-openssl.lib
 !ENDIF
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\inc\mpr.h
-DEPS_51 = $(DEPS_51) build\$(CONFIG)\obj\mprLib.obj
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\mpr.h
+DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\mprLib.obj
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_51 = $(LIBS_51) libmbedtls.lib
+LIBS_52 = $(LIBS_52) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_51 = $(LIBS_51) libmpr-mbedtls.lib
+LIBS_52 = $(LIBS_52) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_51 = $(LIBS_51) libmbedtls.lib
+LIBS_52 = $(LIBS_52) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) libmpr-openssl.lib
+LIBS_52 = $(LIBS_52) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) gdi32.lib
-LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_52 = $(LIBS_52) gdi32.lib
+LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) libeay32.lib
-LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_52 = $(LIBS_52) libeay32.lib
+LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) ssleay32.lib
-LIBPATHS_51 = $(LIBPATHS_51) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_52 = $(LIBS_52) ssleay32.lib
+LIBPATHS_52 = $(LIBPATHS_52) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_51 = $(LIBS_51) libmpr-openssl.lib
+LIBS_52 = $(LIBS_52) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_51 = $(LIBS_51) libmpr-mbedtls.lib
+LIBS_52 = $(LIBS_52) libmpr-mbedtls.lib
 !ENDIF
 
-build\$(CONFIG)\bin\libmpr.dll: $(DEPS_51)
+build\$(CONFIG)\bin\libmpr.dll: $(DEPS_52)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_51) $(LIBS_51) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libmpr.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\mprLib.obj" $(LIBPATHS_52) $(LIBS_52) $(LIBS)  $(LOG)
 
 !IF "$(ME_COM_PCRE)" == "1"
 #
 #   libpcre
 #
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\inc\pcre.h
-DEPS_52 = $(DEPS_52) build\$(CONFIG)\obj\pcre.obj
+DEPS_53 = $(DEPS_53) build\$(CONFIG)\inc\pcre.h
+DEPS_53 = $(DEPS_53) build\$(CONFIG)\obj\pcre.obj
 
-build\$(CONFIG)\bin\libpcre.dll: $(DEPS_52)
+build\$(CONFIG)\bin\libpcre.dll: $(DEPS_53)
 	@echo ..... [Link] build\$(CONFIG)\bin\libpcre.dll
 	"$(LD)" -dll -out:$(BUILD)\bin\libpcre.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\pcre.obj" $(LIBS)  $(LOG)
 !ENDIF
@@ -768,155 +784,89 @@ build\$(CONFIG)\bin\libpcre.dll: $(DEPS_52)
 #
 #   libhttp
 #
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libmpr.dll
+DEPS_54 = $(DEPS_54) build\$(CONFIG)\bin\libmpr.dll
 !IF "$(ME_COM_PCRE)" == "1"
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\bin\libpcre.dll
+DEPS_54 = $(DEPS_54) build\$(CONFIG)\bin\libpcre.dll
 !ENDIF
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\inc\http.h
-DEPS_53 = $(DEPS_53) build\$(CONFIG)\obj\httpLib.obj
+DEPS_54 = $(DEPS_54) build\$(CONFIG)\inc\http.h
+DEPS_54 = $(DEPS_54) build\$(CONFIG)\obj\httpLib.obj
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_53 = $(LIBS_53) libmbedtls.lib
+LIBS_54 = $(LIBS_54) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-mbedtls.lib
+LIBS_54 = $(LIBS_54) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_53 = $(LIBS_53) libmbedtls.lib
+LIBS_54 = $(LIBS_54) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-openssl.lib
+LIBS_54 = $(LIBS_54) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) gdi32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_54 = $(LIBS_54) gdi32.lib
+LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libeay32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_54 = $(LIBS_54) libeay32.lib
+LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) ssleay32.lib
-LIBPATHS_53 = $(LIBPATHS_53) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_54 = $(LIBS_54) ssleay32.lib
+LIBPATHS_54 = $(LIBPATHS_54) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
-LIBS_53 = $(LIBS_53) libmpr.lib
+LIBS_54 = $(LIBS_54) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-openssl.lib
+LIBS_54 = $(LIBS_54) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_53 = $(LIBS_53) libmpr-mbedtls.lib
+LIBS_54 = $(LIBS_54) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
-LIBS_53 = $(LIBS_53) libpcre.lib
+LIBS_54 = $(LIBS_54) libpcre.lib
 !ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
-LIBS_53 = $(LIBS_53) libpcre.lib
+LIBS_54 = $(LIBS_54) libpcre.lib
 !ENDIF
-LIBS_53 = $(LIBS_53) libmpr.lib
+LIBS_54 = $(LIBS_54) libmpr.lib
 
-build\$(CONFIG)\bin\libhttp.dll: $(DEPS_53)
+build\$(CONFIG)\bin\libhttp.dll: $(DEPS_54)
 	@echo ..... [Link] build\$(CONFIG)\bin\libhttp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_53) $(LIBS_53) $(LIBS)  $(LOG)
+	"$(LD)" -dll -out:$(BUILD)\bin\libhttp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\httpLib.obj" $(LIBPATHS_54) $(LIBS_54) $(LIBS)  $(LOG)
 !ENDIF
 
 #
 #   libmpr-version
 #
-DEPS_54 = $(DEPS_54) build\$(CONFIG)\inc\mpr-version.h
-DEPS_54 = $(DEPS_54) build\$(CONFIG)\obj\mpr-version.obj
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\mpr-version.h
+DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\mpr-version.obj
 
-build\$(CONFIG)\bin\libmpr-version.lib: $(DEPS_54)
+build\$(CONFIG)\bin\libmpr-version.lib: $(DEPS_55)
 	@echo ..... [Link] build\$(CONFIG)\bin\libmpr-version.lib
-	"lib.exe" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
+	"$(AR)" -nologo -out:$(BUILD)\bin\libmpr-version.lib "$(BUILD)\obj\mpr-version.obj" $(LOG)
 
 #
 #   libesp
 #
 !IF "$(ME_COM_SQLITE)" == "1"
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\bin\libsql.dll
-!ENDIF
-!IF "$(ME_COM_HTTP)" == "1"
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\bin\libhttp.dll
-!ENDIF
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\bin\libmpr-version.lib
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\edi.h
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\esp.h
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\inc\mdb.h
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\edi.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espAbbrev.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espConfig.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espFramework.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espHtml.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espRequest.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\espTemplate.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\mdb.obj
-DEPS_55 = $(DEPS_55) build\$(CONFIG)\obj\sdb.obj
-
-!IF "$(ME_COM_SQLITE)" == "1"
-LIBS_55 = $(LIBS_55) libsql.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_55 = $(LIBS_55) libmbedtls.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_55 = $(LIBS_55) libmpr-mbedtls.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_55 = $(LIBS_55) libmbedtls.lib
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_55 = $(LIBS_55) libmpr-openssl.lib
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_55 = $(LIBS_55) gdi32.lib
-LIBPATHS_55 = $(LIBPATHS_55) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_55 = $(LIBS_55) libeay32.lib
-LIBPATHS_55 = $(LIBPATHS_55) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_55 = $(LIBS_55) ssleay32.lib
-LIBPATHS_55 = $(LIBPATHS_55) -libpath:$(ME_COM_OPENSSL_PATH)/out32
-!ENDIF
-LIBS_55 = $(LIBS_55) libmpr.lib
-!IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_55 = $(LIBS_55) libmpr-openssl.lib
-!ENDIF
-!IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_55 = $(LIBS_55) libmpr-mbedtls.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_55 = $(LIBS_55) libpcre.lib
-!ENDIF
-!IF "$(ME_COM_HTTP)" == "1"
-LIBS_55 = $(LIBS_55) libhttp.lib
-!ENDIF
-!IF "$(ME_COM_PCRE)" == "1"
-LIBS_55 = $(LIBS_55) libpcre.lib
-!ENDIF
-LIBS_55 = $(LIBS_55) libmpr.lib
-LIBS_55 = $(LIBS_55) libmpr-version.lib
-LIBS_55 = $(LIBS_55) libmpr-version.lib
-!IF "$(ME_COM_HTTP)" == "1"
-LIBS_55 = $(LIBS_55) libhttp.lib
-!ENDIF
-!IF "$(ME_COM_SQLITE)" == "1"
-LIBS_55 = $(LIBS_55) libsql.lib
-!ENDIF
-
-build\$(CONFIG)\bin\libesp.dll: $(DEPS_55)
-	@echo ..... [Link] build\$(CONFIG)\bin\libesp.dll
-	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\edi.obj" "$(BUILD)\obj\espAbbrev.obj" "$(BUILD)\obj\espConfig.obj" "$(BUILD)\obj\espFramework.obj" "$(BUILD)\obj\espHtml.obj" "$(BUILD)\obj\espRequest.obj" "$(BUILD)\obj\espTemplate.obj" "$(BUILD)\obj\mdb.obj" "$(BUILD)\obj\sdb.obj" $(LIBPATHS_55) $(LIBS_55) $(LIBS)  $(LOG)
-
-#
-#   espcmd
-#
-!IF "$(ME_COM_SQLITE)" == "1"
 DEPS_56 = $(DEPS_56) build\$(CONFIG)\bin\libsql.dll
 !ENDIF
-DEPS_56 = $(DEPS_56) build\$(CONFIG)\bin\libesp.dll
-DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\esp.obj
+!IF "$(ME_COM_HTTP)" == "1"
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\bin\libhttp.dll
+!ENDIF
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\bin\libmpr-version.lib
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\inc\edi.h
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\inc\esp.h
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\inc\mdb.h
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\edi.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\espAbbrev.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\espConfig.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\espFramework.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\espHtml.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\espRequest.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\espTemplate.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\mdb.obj
+DEPS_56 = $(DEPS_56) build\$(CONFIG)\obj\sdb.obj
 
 !IF "$(ME_COM_SQLITE)" == "1"
 LIBS_56 = $(LIBS_56) libsql.lib
@@ -963,7 +913,6 @@ LIBS_56 = $(LIBS_56) libpcre.lib
 !ENDIF
 LIBS_56 = $(LIBS_56) libmpr.lib
 LIBS_56 = $(LIBS_56) libmpr-version.lib
-LIBS_56 = $(LIBS_56) libesp.lib
 LIBS_56 = $(LIBS_56) libmpr-version.lib
 !IF "$(ME_COM_HTTP)" == "1"
 LIBS_56 = $(LIBS_56) libhttp.lib
@@ -972,17 +921,84 @@ LIBS_56 = $(LIBS_56) libhttp.lib
 LIBS_56 = $(LIBS_56) libsql.lib
 !ENDIF
 
-build\$(CONFIG)\bin\esp.exe: $(DEPS_56)
+build\$(CONFIG)\bin\libesp.dll: $(DEPS_56)
+	@echo ..... [Link] build\$(CONFIG)\bin\libesp.dll
+	"$(LD)" -dll -out:$(BUILD)\bin\libesp.dll -entry:_DllMainCRTStartup $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\edi.obj" "$(BUILD)\obj\espAbbrev.obj" "$(BUILD)\obj\espConfig.obj" "$(BUILD)\obj\espFramework.obj" "$(BUILD)\obj\espHtml.obj" "$(BUILD)\obj\espRequest.obj" "$(BUILD)\obj\espTemplate.obj" "$(BUILD)\obj\mdb.obj" "$(BUILD)\obj\sdb.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS)  $(LOG)
+
+#
+#   espcmd
+#
+!IF "$(ME_COM_SQLITE)" == "1"
+DEPS_57 = $(DEPS_57) build\$(CONFIG)\bin\libsql.dll
+!ENDIF
+DEPS_57 = $(DEPS_57) build\$(CONFIG)\bin\libesp.dll
+DEPS_57 = $(DEPS_57) build\$(CONFIG)\obj\esp.obj
+
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_57 = $(LIBS_57) libsql.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_57 = $(LIBS_57) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_57 = $(LIBS_57) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_57 = $(LIBS_57) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_57 = $(LIBS_57) libmpr-openssl.lib
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_57 = $(LIBS_57) gdi32.lib
+LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_57 = $(LIBS_57) libeay32.lib
+LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_57 = $(LIBS_57) ssleay32.lib
+LIBPATHS_57 = $(LIBPATHS_57) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+LIBS_57 = $(LIBS_57) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_57 = $(LIBS_57) libmpr-openssl.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_57 = $(LIBS_57) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_57 = $(LIBS_57) libpcre.lib
+!ENDIF
+!IF "$(ME_COM_HTTP)" == "1"
+LIBS_57 = $(LIBS_57) libhttp.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_57 = $(LIBS_57) libpcre.lib
+!ENDIF
+LIBS_57 = $(LIBS_57) libmpr.lib
+LIBS_57 = $(LIBS_57) libmpr-version.lib
+LIBS_57 = $(LIBS_57) libesp.lib
+LIBS_57 = $(LIBS_57) libmpr-version.lib
+!IF "$(ME_COM_HTTP)" == "1"
+LIBS_57 = $(LIBS_57) libhttp.lib
+!ENDIF
+!IF "$(ME_COM_SQLITE)" == "1"
+LIBS_57 = $(LIBS_57) libsql.lib
+!ENDIF
+
+build\$(CONFIG)\bin\esp.exe: $(DEPS_57)
 	@echo ..... [Link] build\$(CONFIG)\bin\esp.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\esp.obj" $(LIBPATHS_56) $(LIBS_56) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\esp.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\esp.obj" $(LIBPATHS_57) $(LIBS_57) $(LIBS)  $(LOG)
 
 #
 #   extras
 #
-DEPS_57 = $(DEPS_57) src\esp-compile.json
-DEPS_57 = $(DEPS_57) src\vcvars.bat
+DEPS_58 = $(DEPS_58) src\esp-compile.json
+DEPS_58 = $(DEPS_58) src\vcvars.bat
 
-build\$(CONFIG)\.extras-modified: $(DEPS_57)
+build\$(CONFIG)\.extras-modified: $(DEPS_58)
 	@echo ..... [Copy] build\$(CONFIG)\bin
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
 	copy /Y /B src\esp-compile.json+modified build\$(CONFIG)\bin\esp-compile.json $(LOG)
@@ -993,68 +1009,68 @@ build\$(CONFIG)\.extras-modified: $(DEPS_57)
 #
 #   httpcmd
 #
-DEPS_58 = $(DEPS_58) build\$(CONFIG)\bin\libhttp.dll
-DEPS_58 = $(DEPS_58) build\$(CONFIG)\obj\http.obj
+DEPS_59 = $(DEPS_59) build\$(CONFIG)\bin\libhttp.dll
+DEPS_59 = $(DEPS_59) build\$(CONFIG)\obj\http.obj
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_58 = $(LIBS_58) libmbedtls.lib
+LIBS_59 = $(LIBS_59) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_58 = $(LIBS_58) libmpr-mbedtls.lib
+LIBS_59 = $(LIBS_59) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_58 = $(LIBS_58) libmbedtls.lib
+LIBS_59 = $(LIBS_59) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_58 = $(LIBS_58) libmpr-openssl.lib
+LIBS_59 = $(LIBS_59) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_58 = $(LIBS_58) gdi32.lib
-LIBPATHS_58 = $(LIBPATHS_58) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_59 = $(LIBS_59) gdi32.lib
+LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_58 = $(LIBS_58) libeay32.lib
-LIBPATHS_58 = $(LIBPATHS_58) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_59 = $(LIBS_59) libeay32.lib
+LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_58 = $(LIBS_58) ssleay32.lib
-LIBPATHS_58 = $(LIBPATHS_58) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_59 = $(LIBS_59) ssleay32.lib
+LIBPATHS_59 = $(LIBPATHS_59) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
-LIBS_58 = $(LIBS_58) libmpr.lib
+LIBS_59 = $(LIBS_59) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_58 = $(LIBS_58) libmpr-openssl.lib
+LIBS_59 = $(LIBS_59) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_58 = $(LIBS_58) libmpr-mbedtls.lib
+LIBS_59 = $(LIBS_59) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_PCRE)" == "1"
-LIBS_58 = $(LIBS_58) libpcre.lib
+LIBS_59 = $(LIBS_59) libpcre.lib
 !ENDIF
-LIBS_58 = $(LIBS_58) libhttp.lib
+LIBS_59 = $(LIBS_59) libhttp.lib
 !IF "$(ME_COM_PCRE)" == "1"
-LIBS_58 = $(LIBS_58) libpcre.lib
+LIBS_59 = $(LIBS_59) libpcre.lib
 !ENDIF
-LIBS_58 = $(LIBS_58) libmpr.lib
+LIBS_59 = $(LIBS_59) libmpr.lib
 
-build\$(CONFIG)\bin\http.exe: $(DEPS_58)
+build\$(CONFIG)\bin\http.exe: $(DEPS_59)
 	@echo ..... [Link] build\$(CONFIG)\bin\http.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_58) $(LIBS_58) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\http.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS) "$(BUILD)\obj\http.obj" $(LIBPATHS_59) $(LIBS_59) $(LIBS)  $(LOG)
 !ENDIF
 
 #
 #   install-certs
 #
-DEPS_59 = $(DEPS_59) src\certs\samples\ca.crt
-DEPS_59 = $(DEPS_59) src\certs\samples\ca.key
-DEPS_59 = $(DEPS_59) src\certs\samples\ec.crt
-DEPS_59 = $(DEPS_59) src\certs\samples\ec.key
-DEPS_59 = $(DEPS_59) src\certs\samples\roots.crt
-DEPS_59 = $(DEPS_59) src\certs\samples\self.crt
-DEPS_59 = $(DEPS_59) src\certs\samples\self.key
-DEPS_59 = $(DEPS_59) src\certs\samples\test.crt
-DEPS_59 = $(DEPS_59) src\certs\samples\test.key
+DEPS_60 = $(DEPS_60) src\certs\samples\ca.crt
+DEPS_60 = $(DEPS_60) src\certs\samples\ca.key
+DEPS_60 = $(DEPS_60) src\certs\samples\ec.crt
+DEPS_60 = $(DEPS_60) src\certs\samples\ec.key
+DEPS_60 = $(DEPS_60) src\certs\samples\roots.crt
+DEPS_60 = $(DEPS_60) src\certs\samples\self.crt
+DEPS_60 = $(DEPS_60) src\certs\samples\self.key
+DEPS_60 = $(DEPS_60) src\certs\samples\test.crt
+DEPS_60 = $(DEPS_60) src\certs\samples\test.key
 
-build\$(CONFIG)\.install-certs-modified: $(DEPS_59)
+build\$(CONFIG)\.install-certs-modified: $(DEPS_60)
 	@echo ..... [Copy] build\$(CONFIG)\bin
 	if not exist "build\$(CONFIG)\bin" md "build\$(CONFIG)\bin"
 	copy /Y /B src\certs\samples\ca.crt+modified build\$(CONFIG)\bin\ca.crt $(LOG)
@@ -1069,52 +1085,106 @@ build\$(CONFIG)\.install-certs-modified: $(DEPS_59)
 	copy /Y /B nul+modified build\$(CONFIG)\.install-certs-modified $(LOG)
 
 #
+#   server
+#
+!IF "$(ME_COM_HTTP)" == "1"
+DEPS_61 = $(DEPS_61) build\$(CONFIG)\bin\libhttp.dll
+!ENDIF
+DEPS_61 = $(DEPS_61) build\$(CONFIG)\obj\server.obj
+
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_61 = $(LIBS_61) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_61 = $(LIBS_61) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_61 = $(LIBS_61) libmbedtls.lib
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_61 = $(LIBS_61) libmpr-openssl.lib
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_61 = $(LIBS_61) gdi32.lib
+LIBPATHS_61 = $(LIBPATHS_61) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_61 = $(LIBS_61) libeay32.lib
+LIBPATHS_61 = $(LIBPATHS_61) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_61 = $(LIBS_61) ssleay32.lib
+LIBPATHS_61 = $(LIBPATHS_61) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+!ENDIF
+LIBS_61 = $(LIBS_61) libmpr.lib
+!IF "$(ME_COM_OPENSSL)" == "1"
+LIBS_61 = $(LIBS_61) libmpr-openssl.lib
+!ENDIF
+!IF "$(ME_COM_MBEDTLS)" == "1"
+LIBS_61 = $(LIBS_61) libmpr-mbedtls.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_61 = $(LIBS_61) libpcre.lib
+!ENDIF
+!IF "$(ME_COM_HTTP)" == "1"
+LIBS_61 = $(LIBS_61) libhttp.lib
+!ENDIF
+!IF "$(ME_COM_PCRE)" == "1"
+LIBS_61 = $(LIBS_61) libpcre.lib
+!ENDIF
+LIBS_61 = $(LIBS_61) libmpr.lib
+
+build\$(CONFIG)\bin\server.exe: $(DEPS_61)
+	@echo ..... [Link] build\$(CONFIG)\bin\server.exe
+	"$(LD)" -nologo -out:$(BUILD)\bin\server.exe -entry:mainCRTStartup -subsystem:console $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\server.obj" $(LIBPATHS_61) $(LIBS_61) $(LIBS)  $(LOG)
+
+#
 #   watchdog
 #
-DEPS_60 = $(DEPS_60) build\$(CONFIG)\bin\libmpr.dll
-DEPS_60 = $(DEPS_60) build\$(CONFIG)\obj\watchdog.obj
+DEPS_62 = $(DEPS_62) build\$(CONFIG)\bin\libmpr.dll
+DEPS_62 = $(DEPS_62) build\$(CONFIG)\obj\watchdog.obj
 
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_60 = $(LIBS_60) libmbedtls.lib
+LIBS_62 = $(LIBS_62) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_60 = $(LIBS_60) libmpr-mbedtls.lib
+LIBS_62 = $(LIBS_62) libmpr-mbedtls.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_60 = $(LIBS_60) libmbedtls.lib
+LIBS_62 = $(LIBS_62) libmbedtls.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_60 = $(LIBS_60) libmpr-openssl.lib
+LIBS_62 = $(LIBS_62) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_60 = $(LIBS_60) gdi32.lib
-LIBPATHS_60 = $(LIBPATHS_60) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_62 = $(LIBS_62) gdi32.lib
+LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_60 = $(LIBS_60) libeay32.lib
-LIBPATHS_60 = $(LIBPATHS_60) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_62 = $(LIBS_62) libeay32.lib
+LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_60 = $(LIBS_60) ssleay32.lib
-LIBPATHS_60 = $(LIBPATHS_60) -libpath:$(ME_COM_OPENSSL_PATH)/out32
+LIBS_62 = $(LIBS_62) ssleay32.lib
+LIBPATHS_62 = $(LIBPATHS_62) -libpath:$(ME_COM_OPENSSL_PATH)/out32
 !ENDIF
-LIBS_60 = $(LIBS_60) libmpr.lib
+LIBS_62 = $(LIBS_62) libmpr.lib
 !IF "$(ME_COM_OPENSSL)" == "1"
-LIBS_60 = $(LIBS_60) libmpr-openssl.lib
+LIBS_62 = $(LIBS_62) libmpr-openssl.lib
 !ENDIF
 !IF "$(ME_COM_MBEDTLS)" == "1"
-LIBS_60 = $(LIBS_60) libmpr-mbedtls.lib
+LIBS_62 = $(LIBS_62) libmpr-mbedtls.lib
 !ENDIF
 
-build\$(CONFIG)\bin\espman.exe: $(DEPS_60)
+build\$(CONFIG)\bin\espman.exe: $(DEPS_62)
 	@echo ..... [Link] build\$(CONFIG)\bin\espman.exe
-	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_60) $(LIBS_60) $(LIBS)  $(LOG)
+	"$(LD)" -nologo -out:$(BUILD)\bin\espman.exe -entry:WinMainCRTStartup -subsystem:windows $(LDFLAGS) $(LIBPATHS)  "$(BUILD)\obj\watchdog.obj" $(LIBPATHS_62) $(LIBS_62) $(LIBS)  $(LOG)
 
 #
 #   installPrep
 #
 
-installPrep: $(DEPS_61)
+installPrep: $(DEPS_63)
 	if [ "`id -u`" != 0 ]
 	then echo "Must run as root. Rerun with sudo."
 	exit 255
@@ -1124,14 +1194,14 @@ installPrep: $(DEPS_61)
 #   stop
 #
 
-stop: $(DEPS_62)
+stop: $(DEPS_64)
 #  Omit build script stop
 
 #
 #   installBinary
 #
 
-installBinary: $(DEPS_63)
+installBinary: $(DEPS_65)
 	if not exist "$(ME_VAPP_PREFIX)\man\man1" md "$(ME_VAPP_PREFIX)\man\man1"
 	if not exist "$(ME_VAPP_PREFIX)\bin" md "$(ME_VAPP_PREFIX)\bin"
 	copy /Y /B build\$(CONFIG)\bin\esp.exe+modified "$(ME_VAPP_PREFIX)\bin\esp.exe" $(LOG)
@@ -1169,33 +1239,33 @@ installBinary: $(DEPS_63)
 #   start
 #
 
-start: $(DEPS_64)
+start: $(DEPS_66)
 #  Omit build script start
 
 #
 #   install
 #
-DEPS_65 = $(DEPS_65) installPrep
-DEPS_65 = $(DEPS_65) stop
-DEPS_65 = $(DEPS_65) installBinary
-DEPS_65 = $(DEPS_65) start
+DEPS_67 = $(DEPS_67) installPrep
+DEPS_67 = $(DEPS_67) stop
+DEPS_67 = $(DEPS_67) installBinary
+DEPS_67 = $(DEPS_67) start
 
-install: $(DEPS_65)
+install: $(DEPS_67)
 #  Omit build script install
 
 #
 #   uninstall
 #
-DEPS_66 = $(DEPS_66) stop
+DEPS_68 = $(DEPS_68) stop
 
-uninstall: $(DEPS_66)
+uninstall: $(DEPS_68)
 #  Omit build script uninstall
 
 #
 #   uninstallBinary
 #
 
-uninstallBinary: $(DEPS_67)
+uninstallBinary: $(DEPS_69)
 	if exist "$(ME_VAPP_PREFIX)" rd /Q /S "$(ME_VAPP_PREFIX)"
 	if exist "$(ME_VAPP_PREFIX)\bin" rd /Q "$(ME_VAPP_PREFIX)\bin"
 	if exist "$(ME_VAPP_PREFIX)\inc" rd /Q "$(ME_VAPP_PREFIX)\inc"
@@ -1206,6 +1276,6 @@ uninstallBinary: $(DEPS_67)
 #   version
 #
 
-version: $(DEPS_68)
+version: $(DEPS_70)
 	echo $(VERSION)
 

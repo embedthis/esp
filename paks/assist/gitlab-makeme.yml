@@ -2,7 +2,7 @@
 #   gitlab-makeme.yml - Template building with MakeMe
 #
 #   Inputs:
-#       AWS_PROFILE     mobsense
+#       AWS_PROFILE     ACCOUNT
 #       PROFILE         dev, release, ...
 #   Outputs
 #       build/*/img/    built images

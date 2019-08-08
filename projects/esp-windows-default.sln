@@ -159,6 +159,29 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsql", "esp-windows-defau
 		{4A55E78E-9B64-4BBC-B3CF-714B53143E2B} = {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "esp-windows-default\server.vcxproj", "{08D18C65-F128-48C2-BF1B-03D85F9D08CA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{AA579BAE-5ACB-48D5-B42E-AE12F30F3B77} = {AA579BAE-5ACB-48D5-B42E-AE12F30F3B77}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{0AF5E050-282A-438A-971F-DA21A00C1DE8} = {0AF5E050-282A-438A-971F-DA21A00C1DE8}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{40D07AB8-5586-4EB8-B0E5-29A5AA12297F} = {40D07AB8-5586-4EB8-B0E5-29A5AA12297F}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{9F59A794-2F2A-4991-B2BF-25D39031215E} = {9F59A794-2F2A-4991-B2BF-25D39031215E}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{3BC80A8C-23DB-4258-A7B2-A7F553B711DF} = {3BC80A8C-23DB-4258-A7B2-A7F553B711DF}
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{08D18C65-F128-48C2-BF1B-03D85F9D08CA} = {08D18C65-F128-48C2-BF1B-03D85F9D08CA}
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "watchdog", "esp-windows-default\watchdog.vcxproj", "{985DA7F2-2AA1-498E-9116-6256A6AF994D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C29B740D-1A14-47B8-8D2D-55B7CCD461B6} = {C29B740D-1A14-47B8-8D2D-55B7CCD461B6}
@@ -281,6 +304,14 @@ EndProject
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Release|Win32.Build.0 = Release|Win32
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Release|x64.ActiveCfg = Release|x64
 {4A55E78E-9B64-4BBC-B3CF-714B53143E2B}.Release|x64.Build.0 = Release|x64
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Debug|Win32.ActiveCfg = Debug|Win32
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Debug|Win32.Build.0 = Debug|Win32
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Debug|x64.ActiveCfg = Debug|x64
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Debug|x64.Build.0 = Debug|x64
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Release|Win32.ActiveCfg = Release|Win32
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Release|Win32.Build.0 = Release|Win32
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Release|x64.ActiveCfg = Release|x64
+{08D18C65-F128-48C2-BF1B-03D85F9D08CA}.Release|x64.Build.0 = Release|x64
 {985DA7F2-2AA1-498E-9116-6256A6AF994D}.Debug|Win32.ActiveCfg = Debug|Win32
 {985DA7F2-2AA1-498E-9116-6256A6AF994D}.Debug|Win32.Build.0 = Debug|Win32
 {985DA7F2-2AA1-498E-9116-6256A6AF994D}.Debug|x64.ActiveCfg = Debug|x64

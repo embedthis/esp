@@ -108,11 +108,17 @@
 #ifndef ME_NAME
     #define ME_NAME "esp"
 #endif
+#ifndef ME_PARTS
+    #define ME_PARTS "undefined"
+#endif
 #ifndef ME_PLATFORMS
     #define ME_PLATFORMS "local"
 #endif
 #ifndef ME_PREFIXES
     #define ME_PREFIXES "install-prefixes"
+#endif
+#ifndef ME_PROFILE
+    #define ME_PROFILE "undefined"
 #endif
 #ifndef ME_TITLE
     #define ME_TITLE "Embedthis ESP"
