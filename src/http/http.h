@@ -414,7 +414,7 @@ typedef struct HttpAddress {
     int         banStatus;                      /**< Ban response status */
     int         delay;                          /**< Delay per request */
     int         ncounters;                      /**< Number of counters in ncounters */
-    int         seqno;                          /**< Uniqueu client sequence number */
+    int         seqno;                          /**< Unique client sequence number */
     HttpCounter counters[1];                    /**< Counters allocated here */
 } HttpAddress;
 
@@ -1012,6 +1012,7 @@ typedef struct Http {
     int             activeProcesses;        /**< Count of active external processes */
     uint64          totalConnections;       /**< Total connections accepted */
     uint64          totalRequests;          /**< Total requests served */
+    uint64          totalStreams;           /**< Total streams created */
 
     int             flags;                  /**< Open flags */
     void            *context;               /**< Embedding context */
@@ -1036,6 +1037,7 @@ typedef struct Http {
     int             staticLink;             /**< Target platform is using a static linking */
     int             traceLevel;             /**< Current request trace level */
     int             startLevel;             /**< Start endpoint trace level */
+    int             http2;                  /**< Enable http 2 */
 
     /*
         Callbacks
@@ -1135,6 +1137,14 @@ PUBLIC Http *httpCreate(int flags);
     @stability Internal
  */
 PUBLIC void httpDestroy(void);
+
+/*
+    Enable or disable HTTP/2 for the server at runtime.
+    @param enable Boolean. Set to 1 to enable and zero to disable.
+    @ingroup Http
+    @stability Prototype
+ */
+PUBLIC void httpEnableHttp2(int enable);
 
 /**
     Get the http context object
@@ -2338,17 +2348,6 @@ PUBLIC void httpResumeQueue(HttpQueue *q);
  */
 PUBLIC void httpScheduleQueue(HttpQueue *q);
 
-#if UNUSED
-/**
-    Service a queue
-    @description Service a queue by invoking its service() routine.
-    @param q Queue reference
-    @ingroup HttpQueue
-    @stability Stable
- */
-PUBLIC void httpServiceQueue(HttpQueue *q);
-#endif
-
 /**
     Set a queue's max packetSize and flow control low, max and window thresholds
     @description If size parameters are set to -1, default values from the limits are used.
@@ -3092,8 +3091,9 @@ typedef struct HttpNet {
 
     void            *context;               /**< Embedding context (EjsRequest) */
     void            *data;                  /**< Custom data */
+    uint64          seqno;                  /**< Unique network sequence number */
 
-#if UNUSED || 1
+#if KEEP || 1
     void            *ejs;                   /**< Embedding VM */
     void            *pool;                  /**< Pool of VMs */
 #endif
@@ -3102,18 +3102,20 @@ typedef struct HttpNet {
     int             nextStreamID;           /**< Next stream ID */
     int             lastStreamID;           /**< Last stream ID */
     int             ownStreams;             /**< Number of peer created streams */
-    int             seqno;                  /**< Unique network sequence number */
     int             session;                /**< Currently parsing frame for this session */
     int             timeout;                /**< Network timeout indication */
     int             totalRequests;          /**< Total number of requests serviced */
 
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
+#if DEPRECATED || 1
     bool            borrowed: 1;            /**< Socket has been borrowed */
+#endif
     bool            destroyed: 1;           /**< Net object has been destroyed */
     bool            eof: 1;                 /**< Socket has been closed */
     bool            error: 1;               /**< Hard network error - cannot continue */
     uint            eventMask: 3;           /**< Last IO event mask */
     bool            goaway: 1;              /**< Closing network connection (sent or received a goAway frame) */
+    bool            http2: 1;               /**< Enable http 2 */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
     uint            protocol: 2;            /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
     bool            receivedGoaway: 1;      /**< Received goaway frame */
@@ -3125,6 +3127,7 @@ typedef struct HttpNet {
     bool            writeBlocked: 1;        /**< Transmission writing is blocked */
 } HttpNet;
 
+#if DEPRECATED || 1
 /**
     Borrow a network connection
     @description Borrow the network from Http. This effectively gains an exclusive loan of the network so that it
@@ -3145,9 +3148,10 @@ typedef struct HttpNet {
     \n\n
     @param net HttpNet object created via #httpCreateNet
     @ingroup HttpNet
-    @stability Internal
+    @stability Deprecated
  */
 PUBLIC void httpBorrowNet(HttpNet *net);
+#endif
 
 /**
     Connect the network to a remote peer.
@@ -3231,6 +3235,17 @@ PUBLIC bool httpGetAsync(HttpNet *net);
 PUBLIC void httpIOEvent(struct HttpNet *net, MprEvent *event);
 
 /**
+    Read input from a HTTP connected socket
+    @description This routine reads I/O events. It allocates a standard sized
+        packet and reads data into this packet and passes to the input queue pipeline.
+    @param net HttpNet object created via #httpCreateNet
+    @ingroup HttpNet
+    @stability Internal
+ */
+
+PUBLIC bool httpReadIO(HttpNet *net);
+
+/**
     Test if the network is a client-side network
     @param net HttpNet Network object created via #httpCreateNet
     @return true if the network is client-side
@@ -3272,6 +3287,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...);
   */
 PUBLIC void httpNetTimeout(HttpNet *net);
 
+#if DEPRECATED || 1
 /**
     Return a borrowed a network connection
     @description Returns a borrowed network object back to the Http engine. This ends the exclusive loan of the
@@ -3286,9 +3302,10 @@ PUBLIC void httpNetTimeout(HttpNet *net);
     \n\n
     @param net HttpNet object created via #httpCreateNet
     @ingroup HttpNet
-    @stability Internal
+    @stability Deprecated
  */
 PUBLIC void httpReturnNet(HttpNet *net);
+#endif
 
 /**
     Service pipeline queues to flow data.
@@ -3514,6 +3531,7 @@ typedef struct HttpStream {
     MprEvent        *timeoutEvent;          /**< Connection or request timeout event */
     HttpTrace       *trace;                 /**< Tracing configuration */
     uint64          startMark;              /**< High resolution tick time of request */
+    uint64          seqno;                  /**< Unique monotonically increasing sequence number */
 
     char            *boundary;              /**< File upload boundary */
     void            *context;               /**< Embedding context (EjsRequest) */
@@ -6890,7 +6908,7 @@ PUBLIC cchar *httpGetBodyInput(HttpStream *stream);
     Read response data as a string. This will read all rx body and return a string that the caller should free.
     This will block and should not be used in async mode.
     @param stream HttpStream stream object created via #httpCreateStream
-    @returns A string containing the rx body. Caller should free.
+    @returns A string containing the rx body.
     @ingroup HttpRx
     @stability Stable
  */
@@ -8421,6 +8439,25 @@ typedef struct HttpDir {
  */
 PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 
+/************************************ CreateEvent ***********************************/
+/**
+    Event callback function for httpCreateEvent
+    @ingroup HttpStream
+    @stability Prototype
+ */
+typedef void (*HttpEventProc)(HttpStream *stream, void *data);
+
+/**
+    Invoke a callback on an Appweb thread from a non-appweb thread using a stream sequence number.
+    @description Used to safely call back into Apppweb.
+    @param streamSeqno HttpStream->seqno identifier
+    @param callback Callback function to invoke
+    @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
+    @ingroup HttpStream
+    @stability Prototype
+ */
+PUBLIC void httpCreateEvent(uint64 streamSeqno, HttpEventProc callback, void *data);
+
 /************************************ Misc *****************************************/
 /**
     Add an option to the options table
@@ -8509,6 +8546,18 @@ PUBLIC void httpRemoveOption(MprHash *options, cchar *field);
  */
 PUBLIC void httpSetOption(MprHash *options, cchar *field, cchar *value);
 
+/**
+    Get more output by invoking the handler's writable callback.
+    Called by processRunning.
+    Also issues an HTTP_EVENT_WRITABLE for application level notification.
+    @description Get more output by invoking the handler's writable callback. Called by processRunning.
+    Also issues an HTTP_EVENT_WRITABLE for application level notification.
+    @param q HttpQueue input queue object
+    @ingroup HttpConn
+    @stability Internal
+ */
+PUBLIC bool httpPumpOutput(HttpQueue *q);
+
 /********************************* Compat **************************************/
 /*
     LEGACY redefines for compatibility with http versions 4-7
@@ -8535,6 +8584,8 @@ PUBLIC void httpSetOption(MprHash *options, cchar *field, cchar *value);
 #define httpClientConn(stream) httpClientStream(stream)
 #define httpServerConn(stream) httpServerStream(stream)
 #define httpDisconnect(stream) httpDisconnectStream(stream)
+
+PUBLIC void httpProtocol(HttpStream *stream);
 
 #endif
 
