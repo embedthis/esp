@@ -1286,8 +1286,9 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         httpSetRouteHome(route, mprGetPathDir(path));
         eroute->configFile = sclone(path);
     }
-    httpAddRouteHandler(route, "espHandler", "esp");
-
+    if (!route->handler) {
+        httpAddRouteHandler(route, "espHandler", "esp");
+    }
     /*
         Loading config may run commands. To make it easier for parsing code, we disable GC by not consenting to
         yield for this section. This should only happen on application load.

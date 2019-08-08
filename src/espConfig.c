@@ -53,21 +53,6 @@ static void parseEsp(HttpRoute *route, cchar *key, MprJson *prop)
     EspRoute    *eroute;
 
     eroute = route->eroute;
-
-#if MOVED
-    if (mprGetJson(prop, "app")) {
-        eroute->app = 1;
-    }
-    if (eroute->app) {
-        /*
-            Set some defaults before parsing "esp". This permits user overrides.
-         */
-        httpSetRouteXsrf(route, 1);
-        httpAddRouteHandler(route, "espHandler", "");
-        eroute->keep = smatch(route->mode, "release") == 0;
-    }
-    espSetDefaultDirs(route, eroute->app);
-#endif
     httpParseAll(route, key, prop);
 
     /*
