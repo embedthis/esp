@@ -32,10 +32,6 @@
         {
             "from": "windows.bat",
             "to": "../projects"
-        },
-        {
-            "from": "make.bat",
-            "to": ".."
         }
     ],
     "origin": "embedthis/me-win"

@@ -6,6 +6,7 @@ import * as gulp from 'gulp'
 import * as log from 'fancy-log'
 import clean from './clean'
 import config from 'assist'
+import {blend} from 'assist/blend'
 import render from './render'
 import patch from './patch'
 import publish from './publish'
@@ -15,6 +16,7 @@ import watch from './watch'
 
 function setProd(done) {
     config.profile = 'prod'
+    blend(config, config.profiles[config.profile])
     done()
 }
 

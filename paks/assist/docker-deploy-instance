@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-#   UNUSED - NOT YET UPGRADED
+#   NOT YET UPGRADED
 #   docker-deploy - Deploy docker image to an instance
 #
 #   usage: docker-deploy
 #
-echo UNUSED - NOT YET UPGRADED
+echo NOT YET UPGRADED
 exit 255
 
 IMAGE=${NAME}
@@ -121,7 +121,6 @@ do
     if [ "${containers}" != "" ] ; then
         echo "Gracefully stop traffic on ${NAME}"
 
-        # MOB - these SIGQUITs don't seem to be getting through to the container. Explicit kill signals work though on the process.
         echo "docker kill -s SIGQUIT ${NAME}"
         docker kill -s SIGQUIT ${NAME}
 

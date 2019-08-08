@@ -2,7 +2,7 @@
 #   gitlab-ui.yml - Template CI/CD for building a UI hosted in S3
 #
 #   Inputs:
-#       AWS_PROFILE     mobsense
+#       AWS_PROFILE     ACCOUNT
 #       PROFILE         dev, release, prod, ...
 #       UI              "ui"
 #   Outputs

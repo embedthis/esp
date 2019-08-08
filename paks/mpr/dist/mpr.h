@@ -102,6 +102,9 @@ struct  MprXml;
 #ifndef ME_MPR_MAX_PASSWORD
     #define ME_MPR_MAX_PASSWORD 256    /**< Max password length */
 #endif
+#ifndef ME_MPR_THREAD_LIMIT_BY_CORES
+    #define ME_MPR_THREAD_LIMIT_BY_CORES 1
+#endif
 
 /*
     Select wakeup port. Port can be any free port number. If this is not free, the MPR will use the next free port.
@@ -5798,7 +5801,6 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 
 /**
     Event callback function
-    @return Return non-zero if the dispatcher is deleted. Otherwise return 0
     @ingroup MprEvent
     @stability Stable
  */
@@ -5818,20 +5820,20 @@ typedef void (*MprEventProc)(void *data, struct MprEvent *event);
     @stability Internal
  */
 typedef struct MprEvent {
-    cchar               *name;          /**< Static debug name of the event */
-    MprEventProc        proc;           /**< Callback procedure */
-    MprTicks            timestamp;      /**< When was the event created */
-    MprTicks            due;            /**< When is the event due */
-    void                *data;          /**< Event private data (managed|unmanged depending on flags) */
-    void                *sock;          /**< Optional socket data */
-    int                 flags;          /**< Event flags */
-    int                 mask;           /**< I/O mask of events */
-    MprTicks            period;         /**< Reschedule period */
-    struct MprEvent     *next;          /**< Next event linkage */
-    struct MprEvent     *prev;          /**< Previous event linkage */
-    struct MprDispatcher *dispatcher;   /**< Event dispatcher service */
-    struct MprWaitHandler *handler;     /**< Optional wait handler */
-    MprCond             *cond;          /**< Wait for event to complete */
+    cchar                   *name;              /**< Static debug name of the event */
+    MprEventProc            proc;               /**< Callback procedure */
+    MprTicks                timestamp;          /**< When was the event created */
+    MprTicks                due;                /**< When is the event due */
+    void                    *data;              /**< Event private data (managed|unmanged depending on flags) */
+    void                    *sock;              /**< Optional socket data */
+    int                     flags;              /**< Event flags */
+    int                     mask;               /**< I/O mask of events */
+    MprTicks                period;             /**< Reschedule period */
+    struct MprEvent         *next;              /**< Next event linkage */
+    struct MprEvent         *prev;              /**< Previous event linkage */
+    struct MprDispatcher    *dispatcher;        /**< Event dispatcher service */
+    struct MprWaitHandler   *handler;           /**< Optional wait handler */
+    MprCond                 *cond;              /**< Wait for event to complete */
 } MprEvent;
 
 /*
@@ -6048,8 +6050,9 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks.
         \n\n
         When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.
-    @return Returns the event object if successful. This routine may return before or after the even callback has run.
-        If MPR_EVENT_FOREIGN is supplied, the return value is always zero.
+    @return Returns the event object if successful. This routine may return before or after the event callback has run.
+        If MPR_EVENT_FOREIGN is supplied, the return value is may point to freed memory. You may test the pointer if it is
+        NULL, but do not dereference it.
     @ingroup MprEvent
     @stability Evolving
  */
@@ -6060,10 +6063,11 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     @description Queue an event for service
     @param dispatcher Dispatcher object created via mprCreateDispatcher
     @param event Event object to queue
+    @returns True if the event was scheduled on the dispatcher.
     @ingroup MprEvent
     @stability Stable
  */
-PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
+PUBLIC bool mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
 
 /**
     Remove an event
@@ -8048,6 +8052,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     #define ME_MPR_SSL_TIMEOUT 86400
 #endif
 #define ME_MPR_HAS_ALPN 1
+#define MPR_HAS_CRPTO_ENGINE 1
 
 /**
     Callback function for SNI connections.
@@ -8068,6 +8073,7 @@ typedef struct MprSsl {
     cchar           *caFile;            /**< Certificate verification cert file or bundle */
     cchar           *caPath;            /**< Certificate verification cert directory (OpenSSL only) */
     cchar           *ciphers;           /**< Candidate ciphers to use */
+    cchar           *device;            /**< Crypto hardware device to use */
     cchar           *hostname;          /**< Hostname when using SNI */
     MprList         *alpn;              /**< ALPN protocols */
     void            *config;            /**< Extended provider SSL configuration */
@@ -8093,8 +8099,9 @@ typedef struct MprSsl {
 #define MPR_PROTO_TLSV1_0  0x8              /**< TLS V1.0 protocol */
 #define MPR_PROTO_TLSV1_1  0x10             /**< TLS V1.1 protocol */
 #define MPR_PROTO_TLSV1_2  0x20             /**< TLS V1.2 protocol */
-#define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2)
-#define MPR_PROTO_ALL      0x2F             /**< All protocols */
+#define MPR_PROTO_TLSV1_3  0x40             /**< TLS V1.3 protocol */
+#define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2 | MPR_PROTO_TLSV1_3)
+#define MPR_PROTO_ALL      0x6B             /**< All protocols */
 
 /**
     Add the ciphers to use for SSL

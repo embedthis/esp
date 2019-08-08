@@ -1158,6 +1158,13 @@
     </member>
     <member kind="typedef">
       <type>void(*</type>
+      <name>HttpInvokeProc</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>gab961689c08b521886ab8ae33cef278ea</anchor>
+      <arglist>)(HttpConn *conn, void *data)</arglist>
+    </member>
+    <member kind="typedef">
+      <type>void(*</type>
       <name>HttpIOCallback</name>
       <anchorfile>group___http_conn.html</anchorfile>
       <anchor>ga90233a1163fa6772c60c86588b01e803</anchor>
@@ -1353,6 +1360,13 @@
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>httpInvoke</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>ga680c6d113a32965c2498c407fdf1b69e</anchor>
+      <arglist>(HttpConn *conn, HttpInvokeProc callback, void *data)</arglist>
+    </member>
+    <member kind="function">
       <type>void void void void</type>
       <name>httpIO</name>
       <anchorfile>group___http_conn.html</anchorfile>
@@ -1407,6 +1421,13 @@
       <anchorfile>group___http_conn.html</anchorfile>
       <anchor>gae24ec30899bb6b77e4840e6090aa2289</anchor>
       <arglist>(HttpConn *conn, bool keepHeaders)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>httpPumpOutput</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>ga4fc4c6ad8dbddb5b543a267e4e7a2193</anchor>
+      <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
@@ -3929,7 +3950,7 @@
   </compound>
   <compound kind="dir">
     <name>src</name>
-    <path>/Users/mob/dev/http/src/</path>
+    <path>/Users/mob/dev/http-7/src/</path>
     <filename>dir_68267d1309a1af8e8297ef4c3efbcdba.html</filename>
     <file>http.h</file>
   </compound>

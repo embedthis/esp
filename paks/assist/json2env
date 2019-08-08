@@ -153,7 +153,6 @@ function template(v, context) {
                 context[word] = '${' + word + '}'
             }
         }
-        //  MOB - better to replace with code that does not eval
         let fn = Function('_context_', 'with (_context_) { return `' + text + '`}')
         return fn(context)
     }

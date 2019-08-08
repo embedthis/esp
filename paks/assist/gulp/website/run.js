@@ -26,5 +26,4 @@ function run(cb) {
     })
 }
 
-
 export default gulp.parallel(run, watch)

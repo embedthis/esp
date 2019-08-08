@@ -1385,6 +1385,10 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Wait till 2 milliseconds of idle time possible.</td></tr>
 <tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1a946249df06e7ef237168454c5c0f5041" class="nameRef">MPR_MODULE_LOADED</a>&nbsp;&nbsp;&nbsp;0x4</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Dynamic module loaded.</td></tr>
+<tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a2ea2f3145ba5647efb9d249b64115c25" class="nameRef">MPR_MODULE_STARTED</a>&nbsp;&nbsp;&nbsp;0x1</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Module stared.</td></tr>
@@ -1433,7 +1437,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Flag for mprGetPathFiles to return paths relative to the directory.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a3865b9d22e4cf35a4bbb06fe282ed0b4" class="nameRef">MPR_PROTO_ALL</a>&nbsp;&nbsp;&nbsp;0x2F</td>
+<td>#define</td><td><a href="#mpr_8h_1a3865b9d22e4cf35a4bbb06fe282ed0b4" class="nameRef">MPR_PROTO_ALL</a>&nbsp;&nbsp;&nbsp;0x6B</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>All protocols.</td></tr>
 <tr class="apiDef">
@@ -1456,6 +1460,10 @@
 <td>#define</td><td><a href="#mpr_8h_1a7216cd86a972299f47f8f450371874c8" class="nameRef">MPR_PROTO_TLSV1_2</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>TLS V1.2 protocol.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1a577cce0164e72e2e631389306bb1d0ce" class="nameRef">MPR_PROTO_TLSV1_3</a>&nbsp;&nbsp;&nbsp;0x40</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>TLS V1.3 protocol.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a92106b0b98bcd8a8d346b690564fb7d5" class="nameRef">MPR_READABLE</a>&nbsp;&nbsp;&nbsp;0x2</td>
 </tr>
@@ -5509,7 +5517,7 @@ When was the event created.
     <tr><td class="param">flags</td><td>Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event which will be automatically rescheduled according to the specified period. Use MPR_EVENT_STATIC_DATA if the data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks. <br/><br/>
  When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>The event object if successful. This routine may return before or after the even callback has run. If MPR_EVENT_FOREIGN is supplied, the return value is always zero.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The event object if successful. This routine may return before or after the event callback has run. If MPR_EVENT_FOREIGN is supplied, the return value is may point to freed memory. You may test the pointer if it is NULL, but do not dereference it.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a>, <a href="#group___mpr_event" class="ref">MprEvent</a>, <a href="#group___mpr_event_1ga780d2b4460347c6da009d21097f4f27d" class="ref">MprEventProc</a>, <a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="ref">mprCreateDispatcher</a>, <a href="#group___mpr_event_1ga3e92f13fc23a3f0ed2d730b077f61611" class="ref">mprCreateTimerEvent</a>, <a href="#group___mpr_dispatcher_1gafd35a965e3ebadc852b8b02aace7a08e" class="ref">mprDestroyDispatcher</a>, <a href="#group___mpr_event_1gac9e97afd0732f2d3612d911817357db5" class="ref">mprEnableContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga443960e2b8cc3fd9169b46dfb66ff0d3" class="ref">mprGetDispatcher</a>, <a href="#group___mpr_event_1ga9163bc8e37a8ff05c0c957cfcc86e02e" class="ref">mprRemoveEvent</a>, <a href="#group___mpr_event_1ga1919da044dd4f62d999526175f76bdc2" class="ref">mprRescheduleEvent</a>, <a href="#group___mpr_event_1ga6fa51ab06c56baaad50f1b4df7efc1d4" class="ref">mprRestartContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga205adaee3b45d0cc899afc89eb9f3b3d" class="ref">mprServiceEvents</a>, <a href="#group___mpr_dispatcher_1gac81ecb3239317f36c36c7d849d738540" class="ref">mprSignalDispatcher</a>, <a href="#group___mpr_event_1ga1f2c85a20242ec0c1e4830ccd25c7bb7" class="ref">mprStopContinuousEvent</a>, <a href="#group___mpr_dispatcher_1gaa523c291209f9419ad27f8b7be4e231d" class="ref">mprWaitForEvent</a></dd></dl>
@@ -11805,6 +11813,9 @@ Extended provider SSL configuration.
     <tr><td class="param">bool</td><td><td>configured</td><td>
 Set if this SSL configuration has been processed.
 </td>
+    <tr><td class="param">cchar *</td><td><td>device</td><td>
+Crypto hardware device to use.
+</td>
     <tr><td class="param">cchar *</td><td><td>hostname</td><td>
 Hostname when using SNI.
 </td>
@@ -15469,7 +15480,6 @@ Equivalent in size to void*
   </div>
   <div class="apiDetail">
 <p>Event callback function.</p>
-    <dl><dt>Returns:</dt><dd>Return non-zero if the dispatcher is deleted. Otherwise return 0.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_dispatcher" class="ref">MprDispatcher</a>, <a href="#group___mpr_event" class="ref">MprEvent</a>, <a href="#group___mpr_dispatcher_1ga94da5c23c5648b4b3c4f3b1fe5a4e7b1" class="ref">mprCreateDispatcher</a>, <a href="#group___mpr_event_1gac6fcf6faf6ba5c85d7954fa416b73e30" class="ref">mprCreateEvent</a>, <a href="#group___mpr_event_1ga3e92f13fc23a3f0ed2d730b077f61611" class="ref">mprCreateTimerEvent</a>, <a href="#group___mpr_dispatcher_1gafd35a965e3ebadc852b8b02aace7a08e" class="ref">mprDestroyDispatcher</a>, <a href="#group___mpr_event_1gac9e97afd0732f2d3612d911817357db5" class="ref">mprEnableContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga443960e2b8cc3fd9169b46dfb66ff0d3" class="ref">mprGetDispatcher</a>, <a href="#group___mpr_event_1ga9163bc8e37a8ff05c0c957cfcc86e02e" class="ref">mprRemoveEvent</a>, <a href="#group___mpr_event_1ga1919da044dd4f62d999526175f76bdc2" class="ref">mprRescheduleEvent</a>, <a href="#group___mpr_event_1ga6fa51ab06c56baaad50f1b4df7efc1d4" class="ref">mprRestartContinuousEvent</a>, <a href="#group___mpr_dispatcher_1ga205adaee3b45d0cc899afc89eb9f3b3d" class="ref">mprServiceEvents</a>, <a href="#group___mpr_dispatcher_1gac81ecb3239317f36c36c7d849d738540" class="ref">mprSignalDispatcher</a>, <a href="#group___mpr_event_1ga1f2c85a20242ec0c1e4830ccd25c7bb7" class="ref">mprStopContinuousEvent</a>, <a href="#group___mpr_dispatcher_1gaa523c291209f9419ad27f8b7be4e231d" class="ref">mprWaitForEvent</a></dd></dl>
@@ -16319,6 +16329,9 @@ Extended provider SSL configuration.
 </td>
     <tr><td class="param">bool</td><td><td>configured</td><td>
 Set if this SSL configuration has been processed.
+</td>
+    <tr><td class="param">cchar *</td><td><td>device</td><td>
+Crypto hardware device to use.
 </td>
     <tr><td class="param">cchar *</td><td><td>hostname</td><td>
 Hostname when using SNI.

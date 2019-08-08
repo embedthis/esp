@@ -39,7 +39,7 @@ function deployParts() {
         cd "./${part}"
         if [ -f bin/deploy ] ; then
             bin/deploy $*
-        elif [ -f gulpfile.ts ] ; then
+        elif [ -f gulpfile.ts -o gulpfile.js -o gulpfile.babel.js ] ; then
             gulp deploy $*
         elif [ -f main.me ] ; then
             me deploy

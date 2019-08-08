@@ -21,7 +21,7 @@ if [ -z "${CI}" ] ; then
     fi
     export PROFILE
     export AWS_DEFAULT_REGION=us-east-1
-    export AWS_PROFILE=mobsense
+    export AWS_PROFILE=ACCOUNT_NAME
 
     # export TF_VAR_profile=${PROFILE}
     export TF_VAR_profile=prod
