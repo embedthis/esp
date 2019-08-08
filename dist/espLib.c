@@ -5033,7 +5033,6 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     }
 #endif
 
-    httpTrace(conn, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     conn->rx->target = &conn->rx->pathInfo[1];
     httpMapFile(conn);
     if (conn->tx->fileInfo.isDir) {
@@ -5095,7 +5094,7 @@ static int cloneDatabase(HttpConn *conn)
      */
     httpGetSession(conn, 1);
     id = httpGetSessionID(conn);
-    if ((req->edi = mprLookupKey(esp->databases, id)) == 0) {
+    if (id && (req->edi = mprLookupKey(esp->databases, id)) == 0) {
         if ((req->edi = ediClone(eroute->edi)) == 0) {
             mprLog("error esp", 0, "Cannot clone database: %s", eroute->edi->path);
             return MPR_ERR_CANT_OPEN;
@@ -5633,8 +5632,9 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         httpSetRouteHome(route, mprGetPathDir(path));
         eroute->configFile = sclone(path);
     }
-    httpAddRouteHandler(route, "espHandler", "esp");
-
+    if (!route->handler) {
+        httpAddRouteHandler(route, "espHandler", "esp");
+    }
     /*
         Loading config may run commands. To make it easier for parsing code, we disable GC by not consenting to
         yield for this section. This should only happen on application load.

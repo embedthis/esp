@@ -298,7 +298,7 @@ static int parseArgs(int argc, char **argv)
                 if (chdir((char*) argp) < 0) {
                     fail("Cannot change directory to %s", argp);
                 }
-                app->home = sclone(argv[++argind]);
+                app->home = sclone(argp);
             }
 
         } else if (smatch(argp, "cipher")) {
