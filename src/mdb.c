@@ -20,7 +20,7 @@
 #define MDB_LOAD_TABLE   2      /* Parsing a table */
 #define MDB_LOAD_HINTS   3      /* Parsing hints */
 #define MDB_LOAD_SCHEMA  4      /* Parsing schema */
-#define MDB_LOAD_COL     5      /* Parsing column schema */ 
+#define MDB_LOAD_COL     5      /* Parsing column schema */
 #define MDB_LOAD_DATA    6      /* Parsing data */
 #define MDB_LOAD_FIELD   7      /* Parsing fields */
 
@@ -86,15 +86,15 @@ static int mdbUpdateRec(Edi *edi, EdiRec *rec);
 
 static EdiProvider MdbProvider = {
     "mdb",
-    mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete, 
-    mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery, 
-    mdbReadField, mdbReadRec, mdbReadWhere, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable, 
+    mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete,
+    mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery,
+    mdbReadField, mdbReadRec, mdbReadWhere, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
     mdbRenameTable, mdbRenameColumn, mdbSave, mdbUpdateField, mdbUpdateRec,
 };
 
 /************************************* Code ***********************************/
 
-PUBLIC void mdbInit()
+PUBLIC void mdbInit(void)
 {
     ediAddProvider(&MdbProvider);
 }
@@ -136,7 +136,7 @@ static void manageMdb(Mdb *mdb, int flags)
 static void mdbClose(Edi *edi)
 {
     Mdb     *mdb;
-   
+
     mdb = (Mdb*) edi;
     autoSave(mdb, 0);
     mdb->tables = 0;
@@ -951,7 +951,7 @@ static int checkMdbState(MprJsonParser *jp, cchar *name, bool leave)
         clearLoadState(mdb);
         pushState(mdb, MDB_LOAD_TABLE);
         break;
-        
+
     case MDB_LOAD_TABLE:
         if (smatch(name, "hints")) {
             pushState(mdb, MDB_LOAD_HINTS);
@@ -964,7 +964,7 @@ static int checkMdbState(MprJsonParser *jp, cchar *name, bool leave)
             return MPR_ERR_BAD_FORMAT;
         }
         break;
-    
+
     case MDB_LOAD_SCHEMA:
         if ((mdb->loadCol = createCol(mdb->loadTable, name)) == 0) {
             mprSetJsonError(jp, "Cannot create '%s' column", name);
@@ -1003,7 +1003,7 @@ static int setMdbValue(MprJsonParser *parser, MprJson *obj, cchar *name, MprJson
 
     mdb = parser->data;
     value = child->value;
-    
+
     switch (mdb->loadState) {
     case MDB_LOAD_BEGIN:
     case MDB_LOAD_TABLE:
@@ -1279,7 +1279,7 @@ static int lookupRow(MdbTable *table, cchar *key)
     if (table->index) {
         if ((kp = mprLookupKeyEntry(table->index, key)) != 0) {
             return (int) PTOL(kp->data);
-        } 
+        }
     } else {
         nrows = mprGetListLength(table->rows);
         keycol = table->keyCol ? table->keyCol->cid : 0;
@@ -1299,7 +1299,7 @@ static int lookupRow(MdbTable *table, cchar *key)
 static MdbSchema *growSchema(MdbTable *table)
 {
     if (table->schema == 0) {
-        if ((table->schema = mprAllocBlock(sizeof(MdbSchema) + 
+        if ((table->schema = mprAllocBlock(sizeof(MdbSchema) +
                 sizeof(MdbCol) * MDB_INCR, MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO)) == 0) {
             return 0;
         }
@@ -1307,7 +1307,7 @@ static MdbSchema *growSchema(MdbTable *table)
         table->schema->capacity = MDB_INCR;
 
     } else if (table->schema->ncols >= table->schema->capacity) {
-        if ((table->schema = mprRealloc(table->schema, sizeof(MdbSchema) + 
+        if ((table->schema = mprRealloc(table->schema, sizeof(MdbSchema) +
                 (sizeof(MdbCol) * (table->schema->capacity + MDB_INCR)))) == 0) {
             return 0;
         }
@@ -1336,7 +1336,7 @@ static MdbCol *createCol(MdbTable *table, cchar *columnName)
 }
 
 
-static void manageSchema(MdbSchema *schema, int flags) 
+static void manageSchema(MdbSchema *schema, int flags)
 {
     int     i;
 
@@ -1348,7 +1348,7 @@ static void manageSchema(MdbSchema *schema, int flags)
 }
 
 
-static void manageCol(MdbCol *col, int flags) 
+static void manageCol(MdbCol *col, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(col->name);
@@ -1458,7 +1458,7 @@ static int updateFieldValue(MdbRow *row, MdbCol *col, cchar *value)
 {
     MdbTable    *table;
     cchar       *key;
-    
+
     assert(row);
     assert(col);
 

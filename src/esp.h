@@ -161,7 +161,7 @@ PUBLIC void espInitHtmlOptions(Esp *esp);
     Initialize the ESP configuration file parser
     @internal
  */
-PUBLIC int espInitParser();
+PUBLIC int espInitParser(void);
 
 /********************************** EspRoutes *********************************/
 /**
@@ -546,7 +546,7 @@ PUBLIC bool espTestConfig(HttpRoute *route, cchar *key, cchar *desired);
 /*
     Internal
  */
-PUBLIC cchar *espGetVisualStudio();
+PUBLIC cchar *espGetVisualStudio(void);
 PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
 PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
@@ -731,11 +731,12 @@ PUBLIC void espFlush(HttpStream *stream);
 
 /**
     Get the current route HttpAuth object.
+    @param stream HttpStream stream object
     @return The HttpAuth object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpAuth *espGetAuth();
+PUBLIC HttpAuth *espGetAuth(HttpStream *stream);
 
 /**
     Get the current request stream.
@@ -743,7 +744,7 @@ PUBLIC HttpAuth *espGetAuth();
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpStream *espGetStream();
+PUBLIC HttpStream *espGetStream(void);
 
 /**
     Get the receive body content length.
@@ -959,11 +960,12 @@ PUBLIC cchar *espGetReferrer(HttpStream *stream);
 
 /**
     Get the current route HttpRoute object.
+    @param stream HttpStream stream object
     @return The HttpRoute object
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC HttpRoute *espGetRoute();
+PUBLIC HttpRoute *espGetRoute(HttpStream *stream);
 
 /**
     Get the default database defined on a route.
@@ -1770,7 +1772,7 @@ PUBLIC bool createRecFromParams(cchar *table);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *createSession();
+PUBLIC cchar *createSession(void);
 
 /**
     Destroy a session state object.
@@ -1778,14 +1780,14 @@ PUBLIC cchar *createSession();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void destroySession();
+PUBLIC void destroySession(void);
 
 /**
     Don't auto-finalize this request
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void dontAutoFinalize();
+PUBLIC void dontAutoFinalize(void);
 
 /**
     Finalize the response.
@@ -1795,7 +1797,7 @@ PUBLIC void dontAutoFinalize();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void finalize();
+PUBLIC void finalize(void);
 
 /**
     Set a feedback message
@@ -1819,14 +1821,14 @@ PUBLIC bool feedback(cchar *type, cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void flush();
+PUBLIC void flush(void);
 
 /**
     Get the auth object for the current route
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC HttpAuth *getAuth();
+PUBLIC HttpAuth *getAuth(void);
 
 /**
     Get a list of column names.
@@ -1844,7 +1846,7 @@ PUBLIC MprList *getColumns(EdiRec *rec);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getCookies();
+PUBLIC cchar *getCookies(void);
 
 /**
     Get the HttpStream object
@@ -1854,7 +1856,7 @@ PUBLIC cchar *getCookies();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC HttpStream *getStream();
+PUBLIC HttpStream *getStream(void);
 
 #if ME_COMPAT
 /*
@@ -1872,7 +1874,7 @@ PUBLIC HttpStream *getStream();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprOff getContentLength();
+PUBLIC MprOff getContentLength(void);
 
 /**
     Get the receive body content type
@@ -1881,7 +1883,7 @@ PUBLIC MprOff getContentLength();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getContentType();
+PUBLIC cchar *getContentType(void);
 
 /**
     Get the private data reference for the current request set via #setData
@@ -1889,7 +1891,7 @@ PUBLIC cchar *getContentType();
     @ingroup EspAbbrev
     @stability prototype
  */
-PUBLIC void *getData();
+PUBLIC void *getData(void);
 
 /**
     Get the stream dispatcher object
@@ -1897,7 +1899,7 @@ PUBLIC void *getData();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprDispatcher *getDispatcher();
+PUBLIC MprDispatcher *getDispatcher(void);
 
 /**
     Get a feedback message defined via #feedback
@@ -1917,7 +1919,7 @@ PUBLIC cchar *getFeedback(cchar *type);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC Edi *getDatabase();
+PUBLIC Edi *getDatabase(void);
 
 /**
     Get the extended route EspRoute structure
@@ -1925,7 +1927,7 @@ PUBLIC Edi *getDatabase();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EspRoute *getEspRoute();
+PUBLIC EspRoute *getEspRoute(void);
 
 /**
     Get the default document root directory for the request route.
@@ -1933,7 +1935,7 @@ PUBLIC EspRoute *getEspRoute();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getDocuments();
+PUBLIC cchar *getDocuments(void);
 
 /**
     Get a field from the current database record
@@ -1952,7 +1954,7 @@ PUBLIC cchar *getField(EdiRec *rec, cchar *field);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiGrid *getGrid();
+PUBLIC EdiGrid *getGrid(void);
 
 /**
     Get an rx http header.
@@ -1971,7 +1973,7 @@ PUBLIC cchar *getHeader(cchar *key);
     @ingroup EspReq
     @stability Evolving
  */
-PUBLIC cchar *getMethod();
+PUBLIC cchar *getMethod(void);
 
 /**
     Get the HTTP URI query string
@@ -1980,7 +1982,7 @@ PUBLIC cchar *getMethod();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getQuery();
+PUBLIC cchar *getQuery(void);
 
 /**
     Get the referring URI
@@ -1991,7 +1993,7 @@ PUBLIC cchar *getQuery();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getReferrer();
+PUBLIC cchar *getReferrer(void);
 
 /**
     Get the ESP request object
@@ -1999,14 +2001,14 @@ PUBLIC cchar *getReferrer();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EspReq *getReq();
+PUBLIC EspReq *getReq(void);
 
 /**
     Get the HttpRoute object for the current route
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC HttpRoute *getRoute();
+PUBLIC HttpRoute *getRoute(void);
 
 /**
     Get the security token.
@@ -2017,7 +2019,7 @@ PUBLIC HttpRoute *getRoute();
     @ingroup EspAbbrev
     @stability Evolving
 */
-PUBLIC cchar *getSecurityToken();
+PUBLIC cchar *getSecurityToken(void);
 
 /**
     Get a session state variable
@@ -2037,7 +2039,7 @@ PUBLIC cchar *getSessionVar(cchar *name);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getSessionID();
+PUBLIC cchar *getSessionID(void);
 
 /**
     Test if a field in the current record has input validation errors
@@ -2054,7 +2056,7 @@ PUBLIC cchar *getFieldError(cchar *field);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getPath();
+PUBLIC cchar *getPath(void);
 
 /**
     Get the current database record
@@ -2062,7 +2064,7 @@ PUBLIC cchar *getPath();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiRec *getRec();
+PUBLIC EdiRec *getRec(void);
 
 /**
     Get a field from the application pak.json configuration
@@ -2080,7 +2082,7 @@ PUBLIC cchar *getConfig(cchar *field);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprList *getUploads();
+PUBLIC MprList *getUploads(void);
 
 /**
     Get the request URI string
@@ -2089,7 +2091,7 @@ PUBLIC MprList *getUploads();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC cchar *getUri();
+PUBLIC cchar *getUri(void);
 
 /**
     Test if a current grid has been defined
@@ -2097,7 +2099,7 @@ PUBLIC cchar *getUri();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool hasGrid();
+PUBLIC bool hasGrid(void);
 
 /**
     Test if a current record has been defined and save to the database
@@ -2107,7 +2109,7 @@ PUBLIC bool hasGrid();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool hasRec();
+PUBLIC bool hasRec(void);
 
 /**
     Render an input field as part of a form. This is a smart input control that will call the appropriate
@@ -2131,7 +2133,7 @@ PUBLIC void input(cchar *field, cchar *options);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool isEof();
+PUBLIC bool isEof(void);
 
 /**
     Test if a http request is finalized.
@@ -2140,7 +2142,7 @@ PUBLIC bool isEof();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool isFinalized();
+PUBLIC bool isFinalized(void);
 
 /**
     Test if the stream is using SSL and is secure
@@ -2148,7 +2150,7 @@ PUBLIC bool isFinalized();
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool isSecure();
+PUBLIC bool isSecure(void);
 
 /**
     Make a hash table container of property values
@@ -2266,7 +2268,7 @@ PUBLIC cchar *md5(cchar *str);
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC cchar *nonce();
+PUBLIC cchar *nonce(void);
 
 /**
     Test the the application mode
@@ -2301,7 +2303,7 @@ PUBLIC cchar *param(cchar *name);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprJson *params();
+PUBLIC MprJson *params(void);
 
 /**
     Read the identified record
@@ -2396,7 +2398,7 @@ PUBLIC void redirect(cchar *target);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void redirectBack();
+PUBLIC void redirectBack(void);
 
 /**
     Remove a cookie
@@ -2447,7 +2449,7 @@ PUBLIC ssize render(cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC ssize renderCached();
+PUBLIC ssize renderCached(void);
 
 /**
     Render the pak.json
@@ -2455,7 +2457,7 @@ PUBLIC ssize renderCached();
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC ssize renderConfig();
+PUBLIC ssize renderConfig(void);
 
 /**
     Render an error message back to the client and finalize the request. The output is Html escaped for security.
@@ -2513,7 +2515,7 @@ PUBLIC ssize renderSafe(cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC void inputSecurityToken();
+PUBLIC void inputSecurityToken(void);
 
 /**
     Render a string of data to the client
@@ -2631,7 +2633,7 @@ PUBLIC void stylesheets(cchar *patterns);
     @ingroup EspAbbrev
     @stability Evolving
 */
-PUBLIC void securityToken();
+PUBLIC void securityToken(void);
 
 /**
     Get a session state variable
@@ -2808,7 +2810,7 @@ PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void showRequest();
+PUBLIC void showRequest(void);
 
 //  FUTURE - document
 PUBLIC EdiGrid *sortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder);

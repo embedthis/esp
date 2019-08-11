@@ -11,7 +11,7 @@
 
 /************************************* Local **********************************/
 
-static void addValidations();
+static void addValidations(void);
 static void formatFieldForJson(MprBuf *buf, EdiField *fp);
 static void manageEdiService(EdiService *es, int flags);
 static void manageEdiGrid(EdiGrid *grid, int flags);

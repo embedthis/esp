@@ -44,11 +44,11 @@ typedef struct EdiService {
     @stability Evolving
     @internal
  */
-PUBLIC EdiService *ediCreateService();
+PUBLIC EdiService *ediCreateService(void);
 
 /**
-    Add a database provider. 
-    @description This should only be called by database providers. 
+    Add a database provider.
+    @description This should only be called by database providers.
     @ingroup EdiService
     @stability Evolving
  */
@@ -59,7 +59,7 @@ PUBLIC void ediAddProvider(struct EdiProvider *provider);
     @param vp Validation structure reference
     @param rec Record to validate
     @param fieldName Field name to validate
-    @param value Field value to validate 
+    @param value Field value to validate
     @ingroup EdiService
     @stability Evolving
  */
@@ -116,7 +116,7 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
 #define EDI_INDEX           0x4         /**< Field flag -- Column is indexed */
 #define EDI_FOREIGN         0x8         /**< Field flag -- Column is a foreign key */
 #define EDI_NOT_NULL        0x10        /**< Field flag -- Column must not be null (not implemented) */
- 
+
 /**
     EDI Record field structure
     @description The EdiField stores record field data and minimal schema information such as the data type and
@@ -191,7 +191,7 @@ PUBLIC void ediDefineMigration(struct Edi *edi, EdiMigration forw, EdiMigration 
 
 /**
     Database structure
-    @description The Embedded Database Interface (EDI) defines an abstract interface atop various relational 
+    @description The Embedded Database Interface (EDI) defines an abstract interface atop various relational
     database providers. Providers are supplied for SQLite and for the ESP Memory Database (MDB).
     @defgroup Edi Edi
   */
@@ -249,8 +249,8 @@ typedef struct EdiProvider {
     @param tableName Database table name
     @param columnName Database column name
     @param type Column data type. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE
-        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT 
-    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns, 
+        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT
+    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns,
         EDI_KEY if the column is the key column and/or EDI_INDEX to create an index on the column.
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup Edi
@@ -286,7 +286,7 @@ PUBLIC int ediAddTable(Edi *edi, cchar *tableName);
     @description Validations are run when calling ediUpdateRec. A validation is used to validate field data
         using builtin validators.
     @param edi Database handle
-    @param name Validation name. Select from: 
+    @param name Validation name. Select from:
         @arg banned -- to validate field data against a regular express for banned content.
         @arg boolean -- to validate field data as "true" or "false"
         @arg date -- to validate field data as a date or time.
@@ -310,8 +310,8 @@ PUBLIC int ediAddValidation(Edi *edi, cchar *name, cchar *tableName, cchar *colu
     @param tableName Database table name
     @param columnName Database column name
     @param type Column data type. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE
-        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT 
-    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns, 
+        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT
+    @param flags Control column attributes. Set to a set of: EDI_AUTO_INC for auto incrementing columns,
         EDI_KEY if the column is the key column and/or EDI_INDEX to create an index on the column.
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup Edi
@@ -387,7 +387,7 @@ PUBLIC MprList *ediGetColumns(Edi *edi, cchar *tableName);
         EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT.
         Set to null if this data is not required.
     @param flags Output parameter to receive the column control flags. Will be set to one or more of:
-            EDI_AUTO_INC, EDI_KEY and/or EDI_INDEX 
+            EDI_AUTO_INC, EDI_KEY and/or EDI_INDEX
         Set to null if this data is not required.
     @param cid Output parameter to receive the ordinal column index in the database table.
         Set to null if this data is not required.
@@ -464,7 +464,7 @@ PUBLIC MprList *ediGetTables(Edi *edi);
     Convert an EDI database grid into a JSON string.
     @param grid EDI grid
     @param flags Reserved. Set to zero.
-    @return JSON string 
+    @return JSON string
     @ingroup Edi
     @stability Prototype
   */
@@ -604,7 +604,7 @@ PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cch
     @description Read a record from the given table as identified by the key value.
     @param edi Database handle
     @param tableName Database table name
-    @param key Key value of the record to read 
+    @param key Key value of the record to read
     @return Record instance of EdiRec.
     @ingroup Edi
     @stability Evolving
@@ -641,7 +641,7 @@ PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName);
     Convert an EDI database record into a JSON string.
     @param rec EDI record
     @param flags Reserved. Set to zero.
-    @return JSON string 
+    @return JSON string
     @ingroup Edi
     @stability Prototype
   */
@@ -702,7 +702,7 @@ PUBLIC int ediRemoveTable(Edi *edi, cchar *tableName);
 PUBLIC int ediRenameTable(Edi *edi, cchar *tableName, cchar *newTableName);
 
 /**
-    Rename a column. 
+    Rename a column.
     @param edi Database handle
     @param tableName Database table name
     @param columnName Database column name
@@ -740,7 +740,7 @@ PUBLIC EdiRec *ediSetField(EdiRec *rec, cchar *fieldName, cchar *value);
 
 /**
     Set record fields without writing to the database.
-    @description This routine updates the record object with the given values. The "data' argument supplies 
+    @description This routine updates the record object with the given values. The "data' argument supplies
         a hash of fieldNames and values. The data hash may come from the request params() or it can be manually
         created via #ediMakeHash to convert a JSON string into an options hash.
         For example: ediSetFields(rec, mprParseJson("{ name: '%s', address: '%s' }", name, address))
@@ -801,7 +801,7 @@ PUBLIC int ediUpdateRec(Edi *edi, EdiRec *rec);
 /**
     Validate a record.
     @description Run defined field validations and return true if the record validates. Field validations are defined
-        via #ediAddValidation calls. If any validations fail, error messages will be added to the record and can be 
+        via #ediAddValidation calls. If any validations fail, error messages will be added to the record and can be
         retrieved via #ediGetRecErrors.
     @param rec Record to validate
     @return True if all field valiations pass.
@@ -838,7 +838,7 @@ PUBLIC EdiRec *ediCreateBareRec(Edi *edi, cchar *tableName, int nfields);
 /**
     Filter the fields of a grid
     @param grid Grid to modify and filter
-    @param fields Space separated list of record field names 
+    @param fields Space separated list of record field names
     @param include Set to true to interpret the names as fields to include. If false, interpret the names
         as fields to reject.
     @return The filtered grid. Same reference as the input grid.
@@ -850,7 +850,7 @@ PUBLIC EdiGrid *ediFilterGridFields(EdiGrid *grid, cchar *fields, int include);
 /**
     Filter the fields of a record
     @param rec Record to modify and filter
-    @param fields Space separated list of record field names 
+    @param fields Space separated list of record field names
     @param include Set to true to interpret the names as fields to include. If false, interpret the names
         as fields to reject.
     @return The filtered record. Same reference as the input record.
@@ -880,7 +880,7 @@ PUBLIC cchar *ediFormatField(cchar *fmt, EdiField *fp);
 PUBLIC EdiField *ediGetField(EdiRec *rec, cchar *fieldName);
 
 /**
-    Get a field value 
+    Get a field value
     @param rec Database record
     @param fieldName Field in the record to extract
     @return A field value as a string. Returns ZZ
@@ -893,8 +893,8 @@ PUBLIC cchar *ediGetFieldValue(EdiRec *rec, cchar *fieldName);
     Get the data type of a record field.
     @param rec Record to examine
     @param fieldName Field to examine
-    @return The field type. Returns one of: EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, 
-        EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT. 
+    @return The field type. Returns one of: EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT,
+        EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT.
     @ingroup Edi
     @stability Evolving
  */
@@ -929,7 +929,7 @@ PUBLIC MprHash *ediGetRecErrors(EdiRec *rec);
 /**
     Convert an EDI type to a string.
     @param type Column data type. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE
-        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT 
+        EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT
     @return Type string. This will be set to one of: "binary", "bool", "date", "float", "int", "string" or "text".
     @ingroup Edi
     @stability Evolving
@@ -938,8 +938,8 @@ PUBLIC char *ediGetTypeString(int type);
 
 /**
     Make a hash container of property values.
-    @description This routine formats the given arguments, parses the result as a JSON string and returns an 
-        equivalent hash of property values. 
+    @description This routine formats the given arguments, parses the result as a JSON string and returns an
+        equivalent hash of property values.
     @param fmt Printf style format string
     @param ... arguments
     @return MprHash instance
@@ -999,7 +999,7 @@ PUBLIC void ediManageEdiRec(EdiRec *rec, int flags);
 /**
     Parse an EDI type string.
     @param type Type string set to one of: "binary", "bool", "date", "float", "int", "string" or "text".
-    @return Type code. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, EDI_TYPE_INT, 
+    @return Type code. Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE, EDI_TYPE_FLOAT, EDI_TYPE_INT,
         EDI_TYPE_STRING, EDI_TYPE_TEXT.
     @ingroup Edi
     @stability Evolving
@@ -1022,11 +1022,11 @@ PUBLIC EdiGrid *ediPivotGrid(EdiGrid *grid, int flags);
 PUBLIC EdiGrid *ediSortGrid(EdiGrid *grid, cchar *sortColumn, int sortOrder);
 
 #if ME_COM_MDB
-PUBLIC void mdbInit();
+PUBLIC void mdbInit(void);
 #endif
 
 #if ME_COM_SQLITE
-PUBLIC void sdbInit();
+PUBLIC void sdbInit(void);
 #endif
 
 #ifdef __cplusplus

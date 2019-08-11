@@ -28,7 +28,7 @@ typedef struct Sdb {
 } Sdb;
 
 static int sqliteInitialized;
-static void initSqlite();
+static void initSqlite(void);
 
 #if KEEP
 static char *DataTypeToSqlType[] = {
