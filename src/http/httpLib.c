@@ -4156,6 +4156,12 @@ static void parseAuthUsers(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseAutoFinalize(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    httpSetRouteAutoFinalize(route, (smatch(prop->value, "true")));
+}
+
+
 static void parseCache(HttpRoute *route, cchar *key, MprJson *prop)
 {
     MprJson     *child;
@@ -4283,6 +4289,7 @@ static void parseErrors(HttpRoute *route, cchar *key, MprJson *prop)
         httpAddRouteErrorDocument(route, (int) stoi(child->name), child->value);
     }
 }
+
 
 
 static void parseFormatsResponse(HttpRoute *route, cchar *key, MprJson *prop)
@@ -5593,6 +5600,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.store", parseAuthStore);
     httpAddConfig("http.auth.type", parseAuthType);
     httpAddConfig("http.auth.users", parseAuthUsers);
+    httpAddConfig("http.autoFinalize", parseAutoFinalize);
     httpAddConfig("http.cache", parseCache);
     httpAddConfig("http.canonical", parseCanonicalName);
     httpAddConfig("http.cgi", httpParseAll);
@@ -6975,7 +6983,6 @@ PUBLIC void httpStopEndpoint(HttpEndpoint *endpoint)
 static void acceptNet(HttpEndpoint *endpoint)
 {
     MprDispatcher   *dispatcher;
-    MprEvent        *event;
     MprSocket       *sock;
     MprWaitHandler  *wp;
 
@@ -6994,16 +7001,13 @@ static void acceptNet(HttpEndpoint *endpoint)
     } else {
         dispatcher = mprGetDispatcher();
     }
-    event = mprCreateEvent(dispatcher, "AcceptNet", 0, httpAccept, endpoint, MPR_EVENT_DONT_QUEUE);
-    event->mask = wp->presentMask;
-    event->sock = sock;
-    event->handler = wp;
     /*
         Optimization to wake the event service in this amount of time. This ensures that when the HttpTimer is scheduled,
         it won't need to awaken the notifier.
      */
     mprSetEventServiceSleep(HTTP_TIMER_PERIOD);
-    mprQueueEvent(dispatcher, event);
+
+    mprCreateIOEvent(dispatcher, httpAccept, endpoint, wp, sock);
 }
 
 
@@ -17830,6 +17834,7 @@ PUBLIC HttpRoute *httpCreateRoute(HttpHost *host)
     route->pattern = MPR->emptyString;
     route->targetRule = sclone("run");
     route->autoDelete = 1;
+    route->autoFinalize = 1;
     route->workers = -1;
     route->prefix = MPR->emptyString;
     route->trace = http->trace;
@@ -17883,6 +17888,7 @@ PUBLIC HttpRoute *httpCreateInheritedRoute(HttpRoute *parent)
     }
     route->auth = httpCreateInheritedAuth(parent->auth);
     route->autoDelete = parent->autoDelete;
+    route->autoFinalize = parent->autoFinalize;
     route->caching = parent->caching;
     route->clientConfig = parent->clientConfig;
     route->conditions = parent->conditions;
@@ -18936,6 +18942,13 @@ PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool enable)
 {
     assert(route);
     route->autoDelete = enable;
+}
+
+
+PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool enable)
+{
+    assert(route);
+    route->autoFinalize = enable;
 }
 
 
@@ -20262,18 +20275,18 @@ PUBLIC HttpRoute *httpAddRestfulRoute(HttpRoute *parent, cchar *methods, cchar *
 PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
 {
     /* Delete is a POST method alternative to remove */
-    httpAddRestfulRoute(parent, "GET",     "$",                           "",          resource);
-    httpAddRestfulRoute(parent, "POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",                       "create",    resource);
-    httpAddRestfulRoute(parent, "GET",     "/{id=[0-9]+}/edit$",          "edit",      resource);
-    httpAddRestfulRoute(parent, "GET",     "/{id=[0-9]+}$",               "get",       resource);
-    httpAddRestfulRoute(parent, "GET",     "/init$",                      "init",      resource);
-    httpAddRestfulRoute(parent, "GET",     "/list$",                      "list",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",                           "",          resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",                       "create",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}/edit$",          "edit",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}$",               "get",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",                      "init",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/list$",                      "list",      resource);
     httpAddWebSocketsRoute(parent, "stream");
-    httpAddRestfulRoute(parent, "DELETE",  "/{id=[0-9]+}$",               "remove",    resource);
-    httpAddRestfulRoute(parent, "POST",    "/{id=[0-9]+}$",               "update",    resource);
-    httpAddRestfulRoute(parent, "GET,POST","/{id=[0-9]+}/{action}(/)*$",  "${action}", resource);
-    httpAddRestfulRoute(parent, "GET,POST","/{action}(/)*$",              "${action}", resource);
+    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "/{id=[0-9]+}$",               "remove",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}$",               "update",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{id=[0-9]+}/{action}(/)*$",  "${action}", resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$",              "${action}", resource);
 }
 
 
@@ -20283,16 +20296,16 @@ PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
 PUBLIC void httpAddResource(HttpRoute *parent, cchar *resource)
 {
     /* Delete is a POST method alternative to remove */
-    httpAddRestfulRoute(parent, "GET",     "$",              "",           resource);
-    httpAddRestfulRoute(parent, "POST",    "/delete$",       "delete",     resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",          "create",     resource);
-    httpAddRestfulRoute(parent, "GET",     "/edit$",         "edit",       resource);
-    httpAddRestfulRoute(parent, "GET",     "(/)*$",          "get",        resource);
-    httpAddRestfulRoute(parent, "GET",     "/init$",         "init",       resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",          "update",     resource);
-    httpAddRestfulRoute(parent, "DELETE",  "(/)*$",          "remove",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",              "",           resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/delete$",       "delete",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "create",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/edit$",         "edit",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",         "init",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "update",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "(/)*$",          "remove",     resource);
     httpAddWebSocketsRoute(parent, "stream");
-    httpAddRestfulRoute(parent, "GET,POST","/{action}(/)*$", "${action}",  resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$", "${action}",  resource);
 }
 
 
@@ -20301,11 +20314,11 @@ PUBLIC void httpAddResource(HttpRoute *parent, cchar *resource)
  */
 PUBLIC void httpAddPermResource(HttpRoute *parent, cchar *resource)
 {
-    httpAddRestfulRoute(parent, "GET",     "$",              "",           resource);
-    httpAddRestfulRoute(parent, "GET",     "(/)*$",          "get",        resource);
-    httpAddRestfulRoute(parent, "POST",    "(/)*$",          "update",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",              "",           resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "update",     resource);
     httpAddWebSocketsRoute(parent, "stream");
-    httpAddRestfulRoute(parent, "GET,POST","/{action}(/)*$", "${action}",  resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$", "${action}",  resource);
 }
 
 
@@ -20317,7 +20330,7 @@ PUBLIC HttpRoute *httpAddWebSocketsRoute(HttpRoute *parent, cchar *action)
 
     pattern = sfmt("^%s/{controller}/%s", parent->prefix, action);
     path = sjoin("$1/", action, NULL);
-    route = httpDefineRoute(parent, "GET", pattern, path, "${controller}.c");
+    route = httpDefineRoute(parent, "OPTIONS,GET", pattern, path, "${controller}.c");
     httpAddRouteFilter(route, "webSocketFilter", "", HTTP_STAGE_RX | HTTP_STAGE_TX);
 
     /*
@@ -22306,17 +22319,18 @@ PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module)
 /*
     Invocation structure for httpCreateEvent
  */
-typedef struct HttpEvent {
+typedef struct HttpInvoke {
+    HttpStream      *stream;
     HttpEventProc   callback;
     void            *data;          //  User data - caller must free if required in callback
-    uint64          seqno;          //  Stream seqno
-} HttpEvent;
+} HttpInvoke;
 
 /***************************** Forward Declarations ***************************/
 
-static void pickStreamNumber(HttpStream *stream);
 static void commonPrep(HttpStream *stream);
+static void manageInvoke(HttpInvoke *event, int flags);
 static void manageStream(HttpStream *stream, int flags);
+static void pickStreamNumber(HttpStream *stream);
 
 /*********************************** Code *************************************/
 /*
@@ -22446,8 +22460,10 @@ PUBLIC void httpDestroyStream(HttpStream *stream)
         if (!stream->peerCreated) {
             stream->net->ownStreams--;
         }
-        stream->destroyed = 1;
         httpRemoveStream(stream->net, stream);
+        stream->state = HTTP_STATE_BEGIN;
+        stream->net = 0;
+        stream->destroyed = 1;
     }
 }
 
@@ -22954,54 +22970,84 @@ PUBLIC void httpTraceQueues(HttpStream *stream)
 }
 
 
-static HttpStream *getStreamBySeqno(uint64 seqno) 
+/*
+    Invoke the callback. This routine is run on the streams dispatcher.
+ */
+static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
+{
+    HttpStream  *stream;
+
+    /*
+        Stream is safe from GC due to references from invoke.
+     */
+    stream = invoke->stream;
+    assert(stream);
+
+    if (HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
+        invoke->callback(invoke->stream, invoke->data);
+    }
+    /* invoke will be collected when the event is collected */
+}
+
+
+/*
+    Create an event on a stream identified by its sequence number.
+    This routine is foreign thread-safe.
+ */
+PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
 {
     HttpNet     *net;
     HttpStream  *stream;
-    int         nextNet, nextStream;
+    HttpInvoke  *invoke;
+    int         nextNet, nextStream, status;
 
+    status = MPR_ERR_CANT_FIND;
+    stream = 0;
+
+    /*
+        The global lock stops GC
+     */
+    mprGlobalLock();
+    lock(HTTP->networks);
     for (ITERATE_ITEMS(HTTP->networks, net, nextNet)) {
+        lock(net->streams);
         for (ITERATE_ITEMS(net->streams, stream, nextStream)) {
-            if (stream->seqno == seqno && !stream->destroyed) {
-                return stream;
+            if (stream->seqno == seqno && HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
+                /*
+                    Must allocate and Hold memory to be immune from GC. The hold is released below after mprCreateEvent
+                    takes ownership of the data. A manager is used to make sure the stream is retained after unlocking below.
+                 */
+                if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
+                    /*
+                        At this point, the invoke memory is held and the stream is preserved via the lock above.
+                     */
+                    invoke->callback = callback;
+                    invoke->data = data;
+                    invoke->stream = stream;
+                    mprSetManager(invoke, (MprManager) manageInvoke);
+                    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, invoke, 0);
+                    mprRelease(invoke);
+                }
+                unlock(net->streams);
+                status = MPR_ERR_OK;
+                nextNet = HTTP->networks->length;
+                break;
             }
         }
+        unlock(net->streams);
     }
-    return 0;
+    unlock(HTTP->networks);
+    mprGlobalUnlock();
+    return status;
 }
 
 
-static void invokeWrapper(HttpEvent *invoke)
+static void manageInvoke(HttpInvoke *invoke, int flags)
 {
-    HttpStream  *stream;
-
-    if ((stream = getStreamBySeqno(invoke->seqno)) != NULL) {
-        invoke->callback(stream, invoke->data);
-        pfree(invoke);
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(invoke->stream);
     }
 }
-
-
-PUBLIC void httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
-{
-    HttpStream  *stream;
-    HttpEvent   *invoke;
-
-    lock(HTTP);
-    if ((stream = getStreamBySeqno(seqno)) != NULL) {
-        if (HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
-            if ((invoke = palloc(sizeof(HttpEvent))) != NULL) {
-                invoke->callback = callback;
-                invoke->data = data;
-                invoke->seqno = seqno;
-                mprCreateEvent(stream->dispatcher, "httpCreateEvent", 0, (MprEventProc) invokeWrapper,
-                    invoke, MPR_EVENT_FOREIGN | MPR_EVENT_STATIC_DATA);
-            }
-        }
-    }
-    unlock(HTTP);
-}
-
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.

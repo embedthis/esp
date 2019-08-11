@@ -1358,10 +1358,10 @@
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>int</type>
       <name>httpCreateEvent</name>
       <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>ga3c4c181b6ea23fe6062a4bd8bc25cb25</anchor>
+      <anchor>ga10254442a823620d2ccd8b4334f71c38</anchor>
       <arglist>(uint64 streamSeqno, HttpEventProc callback, void *data)</arglist>
     </member>
     <member kind="function">
@@ -2411,6 +2411,13 @@
       <name>httpSetRouteAutoDelete</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gaddcc56c566e6857c3d1339f95fd5e712</anchor>
+      <arglist>(HttpRoute *route, bool on)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpSetRouteAutoFinalize</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga5d73b457f36a0a337dc4e8de9e4f4c6b</anchor>
       <arglist>(HttpRoute *route, bool on)</arglist>
     </member>
     <member kind="function">

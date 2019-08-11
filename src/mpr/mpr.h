@@ -1182,7 +1182,7 @@ PUBLIC struct Mpr *mprCreateMemService(MprManager manager, int flags);
  */
 #define MPR_ALLOC_MANAGER           0x1         /**< Reserve room for a manager */
 #define MPR_ALLOC_ZERO              0x2         /**< Zero memory */
-#define MPR_ALLOC_HOLD              0x4         /**< Allocate and hold */
+#define MPR_ALLOC_HOLD              0x4         /**< Allocate and hold -- immune from GC until mprRelease */
 #define MPR_ALLOC_PAD_MASK          0x1         /**< Flags that impact padding */
 
 /**
@@ -5792,10 +5792,12 @@ PUBLIC int mprUnloadModule(MprModule *mp);
  */
 #define MPR_EVENT_CONTINUOUS        0x1     /**< Timer event runs is automatically rescheduled */
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
-#define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
-#define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
-#define MPR_EVENT_RUNNING           0x10    /**< Event currently executing */
-#define MPR_EVENT_FOREIGN           0x20    /**< Invoking from a foreign non-mpr thread */
+#define MPR_EVENT_STATIC_DATA       0x4     /**< Event data is permanent and should not be marked by GC */
+#define MPR_EVENT_RUNNING           0x8     /**< Event currently executing */
+#if UNUSED
+#define MPR_EVENT_FOREIGN           0x10    /**< Invoking from a foreign non-mpr thread */
+#define MPR_EVENT_DONT_QUEUE        0x20    /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
+#endif
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
 
@@ -6031,7 +6033,7 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         The MPR serializes work in a thread-safe manner on dispatcher queues. Resources such as connections will typically
         own a dispatcher that is used to serialize their work.
         \n\n
-        This API may be called by foreign (non-mpr) threads and is the only safe way to invoke MPR services from
+        This API may be called by foreign (non-mpr) threads and this routine is the only safe way to invoke MPR services from
         a foreign-thread. The reason for this is that the MPR uses a cooperative garbage collector and a foreign thread
         may call into the MPR at an inopportune time when the MPR is running the garbage collector which requires sole
         access to application memory.
@@ -6049,25 +6051,71 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event
         without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks.
         \n\n
-        When calling this routine from foreign threads, you must use the MPR_EVENT_FOREIGN flag. IN this case the supplied dispatcher will be ignored and the MPR_EVENT_QUICK and MPR_EVENT_STATIC_DATA flags will be implied. Data supplied from foreign threads must be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback.
-    @return Returns the event object if successful. This routine may return before or after the event callback has run.
-        If MPR_EVENT_FOREIGN is supplied, the return value is may point to freed memory. You may test the pointer if it is
-        NULL, but do not dereference it.
+        When calling this routine from foreign threads, you should use a NULL dispatcher or guarantee the dispatcher is held by
+        other means. Data supplied from foreign threads should generally be non-mpr memory and must persist until the callback
+        has completed. This typically means the data memory should either be static or be allocated using malloc() before the
+        call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag.
+        \n\n
+        If using Appweb or the Http library, it is preferable to use the httpCreateEvent API when invoking callbacks on
+            HttpStreams.
+    @return Returns the event object. If called from a foreign thread, note that the event may have already run and the event object
+        may have been collected by the GC. May return NULL if the dispatcher has already been destroyed.
     @ingroup MprEvent
     @stability Evolving
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 
 /*
+    Create an event object
+    @param dispatcher Event dispatcher created via mprCreateDispatcher. Dispatcher must not be null.
+    @param name Static string name of the event used for debugging.
+    @param period Time in milliseconds used by continuous events between firing of the event.
+    @param proc Function to invoke when the event is run.
+    @param data Data to associate with the event. See #mprCreateEvent for details.
+    @param wp WaitHandler reference created via #mprWaitHandler
+    @see MprEvent MprWaitHandler mprCreateEvent mprCreateWaitHandler mprQueueIOEvent
+    @ingroup MprEvent
+    @stability Internal
+ */
+PUBLIC MprEvent *mprCreateEventCore(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
+
+/*
+    Create and queue an IO event for a wait handler
+    @param dispatcher Event dispatcher created via mprCreateDispatcher
+    @param proc Function to invoke when the event is run.
+    @param data Data to associate with the event. See #mprCreateEvent for details.
+    @param wp WaitHandler reference created via #mprWaitHandler
+    @see MprEvent MprWaitHandler mprCreateEvent mprCreateWaitHandler mprQueueIOEvent
+    @ingroup MprEvent
+    @stability Internal
+ */
+PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, struct MprWaitHandler *wp, struct MprSocket *sock);
+
+/**
+    Create a timer event
+    @description Create and queue a timer event for service. This is a convenience wrapper to create continuous
+        events over the #mprCreateEvent call.
+    @param dispatcher Dispatcher object created via #mprCreateDispatcher
+    @param name Debug name of the event
+    @param proc Function to invoke when the event is run
+    @param period Time in milliseconds used by continuous events between firing of the event.
+    @param data Data to associate with the event and stored in event->data.
+    @param flags Reserved. Must be set to zero.
+    @return Returns the event object.
+    @ingroup MprEvent
+    @stability Stable
+ */
+PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
+
+/*
     Queue a new event for service.
     @description Queue an event for service
     @param dispatcher Dispatcher object created via mprCreateDispatcher
     @param event Event object to queue
-    @returns True if the event was scheduled on the dispatcher.
     @ingroup MprEvent
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC bool mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
+PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
 
 /**
     Remove an event
@@ -6106,22 +6154,6 @@ PUBLIC void mprRestartContinuousEvent(MprEvent *event);
     @stability Stable
  */
 PUBLIC void mprEnableContinuousEvent(MprEvent *event, int enable);
-
-/**
-    Create a timer event
-    @description Create and queue a timer event for service. This is a convenience wrapper to create continuous
-        events over the #mprCreateEvent call.
-    @param dispatcher Dispatcher object created via #mprCreateDispatcher
-    @param name Debug name of the event
-    @param proc Function to invoke when the event is run
-    @param period Time in milliseconds used by continuous events between firing of the event.
-    @param data Data to associate with the event and stored in event->data.
-    @param flags Reserved. Must be set to zero.
-    @ingroup MprEvent
-    @stability Stable
- */
-PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data,
-    int flags);
 
 /**
     Reschedule an event
@@ -6937,7 +6969,7 @@ PUBLIC void mprStopThreadService(void);
 typedef struct MprThread {
     MprOsThread     osThread;           /**< O/S thread id */
 #if ME_WIN_LIKE
-    handle          threadHandle;       /**< Threads OS handle for WIN */
+    handle          threadHandle;       /**< Threads OS handle */
     HWND            hwnd;               /**< Window handle */
 #endif
     MprThreadProc   entry;              /**< Users thread entry point */
@@ -6958,7 +6990,7 @@ typedef struct MprThread {
     bool            yielded: 1;         /**< Thread has yielded to GC */
     bool            noyield: 1;         /**< Do not yield (temporary) */
     bool            waitForSweeper: 1;  /**< Yield untill the GC sweeper is complete */
-    int             waiting: 1;         /**< Waiting in mprYield */
+    bool            waiting: 1;         /**< Waiting in mprYield */
 } MprThread;
 
 
@@ -7049,6 +7081,19 @@ PUBLIC bool mprSetThreadYield(MprThread *tp, bool on);
     @stability Stable
  */
 PUBLIC int mprStartThread(MprThread *thread);
+
+/**
+    Start an O/S thread
+    @description Start an O/S thread.
+    @param name Task name to use on VxWorks
+    @param proc Callback function for the thread's main
+    @param data Data for the callback to receive.
+    @param tp Optional MprThread object to receive thread handles
+    @return Returns zero if successful, otherwise a negative MPR error code.
+    @ingroup MprThread
+    @stability Stable
+ */
+PUBLIC int mprStartOsThread(cchar *name, void *proc, void *data, MprThread *tp);
 
 #define MPR_YIELD_DEFAULT   0x0     /**< mprYield flag if GC is required, yield and wait for mark phase to coplete,
                                          otherwise return without blocking.*/

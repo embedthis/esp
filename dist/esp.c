@@ -121,7 +121,7 @@ static int       nextMigration;         /* Sequence number for next migration */
 /***************************** Forward Declarations ***************************/
 
 static void clean(int argc, char **argv);
-static void config();
+static void config(void);
 static void compile(int argc, char **argv);
 static void compileFile(HttpRoute *route, cchar *source, int kind);
 static void compileCombined(HttpRoute *route);
@@ -136,11 +136,11 @@ static void generateController(int argc, char **argv);
 static void generateItem(cchar *item);
 static void genKey(cchar *key, cchar *path, MprHash *tokens);
 static void generateMigration(int argc, char **argv);
-static char *getPassword();
+static char *getPassword(void);
 static void generateScaffold(int argc, char **argv);
 static void generateTable(int argc, char **argv);
 static cchar *getJson(MprJson *config, cchar *key, cchar *defaultValue);
-static MprList *getRoutes();
+static MprList *getRoutes(void);
 static MprHash *getTargets(int argc, char **argv);
 static cchar *getTemplate(cchar *key, MprHash *tokens);
 static cchar *getPakVersion(cchar *name, cchar *version);
@@ -156,9 +156,9 @@ static void migrate(int argc, char **argv);
 static int parseArgs(int argc, char **argv);
 static void parseCommand(int argc, char **argv);
 static void process(int argc, char **argv);
-static MprJson *readConfig();
+static MprJson *readConfig(cchar *path);
 static cchar *readTemplate(cchar *path, MprHash *tokens, ssize *len);
-static void renderGenerated();
+static void renderGenerated(void);
 static bool requiredRoute(HttpRoute *route);
 static int reverseSortFiles(MprDirEntry **d1, MprDirEntry **d2);
 static void role(int argc, char **argv);
@@ -171,9 +171,9 @@ static void setProfile(cchar *mode);
 static int sortFiles(MprDirEntry **d1, MprDirEntry **d2);
 static void qtrace(cchar *tag, cchar *fmt, ...);
 static void trace(cchar *tag, cchar *fmt, ...);
-static void usageError();
+static void usageError(void);
 static void user(int argc, char **argv);
-static bool verifyConfig();
+static bool verifyConfig(void);
 static void vtrace(cchar *tag, cchar *fmt, ...);
 static void why(cchar *path, cchar *fmt, ...);
 
@@ -2087,15 +2087,12 @@ static void compileCombined(HttpRoute *route)
         if (runEspCommand(route, eroute->compileCmd, app->combinePath, app->module) < 0) {
             return;
         }
-#if UNUSED
-        /* Must not link when building combined */
         if (eroute->linkCmd) {
             trace("Link", "%s", mprGetRelPath(mprTrimPathExt(app->module), NULL));
             if (runEspCommand(route, eroute->linkCmd, app->combinePath, app->module) < 0) {
                 return;
             }
         }
-#endif
     }
     app->combineItems = 0;
     app->combineFile = 0;

@@ -4907,6 +4907,8 @@ typedef struct HttpRoute {
     cchar           *responseFormat;        /**< Client response format */
     cchar           *clientConfig;          /**< Configuration to send to the client */
 
+    bool            autoDelete: 1;          /**< Automatically delete uploaded files */
+    bool            autoFinalize: 1;        /**< Auto finalize the request (ESP) */
     bool            debug: 1;               /**< Application running in debug mode */
     bool            error: 1;               /**< Parse or runtime error */
     bool            ignoreEncodingErrors: 1;/**< Ignore UTF8 encoding errors */
@@ -4932,7 +4934,6 @@ typedef struct HttpRoute {
     MprHash         *errorDocuments;        /**< Set of error documents to use on errors */
     void            *context;               /**< Hosting context (Appweb == EjsPool) */
     void            *eroute;                /**< Extended route information for handler (only) */
-    int             autoDelete;             /**< Automatically delete uploaded files */
     int             renameUploads;          /**< Rename uploaded files */
 
     HttpLimits      *limits;                /**< Host resource limits */
@@ -5757,6 +5758,16 @@ PUBLIC void httpSetRouteAuth(HttpRoute *route, HttpAuth *auth);
     @stability Stable
  */
 PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
+
+/**
+    Control auto finalize for a route
+    @description This controls whether a request is auto-finalized after the handler runs to service a request.
+    @param route Route to modify
+    @param on Set to true to enable auto-finalize. Auto-finalize is enabled by default for frameworks that use it.
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool on);
 
 /**
     Define whether updating a request may compile from source
@@ -8448,15 +8459,17 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 typedef void (*HttpEventProc)(HttpStream *stream, void *data);
 
 /**
-    Invoke a callback on an Appweb thread from a non-appweb thread using a stream sequence number.
-    @description Used to safely call back into Apppweb.
-    @param streamSeqno HttpStream->seqno identifier
+    Invoke a callback on a stream using a stream sequence number.
+    @description This routine invokes a callback on a stream's event dispatcher in a thread-safe manner. This API
+        is the only way to invoke APIs on a stream from foreign threads.
+    @param streamSeqno HttpStream->seqno identifier extracted when running in an MPR (Appweb) thread.
     @param callback Callback function to invoke
     @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
+    @return "Zero" if the stream can be found and the event is scheduled, Otherwise returns MPR_ERR_CANT_FIND.
     @ingroup HttpStream
     @stability Prototype
  */
-PUBLIC void httpCreateEvent(uint64 streamSeqno, HttpEventProc callback, void *data);
+PUBLIC int httpCreateEvent(uint64 streamSeqno, HttpEventProc callback, void *data);
 
 /************************************ Misc *****************************************/
 /**
