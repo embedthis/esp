@@ -177,7 +177,7 @@ PUBLIC void espDefineView(HttpRoute *route, cchar *path, void *view)
     if (route->eroute) {
         eroute = ((EspRoute*) route->eroute)->top;
     } else {
-        if ((eroute = espRoute(route)) == 0) {
+        if ((eroute = espRoute(route, 1)) == 0) {
             /* Should never happen */
             return;
         }

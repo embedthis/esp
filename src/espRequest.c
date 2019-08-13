@@ -1039,7 +1039,7 @@ static EspRoute *cloneEspRoute(HttpRoute *route, EspRoute *parent)
     Get an EspRoute. Allocate if required.
     It is expected that the caller will modify the EspRoute.
  */
-PUBLIC EspRoute *espRoute(HttpRoute *route)
+PUBLIC EspRoute *espRoute(HttpRoute *route, bool create)
 {
     HttpRoute   *rp;
 
@@ -1053,7 +1053,7 @@ PUBLIC EspRoute *espRoute(HttpRoute *route)
         if (rp->eroute) {
             return cloneEspRoute(route, rp->eroute);
         }
-        if (rp->parent == 0) {
+        if (rp->parent == 0 && create) {
             /*
                 Create an ESP configuration on the top level parent so others can inherit
                 Load the compiler rules once for all
@@ -1065,7 +1065,10 @@ PUBLIC EspRoute *espRoute(HttpRoute *route)
             break;
         }
     }
-    return cloneEspRoute(route, rp->eroute);
+    if (rp) {
+        return cloneEspRoute(route, rp->eroute);
+    }
+    return 0;
 }
 
 
@@ -1220,9 +1223,8 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         return MPR_ERR_BAD_ARGS;
     }
     lock(esp);
-    if ((eroute = espRoute(route)) == 0) {
-        unlock(esp);
-        return MPR_ERR_MEMORY;
+    if ((eroute = espRoute(route, 0)) == 0) {
+        eroute = espCreateRoute(route);
     }
     if (prefix) {
         if (*prefix != '/') {
