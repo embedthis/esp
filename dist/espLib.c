@@ -4547,7 +4547,7 @@ static int openEsp(HttpQueue *q)
     }
     req->esp = esp;
     req->route = route;
-    req->autoFinalize = 1;
+    req->autoFinalize = route->autoFinalize;
 
     /*
         If a cookie is not explicitly set, use the application name for the session cookie so that
@@ -6602,7 +6602,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "static void %s(HttpConn *conn) {\n"\
             "%s%s%s"\
             "}\n\n"\
-            "%s int esp_%s(HttpRoute *route, MprModule *module) {\n"\
+            "%s int esp_%s(HttpRoute *route) {\n"\
             "   espDefineView(route, \"%s\", %s);\n"\
             "   return 0;\n"\
             "}\n",
