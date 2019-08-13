@@ -640,7 +640,7 @@ PUBLIC void espRenderDocument(HttpConn *conn, cchar *target)
     }
 #endif
 
-    conn->rx->target = &conn->rx->pathInfo[1];
+    conn->rx->target = sclone(&conn->rx->pathInfo[1]);
     httpMapFile(conn);
     if (conn->tx->fileInfo.isDir) {
         httpHandleDirectory(conn);
