@@ -2031,9 +2031,9 @@ static void compileCombined(HttpRoute *route)
             compileFile(route, kp->key, kind);
         }
         mprWriteFileFmt(app->combineFile,
-            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route, MprModule *module) {\n", name);
+            "\nESP_EXPORT int esp_app_%s_combine(HttpRoute *route) {\n", name);
         for (next = 0; (line = mprGetNextItem(app->combineItems, &next)) != 0; ) {
-            mprWriteFileFmt(app->combineFile, "    %s(route, module);\n", line);
+            mprWriteFileFmt(app->combineFile, "    %s(route);\n", line);
         }
         mprWriteFileFmt(app->combineFile, "    return 0;\n}\n");
         mprCloseFile(app->combineFile);

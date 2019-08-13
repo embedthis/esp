@@ -761,7 +761,7 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
             "static void %s(HttpConn *conn) {\n"\
             "%s%s%s"\
             "}\n\n"\
-            "%s int esp_%s(HttpRoute *route, MprModule *module) {\n"\
+            "%s int esp_%s(HttpRoute *route) {\n"\
             "   espDefineView(route, \"%s\", %s);\n"\
             "   return 0;\n"\
             "}\n",
