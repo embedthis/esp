@@ -154,7 +154,7 @@ static int openEsp(HttpQueue *q)
     }
     req->esp = esp;
     req->route = route;
-    req->autoFinalize = 1;
+    req->autoFinalize = route->autoFinalize;
 
     /*
         If a cookie is not explicitly set, use the application name for the session cookie so that
