@@ -634,6 +634,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_EVENT_ALWAYS</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a83b40d1c6e1752448e424c3ba1acc3fa</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_EVENT_ASYNC</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>aa75b23385a68cbe6d21e4fdb8ca72d1f</anchor>
@@ -648,23 +655,9 @@
     </member>
     <member kind="define">
       <type>#define</type>
-      <name>MPR_EVENT_DONT_QUEUE</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>ac32b25ad7f171f1e1d88f24ac6394b21</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
       <name>MPR_EVENT_EPOLL</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a35751841ed0361d40361c375bca122a4</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="define">
-      <type>#define</type>
-      <name>MPR_EVENT_FOREIGN</name>
-      <anchorfile>mpr_8h.html</anchorfile>
-      <anchor>a3577aee82220ed1403c06b3a510e6c01</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -5492,6 +5485,13 @@
     </member>
     <member kind="function">
       <type>int</type>
+      <name>mprStartOsThread</name>
+      <anchorfile>group___mpr_thread.html</anchorfile>
+      <anchor>ga3026fd2597352a226c67dcd2f847ed08</anchor>
+      <arglist>(cchar *name, void *proc, void *data, MprThread *tp)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
       <name>mprStartThread</name>
       <anchorfile>group___mpr_thread.html</anchorfile>
       <anchor>ga35c53df918c2f52e2e1f6961e35ee8d1</anchor>
@@ -9124,6 +9124,13 @@
       <anchorfile>group___mpr_thread.html</anchorfile>
       <anchor>ga57f5e86ffcf2cabdb1c778131ac84b7e</anchor>
       <arglist>(MprThread *tp, bool on)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
+      <name>mprStartOsThread</name>
+      <anchorfile>group___mpr_thread.html</anchorfile>
+      <anchor>ga3026fd2597352a226c67dcd2f847ed08</anchor>
+      <arglist>(cchar *name, void *proc, void *data, MprThread *tp)</arglist>
     </member>
     <member kind="function">
       <type>int</type>

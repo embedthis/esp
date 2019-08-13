@@ -1305,8 +1305,8 @@
       <type>void(*</type>
       <name>HttpEventProc</name>
       <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>gada027f72dcd04430260b5721517b374c</anchor>
-      <arglist>)(HttpStream *stream, void *data)</arglist>
+      <anchor>ga762ba480566e55623f2da61e73e105e4</anchor>
+      <arglist>)(struct HttpStream *stream, void *data)</arglist>
     </member>
     <member kind="typedef">
       <type>int(*</type>
@@ -1337,10 +1337,10 @@
       <arglist>)(struct HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>void void void</type>
+      <type>void</type>
       <name>httpBadRequestError</name>
       <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>ga27be553d91ff900d49110e314c6e4bb4</anchor>
+      <anchor>gac58f092f20f3cdd09afc95a42cb9869b</anchor>
       <arglist>(HttpStream *stream, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">
@@ -1351,10 +1351,10 @@
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>void void</type>
       <name>httpClosePipeline</name>
       <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>ga4c52ee2ada2352607f114d0d34f86636</anchor>
+      <anchor>gad878e01ee55c846968e064fe8f8bcce3</anchor>
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
@@ -1428,10 +1428,17 @@
       <arglist>(HttpStream *stream, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">
-      <type>void void void ssize</type>
+      <type>void HttpStream *</type>
+      <name>httpFindStream</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>ga9e42c299ce4726dec30b39bff8f7d680</anchor>
+      <arglist>(uint64 seqno, HttpEventProc proc, void *data)</arglist>
+    </member>
+    <member kind="function">
+      <type>void ssize</type>
       <name>httpGetChunkSize</name>
       <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>gac38cef9ee580a3fc5d60e1769571297c</anchor>
+      <anchor>ga3b31444a630d64c20a57e05a1e0fb798</anchor>
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
@@ -1484,10 +1491,10 @@
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>void void</type>
+      <type>void</type>
       <name>httpLimitError</name>
       <anchorfile>group___http_stream.html</anchorfile>
-      <anchor>ga26240d5330f2a7471a0da29e5dd1937c</anchor>
+      <anchor>ga3429a7b0bdf079fd55125a7dd5e9b9be</anchor>
       <arglist>(HttpStream *stream, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">

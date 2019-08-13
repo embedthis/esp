@@ -664,6 +664,9 @@ static MprMem *growHeap(size_t required)
 }
 
 
+/*
+    Free a memory block back onto the freelists
+ */
 static void freeBlock(MprMem *mp)
 {
     MprRegion   *region;
@@ -678,6 +681,9 @@ static void freeBlock(MprMem *mp)
 #if ME_MPR_ALLOC_STATS
     heap->stats.freed += mp->size;
 #endif
+    /*
+        If memory block is first in the region, check if the entire region is free
+     */
     if (mp->first) {
         region = GET_REGION(mp);
         if (GET_NEXT(mp) >= region->end) {
@@ -1059,6 +1065,7 @@ PUBLIC void mprYield(int flags)
         assert(!tp->yielded);
         assert(!heap->marking);
     }
+    assert(!tp->waiting);
 }
 
 
@@ -1412,7 +1419,7 @@ static void sweep()
             if (mp->free && joinBlocks) {
                 /*
                     Coalesce already free blocks if the next is also free
-                    This may be needed because the code below only coalesces forward.
+                    This is needed because the code below only coalesces forward.
                  */
                 if (next < region->end && !next->free && next->mark != heap->mark && claim(mp)) {
                     mp->mark = !heap->mark;
@@ -1571,7 +1578,13 @@ PUBLIC void mprRelease(cvoid *ptr)
     if (ptr) {
         mp = GET_MEM(ptr);
         if (!mp->free && VALID_BLK(mp)) {
-            assert(mp->eternal);
+            /*
+                For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
+                and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
+                the block on this sweep. Will be collected on the next if there is no other reference.
+             */
+            mp->mark = heap->mark;
+            mprAtomicBarrier();
             mp->eternal = 0;
         }
     }
@@ -1899,13 +1912,16 @@ PUBLIC void *mprSetAllocName(void *ptr, cchar *name)
 }
 
 
+/*
+    Mark this allocation address as freed (debug only)
+ */
 static void freeLocation(MprMem *mp)
 {
     MprLocationStats    *lp;
     cchar               *name;
     int                 index;
 
-    if (!heap->track) {
+    if (!heap->track || mp->eternal) {
         return;
     }
     name = mp->name;
@@ -9639,28 +9655,35 @@ PUBLIC MprDispatcher *mprCreateDispatcher(cchar *name, int flags)
 }
 
 
+static void freeEvents(MprEvent *q)
+{
+    MprEvent    *event, *next;
+
+    if (q) {
+        for (event = q->next; event != q; event = next) {
+            next = event->next;
+            if (event->cond) {
+                mprSignalCond(event->cond);
+            }
+            if (event->dispatcher) {
+                mprRemoveEvent(event);
+            }
+            mprRelease(event);
+        }
+    }
+}
+
+
 PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
-    MprEvent            *q, *event, *next;
 
     if (dispatcher) {
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
-        assert(dispatcher->service == MPR->eventService);
-        q = dispatcher->eventQ;
-        if (q) {
-            for (event = q->next; event != q; event = next) {
-                next = event->next;
-                if (event->cond) {
-                    mprSignalCond(event->cond);
-                }
-                if (event->dispatcher) {
-                    mprRemoveEvent(event);
-                }
-            }
-        }
+        freeEvents(dispatcher->eventQ);
+        freeEvents(dispatcher->currentQ);
         dequeueDispatcher(dispatcher);
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
@@ -9690,6 +9713,12 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
                 next = event->next;
                 mprMark(event);
             }
+        }
+
+    } else if (flags & MPR_MANAGE_FREE) {
+        if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
+            freeEvents(dispatcher->eventQ);
+            freeEvents(dispatcher->currentQ);
         }
     }
 }
@@ -9941,7 +9970,7 @@ PUBLIC int mprDispatchersAreIdle()
  */
 PUBLIC int mprStartDispatcher(MprDispatcher *dispatcher)
 {
-    if (!claimDispatcher(dispatcher, NULL)) {
+    if (!claimDispatcher(dispatcher, 0)) {
         mprLog("error mpr event", 0, "Cannot start dispatcher - owned by another thread");
         return MPR_ERR_BAD_STATE;
     }
@@ -10039,7 +10068,6 @@ static int dispatchEvents(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
     MprEvent            *event;
-    //MprOsThread         priorOwner;
     int                 count;
 
     if (mprIsStopped()) {
@@ -10048,16 +10076,12 @@ static int dispatchEvents(MprDispatcher *dispatcher)
     assert(isRunning(dispatcher));
     es = dispatcher->service;
 
-    // priorOwner = dispatcher->owner;
     assert(ownedDispatcher(dispatcher));
-
-    // dispatcher->owner = mprGetCurrentOsThread();
 
     /*
         Events are removed from the dispatcher queue and put onto the currentQ. This is so they will be marked for GC.
         If the callback calls mprRemoveEvent, it will not remove from the currentQ. If it was a continuous event,
         mprRemoveEvent will clear the continuous flag.
-
         OPT - this could all be simpler if dispatchEvents was never called recursively. Then a currentQ would not be needed,
         and neither would a running flag. See mprRemoveEvent().
      */
@@ -10069,6 +10093,8 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         mprAtomicAdd64(&dispatcher->mark, 1);
 
         (event->proc)(event->data, event);
+        event->hasRun = 1;
+
         if (event->cond) {
             mprSignalCond(event->cond);
         }
@@ -10092,11 +10118,14 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         } else {
             mprDequeueEvent(event);
         }
+        /*
+            Can release here even if continuous. Hold not needed once securely referenced by the dispatcher
+         */
+        mprRelease(event);
         es->eventCount++;
         assert(ownedDispatcher(dispatcher));
         unlock(es);
     }
-    // dispatcher->owner = priorOwner;
     return count;
 }
 
@@ -11095,6 +11124,7 @@ void epollDummy() {}
 
 /***************************** Forward Declarations ***************************/
 
+static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 static void initEventQ(MprEvent *q, cchar *name);
 static void manageEvent(MprEvent *event, int flags);
 static void queueEvent(MprEvent *prior, MprEvent *event);
@@ -11132,14 +11162,12 @@ PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, 
     if (dispatcher && dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return;
     }
-    event = mprCreateEventCore(dispatcher, "IOEvent", 0, proc, wp->handlerData, 0);
+    event = createEvent(dispatcher, "IOEvent", 0, proc, wp->handlerData, 0);
     event->mask = wp->presentMask;
     event->handler = wp;
     event->sock = sock;
     wp->event = event;
-    assert(dispatcher);
     mprQueueEvent(dispatcher, event);
-    mprRelease(event);
 }
 
 
@@ -11155,8 +11183,8 @@ PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, Mpr
 /*
     Create and queue an event for execution by a dispatcher.
     May be called by foreign threads if:
-    - The dispatcher is null or retained against GC.
-    - The caller is responsible for the data memory. It must be retained, static or be non-Mpr memory.
+    - The dispatcher and data are held or null.
+    - The caller is responsible for the data memory.
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
@@ -11168,9 +11196,11 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     if (dispatcher && dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return 0;
     }
-    if ((event = mprCreateEventCore(dispatcher, name, period, proc, data, flags)) != NULL) {
-        mprQueueEvent(dispatcher, event);
-        mprRelease(event);
+    if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
+        // DEPRECATE - only for ejscript
+        if (!(flags & MPR_EVENT_DONT_QUEUE)) {
+            mprQueueEvent(dispatcher, event);
+        }
     }
     return event;
 }
@@ -11178,10 +11208,11 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
 
 /*
     Create a new event but do not queue. The returned event is held via mprHold() and is itself immune from GC.
-    This routine is foreign thread-safe provided the dispatcher is NULL or held and the data is held.
+    The hold will be released when the event is run in dispatchEvents or if the dispatcher is freed before the event is run.
     Period is used as the delay before running the event and as the period between events for continuous events.
+    This routine is foreign thread-safe provided the dispatcher and data are held or null.
  */
-PUBLIC MprEvent *mprCreateEventCore(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
+static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
     MprEvent    *event;
 
@@ -11216,13 +11247,18 @@ PUBLIC MprEvent *mprCreateEventCore(MprDispatcher *dispatcher, cchar *name, MprT
 static void manageEvent(MprEvent *event, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(event->dispatcher);
+        //  Don't mark the dispatcher as it will be marked elsewhere by owners of the dispatcher
         mprMark(event->handler);
         if (!(event->flags & MPR_EVENT_STATIC_DATA)) {
             mprMark(event->data);
         }
         mprMark(event->sock);
         mprMark(event->cond);
+
+    } else if (flags & MPR_MANAGE_FREE) {
+        if (!event->hasRun && (event->flags & MPR_EVENT_ALWAYS)) {
+            (event->proc)(event->data, NULL);
+        }
     }
 }
 
@@ -11358,7 +11394,6 @@ PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
         if (next->due <= es->now) {
             /*
                 Hold event while executing in the current queue
-                MOB ZZ
              */
             event = next;
             queueEvent(dispatcher->currentQ, event);
@@ -11393,7 +11428,7 @@ static void initEventQ(MprEvent *q, cchar *name)
 
     q->next = q;
     q->prev = q;
-    q->name = sclone(name);
+    q->name = name;
 }
 
 

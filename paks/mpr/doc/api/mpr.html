@@ -608,6 +608,7 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_module_1gada93a8c2366fe16efc767791d81793bd" class="nameRef">mprStartModule</a>(<a href="#group___mpr_module" class="ref">MprModule</a> *mp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Start a module.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#mpr_8h_1a1e4dcdd954efac9c65c5c462c24967be" class="nameRef">mprStartModuleService</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Start the module service.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_1gaea150df805ae67bea5f09b095544f14c" class="nameRef">mprStartOsService</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Start the O/S dependent subsystem.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_thread_1ga3026fd2597352a226c67dcd2f847ed08" class="nameRef">mprStartOsThread</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, void *proc, void *data, <a href="#group___mpr_thread" class="ref">MprThread</a> *tp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Start an O/S thread.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___mpr_thread_1ga35c53df918c2f52e2e1f6961e35ee8d1" class="nameRef">mprStartThread</a>(<a href="#group___mpr_thread" class="ref">MprThread</a> *thread)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Start a thread.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#mpr_8h_1aff85a5fec251ea6ce4c9f24532b93e11" class="nameRef">mprStartWorker</a>(<a href="#group___mpr_worker_1ga1c2789aea11b60b13644c3b4e7c54f99" class="ref">MprWorkerProc</a> proc, void *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Start a worker thread.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#mpr_8h_1af9381320a2640ea84038579d8f143c01" class="ref">Socket</a></td><td><a href="#group___mpr_socket_1ga46693977a785a59037ff73375bd2acb2" class="nameRef">mprStealSocketHandle</a>(<a href="#group___mpr_socket" class="ref">MprSocket</a> *sp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Steal the socket handle.</td></tr>
@@ -1117,6 +1118,10 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Blocking operation would block.</td></tr>
 <tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1a83b40d1c6e1752448e424c3ba1acc3fa" class="nameRef">MPR_EVENT_ALWAYS</a>&nbsp;&nbsp;&nbsp;0x10</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Always invoke the callback even if the event not run.</td></tr>
+<tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1aa75b23385a68cbe6d21e4fdb8ca72d1f" class="nameRef">MPR_EVENT_ASYNC</a>&nbsp;&nbsp;&nbsp;1</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Windows async select.</td></tr>
@@ -1125,17 +1130,9 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Timer event runs is automatically rescheduled.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1ac32b25ad7f171f1e1d88f24ac6394b21" class="nameRef">MPR_EVENT_DONT_QUEUE</a>&nbsp;&nbsp;&nbsp;0x4</td>
-</tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Don&apos;t queue the event.</td></tr>
-<tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a35751841ed0361d40361c375bca122a4" class="nameRef">MPR_EVENT_EPOLL</a>&nbsp;&nbsp;&nbsp;2</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>epoll_wait.</td></tr>
-<tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a3577aee82220ed1403c06b3a510e6c01" class="nameRef">MPR_EVENT_FOREIGN</a>&nbsp;&nbsp;&nbsp;0x20</td>
-</tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Invoking from a foreign non-mpr thread.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a9cf11fdbc5ec554791085628014ce354" class="nameRef">MPR_EVENT_KQUEUE</a>&nbsp;&nbsp;&nbsp;3</td>
 </tr>
@@ -1149,7 +1146,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Execute inline without executing via a thread.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1ace3d51e15de22e334aede80a45e63366" class="nameRef">MPR_EVENT_RUNNING</a>&nbsp;&nbsp;&nbsp;0x10</td>
+<td>#define</td><td><a href="#mpr_8h_1ace3d51e15de22e334aede80a45e63366" class="nameRef">MPR_EVENT_RUNNING</a>&nbsp;&nbsp;&nbsp;0x8</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Event currently executing.</td></tr>
 <tr class="apiDef">
@@ -1157,7 +1154,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>traditional select().</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a58e11a0fe2de721fd742aa6c601ff8e4" class="nameRef">MPR_EVENT_STATIC_DATA</a>&nbsp;&nbsp;&nbsp;0x8</td>
+<td>#define</td><td><a href="#mpr_8h_1a58e11a0fe2de721fd742aa6c601ff8e4" class="nameRef">MPR_EVENT_STATIC_DATA</a>&nbsp;&nbsp;&nbsp;0x4</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Event data is permanent and should not be marked by GC.</td></tr>
 <tr class="apiDef">
@@ -5469,6 +5466,9 @@ Event flags.
     <tr><td class="param">struct MprWaitHandler *</td><td><td>handler</td><td>
 Optional wait handler.
 </td>
+    <tr><td class="param">int</td><td><td>hasRun</td><td>
+Event has run.
+</td>
     <tr><td class="param">int</td><td><td>mask</td><td>
 I/O mask of events.
 </td>
@@ -5515,7 +5515,8 @@ When was the event created.
     <tr><td class="param">proc</td><td>Function to invoke when the event is run.</td>
     <tr><td class="param">data</td><td>Data to associate with the event and stored in event-&gt;data. The data must be either an allocated memory object or MPR_EVENT_STATIC_DATA must be specified in flags.</td>
     <tr><td class="param">flags</td><td>Flags to modify the behavior of the event. Valid values are: MPR_EVENT_CONTINUOUS to create an event which will be automatically rescheduled according to the specified period. Use MPR_EVENT_STATIC_DATA if the data argument does not point to a memory object allocated by the Mpr. Include MPR_EVENT_QUICK to execute the event without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks. <br/><br/>
- When calling this routine from foreign threads, you should use a NULL dispatcher or guarantee the dispatcher is held by other means. Data supplied from foreign threads should generally be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag.</td>
+ When calling this routine from foreign threads, you should use a NULL dispatcher or guarantee the dispatcher is held by other means (difficult). Data supplied from foreign threads should generally be non-mpr memory and must persist until the callback has completed. This typically means the data memory should either be static or be allocated using malloc() before the call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag. Use the MPR_EVENT_ALWAYS_CALL to ensure your callback is always invoked even if the dispatcher is destroyed before the event is run. In such cases, the callback &quot;event&quot; argument will be NULL to indicate the dispatcher has been destroyed. Use this flag to free any allocated &quot;data&quot; memory in the callback. This may be important to prevent leaks. <br/><br/>
+ If using Appweb or the Http library, it is preferable to use the httpCreateEvent API when invoking callbacks on HttpStreams.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The event object. If called from a foreign thread, note that the event may have already run and the event object may have been collected by the GC. May return NULL if the dispatcher has already been destroyed.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
@@ -13880,7 +13881,7 @@ Yielded does not auto-clear after GC.
     <tr><td class="param">bool</td><td><td>waitForSweeper</td><td>
 Yield untill the GC sweeper is complete.
 </td>
-    <tr><td class="param">int</td><td><td>waiting</td><td>
+    <tr><td class="param">bool</td><td><td>waiting</td><td>
 Waiting in mprYield.
 </td>
     <tr><td class="param">bool</td><td><td>yielded</td><td>
@@ -13979,6 +13980,29 @@ Thread has yielded to GC.
     <tr><td class="param">on</td><td>Set to true to enable yielding.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#group___mpr_thread" class="ref">MprThread</a>, <a href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d" class="ref">MprThreadProc</a>, <a href="#struct_mpr_thread_service" class="ref">MprThreadService</a>, <a href="#group___mpr_thread_1ga442393787e4c3a1afc2cefac951c56c1" class="ref">mprCreateThread</a>, <a href="#group___mpr_thread_1ga9db7204c54785784352bb1ee492fadab" class="ref">mprGetCurrentOsThread</a>, <a href="#group___mpr_thread_1gaff3424b3b720bfb634a40d00610fa46e" class="ref">mprGetCurrentThread</a>, <a href="#mpr_8h_1a6c9995d58b9b065914023f44078604d8" class="ref">mprGetCurrentThreadName</a>, <a href="#group___mpr_thread_1gac98816057bf8f47f8d15131e68ae12f7" class="ref">mprGetThreadName</a>, <a href="#mpr_8h_1a525ba7359a573e4dee78703ea6ef93eb" class="ref">mprNeedYield</a>, <a href="#mpr_8h_1aa4bf0d2c9a7c854dcb9edc83035c84ba" class="ref">mprResetYield</a>, <a href="#group___mpr_thread_1ga35c53df918c2f52e2e1f6961e35ee8d1" class="ref">mprStartThread</a>, <a href="#mpr_8h_1af140a2fda18b2e8461236cc44c0a2cc4" class="ref">mprYield</a></dd></dl>
+  </div>
+</div>
+<a name="group___mpr_thread_1ga3026fd2597352a226c67dcd2f847ed08"></a>
+<div class="api">
+  <div class="prototype">
+    int
+    mprStartOsThread
+(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, void *proc, void *data, <a href="#group___mpr_thread" class="ref">MprThread</a> *tp)
+  </div>
+  <div class="apiDetail">
+<p>Start an O/S thread.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Start an O/S thread.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">name</td><td>Task name to use on VxWorks.</td>
+    <tr><td class="param">proc</td><td>Callback function for the thread&apos;s main.</td>
+    <tr><td class="param">data</td><td>Data for the callback to receive.</td>
+    <tr><td class="param">tp</td><td>Optional MprThread object to receive thread handles.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>Returns zero if successful, otherwise a negative MPR error code.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_thread" class="ref">MprThread</a>, <a href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d" class="ref">MprThreadProc</a>, <a href="#struct_mpr_thread_service" class="ref">MprThreadService</a>, <a href="#group___mpr_thread_1ga442393787e4c3a1afc2cefac951c56c1" class="ref">mprCreateThread</a>, <a href="#group___mpr_thread_1ga9db7204c54785784352bb1ee492fadab" class="ref">mprGetCurrentOsThread</a>, <a href="#group___mpr_thread_1gaff3424b3b720bfb634a40d00610fa46e" class="ref">mprGetCurrentThread</a>, <a href="#mpr_8h_1a6c9995d58b9b065914023f44078604d8" class="ref">mprGetCurrentThreadName</a>, <a href="#group___mpr_thread_1gac98816057bf8f47f8d15131e68ae12f7" class="ref">mprGetThreadName</a>, <a href="#mpr_8h_1a525ba7359a573e4dee78703ea6ef93eb" class="ref">mprNeedYield</a>, <a href="#mpr_8h_1aa4bf0d2c9a7c854dcb9edc83035c84ba" class="ref">mprResetYield</a>, <a href="#group___mpr_thread_1ga35c53df918c2f52e2e1f6961e35ee8d1" class="ref">mprStartThread</a>, <a href="#mpr_8h_1af140a2fda18b2e8461236cc44c0a2cc4" class="ref">mprYield</a></dd></dl>
   </div>

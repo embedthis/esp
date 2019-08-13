@@ -864,10 +864,14 @@ typedef struct MprMem {
                                              ME_MPR_ALLOC_BIG is defined and then it will be 64 bits. */
     uchar       qindex;                 /**< Freeq index. Always less than 512 queues. */
     uchar       eternal;                /**< Immune from GC. Implemented as a byte to be atomic */
+    uchar       mark;                   /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
+
+    /*
+        Bit fields for fields only updated by mark/sweeper. Must not use bits for fields updated by multiple threads.
+     */
     uchar       free: 1;                /**< Block not in use */
     uchar       first: 1;               /**< Block is first block in region */
     uchar       hasManager: 1;          /**< Has manager function. Set at block init. */
-    uchar       mark: 1;                /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
     uchar       fullRegion: 1;          /**< Block is an entire region - never on free queues . */
 
 #if ME_MPR_ALLOC_DEBUG
@@ -878,8 +882,6 @@ typedef struct MprMem {
 #if ME_64
     uchar       filler[4];
 #endif
-#else
-    uchar       filler[1];
 #endif
 } MprMem;
 
@@ -5792,12 +5794,10 @@ PUBLIC int mprUnloadModule(MprModule *mp);
  */
 #define MPR_EVENT_CONTINUOUS        0x1     /**< Timer event runs is automatically rescheduled */
 #define MPR_EVENT_QUICK             0x2     /**< Execute inline without executing via a thread */
-#define MPR_EVENT_STATIC_DATA       0x4     /**< Event data is permanent and should not be marked by GC */
-#define MPR_EVENT_RUNNING           0x8     /**< Event currently executing */
-#if UNUSED
-#define MPR_EVENT_FOREIGN           0x10    /**< Invoking from a foreign non-mpr thread */
-#define MPR_EVENT_DONT_QUEUE        0x20    /**< Don't queue the event. User must call mprQueueEvent. (internal use only) */
-#endif
+#define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent */
+#define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
+#define MPR_EVENT_RUNNING           0x10    /**< Event currently executing */
+#define MPR_EVENT_ALWAYS            0x20    /**< Always invoke the callback even if the event not run  */
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
 
@@ -5830,6 +5830,7 @@ typedef struct MprEvent {
     void                    *sock;              /**< Optional socket data */
     int                     flags;              /**< Event flags */
     int                     mask;               /**< I/O mask of events */
+    int                     hasRun;             /**< Event has run */
     MprTicks                period;             /**< Reschedule period */
     struct MprEvent         *next;              /**< Next event linkage */
     struct MprEvent         *prev;              /**< Previous event linkage */
@@ -6052,9 +6053,12 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
         without utilizing using a worker thread. This should only be used for quick non-blocking event callbacks.
         \n\n
         When calling this routine from foreign threads, you should use a NULL dispatcher or guarantee the dispatcher is held by
-        other means. Data supplied from foreign threads should generally be non-mpr memory and must persist until the callback
-        has completed. This typically means the data memory should either be static or be allocated using malloc() before the
-        call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag.
+        other means (difficult). Data supplied from foreign threads should generally be non-mpr memory and must persist until
+        the callback has completed. This typically means the data memory should either be static or be allocated using malloc()
+        before the call and released via free() in the callback. Static data should use the MPR_EVENT_STATIC_DATA flag.
+        Use the MPR_EVENT_ALWAYS_CALL to ensure your callback is always invoked even if the dispatcher is destroyed before the
+        event is run. In such cases, the callback "event" argument will be NULL to indicate the dispatcher has been destroyed.
+        Use this flag to free any allocated "data" memory in the callback. This may be important to prevent leaks.
         \n\n
         If using Appweb or the Http library, it is preferable to use the httpCreateEvent API when invoking callbacks on
             HttpStreams.
@@ -6064,20 +6068,6 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
     @stability Evolving
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
-
-/*
-    Create an event object
-    @param dispatcher Event dispatcher created via mprCreateDispatcher. Dispatcher must not be null.
-    @param name Static string name of the event used for debugging.
-    @param period Time in milliseconds used by continuous events between firing of the event.
-    @param proc Function to invoke when the event is run.
-    @param data Data to associate with the event. See #mprCreateEvent for details.
-    @param wp WaitHandler reference created via #mprWaitHandler
-    @see MprEvent MprWaitHandler mprCreateEvent mprCreateWaitHandler mprQueueIOEvent
-    @ingroup MprEvent
-    @stability Internal
- */
-PUBLIC MprEvent *mprCreateEventCore(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 
 /*
     Create and queue an IO event for a wait handler
@@ -6984,13 +6974,16 @@ typedef struct MprThread {
     void            *stackBase;         /**< Base of stack (approx) */
     int             peakStack;          /**< Peak stack usage */
 #endif
-    bool            isWorker: 1;        /**< Is a worker thread */
-    bool            isMain: 1;          /**< Is the main thread */
-    bool            stickyYield: 1;     /**< Yielded does not auto-clear after GC */
-    bool            yielded: 1;         /**< Thread has yielded to GC */
-    bool            noyield: 1;         /**< Do not yield (temporary) */
-    bool            waitForSweeper: 1;  /**< Yield untill the GC sweeper is complete */
-    bool            waiting: 1;         /**< Waiting in mprYield */
+    bool            isWorker;           /**< Is a worker thread */
+    bool            isMain;             /**< Is the main thread */
+    /*
+        Don' use bit fields for racing updates
+     */
+    bool            stickyYield;        /**< Yielded does not auto-clear after GC */
+    bool            yielded;            /**< Thread has yielded to GC */
+    bool            waiting;            /**< Waiting in mprYield */
+    bool            noyield;            /**< Do not yield (temporary) */
+    bool            waitForSweeper;     /**< Yield untill the GC sweeper is complete */
 } MprThread;
 
 

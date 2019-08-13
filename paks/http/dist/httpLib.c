@@ -9021,7 +9021,7 @@ static void parseRequestLine(HttpQueue *q, HttpPacket *packet)
         httpBadRequestError(stream, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty protocol");
         return;
     }
-    protocol = supper(protocol);
+    rx->protocol = protocol = supper(protocol);
     if (smatch(protocol, "HTTP/1.0") || *protocol == 0) {
         if (rx->flags & (HTTP_POST|HTTP_PUT)) {
             rx->remainingContent = HTTP_UNLIMITED;
@@ -9393,7 +9393,8 @@ PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
     mprPutStringToBuf(buf, "\r\n");
 
     if (httpTracing(q->net)) {
-        httpLog(stream->trace, "http.tx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
+        httpLog(stream->trace, "http.tx.headers", "headers", "\n%s %d %s\n%s",
+            httpGetProtocol(stream->net), tx->status, httpLookupStatus(tx->status), httpTraceHeaders(q, tx->headers));
     }
     /*
         Output headers
@@ -15996,7 +15997,8 @@ static void processFirst(HttpQueue *q)
     if (httpTracing(net) && httpIsServer(net)) {
         httpLog(stream->trace, "http.rx.request", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
-        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->rx->headers));
+        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s", 
+            rx->originalMethod, rx->uri, rx->protocol, httpTraceHeaders(q, stream->rx->headers));
     }
 }
 
@@ -16461,7 +16463,7 @@ static bool processContent(HttpQueue *q)
             HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
         }
     }
-    return httpPumpOutput(q) || rx->eof;
+    return httpPumpOutput(q) || rx->eof || stream->error;
 }
 
 
@@ -21194,6 +21196,7 @@ static void manageRx(HttpRx *rx, int flags)
         mprMark(rx->passwordDigest);
         mprMark(rx->pathInfo);
         mprMark(rx->pragma);
+        mprMark(rx->protocol);
         mprMark(rx->redirect);
         mprMark(rx->referrer);
         mprMark(rx->requestData);
@@ -21843,7 +21846,7 @@ PUBLIC HttpSession *httpGetSession(HttpStream *stream, int create)
         if (!rx->session && create) {
             lock(http);
             thisSeqno = ++seqno;
-            id = sfmt("%08x%08x%d", PTOI(stream->data) + PTOI(stream), (int) mprGetTicks(), thisSeqno);
+            id = sfmt("%08x%08x%d", PTOI(stream->seqno) + PTOI(stream), (int) mprGetTicks(), thisSeqno);
             id = mprGetMD5WithPrefix(id, slen(id), "-http.session-");
             id = sfmt("%d%s", thisSeqno, mprGetMD5WithPrefix(id, slen(id), "::http.session::"));
 
@@ -22320,14 +22323,16 @@ PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module)
     Invocation structure for httpCreateEvent
  */
 typedef struct HttpInvoke {
-    HttpStream      *stream;
     HttpEventProc   callback;
+    uint64          seqno;          // Stream sequence number
     void            *data;          //  User data - caller must free if required in callback
+    int             hasRun;
 } HttpInvoke;
 
 /***************************** Forward Declarations ***************************/
 
 static void commonPrep(HttpStream *stream);
+static void createEvent(HttpStream *stream, void *data);
 static void manageInvoke(HttpInvoke *event, int flags);
 static void manageStream(HttpStream *stream, int flags);
 static void pickStreamNumber(HttpStream *stream);
@@ -22461,8 +22466,7 @@ PUBLIC void httpDestroyStream(HttpStream *stream)
             stream->net->ownStreams--;
         }
         httpRemoveStream(stream->net, stream);
-        stream->state = HTTP_STATE_BEGIN;
-        stream->net = 0;
+        stream->state = HTTP_STATE_COMPLETE;
         stream->destroyed = 1;
     }
 }
@@ -22972,21 +22976,19 @@ PUBLIC void httpTraceQueues(HttpStream *stream)
 
 /*
     Invoke the callback. This routine is run on the streams dispatcher.
+    If the stream is destroyed, the event will be NULL.
  */
 static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
 {
     HttpStream  *stream;
 
-    /*
-        Stream is safe from GC due to references from invoke.
-     */
-    stream = invoke->stream;
-    assert(stream);
-
-    if (HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
-        invoke->callback(invoke->stream, invoke->data);
+    if (event && (stream = httpFindStream(invoke->seqno, NULL, NULL)) != NULL) {
+        invoke->callback(stream, invoke->data);
+    } else {
+        invoke->callback(NULL, invoke->data);
     }
-    /* invoke will be collected when the event is collected */
+    invoke->hasRun = 1;
+    mprRelease(invoke);
 }
 
 
@@ -22996,40 +22998,77 @@ static void invokeWrapper(HttpInvoke *invoke, MprEvent *event)
  */
 PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
 {
-    HttpNet     *net;
-    HttpStream  *stream;
     HttpInvoke  *invoke;
-    int         nextNet, nextStream, status;
-
-    status = MPR_ERR_CANT_FIND;
-    stream = 0;
 
     /*
-        The global lock stops GC
+        Must allocate memory immune from GC. The hold is released in the invokeWrapper
+        callback which is always invoked eventually.
      */
-    mprGlobalLock();
+    if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_ZERO | MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
+        mprSetManager(invoke, (MprManager) manageInvoke);
+        invoke->seqno = seqno;
+        invoke->callback = callback;
+        invoke->data = data;
+    }
+    if (httpFindStream(seqno, createEvent, invoke)) {
+        return 0;
+    }
+    mprRelease(invoke);
+    return MPR_ERR_CANT_FIND;
+}
+
+
+/*
+    Destructor for Invoke to make sure the callback is always called.
+ */
+static void manageInvoke(HttpInvoke *invoke, int flags)
+{
+    if (flags & MPR_MANAGE_FREE) {
+        if (!invoke->hasRun) {
+            invokeWrapper(invoke, NULL);
+        }
+    }
+}
+
+
+static void createEvent(HttpStream *stream, void *data)
+{
+    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, data, MPR_EVENT_ALWAYS);
+}
+
+
+/*
+    If invoking on a foreign thread, provide a callback proc and data so the stream can be safely accessed while locked.
+    Do not use the returned value except to test for NULL in a foreign thread.
+ */
+PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
+{
+    HttpNet     *net;
+    HttpStream  *stream;
+    int         nextNet, nextStream;
+
+    if (!proc && !mprGetCurrentThread()) {
+        assert(proc || mprGetCurrentThread());
+        return NULL;
+    }
+    /*
+        WARNING: GC can be running here in a foreign thread. The locks will ensure that networks and
+        streams are not destroyed while locked. Event service lock is needed for the manageDispatcher
+        which then marks networks.
+     */
+    stream = 0;
+    lock(MPR->eventService);
     lock(HTTP->networks);
     for (ITERATE_ITEMS(HTTP->networks, net, nextNet)) {
+        /*
+            This lock prevents the stream being freed and from being removed from HttpNet.networks
+         */
         lock(net->streams);
         for (ITERATE_ITEMS(net->streams, stream, nextStream)) {
-            if (stream->seqno == seqno && HTTP_STATE_BEGIN < stream->state && stream->state < HTTP_STATE_COMPLETE) {
-                /*
-                    Must allocate and Hold memory to be immune from GC. The hold is released below after mprCreateEvent
-                    takes ownership of the data. A manager is used to make sure the stream is retained after unlocking below.
-                 */
-                if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
-                    /*
-                        At this point, the invoke memory is held and the stream is preserved via the lock above.
-                     */
-                    invoke->callback = callback;
-                    invoke->data = data;
-                    invoke->stream = stream;
-                    mprSetManager(invoke, (MprManager) manageInvoke);
-                    mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, invoke, 0);
-                    mprRelease(invoke);
+            if (stream->seqno == seqno && !stream->destroyed) {
+                if (proc) {
+                    (proc)(stream, data);
                 }
-                unlock(net->streams);
-                status = MPR_ERR_OK;
                 nextNet = HTTP->networks->length;
                 break;
             }
@@ -23037,16 +23076,8 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
         unlock(net->streams);
     }
     unlock(HTTP->networks);
-    mprGlobalUnlock();
-    return status;
-}
-
-
-static void manageInvoke(HttpInvoke *invoke, int flags)
-{
-    if (flags & MPR_MANAGE_MARK) {
-        mprMark(invoke->stream);
-    }
+    unlock(MPR->eventService);
+    return stream;
 }
 
 /*
@@ -23099,12 +23130,19 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
 {
     HttpStream  *stream;
     HttpRx      *rx;
+    ssize       count;
 
     stream = q->stream;
     rx = stream->rx;
 
     if (q->net->eof) {
         httpSetEof(stream);
+    }
+    count = stream->readq->count + httpGetPacketLength(packet);
+    if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+                       "Request form of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+        return;
     }
     httpPutPacketToNext(q, packet);
     if (rx->eof) {
