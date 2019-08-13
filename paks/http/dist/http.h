@@ -2849,6 +2849,12 @@ PUBLIC int httpHandleDirectory(struct HttpConn *conn);
 #define HTTP_STATE_COMPLETE         9       /**< Request complete */
 
 
+/**
+    Event callback function for httpCreateEvent
+    @ingroup HttpConn
+    @stability Prototype
+ */
+typedef void (*HttpEventProc)(struct HttpConn *conn, void *data);
 
 /**
     Callback to fill headers
@@ -3163,6 +3169,26 @@ PUBLIC void httpEnableUpload(HttpConn *conn);
     @stability Stable
  */
 PUBLIC void httpError(HttpConn *conn, int status, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
+
+/**
+    Find a connection given a connection sequence number
+    @description Find a connection in a thread-safe manner given a connection sequence number. Each connection has a
+        unique 64-bit sequence
+        number that can be used to retrieve a connection object. When using foreign threads, this is preferable as another thread
+        may disconnect and destroy the connection at any time.
+        \n\n
+        A callback may be provided which will be invoked if the connection is found before returning from the API. This should
+        be used if utilizing this API in a foreign thread. httpFindConn will lock the connection while the callback is invoked.
+    @param seqno HttpConn connection sequence number retrieved from HttpConn.seqno
+    @param proc Callback function to invoke with the signature void (*HttpEventProc)(struct HttpConn *conn, void *data);
+    @param data Data to pass to the callback
+    @return The steam object reference. Returns NULL if the connection is not found. Only use this value if invoked in an
+        MPR thread. While foreign threads using this API may return a connection reference,
+        the connection may be destroyed before the reference can be used.
+    @ingroup HttpConn
+    @stability Prototype
+ */
+PUBLIC HttpConn *httpFindConn(uint64 seqno, HttpEventProc proc, void *data);
 
 /**
     Emit an error message for limit violations
@@ -4506,7 +4532,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
         httpCreateDefaultRoute httpCreateInheritedRoute httpCreateRoute httpDefineRoute
         httpDefineRouteCondition httpDefineRouteTarget httpDefineRouteUpdate httpFinalizeRoute httpGetRouteData
         httpGetRouteDocuments httpLookupRouteErrorDocument httpMakePath httpResetRoutePipeline
-        httpSetRouteAuth httpSetRouteAutoDelete httpSetRouteConnector httpSetRouteData
+        httpSetRouteAuth httpSetRouteAutoDelete httpSetRouteAutoFinalize httpSetRouteConnector httpSetRouteData
         httpSetRouteDefaultLanguage httpSetRouteDocuments httpSetRouteFlags httpSetRouteHandler httpSetRouteHost
         httpSetRouteIndex httpSetRouteMethods httpSetRouteVar httpSetRoutePattern
         httpSetRoutePrefix httpSetRouteScript httpSetRouteSource httpSetRouteTarget httpSetRouteWorkers httpTemplate
@@ -4573,6 +4599,7 @@ typedef struct HttpRoute {
     void            *context;               /**< Hosting context (Appweb == EjsPool) */
     void            *eroute;                /**< Extended route information for handler (only) */
     int             autoDelete;             /**< Automatically delete uploaded files */
+    bool            autoFinalize: 1;        /**< Auto finalize the request (ESP) */
     int             renameUploads;          /**< Rename uploaded files */
 
     HttpLimits      *limits;                /**< Host resource limits */
@@ -5394,6 +5421,16 @@ PUBLIC void httpSetRouteAuth(HttpRoute *route, HttpAuth *auth);
     @stability Stable
  */
 PUBLIC void httpSetRouteAutoDelete(HttpRoute *route, bool on);
+
+/**
+    Control auto finalize for a route
+    @description This controls whether a request is auto-finalized after the handler runs to service a request.
+    @param route Route to modify
+    @param on Set to true to enable auto-finalize. Auto-finalize is enabled by default for frameworks that use it.
+    @ingroup HttpRoute
+    @stability Prototype
+ */
+PUBLIC void httpSetRouteAutoFinalize(HttpRoute *route, bool on);
 
 /**
     Define whether updating a request may compile from source
@@ -8050,22 +8087,23 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
 
 /************************************ CreateEvent ***********************************/
 /**
-    Event callback function for httpCreateEvent
+    Invoke a callback on a connection using a connection sequence number.
+    @description This routine invokes a callback on a connection's event dispatcher in a thread-safe manner. This API
+        is the only safe way to invoke APIs on a connection from foreign threads.
+    @param seqno HttpStream->seqno identifier extracted when running in an MPR (Appweb) thread.
+    @param callback Callback function to invoke. The callback will always be invoked if the call is successful so that
+        you can free any allocated resources. If the connection is destroyed before the event is run, the callback will be
+        invoked and the "conn" argument will be set to NULL.
+        \n\n
+        If is important to check the HttpStream.error and HttpStream.state in the callback to ensure the Stream is in
+        an acceptable state for your logic. Typically you want HttpStream.state to be greater than HTTP_STATE_BEGIN and
+        less than HTTP_STATE_COMPLETE. You may also wish to check HttpStream.error incase the connection request has errored.
+    @param data Data to pass to the callback.
+    @return "Zero" if the connection can be found and the event is scheduled, Otherwise returns MPR_ERR_CANT_FIND.
     @ingroup HttpConn
     @stability Prototype
  */
-typedef void (*HttpEventProc)(HttpConn *conn, void *data);
-
-/**
-    Invoke a callback on an Appweb thread from a non-appweb thread.
-    @description Used to safely call back into Apppweb. This API provides a wrapper over mprCreateEvent.
-    @param connSeqno HttpConn->seqno identifier
-    @param callback Callback function to invoke
-    @param data Data to pass to the callback. Caller is responsible to free in the callback if required.
-    @ingroup HttpConn
-    @stability Prototype
- */
-PUBLIC void httpCreateEvent(uint64 connSeqno, HttpEventProc callback, void *data);
+PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data);
 
 /************************************ Misc *****************************************/
 /**

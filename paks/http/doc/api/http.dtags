@@ -1150,18 +1150,18 @@
       <arglist>)(struct HttpConn *conn)</arglist>
     </member>
     <member kind="typedef">
+      <type>void(*</type>
+      <name>HttpEventProc</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>ga883d50e11c7bbdc7eae9d5049f4795bf</anchor>
+      <arglist>)(struct HttpConn *conn, void *data)</arglist>
+    </member>
+    <member kind="typedef">
       <type>int(*</type>
       <name>HttpHeadersCallback</name>
       <anchorfile>group___http_conn.html</anchorfile>
       <anchor>gaf11f6724913441eab0f9c8a6e139569e</anchor>
       <arglist>)(void *arg)</arglist>
-    </member>
-    <member kind="typedef">
-      <type>void(*</type>
-      <name>HttpInvokeProc</name>
-      <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>gab961689c08b521886ab8ae33cef278ea</anchor>
-      <arglist>)(HttpConn *conn, void *data)</arglist>
     </member>
     <member kind="typedef">
       <type>void(*</type>
@@ -1199,10 +1199,10 @@
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
-      <type>void void void</type>
+      <type>void void</type>
       <name>httpBadRequestError</name>
       <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>ga8968edd59af5c01afe835ffd9df0b17d</anchor>
+      <anchor>ga0e9096cf4471a400a4b27f93393b1895</anchor>
       <arglist>(HttpConn *conn, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">
@@ -1232,6 +1232,13 @@
       <anchorfile>group___http_conn.html</anchorfile>
       <anchor>ga25308956e8946f7f26ee9adc396534d3</anchor>
       <arglist>(struct HttpEndpoint *endpoint, MprDispatcher *dispatcher)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
+      <name>httpCreateEvent</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>ga2f07f0d50fac6c7fa3131f2aa5665e69</anchor>
+      <arglist>(uint64 seqno, HttpEventProc callback, void *data)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1297,6 +1304,13 @@
       <arglist>(HttpConn *conn, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">
+      <type>void HttpConn *</type>
+      <name>httpFindConn</name>
+      <anchorfile>group___http_conn.html</anchorfile>
+      <anchor>ga17594713541203560e0b429ef310b72a</anchor>
+      <arglist>(uint64 seqno, HttpEventProc proc, void *data)</arglist>
+    </member>
+    <member kind="function">
       <type>int</type>
       <name>httpGetAsync</name>
       <anchorfile>group___http_conn.html</anchorfile>
@@ -1360,17 +1374,10 @@
       <arglist>(HttpConn *conn)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
-      <name>httpInvoke</name>
-      <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>ga680c6d113a32965c2498c407fdf1b69e</anchor>
-      <arglist>(HttpConn *conn, HttpInvokeProc callback, void *data)</arglist>
-    </member>
-    <member kind="function">
-      <type>void void void void</type>
+      <type>void void void</type>
       <name>httpIO</name>
       <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>ga6282b5931e91af3bb256f4167e623bff</anchor>
+      <anchor>ga0f8d7bb5260368cb7a7a06536ad50daf</anchor>
       <arglist>(struct HttpConn *conn, int eventMask)</arglist>
     </member>
     <member kind="function">
@@ -1381,10 +1388,10 @@
       <arglist>(struct HttpConn *conn, MprEvent *event)</arglist>
     </member>
     <member kind="function">
-      <type>void void</type>
+      <type>void</type>
       <name>httpLimitError</name>
       <anchorfile>group___http_conn.html</anchorfile>
-      <anchor>ga50ffd4fc600a673857222841718152de</anchor>
+      <anchor>ga765e9101c729f4069e9937274970aeba</anchor>
       <arglist>(HttpConn *conn, int status, cchar *fmt,...) PRINTF_ATTRIBUTE(3</arglist>
     </member>
     <member kind="function">
@@ -2385,6 +2392,13 @@
       <name>httpSetRouteAutoDelete</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>gaddcc56c566e6857c3d1339f95fd5e712</anchor>
+      <arglist>(HttpRoute *route, bool on)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpSetRouteAutoFinalize</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga5d73b457f36a0a337dc4e8de9e4f4c6b</anchor>
       <arglist>(HttpRoute *route, bool on)</arglist>
     </member>
     <member kind="function">

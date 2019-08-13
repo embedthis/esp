@@ -664,6 +664,9 @@ static MprMem *growHeap(size_t required)
 }
 
 
+/*
+    Free a memory block back onto the freelists
+ */
 static void freeBlock(MprMem *mp)
 {
     MprRegion   *region;
@@ -678,6 +681,9 @@ static void freeBlock(MprMem *mp)
 #if ME_MPR_ALLOC_STATS
     heap->stats.freed += mp->size;
 #endif
+    /*
+        If memory block is first in the region, check if the entire region is free
+     */
     if (mp->first) {
         region = GET_REGION(mp);
         if (GET_NEXT(mp) >= region->end) {
@@ -1059,6 +1065,7 @@ PUBLIC void mprYield(int flags)
         assert(!tp->yielded);
         assert(!heap->marking);
     }
+    assert(!tp->waiting);
 }
 
 
@@ -1236,19 +1243,24 @@ static void markAndSweep()
 
     /*
         Mark used memory. Toggle the in-use heap->mark for each collection.
+        Assert global lock around marking and changing heap->mark so that routines in foreign threads (like httpCreateEvent)
+        can stop GC when creating events.
      */
+    mprGlobalLock();
     heap->mark = !heap->mark;
     markRoots();
-
     heap->marking = 0;
     heap->priorWorkDone = heap->workDone;
     heap->workDone = 0;
+    mprGlobalUnlock();
 
     /*
-        Sweep unused memory
+        Sweep unused memory. Sweeping goes on in parallel with running threads.
      */
     heap->sweeping = 1;
+
     resumeThreads(YIELDED_THREADS);
+
     sweep();
     heap->sweeping = 0;
 
@@ -1265,9 +1277,6 @@ static void markRoots()
     heap->stats.markVisited = 0;
     heap->stats.marked = 0;
 #endif
-    /*
-        Don't mark roots elements here
-     */
     mprMark(heap->roots);
     mprMark(heap->gcCond);
 }
@@ -1410,7 +1419,7 @@ static void sweep()
             if (mp->free && joinBlocks) {
                 /*
                     Coalesce already free blocks if the next is also free
-                    This may be needed because the code below only coalesces forward.
+                    This is needed because the code below only coalesces forward.
                  */
                 if (next < region->end && !next->free && next->mark != heap->mark && claim(mp)) {
                     mp->mark = !heap->mark;
@@ -1569,7 +1578,13 @@ PUBLIC void mprRelease(cvoid *ptr)
     if (ptr) {
         mp = GET_MEM(ptr);
         if (!mp->free && VALID_BLK(mp)) {
-            assert(mp->eternal);
+            /*
+                For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
+                and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
+                the block on this sweep. Will be collected on the next if there is no other reference.
+             */
+            mp->mark = heap->mark;
+            mprAtomicBarrier();
             mp->eternal = 0;
         }
     }
@@ -1897,13 +1912,16 @@ PUBLIC void *mprSetAllocName(void *ptr, cchar *name)
 }
 
 
+/*
+    Mark this allocation address as freed (debug only)
+ */
 static void freeLocation(MprMem *mp)
 {
     MprLocationStats    *lp;
     cchar               *name;
     int                 index;
 
-    if (!heap->track) {
+    if (!heap->track || mp->eternal) {
         return;
     }
     name = mp->name;
@@ -3102,6 +3120,7 @@ PUBLIC int mprGetState()
 
 PUBLIC void mprSetState(int state)
 {
+    // OPT - Don't need lock around simple assignment
     mprGlobalLock();
     mprState = state;
     mprGlobalUnlock();
@@ -9478,19 +9497,28 @@ static int cygOpen(MprFileSystem *fs, cchar *path, int omode, int perms)
 
 
 
+/*********************************** Locals *************************************/
+
+#define RESERVED_DISPATCHER     ((MprOsThread) 0x1)
+
 /***************************** Forward Declarations ***************************/
 
+static bool claimDispatcher(MprDispatcher *dispatcher, MprOsThread thread);
 static MprDispatcher *createQhead(cchar *name);
 static void dequeueDispatcher(MprDispatcher *dispatcher);
 static int dispatchEvents(MprDispatcher *dispatcher);
-static void dispatchEventsWorker(MprDispatcher *dispatcher);
+static void dispatchEventsHelper(MprDispatcher *dispatcher);
 static MprTicks getDispatcherIdleTicks(MprDispatcher *dispatcher, MprTicks timeout);
 static MprTicks getIdleTicks(MprEventService *es, MprTicks timeout);
 static MprDispatcher *getNextReadyDispatcher(MprEventService *es);
 static void initDispatcher(MprDispatcher *q);
 static void manageDispatcher(MprDispatcher *dispatcher, int flags);
 static void manageEventService(MprEventService *es, int flags);
+static bool ownedDispatcher(MprDispatcher *dispatcher);
 static void queueDispatcher(MprDispatcher *prior, MprDispatcher *dispatcher);
+static bool reclaimDispatcher(MprDispatcher *dispatcher);
+static void releaseDispatcher(MprDispatcher *dispatcher);
+static bool reservedDispatcher(MprDispatcher *dispatcher);
 
 #define isIdle(dispatcher) (dispatcher->parent == dispatcher->service->idleQ)
 #define isRunning(dispatcher) (dispatcher->parent == dispatcher->service->runQ)
@@ -9627,28 +9655,35 @@ PUBLIC MprDispatcher *mprCreateDispatcher(cchar *name, int flags)
 }
 
 
+static void freeEvents(MprEvent *q)
+{
+    MprEvent    *event, *next;
+
+    if (q) {
+        for (event = q->next; event != q; event = next) {
+            next = event->next;
+            if (event->cond) {
+                mprSignalCond(event->cond);
+            }
+            if (event->dispatcher) {
+                mprRemoveEvent(event);
+            }
+            mprRelease(event);
+        }
+    }
+}
+
+
 PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
-    MprEvent            *q, *event, *next;
 
     if (dispatcher) {
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
-        assert(dispatcher->service == MPR->eventService);
-        q = dispatcher->eventQ;
-        if (q) {
-            for (event = q->next; event != q; event = next) {
-                next = event->next;
-                if (event->cond) {
-                    mprSignalCond(event->cond);
-                }
-                if (event->dispatcher) {
-                    mprRemoveEvent(event);
-                }
-            }
-        }
+        freeEvents(dispatcher->eventQ);
+        freeEvents(dispatcher->currentQ);
         dequeueDispatcher(dispatcher);
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
@@ -9678,6 +9713,12 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
                 next = event->next;
                 mprMark(event);
             }
+        }
+
+    } else if (flags & MPR_MANAGE_FREE) {
+        if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
+            freeEvents(dispatcher->eventQ);
+            freeEvents(dispatcher->currentQ);
         }
     }
 }
@@ -9723,13 +9764,19 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         mprServiceSignals();
 
         while ((dp = getNextReadyDispatcher(es)) != NULL) {
+            assert(reservedDispatcher(dp));
             assert(!isRunning(dp));
             queueDispatcher(es->runQ, dp);
+            assert(isRunning(dp));
+
+            /*
+                dispatchEventsHelper will dispatch events and release the claim
+             */
             if (dp->flags & MPR_DISPATCHER_IMMEDIATE) {
-                dispatchEventsWorker(dp);
+                dispatchEventsHelper(dp);
             } else {
-                if (mprStartWorker((MprWorkerProc) dispatchEventsWorker, dp) < 0) {
-                    /* Should not get here */
+                if (mprStartWorker((MprWorkerProc) dispatchEventsHelper, dp) < 0) {
+                    releaseDispatcher(dp);
                     queueDispatcher(es->pendingQ, dp);
                     break;
                 }
@@ -9792,32 +9839,22 @@ PUBLIC int64 mprGetEventMark(MprDispatcher *dispatcher)
 PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 mark)
 {
     MprEventService     *es;
-    MprTicks            expires, delay;
-    int                 runEvents, changed;
+    MprTicks            delay;
+    int                 changed;
 
+    es = MPR->eventService;
     if (dispatcher == NULL) {
         dispatcher = MPR->dispatcher;
     }
     if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return 0;
     }
-    if ((runEvents = (dispatcher->owner == mprGetCurrentOsThread())) != 0) {
-        /* Called from an event on a running dispatcher */
-        assert(isRunning(dispatcher) || (dispatcher->flags & MPR_DISPATCHER_DESTROYED));
-        if (dispatchEvents(dispatcher)) {
-            return 0;
-        }
+    if (ownedDispatcher(dispatcher) && dispatchEvents(dispatcher)) {
+        return 0;
     }
-    es = MPR->eventService;
-    es->now = mprGetTicks();
-    expires = timeout < 0 ? MPR_MAX_TIMEOUT : (es->now + timeout);
-    if (expires < 0) {
-        expires = MPR_MAX_TIMEOUT;
-    }
-    delay = expires - es->now;
 
     lock(es);
-    delay = getDispatcherIdleTicks(dispatcher, delay);
+    delay = getDispatcherIdleTicks(dispatcher, timeout);
     dispatcher->flags |= MPR_DISPATCHER_WAITING;
     changed = dispatcher->mark != mark && mark != -1;
     unlock(es);
@@ -9825,18 +9862,18 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     if (changed) {
         return 0;
     }
-    mprYield(MPR_YIELD_STICKY);
-    mprWaitForCond(dispatcher->cond, delay);
-    mprResetYield();
-    es->now = mprGetTicks();
-
+    if (!ownedDispatcher(dispatcher)) {
+        mprYield(MPR_YIELD_STICKY);
+        mprWaitForCond(dispatcher->cond, delay);
+        mprResetYield();
+        es->now = mprGetTicks();
+    }
     lock(es);
     dispatcher->flags &= ~MPR_DISPATCHER_WAITING;
     unlock(es);
 
-    if (runEvents) {
+    if (ownedDispatcher(dispatcher)) {
         dispatchEvents(dispatcher);
-        assert(isRunning(dispatcher) || (dispatcher->flags & MPR_DISPATCHER_DESTROYED));
     }
     return 0;
 }
@@ -9927,36 +9964,35 @@ PUBLIC int mprDispatchersAreIdle()
 
 
 /*
-    Start the dispatcher by putting it on the runQ. This prevents the event service from
+    Manually start the dispatcher by putting it on the runQ. This prevents the event service from
     starting any events in parallel. The invoking thread should service events directly by
-    calling mprServiceEvents or mprWaitForEvent.
+    calling mprServiceEvents or mprWaitForEvent. This is often called by utility programs.
  */
 PUBLIC int mprStartDispatcher(MprDispatcher *dispatcher)
 {
-    if (dispatcher->owner && dispatcher->owner != mprGetCurrentOsThread()) {
+    if (!claimDispatcher(dispatcher, 0)) {
         mprLog("error mpr event", 0, "Cannot start dispatcher - owned by another thread");
         return MPR_ERR_BAD_STATE;
     }
     if (!isRunning(dispatcher)) {
         queueDispatcher(dispatcher->service->runQ, dispatcher);
     }
-    dispatcher->owner = mprGetCurrentOsThread();
     return 0;
 }
 
 
 PUBLIC int mprStopDispatcher(MprDispatcher *dispatcher)
 {
-    if (dispatcher->owner != mprGetCurrentOsThread()) {
-        assert(dispatcher->owner == mprGetCurrentOsThread());
+    if (!ownedDispatcher(dispatcher)) {
+        mprLog("error mpr event", 0, "Cannot stop dispatcher - owned by another thread");
         return MPR_ERR_BAD_STATE;
     }
     if (!isRunning(dispatcher)) {
         assert(isRunning(dispatcher));
         return MPR_ERR_BAD_STATE;
     }
-    dispatcher->owner = 0;
     dequeueDispatcher(dispatcher);
+    releaseDispatcher(dispatcher);
     mprScheduleDispatcher(dispatcher);
     return 0;
 }
@@ -9981,6 +10017,7 @@ PUBLIC void mprScheduleDispatcher(MprDispatcher *dispatcher)
         return;
     }
     lock(es);
+    es->now = mprGetTicks();
     mustWakeWaitService = es->waiting;
 
     if (isRunning(dispatcher)) {
@@ -10031,7 +10068,6 @@ static int dispatchEvents(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
     MprEvent            *event;
-    MprOsThread         priorOwner;
     int                 count;
 
     if (mprIsStopped()) {
@@ -10040,16 +10076,12 @@ static int dispatchEvents(MprDispatcher *dispatcher)
     assert(isRunning(dispatcher));
     es = dispatcher->service;
 
-    priorOwner = dispatcher->owner;
-    assert(priorOwner == 0 || priorOwner == mprGetCurrentOsThread());
-
-    dispatcher->owner = mprGetCurrentOsThread();
+    assert(ownedDispatcher(dispatcher));
 
     /*
         Events are removed from the dispatcher queue and put onto the currentQ. This is so they will be marked for GC.
         If the callback calls mprRemoveEvent, it will not remove from the currentQ. If it was a continuous event,
         mprRemoveEvent will clear the continuous flag.
-
         OPT - this could all be simpler if dispatchEvents was never called recursively. Then a currentQ would not be needed,
         and neither would a running flag. See mprRemoveEvent().
      */
@@ -10061,6 +10093,8 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         mprAtomicAdd64(&dispatcher->mark, 1);
 
         (event->proc)(event->data, event);
+        event->hasRun = 1;
+
         if (event->cond) {
             mprSignalCond(event->cond);
         }
@@ -10084,34 +10118,40 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         } else {
             mprDequeueEvent(event);
         }
+        /*
+            Can release here even if continuous. Hold not needed once securely referenced by the dispatcher
+         */
+        mprRelease(event);
         es->eventCount++;
+        assert(ownedDispatcher(dispatcher));
         unlock(es);
-        assert(dispatcher->owner == mprGetCurrentOsThread());
     }
-    dispatcher->owner = priorOwner;
     return count;
 }
 
 
 /*
-    Run events for a dispatcher in a worker thread. When complete, reschedule the dispatcher as required.
+    Run events for a dispatcher. When complete, reschedule the dispatcher as required.
  */
-static void dispatchEventsWorker(MprDispatcher *dispatcher)
+static void dispatchEventsHelper(MprDispatcher *dispatcher)
 {
     if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         /* Dispatcher destroyed after worker started */
         return;
     }
-    dispatcher->owner = mprGetCurrentOsThread();
+    if (!reclaimDispatcher(dispatcher)) {
+        return;
+    }
+    assert(ownedDispatcher(dispatcher));
+
     dispatchEvents(dispatcher);
 
-    assert(dispatcher->owner == 0 || dispatcher->owner == mprGetCurrentOsThread());
-    dispatcher->owner = 0;
-
     if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
+        releaseDispatcher(dispatcher);
         dequeueDispatcher(dispatcher);
         mprScheduleDispatcher(dispatcher);
     }
+    assert(!ownedDispatcher(dispatcher));
 }
 
 
@@ -10166,11 +10206,8 @@ static MprDispatcher *getNextReadyDispatcher(MprEventService *es)
     if (!dispatcher && readyQ->next != readyQ) {
         dispatcher = readyQ->next;
     }
-    /*
-        Reserve the dispatcher. This may get transferred to a worker
-     */
-    if (dispatcher) {
-        dispatcher->owner = mprGetCurrentOsThread();
+    if (dispatcher && !claimDispatcher(dispatcher, RESERVED_DISPATCHER)) {
+        dispatcher = 0;
     }
     unlock(es);
     return dispatcher;
@@ -10222,8 +10259,12 @@ PUBLIC void mprSetEventServiceSleep(MprTicks delay)
 
 static MprTicks getDispatcherIdleTicks(MprDispatcher *dispatcher, MprTicks timeout)
 {
-    MprEvent    *next;
-    MprTicks    delay;
+    MprEventService *es;
+    MprEvent        *next;
+    MprTicks        delay, expires;
+
+    es = MPR->eventService;
+    es->now = mprGetTicks();
 
     if (timeout < 0) {
         timeout = 0;
@@ -10236,6 +10277,11 @@ static MprTicks getDispatcherIdleTicks(MprDispatcher *dispatcher, MprTicks timeo
                 delay = 0;
             }
         }
+        expires = timeout < 0 ? MPR_MAX_TIMEOUT : (es->now + timeout);
+        if (expires < 0) {
+            expires = MPR_MAX_TIMEOUT;
+        }
+        timeout = expires - es->now;
         timeout = min(delay, timeout);
     }
     return timeout;
@@ -10282,6 +10328,79 @@ static void dequeueDispatcher(MprDispatcher *dispatcher)
         assert(dispatcher->prev == dispatcher);
     }
     unlock(dispatcher->service);
+}
+
+
+static bool claimDispatcher(MprDispatcher *dispatcher, MprOsThread thread)
+{
+    MprEventService *es;
+
+    if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return 0;
+    }
+    es = MPR->eventService;
+    lock(es);
+    if (dispatcher->owner && dispatcher->owner != mprGetCurrentOsThread()) {
+        assert(0);
+        unlock(es);
+        return 0;
+    }
+    dispatcher->owner = (thread ? thread : mprGetCurrentOsThread());
+    unlock(es);
+    return 1;
+}
+
+
+/*
+    Used by workers to change the owner
+ */
+static bool reclaimDispatcher(MprDispatcher *dispatcher)
+{
+    MprEventService *es;
+
+    if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return 0;
+    }
+    es = MPR->eventService;
+    lock(es);
+    if (dispatcher->owner != RESERVED_DISPATCHER) {
+        assert(dispatcher->owner == RESERVED_DISPATCHER);
+        unlock(es);
+        return 0;
+    }
+    dispatcher->owner = mprGetCurrentOsThread();
+    unlock(es);
+    return 1;
+
+}
+
+
+static void releaseDispatcher(MprDispatcher *dispatcher)
+{
+    lock(MPR->eventService);
+    if (dispatcher->owner && dispatcher->owner != RESERVED_DISPATCHER && dispatcher->owner != mprGetCurrentOsThread()) {
+        assert(0);
+    }
+    dispatcher->owner = 0;
+    unlock(MPR->eventService);
+}
+
+
+static bool ownedDispatcher(MprDispatcher *dispatcher)
+{
+    if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return 0;
+    }
+    return (dispatcher->owner == mprGetCurrentOsThread()) ? 1 : 0;
+}
+
+
+static bool reservedDispatcher(MprDispatcher *dispatcher)
+{
+    if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return 0;
+    }
+    return (dispatcher->owner == RESERVED_DISPATCHER) ? 1 : 0;
 }
 
 
@@ -11005,6 +11124,7 @@ void epollDummy() {}
 
 /***************************** Forward Declarations ***************************/
 
+static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 static void initEventQ(MprEvent *q, cchar *name);
 static void manageEvent(MprEvent *event, int flags);
 static void queueEvent(MprEvent *prior, MprEvent *event);
@@ -11027,45 +11147,92 @@ PUBLIC MprEvent *mprCreateEventQueue()
 
 
 /*
-    Create and queue a new event for service. Period is used as the delay before running the event and as the period
-    between events for continuous events.
+    Must only be called from an Appweb thread owning this dispatcher
+ */
+PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, MprWaitHandler *wp, MprSocket *sock)
+{
+    MprEvent    *event;
 
-    This routine is foreign thread-safe when used with the MPR_EVENT_FOREIGN flag and a named dispatcher.
-    i.e. it can be called by non-mpr threads where it runs in parallel with the GC.
+    assert(proc);
+    assert(wp);
+
+    if (dispatcher == 0) {
+        dispatcher = MPR->dispatcher;
+    }
+    if (dispatcher && dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return;
+    }
+    event = createEvent(dispatcher, "IOEvent", 0, proc, wp->handlerData, 0);
+    event->mask = wp->presentMask;
+    event->handler = wp;
+    event->sock = sock;
+    wp->event = event;
+    mprQueueEvent(dispatcher, event);
+}
+
+
+/*
+    Create an interval timer
+ */
+PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
+{
+    return mprCreateEvent(dispatcher, name, period, proc, data, MPR_EVENT_CONTINUOUS | flags);
+}
+
+
+/*
+    Create and queue an event for execution by a dispatcher.
+    May be called by foreign threads if:
+    - The dispatcher and data are held or null.
+    - The caller is responsible for the data memory.
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
 {
     MprEvent    *event;
-    bool        scheduled;
-    int         aflags;
 
-    aflags = MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO;
-    if (flags & MPR_EVENT_FOREIGN) {
-        /*
-            Hold event memory for foreign threads to be immune from GC.
-            Supplied user data should be static (non mpr) or be held via mprHold.
-         */
-        flags = flags | MPR_EVENT_STATIC_DATA;
+    if (dispatcher == 0) {
+        dispatcher = (flags & MPR_EVENT_QUICK) ? MPR->nonBlock : MPR->dispatcher;
+    }
+    if (dispatcher && dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
+        return 0;
+    }
+    if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
+        // DEPRECATE - only for ejscript
         if (!(flags & MPR_EVENT_DONT_QUEUE)) {
-            aflags |= MPR_ALLOC_HOLD;
+            mprQueueEvent(dispatcher, event);
         }
     }
-    if ((event = mprAllocMem(sizeof(MprEvent), aflags)) == 0) {
+    return event;
+}
+
+
+/*
+    Create a new event but do not queue. The returned event is held via mprHold() and is itself immune from GC.
+    The hold will be released when the event is run in dispatchEvents or if the dispatcher is freed before the event is run.
+    Period is used as the delay before running the event and as the period between events for continuous events.
+    This routine is foreign thread-safe provided the dispatcher and data are held or null.
+ */
+static MprEvent *createEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags)
+{
+    MprEvent    *event;
+
+    assert(dispatcher);
+    assert(!(dispatcher->flags & MPR_DISPATCHER_DESTROYED));
+
+    /*
+        The old is for allocations via foreign threads which retains the event until it is queued.
+     */
+    if ((event = mprAllocMem(sizeof(MprEvent), MPR_ALLOC_MANAGER | MPR_ALLOC_ZERO | MPR_ALLOC_HOLD)) == 0) {
         return 0;
     }
     mprSetManager(event, (MprManager) manageEvent);
-    if (dispatcher == 0 || (dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
-        dispatcher = (flags & MPR_EVENT_QUICK) ? MPR->nonBlock : MPR->dispatcher;
-    }
-    dispatcher->service->now = mprGetTicks();
     event->name = name;
     event->proc = proc;
     event->data = data;
     event->dispatcher = dispatcher;
     event->next = event->prev = 0;
     event->flags = flags;
-
-    event->timestamp = dispatcher->service->now;
+    event->timestamp = mprGetTicks();
     if (period < 0) {
         period = -period;
     } else if (period > MPR_EVENT_MAX_PERIOD) {
@@ -11073,15 +11240,6 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
     }
     event->period = period;
     event->due = event->timestamp + period;
-
-    if (!(flags & MPR_EVENT_DONT_QUEUE)) {
-        scheduled = mprQueueEvent(dispatcher, event);
-        if (flags & MPR_EVENT_FOREIGN) {
-            mprRelease(event);
-            /* Warning: event may collected by GC here, if it has already run */
-            return scheduled ? event : NULL;
-        }
-    }
     return event;
 }
 
@@ -11089,32 +11247,26 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
 static void manageEvent(MprEvent *event, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(event->dispatcher);
+        //  Don't mark the dispatcher as it will be marked elsewhere by owners of the dispatcher
         mprMark(event->handler);
         if (!(event->flags & MPR_EVENT_STATIC_DATA)) {
             mprMark(event->data);
         }
         mprMark(event->sock);
         mprMark(event->cond);
+
+    } else if (flags & MPR_MANAGE_FREE) {
+        if (!event->hasRun && (event->flags & MPR_EVENT_ALWAYS)) {
+            (event->proc)(event->data, NULL);
+        }
     }
 }
 
 
-/*
-    Create an interval timer
- */
-PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc,
-    void *data, int flags)
-{
-    return mprCreateEvent(dispatcher, name, period, proc, data, MPR_EVENT_CONTINUOUS | flags);
-}
-
-
-PUBLIC bool mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
+PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
 {
     MprEventService     *es;
     MprEvent            *prior, *q;
-    bool                scheduled;
 
     assert(dispatcher);
     assert(event);
@@ -11138,12 +11290,8 @@ PUBLIC bool mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
         event->dispatcher = dispatcher;
         es->eventCount++;
         mprScheduleDispatcher(dispatcher);
-        scheduled = 1;
-    } else {
-        scheduled = 0;
     }
     unlock(es);
-    return scheduled;
 }
 
 
@@ -11280,7 +11428,7 @@ static void initEventQ(MprEvent *q, cchar *name)
 
     q->next = q;
     q->prev = q;
-    q->name = sclone(name);
+    q->name = name;
 }
 
 
@@ -14826,7 +14974,7 @@ static void manageList(MprList *lp, int flags)
     if (flags & MPR_MANAGE_MARK) {
         mprMark(lp->mutex);
         if (lp->items) {
-            /* OPT - no need to lock as this is running solo */
+            /* Lock incase foreign threads queueing events. Also for markRoots. */
             lock(lp);
             mprMark(lp->items);
             if (!(lp->flags & MPR_LIST_STATIC_VALUES)) {
@@ -25159,61 +25307,70 @@ static void threadProc(MprThread *tp)
 }
 
 
-/*
-    Start a thread
- */
 PUBLIC int mprStartThread(MprThread *tp)
 {
     if (!tp) {
+        assert(tp);
         return MPR_ERR_BAD_ARGS;
     }
     lock(tp);
-
-#if ME_WIN_LIKE
-{
-    HANDLE          h;
-    uint            threadId;
-
-    h = (HANDLE) _beginthreadex(NULL, 0, threadProcWrapper, (void*) tp, 0, &threadId);
-    if (h == NULL) {
-        unlock(tp);
-        return MPR_ERR_CANT_INITIALIZE;
-    }
-    tp->osThread = (int) threadId;
-    tp->threadHandle = (HANDLE) h;
-}
-#elif VXWORKS
-{
-    int     taskHandle, pri;
-
-    taskPriorityGet(taskIdSelf(), &pri);
-    taskHandle = taskSpawn(tp->name, pri, VX_FP_TASK, tp->stackSize, (FUNCPTR) threadProcWrapper, (int) tp,
-        0, 0, 0, 0, 0, 0, 0, 0, 0);
-    if (taskHandle < 0) {
+    if (mprStartOsThread(tp->name, threadProcWrapper, tp, tp) < 0) {
         mprLog("error mpr thread", 0, "Cannot create thread %s", tp->name);
         unlock(tp);
         return MPR_ERR_CANT_INITIALIZE;
     }
-}
-#else /* UNIX */
-{
-    pthread_attr_t  attr;
-    pthread_t       h;
-
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_attr_setstacksize(&attr, tp->stackSize);
-
-    if (pthread_create(&h, &attr, threadProcWrapper, (void*) tp) != 0) {
-        assert(0);
-        pthread_attr_destroy(&attr);
-        unlock(tp);
-        return MPR_ERR_CANT_CREATE;
-    }
-    pthread_attr_destroy(&attr);
-}
-#endif
     unlock(tp);
+    return 0;
+}
+
+
+PUBLIC int mprStartOsThread(cchar *name, void *proc, void *data, MprThread *tp)
+{
+    ssize       stackSize;
+
+    stackSize = tp ? tp->stackSize : ME_STACK_SIZE;
+
+    #if ME_WIN_LIKE
+    {
+        HANDLE          h;
+        uint            threadId;
+
+        h = (HANDLE) _beginthreadex(NULL, 0, proc, (void*) data, 0, &threadId);
+        if (h == NULL) {
+            return MPR_ERR_CANT_INITIALIZE;
+        }
+        if (tp) {
+            tp->osThread = (int) threadId;
+            tp->threadHandle = (HANDLE) h;
+        }
+    }
+    #elif VXWORKS
+    {
+        int     taskHandle, pri;
+
+        taskPriorityGet(taskIdSelf(), &pri);
+        taskHandle = taskSpawn(name, pri, VX_FP_TASK, stackSize, (FUNCPTR) proc, (int) data, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        if (taskHandle < 0) {
+            return MPR_ERR_CANT_INITIALIZE;
+        }
+        tp->osThread = taskHandle;
+    }
+    #else /* UNIX */
+    {
+        pthread_attr_t  attr;
+        pthread_t       h;
+
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        pthread_attr_setstacksize(&attr, stackSize);
+
+        if (pthread_create(&h, &attr, proc, (void*) data) != 0) {
+            pthread_attr_destroy(&attr);
+            return MPR_ERR_CANT_CREATE;
+        }
+        pthread_attr_destroy(&attr);
+    }
+    #endif
     return 0;
 }
 
@@ -28267,7 +28424,6 @@ PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
 PUBLIC void mprQueueIOEvent(MprWaitHandler *wp)
 {
     MprDispatcher   *dispatcher;
-    MprEvent        *event;
 
     if (wp->flags & MPR_WAIT_NEW_DISPATCHER) {
         dispatcher = mprCreateDispatcher("IO", MPR_DISPATCHER_AUTO);
@@ -28276,11 +28432,7 @@ PUBLIC void mprQueueIOEvent(MprWaitHandler *wp)
     } else {
         dispatcher = mprGetDispatcher();
     }
-    event = mprCreateEvent(dispatcher, "IOEvent", 0, ioEvent, wp->handlerData, MPR_EVENT_DONT_QUEUE);
-    event->mask = wp->presentMask;
-    event->handler = wp;
-    wp->event = event;
-    mprQueueEvent(dispatcher, event);
+    mprCreateIOEvent(dispatcher, ioEvent, wp, wp, NULL);
 }
 
 
