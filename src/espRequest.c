@@ -650,7 +650,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
 #endif
 
     httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
-    stream->rx->target = (char*) &stream->rx->pathInfo[1];
+    stream->rx->target = sclone(&stream->rx->pathInfo[1]);
     httpMapFile(stream);
     if (stream->tx->fileInfo.isDir) {
         httpHandleDirectory(stream);
