@@ -6668,52 +6668,6 @@ PUBLIC void httpSetConnReqData(HttpConn *conn, void *data)
 }
 
 
-#if 0
-static HttpConn *getConnBySeqno(uint64 seqno)
-{
-    HttpConn    *conn;
-    int         next;
-
-    for (ITERATE_ITEMS(HTTP->connections, conn, next)) {
-        if (conn->seqno == seqno && !conn->destroyed) {
-            return conn;
-        }
-    }
-    return 0;
-}
-
-
-static void invokeWrapper(HttpEvent *invoke)
-{
-    HttpConn  *conn;
-
-    if ((conn = getConnBySeqno(invoke->seqno)) != NULL) {
-        invoke->callback(conn, invoke->data);
-        pfree(invoke);
-    }
-}
-
-
-PUBLIC void httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
-{
-    HttpConn    *conn;
-    HttpEvent   *invoke;
-
-    lock(HTTP);
-    if ((conn = getConnBySeqno(seqno)) != NULL) {
-        if (HTTP_STATE_BEGIN < conn->state && conn->state < HTTP_STATE_COMPLETE) {
-            if ((invoke = palloc(sizeof(HttpEvent))) != NULL) {
-                invoke->callback = callback;
-                invoke->data = data;
-                invoke->seqno = seqno;
-                mprCreateEvent(conn->dispatcher, "httpCreateEvent", 0, (MprEventProc) invokeWrapper,
-                    invoke, MPR_EVENT_FOREIGN | MPR_EVENT_STATIC_DATA);
-            }
-        }
-    }
-    unlock(HTTP);
-}
-#endif
 /*
     Invoke the callback. This routine is run on the streams dispatcher.
     If the stream is destroyed, the event will be NULL.
@@ -16100,8 +16054,6 @@ PUBLIC void httpDestroyRx(HttpRx *rx)
     Process an incoming request and drive the state machine. This will process only one request.
     All socket I/O is non-blocking, and this routine must not block. Note: packet may be null.
     Return true if the request is completed successfully.
-
-    MUST only ever be called from httpIOEvent otherwise recursion plays havoc.
  */
 PUBLIC void httpProtocol(HttpConn *conn)
 {
@@ -16210,6 +16162,7 @@ static bool parseIncoming(HttpConn *conn)
     if ((len = httpGetPacketLength(packet)) == 0) {
         return 0;
     }
+
     /*
         Don't start processing until all the headers have been received (delimited by two blank lines)
      */
@@ -16406,6 +16359,7 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
             "Bad request. URI too long. Length %zd vs limit %zd", len, limits->uriSize);
         return 0;
     }
+
     protocol = getToken(conn, "\r\n", TOKEN_WORD);
     if (protocol == NULL || *protocol == '\0') {
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_BAD_REQUEST, "Bad HTTP request. Empty protocol");
@@ -16424,6 +16378,7 @@ static bool parseRequestLine(HttpConn *conn, HttpPacket *packet)
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
         return 0;
     }
+
     rx->uri = sclone(uri);
     if (!rx->originalUri) {
         rx->originalUri = rx->uri;
@@ -16471,6 +16426,7 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Unsupported HTTP protocol");
         return 0;
     }
+
     status = getToken(conn, NULL, TOKEN_NUMBER);
     if (status == NULL || *status == '\0') {
         httpBadRequestError(conn, HTTP_ABORT | HTTP_CODE_NOT_ACCEPTABLE, "Bad response status code");
@@ -16491,6 +16447,7 @@ static bool parseResponseLine(HttpConn *conn, HttpPacket *packet)
             "Bad response. Status message too long. Length %zd vs limit %zd", len, conn->limits->uriSize);
         return 0;
     }
+
     if (httpTracing(conn)) {
         httpTrace(conn, "rx.first.client", "request", "status:%d,protocol:'%s'", rx->status, protocol);
         content = packet->content;

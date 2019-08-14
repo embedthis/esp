@@ -475,7 +475,7 @@ static int initQueues()
 
 
 /*
-    Lock free memory allocator. This routine races with the sweeper.
+    Lock free memory allocator. This routine races with the sweeper and if invoked from a foreign thread, the marker as well.
  */
 static MprMem *allocMem(size_t required)
 {
@@ -515,6 +515,9 @@ static MprMem *allocMem(size_t required)
 
         /*
             Non-blocking search for a free block. If contention of any kind, simply skip the queue and try the next queue.
+            This races with the sweeper. Must clear the fp->blk.free bit last after fully allocating the block.
+            If invoked from a foreign thread, we are also racing the marker and so heap->mark may change at any time.
+            That is why we always create eternal blocks here so that foreign threads can release the eternal hold when safe.
          */
         for (bindex = baseBindex; bindex < MPR_ALLOC_NUM_BITMAPS; bitmap++, bindex++) {
             /* Mask queues lower than the base queue */
@@ -532,9 +535,14 @@ static MprMem *allocMem(size_t required)
                         fp->prev->next = fp->next;
                         fp->next->prev = fp->prev;
                         fp->blk.qindex = 0;
-                        fp->blk.mark = heap->mark;
-                        fp->blk.free = 0;
+                        /*
+                            We've secured the free queue, so no one else can allocate this block. But racing with the sweeper.
+                            But we must fully configure before clearing the "free" flag last.
+                         */
                         fp->blk.eternal = 1;
+                        fp->blk.mark = heap->mark;
+                        assert(fp->blk.free == 1);
+                        fp->blk.free = 0;
                         if (--freeq->count == 0) {
                             clearbitmap(bitmap, qindex % MPR_ALLOC_BITMAP_BITS);
                         }
@@ -553,6 +561,7 @@ static MprMem *allocMem(size_t required)
                         }
                         ATOMIC_INC(reuse);
                         assert(mp->size >= required);
+                        assert(fp->blk.free == 0);
                         return mp;
                     } else {
                         /* Another thread raced for the last block */
@@ -777,7 +786,6 @@ static ME_INLINE bool linkBlock(MprMem *mp)
     }
     assert(qindex >= 0);
     mp->qindex = qindex;
-    mp->free = 1;
     mp->hasManager = 0;
     fp = (MprFreeMem*) mp;
     fp->next = freeq->next;
@@ -786,6 +794,7 @@ static ME_INLINE bool linkBlock(MprMem *mp)
     freeq->next = fp;
     freeq->count++;
     setbitmap(&heap->bitmap[mp->qindex / MPR_ALLOC_BITMAP_BITS], mp->qindex % MPR_ALLOC_BITMAP_BITS);
+    mp->free = 1;
     release(freeq);
     mprAtomicAdd64((int64*) &heap->stats.bytesFree, size);
     return 1;
@@ -1291,11 +1300,15 @@ static void invokeDestructors()
     for (region = heap->regions; region; region = region->next) {
         for (mp = region->start; mp < region->end; mp = GET_NEXT(mp)) {
             /*
-                OPT - could optimize by requiring a separate flag for managers that implement destructors.
+                Order matters: racing with allocator. The allocator sets free last.
+                Free first, then mark, then eternal
              */
-            if (mp->mark != heap->mark && !mp->free && mp->hasManager && !mp->eternal) {
+            if (!mp->free && mp->mark != heap->mark && !mp->eternal && mp->hasManager) {
                 mgr = GET_MANAGER(mp);
                 if (mgr) {
+                    assert(mp->mark != heap->mark);
+                    assert(!mp->free);
+                    assert(!mp->eternal);
                     (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
                     /* Retest incase the manager routine revied the object */
                     if (mp->mark != heap->mark) {
@@ -1412,14 +1425,19 @@ static void sweep()
             CHECK(mp);
             INC(sweepVisited);
 
+            /*
+                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is cleared.
+                The allocator is the only place that sets mp->free. If mp->free is zero, we can be sure the block is
+                not free and not on a freeq. If mp->free is set, we could be racing with the allocator for the block.
+             */
             if (mp->eternal) {
                 assert(!region->freeable);
                 continue;
             }
             if (mp->free && joinBlocks) {
                 /*
-                    Coalesce already free blocks if the next is also free
-                    This is needed because the code below only coalesces forward.
+                    Coalesce already free blocks if the next is unreferenced and we can claim the block (racing with allocator).
+                    Claim the block and then mark it as unreferenced. Then the code below will join the blocks.
                  */
                 if (next < region->end && !next->free && next->mark != heap->mark && claim(mp)) {
                     mp->mark = !heap->mark;
@@ -1435,7 +1453,7 @@ static void sweep()
                     while (next < region->end && !next->eternal) {
                         if (next->free) {
                             /*
-                                Block is free and on a freeq - must claim
+                                Block is free and on a freeq - must claim as racing with the allocator for the block
                              */
                             if (!claim(next)) {
                                 break;
@@ -1448,7 +1466,7 @@ static void sweep()
 
                         } else if (next->mark != heap->mark) {
                             /*
-                                Block is now free and NOT on a freeq - no need to claim
+                                Block not in use and NOT on a freeq - no need to claim
                              */
                             assert(!next->free);
                             assert(next->qindex == 0);
@@ -9518,13 +9536,16 @@ static bool ownedDispatcher(MprDispatcher *dispatcher);
 static void queueDispatcher(MprDispatcher *prior, MprDispatcher *dispatcher);
 static bool reclaimDispatcher(MprDispatcher *dispatcher);
 static void releaseDispatcher(MprDispatcher *dispatcher);
-static bool reservedDispatcher(MprDispatcher *dispatcher);
 
 #define isIdle(dispatcher) (dispatcher->parent == dispatcher->service->idleQ)
 #define isRunning(dispatcher) (dispatcher->parent == dispatcher->service->runQ)
 #define isReady(dispatcher) (dispatcher->parent == dispatcher->service->readyQ)
 #define isWaiting(dispatcher) (dispatcher->parent == dispatcher->service->waitQ)
 #define isEmpty(dispatcher) (dispatcher->eventQ->next == dispatcher->eventQ)
+
+#if ME_DEBUG
+static bool isReservedDispatcher(MprDispatcher *dispatcher);
+#endif
 
 /************************************* Code ***********************************/
 /*
@@ -9764,7 +9785,7 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
         mprServiceSignals();
 
         while ((dp = getNextReadyDispatcher(es)) != NULL) {
-            assert(reservedDispatcher(dp));
+            assert(isReservedDispatcher(dp));
             assert(!isRunning(dp));
             queueDispatcher(es->runQ, dp);
             assert(isRunning(dp));
@@ -10395,13 +10416,15 @@ static bool ownedDispatcher(MprDispatcher *dispatcher)
 }
 
 
-static bool reservedDispatcher(MprDispatcher *dispatcher)
+#if ME_DEBUG
+static bool isReservedDispatcher(MprDispatcher *dispatcher)
 {
     if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
         return 0;
     }
     return (dispatcher->owner == RESERVED_DISPATCHER) ? 1 : 0;
 }
+#endif
 
 
 PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher)
@@ -10872,14 +10895,17 @@ PUBLIC void mprManageEpoll(MprWaitService *ws, int flags)
         mprMark(ws->handlerMap);
 
     } else if (flags & MPR_MANAGE_FREE) {
-        if (ws->epoll) {
+        if (ws->epoll >= 0) {
             close(ws->epoll);
+            ws->epoll = -1;
         }
         if (ws->breakFd[0] >= 0) {
             close(ws->breakFd[0]);
+            ws->breakFd[0] = -1;
         }
         if (ws->breakFd[1] >= 0) {
             close(ws->breakFd[1]);
+            ws->breakFd[1] = -1;
         }
     }
 }
@@ -11506,6 +11532,8 @@ PUBLIC MprFile *mprAttachFileFd(int fd, cchar *name, int omode)
 {
     MprFileSystem   *fs;
     MprFile         *file;
+
+    assert(fd >= 0);
 
     fs = mprLookupFileSystem(name);
     if ((file = mprAllocObj(MprFile, manageFile)) != 0) {
@@ -14663,6 +14691,7 @@ PUBLIC void mprManageKqueue(MprWaitService *ws, int flags)
     } else if (flags & MPR_MANAGE_FREE) {
         if (ws->kq >= 0) {
             close(ws->kq);
+            ws->kq = -1;
         }
     }
 }
@@ -21290,6 +21319,7 @@ PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
     } else if (flags & MPR_MANAGE_FREE) {
         if (ws->breakSock >= 0) {
             close(ws->breakSock);
+            ws->breakSock = -1;
         }
     }
 }
@@ -22132,6 +22162,7 @@ static void manageSocket(MprSocket *sp, int flags)
             if (sp->flags & MPR_SOCKET_SERVER) {
                 mprAtomicAdd(&sp->service->numAccept, -1);
             }
+            sp->fd = INVALID_SOCKET;
         }
     }
 }
@@ -27535,7 +27566,9 @@ static int getNumOrSym(char **token, int sep, int kind, int *isAlpah)
     char    *cp;
     int     num;
 
-    if (!token || *token == '\0') {
+    assert(token && *token);
+
+    if (token == NULL || *token == NULL || **token == '\0') {
         return 0;
     }
     if (isalpha((uchar) **token)) {
@@ -28317,11 +28350,15 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
 #if ME_DEBUG
     {
         MprWaitHandler  *op;
+        static int      warnOnce = 0;
         int             index;
 
         for (ITERATE_ITEMS(ws->handlers, op, index)) {
             if (op->fd == fd) {
-                mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
+                if (!warnOnce) {
+                    mprLog("error mpr event", 0, "Duplicate fd in wait handlers");
+                    warnOnce = 1;
+                }
             }
         }
     }
@@ -28473,6 +28510,8 @@ PUBLIC void mprRecallWaitHandlerByFd(Socket fd)
     MprWaitService  *ws;
     MprWaitHandler  *wp;
     int             index;
+
+    assert(fd >= 0);
 
     if ((ws = MPR->waitService) == 0) {
         return;

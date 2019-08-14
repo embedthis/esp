@@ -867,7 +867,7 @@ typedef struct MprMem {
     uchar       mark;                   /**< GC mark indicator. Toggled for each GC pass by mark() when thread yielded. */
 
     /*
-        Bit fields for fields only updated by mark/sweeper. Must not use bits for fields updated by multiple threads.
+        Bits for fields only updated by mark/sweeper. Must not use bits for fields updated by multiple threads.
      */
     uchar       free: 1;                /**< Block not in use */
     uchar       first: 1;               /**< Block is first block in region */
@@ -882,8 +882,6 @@ typedef struct MprMem {
 #if ME_64
     uchar       filler[4];
 #endif
-#else
-    uchar       filler[1];
 #endif
 } MprMem;
 
@@ -8940,8 +8938,8 @@ typedef struct MprCmd {
     int             requiredEof;        /**< Number of EOFs required for an exit */
     int             argc;               /**< Count of args in argv */
     int             timedout;           /**< Request has timedout */
-    bool            complete: 1;        /**< All channels EOF and status gathered */
-    bool            stopped: 1;         /**< Command stopped */
+    bool            complete;           /**< All channels EOF and status gathered */
+    bool            stopped;            /**< Command stopped */
     cchar           **makeArgv;         /**< Allocated argv */
     cchar           **argv;             /**< List of args. Null terminated */
     char            *dir;               /**< Current working dir for the process */
