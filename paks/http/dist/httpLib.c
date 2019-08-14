@@ -7742,7 +7742,7 @@ static void outgoingFileService(HttpQueue *q)
 
     stream = q->stream;
 
-#if 0
+#if UNUSED
     /*
         There will be only one entity data packet. PrepPacket will read data into the packet and then
         put the remaining entity packet on the queue where it will be examined again until the down stream queue is full.
@@ -9255,7 +9255,7 @@ static char *validateToken(char *token, char *endToken, int validation)
     return token;
 }
 
-#if 0
+#if UNUSED
 /*
     Get the next input token. The content buffer is advanced to the next token.
     The delimiter is a string to match and not a set of characters.
