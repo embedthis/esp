@@ -622,7 +622,7 @@ static MprMem *growHeap(size_t required)
     size_t      size, rsize, spareLen;
 
     if (required < MPR_ALLOC_MAX_BLOCK && (heap->workDone > heap->workQuota)) {
-        triggerGC(0);
+        triggerGC(1);
     }
     if (required >= MPR_ALLOC_MAX) {
         allocException(MPR_MEM_TOO_BIG, required);
@@ -1168,6 +1168,7 @@ static int pauseThreads()
 
     } while (mprGetElapsedTicks(start) < timeout);
 
+    assert(allYielded || noyield);
     return (allYielded) ? 1 : 0;
 }
 
@@ -1303,12 +1304,12 @@ static void invokeDestructors()
                 Order matters: racing with allocator. The allocator sets free last.
                 Free first, then mark, then eternal
              */
-            if (!mp->free && mp->mark != heap->mark && !mp->eternal && mp->hasManager) {
+            if (!mp->free && !mp->eternal && mp->mark != heap->mark && mp->hasManager) {
                 mgr = GET_MANAGER(mp);
                 if (mgr) {
-                    assert(mp->mark != heap->mark);
-                    assert(!mp->free);
                     assert(!mp->eternal);
+                    assert(!mp->free);
+                    assert(mp->mark != heap->mark);
                     (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
                     /* Retest incase the manager routine revied the object */
                     if (mp->mark != heap->mark) {
@@ -1600,6 +1601,7 @@ PUBLIC void mprRelease(cvoid *ptr)
                 For memory allocated in foreign threads, there could be a race where it missed the GC mark phase
                 and the sweeper is or is about to run. We simulate a GC mark here to prevent the sweeper from collecting
                 the block on this sweep. Will be collected on the next if there is no other reference.
+                Note: this races with the sweeper (invokeDestructors) so must set the mark first and clear eternal after that.
              */
             mp->mark = heap->mark;
             mprAtomicBarrier();

@@ -6699,7 +6699,7 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
         callback which is always invoked eventually.
      */
     if ((invoke = mprAllocMem(sizeof(HttpInvoke), MPR_ALLOC_ZERO | MPR_ALLOC_MANAGER | MPR_ALLOC_HOLD)) != 0) {
-        mprSetManager(invoke, (MprManager) manageInvoke);
+        mprSetManager(mprSetAllocName(invoke, "HttpInvoke@" MPR_LOC), (MprManager) manageInvoke);
         invoke->seqno = seqno;
         invoke->callback = callback;
         invoke->data = data;
