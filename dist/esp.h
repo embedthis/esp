@@ -129,6 +129,7 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
 #define EDI_INDEX           0x4         /**< Field flag -- Column is indexed */
 #define EDI_FOREIGN         0x8         /**< Field flag -- Column is a foreign key */
 #define EDI_NOT_NULL        0x10        /**< Field flag -- Column must not be null (not implemented) */
+#define EDI_READ_ONLY       0x20        /**< Field flag -- Field is read-only (not implemented) */
 
 /**
     EDI Record field structure
