@@ -118,7 +118,6 @@ PUBLIC cchar *espCreateSession(HttpStream *stream)
 PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
 {
     EspRoute    *eroute;
-    char        *action, *controller;
 
     assert(route);
     assert(target && *target);
@@ -126,7 +125,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
 
     eroute = ((EspRoute*) route->eroute)->top;
     if (target) {
-#if DEPRECATED || 1
+#if DEPRECATED
         /*
             Keep till version 6
          */
