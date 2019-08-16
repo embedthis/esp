@@ -2841,9 +2841,11 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
         nbytes = min(rx->remainingContent, httpGetPacketLength(packet));
         rx->remainingContent -= nbytes;
         if (rx->remainingContent <= 0) {
-            httpSetEof(stream);
+            if (!rx->eof) {
+                httpSetEof(stream);
+            }
 #if HTTP_PIPELINING
-            /* HTTP/1.1 pipelining is not implemented reliably by modern browsers */
+            /* HTTP/1.1 pipelining is not implemented reliably by all browsers */
             if (nbytes < len && (tail = httpSplitPacket(packet, nbytes)) != 0) {
                 httpPutPacket(stream->inputq, tail);
             }
@@ -2926,7 +2928,9 @@ static void incomingChunk(HttpQueue *q, HttpPacket *packet)
                 rx->remainingContent = chunkSize;
                 if (chunkSize == 0) {
                     rx->chunkState = HTTP_CHUNK_EOF;
-                    httpSetEof(stream);
+                    if (!rx->eof) {
+                        httpSetEof(stream);
+                    }
                 } else if (rx->eof) {
                     rx->chunkState = HTTP_CHUNK_EOF;
                 } else {
@@ -7357,6 +7361,9 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
     }
     if (flags & (HTTP_ABORT | HTTP_CLOSE)) {
         stream->keepAliveCount = 0;
+        if (!rx->eof) {
+            httpSetEof(stream);
+        }
     }
     if (!stream->error) {
         stream->error = 1;
@@ -7851,8 +7858,8 @@ static void incomingFile(HttpQueue *q, HttpPacket *packet)
         /* End of input */
         if (file) {
             mprCloseFile(file);
+            q->queueData = 0;
         }
-        q->queueData = 0;
         if (!tx->etag) {
             /* Set the etag for caching in the client */
             mprGetPathInfo(tx->filename, &tx->fileInfo);
@@ -7889,7 +7896,7 @@ static void handlePutRequest(HttpQueue *q)
     MprFile     *file;
     cchar       *path;
 
-    assert(q->pair->queueData == 0);
+    assert(q->queueData == 0);
 
     stream = q->stream;
     tx = stream->tx;
@@ -7922,7 +7929,7 @@ static void handlePutRequest(HttpQueue *q)
         These are both success returns. 204 means already existed.
      */
     httpSetStatus(stream, tx->fileInfo.isReg ? HTTP_CODE_NO_CONTENT : HTTP_CODE_CREATED);
-    q->pair->queueData = (void*) file;
+    q->queueData = (void*) file;
 }
 
 
@@ -10095,6 +10102,10 @@ static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
             /* Memory error - centrally reported */
             return 0;
         }
+        /*
+            HTTP/2 does not use Content-Length or chunking. End of stream is detected by a frame with HTTP2_END_STREAM_FLAG
+         */
+        stream->rx->remainingContent = HTTP_UNLIMITED;
         stream->streamID = frame->streamID;
         frame->stream = stream;
 
@@ -10126,8 +10137,8 @@ static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
         }
     }
     rx = stream->rx;
-    if (frame->flags & HTTP2_END_STREAM_FLAG) {
-        rx->eof = 1;
+    if (frame->flags & HTTP2_END_STREAM_FLAG && !rx->eof) {
+        httpSetEof(stream);
     }
     if (rx->headerPacket) {
         httpJoinPacket(rx->headerPacket, packet);
@@ -10281,7 +10292,7 @@ static void parseWindowFrame(HttpQueue *q, HttpPacket *packet)
 
 
 /*
-    Once the hader and all continuation frames are received, they are joined into a single rx->headerPacket.
+    Once the header frame and all continuation frames are received, they are joined into a single rx->headerPacket.
  */
 static void parseHeaderFrames(HttpQueue *q, HttpStream *stream)
 {
@@ -10608,8 +10619,8 @@ static void processDataFrame(HttpQueue *q, HttpPacket *packet)
     frame = packet->data;
     stream = frame->stream;
 
-    if (frame->flags & HTTP2_END_STREAM_FLAG) {
-        stream->rx->eof = 1;
+    if (frame->flags & HTTP2_END_STREAM_FLAG && !stream->rx->eof) {
+        httpSetEof(stream);
     }
     if (httpGetPacketLength(packet) > 0) {
         httpPutPacket(stream->inputq, packet);
@@ -13788,7 +13799,7 @@ PUBLIC void httpSetNetProtocol(HttpNet *net, int protocol)
     /*
         The input queue window is defined by the network limits value. Default of HTTP2_MIN_WINDOW but revised by config.
      */
-    httpSetQueueLimits(net->inputq, net->limits, -1, -1, -1, -1);
+    httpSetQueueLimits(net->inputq, net->limits, HTTP2_MIN_FRAME_SIZE, -1, -1, -1);
     /*
         The packetSize and window size will always be revised in Http2:parseSettingsFrame
      */
@@ -13806,7 +13817,9 @@ PUBLIC void httpNetClosed(HttpNet *net)
         if (stream->state < HTTP_STATE_PARSED) {
             httpError(stream, 0, "Peer closed connection before receiving a response");
         }
-        httpSetEof(stream);
+        if (stream->rx && !stream->rx->eof) {
+            httpSetEof(stream);
+        }
         httpSetState(stream, HTTP_STATE_COMPLETE);
         mprCreateEvent(net->dispatcher, "disconnect", 0, httpProcess, stream->inputq, 0);
     }
@@ -15507,6 +15520,9 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
     if (httpClientStream(stream)) {
         pairQueues(stream->rxHead, stream->txHead);
         httpOpenQueues(stream);
+
+    } else if (!rx->streaming) {
+        q->max = stream->limits->rxFormSize;
     }
     if (q->net->protocol < 2) {
         q->net->inputq->stream = stream;
@@ -15997,7 +16013,7 @@ static void processFirst(HttpQueue *q)
     if (httpTracing(net) && httpIsServer(net)) {
         httpLog(stream->trace, "http.rx.request", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
-        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s", 
+        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s",
             rx->originalMethod, rx->uri, rx->protocol, httpTraceHeaders(q, stream->rx->headers));
     }
 }
@@ -16323,6 +16339,7 @@ static void processHeaders(HttpQueue *q)
 
 /*
     Called once the HTTP request/response headers have been parsed
+    Queue is the inputq.
  */
 static void processParsed(HttpQueue *q)
 {
@@ -16342,58 +16359,63 @@ static void processParsed(HttpQueue *q)
         }
         if ((stream->host = httpMatchHost(net, hostname)) == 0) {
             stream->host = mprGetFirstItem(net->endpoint->hosts);
-            httpError(stream, HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
+            httpError(stream, HTTP_CLOSE | HTTP_CODE_NOT_FOUND, "No listening endpoint for request for %s", rx->hostHeader);
+            /* continue */
         }
-        if (!rx->originalUri) {
-            rx->originalUri = rx->uri;
-        }
-        parseUri(stream);
-    }
-
-    if (rx->form && rx->length >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
-        httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-            "Request form of %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxFormSize);
-    }
-    if (stream->error) {
-        /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
-        stream->keepAliveCount = 0;
-    }
-    if (httpClientStream(stream) && stream->keepAliveCount <= 0 && rx->length < 0 && rx->chunkState == HTTP_CHUNK_UNCHUNKED) {
-        /*
-            Google does responses with a body and without a Content-Length like this:
-                Connection: close
-                Location: URI
-         */
-        rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
-    }
-
-    if (httpIsServer(stream->net)) {
         //  TODO is rx->length getting set for HTTP/2?
         if (!rx->upload && rx->length >= stream->limits->rxBodySize && stream->limits->rxBodySize != HTTP_UNLIMITED) {
             httpLimitError(stream, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Request content length %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxBodySize);
             return;
         }
-        httpAddQueryParams(stream);
         rx->streaming = httpGetStreaming(stream->host, rx->mimeType, rx->uri);
-        if (rx->streaming && httpServerStream(stream)) {
-            /*
-                Disable upload if streaming, used by PHP to stream input and process file upload in PHP.
-             */
+        if (!rx->streaming && rx->length >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+            httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
+                "Request form of %lld bytes is too big. Limit %lld", rx->length, stream->limits->rxFormSize);
+            /* continue */
+        }
+
+        if (!rx->originalUri) {
+            rx->originalUri = rx->uri;
+        }
+        parseUri(stream);
+        httpAddQueryParams(stream);
+
+        if (stream->error) {
+            /* Cannot reliably continue with keep-alive as the headers have not been correctly parsed */
+            stream->keepAliveCount = 0;
+        }
+        if (rx->streaming) {
+            /* Disable upload if streaming, used by PHP to stream input and process file upload in PHP. */
             rx->upload = 0;
             routeRequest(stream);
+        } else {
+            stream->readq->max = stream->limits->rxFormSize;
         }
+
     } else {
-#if ME_HTTP_WEB_SOCKETS
-        if (stream->upgraded && !httpVerifyWebSocketsHandshake(stream)) {
-            httpSetState(stream, HTTP_STATE_FINALIZED);
-            return;
+        /*
+            Google does responses with a body and without a Content-Length like this:
+                Connection: close
+                Location: URI
+         */
+        if (stream->keepAliveCount <= 0 && rx->length < 0 && rx->chunkState == HTTP_CHUNK_UNCHUNKED) {
+            rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
         }
-#endif
     }
+
+#if ME_HTTP_WEB_SOCKETS
+    if (httpIsClient(stream->net) && stream->upgraded && !httpVerifyWebSocketsHandshake(stream)) {
+        httpSetState(stream, HTTP_STATE_FINALIZED);
+        return;
+    }
+#endif
+
     httpSetState(stream, HTTP_STATE_CONTENT);
     if (rx->remainingContent == 0) {
-        httpSetEof(stream);
+        if (!rx->eof) {
+            httpSetEof(stream);
+        }
         httpFinalizeInput(stream);
     }
 }
@@ -16401,10 +16423,23 @@ static void processParsed(HttpQueue *q)
 
 static void routeRequest(HttpStream *stream)
 {
-    httpRouteRequest(stream);
-    httpCreatePipeline(stream);
-    httpStartPipeline(stream);
-    httpStartHandler(stream);
+    HttpRx      *rx;
+    HttpTx      *tx;
+
+    rx = stream->rx;
+    tx = stream->tx;
+
+    if (!rx->route) {
+        httpRouteRequest(stream);
+        httpCreatePipeline(stream);
+        httpStartPipeline(stream);
+    }
+    if (!tx->started) {
+        httpStartHandler(stream);
+    }
+    if (rx->eof) {
+        httpTransferPackets(stream);
+    }
 }
 
 
@@ -16427,7 +16462,7 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
                 tx->handler->writable(wq);
             }
         }
-        return (wq->count - count) ? 0 : 1;
+        return (wq->count - count) ? 1 : 0;
     }
     return 0;
 }
@@ -16437,7 +16472,6 @@ static bool processContent(HttpQueue *q)
 {
     HttpStream  *stream;
     HttpRx      *rx;
-    HttpPacket  *packet;
 
     stream = q->stream;
     rx = stream->rx;
@@ -16449,12 +16483,7 @@ static bool processContent(HttpQueue *q)
                 return 1;
             }
             mapMethod(stream);
-            if (!rx->route) {
-                routeRequest(stream);
-            }
-            while ((packet = httpGetPacket(stream->rxHead)) != 0) {
-                httpPutPacket(stream->readq, packet);
-            }
+            routeRequest(stream);
         }
         httpSetState(stream, HTTP_STATE_READY);
     }
@@ -21155,6 +21184,7 @@ PUBLIC HttpRx *httpCreateRx(HttpStream *stream)
     rx->needInputPipeline = httpClientStream(stream);
     rx->headers = mprCreateHash(HTTP_SMALL_HASH_SIZE, MPR_HASH_CASELESS | MPR_HASH_STABLE);
     rx->chunkState = HTTP_CHUNK_UNCHUNKED;
+    rx->remainingContent = 0;
 
     rx->seqno = ++stream->net->totalRequests;
     peer = stream->net->address ? stream->net->address->seqno : 0;
@@ -21506,8 +21536,14 @@ PUBLIC bool httpMatchModified(HttpStream *stream, MprTime time)
 
 PUBLIC void httpSetEof(HttpStream *stream)
 {
-    if (stream->net->protocol < 2) {
+    if (stream) {
+#if UNUSED
+        if (stream->net->protocol < 2) {
+            stream->rx->eof = 1;
+        }
+#else
         stream->rx->eof = 1;
+#endif
     }
 }
 
@@ -22640,9 +22676,12 @@ static void pickStreamNumber(HttpStream *stream)
 
 PUBLIC void httpDisconnectStream(HttpStream *stream)
 {
+    HttpRx      *rx;
     HttpTx      *tx;
 
+    rx = stream->rx;
     tx = stream->tx;
+
     stream->error++;
     if (tx) {
         tx->responded = 1;
@@ -22650,7 +22689,7 @@ PUBLIC void httpDisconnectStream(HttpStream *stream)
         tx->finalizedOutput = 1;
         tx->finalizedConnector = 1;
     }
-    if (stream->rx) {
+    if (rx && !rx->eof) {
         httpSetEof(stream);
     }
     if (stream->net->protocol < 2) {
@@ -23080,6 +23119,23 @@ PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
     return stream;
 }
 
+
+PUBLIC void httpTransferPackets(HttpStream *stream)
+{
+    HttpPacket  *packet;
+    HttpRx      *rx;
+
+    rx = stream->rx;
+
+    while ((packet = httpGetPacket(stream->rxHead)) != 0) {
+        httpPutPacket(stream->readq, packet);
+    }
+    if (!rx->inputEnded) {
+        rx->inputEnded = 1;
+        httpPutPacketToNext(stream->readq, httpCreateEndPacket());
+    }
+}
+
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -23135,17 +23191,18 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
     stream = q->stream;
     rx = stream->rx;
 
-    if (q->net->eof) {
+    if (q->net->eof && !rx->eof) {
         httpSetEof(stream);
     }
     count = stream->readq->count + httpGetPacketLength(packet);
-    if (rx->form && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
+    if ((rx->form || !rx->streaming) && count >= stream->limits->rxFormSize && stream->limits->rxFormSize != HTTP_UNLIMITED) {
         httpLimitError(stream, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
-                       "Request form of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
-        return;
+            "Request form of %ld bytes is too big. Limit %lld", count, stream->limits->rxFormSize);
+    } else {
+        httpPutPacketToNext(q, packet);
     }
-    httpPutPacketToNext(q, packet);
-    if (rx->eof) {
+    if (rx->eof && !rx->inputEnded) {
+        rx->inputEnded = 1;
         httpPutPacketToNext(q, httpCreateEndPacket());
     }
     if (rx->route && stream->readq->first) {
@@ -27740,7 +27797,9 @@ static void incomingWebSockData(HttpQueue *q, HttpPacket *packet)
             ws->frameState = WS_CLOSED;
             ws->state = WS_STATE_CLOSED;
             httpFinalize(stream);
-            httpSetEof(stream);
+            if (!stream->rx->eof) {
+                httpSetEof(stream);
+            }
             httpSetState(stream, HTTP_STATE_FINALIZED);
             return;
         }
@@ -27884,7 +27943,9 @@ static int processFrame(HttpQueue *q, HttpPacket *packet)
         } else {
             /* Acknowledge the close. Echo the received status */
             httpSendClose(stream, WS_STATUS_OK, "OK");
-            httpSetEof(stream);
+            if (!stream->rx->eof) {
+                httpSetEof(stream);
+            }
             rx->remainingContent = 0;
             stream->keepAliveCount = 0;
         }
