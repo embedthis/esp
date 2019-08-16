@@ -1168,7 +1168,6 @@ static int pauseThreads()
 
     } while (mprGetElapsedTicks(start) < timeout);
 
-    assert(allYielded || noyield);
     return (allYielded) ? 1 : 0;
 }
 

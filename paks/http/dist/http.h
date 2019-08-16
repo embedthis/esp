@@ -6573,8 +6573,8 @@ PUBLIC ssize httpReadBlock(HttpConn *conn, char *buffer, ssize size, MprTicks ti
 
 /**
     Get the receive body input
-    @description This will return all the body input. The request must have received all input (rx->eof == 1) and
-        must not be streaming (rx->streaming).
+    @description This will return all the body input. The request must have received all input (HttpRx.eof == 1) and
+        must not be streaming (HttpRx.streaming).
     @param conn HttpConn connection object created via #httpCreateConn
     @return A string containing the body input.
     @stability Evolving

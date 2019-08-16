@@ -2828,7 +2828,7 @@ static int openChunk(HttpQueue *q)
     Achive this by parseHeaders reversing the input start by 2.
 
     Return number of bytes available to read.
-    NOTE: may set rx->eof and return 0 bytes on EOF.
+    NOTE: may set eof and return 0 bytes on EOF.
  */
 PUBLIC ssize httpFilterChunkData(HttpQueue *q, HttpPacket *packet)
 {
@@ -3334,7 +3334,7 @@ PUBLIC char *httpReadString(HttpConn *conn)
     if (rx->length < 0) {
         return 0;
     }
-    remaining = (rx->length > MAXSSIZE) ? MAXSIZE: rx->length;
+    remaining = (ssize) min(MAXSSIZE, rx->length);
 
     if (remaining > 0) {
         if ((content = mprAlloc(remaining + 1)) == 0) {
@@ -6114,7 +6114,7 @@ static void readPeerData(HttpConn *conn)
         } else if (conn->lastRead < 0 && mprIsSocketEof(conn->sock)) {
             if (conn->state < HTTP_STATE_PARSED) {
                 conn->error = 1;
-                conn->rx->eof = 1;
+                httpSetEof(conn);
             }
             conn->errorMsg = conn->sock->errorMsg ? conn->sock->errorMsg : sclone("Connection reset");
             conn->keepAliveCount = 0;
@@ -6200,9 +6200,6 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     } else if (!mprIsSocketEof(conn->sock) && conn->async && !conn->delay) {
         httpEnableConnEvents(conn);
     }
-#if DEPRECATE
-    conn->io = 0;
-#endif
 }
 
 
@@ -6231,10 +6228,9 @@ PUBLIC int httpGetConnEventMask(HttpConn *conn)
     eventMask = 0;
     if (rx) {
         if (conn->connError || (tx->writeBlocked) ||
-           (conn->connectorq && (conn->connectorq->count > 0 || conn->connectorq->ioCount > 0)) ||
-           (httpQueuesNeedService(conn)) ||
-           (mprSocketHasBufferedWrite(sp)) ||
-           (rx->eof && tx->finalized && conn->state < HTTP_STATE_FINALIZED)) {
+                (conn->connectorq && (conn->connectorq->count > 0 || conn->connectorq->ioCount > 0)) ||
+                httpQueuesNeedService(conn) || mprSocketHasBufferedWrite(sp) ||
+                (rx->eof && tx->finalized && conn->state < HTTP_STATE_FINALIZED)) {
             if (!mprSocketHandshaking(sp)) {
                 /* Must not pollute the data stream if the SSL stack is still doing manual handshaking */
                 eventMask |= MPR_WRITABLE;
@@ -8365,6 +8361,7 @@ static void errorv(HttpConn *conn, int flags, cchar *fmt, va_list args)
     }
     if (flags & (HTTP_ABORT | HTTP_CLOSE)) {
         conn->keepAliveCount = 0;
+        httpSetEof(conn);
     }
     if (flags & HTTP_ABORT) {
         conn->connError++;
@@ -11805,8 +11802,12 @@ PUBLIC void httpInitQueue(HttpConn *conn, HttpQueue *q, cchar *name)
 
 PUBLIC void httpSetQueueLimits(HttpQueue *q, ssize low, ssize max)
 {
-    q->low = low;
-    q->max = max;
+    if (low > 0) {
+        q->low = low;
+    }
+    if (max > 0) {
+        q->max = max;
+    }
 }
 
 
@@ -16855,6 +16856,8 @@ static bool processParsed(HttpConn *conn)
         rx->streaming = httpGetStreaming(conn->host, rx->mimeType, rx->uri);
         if (rx->streaming) {
             httpRouteRequest(conn);
+        } else {
+            httpSetQueueLimits(conn->readq, -1, conn->limits->rxFormSize);
         }
         /*
             Delay testing rxBodySize till after routing for streaming requests. This way, recieveBodySize
@@ -16914,7 +16917,7 @@ static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
     limits = conn->limits;
     *more = 0;
 
-    if (mprIsSocketEof(conn->sock) || conn->connError) {
+    if (mprIsSocketEof(conn->sock) || conn->error) {
         httpSetEof(conn);
     }
     if (rx->chunkState) {
@@ -16948,10 +16951,12 @@ static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
         if (size >= limits->rxBodySize) {
             httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Receive body of %lld bytes (sofar) is too big. Limit %lld", size, limits->rxBodySize);
+            return 0;
 
-        } else if (rx->form && size >= limits->rxFormSize) {
+        } else if (!rx->streaming && size >= limits->rxFormSize) {
             httpLimitError(conn, HTTP_CLOSE | HTTP_CODE_REQUEST_TOO_LARGE,
                 "Receive form of %lld bytes (sofar) is too big. Limit %lld", size, limits->rxFormSize);
+            return 0;
         }
     }
     if (packet && httpTracing(conn)) {
@@ -16968,7 +16973,6 @@ static ssize filterPacket(HttpConn *conn, HttpPacket *packet, int *more)
 #endif
         if ((rx->remainingContent > 0 && (rx->length > 0 || !conn->mustClose)) ||
             (rx->chunkState && rx->chunkState != HTTP_CHUNK_EOF)) {
-            /* Closing is the only way for HTTP/1.0 to signify the end of data */
             httpError(conn, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "Connection lost");
             return 0;
         }
@@ -17027,20 +17031,18 @@ static bool processContent(HttpConn *conn)
                     }
                     httpRouteRequest(conn);
                     httpCreatePipeline(conn);
-                    /*
-                        Transfer buffered input body data into the pipeline
-                     */
-                    while ((packet = httpGetPacket(q)) != 0) {
-                        httpPutPacketToNext(q, packet);
-                    }
                 }
-                httpPutPacketToNext(q, httpCreateEndPacket());
                 if (!tx->started) {
                     httpStartPipeline(conn);
                 }
-            } else {
-                httpPutPacketToNext(q, httpCreateEndPacket());
+                /*
+                    Transfer buffered input body data into the pipeline
+                 */
+                while ((packet = httpGetPacket(q)) != 0) {
+                    httpPutPacketToNext(q, packet);
+                }
             }
+            httpPutPacketToNext(q, httpCreateEndPacket());
             httpSetState(conn, HTTP_STATE_READY);
         }
         return 1;
