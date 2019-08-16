@@ -22,6 +22,6 @@ static void login() {
 }
 
 ESP_EXPORT int esp_controller_esptest_session(HttpRoute *route, MprModule *module) {
-    espDefineAction(route, "session-login", login);
+    espDefineAction(route, "session/login", login);
     return 0;
 }

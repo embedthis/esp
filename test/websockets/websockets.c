@@ -241,16 +241,16 @@ static void chat_action()
 ESP_EXPORT int esp_controller_esptest_websockets(HttpRoute *route) {
     clients = mprCreateList(0, 0);
     mprAddRoot(clients);
-    espDefineAction(route, "basic-construct", dummy_action);
-    espDefineAction(route, "basic-open", dummy_action);
-    espDefineAction(route, "basic-send", dummy_action);
-    espDefineAction(route, "basic-echo", echo_action);
-    espDefineAction(route, "basic-ssl", len_action);
-    espDefineAction(route, "basic-len", len_action);
-    espDefineAction(route, "basic-echo", echo_action);
-    espDefineAction(route, "basic-empty", empty_response);
-    espDefineAction(route, "basic-big", big_response);
-    espDefineAction(route, "basic-frames", frames_response);
-    espDefineAction(route, "basic-chat", chat_action);
+    espDefineAction(route, "basic/construct", dummy_action);
+    espDefineAction(route, "basic/open", dummy_action);
+    espDefineAction(route, "basic/send", dummy_action);
+    espDefineAction(route, "basic/echo", echo_action);
+    espDefineAction(route, "basic/ssl", len_action);
+    espDefineAction(route, "basic/len", len_action);
+    espDefineAction(route, "basic/echo", echo_action);
+    espDefineAction(route, "basic/empty", empty_response);
+    espDefineAction(route, "basic/big", big_response);
+    espDefineAction(route, "basic/frames", frames_response);
+    espDefineAction(route, "basic/chat", chat_action);
     return 0;
 }

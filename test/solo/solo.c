@@ -27,6 +27,6 @@ static void soloStream() {
 
 
 ESP_EXPORT int esp_controller_esptest_solo(HttpRoute *route, MprModule *module) {
-    espDefineAction(route, "solo-stream", soloStream);
+    espDefineAction(route, "solo/stream", soloStream);
     return 0;
 }
