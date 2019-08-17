@@ -789,6 +789,7 @@ static void config()
     printf("Pak cache dir \"%s\"\n", app->paksCacheDir);
     printf("Paks dir      \"%s\"\n", app->paksDir);
     printf("Binaries dir  \"%s\"\n", app->binDir);
+    printf("Configuration\n%s\n", mprJsonToString(app->config, MPR_JSON_PRETTY));
 }
 
 
@@ -2741,8 +2742,8 @@ static MprJson *loadJson(cchar *path)
 
 static MprJson *readConfig(cchar *path)
 {
-    MprJson     *config;
-    cchar       *data, *errorMsg;
+    MprJson     *config, *profiles;
+    cchar       *data, *errorMsg, *profile;
 
     if ((data = mprReadPathContents(path, NULL)) == 0) {
         fail("Cannot read configuration from \"%s\"", path);
@@ -2751,6 +2752,14 @@ static MprJson *readConfig(cchar *path)
     if ((config = mprParseJsonEx(data, 0, 0, 0, &errorMsg)) == 0) {
         fail("Cannot parse %s: error %s", path, errorMsg);
         return 0;
+    }
+    if ((profile = mprGetJson(config, "profile")) == 0) {
+        profile = mprGetJson(app->package, "profile");
+    }
+    if (profile) {
+        if ((profiles = mprGetJsonObj(config, sfmt("profiles.%s", profile))) != 0) {
+            mprBlendJson(config, profiles, MPR_JSON_COMBINE);
+        }
     }
     return config;
 }
