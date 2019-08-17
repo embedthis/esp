@@ -452,7 +452,7 @@ static int parseArgs(int argc, char **argv)
         } else if (smatch(argp, "--http1") || smatch(argp, "--h1")) {
             app->protocol = 1;
 
-        } else if (smatch(argp, "--http2") || smatch(argp, "--h2")) {
+        } else if (smatch(argp, "--http2") || smatch(argp, "--h2") || smatch(argp, "-h")) {
 #if ME_HTTP_HTTP2
             app->protocol = 2;
 #else
@@ -529,7 +529,7 @@ static int parseArgs(int argc, char **argv)
                     app->protocol = 0;
                 } else if (scaselessmatch(value, "HTTP/1.1") || smatch(value, "1")) {
                     app->protocol = 1;
-                } else if (scaselessmatch(value, "HTTP/2") || smatch(value, "2")) {
+                } else if (scaselessmatch(value, "HTTP/2") || scaselessmatch(value, "HTTP/2.0") || smatch(value, "2")) {
 #if ME_HTTP_HTTP2
                     app->protocol = 2;
 #else

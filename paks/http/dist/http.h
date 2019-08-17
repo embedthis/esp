@@ -564,6 +564,7 @@ PUBLIC HttpAddress *httpMonitorAddress(struct HttpNet *net, int counterIndex);
  */
 #define HTTP_TRACE_PACKET           0x1         /**< Trace a packet */
 #define HTTP_TRACE_HEX              0x2         /**< Format content in hex with side ascii */
+#define HTTP_TRACE_RAW              0x4         /**< Emit raw trace */
 
 /**
     Trace formatter callback
@@ -853,6 +854,13 @@ PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...
             int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
             if (__tlevel >= 0 && __tlevel <= HTTP->traceLevel) { \
                 httpLogProc(trace, event, type, 0, __VA_ARGS__); \
+            } \
+        } else
+    #define httpRawLog(trace, type, ...) \
+        if (trace && HTTP->traceLevel > 0) { \
+            int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
+            if (__tlevel >= 0 && __tlevel <= HTTP->traceLevel) { \
+                httpLogProc(trace, NULL, type, 0, __VA_ARGS__); \
             } \
         } else
 
@@ -2372,6 +2380,15 @@ PUBLIC void httpSetQueueLimits(HttpQueue *q, HttpLimits *limits, ssize packetSiz
  */
 PUBLIC void httpSuspendQueue(HttpQueue *q);
 
+/**
+    Transfer packets from queues
+    @param inq Input q
+    @param outq Output q
+    @ingroup HttpQueue
+    @stability Prototype
+ */
+PUBLIC void httpTransferPackets(HttpQueue *inq, HttpQueue *outq);
+
 #if ME_DEBUG
 /**
     Verify a queue
@@ -3592,6 +3609,14 @@ typedef struct HttpStream {
 } HttpStream;
 
 /**
+    Add an END packet to the input queue
+    @param stream HttpStream stream object created via #httpCreateStream
+    @ingroup HttpStream
+    @stability Prototype
+ */
+PUBLIC void httpAddEndInputPacket(HttpStream *stream);
+
+/**
     Emit an error message for a badly formatted request
     @param stream HttpStream stream object created via #httpCreateStream
     @param status Http status code. The status code can be ored with the flags HTTP_ABORT to immediately abort
@@ -4128,14 +4153,6 @@ PUBLIC void httpStartHandler(HttpStream *stream);
 PUBLIC bool httpTrace(HttpStream *stream, cchar *event, cchar *type, cchar *fmt, ...);
 
 /**
-    Transfer packets from the stream rxHead queue to the readq
-    @param stream Stream object
-    @ingroup HttpQueue
-    @stability Internal
- */
-PUBLIC void httpTransferPackets(HttpStream *stream);
-
-/**
     Verify the server handshake
     @param stream HttpStream stream object created via #httpCreateStream
     @return True if the handshake is valid
@@ -4143,7 +4160,6 @@ PUBLIC void httpTransferPackets(HttpStream *stream);
     @stability Evolving
  */
 PUBLIC bool httpVerifyWebSocketsHandshake(HttpStream *stream);
-
 
 /* Internal APIs */
 PUBLIC void httpParseMethod(HttpStream *stream);

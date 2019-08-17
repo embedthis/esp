@@ -4848,7 +4848,7 @@ static int runAction(HttpStream *stream)
 
 
 /*
-    May yield
+    Load a view ... may yield
  */
 static bool loadView(HttpStream *stream, cchar *target)
 {

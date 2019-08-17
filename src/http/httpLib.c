@@ -2753,7 +2753,7 @@ static cchar *setHeadersFromCache(HttpStream *stream, cchar *content)
 /********* Start of file src/chunkFilter.c ************/
 
 /*
-    chunkFilter.c - Transfer chunk endociding filter.
+    chunkFilter.c - Transfer chunk encoding filter.
 
     This is an output only filter to chunk encode output before writing to the client.
     Input chunking is handled in httpProcess()/processContent(). In the future, it would
@@ -3207,7 +3207,7 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
     httpServiceNetQueues(net, 0);
     httpEnableNetEvents(net);
 
-    protocol = net->protocol < 2 ? "HTTP/1.1" : "HTTP/2";
+    protocol = net->protocol < 2 ? "HTTP/1.1" : "HTTP/2.0";
     httpLog(net->trace, "client.request", "request", "method='%s', url='%s', protocol='%s'", tx->method, url, protocol);
     return 0;
 }
@@ -9400,7 +9400,7 @@ PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
     mprPutStringToBuf(buf, "\r\n");
 
     if (httpTracing(q->net)) {
-        httpLog(stream->trace, "http.tx.headers", "headers", "\n%s %d %s\n%s",
+        httpLog(stream->trace, "http.tx.headers", "headers", "\n\n%s %d %s\n%s",
             httpGetProtocol(stream->net), tx->status, httpLookupStatus(tx->status), httpTraceHeaders(q, tx->headers));
     }
     /*
@@ -10313,6 +10313,7 @@ static void parseHeaderFrames(HttpQueue *q, HttpStream *stream)
         if (!stream->error) {
             stream->state = HTTP_STATE_PARSED;
         }
+        rx->protocol = sclone("HTTP/2.0");
         httpProcessHeaders(stream->inputq);
         httpProcess(stream->inputq);
     }
@@ -10852,7 +10853,9 @@ PUBLIC void httpCreateHeaders2(HttpQueue *q, HttpPacket *packet)
     httpPrepareHeaders(stream);
     definePseudoHeaders(stream, packet);
     if (httpTracing(q->net)) {
-        httpLog(stream->trace, "http2.tx.headers", "headers", "\n%s", httpTraceHeaders(q, stream->tx->headers));
+        httpLog(stream->trace, "http2.tx.headers", "headers", "\n\n%s %d %s\n%s",
+            httpGetProtocol(stream->net), tx->status, httpLookupStatus(tx->status),
+            httpTraceHeaders(q, stream->tx->headers));
     }
 
     /*
@@ -14010,7 +14013,7 @@ PUBLIC cchar *httpGetProtocol(HttpNet *net)
     if (net->protocol == 0) {
         return "HTTP/1.0";
     } else if (net->protocol >= 2) {
-        return "HTTP/2";
+        return "HTTP/2.0";
     } else {
         return "HTTP/1.1";
     }
@@ -14878,10 +14881,11 @@ PUBLIC void httpJoinPacketForService(HttpQueue *q, HttpPacket *packet, bool serv
             Find the last data packet and join with that
          */
         for (p = q->first, last = 0; p && !(p->flags & HTTP_PACKET_END); last = p, p = p->next);
-        assert(last);
         if (last) {
             httpJoinPacket(last, packet);
             q->count += httpGetPacketLength(packet);
+        } else {
+            httpPutBackPacket(q, packet);
         }
     }
     if (serviceQ && !(q->flags & HTTP_QUEUE_SUSPENDED))  {
@@ -15516,7 +15520,9 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
         q = httpCreateQueue(stream->net, stream, stage, HTTP_QUEUE_RX, q);
         q->flags |= HTTP_QUEUE_REQUEST;
     }
+    httpTransferPackets(stream->readq, q);
     stream->readq = q;
+
     if (httpClientStream(stream)) {
         pairQueues(stream->rxHead, stream->txHead);
         httpOpenQueues(stream);
@@ -16013,7 +16019,7 @@ static void processFirst(HttpQueue *q)
     if (httpTracing(net) && httpIsServer(net)) {
         httpLog(stream->trace, "http.rx.request", "request", "method:'%s', uri:'%s', protocol:'%d'",
             rx->method, rx->uri, stream->net->protocol);
-        httpLog(stream->trace, "http.rx.headers", "headers", "\n%s %s %s\n%s",
+        httpLog(stream->trace, "http.rx.headers", "headers", "\n\n%s %s %s\n%s",
             rx->originalMethod, rx->uri, rx->protocol, httpTraceHeaders(q, stream->rx->headers));
     }
 }
@@ -16389,6 +16395,7 @@ static void processParsed(HttpQueue *q)
             /* Disable upload if streaming, used by PHP to stream input and process file upload in PHP. */
             rx->upload = 0;
             routeRequest(stream);
+            httpStartHandler(stream);
         } else {
             stream->readq->max = stream->limits->rxFormSize;
         }
@@ -16434,12 +16441,6 @@ static void routeRequest(HttpStream *stream)
         httpCreatePipeline(stream);
         httpStartPipeline(stream);
     }
-    if (!tx->started) {
-        httpStartHandler(stream);
-    }
-    if (rx->eof) {
-        httpTransferPackets(stream);
-    }
 }
 
 
@@ -16484,6 +16485,7 @@ static bool processContent(HttpQueue *q)
             }
             mapMethod(stream);
             routeRequest(stream);
+            httpStartHandler(stream);
         }
         httpSetState(stream, HTTP_STATE_READY);
     }
@@ -16653,6 +16655,7 @@ static void prepErrorDoc(HttpQueue *q)
 
     parseUri(stream);
     routeRequest(stream);
+    httpStartHandler(stream);
 }
 
 
@@ -16669,7 +16672,7 @@ static bool mapMethod(HttpStream *stream)
     cchar       *method;
 
     rx = stream->rx;
-    if (rx->flags & HTTP_POST && (method = httpGetParam(stream, "-http-method-", 0)) != 0) {
+    if (rx->flags & HTTP_POST && (method = httpGetParam(stream, "-http-method-", 0)) != 0 && !rx->route) {
         if (!scaselessmatch(method, rx->method)) {
             httpLog(stream->trace, "http.mapMethod", "context", "originalMethod:'%s', method:'%s'", rx->method, method);
             httpSetMethod(stream, method);
@@ -17410,6 +17413,16 @@ PUBLIC bool httpWillNextQueueAcceptSize(HttpQueue *q, ssize size)
         httpScheduleQueue(nextQ);
     }
     return 0;
+}
+
+
+PUBLIC void httpTransferPackets(HttpQueue *inq, HttpQueue *outq)
+{
+    HttpPacket  *packet;
+
+    while ((packet = httpGetPacket(inq)) != 0) {
+        httpPutPacket(outq, packet);
+    }
 }
 
 
@@ -20862,7 +20875,7 @@ PUBLIC bool httpTokenizev(HttpRoute *route, cchar *line, cchar *fmt, va_list arg
                 }
                 break;
             case 'B':
-                *va_arg(args, bool*) = httpGetBoolToken(tok);;
+                *va_arg(args, bool*) = httpGetBoolToken(tok);
                 break;
             case 'N':
                 *va_arg(args, int*) = (int) stoi(tok);
@@ -20945,7 +20958,8 @@ PUBLIC bool httpTokenizev(HttpRoute *route, cchar *line, cchar *fmt, va_list arg
 
 PUBLIC bool httpGetBoolToken(cchar *tok)
 {
-    return scaselessmatch(tok, "on") || scaselessmatch(tok, "true") || scaselessmatch(tok, "yes") || smatch(tok, "1");
+    return scaselessmatch(tok, "on") || scaselessmatch(tok, "true") || scaselessmatch(tok, "enable") ||
+        scaselessmatch(tok, "yes") || smatch(tok, "1");
 }
 
 
@@ -21537,13 +21551,7 @@ PUBLIC bool httpMatchModified(HttpStream *stream, MprTime time)
 PUBLIC void httpSetEof(HttpStream *stream)
 {
     if (stream) {
-#if UNUSED
-        if (stream->net->protocol < 2) {
-            stream->rx->eof = 1;
-        }
-#else
         stream->rx->eof = 1;
-#endif
     }
 }
 
@@ -23120,16 +23128,11 @@ PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
 }
 
 
-PUBLIC void httpTransferPackets(HttpStream *stream)
+PUBLIC void httpAddEndInputPacket(HttpStream *stream)
 {
-    HttpPacket  *packet;
-    HttpRx      *rx;
+    HttpRx  *rx;
 
     rx = stream->rx;
-
-    while ((packet = httpGetPacket(stream->rxHead)) != 0) {
-        httpPutPacket(stream->readq, packet);
-    }
     if (!rx->inputEnded) {
         rx->inputEnded = 1;
         httpPutPacketToNext(stream->readq, httpCreateEndPacket());
@@ -23201,9 +23204,8 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
     } else {
         httpPutPacketToNext(q, packet);
     }
-    if (rx->eof && !rx->inputEnded) {
-        rx->inputEnded = 1;
-        httpPutPacketToNext(q, httpCreateEndPacket());
+    if (rx->eof) {
+        httpAddEndInputPacket(stream);
     }
     if (rx->route && stream->readq->first) {
         HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
@@ -23489,7 +23491,6 @@ PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, 
 {
     va_list     args;
 
-    assert(event && *event);
     assert(type && *type);
 
     va_start(args, fmt);
@@ -23613,9 +23614,11 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
         } else {
             mprPutToBuf(buf, "%s RECV event=%s type=%s", trace->lastTime, event, type);
         }
+        if (fmt) {
+            mprPutCharToBuf(buf, ' ');
+        }
     }
     if (fmt) {
-        mprPutCharToBuf(buf, ' ');
         msg = sfmtv(fmt, args);
         mprPutStringToBuf(buf, msg);
     }
@@ -27096,7 +27099,7 @@ PUBLIC void httpAddQueryParams(HttpStream *stream)
     HttpRx      *rx;
 
     rx = stream->rx;
-    if (rx->parsedUri->query && !(rx->flags & HTTP_ADDED_QUERY_PARAMS)) {
+    if (rx->parsedUri->query && !(rx->flags & HTTP_ADDED_QUERY_PARAMS) && !stream->error) {
         addParamsFromBuf(stream, rx->parsedUri->query, slen(rx->parsedUri->query));
         rx->flags |= HTTP_ADDED_QUERY_PARAMS;
     }
@@ -27112,7 +27115,7 @@ PUBLIC int httpAddBodyParams(HttpStream *stream)
     rx = stream->rx;
     q = stream->readq;
 
-    if (rx->eof && (rx->form || rx->upload || rx->json) && !(rx->flags & HTTP_ADDED_BODY_PARAMS)) {
+    if (rx->eof && (rx->form || rx->upload || rx->json) && !(rx->flags & HTTP_ADDED_BODY_PARAMS) && !rx->route && !stream->error) {
         httpJoinPackets(q, -1);
         if (q->first && q->first->content) {
             content = q->first->content;
@@ -27136,7 +27139,7 @@ PUBLIC void httpAddJsonParams(HttpStream *stream)
     HttpRx      *rx;
 
     rx = stream->rx;
-    if (rx->eof && sstarts(rx->mimeType, "application/json")) {
+    if (rx->eof && sstarts(rx->mimeType, "application/json") && !stream->error) {
         if (!(rx->flags & HTTP_ADDED_BODY_PARAMS)) {
             mprParseJsonInto(httpGetBodyInput(stream), httpGetParams(stream));
             rx->flags |= HTTP_ADDED_BODY_PARAMS;
