@@ -634,10 +634,7 @@ static int parseArgs(int argc, char **argv)
             app->verbose++;
 
         } else if (smatch(argp, "--version") || smatch(argp, "-V")) {
-            mprEprintf("%s %s\n"
-                "Copyright (C) Embedthis Software\n"
-                "Copyright (C) Michael O'Brien\n",
-               ME_TITLE, ME_VERSION);
+            mprEprintf("%s\n", ME_VERSION);
             exit(0);
 
         } else if (smatch(argp, "--window")) {

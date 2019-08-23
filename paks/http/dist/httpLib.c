@@ -83,7 +83,7 @@ PUBLIC HttpStatusCode HttpStatusCodes[] = {
 /****************************** Forward Declarations **************************/
 
 static void httpTimer(Http *http, MprEvent *event);
-static bool isIdle(bool traceRequests);
+static bool isHttpServiceIdle(bool traceRequests);
 static void manageHttp(Http *http, int flags);
 static void terminateHttp(int state, int how, int status);
 static void updateCurrentDate(void);
@@ -120,6 +120,7 @@ PUBLIC Http *httpCreate(int flags)
     http->trace = httpCreateTrace(0);
     http->startLevel = 2;
     http->localPlatform = slower(sfmt("%s-%s-%s", ME_OS, ME_CPU, ME_PROFILE));
+    http->upload = 1;
     httpSetPlatform(http->localPlatform);
     httpSetPlatformDir(NULL);
 
@@ -143,7 +144,7 @@ PUBLIC Http *httpCreate(int flags)
 #if ME_HTTP_WEB_SOCKETS
     httpOpenWebSockFilter();
 #endif
-    mprSetIdleCallback(isIdle);
+    mprSetIdleCallback(isHttpServiceIdle);
     mprAddTerminator(terminateHttp);
 
     if (flags & HTTP_SERVER_SIDE) {
@@ -204,6 +205,7 @@ static void manageHttp(Http *http, int flags)
         mprMark(http->forkData);
         mprMark(http->group);
         mprMark(http->hosts);
+        mprMark(http->jail);
         mprMark(http->localPlatform);
         mprMark(http->monitors);
         mprMark(http->mutex);
@@ -351,7 +353,7 @@ static void terminateHttp(int state, int how, int status)
 /*
     Test if the http service (including MPR) is idle with no running requests
  */
-static bool isIdle(bool traceRequests)
+static bool isHttpServiceIdle(bool traceRequests)
 {
     Http            *http;
     HttpNet         *net;
@@ -1300,6 +1302,23 @@ PUBLIC void httpEnableHttp2(int enable)
 }
 
 
+PUBLIC void httpSetJail(cchar *path)
+{
+    HTTP->jail = sclone(path);
+}
+
+
+PUBLIC void httpSetEnvCallback(HttpEnvCallback envCallback)
+{
+    HTTP->envCallback = envCallback;
+}
+
+
+PUBLIC void httpSetRedirectCallback(HttpRedirectCallback redirectCallback)
+{
+    HTTP->redirectCallback = redirectCallback;
+}
+
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.
@@ -1533,8 +1552,10 @@ PUBLIC bool httpAuthenticate(HttpStream *stream)
 
     if (!rx->authenticateProbed) {
         rx->authenticateProbed = 1;
+
         ip = httpGetSessionVar(stream, HTTP_SESSION_IP, 0);
         username = httpGetSessionVar(stream, HTTP_SESSION_USERNAME, 0);
+
         if (!smatch(ip, stream->ip) || !username) {
             if (auth->username && *auth->username) {
                 /* Auto-login */
@@ -1545,10 +1566,13 @@ PUBLIC bool httpAuthenticate(HttpStream *stream)
                 return 0;
             }
         }
-        httpLog(stream->trace, "auth.login.authenticated", "context",
-            "msg: 'Using cached authentication data', username:'%s'", username);
+        if (!stream->user && (stream->user = mprLookupKey(auth->userCache, username)) == 0) {
+            return 0;
+        }
         stream->username = username;
         rx->authenticated = 1;
+        httpLog(stream->trace, "auth.login.authenticated", "context",
+            "msg: 'Using cached authentication data', username:'%s'", username);
     }
     return rx->authenticated;
 }
@@ -1581,14 +1605,18 @@ PUBLIC bool httpCanUser(HttpStream *stream, cchar *abilities)
     }
     if (abilities) {
         for (ability = stok(sclone(abilities), " \t,", &tok); abilities; abilities = stok(NULL, " \t,", &tok)) {
-            if (!mprLookupKey(stream->user->abilities, ability)) {
-                return 0;
+            if (!mprLookupKey(stream->user->roles, ability)) {
+                if (!mprLookupKey(stream->user->abilities, ability)) {
+                    return 0;
+                }
             }
         }
     } else {
         for (ITERATE_KEYS(auth->abilities, kp)) {
-            if (!mprLookupKey(stream->user->abilities, kp->key)) {
-                return 0;
+            if (!mprLookupKey(stream->user->roles, kp->key)) {
+                if (!mprLookupKey(stream->user->abilities, kp->key)) {
+                    return 0;
+                }
             }
         }
     }
@@ -1630,6 +1658,12 @@ PUBLIC int httpCreateAuthType(cchar *name, HttpAskLogin askLogin, HttpParseAuth 
         return MPR_ERR_CANT_CREATE;
     }
     return 0;
+}
+
+
+PUBLIC HttpAuthStore *httpGetAuthStore(cchar *name)
+{
+    return mprLookupKey(HTTP->authStores, name);
 }
 
 
@@ -1950,7 +1984,15 @@ PUBLIC void httpSetAuthStoreSessions(HttpAuthStore *store, bool noSession)
 
 PUBLIC void httpSetAuthStoreVerify(HttpAuthStore *store, HttpVerifyUser verifyUser)
 {
-    store->verifyUser = verifyUser;
+    if (store) {
+        store->verifyUser = verifyUser;
+    }
+}
+
+
+PUBLIC void httpSetAuthStoreVerifyByName(cchar *name, HttpVerifyUser verifyUser)
+{
+    httpSetAuthStoreVerify(httpGetAuthStore(name), verifyUser);
 }
 
 
@@ -5501,6 +5543,12 @@ static void parseTrace(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseUpload(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    HTTP->upload = httpGetBoolToken(prop->value);
+}
+
+
 static void parseWebSocketsProtocol(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->webSocketsProtocol = sclone(prop->value);
@@ -5592,6 +5640,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.auth.login", parseAuthLogin);
     httpAddConfig("http.auth.realm", parseAuthRealm);
     httpAddConfig("http.auth.require", httpParseAll);
+    httpAddConfig("http.auth.require.abilities", parseAuthRequireRoles);
     httpAddConfig("http.auth.require.roles", parseAuthRequireRoles);
     httpAddConfig("http.auth.require.users", parseAuthRequireUsers);
     httpAddConfig("http.auth.roles", parseAuthRoles);
@@ -5698,6 +5747,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.timeouts.request", parseTimeoutsRequest);
     httpAddConfig("http.timeouts.session", parseTimeoutsSession);
     httpAddConfig("http.trace", parseTrace);
+    httpAddConfig("http.upload", parseUpload);
     httpAddConfig("http.websockets.protocol", parseWebSocketsProtocol);
     httpAddConfig("http.xsrf", parseXsrf);
 
@@ -7347,7 +7397,7 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
     HttpRx      *rx;
     HttpTx      *tx;
     cchar       *uri;
-    int         status;
+    int         redirected, status;
 
     rx = stream->rx;
     tx = stream->tx;
@@ -7386,9 +7436,18 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
                  */
                 flags |= HTTP_ABORT;
             } else {
-                if (rx->route && (uri = httpLookupRouteErrorDocument(rx->route, tx->status)) && !smatch(uri, rx->uri)) {
-                    errorRedirect(stream, uri);
-                } else {
+                redirected = 0;
+                if (rx->route) {
+                    uri = httpLookupRouteErrorDocument(rx->route, tx->status);
+                    if (rx->route->callback) {
+                        rx->route->callback(stream, HTTP_ROUTE_HOOK_ERROR, &uri);
+                    }
+                    if (uri && !smatch(uri, rx->uri)) {
+                        errorRedirect(stream, uri);
+                        redirected = 1;
+                    }
+                }
+                if (!redirected) {
                     makeAltBody(stream, status);
                 }
             }
@@ -8079,7 +8138,7 @@ PUBLIC HttpHost *httpCreateHost()
 
     host->routes = mprCreateList(-1, MPR_LIST_STABLE);
     host->flags = HTTP_HOST_NO_TRACE;
-    host->streams = mprCreateHash(HTTP_SMALL_HASH_SIZE, MPR_HASH_STABLE);
+    host->streaming = mprCreateHash(HTTP_SMALL_HASH_SIZE, MPR_HASH_STABLE);
     httpSetStreaming(host, "application/x-www-form-urlencoded", NULL, 0);
     httpSetStreaming(host, "application/json", NULL, 0);
     httpSetStreaming(host, "application/csp-report", NULL, 0);
@@ -8102,7 +8161,7 @@ PUBLIC HttpHost *httpCloneHost(HttpHost *parent)
      */
     host->parent = parent;
     host->flags = parent->flags & HTTP_HOST_NO_TRACE;
-    host->streams = parent->streams;
+    host->streaming = parent->streaming;
     host->routes = mprCreateList(-1, MPR_LIST_STABLE);
     return host;
 }
@@ -8120,7 +8179,7 @@ static void manageHost(HttpHost *host, int flags)
         mprMark(host->defaultRoute);
         mprMark(host->defaultEndpoint);
         mprMark(host->secureEndpoint);
-        mprMark(host->streams);
+        mprMark(host->streaming);
 
     } else if (flags & MPR_MANAGE_FREE) {
         if (host->nameCompiled) {
@@ -8458,12 +8517,12 @@ PUBLIC bool httpGetStreaming(HttpHost *host, cchar *mime, cchar *uri)
     MprKey      *kp;
 
     assert(host);
-    assert(host->streams);
+    assert(host->streaming);
 
     if (schr(mime, ';')) {
         mime = ssplit(sclone(mime), ";", 0);
     }
-    if ((kp = mprLookupKeyEntry(host->streams, mime)) != 0) {
+    if ((kp = mprLookupKeyEntry(host->streaming, mime)) != 0) {
         if (kp->data == NULL || sstarts(uri, kp->data)) {
             /* Type is set to the enable value */
             return kp->type;
@@ -8473,12 +8532,15 @@ PUBLIC bool httpGetStreaming(HttpHost *host, cchar *mime, cchar *uri)
 }
 
 
+/*
+    Define streaming to be enabled for a given mime type that starts with the given URI for this host
+ */
 PUBLIC void httpSetStreaming(HttpHost *host, cchar *mime, cchar *uri, bool enable)
 {
     MprKey  *kp;
 
     assert(host);
-    if ((kp = mprAddKey(host->streams, mime, uri)) != 0) {
+    if ((kp = mprAddKey(host->streaming, mime, uri)) != 0) {
         /*
             We store the enable value in the key type to save an allocation
          */
@@ -9481,7 +9543,7 @@ typedef void (*FrameHandler)(HttpQueue *q, HttpPacket *packet);
 
 /************************************ Forwards ********************************/
 
-static void addHeader(HttpStream *stream, cchar *key, cchar *value);
+static void addHeaderToSet(HttpStream *stream, cchar *key, cchar *value);
 static void checkSendSettings(HttpQueue *q);
 static void closeNetworkWhenDone(HttpQueue *q);
 static int decodeInt(HttpPacket *packet, uint prefix);
@@ -9492,7 +9554,7 @@ static void encodeInt(HttpPacket *packet, uint prefix, uint bits, uint value);
 static void encodeString(HttpPacket *packet, cchar *src, uint lower);
 static HttpStream *findStreamObj(HttpNet *net, int stream);
 static int getFrameFlags(HttpQueue *q, HttpPacket *packet);
-static HttpStream *getStream(HttpQueue *q, HttpPacket *packet);
+static HttpStream *getStreamObj(HttpQueue *q, HttpPacket *packet);
 static void incomingHttp2(HttpQueue *q, HttpPacket *packet);
 static void outgoingHttp2(HttpQueue *q, HttpPacket *packet);
 static void outgoingHttp2Service(HttpQueue *q);
@@ -10060,7 +10122,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
         sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad sesssion");
         return;
     }
-    if ((stream = getStream(q, packet)) != 0) {
+    if ((stream = getStreamObj(q, packet)) != 0) {
          if (frame->flags & HTTP2_END_HEADERS_FLAG) {
             parseHeaderFrames(q, stream);
         }
@@ -10077,7 +10139,7 @@ static void parseHeaderFrame(HttpQueue *q, HttpPacket *packet)
 /*
     Get or create a stream connection
  */
-static HttpStream *getStream(HttpQueue *q, HttpPacket *packet)
+static HttpStream *getStreamObj(HttpQueue *q, HttpPacket *packet)
 {
     HttpNet     *net;
     HttpStream  *stream;
@@ -10351,7 +10413,7 @@ static bool parseHeader(HttpQueue *q, HttpStream *stream, HttpPacket *packet)
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Bad header prefix");
             return 0;
         }
-        addHeader(stream, kp->key, kp->value);
+        addHeaderToSet(stream, kp->key, kp->value);
 
     } else if ((ch >> 6) == 1) {
         /*
@@ -10374,7 +10436,7 @@ static bool parseHeader(HttpQueue *q, HttpStream *stream, HttpPacket *packet)
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header name/value");
             return 0;
         }
-        addHeader(stream, name, value);
+        addHeaderToSet(stream, name, value);
         if (httpAddPackedHeader(net->rxHeaders, name, value) < 0) {
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Cannot fit header in hpack table");
             return 0;
@@ -10407,7 +10469,7 @@ static bool parseHeader(HttpQueue *q, HttpStream *stream, HttpPacket *packet)
             sendGoAway(q, HTTP2_PROTOCOL_ERROR, "Invalid header name/value");
             return 0;
         }
-        addHeader(stream, name, value);
+        addHeaderToSet(stream, name, value);
     }
     return 1;
 }
@@ -10450,7 +10512,7 @@ static cchar *parseHeaderField(HttpQueue *q, HttpStream *stream, HttpPacket *pac
 /*
     Add a header key/value pair to the set of headers for the stream (stream)
  */
-static void addHeader(HttpStream *stream, cchar *key, cchar *value)
+static void addHeaderToSet(HttpStream *stream, cchar *key, cchar *value)
 {
     HttpRx      *rx;
     HttpLimits  *limits;
@@ -13824,7 +13886,7 @@ PUBLIC void httpNetClosed(HttpNet *net)
             httpSetEof(stream);
         }
         httpSetState(stream, HTTP_STATE_COMPLETE);
-        mprCreateEvent(net->dispatcher, "disconnect", 0, httpProcess, stream->inputq, 0);
+        httpProcess(stream->inputq);
     }
 }
 
@@ -14550,7 +14612,7 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
         if (packet->flags & HTTP_PACKET_END) {
             if ((stream = packet->stream) != 0) {
                 httpFinalizeConnector(stream);
-                mprCreateEvent(q->net->dispatcher, "endRequest", 0, httpProcess, stream->inputq, 0);
+                httpProcess(stream->inputq);
             }
         } else if (bytes > 0) {
             if (packet->prefix) {
@@ -15520,7 +15582,6 @@ PUBLIC void httpCreateRxPipeline(HttpStream *stream, HttpRoute *route)
         q = httpCreateQueue(stream->net, stream, stage, HTTP_QUEUE_RX, q);
         q->flags |= HTTP_QUEUE_REQUEST;
     }
-    httpTransferPackets(stream->readq, q);
     stream->readq = q;
 
     if (httpClientStream(stream)) {
@@ -15911,15 +15972,19 @@ PUBLIC bool httpProcessHeaders(HttpQueue *q)
 
 PUBLIC void httpProcess(HttpQueue *q)
 {
+    /*
+        Create an event to limit recursion when invoked by pipeline stages
+     */
     mprCreateEvent(q->stream->dispatcher, "http", 0, processHttp, q->stream->inputq, 0);
 }
 
 
+#if UNUSED
 PUBLIC void httpProtocol(HttpStream *stream)
 {
     processHttp(stream->inputq);
 }
-
+#endif
 
 /*
     HTTP Protocol state machine for HTTP/1 server requests and client responses.
@@ -16440,6 +16505,7 @@ static void routeRequest(HttpStream *stream)
         httpRouteRequest(stream);
         httpCreatePipeline(stream);
         httpStartPipeline(stream);
+        httpTransferPackets(stream->rxHead, stream->readq);
     }
 }
 
@@ -17110,7 +17176,7 @@ PUBLIC void httpDiscardQueueData(HttpQueue *q, bool removePackets)
 
 
 /*
-    Flush queue data toward the connector by scheduling the queue and servicing all scheduled queues.
+Flush queue data toward the connector by scheduling the queue and servicing all scheduled queues.
     Return true if there is room for more data. If blocking is requested, the call will block until
     the queue count falls below the queue max. NOTE: may return early if the inactivityTimeout expires.
     WARNING: may yield.
@@ -17126,11 +17192,17 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
     stream = q->stream;
 
     /*
-        Initiate flushing. For HTTP/2 we must process incoming window update frames, so run any pending IO events.
+        Initiate flushing.
      */
     httpScheduleQueue(q);
     httpServiceNetQueues(net, flags);
-    mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
+
+    /*
+        For HTTP/2 we must process incoming window update frames, so run any pending IO events.
+     */
+    if (net->protocol == HTTP_2) {
+        mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
+    }
 
     if (net->error) {
         return 1;
@@ -17149,10 +17221,12 @@ PUBLIC bool httpFlushQueue(HttpQueue *q, int flags)
                 httpScheduleQueue(net->socketq);
                 httpServiceNetQueues(net, flags);
             }
-            /*
-                Process HTTP/2 window update messages for flow control
-             */
-            mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
+            if (net->protocol == HTTP_2) {
+                /*
+                    Process HTTP/2 window update messages for flow control
+                 */
+                mprWaitForEvent(stream->dispatcher, 0, mprGetEventMark(stream->dispatcher));
+            }
         }
         if (!(flags & HTTP_BLOCK)) {
             break;
@@ -18580,6 +18654,7 @@ PUBLIC int httpAddRouteFilter(HttpRoute *route, cchar *name, cchar *extensions, 
     assert(route);
 
     if (smatch(name, "uploadFilter") || smatch(name, "chunkFilter")) {
+        /* Already pre-loaded */
         return 0;
     }
     for (ITERATE_ITEMS(route->outputStages, stage, next)) {
@@ -21151,6 +21226,12 @@ PUBLIC HttpLimits *httpGraduateLimits(HttpRoute *route, HttpLimits *limits)
 }
 
 
+PUBLIC void httpSetRouteCallback(HttpRoute *route, HttpRouteCallback callback)
+{
+    route->callback = callback;
+}
+
+
 #undef  GRADUATE_HASH
 #undef  GRADUATE_LIST
 
@@ -22376,7 +22457,7 @@ typedef struct HttpInvoke {
 /***************************** Forward Declarations ***************************/
 
 static void commonPrep(HttpStream *stream);
-static void createEvent(HttpStream *stream, void *data);
+static void createInvokeEvent(HttpStream *stream, void *data);
 static void manageInvoke(HttpInvoke *event, int flags);
 static void manageStream(HttpStream *stream, int flags);
 static void pickStreamNumber(HttpStream *stream);
@@ -23057,7 +23138,7 @@ PUBLIC int httpCreateEvent(uint64 seqno, HttpEventProc callback, void *data)
         invoke->callback = callback;
         invoke->data = data;
     }
-    if (httpFindStream(seqno, createEvent, invoke)) {
+    if (httpFindStream(seqno, createInvokeEvent, invoke)) {
         return 0;
     }
     mprRelease(invoke);
@@ -23078,7 +23159,7 @@ static void manageInvoke(HttpInvoke *invoke, int flags)
 }
 
 
-static void createEvent(HttpStream *stream, void *data)
+static void createInvokeEvent(HttpStream *stream, void *data)
 {
     mprCreateEvent(stream->dispatcher, "httpEvent", 0, (MprEventProc) invokeWrapper, data, MPR_EVENT_ALWAYS);
 }
@@ -23128,14 +23209,14 @@ PUBLIC HttpStream *httpFindStream(uint64 seqno, HttpEventProc proc, void *data)
 }
 
 
-PUBLIC void httpAddEndInputPacket(HttpStream *stream)
+PUBLIC void httpAddEndInputPacket(HttpStream *stream, HttpQueue *q)
 {
     HttpRx  *rx;
 
     rx = stream->rx;
     if (!rx->inputEnded) {
         rx->inputEnded = 1;
-        httpPutPacketToNext(stream->readq, httpCreateEndPacket());
+        httpPutPacketToNext(q, httpCreateEndPacket());
     }
 }
 
@@ -23205,7 +23286,7 @@ static void incomingTail(HttpQueue *q, HttpPacket *packet)
         httpPutPacketToNext(q, packet);
     }
     if (rx->eof) {
-        httpAddEndInputPacket(stream);
+        httpAddEndInputPacket(stream, q);
     }
     if (rx->route && stream->readq->first) {
         HTTP_NOTIFY(stream, HTTP_EVENT_READABLE, 0);
@@ -24339,6 +24420,9 @@ PUBLIC void httpFinalizeOutput(HttpStream *stream)
         httpFinalize(stream);
     }
     httpPutPacket(stream->writeq, httpCreateEndPacket());
+    //  TODO -- new
+    httpScheduleQueue(stream->writeq);
+    httpServiceNetQueues(stream->net, 0);
 }
 
 
@@ -24457,6 +24541,7 @@ PUBLIC void httpOmitBody(HttpStream *stream)
         tx->length = -1;
         httpDiscardData(stream, HTTP_QUEUE_TX);
     }
+    httpFinalizeOutput(stream);
 }
 
 
@@ -24477,6 +24562,9 @@ PUBLIC void httpRedirect(HttpStream *stream, int status, cchar *targetUri)
     if (tx->flags & HTTP_TX_HEADERS_CREATED) {
         mprLog("error", 0, "Headers already created, so redirect ignored: %s", targetUri);
         return;
+    }
+    if (HTTP->redirectCallback) {
+        targetUri = (HTTP->redirectCallback)(stream, &status, targetUri);
     }
     tx->status = status;
     msg = httpLookupStatus(status);
@@ -24984,7 +25072,6 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...)
     va_end(vargs);
     return httpWriteString(q, buf);
 }
-
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -26745,6 +26832,9 @@ static void manageRole(HttpRole *role, int flags)
 }
 
 
+/*
+    Define a role with a given name with specified abilities
+ */
 PUBLIC HttpRole *httpAddRole(HttpAuth *auth, cchar *name, cchar *abilities)
 {
     HttpRole    *role;
@@ -26769,8 +26859,9 @@ PUBLIC HttpRole *httpAddRole(HttpAuth *auth, cchar *name, cchar *abilities)
 
 
 /*
-    Compute a set of abilities for a role. Role strings can be either roles or abilities.
-    The abilities hash is updated.
+    Compute a set of abilities given a role defined on an auth route. A role can be a role or an ability.
+    The role as defined in the auth route specifies the abilities for the role. These are added to the
+    given abilities hash.
  */
 PUBLIC void httpComputeRoleAbilities(HttpAuth *auth, MprHash *abilities, cchar *role)
 {
@@ -26797,11 +26888,11 @@ PUBLIC void httpComputeRoleAbilities(HttpAuth *auth, MprHash *abilities, cchar *
  */
 PUBLIC void httpComputeUserAbilities(HttpAuth *auth, HttpUser *user)
 {
-    char        *ability, *tok;
+    MprKey      *rp;
 
     user->abilities = mprCreateHash(0, 0);
-    for (ability = stok(sclone(user->roles), " \t,", &tok); ability; ability = stok(NULL, " \t,", &tok)) {
-        httpComputeRoleAbilities(auth, user->abilities, ability);
+    for (ITERATE_KEYS(user->roles, rp)) {
+        httpComputeRoleAbilities(auth, user->abilities, rp->key);
     }
 }
 
@@ -26879,6 +26970,7 @@ static void manageUser(HttpUser *user, int flags)
 PUBLIC HttpUser *httpAddUser(HttpAuth *auth, cchar *name, cchar *password, cchar *roles)
 {
     HttpUser    *user;
+    char        *role, *tok;
 
     if (!auth->userCache) {
         auth->userCache = mprCreateHash(0, 0);
@@ -26891,7 +26983,10 @@ PUBLIC HttpUser *httpAddUser(HttpAuth *auth, cchar *name, cchar *password, cchar
     }
     user->password = sclone(password);
     if (roles) {
-        user->roles = sclone(roles);
+        user->roles = mprCreateHash(0, 0);
+        for (role = stok(sclone(roles), " \t,", &tok); role; role = stok(NULL, " \t,", &tok)) {
+            mprAddKey(user->roles, role, MPR->oneString);
+        }
         httpComputeUserAbilities(auth, user);
     }
     if (mprAddKey(auth->userCache, name, user) == 0) {

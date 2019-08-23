@@ -424,11 +424,25 @@
       <arglist>(int port)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>httpSetEnvCallback</name>
+      <anchorfile>group___http.html</anchorfile>
+      <anchor>ga65c7bf35032df4b2a7aa6ab6ce1e0c97</anchor>
+      <arglist>(HttpEnvCallback envCallback)</arglist>
+    </member>
+    <member kind="function">
       <type>int</type>
       <name>httpSetGroupAccount</name>
       <anchorfile>group___http.html</anchorfile>
       <anchor>ga0036ccea9d7e39eaa1469497c00b4cc9</anchor>
       <arglist>(cchar *group)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpSetJail</name>
+      <anchorfile>group___http.html</anchorfile>
+      <anchor>gac98ec18038f3269de000711a8afe0d5b</anchor>
+      <arglist>(cchar *path)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -457,6 +471,13 @@
       <anchorfile>group___http.html</anchorfile>
       <anchor>gab4c777b9a266d023f0b27fb57e1b4d90</anchor>
       <arglist>(cchar *host, int port)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpSetRedirectCallback</name>
+      <anchorfile>group___http.html</anchorfile>
+      <anchor>gafe1e6d2ad1e8d656741116a163e0dfac</anchor>
+      <arglist>(HttpRedirectCallback redirectCallback)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -930,6 +951,13 @@
       <arglist>(HttpQueue *q)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>httpTransferPackets</name>
+      <anchorfile>group___http_queue.html</anchorfile>
+      <anchor>gae2bb3f27a089f67d275ca41091c2450f</anchor>
+      <arglist>(HttpQueue *inq, HttpQueue *outq)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>httpWillNextQueueAcceptPacket</name>
       <anchorfile>group___http_queue.html</anchorfile>
@@ -1330,11 +1358,25 @@
       <arglist>)(struct HttpStream *stream, int event, int arg)</arglist>
     </member>
     <member kind="typedef">
+      <type>cchar *(*</type>
+      <name>HttpRedirectCallback</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>gad3b1c28d2a0ca99500a292a8c2ab22fb</anchor>
+      <arglist>)(struct HttpStream *stream, int *code, cchar *uri)</arglist>
+    </member>
+    <member kind="typedef">
       <type>void(*</type>
       <name>HttpTimeoutCallback</name>
       <anchorfile>group___http_stream.html</anchorfile>
       <anchor>ga0065e552553caf322b18519842a57c66</anchor>
       <arglist>)(struct HttpStream *stream)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpAddEndInputPacket</name>
+      <anchorfile>group___http_stream.html</anchorfile>
+      <anchor>ga11ff9e4e0927400b45332cf34fd923fd</anchor>
+      <arglist>(HttpStream *stream, HttpQueue *q)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1787,6 +1829,13 @@
       <arglist>(cchar *name, HttpAskLogin askLogin, HttpParseAuth parse, HttpSetAuth setAuth)</arglist>
     </member>
     <member kind="function">
+      <type>HttpAuthStore *</type>
+      <name>httpGetAuthStore</name>
+      <anchorfile>group___http_auth.html</anchorfile>
+      <anchor>ga3ba57d682a7da288c2a847b2118ffdbd</anchor>
+      <arglist>(cchar *name)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>httpIsAuthenticated</name>
       <anchorfile>group___http_auth.html</anchorfile>
@@ -1932,6 +1981,13 @@
       <anchorfile>group___http_auth.html</anchorfile>
       <anchor>gaceb42561636cf7ff37c67b167c8df128</anchor>
       <arglist>(HttpAuthStore *store, HttpVerifyUser verifyUser)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>httpSetAuthStoreVerifyByName</name>
+      <anchorfile>group___http_auth.html</anchorfile>
+      <anchor>ga1967934a19f482da6ded9496dc149086</anchor>
+      <arglist>(cchar *storeName, HttpVerifyUser verifyUser)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -3999,10 +4055,10 @@
       <arglist></arglist>
     </member>
     <member kind="variable">
-      <type>char *</type>
+      <type>MprHash *</type>
       <name>roles</name>
       <anchorfile>struct_http_user.html</anchorfile>
-      <anchor>a4e2ba8923ddb7672423c503a620f9b89</anchor>
+      <anchor>a1ab9d6432b4a95afedfe0fa0094e722a</anchor>
       <arglist></arglist>
     </member>
   </compound>
