@@ -10,6 +10,8 @@
 
 /*************************************** Code *********************************/
 
+#if ME_ESP_ABBREV
+
 PUBLIC void addHeader(cchar *key, cchar *fmt, ...)
 {
     va_list     args;
@@ -80,6 +82,24 @@ PUBLIC void destroySession()
 PUBLIC void dontAutoFinalize()
 {
     espSetAutoFinalizing(getStream(), 0);
+}
+
+
+PUBLIC void dumpParams()
+{
+    mprLog("info esp edi", 0, "Params: %s", mprJsonToString(params(), MPR_JSON_PRETTY));
+}
+
+
+PUBLIC void dumpGrid(EdiGrid *grid)
+{
+    ediDumpGrid(grid);
+}
+
+
+PUBLIC void dumpRec(EdiRec *rec)
+{
+    ediDumpRec(rec);
 }
 
 
@@ -335,11 +355,15 @@ PUBLIC bool hasRec()
 }
 
 
+PUBLIC bool isAuthenticated()
+{
+    return httpIsAuthenticated(getStream());
+}
+
 PUBLIC bool isEof()
 {
     return httpIsEof(getStream());
 }
-
 
 PUBLIC bool isFinalized()
 {
@@ -943,9 +967,9 @@ PUBLIC void scripts(cchar *patterns)
         espRender(stream, "<script src='%s' type='text/javascript'></script>\n", uri);
     }
 }
-
-
 #endif
+
+#endif /* ME_ESP_ABBREV */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
     This software is distributed under commercial and open source licenses.

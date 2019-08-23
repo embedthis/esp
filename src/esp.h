@@ -17,6 +17,9 @@ extern "C" {
 
 /********************************** Tunables **********************************/
 
+#ifndef ME_ESP_ABBREV
+    #define ME_ESP_ABBREV 1
+#endif
 #ifndef ME_ESP_EMAIL_TIMEOUT
     #define ME_ESP_EMAIL_TIMEOUT (60 * 1000)           /**< Timeout for sending email */
 #endif
@@ -385,17 +388,6 @@ PUBLIC char *espBuildScript(HttpRoute *route, cchar *page, cchar *path, cchar *c
     EspState *state, char **err);
 
 /**
-    Define an action
-    @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
-    @param route HttpRoute object
-    @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
-    @param actionProc EspProc callback procedure to invoke when the action is requested.
-    @ingroup EspRoute
-    @stability Stable
- */
-PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, void *actionProc);
-
-/**
     Define an action for a URI pattern.
     @description This creates a new route and binds the action function to a URI pattern.
     @param route Parent route object from which to inherit settings when creating the new route.
@@ -564,6 +556,7 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
  */
 typedef void (*EspViewProc)(HttpStream *stream);
 
+#if UNUSED
 /**
     ESP Action
     @description Actions are run after a request URI is routed to a controller.
@@ -571,8 +564,8 @@ typedef void (*EspViewProc)(HttpStream *stream);
     @stability Stable
  */
 typedef EspProc EspAction;
-
 PUBLIC void espManageAction(EspAction *ap, int flags);
+#endif
 
 /**
     ESP request structure
@@ -1073,6 +1066,15 @@ PUBLIC bool espHasRec(HttpStream *stream);
 PUBLIC bool espIsCurrentSession(HttpStream *stream);
 
 /**
+    Test if the user is authenticated
+    @param stream HttpStream stream object
+    @return True if the username and password have been authenticated.
+    @ingroup EspReq
+    @stability Prototype
+ */
+PUBLIC bool espIsAuthenticated(HttpStream *stream);
+
+/**
     Test if the receive input stream is at end-of-file.
     @param stream HttpStream stream object
     @return "True" if there is no more receive data to read
@@ -1369,7 +1371,7 @@ PUBLIC ssize espSendRec(HttpStream *stream, EdiRec *rec, int flags);
     @description This renders a JSON response including the request success status, feedback message and field errors.
     The field errors apply to the current EDI record.
     The format of the response is:
-        "{ success: STATUS, feedback: {messages}, fieldErrors: {messages}}" wrapper.
+        "{ error: 0/1, feedback: {messages}, fieldErrors: {messages}}" wrapper.
     The feedback messages are created via the espSetFeedback API. Field errors are created by ESP validations.
     @param stream HttpStream stream object
     @param success True if the operation was a success.
@@ -1695,7 +1697,46 @@ PUBLIC bool espUpdateRec(HttpStream *stream, EdiRec *rec);
  */
 PUBLIC cchar *espUri(HttpStream *stream, cchar *target);
 
+
+/************************************** Actions *******************************/
+
+//  MOB DOC
+typedef struct EspAction {
+    cchar       *target;
+    cchar       *roles;
+    EspProc     callback;
+} EspAction;
+
+#if DEPRECATED || 1
+/**
+    Define an action
+    @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
+    This API is deprecated. Use #espAction instead.
+    @param route HttpRoute object
+    @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
+    @param actionProc EspProc callback procedure to invoke when the action is requested.
+    @ingroup EspRoute
+    @stability Deprecated
+ */
+PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, EspProc actionProc);
+#endif
+
+/**
+    Define an action
+    @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
+    The action will require the specified roles or abilities.
+    @param route HttpRoute object
+    @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
+    @param roles String Comma separated list of roles or abilities. If set to the empty string, no specific roles are required
+        but an authenticated user is required. Set to NULL if an authenticated user is not required.
+    @param actionProc EspProc callback procedure to invoke when the action is requested.
+    @ingroup EspRoute
+    @stability Prototype
+ */
+PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *roles, EspProc actionProc);
+
 /***************************** Abbreviated Controls ***************************/
+#if ME_ESP_ABBREV
 /**
     Abbreviated ESP API.
     @description This is a short-form API that uses the current HttpStream stream object.
@@ -1709,13 +1750,22 @@ typedef struct EspAbbrev { int dummy; } EspAbbrev;
 /******************************* Abbreviated API ******************************/
 
 /**
+    Create an absolute URI with a scheme and host
+    @param target The URI target. See httpLink for details
+    @param ... arguments to the formatted target string
+    @return A normalized, absolute Uri string containing scheme and host.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC cchar *absuri(cchar *target, ...);
+
+/**
     Add a header to the transmission using a format string.
     @description Add a header if it does not already exist.
     @param key Http response header key
     @param fmt Printf style formatted string to use as the header key value
     @param ... Arguments for fmt
-    @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already
-        exists.
+    @return Zero if successful, otherwise a negative MPR error code. Returns MPR_ERR_ALREADY_EXISTS if the header already exists.
     @ingroup EspAbbrev
     @stability Evolving
  */
@@ -1791,6 +1841,23 @@ PUBLIC void destroySession(void);
     @stability Evolving
  */
 PUBLIC void dontAutoFinalize(void);
+
+/**
+    Display the grid to the debug log
+    @param grid EDI grid
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpGrid(EdiGrid *grid);
+
+/**
+    Display a record to the debug log
+    @param rec Record to log
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpRec(EdiRec *rec);
+
 
 /**
     Finalize the response.
@@ -2129,6 +2196,15 @@ PUBLIC bool hasRec(void);
     @stability Evolving
  */
 PUBLIC void input(cchar *field, cchar *options);
+
+/**
+    Test if the user is authenticated
+    @param stream HttpStream stream object
+    @return True if the username and password have been authenticated.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC bool isAuthenticated(void);
 
 /**
     Test if the receive input stream is at end-of-file
@@ -2949,16 +3025,7 @@ PUBLIC bool updateRecFromParams(cchar *table);
  */
 PUBLIC cchar *uri(cchar *target, ...);
 
-/**
-    Create an absolute URI with a scheme and host
-    @param target The URI target. See httpLink for details
-    @param ... arguments to the formatted target string
-    @return A normalized, absolute Uri string containing scheme and host.
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC cchar *absuri(cchar *target, ...);
-
+#endif /* ME_ESP_ABBREV */
 /*
     LEGACY redefines
  */
@@ -2966,13 +3033,11 @@ PUBLIC cchar *absuri(cchar *target, ...);
 #define espSetConn espSetStream
 
 #if DEPRECATED || 1
-
 #define espGetFlash(stream, type) espGetFeedback(stream, type)
 #define espRenderFlash(stream, types) espRenderFeedback(stream, types)
 #define espSetFlashv(stream, type, fmt, args) espSetFeedbackv(stream, type, fmt, args)
 #define getFlash(type) getFeedback(type)
 #define renderFlash(types) renderFeedback(types)
-
 PUBLIC void espSetFlash(HttpStream *stream, cchar *type, cchar *fmt, ...);
 PUBLIC void flash(cchar *type, cchar *fmt, ...);
 #endif /* DEPRECATED */

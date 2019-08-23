@@ -367,7 +367,15 @@ PUBLIC int ediDelete(Edi *edi, cchar *path);
     @ingroup Edi
     @stability Prototype
  */
-PUBLIC void espDumpGrid(EdiGrid *grid);
+PUBLIC void ediDumpGrid(EdiGrid *grid);
+
+/**
+    Display a record to the debug log
+    @param rec Record to log
+    @ingroup Edi
+    @stability Prototype
+ */
+PUBLIC void ediDumpRec(EdiRec *rec);
 
 /**
     Get a list of column names.
@@ -740,6 +748,22 @@ PUBLIC int ediSave(Edi *edi);
 PUBLIC EdiRec *ediSetField(EdiRec *rec, cchar *fieldName, cchar *value);
 
 /**
+    Set a record field using a format string.
+    @description This routine updates the record object with the given value. The record will not be written
+        to the database. To write to the database, use #ediUpdateRec.
+    @param rec Record to update
+    @param fieldName Record field name to update
+    @param fmt Format string
+    @param ... Variable arguments for the format string
+    @return The record instance if successful, otherwise NULL.
+    @ingroup Edi
+    @stability Evolving
+ */
+
+PUBLIC EdiRec *ediSetFieldFmt(EdiRec *rec, cchar *fieldName, cchar *fmt, ...);
+
+
+/**
     Set record fields without writing to the database.
     @description This routine updates the record object with the given values. The "data' argument supplies
         a hash of fieldNames and values. The data hash may come from the request params() or it can be manually
@@ -786,6 +810,21 @@ PUBLIC void ediSetPrivate(Edi *edi, bool on);
     @stability Evolving
  */
 PUBLIC int ediUpdateField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *value);
+
+/**
+    Write a formatted value to a database table field.
+    @description Update the value of a table field in the selected table row. Note: field validations are not run.
+    @param edi Database handle
+    @param tableName Database table name
+    @param key Key value for the table row to update.
+    @param fieldName Column name to update
+    @param fmt Value format string
+    @param ... Variable arguments for the format string
+    @return Zero if successful. Otherwise a negative MPR error code.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC int ediUpdateFieldFmt(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *fmt, ...);
 
 /**
     Write a record to the database.

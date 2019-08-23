@@ -88,7 +88,7 @@ PUBLIC int ediAddTable(Edi *edi, cchar *tableName)
 }
 
 
-static void manageValidation(EdiValidation *vp, int flags) 
+static void manageValidation(EdiValidation *vp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(vp->name);
@@ -100,7 +100,7 @@ static void manageValidation(EdiValidation *vp, int flags)
 PUBLIC int ediAddValidation(Edi *edi, cchar *name, cchar *tableName, cchar *columnName, cvoid *data)
 {
     EdiService          *es;
-    EdiValidation       *prior, *vp; 
+    EdiValidation       *prior, *vp;
     MprList             *validations;
     cchar               *errMsg, *vkey;
     int                 column, next;
@@ -121,7 +121,7 @@ PUBLIC int ediAddValidation(Edi *edi, cchar *name, cchar *tableName, cchar *colu
             return MPR_ERR_BAD_SYNTAX;
         }
         if ((vp->mdata = pcre_compile2(data, 0, 0, &errMsg, &column, NULL)) == 0) {
-            mprLog("error esp edi", 0, "Cannot compile validation pattern. Error %s at column %d", errMsg, column); 
+            mprLog("error esp edi", 0, "Cannot compile validation pattern. Error %s at column %d", errMsg, column);
             return MPR_ERR_BAD_SYNTAX;
         }
         data = 0;
@@ -213,11 +213,16 @@ PUBLIC int ediDelete(Edi *edi, cchar *path)
 }
 
 
-//  FUTURE - rename edi
-PUBLIC void espDumpGrid(EdiGrid *grid)
+PUBLIC void ediDumpGrid(EdiGrid *grid)
 {
-    mprLog("info esp edi", 0, "Grid: %s\nschema: %s,\ndata: %s", grid->tableName, 
+    mprLog("info esp edi", 0, "Grid: %s\nschema: %s,\ndata: %s", grid->tableName,
         ediGetTableSchemaAsJson(grid->edi, grid->tableName), ediGridAsJson(grid, MPR_JSON_PRETTY));
+}
+
+
+PUBLIC void ediDumpRec(EdiRec *rec)
+{
+    mprLog("info esp edi", 0, "Rec: %s", ediRecAsJson(rec, MPR_JSON_PRETTY));
 }
 
 
@@ -308,7 +313,7 @@ PUBLIC EdiField *ediGetNextField(EdiRec *rec, EdiField *fp, int offset)
         fp = &rec->fields[offset];
     } else {
         if (++fp >= &rec->fields[rec->nfields]) {
-            fp = 0;  
+            fp = 0;
         }
     }
     return fp;
@@ -328,7 +333,7 @@ PUBLIC EdiRec *ediGetNextRec(EdiGrid *grid, EdiRec *rec)
     } else {
         index = rec->index + 1;
         if (index >= grid->nrecords) {
-            rec = 0;  
+            rec = 0;
         } else {
             rec = grid->records[index];
             rec->index = index;
@@ -357,7 +362,7 @@ PUBLIC cchar *ediGetTableSchemaAsJson(Edi *edi, cchar *tableName)
     mprPutStringToBuf(buf, "{\n    \"types\": {\n");
     for (c = 0; c < ncols; c++) {
         ediGetColumnSchema(edi, tableName, mprGetItem(columns, c), &type, &flags, &cid);
-        mprPutToBuf(buf, "      \"%s\": {\n        \"type\": \"%s\"\n      },\n", 
+        mprPutToBuf(buf, "      \"%s\": {\n        \"type\": \"%s\"\n      },\n",
             (char*) mprGetItem(columns, c), ediGetTypeString(type));
     }
     if (ncols > 0) {
@@ -450,7 +455,7 @@ PUBLIC cchar *ediGetFieldValue(EdiRec *rec, cchar *fieldName)
 PUBLIC int ediGetFieldType(EdiRec *rec, cchar *fieldName)
 {
     int     type;
-    
+
     if (ediGetColumnSchema(rec->edi, rec->tableName, fieldName, &type, NULL, NULL) < 0) {
         return 0;
     }
@@ -616,7 +621,7 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
 PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
 {
     EdiGrid *grid;
-    
+
     /* OPT - slow to read entire table. Need optimized query in providers */
     if ((grid = ediReadWhere(edi, tableName, fieldName, operation, value)) == 0) {
         return 0;
@@ -777,6 +782,21 @@ PUBLIC int ediUpdateField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldNa
 }
 
 
+PUBLIC int ediUpdateFieldFmt(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *fmt, ...)
+{
+    va_list     ap;
+    cchar       *value;
+
+    if (!edi || !edi->provider) {
+        return MPR_ERR_BAD_STATE;
+    }
+    va_start(ap, fmt);
+    value = sfmtv(fmt, ap);
+    va_end(ap);
+    return edi->provider->updateField(edi, tableName, key, fieldName, value);
+}
+
+
 PUBLIC int ediUpdateRec(Edi *edi, EdiRec *rec)
 {
     if (!edi || !edi->provider) {
@@ -905,7 +925,7 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
     if (value == 0) {
         mprPutStringToBuf(buf, "null");
         return;
-    } 
+    }
     switch (fp->type) {
     case EDI_TYPE_BINARY:
         mprPutToBuf(buf, "-binary-");
@@ -956,7 +976,7 @@ static MprList *joinColumns(MprList *cols, EdiGrid *grid, MprHash *grids, int jo
     EdiField    *fp;
     Col         *col;
     cchar       *tableName;
-    
+
     if (grid->nrecords == 0) {
         return cols;
     }
@@ -965,7 +985,7 @@ static MprList *joinColumns(MprList *cols, EdiGrid *grid, MprHash *grids, int jo
 #if KEEP
         if (fp->flags & EDI_FOREIGN && follow)
 #else
-        if (sends(fp->name, "Id") && follow) 
+        if (sends(fp->name, "Id") && follow)
 #endif
         {
             tableName = strim(fp->name, "Id", MPR_TRIM_END);
@@ -1048,7 +1068,7 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
         mprAddItem(rows, rec);
         dest = rec->fields;
         current = 0;
-        for (ITERATE_ITEMS(cols, col, next)) { 
+        for (ITERATE_ITEMS(cols, col, next)) {
             if (col->grid == primary) {
                 *dest = primary->records[r]->fields[col->field];
             } else {
@@ -1274,7 +1294,7 @@ PUBLIC EdiGrid *ediPivotGrid(EdiGrid *grid, int flags)
     nrows = first->nfields;
     nfields = grid->nrecords;
     result = ediCreateBareGrid(grid->edi, grid->tableName, nrows);
-    
+
     for (c = 0; c < nrows; c++) {
         result->records[c] = rec = ediCreateBareRec(grid->edi, grid->tableName, nfields);
         fp = rec->fields;
@@ -1366,6 +1386,17 @@ PUBLIC EdiRec *ediSetField(EdiRec *rec, cchar *fieldName, cchar *value)
             return rec;
         }
     }
+    return rec;
+}
+
+
+PUBLIC EdiRec *ediSetFieldFmt(EdiRec *rec, cchar *fieldName, cchar *fmt, ...)
+{
+    va_list     ap;
+
+    va_start(ap, fmt);
+    ediSetField(rec, fieldName, sfmtv(fmt, ap));
+    va_end(ap);
     return rec;
 }
 
