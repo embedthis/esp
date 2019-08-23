@@ -3412,7 +3412,6 @@ PUBLIC void input(cchar *field, cchar *options);
 
 /**
     Test if the user is authenticated
-    @param stream HttpStream stream object
     @return True if the username and password have been authenticated.
     @ingroup EspAbbrev
     @stability Prototype
