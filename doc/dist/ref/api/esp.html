@@ -187,9 +187,12 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga06c4528395fd1b375d9ac771cf59a8b5" class="nameRef">canUser</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *abilities, <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> warn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a user has the required abilities.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gaecb1d262045b8a9b793c692c6f6df854" class="nameRef">createRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson</a> *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a record and initialize field values.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga6792082e8fe50d8f1796777ff54b3c99" class="nameRef">createRecFromParams</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *table)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a record from the request parameters.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gaa0c7f407af0140b15091227e9a8e839f" class="nameRef">createSession</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a session state object.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga35677b9aa8d61543db5ea80377e823a6" class="nameRef">destroySession</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Destroy a session state object.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2" class="nameRef">dontAutoFinalize</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Don&apos;t auto-finalize this request.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gafd8e418ad6839251b5f058f7bd2c1c3b" class="nameRef">createSession</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a session state object.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga03cbcd66ad537a10bcf4b979d211f5c1" class="nameRef">destroySession</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Destroy a session state object.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gaff2494fbe89907f66d1a00bfc3c0f53b" class="nameRef">dontAutoFinalize</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Don&apos;t auto-finalize this request.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga3e68a43b4ec780b8b02ef2a50c283c97" class="nameRef">dumpGrid</a>(<a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display the grid to the debug log.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga64319d753c67ea605a794f4fb51d6747" class="nameRef">dumpRec</a>(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display a record to the debug log.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gac9762e5dbeee8f48072d7d21a38994ad" class="nameRef">espAction</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *targetKey, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *roles, <a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="ref">EspProc</a> actionProc)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define an action.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga4f8a144e4388122909991a0402b92550" class="nameRef">espAddHeader</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a header to the transmission using a format string.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga98fdeb62e229b97f5fe8049298d5c7fc" class="nameRef">espAddHeaderString</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a header to the transmission.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gaa6e0943224a139d93f465b7ff2060c36" class="nameRef">espAddHomeRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a route for the home page.</td></tr>
@@ -206,15 +209,15 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_route_1gaa6f62a5bb430f502b6067cac74d948e4" class="nameRef">espCompile</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher</a> *dispatcher, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *source, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *module, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *cacheName, int isView, char **errMsg)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Compile an ESP page, controller or view.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#esp_8h_1a0ac80522752809c14f74ccaf02e48de5" class="nameRef">espCreateRoute</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create an EspRoute object.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga133ce6a404cb05682846cbe3f478b7da" class="nameRef">espCreateSession</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a session state object.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1ga321abe89cc91246b2a44f40493988670" class="nameRef">espDefineAction</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *targetKey, void *actionProc)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define an action.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gae250d071bb458546c8ed5fad3aba5e84" class="nameRef">espDefineBase</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="#esp_8h_1a9aa8875a61708ca23b81b72b1fcf19bc" class="ref">EspProc</a> baseProc)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a base function to invoke for all controller actions.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gada1accc3d8bdf9b474239d695353035d" class="nameRef">espDefineAction</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *targetKey, <a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="ref">EspProc</a> actionProc)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define an action.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gae250d071bb458546c8ed5fad3aba5e84" class="nameRef">espDefineBase</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="ref">EspProc</a> baseProc)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a base function to invoke for all controller actions.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_route_1gab7ebccfe31eb1e07f3f40db700d18bd9" class="nameRef">espDefineView</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path, void *viewProc)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a view.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga49dfd97fc85a367ccf7d146454b52cbc" class="nameRef">espDestroySession</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Destroy a session state object.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#esp_8h_1a0fafa076a86bf29ec11d07515817da3c" class="nameRef">espEmail</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *to, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *from, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *subject, <a href="edi.html#mpr.html#group___mpr_time" class="ref">MprTime</a> date, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *mime, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList</a> *files)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send mail using sendmail.</td></tr>
 <tr class="apiDef"><td class="apiType">char*</td><td><a href="#group___esp_route_1gac85c52178c5b387706bb31b419f9f059" class="nameRef">espExpandCommand</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *command, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *source, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *module)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Expand a compile or link command template.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1gafa8c60c6ae199dd31fa92c4dbbaa7c2d" class="nameRef">espFinalize</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Indicate the request is finalized.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga117d4806f7e97f74d2803065bb7f69f3" class="nameRef">espFlush</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_req_1ga71e492b0a2ad58a5eb75616556da4f92" class="nameRef">espGetAuth</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current route HttpAuth object.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_req_1ga48e9736ae0f7cecdb695a4db5f343647" class="nameRef">espGetAuth</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current route HttpAuth object.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_route_1ga97b13560e8c066d70810b2df3e8d7f78" class="nameRef">espGetConfig</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *defaultValue)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a configuration value from the ESP pak.json.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a></td><td><a href="#group___esp_req_1ga8428a4283b20243796432100eba44e58" class="nameRef">espGetContentLength</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content length.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1gada38f3320f81f64a5e3250db87eae7c4" class="nameRef">espGetContentType</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content type.</td></tr>
@@ -236,13 +239,13 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga38effdaea7a82a291a25429b27615ae5" class="nameRef">espGetPath</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request URI path string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1gaff49a2cdac7305eff44fd5b880af0375" class="nameRef">espGetQueryString</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request query string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga245c96379910e75e222361c7da8bf7a7" class="nameRef">espGetReferrer</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the referring URI.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_route" class="ref">HttpRoute*</a></td><td><a href="#group___esp_req_1ga769c951ecdea1f7ab0666eb54e5419df" class="nameRef">espGetRoute</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current route HttpRoute object.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_route" class="ref">HttpRoute*</a></td><td><a href="#group___esp_req_1ga93d00311d73833d28cc1ae4ae4f96de7" class="nameRef">espGetRoute</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current route HttpRoute object.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi" class="ref">Edi*</a></td><td><a href="#group___esp_req_1ga72246c1dc89e871ec596ae0959077af2" class="nameRef">espGetRouteDatabase</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the default database defined on a route.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga76d41fbdcef5bb1e55bb0ce775f9b9c2" class="nameRef">espGetRouteVar</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a route variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga0b83d3dc52626e002247af6df4ef7d74" class="nameRef">espGetSessionID</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, int create)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the session state ID.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_req_1gac69ab5a3aefeb52ee610c97a782f5be8" class="nameRef">espGetStatus</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the response status.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga59410743c09731439663be5f50e1d60b" class="nameRef">espGetStatusMessage</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the Http response status message.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_stream" class="ref">HttpStream*</a></td><td><a href="#group___esp_req_1gacae6982e378c61364b63b7ec06962098" class="nameRef">espGetStream</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current request stream.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_stream" class="ref">HttpStream*</a></td><td><a href="#group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803" class="nameRef">espGetStream</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current request stream.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___esp_req_1ga72875560f986b06bc26f40a991dc8fbb" class="nameRef">espGetUploads</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the uploaded files.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1gadfc219b6afc94969548fdef4d651ecee" class="nameRef">espGetUri</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request URI string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gadb37c44514aa605a811280e2fdee9329" class="nameRef">espHasGrid</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current grid has been defined.</td></tr>
@@ -250,7 +253,8 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga1b26f1c2f8e1f78024f076464c1483dc" class="nameRef">espHasRec</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current record has been defined and save to the database.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_route_1gaca1c2bea3bde8c348d3d70c35ef21667" class="nameRef">espInit</a>(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *prefix, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Initialize ESP.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#esp_8h_1a56eafbf70fb0509e85aa5070becbaca6" class="nameRef">espInitHtmlOptions</a>(<a href="#struct_esp" class="ref">Esp</a> *esp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add HTLM internal options to the Esp.options hash.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#esp_8h_1ab4f5a8bba279335541372845ab87e094" class="nameRef">espInitParser</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Initialize the ESP configuration file parser.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#esp_8h_1a240f55c3789229bd59ec4c2c4b5c1557" class="nameRef">espInitParser</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Initialize the ESP configuration file parser.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1gaba5e635fa31811599d1d3c156164f1bf" class="nameRef">espIsAuthenticated</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the user is authenticated.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga87aa523e2a34d6c1db9355d16746ba83" class="nameRef">espIsCurrentSession</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the request is being made on behalf of the current, single authenticated user.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga911251b3456386c09a53a33c2f063c07" class="nameRef">espIsEof</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the receive input stream is at end-of-file.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga1a37202ca271308e8742ad69af29443b" class="nameRef">espIsFinalized</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the request has been finalized.</td></tr>
@@ -309,53 +313,54 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_req_1ga30c12797ca0400feda759dbc26485b56" class="nameRef">espUpdateRec</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a record to the database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga47472c968efbe0ba27b1b158887da6c1" class="nameRef">espUri</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gac782d72d3f7c11dce5c48befaff8ac0a" class="nameRef">feedback</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a feedback message.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c" class="nameRef">finalize</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Finalize the response.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gadac116554b543b7c4228c018a85882f5" class="nameRef">flush</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_abbrev_1ga35c88eaa69d732f54eb5829a85dffcce" class="nameRef">getAuth</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the auth object for the current route.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga061eb4d725222504949f9eb49c619fd5" class="nameRef">finalize</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Finalize the response.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga0a9e9396972b76c5947592479860020d" class="nameRef">flush</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_abbrev_1ga651bbfd7b411eaf2da2fa9e47bdd1584" class="nameRef">getAuth</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the auth object for the current route.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___esp_abbrev_1ga4ab3c77c072c0e1b7a21439a85240d7e" class="nameRef">getColumns</a>(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a list of column names.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga9647d3deb6392c55c9c1a144da45f797" class="nameRef">getConfig</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a field from the application pak.json configuration.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a></td><td><a href="#group___esp_abbrev_1gad6c78e62403541ae5c8695a126fa73d2" class="nameRef">getContentLength</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content length.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga0c4e333f8e42f16b3d071f10de8f823c" class="nameRef">getContentType</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content type.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga9e29353c73f7482f1b04657c044804a9" class="nameRef">getCookies</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request cookies.</td></tr>
-<tr class="apiDef"><td class="apiType">void*</td><td><a href="#group___esp_abbrev_1ga47d7be20d82041d251a6bb6ed3575b7d" class="nameRef">getData</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the private data reference for the current request set via <a class="ref" href="#group___esp_abbrev_1ga0e9f5142b6aa4d7c3695ef62a9e348b3">setData</a></td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi" class="ref">Edi*</a></td><td><a href="#group___esp_abbrev_1ga9aa7c416a3ac3b6d732c1325e3f2ef15" class="nameRef">getDatabase</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current database instance.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher*</a></td><td><a href="#group___esp_abbrev_1ga93b589637883c1707073619898354ff1" class="nameRef">getDispatcher</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the stream dispatcher object.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gadcce96e047630e80fc6283689be47ae0" class="nameRef">getDocuments</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the default document root directory for the request route.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#group___esp_abbrev_1ga29c40a3c98f7e8b07c4bab47a29d8ade" class="nameRef">getEspRoute</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the extended route EspRoute structure.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a></td><td><a href="#group___esp_abbrev_1gaffb7a50a3516099525ab1c1ca126f84e" class="nameRef">getContentLength</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content length.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga84b524f379282beaba700a273a981735" class="nameRef">getContentType</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the receive body content type.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gae268d333661e4ff0fccef953ac1871a9" class="nameRef">getCookies</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request cookies.</td></tr>
+<tr class="apiDef"><td class="apiType">void*</td><td><a href="#group___esp_abbrev_1ga779fdc15ae8488b0eb564242724897c7" class="nameRef">getData</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the private data reference for the current request set via <a class="ref" href="#group___esp_abbrev_1ga0e9f5142b6aa4d7c3695ef62a9e348b3">setData</a></td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi" class="ref">Edi*</a></td><td><a href="#group___esp_abbrev_1gace84213f938b7f5ab66f45da0d66bea8" class="nameRef">getDatabase</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current database instance.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher*</a></td><td><a href="#group___esp_abbrev_1gac412f9805ef6d334283832762c8758c7" class="nameRef">getDispatcher</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the stream dispatcher object.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gadf3908de0de90bb994420a2bbdccfd38" class="nameRef">getDocuments</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the default document root directory for the request route.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___esp_route" class="ref">EspRoute*</a></td><td><a href="#group___esp_abbrev_1ga81221f706195387c33632f295a384495" class="nameRef">getEspRoute</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the extended route EspRoute structure.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga35b754641777f940d7902f1887cbda55" class="nameRef">getFeedback</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a feedback message defined via <a class="ref" href="#group___esp_abbrev_1gac782d72d3f7c11dce5c48befaff8ac0a">feedback</a></td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gac52ae6c15d4dc95d264a15235187f915" class="nameRef">getField</a>(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a field from the current database record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gaca4c0e5a528f05f835631b4f60b2917c" class="nameRef">getFieldError</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a field in the current record has input validation errors.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1ga2e60477a5b4168f59758c93507b4b899" class="nameRef">getGrid</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current database grid.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1ga3e38d508316931b7ae336e76e0bdb8a8" class="nameRef">getGrid</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current database grid.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga3a9e6969b5beb4c554ec9032b322c0fe" class="nameRef">getHeader</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get an rx http header.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga6cb98a81fac3b68ef772a6cc7a37a156" class="nameRef">getMethod</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HTTP method.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gaaa8e74bb48500059683a45d7a4126d94" class="nameRef">getPath</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request URI path string.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga2382c30fce39d310820e556415abb763" class="nameRef">getQuery</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HTTP URI query string.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349" class="nameRef">getRec</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current database record.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gaefcc3825a86579c9c2669e239f8b1431" class="nameRef">getReferrer</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the referring URI.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___esp_req" class="ref">EspReq*</a></td><td><a href="#group___esp_abbrev_1ga3dea06818770c33f63a8b60f793a6999" class="nameRef">getReq</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the ESP request object.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_route" class="ref">HttpRoute*</a></td><td><a href="#group___esp_abbrev_1ga3e7e849481e913c3971b7e0bf73ce088" class="nameRef">getRoute</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HttpRoute object for the current route.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga9b8a2c16e5e9dfa287b466b5d580a3e3" class="nameRef">getSecurityToken</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the security token.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gaff139c388f84eb5e478f2391c1fedafb" class="nameRef">getSessionID</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the session state ID.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga3657efaa1e51a7053167d4dc19b7ffc7" class="nameRef">getMethod</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HTTP method.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga11a8fab091700ea6fda0272f506cbe2a" class="nameRef">getPath</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request URI path string.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga1e64f32a0ae1f02c720cc88afdf732ef" class="nameRef">getQuery</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HTTP URI query string.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026" class="nameRef">getRec</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the current database record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gad1d00c8067d56cd21e541f7b38302b9e" class="nameRef">getReferrer</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the referring URI.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___esp_req" class="ref">EspReq*</a></td><td><a href="#group___esp_abbrev_1ga58c7660a9f8d6ffb1628ef6193923b16" class="nameRef">getReq</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the ESP request object.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_route" class="ref">HttpRoute*</a></td><td><a href="#group___esp_abbrev_1gab5a8bc264b8f807cc6d0fbcf60c5036a" class="nameRef">getRoute</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HttpRoute object for the current route.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga92e6ff4802af91997ae38c5dff9085d1" class="nameRef">getSecurityToken</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the security token.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga239b3a284ed503443e493c4df79240bd" class="nameRef">getSessionID</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the session state ID.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga241f0cd4f5d49f8a137f1024415b2674" class="nameRef">getSessionVar</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a session state variable.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_stream" class="ref">HttpStream*</a></td><td><a href="#group___esp_abbrev_1ga2cf1d30ceeae743cdacc3f4b8b512c8c" class="nameRef">getStream</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HttpStream object.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___esp_abbrev_1ga12e7ea4b97725ef6cf2cb4aa02d6f21b" class="nameRef">getUploads</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the uploaded files.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga1562f14a38ec9ace0787756964e51cda" class="nameRef">getUri</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request URI string.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga25287207066ad592e465b36148439e2d" class="nameRef">hasGrid</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current grid has been defined.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga9ae793b0c68219491acb86735fa7a4d8" class="nameRef">hasRec</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current record has been defined and save to the database.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_stream" class="ref">HttpStream*</a></td><td><a href="#group___esp_abbrev_1ga153892a3acf416dc1404e30206d8d340" class="nameRef">getStream</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the HttpStream object.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___esp_abbrev_1gac9050b6d24d299c5272fc0dd57c7c868" class="nameRef">getUploads</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the uploaded files.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga7f9a4115f52985c9609d4b1dcc0474b0" class="nameRef">getUri</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request URI string.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gaee6d5f8de45b641f364b59b855e395d3" class="nameRef">hasGrid</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current grid has been defined.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga024fdd517ead11d0c3247b53b0509eee" class="nameRef">hasRec</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a current record has been defined and save to the database.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gaa3f886ac8ecb0b4f2f6decb1da1f5c82" class="nameRef">input</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *field, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *options)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an input field as part of a form.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga4db83aca814319dcd588e114176d0a09" class="nameRef">inputSecurityToken</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an input field with a hidden XSRF security token.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga36e02fce10743365c3be3f4d7311bcb6" class="nameRef">isEof</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the receive input stream is at end-of-file.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga2c49e32dea0137b5bd9516c217b47fe5" class="nameRef">isFinalized</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a http request is finalized.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga609397e6582775d72e233942fb46cec8" class="nameRef">isSecure</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the stream is using SSL and is secure.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga93fc43b556cd29f99195a236b3c4f2c6" class="nameRef">inputSecurityToken</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an input field with a hidden XSRF security token.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga38c15bc6da6061193e4ece0be7222b3a" class="nameRef">isAuthenticated</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the user is authenticated.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gae9563514d2bce554b8fb7e74144ceb4a" class="nameRef">isEof</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the receive input stream is at end-of-file.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga76ec4206bd2235bfc5d7ae3189fe9fd6" class="nameRef">isFinalized</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if a http request is finalized.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gae69c795a239fe68b0f60b36c8cc546ea" class="nameRef">isSecure</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the stream is using SSL and is secure.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#struct_mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___esp_abbrev_1gae478be50b70b65cbc43e79a2f7e87ad3" class="nameRef">makeHash</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a hash table container of property values.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___esp_abbrev_1ga3e4e27c82fe15a0e658412b26747e0d4" class="nameRef">makeJson</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a JSON object container of property values.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1ga0292bb1e6965cb8befad09d4ce7a2839" class="nameRef">makeRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *content)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1gad221f00eaacb1253a8e9d0f29e11c55e" class="nameRef">makeUri</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga1d0fda1c77c88bd3b74df6572365b1f3" class="nameRef">md5</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *str)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get an MD5 checksum.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga9514f98ecae65f2654ad8a42c9549b62" class="nameRef">modeIs</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *check)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test the the application mode.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga22f8d5c52a1ee9eedf326acf2737a4fd" class="nameRef">nonce</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Generate a onetime random string.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga051c9777e0134ff070467a02e38466a8" class="nameRef">nonce</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Generate a onetime random string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c" class="nameRef">param</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a request parameter.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___esp_abbrev_1gac880717bdc6e6f631de7c5c95491df53" class="nameRef">params</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request parameter hash table.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___esp_abbrev_1ga7e1a25d3f0fb64f31fbed43e37f1e910" class="nameRef">params</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the request parameter hash table.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gaebd6eb20a67d36dca94880e1545dfe1b" class="nameRef">readRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read the identified record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gaa26e4e1c0388326035e93a9334f6e0ba" class="nameRef">readRecByKey</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record identified by key value.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1ga36f33afdfe9bdd2a583f43d2af4ed060" class="nameRef">readRecWhere</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read one record.</td></tr>
@@ -363,13 +368,13 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1gaf240f97d3c1081236e74be34c03305c7" class="nameRef">readWhere</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1ga3a7af8bca824b7941d058eeb598194ca" class="nameRef">receive</a>(char *buf, <a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a> size)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read receive body content.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga79cf206805a9595395af14e7c35f289d" class="nameRef">redirect</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Redirect the client.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gad75c0fe1f7da45beaec75d3cddf7bdb4" class="nameRef">redirectBack</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Redirect the client back to the referrer.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga5ac5ea8fa8f059beb45ada13785117bf" class="nameRef">redirectBack</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Redirect the client back to the referrer.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga1a0cf9222507a1e1472cf53856bebb2c" class="nameRef">removeCookie</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a cookie.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga09091b0bc981b74fdf0b197fbee8adab" class="nameRef">removeRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a record from a database table.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga7a4f867b83fd68a2f888fe2850572d6e" class="nameRef">removeSessionVar</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a session state variable.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1gaf89154adc3cbf6d6a6a32c6b4457c593" class="nameRef">render</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a formatted string.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1gaa3ab885ce858d809f47571c64681b96d" class="nameRef">renderCached</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render cached content.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1ga680e8d96388553f684b29b6007e2411a" class="nameRef">renderConfig</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the pak.json.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1ga9f033233a59a6e976d92be561cfbe7e2" class="nameRef">renderCached</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render cached content.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1ga2353b590d91fb2f98b77a8efd4ee8f36" class="nameRef">renderConfig</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render the pak.json.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga5c6a2717cd75e9e0069b206507e5207e" class="nameRef">renderError</a>(int status, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an error message back to the client and finalize the request.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gacf71df9dabcd97ec88211ef4561c5033" class="nameRef">renderFeedback</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *types)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render feedback messages.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_abbrev_1gaa1e37f244a0e0796df494dfb756472a8" class="nameRef">renderFile</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render a file back to the client.</td></tr>
@@ -379,7 +384,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gaf0db430f850378bd83c514a0dda77fb9" class="nameRef">renderView</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *view)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render an ESP page to the client.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_abbrev_1ga1d226bb7d309a4586b862d409f53ab9f" class="nameRef">runCmd</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *command, char *input, char **output, char **error, <a href="edi.html#mpr.html#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> timeout, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Run a command.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga55805dac6f16fafd2fdc18df732b7b46" class="nameRef">scripts</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *patterns)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render scripts.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gab3444f174346e0d8e8d4d3a43d451c5e" class="nameRef">securityToken</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add the security token to the response.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1gac543bc47fde0b8a6fc995a6eb66ad080" class="nameRef">securityToken</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add the security token to the response.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gab8d6f093fa851a73a6e80b20ea1cbc9d" class="nameRef">sendGrid</a>(<a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a Edatabase grid as a JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a></td><td><a href="#group___esp_req_1gaa7f2ab9ce2162dcc0a10f82e74a92d80" class="nameRef">sendRec</a>(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a database record as a JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_req_1ga5a39a9b8619ef0cc07818c3a79eb023c" class="nameRef">sendResult</a>(<a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> status)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Send a JSON response result.</td></tr>
@@ -399,7 +404,7 @@
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga63470999d986c7d2d064dc44cdc2fcac" class="nameRef">setStatus</a>(int status)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a Http response status.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga1487b30d79697bba676f039a03ff744b" class="nameRef">setStream</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set the current request stream.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga07243a4b521119ce41362163afb45032" class="nameRef">setTimeout</a>(void *proc, <a href="edi.html#mpr.html#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" class="ref">MprTicks</a> timeout, void *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a timeout event.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga70074b92c4e5b0381a6a61f9e0f8e2cc" class="nameRef">showRequest</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Show request details.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga0207a5efd3abae696bbe759f5f453c0f" class="nameRef">showRequest</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Show request details.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga61c6ed68dcee1735502c33d2f362d5c7" class="nameRef">stylesheets</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *patterns)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Render stylesheets.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga71ab6f699454ab16232f98c28a47935c" class="nameRef">updateCache</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *uri, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *data, int lifesecs)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Update the cached content for a request.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1ga8aef62e678a3e5602d8dd4b2b85db394" class="nameRef">updateField</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a value to a database table field.</td></tr>
@@ -411,9 +416,8 @@
 <a name="Typedefs"></a><h1>Typedefs</h1>
 <table class="apiIndex" title="typedefs">
 <tr class="apiDef"><td class="apiName"><a href="#struct_esp" class="nameRef">Esp</a></td><td class="apiBrief">Top level ESP structure.</td></tr>
-<tr class="apiDef"><td class="apiName"><a href="#group___esp_req_1ga60cdb8438d2c59c8014fe550129fbc0d" class="nameRef">EspAction</a></td><td class="apiBrief">ESP Action.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___esp_route_1ga8de65adb179b1ab04bf7c1d621ffff9c" class="nameRef">EspModuleEntry</a></td><td class="apiBrief">Entry point for a loadable ESP module.</td></tr>
-<tr class="apiDef"><td class="apiName"><a href="#esp_8h_1a9aa8875a61708ca23b81b72b1fcf19bc" class="nameRef">EspProc</a></td><td class="apiBrief">Procedure callback.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="nameRef">EspProc</a></td><td class="apiBrief">Procedure callback.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___esp_req_1ga36c7632f31238cf472b80f1676146ade" class="nameRef">EspViewProc</a></td><td class="apiBrief">View procedure callback.</td></tr>
 </table>
 <a name="Defines"></a><h1>Defines</h1>
@@ -560,7 +564,7 @@
   </div>
   <div class="apiDetail">
 <p>Create a record and initialize field values.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This will call <a class="ref" href="#group___edi_1gad4e706a1a2d9ff527c9d42612ebeeae1" external="edi.dtags">ediCreateRec</a> to create a record based on the given table&apos;s schema. It will then call <a class="ref" href="#group___edi_1ga916af8d529a028643e87b3b8c8973a85" external="edi.dtags">ediSetFields</a> to update the record with the given data. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349">getRec()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This will call <a class="ref" href="#group___edi_1gad4e706a1a2d9ff527c9d42612ebeeae1" external="edi.dtags">ediCreateRec</a> to create a record based on the given table&apos;s schema. It will then call <a class="ref" href="#group___edi_1ga916af8d529a028643e87b3b8c8973a85" external="edi.dtags">ediSetFields</a> to update the record with the given data. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026">getRec()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -581,7 +585,7 @@
   </div>
   <div class="apiDetail">
 <p>Create a record from the request parameters.</p>
-    <dl><dt><b>Description</b>:</dt><dd>A new record is created with the request parameters in the specified table. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349">getRec()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>A new record is created with the request parameters in the specified table. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026">getRec()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">table</td><td>Database table to update.</td>
@@ -592,12 +596,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gaa0c7f407af0140b15091227e9a8e839f"></a>
+<a name="group___esp_abbrev_1gafd8e418ad6839251b5f058f7bd2c1c3b"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     createSession
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Create a session state object.</p>
@@ -608,12 +612,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga35677b9aa8d61543db5ea80377e823a6"></a>
+<a name="group___esp_abbrev_1ga03cbcd66ad537a10bcf4b979d211f5c1"></a>
 <div class="api">
   <div class="prototype">
     void
     destroySession
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Destroy a session state object.</p>
@@ -623,16 +627,52 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga9db9b8b7e2c750f6f942da0478866de2"></a>
+<a name="group___esp_abbrev_1gaff2494fbe89907f66d1a00bfc3c0f53b"></a>
 <div class="api">
   <div class="prototype">
     void
     dontAutoFinalize
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Don&apos;t auto-finalize this request.</p>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___esp_abbrev_1ga3e68a43b4ec780b8b02ef2a50c283c97"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    dumpGrid
+(<a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *grid)
+  </div>
+  <div class="apiDetail">
+<p>Display the grid to the debug log.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">grid</td><td>EDI grid.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___esp_abbrev_1ga64319d753c67ea605a794f4fb51d6747"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    dumpRec
+(<a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *rec)
+  </div>
+  <div class="apiDetail">
+<p>Display a record to the debug log.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">rec</td><td>Record to log.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -658,12 +698,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga32d626626eee0bc4ade146973f6abb1c"></a>
+<a name="group___esp_abbrev_1ga061eb4d725222504949f9eb49c619fd5"></a>
 <div class="api">
   <div class="prototype">
     void
     finalize
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Finalize the response.</p>
@@ -673,12 +713,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gadac116554b543b7c4228c018a85882f5"></a>
+<a name="group___esp_abbrev_1ga0a9e9396972b76c5947592479860020d"></a>
 <div class="api">
   <div class="prototype">
     void
     flush
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Flush transmit data.</p>
@@ -688,12 +728,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga35c88eaa69d732f54eb5829a85dffcce"></a>
+<a name="group___esp_abbrev_1ga651bbfd7b411eaf2da2fa9e47bdd1584"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth</a> *
     getAuth
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the auth object for the current route.</p>
@@ -740,12 +780,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gad6c78e62403541ae5c8695a126fa73d2"></a>
+<a name="group___esp_abbrev_1gaffb7a50a3516099525ab1c1ca126f84e"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#mpr.html#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" class="ref">MprOff</a>
     getContentLength
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the receive body content length.</p>
@@ -756,12 +796,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga0c4e333f8e42f16b3d071f10de8f823c"></a>
+<a name="group___esp_abbrev_1ga84b524f379282beaba700a273a981735"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getContentType
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the receive body content type.</p>
@@ -772,12 +812,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga9e29353c73f7482f1b04657c044804a9"></a>
+<a name="group___esp_abbrev_1gae268d333661e4ff0fccef953ac1871a9"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getCookies
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the request cookies.</p>
@@ -788,12 +828,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga47d7be20d82041d251a6bb6ed3575b7d"></a>
+<a name="group___esp_abbrev_1ga779fdc15ae8488b0eb564242724897c7"></a>
 <div class="api">
   <div class="prototype">
     void *
     getData
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the private data reference for the current request set via <a class="ref" href="#group___esp_abbrev_1ga0e9f5142b6aa4d7c3695ef62a9e348b3">setData</a></p>
@@ -803,12 +843,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga9aa7c416a3ac3b6d732c1325e3f2ef15"></a>
+<a name="group___esp_abbrev_1gace84213f938b7f5ab66f45da0d66bea8"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#group___edi" class="ref">Edi</a> *
     getDatabase
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the current database instance.</p>
@@ -819,12 +859,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga93b589637883c1707073619898354ff1"></a>
+<a name="group___esp_abbrev_1gac412f9805ef6d334283832762c8758c7"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#mpr.html#group___mpr_dispatcher" class="ref">MprDispatcher</a> *
     getDispatcher
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the stream dispatcher object.</p>
@@ -834,12 +874,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gadcce96e047630e80fc6283689be47ae0"></a>
+<a name="group___esp_abbrev_1gadf3908de0de90bb994420a2bbdccfd38"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getDocuments
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the default document root directory for the request route.</p>
@@ -849,12 +889,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga29c40a3c98f7e8b07c4bab47a29d8ade"></a>
+<a name="group___esp_abbrev_1ga81221f706195387c33632f295a384495"></a>
 <div class="api">
   <div class="prototype">
     <a href="#group___esp_route" class="ref">EspRoute</a> *
     getEspRoute
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the extended route EspRoute structure.</p>
@@ -917,12 +957,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga2e60477a5b4168f59758c93507b4b899"></a>
+<a name="group___esp_abbrev_1ga3e38d508316931b7ae336e76e0bdb8a8"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *
     getGrid
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the current database grid.</p>
@@ -953,44 +993,44 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gaaa8e74bb48500059683a45d7a4126d94"></a>
+<a name="group___esp_abbrev_1ga11a8fab091700ea6fda0272f506cbe2a"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getPath
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the request URI path string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI path. This is the portion after the application/route prefix.</dd></dl>
-    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1gacae6982e378c61364b63b7ec06962098">espGetStream()</a>-&gt;rx-&gt;pathInfo.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803">espGetStream()</a>-&gt;rx-&gt;pathInfo.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga2382c30fce39d310820e556415abb763"></a>
+<a name="group___esp_abbrev_1ga1e64f32a0ae1f02c720cc88afdf732ef"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getQuery
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the HTTP URI query string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the query string for the current request.</dd></dl>
-    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1gacae6982e378c61364b63b7ec06962098">espGetStream()</a>-&gt;rx-&gt;parsedUri-&gt;query property.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803">espGetStream()</a>-&gt;rx-&gt;parsedUri-&gt;query property.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349"></a>
+<a name="group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *
     getRec
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the current database record.</p>
@@ -1000,12 +1040,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gaefcc3825a86579c9c2669e239f8b1431"></a>
+<a name="group___esp_abbrev_1gad1d00c8067d56cd21e541f7b38302b9e"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getReferrer
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the referring URI.</p>
@@ -1016,12 +1056,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga3dea06818770c33f63a8b60f793a6999"></a>
+<a name="group___esp_abbrev_1ga58c7660a9f8d6ffb1628ef6193923b16"></a>
 <div class="api">
   <div class="prototype">
     <a href="#group___esp_req" class="ref">EspReq</a> *
     getReq
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the ESP request object.</p>
@@ -1031,12 +1071,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga3e7e849481e913c3971b7e0bf73ce088"></a>
+<a name="group___esp_abbrev_1gab5a8bc264b8f807cc6d0fbcf60c5036a"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *
     getRoute
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the HttpRoute object for the current route.</p>
@@ -1045,12 +1085,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga9b8a2c16e5e9dfa287b466b5d580a3e3"></a>
+<a name="group___esp_abbrev_1ga92e6ff4802af91997ae38c5dff9085d1"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getSecurityToken
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the security token.</p>
@@ -1061,12 +1101,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gaff139c388f84eb5e478f2391c1fedafb"></a>
+<a name="group___esp_abbrev_1ga239b3a284ed503443e493c4df79240bd"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getSessionID
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the session state ID.</p>
@@ -1097,12 +1137,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga2cf1d30ceeae743cdacc3f4b8b512c8c"></a>
+<a name="group___esp_abbrev_1ga153892a3acf416dc1404e30206d8d340"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *
     getStream
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the HttpStream object.</p>
@@ -1113,12 +1153,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga12e7ea4b97725ef6cf2cb4aa02d6f21b"></a>
+<a name="group___esp_abbrev_1gac9050b6d24d299c5272fc0dd57c7c868"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#mpr.html#group___mpr_list" class="ref">MprList</a> *
     getUploads
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the uploaded files.</p>
@@ -1129,28 +1169,28 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga1562f14a38ec9ace0787756964e51cda"></a>
+<a name="group___esp_abbrev_1ga7f9a4115f52985c9609d4b1dcc0474b0"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getUri
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the request URI string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI.</dd></dl>
-    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1gacae6982e378c61364b63b7ec06962098">espGetStream()</a>-&gt;rx-&gt;uri.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803">espGetStream()</a>-&gt;rx-&gt;uri.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga25287207066ad592e465b36148439e2d"></a>
+<a name="group___esp_abbrev_1gaee6d5f8de45b641f364b59b855e395d3"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
     hasGrid
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Test if a current grid has been defined.</p>
@@ -1160,12 +1200,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga9ae793b0c68219491acb86735fa7a4d8"></a>
+<a name="group___esp_abbrev_1ga024fdd517ead11d0c3247b53b0509eee"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
     hasRec
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Test if a current record has been defined and save to the database.</p>
@@ -1196,12 +1236,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga4db83aca814319dcd588e114176d0a09"></a>
+<a name="group___esp_abbrev_1ga93fc43b556cd29f99195a236b3c4f2c6"></a>
 <div class="api">
   <div class="prototype">
     void
     inputSecurityToken
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Render an input field with a hidden XSRF security token.</p>
@@ -1211,12 +1251,27 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga36e02fce10743365c3be3f4d7311bcb6"></a>
+<a name="group___esp_abbrev_1ga38c15bc6da6061193e4ece0be7222b3a"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
+    isAuthenticated
+(void )
+  </div>
+  <div class="apiDetail">
+<p>Test if the user is authenticated.</p>
+    <dl><dt>Returns:</dt><dd>True if the username and password have been authenticated.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___esp_abbrev_1gae9563514d2bce554b8fb7e74144ceb4a"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
     isEof
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Test if the receive input stream is at end-of-file.</p>
@@ -1226,12 +1281,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga2c49e32dea0137b5bd9516c217b47fe5"></a>
+<a name="group___esp_abbrev_1ga76ec4206bd2235bfc5d7ae3189fe9fd6"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
     isFinalized
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Test if a http request is finalized.</p>
@@ -1242,12 +1297,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga609397e6582775d72e233942fb46cec8"></a>
+<a name="group___esp_abbrev_1gae69c795a239fe68b0f60b36c8cc546ea"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
     isSecure
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Test if the stream is using SSL and is secure.</p>
@@ -1359,12 +1414,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga22f8d5c52a1ee9eedf326acf2737a4fd"></a>
+<a name="group___esp_abbrev_1ga051c9777e0134ff070467a02e38466a8"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     nonce
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Generate a onetime random string.</p>
@@ -1394,12 +1449,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gac880717bdc6e6f631de7c5c95491df53"></a>
+<a name="group___esp_abbrev_1ga7e1a25d3f0fb64f31fbed43e37f1e910"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson</a> *
     params
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the request parameter hash table.</p>
@@ -1419,7 +1474,7 @@ This is a smart input control that will call the appropriate input control based
   </div>
   <div class="apiDetail">
 <p>Read the identified record.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Read the record identified by the request param(&quot;id&quot;) from the nominated table. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349">getRec()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Read the record identified by the request param(&quot;id&quot;) from the nominated table. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026">getRec()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -1440,7 +1495,7 @@ This is a smart input control that will call the appropriate input control based
   </div>
   <div class="apiDetail">
 <p>Read a record identified by key value.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Read a record from the given table as identified by the key value. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349">getRec()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Read a record from the given table as identified by the key value. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026">getRec()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -1461,7 +1516,7 @@ This is a smart input control that will call the appropriate input control based
   </div>
   <div class="apiDetail">
 <p>Read one record.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and selects the first matching record. The query selects a row that has a &quot;field&quot; that matches the given &quot;value&quot;. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga8a4d997f211531f9ad4a21133f761349">getRec()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and selects the first matching record. The query selects a row that has a &quot;field&quot; that matches the given &quot;value&quot;. The record is remembered for this request as the &quot;current&quot; record and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga91bd4d1b15a77af02ec9a636299ab026">getRec()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -1484,7 +1539,7 @@ This is a smart input control that will call the appropriate input control based
   </div>
   <div class="apiDetail">
 <p>Read all the records in table from the database.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This reads a table and returns a grid containing the table data. The grid of records is remembered for this request as the &quot;current&quot; grid and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga2e60477a5b4168f59758c93507b4b899">getGrid()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This reads a table and returns a grid containing the table data. The grid of records is remembered for this request as the &quot;current&quot; grid and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga3e38d508316931b7ae336e76e0bdb8a8">getGrid()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -1504,7 +1559,7 @@ This is a smart input control that will call the appropriate input control based
   </div>
   <div class="apiDetail">
 <p>Read matching records.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and returns matching records in a grid. The query selects all rows that have a &quot;field&quot; that matches the given &quot;value&quot;. The grid of records is remembered for this request as the &quot;current&quot; grid and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga2e60477a5b4168f59758c93507b4b899">getGrid()</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and returns matching records in a grid. The query selects all rows that have a &quot;field&quot; that matches the given &quot;value&quot;. The grid of records is remembered for this request as the &quot;current&quot; grid and can be retrieved via: <a class="ref" href="#group___esp_abbrev_1ga3e38d508316931b7ae336e76e0bdb8a8">getGrid()</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -1558,12 +1613,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gad75c0fe1f7da45beaec75d3cddf7bdb4"></a>
+<a name="group___esp_abbrev_1ga5ac5ea8fa8f059beb45ada13785117bf"></a>
 <div class="api">
   <div class="prototype">
     void
     redirectBack
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Redirect the client back to the referrer.</p>
@@ -1651,12 +1706,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gaa3ab885ce858d809f47571c64681b96d"></a>
+<a name="group___esp_abbrev_1ga9f033233a59a6e976d92be561cfbe7e2"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a>
     renderCached
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Render cached content.</p>
@@ -1667,12 +1722,12 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga680e8d96388553f684b29b6007e2411a"></a>
+<a name="group___esp_abbrev_1ga2353b590d91fb2f98b77a8efd4ee8f36"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a7d08ccc1e981eb4d5a238641ac4ccfc1" class="ref">ssize</a>
     renderConfig
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Render the pak.json.</p>
@@ -1866,12 +1921,12 @@ If a request parameter is not found by the given name, consult the session store
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1gab3444f174346e0d8e8d4d3a43d451c5e"></a>
+<a name="group___esp_abbrev_1gac543bc47fde0b8a6fc995a6eb66ad080"></a>
 <div class="api">
   <div class="prototype">
     void
     securityToken
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Add the security token to the response.</p>
@@ -1990,7 +2045,7 @@ The Path, Domain, and Expires properties can be set to null for default values
   </div>
   <div class="apiDetail">
 <p>Update record fields without writing to the database.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This routine updates the record object with the given values. The "data&apos; argument supplies a hash of fieldNames and values. The data hash may come from the request <a class="ref" href="#group___esp_abbrev_1gac880717bdc6e6f631de7c5c95491df53">params</a> or it can be manually created via <a class="ref" href="#group___edi_1gac8ba9b4a0cdc2d2f30de7d915a4c51c1" external="edi.dtags">ediMakeHash</a> to convert a JSON string into an options hash. For example: updateFields(rec, hash(&quot;{ name: &apos;%s&apos;, address: &apos;%s&apos; }&quot;, name, address)) The record will not be written to the database. To write to the database, use <a class="ref" href="#group___edi_1ga9b65a775c4ddc081e49b1a55cabc06aa" external="edi.dtags">ediUpdateRec</a></dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This routine updates the record object with the given values. The "data&apos; argument supplies a hash of fieldNames and values. The data hash may come from the request <a class="ref" href="#group___esp_abbrev_1ga7e1a25d3f0fb64f31fbed43e37f1e910">params</a> or it can be manually created via <a class="ref" href="#group___edi_1gac8ba9b4a0cdc2d2f30de7d915a4c51c1" external="edi.dtags">ediMakeHash</a> to convert a JSON string into an options hash. For example: updateFields(rec, hash(&quot;{ name: &apos;%s&apos;, address: &apos;%s&apos; }&quot;, name, address)) The record will not be written to the database. To write to the database, use <a class="ref" href="#group___edi_1ga9b65a775c4ddc081e49b1a55cabc06aa" external="edi.dtags">ediUpdateRec</a></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">rec</td><td>Record to update.</td>
@@ -2190,12 +2245,12 @@ This wraps the streamNotifier and calls espSetStream before invoking the notifie
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga70074b92c4e5b0381a6a61f9e0f8e2cc"></a>
+<a name="group___esp_abbrev_1ga0207a5efd3abae696bbe759f5f453c0f"></a>
 <div class="api">
   <div class="prototype">
     void
     showRequest
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Show request details.</p>
@@ -2277,7 +2332,7 @@ This wraps the streamNotifier and calls espSetStream before invoking the notifie
   </div>
   <div class="apiDetail">
 <p>Write field values to a database row.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This routine updates the current record with the given data and then saves the record to the database. The "data&apos; argument supplies a hash of fieldNames and values. The data hash may come from the request <a class="ref" href="#group___esp_abbrev_1gac880717bdc6e6f631de7c5c95491df53">params</a> or it can be manually created via <a class="ref" href="#group___edi_1gac8ba9b4a0cdc2d2f30de7d915a4c51c1" external="edi.dtags">ediMakeHash</a> to convert a JSON string into an options hash. For example: ediWriteFields(rec, <a class="ref" href="#group___esp_abbrev_1gac880717bdc6e6f631de7c5c95491df53">params()</a>); The record runs field validations before saving to the database.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This routine updates the current record with the given data and then saves the record to the database. The "data&apos; argument supplies a hash of fieldNames and values. The data hash may come from the request <a class="ref" href="#group___esp_abbrev_1ga7e1a25d3f0fb64f31fbed43e37f1e910">params</a> or it can be manually created via <a class="ref" href="#group___edi_1gac8ba9b4a0cdc2d2f30de7d915a4c51c1" external="edi.dtags">ediMakeHash</a> to convert a JSON string into an options hash. For example: ediWriteFields(rec, <a class="ref" href="#group___esp_abbrev_1ga7e1a25d3f0fb64f31fbed43e37f1e910">params()</a>); The record runs field validations before saving to the database.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">tableName</td><td>Database table name.</td>
@@ -2652,15 +2707,19 @@ Custom data for request (unmanaged).
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_req_1ga71e492b0a2ad58a5eb75616556da4f92"></a>
+<a name="group___esp_req_1ga48e9736ae0f7cecdb695a4db5f343647"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth</a> *
     espGetAuth
-()
+(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)
   </div>
   <div class="apiDetail">
 <p>Get the current route HttpAuth object.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">stream</td><td>HttpStream stream object.</td>
+    </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The HttpAuth object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -3004,7 +3063,7 @@ Custom data for request (unmanaged).
   <div class="apiDetail">
 <p>Get the request URI path string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI path. This is the request URI path after removing query parameters. It does not include the application route prefix.</dd></dl>
-    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1gacae6982e378c61364b63b7ec06962098">espGetStream()</a>-&gt;rx-&gt;pathInfo.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803">espGetStream()</a>-&gt;rx-&gt;pathInfo.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
@@ -3050,15 +3109,19 @@ Custom data for request (unmanaged).
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_req_1ga769c951ecdea1f7ab0666eb54e5419df"></a>
+<a name="group___esp_req_1ga93d00311d73833d28cc1ae4ae4f96de7"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *
     espGetRoute
-()
+(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)
   </div>
   <div class="apiDetail">
 <p>Get the current route HttpRoute object.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">stream</td><td>HttpStream stream object.</td>
+    </table></dd></dl>
     <dl><dt>Returns:</dt><dd>The HttpRoute object.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -3165,12 +3228,12 @@ Custom data for request (unmanaged).
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_req_1gacae6982e378c61364b63b7ec06962098"></a>
+<a name="group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *
     espGetStream
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the current request stream.</p>
@@ -3210,7 +3273,7 @@ Custom data for request (unmanaged).
   <div class="apiDetail">
 <p>Get the request URI string.</p>
     <dl><dt><b>Description</b>:</dt><dd>This is a convenience API to return the request URI. This is the request URI after removing query parameters. It includes any application route prefix.</dd></dl>
-    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1gacae6982e378c61364b63b7ec06962098">espGetStream()</a>-&gt;rx-&gt;uri.</dd></dl>
+    <dl><dt>Returns:</dt><dd>The <a class="ref" href="#group___esp_req_1ga0d76a638ff2cbc78cd318c79d85e6803">espGetStream()</a>-&gt;rx-&gt;uri.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
@@ -3243,6 +3306,25 @@ Custom data for request (unmanaged).
     <dl><dt><b>Description</b>:</dt><dd>This call returns &quot;true&quot; if a current record is defined and has been saved to the database with a valid &quot;id&quot; field.</dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;True&quot; if a current record with a valid &quot;id&quot; is defined.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#struct_esp" class="ref">Esp</a></dd></dl>
+  </div>
+</div>
+<a name="group___esp_req_1gaba5e635fa31811599d1d3c156164f1bf"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a>
+    espIsAuthenticated
+(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream)
+  </div>
+  <div class="apiDetail">
+<p>Test if the user is authenticated.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">stream</td><td>HttpStream stream object.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>True if the username and password have been authenticated.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -3790,7 +3872,7 @@ If a request parameter is not found by the given name, consult the session store
   </div>
   <div class="apiDetail">
 <p>Send a JSON response result.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This renders a JSON response including the request success status, feedback message and field errors. The field errors apply to the current EDI record. The format of the response is: &quot;{ success: STATUS, feedback: {messages}, fieldErrors: {messages}}&quot; wrapper. The feedback messages are created via the espSetFeedback API. Field errors are created by ESP validations.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This renders a JSON response including the request success status, feedback message and field errors. The field errors apply to the current EDI record. The format of the response is: &quot;{ error: 0/1, feedback: {messages}, fieldErrors: {messages}}&quot; wrapper. The feedback messages are created via the espSetFeedback API. Field errors are created by ESP validations.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">stream</td><td>HttpStream stream object.</td>
@@ -4229,12 +4311,12 @@ Before the notifier is invoked, espSetStream is called to set the stream object 
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_req_1ga6cb98a81fac3b68ef772a6cc7a37a156"></a>
+<a name="group___esp_req_1ga3657efaa1e51a7053167d4dc19b7ffc7"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     getMethod
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Get the HTTP method.</p>
@@ -4427,6 +4509,28 @@ Windows SDK.
     </table></dd></dl>
   </div>
 </div>
+<a name="group___esp_route_1gac9762e5dbeee8f48072d7d21a38994ad"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    espAction
+(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *targetKey, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *roles, <a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="ref">EspProc</a> actionProc)
+  </div>
+  <div class="apiDetail">
+<p>Define an action.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair. The action will require the specified roles or abilities.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">route</td><td>HttpRoute object.</td>
+    <tr><td class="param">targetKey</td><td>Target key used to select the action in a HttpRoute target. This is typically a URI prefix.</td>
+    <tr><td class="param">roles</td><td>String Comma separated list of roles or abilities. If set to the empty string, no specific roles are required but an authenticated user is required. Set to NULL if an authenticated user is not required.</td>
+    <tr><td class="param">actionProc</td><td>EspProc callback procedure to invoke when the action is requested.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#struct_esp" class="ref">Esp</a></dd></dl>
+  </div>
+</div>
 <a name="group___esp_route_1gaa6e0943224a139d93f465b7ff2060c36"></a>
 <div class="api">
   <div class="prototype">
@@ -4594,23 +4698,23 @@ Windows SDK.
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
-<a name="group___esp_route_1ga321abe89cc91246b2a44f40493988670"></a>
+<a name="group___esp_route_1gada1accc3d8bdf9b474239d695353035d"></a>
 <div class="api">
   <div class="prototype">
     void
     espDefineAction
-(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *targetKey, void *actionProc)
+(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *targetKey, <a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="ref">EspProc</a> actionProc)
   </div>
   <div class="apiDetail">
 <p>Define an action.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair. This API is deprecated. Use <a class="ref" href="#group___esp_route_1gac9762e5dbeee8f48072d7d21a38994ad">espAction</a> instead.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">route</td><td>HttpRoute object.</td>
     <tr><td class="param">targetKey</td><td>Target key used to select the action in a HttpRoute target. This is typically a URI prefix.</td>
     <tr><td class="param">actionProc</td><td>EspProc callback procedure to invoke when the action is requested.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
@@ -4620,7 +4724,7 @@ Windows SDK.
   <div class="prototype">
     void
     espDefineBase
-(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="#esp_8h_1a9aa8875a61708ca23b81b72b1fcf19bc" class="ref">EspProc</a> baseProc)
+(<a href="edi.html#http.html#group___http_route" class="ref">HttpRoute</a> *route, <a href="#esp_8h_1ad583474da5a6b6b64f2066faaa40a651" class="ref">EspProc</a> baseProc)
   </div>
   <div class="apiDetail">
 <p>Define a base function to invoke for all controller actions.</p>
@@ -4920,12 +5024,12 @@ Windows SDK.
 <p>Add HTLM internal options to the Esp.options hash.</p>
   </div>
 </div>
-<a name="esp_8h_1ab4f5a8bba279335541372845ab87e094"></a>
+<a name="esp_8h_1a240f55c3789229bd59ec4c2c4b5c1557"></a>
 <div class="api">
   <div class="prototype">
     int
     espInitParser
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Initialize the ESP configuration file parser.</p>
@@ -5006,27 +5110,14 @@ Windows SDK.
   </div>
 </div>
 <h2>Typedefs</h2>
-<a name="esp_8h_1a9aa8875a61708ca23b81b72b1fcf19bc"></a>
+<a name="esp_8h_1ad583474da5a6b6b64f2066faaa40a651"></a>
 <div class="api">
   <div class="prototype">
-    typedef void(* EspProc)(HttpStream *stream).
+    typedef void(* EspProc)(HttpStream *stream, struct EspAction *action).
   </div>
   <div class="apiDetail">
 <p>Procedure callback.</p>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
-  </div>
-</div>
-<a name="group___esp_req_1ga60cdb8438d2c59c8014fe550129fbc0d"></a>
-<div class="api">
-  <div class="prototype">
-    typedef EspProc EspAction.
-  </div>
-  <div class="apiDetail">
-<p>ESP Action.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Actions are run after a request URI is routed to a controller.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    <a href="#struct_esp" class="ref">Esp</a></dd></dl>
   </div>
 </div>
 <a name="group___esp_req_1ga36c7632f31238cf472b80f1676146ade"></a>

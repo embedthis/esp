@@ -30,8 +30,8 @@
       <type>EdiService *</type>
       <name>ediCreateService</name>
       <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>ga52bb6b4d64beebfacefa8cc7cfeab50f</anchor>
-      <arglist>()</arglist>
+      <anchor>gaf844bec409e3238a6a9de36ddc040899</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -199,6 +199,20 @@
       <anchorfile>group___edi.html</anchorfile>
       <anchor>gaec3079929130e2f517f56d8c322e2468</anchor>
       <arglist>(Edi *edi, cchar *path)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>ediDumpGrid</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga696eb0deb1daaffbee776d3773acccc0</anchor>
+      <arglist>(EdiGrid *grid)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>ediDumpRec</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga1bd019aa80a2faef3fc558f4b71e6e47</anchor>
+      <arglist>(EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -475,6 +489,13 @@
     </member>
     <member kind="function">
       <type>EdiRec *</type>
+      <name>ediSetFieldFmt</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga56d9106989bc4bae85c040c0f8729edd</anchor>
+      <arglist>(EdiRec *rec, cchar *fieldName, cchar *fmt,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiRec *</type>
       <name>ediSetFields</name>
       <anchorfile>group___edi.html</anchorfile>
       <anchor>ga916af8d529a028643e87b3b8c8973a85</anchor>
@@ -503,6 +524,13 @@
     </member>
     <member kind="function">
       <type>int</type>
+      <name>ediUpdateFieldFmt</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>gaa871db11b6b3ea1a177769a09078f732</anchor>
+      <arglist>(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName, cchar *fmt,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
       <name>ediUpdateRec</name>
       <anchorfile>group___edi.html</anchorfile>
       <anchor>ga9b65a775c4ddc081e49b1a55cabc06aa</anchor>
@@ -521,13 +549,6 @@
       <anchorfile>group___edi.html</anchorfile>
       <anchor>gafac7f959a214551acc56fd42a8c0e04e</anchor>
       <arglist>(Edi *edi, cchar *tableName, cchar *columnName)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>espDumpGrid</name>
-      <anchorfile>group___edi.html</anchorfile>
-      <anchor>ga18375a1455d10df65a92b6adc3409830</anchor>
-      <arglist>(EdiGrid *grid)</arglist>
     </member>
   </compound>
   <compound kind="struct">

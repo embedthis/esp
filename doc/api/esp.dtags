@@ -18,6 +18,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>espAction</name>
+      <anchorfile>group___esp_route.html</anchorfile>
+      <anchor>gac9762e5dbeee8f48072d7d21a38994ad</anchor>
+      <arglist>(HttpRoute *route, cchar *targetKey, cchar *roles, EspProc actionProc)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>espAddHomeRoute</name>
       <anchorfile>group___esp_route.html</anchorfile>
       <anchor>gaa6e0943224a139d93f465b7ff2060c36</anchor>
@@ -69,8 +76,8 @@
       <type>void</type>
       <name>espDefineAction</name>
       <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>ga321abe89cc91246b2a44f40493988670</anchor>
-      <arglist>(HttpRoute *route, cchar *targetKey, void *actionProc)</arglist>
+      <anchor>gada1accc3d8bdf9b474239d695353035d</anchor>
+      <arglist>(HttpRoute *route, cchar *targetKey, EspProc actionProc)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -162,13 +169,6 @@
     <title>EspReq</title>
     <filename>group___esp_req.html</filename>
     <member kind="typedef">
-      <type>EspProc</type>
-      <name>EspAction</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga60cdb8438d2c59c8014fe550129fbc0d</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="typedef">
       <type>void(*</type>
       <name>EspViewProc</name>
       <anchorfile>group___esp_req.html</anchorfile>
@@ -256,8 +256,8 @@
       <type>HttpAuth *</type>
       <name>espGetAuth</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga71e492b0a2ad58a5eb75616556da4f92</anchor>
-      <arglist>()</arglist>
+      <anchor>ga48e9736ae0f7cecdb695a4db5f343647</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>MprOff</type>
@@ -403,8 +403,8 @@
       <type>HttpRoute *</type>
       <name>espGetRoute</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga769c951ecdea1f7ab0666eb54e5419df</anchor>
-      <arglist>()</arglist>
+      <anchor>ga93d00311d73833d28cc1ae4ae4f96de7</anchor>
+      <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>Edi *</type>
@@ -445,8 +445,8 @@
       <type>HttpStream *</type>
       <name>espGetStream</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>gacae6982e378c61364b63b7ec06962098</anchor>
-      <arglist>()</arglist>
+      <anchor>ga0d76a638ff2cbc78cd318c79d85e6803</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>MprList *</type>
@@ -474,6 +474,13 @@
       <name>espHasRec</name>
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga1b26f1c2f8e1f78024f076464c1483dc</anchor>
+      <arglist>(HttpStream *stream)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>espIsAuthenticated</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>gaba5e635fa31811599d1d3c156164f1bf</anchor>
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
@@ -809,8 +816,8 @@
       <type>cchar *</type>
       <name>getMethod</name>
       <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga6cb98a81fac3b68ef772a6cc7a37a156</anchor>
-      <arglist>()</arglist>
+      <anchor>ga3657efaa1e51a7053167d4dc19b7ffc7</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -891,22 +898,36 @@
       <type>cchar *</type>
       <name>createSession</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaa0c7f407af0140b15091227e9a8e839f</anchor>
-      <arglist>()</arglist>
+      <anchor>gafd8e418ad6839251b5f058f7bd2c1c3b</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>destroySession</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga35677b9aa8d61543db5ea80377e823a6</anchor>
-      <arglist>()</arglist>
+      <anchor>ga03cbcd66ad537a10bcf4b979d211f5c1</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>dontAutoFinalize</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga9db9b8b7e2c750f6f942da0478866de2</anchor>
-      <arglist>()</arglist>
+      <anchor>gaff2494fbe89907f66d1a00bfc3c0f53b</anchor>
+      <arglist>(void)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>dumpGrid</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga3e68a43b4ec780b8b02ef2a50c283c97</anchor>
+      <arglist>(EdiGrid *grid)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>dumpRec</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga64319d753c67ea605a794f4fb51d6747</anchor>
+      <arglist>(EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
@@ -919,22 +940,22 @@
       <type>void</type>
       <name>finalize</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga32d626626eee0bc4ade146973f6abb1c</anchor>
-      <arglist>()</arglist>
+      <anchor>ga061eb4d725222504949f9eb49c619fd5</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>flush</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gadac116554b543b7c4228c018a85882f5</anchor>
-      <arglist>()</arglist>
+      <anchor>ga0a9e9396972b76c5947592479860020d</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>HttpAuth *</type>
       <name>getAuth</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga35c88eaa69d732f54eb5829a85dffcce</anchor>
-      <arglist>()</arglist>
+      <anchor>ga651bbfd7b411eaf2da2fa9e47bdd1584</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>MprList *</type>
@@ -954,57 +975,57 @@
       <type>MprOff</type>
       <name>getContentLength</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gad6c78e62403541ae5c8695a126fa73d2</anchor>
-      <arglist>()</arglist>
+      <anchor>gaffb7a50a3516099525ab1c1ca126f84e</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getContentType</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga0c4e333f8e42f16b3d071f10de8f823c</anchor>
-      <arglist>()</arglist>
+      <anchor>ga84b524f379282beaba700a273a981735</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getCookies</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga9e29353c73f7482f1b04657c044804a9</anchor>
-      <arglist>()</arglist>
+      <anchor>gae268d333661e4ff0fccef953ac1871a9</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void *</type>
       <name>getData</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga47d7be20d82041d251a6bb6ed3575b7d</anchor>
-      <arglist>()</arglist>
+      <anchor>ga779fdc15ae8488b0eb564242724897c7</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>Edi *</type>
       <name>getDatabase</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga9aa7c416a3ac3b6d732c1325e3f2ef15</anchor>
-      <arglist>()</arglist>
+      <anchor>gace84213f938b7f5ab66f45da0d66bea8</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>MprDispatcher *</type>
       <name>getDispatcher</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga93b589637883c1707073619898354ff1</anchor>
-      <arglist>()</arglist>
+      <anchor>gac412f9805ef6d334283832762c8758c7</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getDocuments</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gadcce96e047630e80fc6283689be47ae0</anchor>
-      <arglist>()</arglist>
+      <anchor>gadf3908de0de90bb994420a2bbdccfd38</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>EspRoute *</type>
       <name>getEspRoute</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga29c40a3c98f7e8b07c4bab47a29d8ade</anchor>
-      <arglist>()</arglist>
+      <anchor>ga81221f706195387c33632f295a384495</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -1031,8 +1052,8 @@
       <type>EdiGrid *</type>
       <name>getGrid</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga2e60477a5b4168f59758c93507b4b899</anchor>
-      <arglist>()</arglist>
+      <anchor>ga3e38d508316931b7ae336e76e0bdb8a8</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -1045,57 +1066,57 @@
       <type>cchar *</type>
       <name>getPath</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaaa8e74bb48500059683a45d7a4126d94</anchor>
-      <arglist>()</arglist>
+      <anchor>ga11a8fab091700ea6fda0272f506cbe2a</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getQuery</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga2382c30fce39d310820e556415abb763</anchor>
-      <arglist>()</arglist>
+      <anchor>ga1e64f32a0ae1f02c720cc88afdf732ef</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
       <name>getRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga8a4d997f211531f9ad4a21133f761349</anchor>
-      <arglist>()</arglist>
+      <anchor>ga91bd4d1b15a77af02ec9a636299ab026</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getReferrer</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaefcc3825a86579c9c2669e239f8b1431</anchor>
-      <arglist>()</arglist>
+      <anchor>gad1d00c8067d56cd21e541f7b38302b9e</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>EspReq *</type>
       <name>getReq</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga3dea06818770c33f63a8b60f793a6999</anchor>
-      <arglist>()</arglist>
+      <anchor>ga58c7660a9f8d6ffb1628ef6193923b16</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>HttpRoute *</type>
       <name>getRoute</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga3e7e849481e913c3971b7e0bf73ce088</anchor>
-      <arglist>()</arglist>
+      <anchor>gab5a8bc264b8f807cc6d0fbcf60c5036a</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getSecurityToken</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga9b8a2c16e5e9dfa287b466b5d580a3e3</anchor>
-      <arglist>()</arglist>
+      <anchor>ga92e6ff4802af91997ae38c5dff9085d1</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getSessionID</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaff139c388f84eb5e478f2391c1fedafb</anchor>
-      <arglist>()</arglist>
+      <anchor>ga239b3a284ed503443e493c4df79240bd</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -1108,36 +1129,36 @@
       <type>HttpStream *</type>
       <name>getStream</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga2cf1d30ceeae743cdacc3f4b8b512c8c</anchor>
-      <arglist>()</arglist>
+      <anchor>ga153892a3acf416dc1404e30206d8d340</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>MprList *</type>
       <name>getUploads</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga12e7ea4b97725ef6cf2cb4aa02d6f21b</anchor>
-      <arglist>()</arglist>
+      <anchor>gac9050b6d24d299c5272fc0dd57c7c868</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
       <name>getUri</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga1562f14a38ec9ace0787756964e51cda</anchor>
-      <arglist>()</arglist>
+      <anchor>ga7f9a4115f52985c9609d4b1dcc0474b0</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>hasGrid</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga25287207066ad592e465b36148439e2d</anchor>
-      <arglist>()</arglist>
+      <anchor>gaee6d5f8de45b641f364b59b855e395d3</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>hasRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga9ae793b0c68219491acb86735fa7a4d8</anchor>
-      <arglist>()</arglist>
+      <anchor>ga024fdd517ead11d0c3247b53b0509eee</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1150,29 +1171,36 @@
       <type>void</type>
       <name>inputSecurityToken</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga4db83aca814319dcd588e114176d0a09</anchor>
-      <arglist>()</arglist>
+      <anchor>ga93fc43b556cd29f99195a236b3c4f2c6</anchor>
+      <arglist>(void)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>isAuthenticated</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga38c15bc6da6061193e4ece0be7222b3a</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>isEof</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga36e02fce10743365c3be3f4d7311bcb6</anchor>
-      <arglist>()</arglist>
+      <anchor>gae9563514d2bce554b8fb7e74144ceb4a</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>isFinalized</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga2c49e32dea0137b5bd9516c217b47fe5</anchor>
-      <arglist>()</arglist>
+      <anchor>ga76ec4206bd2235bfc5d7ae3189fe9fd6</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>isSecure</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga609397e6582775d72e233942fb46cec8</anchor>
-      <arglist>()</arglist>
+      <anchor>gae69c795a239fe68b0f60b36c8cc546ea</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>MprHash *</type>
@@ -1213,8 +1241,8 @@
       <type>cchar *</type>
       <name>nonce</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga22f8d5c52a1ee9eedf326acf2737a4fd</anchor>
-      <arglist>()</arglist>
+      <anchor>ga051c9777e0134ff070467a02e38466a8</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -1227,8 +1255,8 @@
       <type>MprJson *</type>
       <name>params</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gac880717bdc6e6f631de7c5c95491df53</anchor>
-      <arglist>()</arglist>
+      <anchor>ga7e1a25d3f0fb64f31fbed43e37f1e910</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
@@ -1283,8 +1311,8 @@
       <type>void</type>
       <name>redirectBack</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gad75c0fe1f7da45beaec75d3cddf7bdb4</anchor>
-      <arglist>()</arglist>
+      <anchor>ga5ac5ea8fa8f059beb45ada13785117bf</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1318,15 +1346,15 @@
       <type>ssize</type>
       <name>renderCached</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaa3ab885ce858d809f47571c64681b96d</anchor>
-      <arglist>()</arglist>
+      <anchor>ga9f033233a59a6e976d92be561cfbe7e2</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
       <name>renderConfig</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga680e8d96388553f684b29b6007e2411a</anchor>
-      <arglist>()</arglist>
+      <anchor>ga2353b590d91fb2f98b77a8efd4ee8f36</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1395,8 +1423,8 @@
       <type>void</type>
       <name>securityToken</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gab3444f174346e0d8e8d4d3a43d451c5e</anchor>
-      <arglist>()</arglist>
+      <anchor>gac543bc47fde0b8a6fc995a6eb66ad080</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -1514,8 +1542,8 @@
       <type>void</type>
       <name>showRequest</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga70074b92c4e5b0381a6a61f9e0f8e2cc</anchor>
-      <arglist>()</arglist>
+      <anchor>ga0207a5efd3abae696bbe759f5f453c0f</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

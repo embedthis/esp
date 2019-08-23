@@ -198,10 +198,12 @@
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga7500efee354868a347e7a9cc763994af" class="nameRef">ediCreateBareGrid</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nrows)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a bare grid.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga15bf63cd0ba27fd41ffcd2556552bc9c" class="nameRef">ediCreateBareRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nfields)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a bare record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1gad4e706a1a2d9ff527c9d42612ebeeae1" class="nameRef">ediCreateRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a record.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_service" class="ref">EdiService*</a></td><td><a href="#group___edi_service_1ga52bb6b4d64beebfacefa8cc7cfeab50f" class="nameRef">ediCreateService</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create the EDI service.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_service" class="ref">EdiService*</a></td><td><a href="#group___edi_service_1gaf844bec409e3238a6a9de36ddc040899" class="nameRef">ediCreateService</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create the EDI service.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga789f616e9f38aee34d6862bf85ac4742" class="nameRef">ediDefineMigration</a>(struct Edi *edi, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> back)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define migration callbacks.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46" class="nameRef">ediDefineValidation</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9" class="ref">EdiValidationProc</a> vfn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a field validation procedure.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gaec3079929130e2f517f56d8c322e2468" class="nameRef">ediDelete</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Delete the database at the given path.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga696eb0deb1daaffbee776d3773acccc0" class="nameRef">ediDumpGrid</a>(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display the grid to the debug log.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga1bd019aa80a2faef3fc558f4b71e6e47" class="nameRef">ediDumpRec</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display a record to the debug log.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_grid_1ga0b5c39ab9aa8d6cba06403659aa9e36b" class="nameRef">ediFilterGridFields</a>(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fields, int include)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Filter the fields of a grid.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_rec_1ga72056f840f501082ef3efac4c4454e24" class="nameRef">ediFilterRecFields</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fields, int include)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Filter the fields of a record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___edi_1ga64d2d436610342310b2b4a7dae4ed376" class="nameRef">ediFormatField</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, <a href="#group___edi_field" class="ref">EdiField</a> *fp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Format a field value.</td></tr>
@@ -248,13 +250,14 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga42ebae84b96f934005926c25cb568f24" class="nameRef">ediRenameTable</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *newTableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Rename a table.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga77d616667577833662154d65ef794519" class="nameRef">ediSave</a>(<a href="#group___edi" class="ref">Edi</a> *edi)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Save in-memory database contents to disk.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga649f5d198bed950955c34c05d8b59777" class="nameRef">ediSetField</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a record field without writing to the database.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga56d9106989bc4bae85c040c0f8729edd" class="nameRef">ediSetFieldFmt</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a record field using a format string.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga916af8d529a028643e87b3b8c8973a85" class="nameRef">ediSetFields</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="mpr.html#group___mpr_json" class="ref">MprJson</a> *data)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set record fields without writing to the database.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga8a81197882a1574b7bd5a89dd725d238" class="nameRef">ediSetPrivate</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> on)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a private database for each client.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga04c6635bccb8f8c2a1b2d5e3bad74bd3" class="nameRef">ediSetReadonly</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a> on)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Control whether the database accepts updates.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga14dfc03675a9312facb1be7dd48f73d6" class="nameRef">ediUpdateField</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a value to a database table field.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gaa871db11b6b3ea1a177769a09078f732" class="nameRef">ediUpdateFieldFmt</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a formatted value to a database table field.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga9b65a775c4ddc081e49b1a55cabc06aa" class="nameRef">ediUpdateRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Write a record to the database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___edi_1ga7525ab6e695b51abc1bb342b8f35022b" class="nameRef">ediValidateRec</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Validate a record.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga18375a1455d10df65a92b6adc3409830" class="nameRef">espDumpGrid</a>(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display the grid to the debug log.</td></tr>
 </table>
 <a name="Typedefs"></a><h1>Typedefs</h1>
 <table class="apiIndex" title="typedefs">
@@ -308,6 +311,10 @@
 <td>#define</td><td><a href="#edi_8h_1a8e7cad2b406b0d2b1306fcf646703faa" class="nameRef">EDI_PRIVATE</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Create private clone of the database.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#edi_8h_1ad8bce44fd493d0ff9e43ec5bb7f41c50" class="nameRef">EDI_READ_ONLY</a>&nbsp;&nbsp;&nbsp;0x20</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Field flag <ndash/> Field is read-only (not implemented).</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#edi_8h_1a288a24bd0787d029ff45d5ff524be9d5" class="nameRef">EDI_SUPPRESS_SAVE</a>&nbsp;&nbsp;&nbsp;0x10</td>
 </tr>
@@ -633,6 +640,42 @@ Validations.
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful. Otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga696eb0deb1daaffbee776d3773acccc0"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    ediDumpGrid
+(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)
+  </div>
+  <div class="apiDetail">
+<p>Display the grid to the debug log.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">grid</td><td>EDI grid.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga1bd019aa80a2faef3fc558f4b71e6e47"></a>
+<div class="api">
+  <div class="prototype">
+    void
+    ediDumpRec
+(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec)
+  </div>
+  <div class="apiDetail">
+<p>Display a record to the debug log.</p>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">rec</td><td>Record to log.</td>
+    </table></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -1456,6 +1499,29 @@ This call makes a free-standing data grid based on the JSON format content strin
     </dd></dl>
   </div>
 </div>
+<a name="group___edi_1ga56d9106989bc4bae85c040c0f8729edd"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_rec" class="ref">EdiRec</a> *
+    ediSetFieldFmt
+(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)
+  </div>
+  <div class="apiDetail">
+<p>Set a record field using a format string.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This routine updates the record object with the given value. The record will not be written to the database. To write to the database, use <a class="ref" href="#group___edi_1ga9b65a775c4ddc081e49b1a55cabc06aa">ediUpdateRec</a></dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">rec</td><td>Record to update.</td>
+    <tr><td class="param">fieldName</td><td>Record field name to update.</td>
+    <tr><td class="param">fmt</td><td>Format string.</td>
+    <tr><td class="param">...</td><td>Variable arguments for the format string.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>The record instance if successful, otherwise NULL.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
 <a name="group___edi_1ga916af8d529a028643e87b3b8c8973a85"></a>
 <div class="api">
   <div class="prototype">
@@ -1539,6 +1605,31 @@ This call makes a free-standing data grid based on the JSON format content strin
     </dd></dl>
   </div>
 </div>
+<a name="group___edi_1gaa871db11b6b3ea1a177769a09078f732"></a>
+<div class="api">
+  <div class="prototype">
+    int
+    ediUpdateFieldFmt
+(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)
+  </div>
+  <div class="apiDetail">
+<p>Write a formatted value to a database table field.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Update the value of a table field in the selected table row. Note: field validations are not run.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">edi</td><td>Database handle.</td>
+    <tr><td class="param">tableName</td><td>Database table name.</td>
+    <tr><td class="param">key</td><td>Key value for the table row to update.</td>
+    <tr><td class="param">fieldName</td><td>Column name to update.</td>
+    <tr><td class="param">fmt</td><td>Value format string.</td>
+    <tr><td class="param">...</td><td>Variable arguments for the format string.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>Zero if successful. Otherwise a negative MPR error code.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
 <a name="group___edi_1ga9b65a775c4ddc081e49b1a55cabc06aa"></a>
 <div class="api">
   <div class="prototype">
@@ -1597,24 +1688,6 @@ This call makes a free-standing data grid based on the JSON format content strin
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful. Otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___edi_1ga18375a1455d10df65a92b6adc3409830"></a>
-<div class="api">
-  <div class="prototype">
-    void
-    espDumpGrid
-(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)
-  </div>
-  <div class="apiDetail">
-<p>Display the grid to the debug log.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">grid</td><td>EDI grid.</td>
-    </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -1897,12 +1970,12 @@ For the first call, set fp to NULL
     </dd></dl>
   </div>
 </div>
-<a name="group___edi_service_1ga52bb6b4d64beebfacefa8cc7cfeab50f"></a>
+<a name="group___edi_service_1gaf844bec409e3238a6a9de36ddc040899"></a>
 <div class="api">
   <div class="prototype">
     <a href="#group___edi_service" class="ref">EdiService</a> *
     ediCreateService
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Create the EDI service.</p>
