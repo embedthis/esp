@@ -1402,9 +1402,7 @@ static void user(int argc, char **argv)
             fail("Cannot find user %s", username);
             return;
         }
-        roles = sreplace(user->roles, ",", "");
-        roles = sreplace(roles, "  ", " ");
-        roles = strim(roles, " ", 0);
+        roles = mprHashKeysToString(user->roles, "");
         trace("Info", "%s %s %s", user->name, user->password, roles);
     }
 }
@@ -2607,7 +2605,7 @@ static void usageError()
     "    esp generate table name [field:type [, field:type] ...]\n"
     "    esp init [name [version]]\n"
     "    esp migrate [forward|backward|NNN]\n"
-    "    esp mode [debug|release|...]\n"
+    "    esp profile [dev|prod|...]\n"
     "    esp role [add|remove] rolename abilities...\n"
     "    esp [run] [ip]:[port] ...\n"
     "    esp user [add|compute] username password roles...\n"

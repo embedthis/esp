@@ -69,11 +69,9 @@ static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
 ESP_EXPORT int esp_app_login_database(HttpRoute *route)
 {
     /*
-        Define a custom authentication verification callback for the "app" auth store
-        If we had other routes which are not children, we could use httpSetAuthStoreVerify to define
-        the callback for all routes using the store.
+        Define a custom authentication verification callback for the "app" auth store.
      */
-    httpSetAuthVerify(route->auth, verifyUser);
+    httpSetAuthStoreVerifyByName("app", verifyUser);
 
     /*
         Define the common base which is called for all requests before the action function is invoked.
