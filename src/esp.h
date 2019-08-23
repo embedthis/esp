@@ -46,12 +46,15 @@ extern "C" {
 #endif
 
 /********************************** Defines ***********************************/
+
+struct EspAction;
+
 /**
     Procedure callback
     @ingroup Esp
     @stability Stable
  */
-typedef void (*EspProc)(HttpStream *stream);
+typedef void (*EspProc)(HttpStream *stream, struct EspAction *action);
 
 #define ESP_CONTENT_MARKER  "${_ESP_CONTENT_MARKER_}"       /* Layout content marker */
 
