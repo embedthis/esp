@@ -13,6 +13,10 @@
 #define ITERATE_CONFIG(route, obj, child, index) \
     index = 0, child = obj ? obj->children: 0; obj && index < obj->length && !route->error; child = child->next, index++
 
+/*********************************** Fowards **********************************/
+
+static EspAction *createAction(cchar *target, cchar *roles, void *callback);
+
 /************************************* Code ***********************************/
 
 #if DEPRECATED || 1
@@ -115,9 +119,18 @@ PUBLIC cchar *espCreateSession(HttpStream *stream)
 }
 
 
-PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
+#if DEPRECATED || 1
+PUBLIC void espDefineAction(HttpRoute *route, cchar *target, EspProc callback)
+{
+    espAction(route, target, NULL, callback);
+}
+#endif
+
+
+PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *roles, EspProc callback)
 {
     EspRoute    *eroute;
+    EspAction   *action;
 
     assert(route);
     assert(target && *target);
@@ -126,9 +139,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
     eroute = ((EspRoute*) route->eroute)->top;
     if (target) {
 #if DEPRECATED
-        /*
-            Keep till version 6
-         */
+        /* Keep till version 6 */
         if (scontains(target, "-cmd-")) {
             target = sreplace(target, "-cmd-", "/");
         } else if (schr(target, '-')) {
@@ -137,12 +148,38 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, void *callback)
         }
 #endif
         if (!eroute->actions) {
-            eroute->actions = mprCreateHash(-1, MPR_HASH_STATIC_VALUES);
+            eroute->actions = mprCreateHash(-1, 0);
         }
-        mprAddKey(eroute->actions, target, callback);
+        if ((action = createAction(target, roles, callback)) == 0) {
+            /* Memory errors centrally reported */
+            return;
+        }
+        mprAddKey(eroute->actions, target, action);
     }
 }
 
+
+static void manageAction(EspAction *action, int flags)
+{
+    if (flags & MPR_MANAGE_MARK) {
+        mprMark(action->target);
+        mprMark(action->roles);
+    }
+}
+
+
+static EspAction *createAction(cchar *target, cchar *roles, void *callback)
+{
+    EspAction   *action;
+
+    if ((action = mprAllocObj(EspAction, manageAction)) == 0) {
+        return NULL;
+    }
+    action->target = sclone(target);
+    action->roles = roles ? sclone(roles) : NULL;
+    action->callback = callback;
+    return action;
+}
 
 /*
     The base procedure is invoked prior to calling any and all actions on this route
@@ -468,6 +505,12 @@ PUBLIC bool espHasRec(HttpStream *stream)
 
     rec = stream->record;
     return (rec && rec->id) ? 1 : 0;
+}
+
+
+PUBLIC bool espIsAuthenticated(HttpStream *stream)
+{
+    return httpIsAuthenticated(stream);
 }
 
 
