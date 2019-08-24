@@ -400,11 +400,9 @@ static int runAction(HttpStream *stream)
     } else {
         req->edi = eroute->edi;
     }
-    action = mprLookupKey(eroute->top->actions, rx->target);
-
     if (route->sourceName == 0 || *route->sourceName == '\0') {
         if (eroute->commonController) {
-            (eroute->commonController)(stream, action);
+            (eroute->commonController)(stream, NULL);
         }
         return 1;
     }
@@ -415,9 +413,10 @@ static int runAction(HttpStream *stream)
     if (!setToken(stream)) {
         return 0;
     }
-    httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
-
     httpAuthenticate(stream);
+    
+    action = mprLookupKey(eroute->top->actions, rx->target);
+    httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
 
     if (eroute->commonController) {
         (eroute->commonController)(stream, action);
