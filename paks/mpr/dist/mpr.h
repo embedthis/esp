@@ -7520,6 +7520,14 @@ PUBLIC bool mprHasSecureSockets(void);
 PUBLIC int mprSetMaxSocketAccept(int max);
 
 /*
+    Set the prebind callback for a socket
+    @param callback Callback to invoke
+    @ingroup MprSocket
+    @stability Prototype
+ */
+PUBLIC void mprSetSocketPrebindCallback(MprSocketPrebind callback);
+
+/*
     Socket close flags
  */
 #define MPR_SOCKET_GRACEFUL     1           /**< Do a graceful shutdown */
