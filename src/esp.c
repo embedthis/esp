@@ -1283,8 +1283,10 @@ static void serve(int argc, char **argv)
     }
     if (argc == 0) {
         if (http->endpoints->length == 0) {
-            if ((endpoint = httpCreateEndpoint("127.0.0.1", 4000, NULL)) == 0) {
-                fail("Cannot create endpoint for 127.0.0.1:%d", 4000);
+            address = app->listen ? app->listen : "127.0.0.1:4000";
+            mprParseSocketAddress(address, &ip, &port, NULL, 80);
+            if ((endpoint = httpCreateEndpoint(ip, port, NULL)) == 0) {
+                fail("Cannot create endpoint for %s:%d", ip, port);
                 return;
             }
             httpAddHostToEndpoint(endpoint, app->host);
