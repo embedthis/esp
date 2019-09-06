@@ -1,6 +1,8 @@
 /*
     edi.h -- Embedded Database Interface (EDI).
 
+    This interface sits atop a SQLite driver and the in-memory database MDB.
+
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
 
@@ -21,7 +23,9 @@ extern "C" {
 #endif
 
 /********************************** Defines ***********************************/
-
+/*
+    Forward declare structures
+ */
 struct Edi;
 struct EdiGrid;
 struct EdiProvider;
@@ -101,7 +105,7 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
  */
 #define EDI_TYPE_BINARY     1           /**< Arbitrary binary data */
 #define EDI_TYPE_BOOL       2           /**< Boolean true|false value */
-#define EDI_TYPE_DATE       3           /**< Date type */
+#define EDI_TYPE_DATE       3           /**< Date type (stored as epoch) */
 #define EDI_TYPE_FLOAT      4           /**< Floating point number */
 #define EDI_TYPE_INT        5           /**< Integer number */
 #define EDI_TYPE_STRING     6           /**< String */
@@ -117,6 +121,11 @@ PUBLIC void ediAddFieldError(struct EdiRec *rec, cchar *field, cchar *fmt, ...);
 #define EDI_FOREIGN         0x8         /**< Field flag -- Column is a foreign key */
 #define EDI_NOT_NULL        0x10        /**< Field flag -- Column must not be null (not implemented) */
 #define EDI_READ_ONLY       0x20        /**< Field flag -- Field is read-only (not implemented) */
+
+/*
+    Encodings
+ */
+#define EDI_ENCODE_PREFIX   0x
 
 /**
     EDI Record field structure
@@ -160,6 +169,7 @@ typedef struct EdiGrid {
     struct Edi      *edi;               /**< Database handle */
     cchar           *tableName;         /**< Base table name for grid */
     int             flags;              /**< Grid flags */
+    int             count;              /**< Total count of available records matching query */
     int             nrecords;           /**< Number of records in grid */
     EdiRec          *records[ARRAY_FLEX];/**< Grid records */
 } EdiGrid;
@@ -177,7 +187,7 @@ typedef struct EdiGrid {
 typedef int (*EdiMigration)(struct Edi *db);
 
 /**
-    Define migration callbacks
+    Define database migration callbacks
     @param edi Database handle
     @param forw Forward migration callback. Of the form:
         int forw(Edi *edit);
@@ -230,11 +240,11 @@ typedef struct EdiProvider {
     Edi       *(*open)(cchar *path, int flags);
     EdiGrid   *(*query)(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
     EdiField  (*readField)(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-    EdiRec    *(*readRec)(Edi *edi, cchar *tableName, cchar *key);
-    EdiGrid   *(*readWhere)(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+    EdiGrid   *(*readGrid)(Edi *edi, cchar *tableName, cchar *query);
+    EdiRec    *(*readRecByKey)(Edi *edi, cchar *tableName, cchar *key);
     int       (*removeColumn)(Edi *edi, cchar *tableName, cchar *columnName);
     int       (*removeIndex)(Edi *edi, cchar *tableName, cchar *indexName);
-    int       (*removeRec)(Edi *edi, cchar *tableName, cchar *key);
+    int       (*removeRecByKey)(Edi *edi, cchar *tableName, cchar *key);
     int       (*removeTable)(Edi *edi, cchar *tableName);
     int       (*renameTable)(Edi *edi, cchar *tableName, cchar *newTableName);
     int       (*renameColumn)(Edi *edi, cchar *tableName, cchar *columnName, cchar *newColumnName);
@@ -339,7 +349,7 @@ PUBLIC EdiGrid *ediCloneGrid(EdiGrid *grid);
 
 /**
     Create a record
-    @description This will create a record using the given database tableName to supply the record schema. Use
+    @description This will create an empty record using the given database tableName to supply the record schema. Use
         #ediCreateBareRec to create a free-standing record without requiring a database.
         The record is allocated and room is reserved to store record values. No record field values are stored.
     @param edi Database handle
@@ -363,6 +373,7 @@ PUBLIC int ediDelete(Edi *edi, cchar *path);
 
 /**
     Display the grid to the debug log
+    @description Used for debugging only.
     @param grid EDI grid
     @ingroup Edi
     @stability Prototype
@@ -371,6 +382,7 @@ PUBLIC void ediDumpGrid(EdiGrid *grid);
 
 /**
     Display a record to the debug log
+    @description Used for debugging only.
     @param rec Record to log
     @ingroup Edi
     @stability Prototype
@@ -378,7 +390,7 @@ PUBLIC void ediDumpGrid(EdiGrid *grid);
 PUBLIC void ediDumpRec(EdiRec *rec);
 
 /**
-    Get a list of column names.
+    Get a list of database column names.
     @param edi Database handle
     @param tableName Database table name
     @return An MprList of column names in the given table.
@@ -472,7 +484,7 @@ PUBLIC MprList *ediGetTables(Edi *edi);
 /**
     Convert an EDI database grid into a JSON string.
     @param grid EDI grid
-    @param flags Reserved. Set to zero.
+    @param flags Reserved. Set to MPR_JSON_PRETTY for a prettier format.
     @return JSON string
     @ingroup Edi
     @stability Prototype
@@ -547,12 +559,11 @@ PUBLIC Edi *ediOpen(cchar *source, cchar *provider, int flags);
 PUBLIC Edi *ediClone(Edi *edi);
 
 /**
-    Run a query.
+    Run a database query query.
     @description This runs a provider dependant query. For the SDB SQLite provider, this runs an SQL statement.
-    The "mdb" provider does not implement this API. To do queries using the "mdb" provider, use:
-        #ediReadRec, #ediReadRecWhere, #ediReadWhere, #ediReadField and #ediReadTable.
-    The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate
-    SQL injection risk.
+        The "mdb" provider does not implement this API. To do queries using the "mdb" provider, use:
+        #ediReadRec, #ediReadGrid and #ediReadField.
+        The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate SQL injection risk.
     @param edi Database handle
     @param cmd Query command to execute.
     @param argc Number of query parameters in argv
@@ -569,7 +580,7 @@ PUBLIC EdiGrid *ediQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list v
     @description This reads a field from the database and formats the result using an optional format string.
         If the field has a null or empty value, the supplied defaultValue will be returned.
     @param edi Database handle
-    @param fmt Reserved. Set to NULL.
+    @param fmt Reserved and not yet implemented. Set to NULL.
     @param tableName Database table name
     @param key Row key column value to read.
     @param fieldName Column name to read
@@ -594,19 +605,34 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
 PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 
 /**
+    Read matching records in a table
+    @description This runs a SQL like query on the database and returns matching records in a grid. The query selects
+        the rows that have matching fields.
+    @param edi Database handle
+    @param tableName Database table name
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". Where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return A grid containing all matching records. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *query);
+
+/**
     Read one record.
     @description This runs a simple query on the database and selects the first matching record. The query selects
         a row that has a "field" that matches the given "value".
     @param edi Database handle
     @param tableName Database table name
-    @param fieldName Database field name to evaluate
-    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
-    @param value Data value to compare with the field values.
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". Where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
     @return First matching record. Returns NULL if no matching records.
     @ingroup Edi
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *query);
 
 /**
     Read a record.
@@ -618,23 +644,9 @@ PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cch
     @ingroup Edi
     @stability Evolving
  */
-PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key);
+PUBLIC EdiRec *ediReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 
-/**
-    Read matching records.
-    @description This runs a simple query on the database and returns matching records in a grid. The query selects
-        all rows that have a "field" that matches the given "value".
-    @param edi Database handle
-    @param tableName Database table name
-    @param fieldName Database field name to evaluate
-    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
-    @param value Data value to compare with the field values.
-    @return A grid containing all matching records. Returns NULL if no matching records.
-    @ingroup Edi
-    @stability Evolving
- */
-PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
-
+#if DEPRECATED && KEEP
 /**
     Read a table.
     @description This reads all the records in a table and returns a grid containing the results.
@@ -645,6 +657,39 @@ PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar
     @stability Evolving
  */
 PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName);
+
+/**
+    Read one record.
+    @description This runs a simple query on the database and selects the first matching record. The query selects
+        a row that has a "field" that matches the given "value".
+        This API is deprecated, use ediReadGrid instead.
+    @param edi Database handle
+    @param tableName Database table name
+    @param fieldName Database field name to evaluate
+    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
+    @param value Data value to compare with the field values.
+    @return First matching record. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Deprecated
+ */
+PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+
+/**
+    Read matching records.
+    @description This runs a simple query on the database and returns matching records in a grid. The query selects
+        all rows that have a "field" that matches the given "value".
+        This API is deprecated, use ediReadGrid instead.
+    @param edi Database handle
+    @param tableName Database table name
+    @param fieldName Database field name to evaluate
+    @param operation Comparision operation. Set to "==", "!=", "<", ">", "<=" or ">=".
+    @param value Data value to compare with the field values.
+    @return A grid containing all matching records. Returns NULL if no matching records.
+    @ingroup Edi
+    @stability Deprecated
+ */
+PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+#endif
 
 /**
     Convert an EDI database record into a JSON string.
@@ -679,15 +724,28 @@ PUBLIC int edRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 
 /**
-    Delete a row in a database table
+    Delete a row in a database table identified by the query expression
     @param edi Database handle
     @param tableName Database table name
-    @param key Row key column value to delete.
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". Where OP is "==", "!=", "<", ">", "<=", ">=" or "><".
     @return Zero if successful. Otherwise a negative MPR error code.
     @ingroup Edi
     @stability Evolving
  */
-PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *key);
+PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query);
+
+/**
+    Delete a row in a database table identified by a key value
+    @param edi Database handle
+    @param tableName Database table name
+    @param key Key column value to delete.
+    @return Zero if successful. Otherwise a negative MPR error code.
+    @ingroup Edi
+    @stability Evolving
+ */
+PUBLIC int ediRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key);
 
 /**
     Remove a table from the database.
@@ -759,18 +817,15 @@ PUBLIC EdiRec *ediSetField(EdiRec *rec, cchar *fieldName, cchar *value);
     @ingroup Edi
     @stability Evolving
  */
-
 PUBLIC EdiRec *ediSetFieldFmt(EdiRec *rec, cchar *fieldName, cchar *fmt, ...);
-
 
 /**
     Set record fields without writing to the database.
     @description This routine updates the record object with the given values. The "data' argument supplies
-        a hash of fieldNames and values. The data hash may come from the request params() or it can be manually
-        created via #ediMakeHash to convert a JSON string into an options hash.
+        the fieldNames and values. The data may come from the request params() or it can be manually
+        created via #ediMakeJson.
         For example: ediSetFields(rec, mprParseJson("{ name: '%s', address: '%s' }", name, address))
-        The record will not be written
-        to the database. To write to the database, use #ediUpdateRec.
+        The record will not be written to the database. To write to the database, use #ediUpdateRec.
     @param rec Record to update
     @param data Json object of field to use for the update
     @return The record instance if successful, otherwise NULL.
@@ -976,6 +1031,7 @@ PUBLIC MprHash *ediGetRecErrors(EdiRec *rec);
  */
 PUBLIC char *ediGetTypeString(int type);
 
+#if UNUSED
 /**
     Make a hash container of property values.
     @description This routine formats the given arguments, parses the result as a JSON string and returns an
@@ -987,6 +1043,7 @@ PUBLIC char *ediGetTypeString(int type);
     @stability Evolving
  */
 PUBLIC MprHash *ediMakeHash(cchar *fmt, ...);
+#endif
 
 /**
     Make a JSON container of property values.

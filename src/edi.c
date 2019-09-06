@@ -12,7 +12,7 @@
 /************************************* Local **********************************/
 
 static void addValidations(void);
-static void formatFieldForJson(MprBuf *buf, EdiField *fp);
+static void formatFieldForJson(MprBuf *buf, EdiField *fp, int flags);
 static void manageEdiService(EdiService *es, int flags);
 static void manageEdiGrid(EdiGrid *grid, int flags);
 static bool validateField(Edi *edi, EdiRec *rec, cchar *columnName, cchar *value);
@@ -528,7 +528,7 @@ PUBLIC cchar *ediGridAsJson(EdiGrid *grid, int flags)
                 } else {
                     mprPutCharToBuf(buf, ':');
                 }
-                formatFieldForJson(buf, fp);
+                formatFieldForJson(buf, fp, flags);
                 if ((f+1) < rec->nfields) {
                     mprPutStringToBuf(buf, ",");
                 }
@@ -618,11 +618,59 @@ PUBLIC cchar *ediReadFieldValue(Edi *edi, cchar *fmt, cchar *tableName, cchar *k
 }
 
 
+PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName)
+{
+    EdiField    field;
+
+    if (!edi || !edi->provider) {
+        memset(&field, 0, sizeof(EdiField));
+        return field;
+    }
+    return edi->provider->readField(edi, tableName, key, fieldName);
+}
+
+
+PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *select)
+{
+    if (!edi || !edi->provider) {
+        return 0;
+    }
+    return edi->provider->readGrid(edi, tableName, select);
+}
+
+
+PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *select)
+{
+    EdiGrid     *grid;
+
+    if (!edi || !edi->provider) {
+        return 0;
+    }
+    if ((grid = edi->provider->readGrid(edi, tableName, select)) == 0) {
+        return 0;
+
+    }
+    if (grid->nrecords > 0) {
+        return grid->records[0];
+    }
+    return 0;
+}
+
+
+PUBLIC EdiRec *ediReadRecByKey(Edi *edi, cchar *tableName, cchar *key)
+{
+    if (!edi || !edi->provider) {
+        return 0;
+    }
+    return edi->provider->readRecByKey(edi, tableName, key);
+}
+
+
+#if DEPRECATED
 PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
 {
     EdiGrid *grid;
 
-    /* OPT - slow to read entire table. Need optimized query in providers */
     if ((grid = ediReadWhere(edi, tableName, fieldName, operation, value)) == 0) {
         return 0;
     }
@@ -633,32 +681,12 @@ PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cch
 }
 
 
-PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName)
-{
-    if (!edi || !edi->provider) {
-        EdiField    field;
-        memset(&field, 0, sizeof(EdiField));
-        return field;
-    }
-    return edi->provider->readField(edi, tableName, key, fieldName);
-}
-
-
-PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key)
-{
-    if (!edi || !edi->provider) {
-        return 0;
-    }
-    return edi->provider->readRec(edi, tableName, key);
-}
-
-
 PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
 {
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, fieldName, operation, value);
+    return edi->provider->readGrid(edi, tableName, sfmt("%s %s %s", fieldName, operation, value));
 }
 
 
@@ -667,8 +695,9 @@ PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName)
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readWhere(edi, tableName, 0, 0, 0);
+    return edi->provider->readGrid(edi, tableName, NULL);
 }
+#endif
 
 
 PUBLIC cchar *ediRecAsJson(EdiRec *rec, int flags)
@@ -690,7 +719,7 @@ PUBLIC cchar *ediRecAsJson(EdiRec *rec, int flags)
             } else {
                 mprPutCharToBuf(buf, ':');
             }
-            formatFieldForJson(buf, fp);
+            formatFieldForJson(buf, fp, flags);
             if ((f+1) < rec->nfields) {
                 mprPutStringToBuf(buf, ",");
             }
@@ -722,12 +751,25 @@ PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName)
 }
 
 
-PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *key)
+PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query)
+{
+    EdiRec  *rec;
+
+    if (!edi || !edi->provider) {
+        return MPR_ERR_BAD_STATE;
+    }
+    if ((rec = ediReadRec(edi, tableName, query)) == 0) {
+        return MPR_ERR_CANT_READ;
+    }
+    return edi->provider->removeRecByKey(edi, tableName, rec->id);
+}
+
+PUBLIC int ediRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key)
 {
     if (!edi || !edi->provider) {
         return MPR_ERR_BAD_STATE;
     }
-    return edi->provider->removeRec(edi, tableName, key);
+    return edi->provider->removeRecByKey(edi, tableName, key);
 }
 
 
@@ -915,7 +957,7 @@ PUBLIC cchar *ediFormatField(cchar *fmt, EdiField *fp)
 }
 
 
-static void formatFieldForJson(MprBuf *buf, EdiField *fp)
+static void formatFieldForJson(MprBuf *buf, EdiField *fp, int flags)
 {
     MprTime     when;
     cchar       *value;
@@ -943,10 +985,14 @@ static void formatFieldForJson(MprBuf *buf, EdiField *fp)
         return;
 
     case EDI_TYPE_DATE:
-        if (mprParseTime(&when, fp->value, MPR_UTC_TIMEZONE, 0) == 0) {
-            mprPutToBuf(buf, "\"%s\"", mprFormatUniversalTime(MPR_RFC822_DATE, when));
+        if (flags & MPR_JSON_ENCODE_TYPES) {
+            if (mprParseTime(&when, fp->value, MPR_UTC_TIMEZONE, 0) == 0) {
+                mprPutToBuf(buf, "\"{type:date}%s\"", mprFormatUniversalTime(MPR_ISO_DATE, when));
+            } else {
+                mprPutToBuf(buf, "%s", fp->value);
+            }
         } else {
-            mprPutToBuf(buf, "\"%s\"", value);
+            mprPutToBuf(buf, "%s", fp->value);
         }
         return;
 
@@ -1019,8 +1065,7 @@ static MprList *joinColumns(MprList *cols, EdiGrid *grid, MprHash *grids, int jo
 
 
 /*
-    Join grids using an INNER JOIN. All rows are returned.
-    List of grids to join must be null terminated.
+    Join grids using an INNER JOIN. All rows are returned. List of grids to join must be null terminated.
  */
 PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
 {
@@ -1075,7 +1120,7 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
                 if (col->grid != current) {
                     current = col->grid;
                     keyValue = primary->records[r]->fields[col->joinField].value;
-                    rec = ediReadRecWhere(edi, col->grid->tableName, "id", "==", keyValue);
+                    rec = ediReadRecByKey(edi, col->grid->tableName, keyValue);
                 }
                 if (rec) {
                     fp = &rec->fields[col->field];
@@ -1096,6 +1141,7 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
         result->records[r] = mprGetItem(rows, r);
     }
     result->nrecords = nrows;
+    result->count = nrows;
     return result;
 }
 
@@ -1198,6 +1244,7 @@ PUBLIC EdiGrid *ediMakeGrid(cchar *json)
 }
 
 
+#if UNUSED
 PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
 {
     MprHash     *obj;
@@ -1208,6 +1255,7 @@ PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
     va_end(args);
     return obj;
 }
+#endif
 
 
 PUBLIC MprJson *ediMakeJson(cchar *fmt, ...)
@@ -1564,8 +1612,7 @@ static cchar *checkUnique(EdiValidation *vp, EdiRec *rec, cchar *fieldName, ccha
 {
     EdiRec  *other;
 
-    //  OPT Could require an index to enforce this.
-    if ((other = ediReadRecWhere(rec->edi, rec->tableName, fieldName, "==", value)) == 0) {
+    if ((other = ediReadRecByKey(rec->edi, rec->tableName, sfmt("%s == %s", fieldName, value))) == 0) {
         return 0;
     }
     if (smatch(other->id, rec->id)) {

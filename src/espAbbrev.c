@@ -8,9 +8,8 @@
 
 #include    "esp.h"
 
-/*************************************** Code *********************************/
-
 #if ME_ESP_ABBREV
+/*************************************** Code *********************************/
 
 PUBLIC void addHeader(cchar *key, cchar *fmt, ...)
 {
@@ -30,6 +29,14 @@ PUBLIC void addParam(cchar *key, cchar *value)
         setParam(key, value);
     }
 }
+
+
+#if KEEP
+PUBLIC cchar *body(cchar *key)
+{
+    return espGetParam(getStream(), sfmt("body.%s", key), 0);
+}
+#endif
 
 
 PUBLIC bool canUser(cchar *abilities, bool warn)
@@ -54,10 +61,18 @@ PUBLIC EdiRec *createRec(cchar *tableName, MprJson *params)
 }
 
 
+#if DEPRECATED
+PUBLIC bool createRecByParams(cchar *table)
+{
+    return saveRec(createRec(table, params("fields")));
+}
+
+
 PUBLIC bool createRecFromParams(cchar *table)
 {
-    return updateRec(createRec(table, params()));
+    return saveRec(createRec(table, params(NULL)));
 }
+#endif
 
 
 /*
@@ -87,7 +102,7 @@ PUBLIC void dontAutoFinalize()
 
 PUBLIC void dumpParams()
 {
-    mprLog("info esp edi", 0, "Params: %s", mprJsonToString(params(), MPR_JSON_PRETTY));
+    mprLog("info esp edi", 0, "Params: %s", mprJsonToString(params(NULL), MPR_JSON_PRETTY));
 }
 
 
@@ -124,7 +139,7 @@ PUBLIC void finalize()
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 {
     va_list     args;
@@ -355,6 +370,12 @@ PUBLIC bool hasRec()
 }
 
 
+PUBLIC int paramInt(cchar *key)
+{
+    return (int) stoi(param(key));
+}
+
+
 PUBLIC bool isAuthenticated()
 {
     return httpIsAuthenticated(getStream());
@@ -446,9 +467,49 @@ PUBLIC cchar *param(cchar *key)
 }
 
 
-PUBLIC MprJson *params()
+PUBLIC MprJson *params(cchar *var)
 {
-    return espGetParams(getStream());
+    if (var) {
+        return mprGetJsonObj(espGetParams(getStream()), var);
+    } else {
+        return espGetParams(getStream());
+    }
+}
+
+
+PUBLIC cchar *makeQuery()
+{
+    MprJson     *fields, *key;
+    MprBuf      *buf;
+    cchar       *filter, *limit, *offset;
+    int         index;
+
+    buf = mprCreateBuf(0, 0);
+
+    if ((fields = params("fields")) != 0) {
+        for (ITERATE_JSON(fields, key, index)) {
+            //  MOB - quote value
+            mprPutToBuf(buf, "%s == %s", key->name, key->value);
+            if ((index + 1) < fields->length) {
+                mprPutStringToBuf(buf, " AND ");
+            }
+            break;
+        }
+    }
+    if ((filter = param("options.filter")) != 0) {
+        if (mprGetBufLength(buf) > 0) {
+            mprPutStringToBuf(buf, " AND ");
+        }
+        //  MOB - quote value
+        //  MOB - Should we use "LIKE" instead of ><
+        mprPutToBuf(buf, "* >< %s", filter);
+    }
+    offset = param("options.offset");
+    limit = param("options.limit");
+    if (offset && limit) {
+        mprPutToBuf(buf, " LIMIT %d, %d", (int) stoi(offset), (int) stoi(limit));
+    }
+    return mprBufToString(buf);
 }
 
 
@@ -458,24 +519,86 @@ PUBLIC ssize receive(char *buf, ssize len)
 }
 
 
-PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
+PUBLIC EdiGrid *readGrid(cchar *tableName, cchar *select, ...)
 {
-    return setRec(ediReadRecWhere(getDatabase(), tableName, fieldName, operation, value));
+    va_list     ap;
+
+    va_start(ap, select);
+    select = sfmtv(select, ap);
+    va_end(ap);
+    return setGrid(ediReadGrid(getDatabase(), tableName, select));
 }
 
 
-PUBLIC EdiRec *readRec(cchar *tableName, cchar *key)
+#if DEPRECATE
+PUBLIC EdiGrid *findGridByParams(cchar *tableName)
 {
-    if (key == 0 || *key == 0) {
-        key = "1";
+    HttpStream  *stream;
+    MprJson     *fields, *key;
+    MprBuf      *buf;
+    cchar       *filter;
+    int         index, limit, offset;
+
+    stream = getStream();
+    offset = paramInt("options.offset");
+    limit = paramInt("options.limit");
+    buf = mprCreateBuf(0, 0);
+
+    if ((fields = params("fields")) != 0) {
+        for (ITERATE_JSON(fields, key, index)) {
+            mprPutToBuf(buf, "%s == %s", key->name, key->value);
+            //  FUTURE - permit multiple select
+            break;
+        }
     }
-    return setRec(ediReadRec(getDatabase(), tableName, key));
+    if ((filter = param("options.filter")) != 0) {
+        if (mprGetBufLength(buf) > 0) {
+            mprPutStringToBuf(buf, " AND ");
+        }
+        mprPutToBuf(buf, "* >< %s", filter);
+    }
+    return setGrid(ediReadGrid(getDatabase(), tableName, mprBufToString(buf)));
 }
+#endif
+
+
+PUBLIC EdiRec *readRec(cchar *tableName, cchar *select, ...)
+{
+    va_list     ap;
+
+    va_start(ap, select);
+    select = sfmtv(select, ap);
+    va_end(ap);
+    return setRec(ediReadRec(getDatabase(), tableName, select));
+}
+
+
+#if DEPRECATE
+PUBLIC EdiRec *findRecByParams(cchar *tableName)
+{
+    EdiGrid     *grid;
+
+    if ((grid = findGridByParams(tableName)) != 0 && grid->nrecords > 0) {
+        return grid->records[0];
+    }
+    return 0;
+}
+#endif
 
 
 PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key)
 {
-    return setRec(ediReadRec(getDatabase(), tableName, key));
+    if (key == 0 || *key == 0) {
+        key = "1";
+    }
+    return setRec(ediReadRecByKey(getDatabase(), tableName, key));
+}
+
+
+#if DEPRECATE
+PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
+{
+    return setRec(ediReadRecWhere(getDatabase(), tableName, fieldName, operation, value));
 }
 
 
@@ -487,8 +610,9 @@ PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, 
 
 PUBLIC EdiGrid *readTable(cchar *tableName)
 {
-    return setGrid(ediReadWhere(getDatabase(), tableName, 0, 0, 0));
+    return setGrid(ediReadTable(getDatabase(), tableName));
 }
+#endif
 
 
 PUBLIC void redirect(cchar *target)
@@ -509,9 +633,20 @@ PUBLIC void removeCookie(cchar *name)
 }
 
 
-PUBLIC bool removeRec(cchar *tableName, cchar *key)
+PUBLIC bool removeRec(cchar *tableName, cchar *query)
 {
-    if (ediRemoveRec(getDatabase(), tableName, key) < 0) {
+    if (ediRemoveRec(getDatabase(), tableName, query) < 0) {
+        feedback("error", "Cannot delete %s", stitle(tableName));
+        return 0;
+    }
+    feedback("info", "Deleted %s", stitle(tableName));
+    return 1;
+}
+
+
+PUBLIC bool removeRecByKey(cchar *tableName, cchar *key)
+{
+    if (ediRemoveRecByKey(getDatabase(), tableName, key) < 0) {
         feedback("error", "Cannot delete %s", stitle(tableName));
         return 0;
     }
@@ -600,14 +735,6 @@ PUBLIC void renderView(cchar *view)
 {
     espRenderDocument(getStream(), view);
 }
-
-
-#if KEEP
-PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprTime timeout, int flags)
-{
-    return mprRun(getDispatcher(), command, input, output, error, timeout, MPR_CMD_IN  | MPR_CMD_OUT | MPR_CMD_ERR | flags);
-}
-#endif
 
 
 PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprTime timeout, int flags)
@@ -782,11 +909,11 @@ PUBLIC bool updateFields(cchar *tableName, MprJson *params)
     if ((rec = ediSetFields(ediReadRec(getDatabase(), tableName, key), params)) == 0) {
         return 0;
     }
-    return updateRec(rec);
+    return saveRec(rec);
 }
 
 
-PUBLIC bool updateRec(EdiRec *rec)
+PUBLIC bool saveRec(EdiRec *rec)
 {
     if (!rec) {
         feedback("error", "Cannot save record");
@@ -802,10 +929,23 @@ PUBLIC bool updateRec(EdiRec *rec)
 }
 
 
+PUBLIC bool updateRec(cchar *table, MprJson *params)
+{
+    MprJson     *fields;
+    cchar       *id;
+
+    id = mprGetJson(params, "fields.id");
+    fields = mprGetJsonObj(params, "fields");
+    return saveRec(setFields(readRecByKey(table, id), fields));
+}
+
+
+#if DEPRECATED
 PUBLIC bool updateRecFromParams(cchar *table)
 {
-    return updateRec(setFields(readRec(table, param("id")), params()));
+    return saveRec(setFields(readRec(table, param("id")), params(NULL)));
 }
+#endif
 
 
 PUBLIC cchar *uri(cchar *target, ...)
@@ -832,7 +972,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 /*
     <% stylesheets(patterns); %>
 
@@ -840,7 +980,7 @@ PUBLIC cchar *absuri(cchar *target, ...)
  */
 PUBLIC void stylesheets(cchar *patterns)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;
@@ -918,7 +1058,7 @@ PUBLIC void stylesheets(cchar *patterns)
  */
 PUBLIC void scripts(cchar *patterns)
 {
-    HttpStream    *stream;
+    HttpStream  *stream;
     HttpRx      *rx;
     HttpRoute   *route;
     EspRoute    *eroute;

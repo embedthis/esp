@@ -5,9 +5,9 @@
 
 /*
     Create a new resource in the database
- */ 
-static void createPost() { 
-    if (updateRec(createRec("post", params()))) {
+ */
+static void createPost() {
+    if (saveRec(createRec("post", params()))) {
         flash("info", "New post Created");
         renderView("post/list");
     } else {
@@ -19,14 +19,14 @@ static void createPost() {
 /*
     Prepare an edit template with the resource
  */
-static void editPost() { 
+static void editPost() {
     readRec("post", param("id"));
 }
 
 /*
     Get a resource
- */ 
-static void getPost() { 
+ */
+static void getPost() {
     readRec("post", param("id"));
     renderView("post/edit");
 }
@@ -34,22 +34,22 @@ static void getPost() {
 /*
     Initialize a new resource for the client to complete
  */
-static void initPost() { 
+static void initPost() {
     createRec("post", 0);
     renderView("post/edit");
 }
 
 /*
     List the resources in this group
- */ 
-static void listPost() { 
+ */
+static void listPost() {
     renderView("post/list");
 }
 
 /*
     Remove a resource identified by the "id" parameter
  */
-static void removePost() { 
+static void removePost() {
     if (removeRec("post", param("id"))) {
         flash("info", "Post Removed");
     }
@@ -61,7 +61,7 @@ static void removePost() {
     If "id" is not defined, this is the same as a create
     Also we tunnel delete here if the user clicked delete
  */
-static void updatePost() { 
+static void updatePost() {
     if (smatch(param("submit"), "Delete")) {
         removePost();
     } else {
@@ -99,7 +99,7 @@ ESP_EXPORT int esp_controller_blog_post(HttpRoute *route, MprModule *module) {
     espDefineAction(route, "post/update", updatePost);
     espDefineAction(route, "post/", listPost);
     espDefineAction(route, "post", redirectPost);
-    
+
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);
     ediAddValidation(edi, "present", "post", "title", 0);

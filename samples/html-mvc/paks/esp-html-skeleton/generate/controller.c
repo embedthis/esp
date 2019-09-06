@@ -7,7 +7,7 @@
     Create a new resource in the database
  */
 static void create${UCONTROLLER}() {
-    if (updateRec(createRec("${CONTROLLER}", params()))) {
+    if (saveRec(createRec("${CONTROLLER}", params()))) {
         feedback("info", "New ${CONTROLLER} Created");
         renderView("${CONTROLLER}/list");
     } else {

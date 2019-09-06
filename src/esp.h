@@ -18,13 +18,13 @@ extern "C" {
 /********************************** Tunables **********************************/
 
 #ifndef ME_ESP_ABBREV
-    #define ME_ESP_ABBREV 1
+    #define ME_ESP_ABBREV 1                             /**< Enable the ESP Abbreviated API */
 #endif
 #ifndef ME_ESP_EMAIL_TIMEOUT
-    #define ME_ESP_EMAIL_TIMEOUT (60 * 1000)           /**< Timeout for sending email */
+    #define ME_ESP_EMAIL_TIMEOUT (60 * 1000)            /**< Timeout for sending email */
 #endif
 #ifndef ME_ESP_RELOAD_TIMEOUT
-    #define ME_ESP_RELOAD_TIMEOUT (5 * 1000)           /**< Timeout for reloading esp modules */
+    #define ME_ESP_RELOAD_TIMEOUT (5 * 1000)            /**< Timeout for reloading esp modules */
 #endif
 #define ESP_TOK_INCR        1024                        /**< Growth increment for ESP tokens */
 #define ESP_LISTEN          "4000"                      /**< Default listening endpoint for the esp program */
@@ -49,7 +49,9 @@ extern "C" {
 #endif
 
 /********************************** Defines ***********************************/
-
+/*
+    Forward declare the EspAction
+ */
 struct EspAction;
 
 /**
@@ -198,18 +200,19 @@ typedef struct EspRoute {
     uint            combine: 1;             /**< Combine C source into a single file */
     uint            compileMode: 1;         /**< Compile the application debug or release mode */
     uint            compile: 1;             /**< Enable recompiling the application or esp page */
-    uint            update: 1;              /**< Enable dynamically updating the application */
+    uint            encodeTypes: 1;         /**< Encode data types in JSON API request/response */
     uint            keep: 1;                /**< Keep intermediate source code after compiling */
+    uint            update: 1;              /**< Enable dynamically updating the application */
 
     Edi             *edi;                   /**< Default database for this route */
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
     cchar           *combineScript;         /**< Combine mode script filename */
     cchar           *combineSheet;          /**< Combine mode stylesheet filename */
 #endif
 } EspRoute;
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Add the specified pak to the pak.json packs list.
     @param route HttpRoute defining the ESP application
@@ -217,7 +220,7 @@ typedef struct EspRoute {
     @param version Pack version string.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version);
 #endif
@@ -262,8 +265,8 @@ PUBLIC void espAddRouteSet(HttpRoute *route, cchar *set);
 PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path);
 
 /**
-    Configure an ESP application
-    @description Load the esp.json and pak.json configuration files.
+    Load configuration for an ESP application
+    @description Load the application's esp.json and pak.json configuration files.
     @param route Parent route from which to inherit configuration.
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
@@ -408,8 +411,8 @@ PUBLIC int espBindProc(HttpRoute *route, cchar *pattern, void *actionProc);
 PUBLIC EspRoute *espCreateRoute(HttpRoute *route);
 
 /**
-    Define a base function to invoke for all controller actions.
-    @description A base function can be defined that will be called before calling any controller action. This
+    Define a base controller function to invoke for all controller actions.
+    @description A base controller function can be defined that will be called before calling any controller action. This
         emulates a super class constructor.
     @param route HttpRoute object
     @param baseProc Function to call just prior to invoking a controller action.
@@ -471,7 +474,7 @@ PUBLIC char *espExpandCommand(HttpRoute *route, cchar *command, cchar *source, c
  */
 PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Test if the ESP application includes the specified pak
     @description This tests the dependencies property specified pak.
@@ -479,7 +482,7 @@ PUBLIC cchar *espGetConfig(HttpRoute *route, cchar *key, cchar *defaultValue);
     @param name Desired pak name. For example: "angular-mvc"
     @returns True if the specified pak is supported
     @ingroup EspRoute
-    @stability Prototype
+    @stability Deprecated
  */
 PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
 #endif
@@ -493,14 +496,14 @@ PUBLIC bool espHasPak(HttpRoute *route, cchar *name);
  */
 PUBLIC int espLoadCompilerRules(HttpRoute *route);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Save the in-memory ESP pak.json configuration to the default location for the ESP application
     defined by the specified route.
     @param route HttpRoute defining the ESP application
     @returns Zero if successful, otherwise a negative MPR error code.
     @ingroup EspRoute
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC int espSaveConfig(HttpRoute *route);
 #endif
@@ -555,17 +558,6 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
     @stability Stable
  */
 typedef void (*EspViewProc)(HttpStream *stream);
-
-#if UNUSED
-/**
-    ESP Action
-    @description Actions are run after a request URI is routed to a controller.
-    @ingroup EspReq
-    @stability Stable
- */
-typedef EspProc EspAction;
-PUBLIC void espManageAction(EspAction *ap, int flags);
-#endif
 
 /**
     ESP request structure
@@ -834,7 +826,7 @@ PUBLIC cchar *espGetDocuments(HttpStream *stream);
 PUBLIC cchar *espGetFeedback(HttpStream *stream, cchar *type);
 
 /**
-    Get the current database grid.
+    Get the current database grid reference.
     @description The current grid is defined via #setGrid
     @return EdiGrid instance
     @ingroup EspReq
@@ -876,19 +868,6 @@ PUBLIC MprHash *espGetHeaderHash(HttpStream *stream);
 PUBLIC char *espGetHeaders(HttpStream *stream);
 
 /**
-    Get a request pararmeter as an integer.
-    @description Get the value of a named request parameter as an integer. Form variables are defined via
-        www-urlencoded query or post data contained in the request.
-    @param stream HttpStream stream object
-    @param var Name of the request parameter to retrieve
-    @param defaultValue Default value to return if the variable is not defined. Can be null.
-    @return Integer containing the request parameter's value
-    @ingroup EspReq
-    @stability Evolving
- */
-PUBLIC int espGetIntParam(HttpStream *stream, cchar *var, int defaultValue);
-
-/**
     Get the HTTP method.
     @description This is a convenience API to return the Http method
     @return The HttpStream.rx.method property
@@ -899,8 +878,9 @@ PUBLIC cchar *espGetMethod(HttpStream *stream);
 
 /**
     Get a request parameter.
-    @description Get the value of a named request parameter. Form variables are defined via www-urlencoded query or post
-        data contained in the request.
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query, post data contained in the request and route parameters. Route parameters are stored as JSON tree objects
+        and may contain nested properties.
     @param stream HttpStream stream object
     @param var Name of the request parameter to retrieve
     @param defaultValue Default value to return if the variable is not defined. Can be null.
@@ -911,10 +891,38 @@ PUBLIC cchar *espGetMethod(HttpStream *stream);
 PUBLIC cchar *espGetParam(HttpStream *stream, cchar *var, cchar *defaultValue);
 
 /**
-    Get the request parameter hash table.
-    @description This call gets the params hash table for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding.
-        Use #mprLookupKey to retrieve data from the table.
+    Get a request pararmeter as an integer.
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query, post data contained in the request and route parameters. Request parameters are stored as JSON tree objects
+        and may contain nested properties.
+    @param stream HttpStream stream object
+    @param var Name of the request parameter to retrieve
+    @param defaultValue Default value to return if the variable is not defined. Can be null.
+    @return Integer containing the request parameter's value
+    @ingroup EspReq
+    @stability Evolving
+ */
+PUBLIC int espGetParamInt(HttpStream *stream, cchar *var, int defaultValue);
+#define espGetIntParam espGetParamInt
+
+/**
+    Get a request pararmeter as a JSON object.
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query, post data contained in the request and route parameters. Request parameters are stored as JSON tree objects
+        and may contain nested properties.
+    @param stream HttpStream stream object
+    @param var Name of the request parameter to retrieve
+    @return JSON parameter object.
+    @ingroup EspReq
+    @stability Evolving
+ */
+PUBLIC MprJson *espGetParamObj(HttpStream *stream, cchar *var);
+
+/**
+    Get the request parameters.
+    @description This call gets the request parameters for the current request.
+    @description Request parameters are defined via www-urlencoded query, post data contained in the request and route parameters.
+        Request parameters are stored as JSON tree objects and may contain nested properties.
     @param stream HttpStream stream object
     @return MprJson instance containing the request parameters
     @ingroup EspReq
@@ -933,8 +941,8 @@ PUBLIC MprJson *espGetParams(HttpStream *stream);
 PUBLIC cchar *espGetPath(HttpStream *stream);
 
 /**
-    Get the request query string.
-    @description Get query string sent with the current request.
+    Get the request URI query string.
+    @description Get URI query string sent with the current request.
     @param stream HttpStream stream object
     @return String containing the request query string. Caller should not free.
     @ingroup EspReq
@@ -1037,7 +1045,7 @@ PUBLIC MprList *espGetUploads(HttpStream *stream);
 PUBLIC cchar *espGetUri(HttpStream *stream);
 
 /**
-    Test if a current grid has been defined.
+    Test if a current grid has been defined via #espSetGrid.
     @return "True" if a current grid has been defined
     @ingroup EspReq
     @stability Deprecated
@@ -1201,7 +1209,8 @@ PUBLIC ssize espRenderConfig(HttpStream *stream);
 
 /**
     Render a block of data to the client.
-    @description Render a block of data to the client. Data packets will be created as required to store the write data. This call may block waiting for the client to absorb the data.
+    @description Render a block of data to the client. Data packets will be created as required to store the write data.
+    This call may block waiting for the client to absorb the data.
     @param stream HttpStream stream object
     @param buf Buffer containing the write data
     @param size Size of the data in buf
@@ -1323,7 +1332,7 @@ PUBLIC ssize espRenderString(HttpStream *stream, cchar *s);
     If a request parameter is not found by the given name, consult the session store for a variable the same name.
     @description This writes the value of a request variable after HTML escaping its value.
     @param stream HttpStream stream object
-    @param name Form variable name
+    @param name Request parameter variable name
     @return A count of the bytes actually written
     @ingroup EspReq
     @stability Stable
@@ -1513,7 +1522,7 @@ PUBLIC void espSetHeaderString(HttpStream *stream, cchar *key, cchar *value);
 
 /**
     Set an integer request parameter value
-    @description Set the value of a named request parameter to an integer value. Form variables are defined via
+    @description Set the value of a named request parameter to an integer value. Request parameters are defined via
         www-urlencoded query or post data contained in the request.
     @param stream HttpStream stream object
     @param var Name of the request parameter to set
@@ -1521,7 +1530,8 @@ PUBLIC void espSetHeaderString(HttpStream *stream, cchar *key, cchar *value);
     @ingroup EspReq
     @stability Stable
  */
-PUBLIC void espSetIntParam(HttpStream *stream, cchar *var, int value);
+PUBLIC void espSetParamInt(HttpStream *stream, cchar *var, int value);
+#define espSetIntParam espSetParamInt
 
 /**
     Define a notifier callback for this stream.
@@ -1699,15 +1709,17 @@ PUBLIC cchar *espUri(HttpStream *stream, cchar *target);
 
 
 /************************************** Actions *******************************/
-
-//  MOB DOC
+/**
+    Action definition
+    @stability Prototype
+ */
 typedef struct EspAction {
-    cchar       *target;
-    cchar       *roles;
-    EspProc     callback;
+    cchar       *target;            /**< Route target string */
+    cchar       *roles;             /**< Roles or abilities string for action */
+    EspProc     callback;           /**< Callback action */
 } EspAction;
 
-#if DEPRECATED || 1
+#if DEPRECATED && KEEP
 /**
     Define an action
     @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
@@ -1813,7 +1825,20 @@ PUBLIC EdiRec *createRec(cchar *tableName, MprJson *data);
     @ingroup EspAbbrev
     @stability Prototype
 */
+PUBLIC bool createRecByParams(cchar *table);
+
+#if DEPRECATED && KEEP
+/**
+    Create a record from the request parameters
+    @description A new record is created with the request parameters in the specified table.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param table Database table to update
+    @return True if the update is successful.
+    @ingroup EspAbbrev
+    @stability Deprecated
+*/
 PUBLIC bool createRecFromParams(cchar *table);
+#endif
 
 /**
     Create a session state object.
@@ -1851,13 +1876,19 @@ PUBLIC void dontAutoFinalize(void);
 PUBLIC void dumpGrid(EdiGrid *grid);
 
 /**
+    Display request parameters to the debug log
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void dumpParams();
+
+/**
     Display a record to the debug log
     @param rec Record to log
     @ingroup EspAbbrev
     @stability Prototype
  */
 PUBLIC void dumpRec(EdiRec *rec);
-
 
 /**
     Finalize the response.
@@ -2198,6 +2229,29 @@ PUBLIC bool hasRec(void);
 PUBLIC void input(cchar *field, cchar *options);
 
 /**
+    Render an input field with a hidden XSRF security token.
+    @description Security tokens are used to help guard against CSRF threats.
+    This call will generate a hidden input field that includes the CSRF security token for the form.
+    This call should not be included in Angular client applications as the Angular framework will automatically
+    handle the security token.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC void inputSecurityToken(void);
+
+/**
+    Get an integer request parameter
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query or post data contained in the request. This routine calls #espGetParam
+    @param name Name of the request parameter to retrieve
+    @return Integer containing the request parameter's value. Returns zero if not found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC int paramInt(cchar *name);
+#define intParam paramInt
+
+/**
     Test if the user is authenticated
     @return True if the username and password have been authenticated.
     @ingroup EspAbbrev
@@ -2255,7 +2309,21 @@ PUBLIC MprHash *makeHash(cchar *fmt, ...);
 PUBLIC MprJson *makeJson(cchar *fmt, ...);
 
 /**
-    Make a record
+    Build an EDI selection query from the request parameters.
+    @description This call creates an EDI "SQL style" query from the request parameters.
+        This call expects optional "fields" and options.offset, options.limit and options.filter parameters.
+        It examines each of the "fields" parameters to build an SQL "WHERE" expression testing the value of each field.
+        The resulting expression looks like:
+    \n\n
+        field OP value AND field OP value .... LIMIT offset, limit
+    @return An EDI sql style selection query string suitable for use with #readRec and #readGrid
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *makeQuery();
+
+/**
+    Make a free-standing record
     @description This call makes a free-standing data record based on the JSON format content string.
         The record is not saved to the database.
     @param content JSON format content string. The content should be a set of property names and values.
@@ -2336,7 +2404,7 @@ PUBLIC cchar *makeUri(cchar *target);
     @param str String to hash
     @returns An allocated MD5 checksum string.
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *md5(cchar *str);
 
@@ -2344,7 +2412,7 @@ PUBLIC cchar *md5(cchar *str);
     Generate a onetime random string
     @returns An MD5 encoded random string
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Evolving
  */
 PUBLIC cchar *nonce(void);
 
@@ -2360,9 +2428,8 @@ PUBLIC bool modeIs(cchar *check);
 
 /**
     Get a request parameter
-    @description Get the value of a named request parameter. Form variables are defined via www-urlencoded query or post
-        data contained in the request.
-        This routine calls #espGetParam
+    @description Get the value of a named request parameter. Request parameters are defined via www-urlencoded
+        query or post data contained in the request. This routine calls #espGetParam.
     @param name Name of the request parameter to retrieve
     @return String containing the request parameter's value. Caller should not free.
         Returns NULL if the parameter is not defined.
@@ -2372,29 +2439,96 @@ PUBLIC bool modeIs(cchar *check);
 PUBLIC cchar *param(cchar *name);
 
 /**
-    Get the request parameter hash table
-    @description This call gets the params hash table for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding.
-        Use #mprLookupKey to retrieve data from the table.
-        This routine calls #espGetParams
+    Get a collection of request parameters
+    @description This call gets request parameters for a given variable root.
+        Route tokens, request query data, and www-url encoded form data are all entered into the request parameters
+    @param var Root property of the params collection. Set to NULL for the root collection.
     @return MprJson instance containing the request parameters
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC MprJson *params(void);
+PUBLIC MprJson *params(cchar *var);
 
+//  MOB - DOC
+//  MOB - who uses?
 /**
-    Read the identified record
-    @description Read the record identified by the request param("id") from the nominated table.
-    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
-    @param tableName Database table name
-    @param key Key value of the record to read
-    @return The identified record. Returns NULL if the table or record cannot be found.
+    Get a property from the request parameters.
+    @description This call gets a request parameter from the request parameters for the current request.
+        Route tokens, request query data, and www-url encoded form data are all entered into the params table
+        after decoding. This routine calls #espGetParams.
+    @return MprJson instance containing the request parameters
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiRec *readRec(cchar *tableName, cchar *key);
+PUBLIC MprJson *paramsObj(cchar *var);
 
+/**
+    Read matching records in table from the database
+    @description This reads a table and returns a grid containing the table data.
+    The grid of records is remembered for this request as the "current" grid and can be retrieved via: getGrid().
+    @param tableName Database table name
+    @param select Selection format string. This is a printf style format string. This will contain a select criteria typically
+        of the form: "Field Op Value AND field OP value ...". All fields may be matched by using the pseudo column name "*".
+        OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return A grid containing all table rows. Returns NULL if the table cannot be found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiGrid *readGrid(cchar *tableName, cchar *select, ...);
+
+#if DEPRECATED && REMOVE
+/**
+    Read matching the records in a table from the database using arguments from the request params.
+    @description This reads matching table rows and returns a grid containing the table data.
+    The grid of records is remembered for this request as the "current" grid and can be retrieved via: getGrid().
+    The parameters "fields", "options.filter", "options.offset" and "options.limit" select the rows to return.
+    @param tableName Database table name
+    @return A grid containing all table rows. Returns NULL if the table cannot be found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiGrid *findGridByParams(cchar *tableName);
+
+/**
+    Read a matching record from a table in the database using arguments from the request params.
+    @description This reads a table and returns a grid containing the table data.
+    The grid of records is remembered for this request as the "current" grid and can be retrieved via: getGrid().
+    The parameters "fields", "options.filter", "options.offset" and "options.limit" select the record to return.
+    @param tableName Database table name
+    @return A record containing the columns of the matching row. Returns NULL if the table cannot be found.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiRec *findRecByParams(cchar *tableName);
+#endif
+
+/**
+    Read a record identified by SQL style query expression
+    @description Read a record from the given table as described by the selection criteria.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param tableName Database table name
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return Record instance of EdiRec.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC EdiRec *readRec(cchar *tableName, cchar *query, ...);
+
+/**
+    Read a record identified by key value
+    @description Read a record from the given table as identified by the key value.
+    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
+    @param tableName Database table name
+    @param key Key value of the record to read
+    @return Record instance of EdiRec.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
+
+#if DEPRECATED && KEEP
 /**
     Read matching records
     @description This runs a simple query on the database and returns matching records in a grid. The query selects
@@ -2406,7 +2540,7 @@ PUBLIC EdiRec *readRec(cchar *tableName, cchar *key);
     @param value Data value to compare with the field values.
     @return A grid containing all matching records. Returns NULL if no matching records.
     @ingroup EspAbbrev
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
 
@@ -2421,21 +2555,9 @@ PUBLIC EdiGrid *readWhere(cchar *tableName, cchar *fieldName, cchar *operation, 
     @param value Data value to compare with the field values.
     @return First matching record. Returns NULL if no matching records.
     @ingroup EspAbbrev
-    @stability Evolving
+    @stability Deprecated
  */
 PUBLIC EdiRec *readRecWhere(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
-
-/**
-    Read a record identified by key value
-    @description Read a record from the given table as identified by the key value.
-    The record is remembered for this request as the "current" record and can be retrieved via: getRec().
-    @param tableName Database table name
-    @param key Key value of the record to read
-    @return Record instance of EdiRec.
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
 
 /**
     Read all the records in table from the database
@@ -2447,6 +2569,7 @@ PUBLIC EdiRec *readRecByKey(cchar *tableName, cchar *key);
     @stability Evolving
  */
 PUBLIC EdiGrid *readTable(cchar *tableName);
+#endif
 
 /**
     Read receive body content
@@ -2488,16 +2611,31 @@ PUBLIC void removeCookie(cchar *name);
 
 /**
     Remove a record from a database table
+    @description Remove the record identified by the query expression.
+        As a sideeffect, if the removal succeeds, the feedback message {inform: "Deleted Record"} will be created.
+        If the removal fails, a feedback message {error: "Cannot delete Record"} will be created.
+    @param tableName Database table name
+    @param query SQL like query expression. This arg is a printf style format string. When expanded, this will contain
+        a SQL style query expression of the form: "Field Op Value AND field OP value ... LIMIT offset, limit".
+        All fields may be matched by using the pseudo column name "*". OP is "==", "!=", "<", ">", "<=", ">=" or "><".
+    @return True if the removal succeeds, otherwise false.
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC bool removeRec(cchar *tableName, cchar *query);
+
+/**
+    Remove a record from a database table
     @description Remove the record identified by the key value from the given table.
         If the removal succeeds, the feedback message {inform: "Deleted Record"} will be created. If the removal fails,
         a feedback message {error: "Cannot delete Record"} will be created.
     @param tableName Database table name
-    @param key Key value of the record to remove
-    @return Record instance of EdiRec.
+    @param key Record key value.
+    @return True if the removal succeeds, otherwise false.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC bool removeRec(cchar *tableName, cchar *key);
+PUBLIC bool removeRecByKey(cchar *tableName, cchar *key);
 
 /**
     Remove a session state variable
@@ -2585,17 +2723,6 @@ PUBLIC ssize renderFile(cchar *path);
 PUBLIC ssize renderSafe(cchar *fmt, ...);
 
 /**
-    Render an input field with a hidden XSRF security token.
-    @description Security tokens are used to help guard against CSRF threats.
-    This call will generate a hidden input field that includes the CSRF security token for the form.
-    This call should not be included in Angular client applications as the Angular framework will automatically
-    handle the security token.
-    @ingroup EspAbbrev
-    @stability Prototype
- */
-PUBLIC void inputSecurityToken(void);
-
-/**
     Render a string of data to the client
     @description Render a string of data to the client. Data packets will be created
         as required to store the write data. This call may block waiting for data to drain to the client.
@@ -2610,7 +2737,7 @@ PUBLIC ssize renderString(cchar *s);
     Render the value of a request variable to the client.
     If a request parameter is not found by the given name, consult the session store for a variable the same name.
     @description This writes the value of a request variable after HTML escaping its value.
-    @param name Form variable name
+    @param name Request parameter variable name
     @return A count of the bytes actually written
     @ingroup EspAbbrev
     @stability Evolving
@@ -2640,7 +2767,22 @@ PUBLIC void renderView(cchar *view);
  */
 PUBLIC int runCmd(cchar *command, char *input, char **output, char **error, MprTicks timeout, int flags);
 
-#if DEPRECATED || 1
+/**
+    Write a record to the database
+    @description The record will be saved to the database after running any field validations. If any field validations
+        fail to pass, the record will not be written and error details can be retrieved via #ediGetRecErrors.
+        If the record is a new record and the "id" column is EDI_AUTO_INC, then the "id" will be assigned
+        prior to saving the record.
+        If the update succeeds, the feedback message {inform: "Saved Record"} will be created. If the update fails,
+        a feedback message {error: "Cannot save Record"} will be created.
+    @param rec Record to write to the database.
+    @return "true" if the record can be successfully written.
+    @ingroup EspAbbrev
+    @stability Evolving
+ */
+PUBLIC bool saveRec(EdiRec *rec);
+
+#if DEPRECATED && REMOVE
 /**
     Render scripts
     @description This renders script elements for all matching filenames on the server.
@@ -2654,9 +2796,9 @@ PUBLIC void scripts(cchar *patterns);
 #endif
 
 /**
-    Send a Edatabase grid as a JSON string
-    @description The JSON string is rendered as part of an enclosing "{ data: JSON }" wrapper.
-    This API is used to send database data to client user interfaces such as Angular or Aurelia clients.
+    Send a database grid as a JSON string to the request client
+    @description The JSON string is rendered as part of an enclosing "{ data: JSON, schema: schema }" wrapper.
+    This API is used to send database data to clients.
     @param grid EDI grid
     @return Number of bytes sent
     @ingroup EspReq
@@ -2689,7 +2831,7 @@ PUBLIC ssize sendRec(EdiRec *rec);
   */
 PUBLIC void sendResult(bool status);
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 /**
     Render stylesheets
     @description This renders stylesheet elements for all matching filenames on the server.
@@ -2767,7 +2909,7 @@ PUBLIC void setData(void *data);
 /**
     Update a record field without writing to the database
     @description This routine updates the record object with the given value. The record will not be written
-        to the database. To write to the database, use #updateRec.
+        to the database. To write to the database, use #saveRec
     @param rec Record to update
     @param fieldName Record field name to update
     @param value Value to update
@@ -2780,10 +2922,10 @@ PUBLIC EdiRec *setField(EdiRec *rec, cchar *fieldName, cchar *value);
 /**
     Update record fields without writing to the database
     @description This routine updates the record object with the given values. The "data' argument supplies
-        a hash of fieldNames and values. The data hash may come from the request #params or it can be manually
-        created via #ediMakeHash to convert a JSON string into an options hash.
-        For example: updateFields(rec, hash("{ name: '%s', address: '%s' }", name, address))
-        The record will not be written to the database. To write to the database, use #ediUpdateRec.
+        a hash of fieldNames and values. The "data' argument supplies the fieldNames and values as a JSON object. The data
+    may come from the request #params or it can be manually created via makeJson to convert a JSON
+    string into an options hash. For example: ediWriteFields(rec, params());
+    The record runs field validations before saving to the database.
     @param rec Record to update
     @param data Json object of field data.
     @return The record instance if successful, otherwise NULL.
@@ -2793,7 +2935,8 @@ PUBLIC EdiRec *setField(EdiRec *rec, cchar *fieldName, cchar *value);
 PUBLIC EdiRec *setFields(EdiRec *rec, MprJson *data);
 
 /**
-    Set the current database grid
+    Set the current database grid reference.
+    @description This sets the current database which is used by many APIs that operate on the current grid.
     @return The grid instance. This permits chaining.
     @ingroup EspAbbrev
     @stability Evolving
@@ -2813,14 +2956,15 @@ PUBLIC void setHeader(cchar *key, cchar *fmt, ...);
 
 /**
     Set an integer request parameter value
-    @description Set the value of a named request parameter to an integer value. Form variables are defined via
+    @description Set the value of a named request parameter to an integer value. Request parameters are defined via
         www-urlencoded query or post data contained in the request.
     @param name Name of the request parameter to set
     @param value Integer value to set.
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC void setIntParam(cchar *name, int value);
+PUBLIC void setParamInt(cchar *name, int value);
+#define setIntParam setParamInt
 
 /**
     Set a notifier callback for the stream.
@@ -2920,10 +3064,9 @@ PUBLIC bool updateField(cchar *tableName, cchar *key, cchar *fieldName, cchar *v
 /**
     Write field values to a database row
     @description This routine updates the current record with the given data and then saves the record to
-        the database. The "data' argument supplies
-        a hash of fieldNames and values. The data hash may come from the request #params or it can be manually
-        created via #ediMakeHash to convert a JSON string into an options hash.
-        For example: ediWriteFields(rec, params());
+        the database. The "data' argument supplies the fieldNames and values as a JSON object. The data
+        may come from the request #params or it can be manually created via makeJson to convert a JSON
+        string into an options hash. For example: ediWriteFields(rec, params());
         The record runs field validations before saving to the database.
     @param tableName Database table name
     @param data Json object of fields to update
@@ -2934,29 +3077,27 @@ PUBLIC bool updateField(cchar *tableName, cchar *key, cchar *fieldName, cchar *v
 PUBLIC bool updateFields(cchar *tableName, MprJson *data);
 
 /**
-    Write a record to the database
-    @description The record will be saved to the database after running any field validations. If any field validations
-        fail to pass, the record will not be written and error details can be retrieved via #ediGetRecErrors.
-        If the record is a new record and the "id" column is EDI_AUTO_INC, then the "id" will be assigned
-        prior to saving the record.
-        If the update succeeds, the feedback message {inform: "Saved Record"} will be created. If the update fails,
-        a feedback message {error: "Cannot save Record"} will be created.
-    @param rec Record to write to the database.
-    @return "true" if the record can be successfully written.
+    Update a record from the request parameters
+    @description The record identified by the params(id) is read and updated with the request parameters.
+    @param table Database table to update
+    @param data Data as a JSON object to apply to the record. This may come from the #params() API or from #makeJson.
+    @return True if the update is successful.
     @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC bool updateRec(EdiRec *rec);
+    @stability Prototype
+*/
+PUBLIC bool updateRec(cchar *table, MprJson *data);
 
+#if DEPRECATED && KEEP
 /**
     Update a record from the request parameters
     @description The record identified by the params(id) is read and updated with the request parameters.
     @param table Database table to update
     @return True if the update is successful.
     @ingroup EspAbbrev
-    @stability Prototype
+    @stability Deprecated
 */
 PUBLIC bool updateRecFromParams(cchar *table);
+#endif
 
 /**
     Create a URI link.
@@ -3031,7 +3172,7 @@ PUBLIC cchar *uri(cchar *target, ...);
 #define espGetConn espGetStream
 #define espSetConn espSetStream
 
-#if DEPRECATED || 1
+#if DEPRECATED && KEEP
 #define espGetFlash(stream, type) espGetFeedback(stream, type)
 #define espRenderFlash(stream, types) espRenderFeedback(stream, types)
 #define espSetFlashv(stream, type, fmt, args) espSetFeedbackv(stream, type, fmt, args)

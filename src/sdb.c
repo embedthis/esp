@@ -79,7 +79,7 @@ static void sdbClose(Edi *edi);
 static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName);
 static int sdbDelete(cchar *path);
 static void sdbError(Edi *edi, cchar *fmt, ...);
-static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
+static int sdbRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static MprList *sdbGetColumns(Edi *edi, cchar *tableName);
 static int sdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *sdbGetTables(Edi *edi);
@@ -88,8 +88,8 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName);
 static Edi *sdbOpen(cchar *path, int flags);
 PUBLIC EdiGrid *sdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-static EdiRec *sdbReadRec(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value);
+static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select);
+static EdiRec *sdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static int sdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int sdbRemoveTable(Edi *edi, cchar *tableName);
@@ -105,13 +105,13 @@ static EdiProvider SdbProvider = {
     "sdb",
     sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
     sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
-    sdbReadField, sdbReadRec, sdbReadWhere, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
+    sdbReadField, sdbReadGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRecByKey, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
 /************************************* Code ***********************************/
 
-PUBLIC void sdbInit()
+PUBLIC void sdbInit(void)
 {
     ediAddProvider(&SdbProvider);
 }
@@ -425,7 +425,9 @@ static int sdbGetTableDimensions(Edi *edi, cchar *tableName, int *numRows, int *
         if ((grid = query(edi, sfmt("SELECT COUNT(*) FROM %s;", tableName), NULL)) == 0) {
             return MPR_ERR_BAD_STATE;
         }
-        *numRows = grid->nrecords;
+        if (grid->nrecords && grid->records[0]->fields->value) {
+            *numRows = (int) stoi(grid->records[0]->fields->value);
+        }
     }
     if (numCols) {
         if ((schema = getSchema(edi, tableName)) == 0) {
@@ -482,7 +484,7 @@ static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
 }
 
 
-static EdiRec *sdbReadRec(Edi *edi, cchar *tableName, cchar *key)
+static EdiRec *sdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key)
 {
     EdiGrid     *grid;
 
@@ -508,25 +510,78 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
-static EdiGrid *sdbReadWhere(Edi *edi, cchar *tableName, cchar *columnName, cchar *operation, cchar *value)
+//  MOB - rename select -> query
+static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
+    EdiRec      *schema;
+    MprBuf      *buf;
+    cchar       *columnName, *operation, *sql, **values;
+    char        *tok, *value;
+    int         i, limit, offset;
 
     assert(tableName && *tableName);
+    columnName = operation = value = 0;
 
+    //  MOB
+    limit = offset = 0;
+    if (limit <= 0) {
+        limit = MAXINT;
+    }
+    if (offset < 0) {
+        offset = 0;
+    }
+    if (select) {
+        columnName = stok(sclone(select), " ", &tok);
+        operation = stok(tok, " ", &value);
+        if (smatch(operation, "><")) {
+            operation = "LIKE";
+            value = sfmt("%%%s%%", value);
+        }
+    }
     if (!validName(tableName)) {
         return 0;
     }
     if (columnName) {
-        if (!validName(columnName)) {
-            return 0;
+        if (smatch(columnName, "*")) {
+            schema = getSchema(edi, tableName);
+            if (!schema) {
+                return 0;
+            }
+            values = mprAllocZeroed(sizeof(cchar*) * (schema->nfields + 1));
+            buf = mprCreateBuf(0, 0);
+            if (!values || !buf) {
+                return 0;
+            }
+            mprPutToBuf(buf, "SELECT * FROM %s WHERE ", tableName);
+            for (i = 0; i < schema->nfields; i++) {
+                mprPutToBuf(buf, "(%s %s ?)", schema->fields[i].name, operation);
+                if ((i+1) < schema->nfields) {
+                    mprPutStringToBuf(buf, " OR ");
+                }
+                values[i] = value;
+            }
+            mprPutToBuf(buf, " LIMIT %d, %d;", offset, limit);
+            sql = mprBufToString(buf);
+            grid = queryArgv(edi, sql, schema->nfields, values, NULL);
+
+        } else {
+            if (!validName(columnName)) {
+                return 0;
+            }
+            sql = sfmt("SELECT * FROM %s WHERE %s %s ? LIMIT %d, %d;", tableName, columnName, operation, offset, limit);
+            grid = query(edi, sql, value, NULL);
         }
-        assert(columnName && *columnName);
-        assert(operation && *operation);
-        assert(value);
-        grid = query(edi, sfmt("SELECT * FROM %s WHERE %s %s ?;", tableName, columnName, operation), value, NULL);
     } else {
-        grid = query(edi, sfmt("SELECT * FROM %s;", tableName), NULL);
+        sql = sfmt("SELECT * FROM %s LIMIT %d, %d;", tableName, offset, limit);
+        grid = query(edi, sql, NULL);
+    }
+    if (grid) {
+        if (grid->nrecords == limit) {
+            sdbGetTableDimensions(edi, tableName, &grid->count, NULL);
+        } else {
+            grid->count = grid->nrecords;
+        }
     }
     return setTableName(grid, tableName);
 }
@@ -548,7 +603,7 @@ static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName)
 }
 
 
-static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key)
+static int sdbRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key)
 {
     assert(edi);
     assert(tableName && *tableName);
@@ -688,7 +743,7 @@ static int sdbUpdateRec(Edi *edi, EdiRec *rec)
     }
     argv[argc] = NULL;
 
-    if (queryArgv(edi, mprGetBufStart(buf), argc, argv) == 0) {
+    if (queryArgv(edi, mprGetBufStart(buf), argc, argv, NULL) == 0) {
         return MPR_ERR_CANT_WRITE;
     }
     return 0;
@@ -716,7 +771,7 @@ static EdiGrid *query(Edi *edi, cchar *cmd, ...)
 
 
 /*
-    Vars are ignored. Just to satisify old compilers
+    Vars are ignored in queryv if argc != 0. Defined here just to satisify old compilers.
  */
 static EdiGrid *queryArgv(Edi *edi, cchar *cmd, int argc, cchar **argv, ...)
 {
@@ -1008,7 +1063,7 @@ static void sdbDebug(Edi *edi, int level, cchar *fmt, ...)
 
 /*********************************** Factory *******************************/
 
-static void initSqlite()
+static void initSqlite(void)
 {
     mprGlobalLock();
     if (!sqliteInitialized) {
@@ -1025,7 +1080,7 @@ static void initSqlite()
 
 #else
 /* To prevent ar/ranlib warnings */
-PUBLIC void sdbDummy() {}
+PUBLIC void sdbDummy(void) {}
 #endif /* ME_COM_SQLITE */
 
 /*

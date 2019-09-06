@@ -113,7 +113,7 @@ static int openEsp(HttpQueue *q)
     HttpRoute   *rp, *route;
     EspRoute    *eroute;
     EspReq      *req;
-    char        *cookie;
+    cchar       *cookie;
     int         next;
 
     stream = q->stream;
@@ -159,7 +159,10 @@ static int openEsp(HttpQueue *q)
         If a cookie is not explicitly set, use the application name for the session cookie so that
         cookies are unique per esp application.
      */
-    cookie = sfmt("esp-%s", eroute->appName);
+    cookie = route->cookie;
+    if (!cookie) {
+        cookie = sfmt("esp-%s", eroute->appName);
+    }
     for (ITERATE_ITEMS(route->host->routes, rp, next)) {
         if (!rp->cookie) {
             httpSetRouteCookie(rp, cookie);
@@ -414,7 +417,7 @@ static int runAction(HttpStream *stream)
         return 0;
     }
     httpAuthenticate(stream);
-    
+
     action = mprLookupKey(eroute->top->actions, rx->target);
     httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
 
@@ -569,7 +572,7 @@ static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, ccha
     }
 #endif
 
-#if DEPRECATED || 1
+#if DEPRECATED
     /*
         See if views are under client/app. Remove in version 6.
      */
@@ -979,7 +982,7 @@ PUBLIC void espManageEspRoute(EspRoute *eroute, int flags)
         mprMark(eroute->top);
         mprMark(eroute->views);
         mprMark(eroute->winsdk);
-#if DEPRECATED || 1
+#if DEPRECATED
         mprMark(eroute->combineScript);
         mprMark(eroute->combineSheet);
 #endif
@@ -1041,7 +1044,7 @@ static EspRoute *cloneEspRoute(HttpRoute *route, EspRoute *parent)
     eroute->compile = parent->compile;
     eroute->keep = parent->keep;
     eroute->update = parent->update;
-#if DEPRECATED || 1
+#if DEPRECATED
     eroute->combineScript = parent->combineScript;
     eroute->combineSheet = parent->combineSheet;
 #endif
@@ -1163,6 +1166,8 @@ PUBLIC int espLoadConfig(HttpRoute *route)
         if ((name = espGetConfig(route, "name", 0)) != 0) {
             eroute->appName = sreplace(name, "-", "_");
         }
+        eroute->encodeTypes = smatch(espGetConfig(route, "esp.encodeTypes", NULL), "true");
+
         cookie = sfmt("esp-%s", eroute->appName);
         for (ITERATE_ITEMS(route->host->routes, rp, next)) {
             if (!rp->cookie) {
@@ -1205,7 +1210,7 @@ static bool preload(HttpRoute *route)
         } else {
             if ((sources = mprGetJsonObj(route->config, "esp.app.source")) != 0) {
                 for (ITERATE_JSON(sources, si, index)) {
-                    files = mprGlobPathFiles(".", si->value, 0);
+                    files = mprGlobPathFiles(route->home, si->value, 0);
                     if (mprGetListLength(files) == 0) {
                         mprLog("error esp", 0, "ESP source pattern does not match any files \"%s\"", si->value);
                     }
@@ -1465,7 +1470,7 @@ PUBLIC int espBindProc(HttpRoute *parent, cchar *pattern, void *proc)
         return MPR_ERR_CANT_CREATE;
     }
     httpSetRouteHandler(route, "espHandler");
-    espDefineAction(route, pattern, proc);
+    espAction(route, pattern, NULL, proc);
     eroute = route->eroute;
     eroute->update = 0;
     return 0;

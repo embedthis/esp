@@ -7,7 +7,7 @@
     Create a new resource in the database
  */
 static void createPost() {
-    if (updateRec(createRec("post", params()))) {
+    if (saveRec(createRec("post", params()))) {
         feedback("info", "New post Created");
         renderView("post/list");
     } else {

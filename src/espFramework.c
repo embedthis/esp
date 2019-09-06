@@ -19,7 +19,7 @@ static EspAction *createAction(cchar *target, cchar *roles, void *callback);
 
 /************************************* Code ***********************************/
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC void espAddPak(HttpRoute *route, cchar *name, cchar *version)
 {
     if (!version || !*version || smatch(version, "0.0.0")) {
@@ -119,7 +119,7 @@ PUBLIC cchar *espCreateSession(HttpStream *stream)
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC void espDefineAction(HttpRoute *route, cchar *target, EspProc callback)
 {
     espAction(route, target, NULL, callback);
@@ -484,7 +484,7 @@ PUBLIC cchar *espGetUri(HttpStream *stream)
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 
 PUBLIC bool espHasPak(HttpRoute *route, cchar *name)
 {
@@ -829,7 +829,7 @@ PUBLIC void espSetNotifier(HttpStream *stream, HttpNotifier notifier)
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC int espSaveConfig(HttpRoute *route)
 {
     cchar       *path;
@@ -845,11 +845,18 @@ PUBLIC int espSaveConfig(HttpRoute *route)
 
 PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
 {
-    if (stream->rx->route->json) {
+    HttpRoute   *route;
+    EspRoute    *eroute;
+
+    route = stream->rx->route;
+
+    if (route->json) {
         httpSetContentType(stream, "application/json");
         if (grid) {
-            return espRender(stream, "{\n  \"data\": %s, \"schema\": %s}\n", ediGridAsJson(grid, flags),
-                ediGetGridSchemaAsJson(grid));
+            eroute = route->eroute;
+            flags = flags | (eroute->encodeTypes ? MPR_JSON_ENCODE_TYPES : 0);
+            return espRender(stream, "{\n  \"data\": %s, \"count\": %d, \"schema\": %s}\n",
+                ediGridAsJson(grid, flags), grid->count, ediGetGridSchemaAsJson(grid));
         }
         return espRender(stream, "{}");
     }
@@ -859,11 +866,16 @@ PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
 
 PUBLIC ssize espSendRec(HttpStream *stream, EdiRec *rec, int flags)
 {
-    if (stream->rx->route->json) {
+    HttpRoute   *route;
+    EspRoute    *eroute;
+
+    route = stream->rx->route;
+    if (route->json) {
         httpSetContentType(stream, "application/json");
         if (rec) {
-            return espRender(stream, "{\n  \"data\": %s, \"schema\": %s}\n",
-                ediRecAsJson(rec, flags), ediGetRecSchemaAsJson(rec));
+            eroute = route->eroute;
+            flags = flags | (eroute->encodeTypes ? MPR_JSON_ENCODE_TYPES : 0);
+            return espRender(stream, "{\n  \"data\": %s, \"schema\": %s}\n", ediRecAsJson(rec, flags), ediGetRecSchemaAsJson(rec));
         }
         return espRender(stream, "{}");
     }
@@ -988,7 +1000,7 @@ PUBLIC void espSetFeedbackv(HttpStream *stream, cchar *kind, cchar *fmt, va_list
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED
 PUBLIC void espSetFlash(HttpStream *stream, cchar *kind, cchar *fmt, ...)
 {
     va_list     args;

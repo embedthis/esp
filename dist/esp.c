@@ -1032,15 +1032,16 @@ static void migrate(int argc, char **argv)
     if (app->rebuild) {
         ediClose(edi);
         mprDeletePath(edi->path);
-        if ((app->eroute->edi = ediOpen(edi->path, edi->provider->name, edi->flags | EDI_CREATE)) == 0) {
+        if ((edi = ediOpen(edi->path, edi->provider->name, edi->flags | EDI_CREATE)) == 0) {
             fail("Cannot open database %s", edi->path);
             return;
         }
+        app->eroute->edi = edi;
     }
     /*
         Each database has a _EspMigrations table which has a record for each migration applied
      */
-    if ((app->migrations = ediReadTable(edi, ESP_MIGRATIONS)) == 0) {
+    if ((app->migrations = ediReadGrid(edi, ESP_MIGRATIONS, NULL)) == 0) {
         rc = ediAddTable(edi, ESP_MIGRATIONS);
         rc += ediAddColumn(edi, ESP_MIGRATIONS, "id", EDI_TYPE_INT, EDI_AUTO_INC | EDI_INDEX | EDI_KEY);
         rc += ediAddColumn(edi, ESP_MIGRATIONS, "version", EDI_TYPE_STRING, 0);
@@ -1048,7 +1049,7 @@ static void migrate(int argc, char **argv)
             fail("Cannot add migration");
             return;
         }
-        app->migrations = ediReadTable(edi, ESP_MIGRATIONS);
+        app->migrations = ediReadGrid(edi, ESP_MIGRATIONS, NULL);
     }
     if (app->migrations->nrecords > 0) {
         mig = app->migrations->records[app->migrations->nrecords - 1];
@@ -1283,8 +1284,10 @@ static void serve(int argc, char **argv)
     }
     if (argc == 0) {
         if (http->endpoints->length == 0) {
-            if ((endpoint = httpCreateEndpoint("127.0.0.1", 4000, NULL)) == 0) {
-                fail("Cannot create endpoint for 127.0.0.1:%d", 4000);
+            address = app->listen ? app->listen : "127.0.0.1:4000";
+            mprParseSocketAddress(address, &ip, &port, NULL, 80);
+            if ((endpoint = httpCreateEndpoint(ip, port, NULL)) == 0) {
+                fail("Cannot create endpoint for %s:%d", ip, port);
                 return;
             }
             httpAddHostToEndpoint(endpoint, app->host);
@@ -1939,7 +1942,7 @@ static void compileItems(HttpRoute *route)
 #endif
     if ((sourceList = mprGetJsonObj(app->config, "esp.app.source")) != 0) {
         for (ITERATE_JSON(sourceList, source, index)) {
-            files = mprGlobPathFiles(".", source->value, 0);
+            files = mprGlobPathFiles(route->home, source->value, 0);
             if (mprGetListLength(files) == 0) {
                 fail("ESP source pattern does not match any files \"%s\"", source->value);
             }
