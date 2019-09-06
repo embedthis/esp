@@ -239,7 +239,7 @@ static void setDefaults()
     app->iterations = 1;
     app->loadThreads = 1;
     app->maxFollow = 5;
-    app->maxRetries = 2;
+    app->maxRetries = 0;
     app->protocol = 1;
     app->success = 1;
     app->streams = 1;
