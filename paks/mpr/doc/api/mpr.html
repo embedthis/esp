@@ -1118,7 +1118,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Blocking operation would block.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a83b40d1c6e1752448e424c3ba1acc3fa" class="nameRef">MPR_EVENT_ALWAYS</a>&nbsp;&nbsp;&nbsp;0x10</td>
+<td>#define</td><td><a href="#mpr_8h_1a83b40d1c6e1752448e424c3ba1acc3fa" class="nameRef">MPR_EVENT_ALWAYS</a>&nbsp;&nbsp;&nbsp;0x20</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Always invoke the callback even if the event not run.</td></tr>
 <tr class="apiDef">
@@ -1129,6 +1129,10 @@
 <td>#define</td><td><a href="#mpr_8h_1a207b6b4c4dd69cefc5d48e0898677ff1" class="nameRef">MPR_EVENT_CONTINUOUS</a>&nbsp;&nbsp;&nbsp;0x1</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Timer event runs is automatically rescheduled.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1ac32b25ad7f171f1e1d88f24ac6394b21" class="nameRef">MPR_EVENT_DONT_QUEUE</a>&nbsp;&nbsp;&nbsp;0x4</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Don&apos;t queue the event.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a35751841ed0361d40361c375bca122a4" class="nameRef">MPR_EVENT_EPOLL</a>&nbsp;&nbsp;&nbsp;2</td>
 </tr>
@@ -1146,7 +1150,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Execute inline without executing via a thread.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1ace3d51e15de22e334aede80a45e63366" class="nameRef">MPR_EVENT_RUNNING</a>&nbsp;&nbsp;&nbsp;0x8</td>
+<td>#define</td><td><a href="#mpr_8h_1ace3d51e15de22e334aede80a45e63366" class="nameRef">MPR_EVENT_RUNNING</a>&nbsp;&nbsp;&nbsp;0x10</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Event currently executing.</td></tr>
 <tr class="apiDef">
@@ -1154,7 +1158,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>traditional select().</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#mpr_8h_1a58e11a0fe2de721fd742aa6c601ff8e4" class="nameRef">MPR_EVENT_STATIC_DATA</a>&nbsp;&nbsp;&nbsp;0x4</td>
+<td>#define</td><td><a href="#mpr_8h_1a58e11a0fe2de721fd742aa6c601ff8e4" class="nameRef">MPR_EVENT_STATIC_DATA</a>&nbsp;&nbsp;&nbsp;0x8</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Event data is permanent and should not be marked by GC.</td></tr>
 <tr class="apiDef">
@@ -1249,6 +1253,10 @@
 <td>#define</td><td><a href="#mpr_8h_1a65f48ffcfcc5efa8d1b20c29dd2bd562" class="nameRef">MPR_JSON_DATA_TYPE</a>&nbsp;&nbsp;&nbsp;0xFF8</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Mask for core type of obj (obj|array|value).</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1a249d8f79212a5fe73b73d00073a504d2" class="nameRef">MPR_JSON_ENCODE_TYPES</a>&nbsp;&nbsp;&nbsp;0x8</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Encode dates and regexp with {type:date} or {type:regexp}.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a7d1e23b3a30abea486e42b6e187fe4b5" class="nameRef">MPR_JSON_FALSE</a>&nbsp;&nbsp;&nbsp;0x8</td>
 </tr>
@@ -1381,6 +1389,10 @@
 <td>#define</td><td><a href="#mpr_8h_1a4cf2a91622343c0e368ba022e64d1b87" class="nameRef">MPR_MIN_TIME_FOR_GC</a>&nbsp;&nbsp;&nbsp;2</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Wait till 2 milliseconds of idle time possible.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#mpr_8h_1ac17fc4ade4e707a6d59f79f513ff43a8" class="nameRef">MPR_MODULE_DATA_MANAGED</a>&nbsp;&nbsp;&nbsp;0x8</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Module.moduleData is managed.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#mpr_8h_1a946249df06e7ef237168454c5c0f5041" class="nameRef">MPR_MODULE_LOADED</a>&nbsp;&nbsp;&nbsp;0x4</td>
 </tr>
@@ -6336,7 +6348,7 @@ Virtual write file routine.
   <div class="apiDetail">
 <p>Get the ROM file system data.</p>
     <dl><dt>Returns:</dt><dd>Returns a pointer to the list of ROM inodes.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#struct_mpr_rom_inode" class="ref">MprRomInode</a>, <a href="#group___mpr_file_system_1gaace8a812b003454accd5f45079b8dd24" class="ref">mprAddFileSystem</a>, <a href="#group___mpr_file_system_1ga5d33c9eaec3fef58119ed5f63d550cf2" class="ref">mprCreateDiskFileSystem</a>, <a href="#group___mpr_file_system_1gac4d574bd66524a7bbd61bd6f97b6e6dd" class="ref">mprCreateRomFileSystem</a>, <a href="#group___mpr_file_system_1gae105ccdc8d64f1eab2e31afce29c22c2" class="ref">mprLookupFileSystem</a>, <a href="#group___mpr_file_system_1ga10d97267fcc49bb5126547b3a520d812" class="ref">mprSetPathNewline</a>, <a href="#group___mpr_file_system_1ga604f5f0da674b354c16dc30be6f058d2" class="ref">mprSetPathSeparators</a></dd></dl>
   </div>
@@ -9525,7 +9537,7 @@ When the module was last used.
 When the module file was last modified.
 </td>
     <tr><td class="param">void *</td><td><td>moduleData</td><td>
-Module specific data - not managed.
+Module specific data - not managed unless MPR_MODULE_DATA_MANAGED.
 </td>
     <tr><td class="param">char *</td><td><td>name</td><td>
 Unique module name.
@@ -10942,7 +10954,7 @@ The trapped signals are SIGINT, SIGQUIT, SIGTERM, SIGPIPE and SIGXFSZ. SIGPIPE a
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">char *</td><td><td>acceptIp</td><td>
-Server addresss that accepted a new connection (actual interface).
+Server address that accepted a new connection (actual interface).
 </td>
     <tr><td class="param">int</td><td><td>acceptPort</td><td>
 Server port doing the listening.
@@ -11259,7 +11271,7 @@ This is used to prevent further I/O wait events while still preserving the socke
     <tr><td class="param">port</td><td>Port number.</td>
     <tr><td class="param">family</td><td>Output parameter to contain the Internet protocol family.</td>
     <tr><td class="param">protocol</td><td>Output parameter to contain the Internet TCP/IP protocol.</td>
-    <tr><td class="param">addr</td><td>Output parameter to contain the sockaddr description of the socket address.</td>
+    <tr><td class="param">addr</td><td>Allocated block to contain the sockaddr description of the socket address.</td>
     <tr><td class="param">addrlen</td><td>Output parameter to hold the length of the sockaddr object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if the call is successful. Otherwise return a negative MPR error code.</dd></dl>
@@ -12034,7 +12046,7 @@ Verify the peer verificate.
     <tr><td class="param">ssl</td><td>SSL instance returned from <a class="ref" href="#group___mpr_ssl_1gac6a41e387c7475251098f237f5f0a802">mprCreateSsl</a></td>
     <tr><td class="param">hostname</td><td>Name of the host when using SNI.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -13979,7 +13991,7 @@ Thread has yielded to GC.
     <tr><td class="param">tp</td><td>Thread object returned by <a class="ref" href="#group___mpr_thread_1ga442393787e4c3a1afc2cefac951c56c1">mprCreateThread</a>. Set to NULL for the current thread.</td>
     <tr><td class="param">on</td><td>Set to true to enable yielding.</td>
     </table></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___mpr_thread" class="ref">MprThread</a>, <a href="#group___mpr_thread_1gaa80044a8a7f610a62acf33ff10cd809d" class="ref">MprThreadProc</a>, <a href="#struct_mpr_thread_service" class="ref">MprThreadService</a>, <a href="#group___mpr_thread_1ga442393787e4c3a1afc2cefac951c56c1" class="ref">mprCreateThread</a>, <a href="#group___mpr_thread_1ga9db7204c54785784352bb1ee492fadab" class="ref">mprGetCurrentOsThread</a>, <a href="#group___mpr_thread_1gaff3424b3b720bfb634a40d00610fa46e" class="ref">mprGetCurrentThread</a>, <a href="#mpr_8h_1a6c9995d58b9b065914023f44078604d8" class="ref">mprGetCurrentThreadName</a>, <a href="#group___mpr_thread_1gac98816057bf8f47f8d15131e68ae12f7" class="ref">mprGetThreadName</a>, <a href="#mpr_8h_1a525ba7359a573e4dee78703ea6ef93eb" class="ref">mprNeedYield</a>, <a href="#mpr_8h_1aa4bf0d2c9a7c854dcb9edc83035c84ba" class="ref">mprResetYield</a>, <a href="#group___mpr_thread_1ga35c53df918c2f52e2e1f6961e35ee8d1" class="ref">mprStartThread</a>, <a href="#mpr_8h_1af140a2fda18b2e8461236cc44c0a2cc4" class="ref">mprYield</a></dd></dl>
   </div>
@@ -14182,6 +14194,7 @@ Format a time string. This uses strftime if available and so the supported forma
  D ... date (m/d/y) <br/>
  d ... day-of-month (01-31) <br/>
  e ... day-of-month with a leading space if only one digit ( 1-31) <br/>
+ f ... milliseconds <br/>
  F ... same as Y-m-d <br/>
  H ... hour (24 hour clock) (00-23) <br/>
  h ... same as b <br/>

@@ -32,13 +32,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>espAddPak</name>
-      <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>gae90883055ee760dca316820bf3d81f96</anchor>
-      <arglist>(HttpRoute *route, cchar *name, cchar *version)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>espAddRouteSet</name>
       <anchorfile>group___esp_route.html</anchorfile>
       <anchor>gab12f7c6108ac1d0a972fc837e9b9dec8</anchor>
@@ -74,13 +67,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>espDefineAction</name>
-      <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>gada1accc3d8bdf9b474239d695353035d</anchor>
-      <arglist>(HttpRoute *route, cchar *targetKey, EspProc actionProc)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>espDefineBase</name>
       <anchorfile>group___esp_route.html</anchorfile>
       <anchor>gae250d071bb458546c8ed5fad3aba5e84</anchor>
@@ -106,13 +92,6 @@
       <anchorfile>group___esp_route.html</anchorfile>
       <anchor>ga97b13560e8c066d70810b2df3e8d7f78</anchor>
       <arglist>(HttpRoute *route, cchar *key, cchar *defaultValue)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>espHasPak</name>
-      <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>gab784ceb8c6581201c05c93729f733b6c</anchor>
-      <arglist>(HttpRoute *route, cchar *name)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -141,13 +120,6 @@
       <anchorfile>group___esp_route.html</anchorfile>
       <anchor>ga4f34c72cee102cf5cb115e3908261013</anchor>
       <arglist>(HttpRoute *route, bool create)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>espSaveConfig</name>
-      <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>gacd7c962cf79038c3d7604c72dc43bbdb</anchor>
-      <arglist>(HttpRoute *route)</arglist>
     </member>
     <member kind="function">
       <type>int</type>
@@ -351,13 +323,6 @@
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
-      <type>int</type>
-      <name>espGetIntParam</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga8c516f5c15f5610e38c7a2c8f37f28cc</anchor>
-      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
-    </member>
-    <member kind="function">
       <type>cchar *</type>
       <name>espGetMethod</name>
       <anchorfile>group___esp_req.html</anchorfile>
@@ -370,6 +335,20 @@
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga4cbe8eba43dbb755ee5e383c2834c225</anchor>
       <arglist>(HttpStream *stream, cchar *var, cchar *defaultValue)</arglist>
+    </member>
+    <member kind="function">
+      <type>int</type>
+      <name>espGetParamInt</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>ga2b0a4a349c06bae1be16bc789779f3db</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
+    </member>
+    <member kind="function">
+      <type>MprJson *</type>
+      <name>espGetParamObj</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>ga8382335d9e26902afa136fcfa6b80061</anchor>
+      <arglist>(HttpStream *stream, cchar *var)</arglist>
     </member>
     <member kind="function">
       <type>MprJson *</type>
@@ -744,13 +723,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>espSetIntParam</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga4c96cdd5564f1344c52e18b80a1da475</anchor>
-      <arglist>(HttpStream *stream, cchar *var, int value)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>espSetNotifier</name>
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga6696ab81bed4cdd5031cf535e614e726</anchor>
@@ -762,6 +734,13 @@
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga0363bac2a708d5185f9335fcfbffa510</anchor>
       <arglist>(HttpStream *stream, cchar *var, cchar *value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>espSetParamInt</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>ga019457243559de65eafc912540707f28</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int value)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
@@ -889,9 +868,9 @@
     </member>
     <member kind="function">
       <type>bool</type>
-      <name>createRecFromParams</name>
+      <name>createRecByParams</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga6792082e8fe50d8f1796777ff54b3c99</anchor>
+      <anchor>gadfb986955cb858805a1b6c1c526ee726</anchor>
       <arglist>(cchar *table)</arglist>
     </member>
     <member kind="function">
@@ -921,6 +900,13 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga3e68a43b4ec780b8b02ef2a50c283c97</anchor>
       <arglist>(EdiGrid *grid)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>dumpParams</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga29ff2542d5ab62e0b9b02c0b4a509c8a</anchor>
+      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1217,6 +1203,13 @@
       <arglist>(cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
+      <type>cchar *</type>
+      <name>makeQuery</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga6b2214cb485032e7324b69b5c4aceb6f</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
       <type>EdiRec *</type>
       <name>makeRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
@@ -1252,18 +1245,39 @@
       <arglist>(cchar *name)</arglist>
     </member>
     <member kind="function">
+      <type>int</type>
+      <name>paramInt</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga55013b75f2ed92726f73e4c4137cbf9f</anchor>
+      <arglist>(cchar *name)</arglist>
+    </member>
+    <member kind="function">
       <type>MprJson *</type>
       <name>params</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga7e1a25d3f0fb64f31fbed43e37f1e910</anchor>
-      <arglist>(void)</arglist>
+      <anchor>ga13931995115dd8d7c7725afe54c6a1ba</anchor>
+      <arglist>(cchar *var)</arglist>
+    </member>
+    <member kind="function">
+      <type>MprJson *</type>
+      <name>paramsObj</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>gae203dbb75f0a6610f0d904d1812e89cc</anchor>
+      <arglist>(cchar *var)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>readGrid</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga54deafc297a9ac46e475580f9da23be8</anchor>
+      <arglist>(cchar *tableName, cchar *select,...)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
       <name>readRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaebd6eb20a67d36dca94880e1545dfe1b</anchor>
-      <arglist>(cchar *tableName, cchar *key)</arglist>
+      <anchor>ga8c93ce16dc8e9581d461846e71a9fb64</anchor>
+      <arglist>(cchar *tableName, cchar *query,...)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
@@ -1271,27 +1285,6 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>gaa26e4e1c0388326035e93a9334f6e0ba</anchor>
       <arglist>(cchar *tableName, cchar *key)</arglist>
-    </member>
-    <member kind="function">
-      <type>EdiRec *</type>
-      <name>readRecWhere</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga36f33afdfe9bdd2a583f43d2af4ed060</anchor>
-      <arglist>(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)</arglist>
-    </member>
-    <member kind="function">
-      <type>EdiGrid *</type>
-      <name>readTable</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga550c1016448c47c8ef7b78612a67ccd2</anchor>
-      <arglist>(cchar *tableName)</arglist>
-    </member>
-    <member kind="function">
-      <type>EdiGrid *</type>
-      <name>readWhere</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaf240f97d3c1081236e74be34c03305c7</anchor>
-      <arglist>(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
@@ -1325,7 +1318,14 @@
       <type>bool</type>
       <name>removeRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga09091b0bc981b74fdf0b197fbee8adab</anchor>
+      <anchor>ga05131113923818f2449d988851236437</anchor>
+      <arglist>(cchar *tableName, cchar *query)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>removeRecByKey</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga025fe0d2d544e3f63435eeb2997a5cfe</anchor>
       <arglist>(cchar *tableName, cchar *key)</arglist>
     </member>
     <member kind="function">
@@ -1413,11 +1413,11 @@
       <arglist>(cchar *command, char *input, char **output, char **error, MprTicks timeout, int flags)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
-      <name>scripts</name>
+      <type>bool</type>
+      <name>saveRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga55805dac6f16fafd2fdc18df732b7b46</anchor>
-      <arglist>(cchar *patterns)</arglist>
+      <anchor>gaf372bf2f67325a3d7eb5c916dd36de72</anchor>
+      <arglist>(EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1484,13 +1484,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>setIntParam</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gad58993583c3513dc5ad97e1a8e93e30a</anchor>
-      <arglist>(cchar *name, int value)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>setNotifier</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga7d227ab7fdc91d90a4484550ea9482b8</anchor>
@@ -1502,6 +1495,13 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga65fe2a97ffad029e6229e4e2dd290dd5</anchor>
       <arglist>(cchar *name, cchar *value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>setParamInt</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga3fb6e8cbd912ffb1c5ba2356b418e7d2</anchor>
+      <arglist>(cchar *name, int value)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
@@ -1547,13 +1547,6 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>stylesheets</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga61c6ed68dcee1735502c33d2f362d5c7</anchor>
-      <arglist>(cchar *patterns)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
       <name>updateCache</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga71ab6f699454ab16232f98c28a47935c</anchor>
@@ -1577,15 +1570,8 @@
       <type>bool</type>
       <name>updateRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaac69d2eab0ce7dfea56ac4714d0e6e55</anchor>
-      <arglist>(EdiRec *rec)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>updateRecFromParams</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga443a4d955b4cd2ea70b904ff75d9f06f</anchor>
-      <arglist>(cchar *table)</arglist>
+      <anchor>ga8d75b3623a14d88dfad5992616c9bb0b</anchor>
+      <arglist>(cchar *table, MprJson *data)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -1673,6 +1659,31 @@
       <name>vstudioEnv</name>
       <anchorfile>struct_esp.html</anchorfile>
       <anchor>a6c02052e76626940b99de65feb7ca926</anchor>
+      <arglist></arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>EspAction</name>
+    <filename>struct_esp_action.html</filename>
+    <member kind="variable">
+      <type>EspProc</type>
+      <name>callback</name>
+      <anchorfile>struct_esp_action.html</anchorfile>
+      <anchor>ab768cb13e9158837987fd4a00923a2f2</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>roles</name>
+      <anchorfile>struct_esp_action.html</anchorfile>
+      <anchor>a2b21fa3aaeaeebc1bc7e560122f95a13</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>cchar *</type>
+      <name>target</name>
+      <anchorfile>struct_esp_action.html</anchorfile>
+      <anchor>a290d87d8c809d854b35e64b794559166</anchor>
       <arglist></arglist>
     </member>
   </compound>

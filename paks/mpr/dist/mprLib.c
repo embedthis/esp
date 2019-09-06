@@ -14351,6 +14351,7 @@ PUBLIC cchar *mprGetJson(MprJson *obj, cchar *key)
 }
 
 
+
 PUBLIC int mprSetJsonObj(MprJson *obj, cchar *key, MprJson *value)
 {
     if (key && !strpbrk(key, ".[]*")) {
@@ -17440,6 +17441,9 @@ PUBLIC MprModule *mprCreateModule(cchar *name, cchar *path, cchar *entry, void *
     if (entry && *entry) {
         mp->entry = sclone(entry);
     }
+    /*
+        Not managed by default unless MPR_MODULE_DATA_MANAGED is set
+     */
     mp->moduleData = data;
     mp->lastActivity = mprGetTicks();
     index = mprAddItem(ms->modules, mp);
@@ -17456,6 +17460,9 @@ static void manageModule(MprModule *mp, int flags)
         mprMark(mp->name);
         mprMark(mp->path);
         mprMark(mp->entry);
+        if (mp->flags & MPR_MODULE_DATA_MANAGED) {
+            mprMark(mp->moduleData);
+        }
     }
 }
 
@@ -27054,6 +27061,12 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
                 cp++;
                 goto again;
 
+            case 'f':
+                strcpy(--dp, "000");
+                dp += slen(dp);
+                cp++;
+                break;
+
             case 'F':
                 strcpy(dp, "Y-%m-%d");
                 dp += 7;
@@ -27346,6 +27359,10 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
 
         case 'e':                                       /* day of month (1-31). Single digits preceeded by a blank */
             digits(buf, 2, ' ', tp->tm_mday);
+            break;
+
+        case 'f':                                       /* milliseconds */
+            mprPutStringToBuf(buf, "000");
             break;
 
         case 'F':                                       /* %m/%d/%y */

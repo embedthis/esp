@@ -59,7 +59,7 @@ done
 IMAGE="${1}"
 NAME="${IMAGE}"
 if [ "${IMAGE}" = "" -o "${AWS_DEFAULT_REGION}" = "" ] ; then
-    echo "usage: docker-publish [--primary] [--aws-profile profile] [--region region] image"
+    echo "usage: docker-deploy [--aws-profile profile] [--region region] [--proxy proxy] [--group group] [--deploy cmd] [--validate cmd] image"
     exit 255
 fi
 export AWS_PROFILE AWS_DEFAULT_REGION

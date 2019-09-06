@@ -249,7 +249,7 @@ $ <b>esp generate scaffold post title:string body:text</b>
             <pre class="code">
 #include "esp.h"
 static void createPost() {
-    if (updateRec(createRec("post", params()))) {
+    if (saveRec(createRec("post", params()))) {
         flash("info", "New post Created");
         renderView("post/list");
     } else {

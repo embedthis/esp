@@ -655,6 +655,13 @@
     </member>
     <member kind="define">
       <type>#define</type>
+      <name>MPR_EVENT_DONT_QUEUE</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>ac32b25ad7f171f1e1d88f24ac6394b21</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
       <name>MPR_EVENT_EPOLL</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a35751841ed0361d40361c375bca122a4</anchor>
@@ -861,6 +868,13 @@
       <name>MPR_JSON_DATA_TYPE</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a65f48ffcfcc5efa8d1b20c29dd2bd562</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_JSON_ENCODE_TYPES</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>a249d8f79212a5fe73b73d00073a504d2</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -1092,6 +1106,13 @@
       <name>MPR_MIN_TIME_FOR_GC</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a4cf2a91622343c0e368ba022e64d1b87</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_MODULE_DATA_MANAGED</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>ac17fc4ade4e707a6d59f79f513ff43a8</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">

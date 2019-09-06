@@ -7438,7 +7438,9 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
             } else {
                 redirected = 0;
                 if (rx->route) {
-                    uri = httpLookupRouteErrorDocument(rx->route, tx->status);
+                    if ((uri = httpLookupRouteErrorDocument(rx->route, tx->status)) != 0) {
+                        uri = httpExpandVars(stream, uri);
+                    }
                     if (rx->route->callback) {
                         rx->route->callback(stream, HTTP_ROUTE_HOOK_ERROR, &uri);
                     }
@@ -16708,6 +16710,7 @@ static void prepErrorDoc(HttpQueue *q)
 
     stream->rx->headers = rx->headers;
     stream->rx->method = rx->method;
+    stream->rx->originalMethod = rx->originalMethod;
     stream->rx->originalUri = rx->uri;
     stream->rx->uri = (char*) tx->errorDocument;
     stream->tx->status = tx->status;
@@ -27140,14 +27143,24 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
 {
     MprJson     *params, *prior;
     char        *newValue, *decoded, *keyword, *value, *tok;
+    bool        json;
 
     assert(stream);
     params = httpGetParams(stream);
+
+    json = scontains(buf, "_encoded_json_") ? 1 : 0;
+    if (json) {
+        value = mprUriDecode(buf);
+        mprParseJsonInto(value, params);
+        return;
+    }
+
     decoded = mprAlloc(len + 1);
     decoded[len] = '\0';
     memcpy(decoded, buf, len);
 
     keyword = stok(decoded, "&", &tok);
+
     while (keyword != 0) {
         if ((value = strchr(keyword, '=')) != 0) {
             *value++ = '\0';
@@ -27160,14 +27173,12 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
             /*
                 Append to existing keywords
              */
-            prior = mprReadJsonObj(params, keyword);
+            prior = mprGetJsonObj(params, keyword);
 #if (ME_EJS_PRODUCT || ME_EJSCRIPT_PRODUCT) && (DEPRECATED || 1)
-            /*
-                We allow embedded ".[]" in the keys
-             */
             if (prior && prior->type == MPR_JSON_VALUE) {
                 if (*value) {
                     newValue = sjoin(prior->value, " ", value, NULL);
+                    //  Uses SetJson instead of WriteJson which permits embedded . and []
                     mprSetJson(params, keyword, newValue, MPR_JSON_STRING);
                 }
             } else {
@@ -27254,7 +27265,22 @@ PUBLIC MprJson *httpGetParams(HttpStream *stream)
 
 PUBLIC int httpTestParam(HttpStream *stream, cchar *var)
 {
-    return mprReadJsonObj(httpGetParams(stream), var) != 0;
+    return mprGetJsonObj(httpGetParams(stream), var) != 0;
+}
+
+
+PUBLIC MprJson *httpGetParamObj(HttpStream *stream, cchar *var)
+{
+    return mprGetJsonObj(httpGetParams(stream), var);
+}
+
+
+PUBLIC int httpGetParamInt(HttpStream *stream, cchar *var, int defaultValue)
+{
+    cchar       *value;
+
+    value = mprGetJson(httpGetParams(stream), var);
+    return (value) ? (int) stoi(value) : defaultValue;
 }
 
 
@@ -27262,17 +27288,8 @@ PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue)
 {
     cchar       *value;
 
-    value = mprReadJson(httpGetParams(stream), var);
+    value = mprGetJson(httpGetParams(stream), var);
     return (value) ? value : defaultValue;
-}
-
-
-PUBLIC int httpGetIntParam(HttpStream *stream, cchar *var, int defaultValue)
-{
-    cchar       *value;
-
-    value = mprReadJson(httpGetParams(stream), var);
-    return (value) ? (int) stoi(value) : defaultValue;
 }
 
 
