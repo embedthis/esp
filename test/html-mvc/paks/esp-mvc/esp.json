@@ -1,8 +1,7 @@
 {
     "esp": {
+        "?app": true,
         "generate": {
-            "-appweb": "esp-server/generate/appweb.conf",
-
             "?appweb": "esp-mvc/generate/appweb.conf",
             "?controller": "esp-mvc/generate/controller.c",
             "?controllerSingleton": "esp-mvc/generate/controller.c",
@@ -11,6 +10,36 @@
         }
     },
     "http": {
-        "?database": "default"
+        "auth": {
+            "?store": "app"
+        },
+        "?database": "default",
+        "formats": {
+            "?date": "yyyy-MM-dd",
+            "?float": 2
+        },
+        "?showErrors": true,
+        "?routes": "esp-restful"
+    },
+    "profiles": {
+        "dev": {
+            "esp": {
+                "combine": false,
+                "compile": true,
+                "optimize": false,
+                "update": true
+            }
+        },
+        "prod": {
+            "esp": {
+                "combine": true,
+                "compile": true,
+                "optimize": true,
+                "update": true
+            },
+            "http": {
+                "compress": true
+            }
+        }
     }
 }

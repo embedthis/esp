@@ -2,25 +2,30 @@
     expansive.json - Configuration for esp-html-skeleton
  */
 {
-    control: {
-        script: "function menu(item) meta.menu == item ? 'active' : ''"
-    },
-    services: {
-        'clean-css': true,
-        'compile-less-css': {
-            stylesheet: 'css/all.css'
+    dev: {
+        services: {
+            "?gzip": false,
+            "?html": false,
+            "?js": {
+                "?minify": false,
+                "?usemin": true,
+                "?usemap": true
+            }
         }
     },
-    debug: {
+    prod: {
         services: {
-            'compile-html': false,
-            'minify-css':   false,
-            'minify-js':    false
-        }
-    },
-    release: {
-        services: {
-            'minify-css': true
+            "css": {
+                "?minify": true,
+                "?usemin": true,
+                "?usemap": false
+            },
+            "?gzip": true,
+            "js": {
+                "?minify": true,
+                "?usemin": true,
+                "?usemap": false
+            }
         }
     }
 }

@@ -6,7 +6,7 @@
         %>
         <h1><%= param("id") ? "Edit" : "Create" %> ${UCONTROLLER}</h1>
 
-        <form name='${UCONTROLLER}Form' class='form-horizontal' action='../${CONTROLLER}/@@id' method="POST">
+        <form name='${UCONTROLLER}Form' class='form-horizontal' action='../${CONTROLLER}/%$id' method="POST">
             <% for (fp = 0; (fp = ediGetNextField(rec, fp, 1)) != 0; ) { %> 
                 <div class='form-group'>
                     <label class='control-label col-md-3'><%= stitle(fp->name) %></label>

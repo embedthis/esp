@@ -2,34 +2,52 @@
     "esp": {
         "app": true,
         "generate": {
+            "appweb": "esp-mvc/generate/appweb.conf",
             "controllerSingleton": "esp-mvc/generate/controller.c",
             "migration": "esp-mvc/generate/migration.c",
             "module": "esp-mvc/generate/src/app.c",
-            "appweb": "esp-html-skeleton/generate/appweb.conf",
             "clientList": "esp-html-skeleton/generate/list.esp",
             "clientEdit": "esp-html-skeleton/generate/edit.esp",
             "controller": "esp-html-skeleton/generate/controller.c"
         }
     },
     "http": {
-        "database": "default",
         "auth": {
             "store": "app"
         },
+        "database": "default",
         "server": {
             listen: [
                 'http://127.0.0.1:7800',
                 'https://127.0.0.1:7943',
             ],
         },
-        "log": {
-            "location": "error.log",
-            "level": 4
+        "formats": {
+            "date": "yyyy-MM-dd",
+            "float": 2
         },
-        "trace": {
-            "location": "trace.log",
-            "level": 4
-        },
+        "showErrors": true,
         "routes": "esp-restful"
+    },
+    "profiles": {
+        "dev": {
+            "esp": {
+                "combine": false,
+                "compile": true,
+                "optimize": false,
+                "update": true
+            }
+        },
+        "prod": {
+            "esp": {
+                "combine": true,
+                "compile": true,
+                "optimize": true,
+                "update": true
+            },
+            "http": {
+                "compress": true
+            }
+        }
     }
 }

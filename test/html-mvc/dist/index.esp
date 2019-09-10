@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Html-mvc Application</title>
+    <meta charset="utf-8" />
+    <meta name="description" content="Html-mvc Application">
+    <link rel="icon" href="data:image/x-icon;base64," type="image/x-icon" />
+    <link href="css/all.css" rel="stylesheet" type="text/css" />
+    
+    <link rel="stylesheet" href="./css/all.css" type="text/css" />
+
+
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="./"><%= getConfig("title") %></a>
+        </div>
+    </div>
+
+
+    <main class="container">
+
+        <article>
+            <h1>Welcome to Embedded Server Pages</h1>
+            <section>
+                <p>ESP is a powerful "C"-based web framework for blazing fast dynamic web applications.
+                It has an page templating engine, layout pages, a Model-View-Controller framework,
+                    embedded database, content caching and application generator.</p>
+            </section>
+
+            <section>
+                <h2>Quick Start</h2>
+                <ol>
+                    <li><b>Create ESP Pages</b>
+                    <p>Create web pages under the "contents" directory.
+                        Modify the layout in "layouts/default.html.exp" and customize the Less-based style sheet
+                        in the "contents/css/app.less" and "contents/css/theme.less".</p>
+                    </li>
+
+                    <li><b>Render</b>
+                        <p>Install <a href="https://embedthis.com/expansive/">Expansive</b></a>
+                        and run <b>"expansive render"</b> to render the site into the "dist" directory.</p></li>
+
+                    <li><b>Serve</b>
+                        <p>Run <b>"esp -v"</b> or <b>"expansive"</b> to serve pages.</p>
+                    </li>
+
+                    <li><b>Browse</b>
+                        <p>Navigate to <b>http://localhost:4000/</b> in your browser.</p>
+                    </li>
+
+                    <li><b>Generate Controllers</a></b>
+                        <p>Create controllers to manage your app. Run 
+                            <a href="https://embedthis.com/esp/doc/users/esp.html"><b>esp</b></a> 
+                            with no options to see its usage.</p>
+                        <pre>esp generate controller NAME [action, ...]</pre>
+                    </li>
+
+                    <li><b>Generate Scaffolds</a></b>
+                        <p>Create entire scaffolds for large sections of your application. 
+                        <pre>esp generate scaffold NAME [field:type, ...]</pre>
+                    </li>
+                    
+                    <li><b>Read the Documentation</b>
+                        <p>Go to <a href="https://embedthis.com/esp/doc/">
+                        https://embedthis.com/esp/doc/</a> for the latest ESP documentation.
+                        Here you can read quick tours, overviews and access all the ESP APIs.</b>
+                    </li>
+                    <li><b>Enjoy!</b></li>
+                </ol>
+            </section>
+        </article>
+
+        <aside>
+            <h2 class="section">ESP Links</h2>
+            <ul>
+                <li><a href="https://embedthis.com">Official Web Site</a></li>
+                <li><a href="https://embedthis.com/esp/doc/">Documentation</a></li>
+                <li><a href="https://embedthis.com/esp/doc/users/">ESP User's Guide</a></li>
+                <li><a href="https://github.com/embedthis/esp">ESP Repository and Issue List</a></li>
+                <li><a href="https://embedthis.com/blog/">Embedthis Blog</a></li>
+            </ul>
+        </aside>
+
+    </main>
+    <div class="feedback">
+            <% renderFeedback("*"); %>
+        </div>
+        
+
+
+</body>
+</html>

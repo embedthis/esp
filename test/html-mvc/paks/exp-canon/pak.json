@@ -1,0 +1,19 @@
+{
+    "name": "exp-canon",
+    "description": "Canonicalize index pages for search engines",
+    "version": "1.0.0",
+    "keywords": [
+        "expansive-plugin",
+        "canon"
+    ],
+    "licenses": "GPL",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/embedthis/exp-canon.git"
+    },
+    "devDependencies": {
+        "expansive": ">=1.0.0",
+        "pak": ">=1.0.0"
+    },
+    "origin": "embedthis/exp-canon"
+}

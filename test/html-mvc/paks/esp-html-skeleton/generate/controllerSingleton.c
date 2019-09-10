@@ -7,11 +7,11 @@
     Create a new resource in the database
  */
 static void create${UCONTROLLER}() {
-    if (saveRec(createRec("${CONTROLLER}", params()))) {
-        flash("info", "New ${CONTROLLER} Created");
+    if (updateRec(createRec("${CONTROLLER}", params(NULL)))) {
+        feedback("info", "New ${CONTROLLER} Created");
         renderView("/");
     } else {
-        flash("error", "Cannot Create ${UCONTROLLER}");
+        feedback("error", "Cannot Create ${UCONTROLLER}");
         renderView("${CONTROLLER}/edit");
     }
 }
@@ -20,14 +20,14 @@ static void create${UCONTROLLER}() {
     Prepare an edit template with the resource
  */
 static void edit${UCONTROLLER}() {
-    findRec("${CONTROLLER}", param("id"));
+    readRec("${CONTROLLER}", param("id"));
 }
 
 /*
     Get a resource
  */
 static void get${UCONTROLLER}() {
-    findRec("${CONTROLLER}", param("id"));
+    readRec("${CONTROLLER}", param("id"));
     renderView("${CONTROLLER}/edit");
 }
 
@@ -44,7 +44,7 @@ static void init${UCONTROLLER}() {
  */
 static void remove${UCONTROLLER}() {
     if (removeRec("${CONTROLLER}", param("id"))) {
-        flash("info", "${UCONTROLLER} Removed");
+        feedback("info", "${UCONTROLLER} Removed");
     }
     redirect(".");
 }
@@ -58,31 +58,32 @@ static void update${UCONTROLLER}() {
     if (smatch(param("submit"), "Delete")) {
         removePost();
     } else {
-        if (updateFields("${CONTROLLER}", params())) {
-            flash("info", "${UCONTROLLER} Updated Successfully");
+        if (updateFields("${CONTROLLER}", params(NULL))) {
+            feedback("info", "${UCONTROLLER} Updated Successfully");
             redirect(".");
         } else {
-            flash("error", "Cannot Update ${UCONTROLLER}");
+            feedback("error", "Cannot Update ${UCONTROLLER}");
             renderView("${CONTROLLER}/edit");
         }
     }
 }
 
-static void common(HttpStream *stream, EspAction *action) {
+static void common${UCONTROLLER}(HttpConn *conn, EspAction *action) {
 }
 
 
 /*
     Dynamic module initialization
  */
-ESP_EXPORT int esp_controller_${NAME}_${CONTROLLER}(HttpRoute *route, MprModule *module) {
-    espDefineBase(route, common);
-    espAction(route, "${CONTROLLER}/create", NULL, create${UCONTROLLER});
-    espAction(route, "${CONTROLLER}/remove", NULL, remove${UCONTROLLER});
-    espAction(route, "${CONTROLLER}/edit", NULL, edit${UCONTROLLER});
-    espAction(route, "${CONTROLLER}/get", NULL, get${UCONTROLLER});
-    espAction(route, "${CONTROLLER}/init", NULL, init${UCONTROLLER});
-    espAction(route, "${CONTROLLER}/update", NULL, update${UCONTROLLER});
+ESP_EXPORT int esp_controller_${NAME}_${CONTROLLER}(HttpRoute *route) {
+    cchar   *role = "user";
+    espController(route, common${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/create", role, create${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/remove", role, remove${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/edit", role, edit${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/get", role, get${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/init", role, init${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/update", role, update${UCONTROLLER});
 ${DEFINE_ACTIONS}
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);

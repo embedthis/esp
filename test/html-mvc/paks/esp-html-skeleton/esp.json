@@ -1,22 +1,12 @@
 {
     "esp": {
         "generate": {
-            "-appweb": "esp-mvc/generate/appweb.conf",
             "-controller": "esp-mvc/generate/controller.c",
-            "-controllerSingleton": "esp-mvc/generate/controllerSingleton.c",
 
-            "?appweb": "esp-html-skeleton/generate/appweb.conf",
             "?clientList": "esp-html-skeleton/generate/list.esp",
             "?clientEdit": "esp-html-skeleton/generate/edit.esp",
             "?controller": "esp-html-skeleton/generate/controller.c",
             "?controllerSingleton": "esp-html-skeleton/generate/controllerSingleton.c"
         }
-    },
-    "http": {
-        "auth": {
-            "?store": "app"
-        },
-        "-routes": "esp-server",
-        "?routes": "esp-restful"
     }
 }

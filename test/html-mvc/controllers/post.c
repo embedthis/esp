@@ -20,14 +20,14 @@ static void createPost() {
     Prepare an edit template with the resource
  */
 static void editPost() {
-    findRec("post", param("id"));
+    readRec("post", param("id"));
 }
 
 /*
     Get a resource
  */
 static void getPost() {
-    findRec("post", param("id"));
+    readRec("post", param("id"));
     renderView("post/edit");
 }
 
@@ -82,23 +82,24 @@ static void redirectPost() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void common(HttpStream *stream, EspAction *action) {
+static void commonPost(HttpConn *conn, EspAction *action) {
 }
 
 /*
     Dynamic module initialization
  */
-ESP_EXPORT int esp_controller_blog_post(HttpRoute *route, MprModule *module) {
-    espDefineBase(route, common);
-    espAction(route, "post/create", NULL, createPost);
-    espAction(route, "post/remove", NULL, removePost);
-    espAction(route, "post/edit", NULL, editPost);
-    espAction(route, "post/get", NULL, getPost);
-    espAction(route, "post/init", NULL, initPost);
-    espAction(route, "post/list", NULL, listPost);
-    espAction(route, "post/update", NULL, updatePost);
-    espAction(route, "post/", NULL, listPost);
-    espAction(route, "post", NULL, redirectPost);
+ESP_EXPORT int esp_controller_html_mvc_post(HttpRoute *route) {
+    cchar   *role = "user";
+    espController(route, commonPost);
+    espAction(route, "post/create", role, createPost);
+    espAction(route, "post/remove", role, removePost);
+    espAction(route, "post/edit", role, editPost);
+    espAction(route, "post/get", role, getPost);
+    espAction(route, "post/init", role, initPost);
+    espAction(route, "post/list", role, listPost);
+    espAction(route, "post/update", role, updatePost);
+    espAction(route, "post/", role, listPost);
+    espAction(route, "post", role, redirectPost);
 
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);

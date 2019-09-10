@@ -5,7 +5,7 @@
 
 ${ACTIONS}
 
-ESP_EXPORT int esp_controller_${NAME}_${CONTROLLER}(HttpRoute *route, MprModule *module) {
-${DEFINE_ACTIONS}    
+ESP_EXPORT int esp_controller_${NAME}_${CONTROLLER}(HttpRoute *route) {
+${DEFINE_ACTIONS}
     return 0;
 }

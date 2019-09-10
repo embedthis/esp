@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Html-mvc Application</title>
+    <meta charset="utf-8" />
+    <meta name="description" content="Html-mvc Application">
+    <link rel="icon" href="data:image/x-icon;base64," type="image/x-icon" />
+    <link href="../css/all.css" rel="stylesheet" type="text/css" />
+    
+    <link rel="stylesheet" href="../css/all.css" type="text/css" />
+
+
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="../"><%= getConfig("title") %></a>
+        </div>
+    </div>
+
+
+    <main class="container">
+
+        <%^ start
+            EdiGrid     *grid = readTable("post");
+            EdiRec      *rec;
+            EdiField    *fp;
+        %>
+        <h1>Post List</h1>
+        <table class='list'>
+            <thead>
+                <tr><%
+                    if (grid && grid->nrecords) {
+                        rec = grid->records[0];
+                        for (fp = 0; (fp = ediGetNextField(rec, fp, 1)) != 0; ) { 
+                            render("<th>%s</th>\n", stitle(fp->name));
+                        }
+                    } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (rec = 0; (rec = ediGetNextRec(grid, rec)) != 0; ) { %>
+                    <tr onclick='document.location="<%= uri("%s", rec->id) %>"'>
+                        <% for (fp = 0; (fp = ediGetNextField(rec, fp, 1)) != 0; ) { %>
+                            <td><%= ediFormatField(0, fp); %></td>
+                        <% } %>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+        <a href="init"><button class='btn btn-primary'>New Post</button></a>
+
+    </main>
+    <div class="feedback">
+            <% renderFeedback("*"); %>
+        </div>
+        
+
+
+</body>
+</html>

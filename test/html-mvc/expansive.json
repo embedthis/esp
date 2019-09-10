@@ -1,20 +1,48 @@
 {
-    "services": {
-        "clean-css": true,
-        "compile-less-css": {
-            "stylesheet": "css/all.css"
+    "control": {
+        "deploy": {
+            "from": [
+                "dist/**",
+                "db/*.*",
+                "!db/*.bak",
+                "cache/*.dylib",
+                "cache/*.so",
+                "cache/*.dll",
+                "cache/*.lib",
+                "esp.json",
+                "package.json",
+                "appweb.conf"
+            ],
+            "to": "deploy",
+            "flatten": false,
+            "clean": true,
+            "script": ""
         }
     },
-    "debug": {
+    "prod": {
         "services": {
-            "compile-html": false,
-            "minify-css": false,
-            "minify-js": false
+            "css": {
+                "minify": true,
+                "usemin": true,
+                "usemap": false
+            },
+            "gzip": true,
+            "js": {
+                "minify": true,
+                "usemin": true,
+                "usemap": false
+            }
         }
     },
-    "release": {
+    "dev": {
         "services": {
-            "minify-css": true
+            "gzip": false,
+            "html": false,
+            "js": {
+                "minify": false,
+                "usemin": true,
+                "usemap": true
+            }
         }
     }
 }

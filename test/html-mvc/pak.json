@@ -1,29 +1,16 @@
 {
-    "name": "blog",
-    "title": "Blog Application",
-    "description": "Blog Application",
+    "name": "html-mvc",
+    "title": "Html-mvc Application",
+    "owner": "default",
     "version": "1.0.0",
-    "keywords": [
-        "Put search keywords here"
-    ],
-    "author": {
-        "name": "Your name",
-        "email": "Your email",
-        "url": "Your web site"
+    "import": true,
+    "profile": "dev",
+    "devDependencies": {
+        "esp": ">=8.0"
     },
-    "bugs": {
-        "email": "name@example.com",
-        "url": "http://example.com/bugs"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/user/repo.git"
-    },
-    "license": "GPL",
-    "dependencies": {
-        "esp-html-skeleton": "~5.3"
-    },
-    "pak": {
-        "mode": "debug"
+    "directories": {
+        "dist": "dist",
+        "controllers": "controllers",
+        "export": "contents/lib"
     }
 }
