@@ -3,7 +3,7 @@
  */
 #include "esp.h"
 
-static void login() { 
+static void login() {
     if (getSessionVar("id")) {
         render("Logged in");
 
@@ -22,6 +22,6 @@ static void login() {
 }
 
 ESP_EXPORT int esp_controller_esptest_session(HttpRoute *route, MprModule *module) {
-    espDefineAction(route, "session/login", login);
+    espAction(route, "session/login", NULL, login);
     return 0;
 }

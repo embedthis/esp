@@ -7,11 +7,11 @@
     Create a new resource in the database
  */
 static void createPost() {
-    if (saveRec(createRec("post", params()))) {
-        flash("info", "New post Created");
+    if (updateRec(createRec("post", params(NULL)))) {
+        feedback("info", "New post Created");
         renderView("post/list");
     } else {
-        flash("error", "Cannot Create Post");
+        feedback("error", "Cannot Create Post");
         renderView("post/edit");
     }
 }
@@ -20,14 +20,14 @@ static void createPost() {
     Prepare an edit template with the resource
  */
 static void editPost() {
-    readRec("post", param("id"));
+    findRec("post", param("id"));
 }
 
 /*
     Get a resource
  */
 static void getPost() {
-    readRec("post", param("id"));
+    findRec("post", param("id"));
     renderView("post/edit");
 }
 
@@ -51,7 +51,7 @@ static void listPost() {
  */
 static void removePost() {
     if (removeRec("post", param("id"))) {
-        flash("info", "Post Removed");
+        feedback("info", "Post Removed");
     }
     redirect(".");
 }
@@ -65,11 +65,11 @@ static void updatePost() {
     if (smatch(param("submit"), "Delete")) {
         removePost();
     } else {
-        if (updateFields("post", params())) {
-            flash("info", "Post Updated Successfully");
+        if (updateFields("post", params(NULL))) {
+            feedback("info", "Post Updated Successfully");
             redirect(".");
         } else {
-            flash("error", "Cannot Update Post");
+            feedback("error", "Cannot Update Post");
             renderView("post/edit");
         }
     }
@@ -82,7 +82,7 @@ static void redirectPost() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void common(HttpStream *stream) {
+static void common(HttpStream *stream, EspAction *action) {
 }
 
 /*
@@ -90,15 +90,15 @@ static void common(HttpStream *stream) {
  */
 ESP_EXPORT int esp_controller_blog_post(HttpRoute *route, MprModule *module) {
     espDefineBase(route, common);
-    espDefineAction(route, "post/create", createPost);
-    espDefineAction(route, "post/remove", removePost);
-    espDefineAction(route, "post/edit", editPost);
-    espDefineAction(route, "post/get", getPost);
-    espDefineAction(route, "post/init", initPost);
-    espDefineAction(route, "post/list", listPost);
-    espDefineAction(route, "post/update", updatePost);
-    espDefineAction(route, "post/", listPost);
-    espDefineAction(route, "post", redirectPost);
+    espAction(route, "post/create", NULL, createPost);
+    espAction(route, "post/remove", NULL, removePost);
+    espAction(route, "post/edit", NULL, editPost);
+    espAction(route, "post/get", NULL, getPost);
+    espAction(route, "post/init", NULL, initPost);
+    espAction(route, "post/list", NULL, listPost);
+    espAction(route, "post/update", NULL, updatePost);
+    espAction(route, "post/", NULL, listPost);
+    espAction(route, "post", NULL, redirectPost);
 
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);

@@ -1,6 +1,6 @@
 
         <div class="feedback">
-            <% renderFlash("all"); %>
+            <% renderFeedback("all"); %>
         </div>
 
 

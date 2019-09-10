@@ -1,6 +1,6 @@
 /*
     caching.c - Test caching
- 
+
     Assumes configuration of: LimitCache 64K, CacheItem 16K
  */
 #include "esp.h"
@@ -38,7 +38,7 @@ static void big() {
     }
 }
 
-static void huge() { 
+static void huge() {
     int     i;
     //  This will emit ~800K (over the item limit)
     for (i = 0; i < 10000; i++) {
@@ -48,7 +48,7 @@ static void huge() {
     render("{ when: %lld, uri: '%s', query: '%s' }\r\n", mprGetTicks(), getUri(), getQuery());
 }
 
-static void clear() { 
+static void clear() {
     espUpdateCache(getStream(), "/caching/manual", 0, 0);
     espUpdateCache(getStream(), "/caching/big", 0, 0);
     espUpdateCache(getStream(), "/caching/medium", 0, 0);
@@ -58,11 +58,11 @@ static void clear() {
     render("cleared");
 }
 
-static void client() { 
+static void client() {
     render("{ when: %lld, uri: '%s', query: '%s' }\r\n", mprGetTicks(), getUri(), getQuery());
 }
 
-static void manual() { 
+static void manual() {
     if (smatch(getQuery(), "send")) {
         setHeader("X-SendCache", "true");
         finalize();
@@ -71,7 +71,7 @@ static void manual() {
     }
 }
 
-static void update() { 
+static void update() {
     cchar   *data = sfmt("{ when: %lld, uri: '%s', query: '%s' }\r\n", mprGetTicks(), getUri(), getQuery());
     espUpdateCache(getStream(), "/caching/manual", data, 86400);
     render("done");
@@ -80,15 +80,15 @@ static void update() {
 ESP_EXPORT int esp_controller_esptest_caching(HttpRoute *route, MprModule *module) {
     HttpRoute   *rp;
 
-    espDefineAction(route, "caching/api", api);
-    espDefineAction(route, "caching/big", big);
-    espDefineAction(route, "caching/small", sml);
-    espDefineAction(route, "caching/medium", medium);
-    espDefineAction(route, "caching/clear", clear);
-    espDefineAction(route, "caching/client", client);
-    espDefineAction(route, "caching/huge", huge);
-    espDefineAction(route, "caching/manual", manual);
-    espDefineAction(route, "caching/update", update);
+    espAction(route, "caching/api", NULL, api);
+    espAction(route, "caching/big", NULL, big);
+    espAction(route, "caching/small", NULL, sml);
+    espAction(route, "caching/medium", NULL, medium);
+    espAction(route, "caching/clear", NULL, clear);
+    espAction(route, "caching/client", NULL, client);
+    espAction(route, "caching/huge", NULL, huge);
+    espAction(route, "caching/manual", NULL, manual);
+    espAction(route, "caching/update", NULL, update);
 
     //  This is not required for unit tests
     if ((rp = httpLookupRoute(route->host, "/caching/")) != 0) {

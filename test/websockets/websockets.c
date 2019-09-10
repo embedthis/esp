@@ -16,9 +16,9 @@ static void traceEvent(HttpStream *stream, int event, int arg)
             The last frame in a message has packet->last == true
          */
         packet = stream->readq->first;
-        mprDebug("webock test", 5, "read %s event, last %d", packet->type == WS_MSG_TEXT ? "text" : "binary", 
+        mprDebug("webock test", 5, "read %s event, last %d", packet->type == WS_MSG_TEXT ? "text" : "binary",
             packet->last);
-        mprDebug("webock test", 5, "read: (start of data only) \"%s\"", 
+        mprDebug("webock test", 5, "read: (start of data only) \"%s\"",
             snclone(mprGetBufStart(packet->content), 40));
 
     } else if (event == HTTP_EVENT_APP_CLOSE) {
@@ -34,7 +34,7 @@ static void dummy_callback(HttpStream *stream, int event, int arg)
 {
 }
 
-static void dummy_action() { 
+static void dummy_action() {
     dontAutoFinalize();
     espSetNotifier(getStream(), dummy_callback);
 }
@@ -51,8 +51,8 @@ static void len_callback(HttpStream *stream, int event, int arg)
          */
         packet = httpGetPacket(stream->readq);
         assert(packet);
-        /* 
-            Ignore precedding packets and just respond and echo the last 
+        /*
+            Ignore precedding packets and just respond and echo the last
          */
         if (packet->last) {
             ws = stream->rx->webSocket;
@@ -62,7 +62,7 @@ static void len_callback(HttpStream *stream, int event, int arg)
     }
 }
 
-static void len_action() { 
+static void len_action() {
     dontAutoFinalize();
     espSetNotifier(getStream(), len_callback);
 }
@@ -85,7 +85,7 @@ static void echo_callback(HttpStream *stream, int event, int arg)
     }
 }
 
-static void echo_action() { 
+static void echo_action() {
     dontAutoFinalize();
     espSetNotifier(getStream(), echo_callback);
 }
@@ -94,7 +94,7 @@ static void echo_action() {
 /*
     Test sending an empty text message, followed by an orderly close
  */
-static void empty_response() 
+static void empty_response()
 {
     httpSendBlock(getStream(), WS_MSG_TEXT, "", 0, 0);
     httpSendClose(getStream(), WS_STATUS_OK, "OK");
@@ -104,7 +104,7 @@ static void empty_response()
 /*
     Big single message written with one send(). The WebSockets filter will break this into frames as required.
  */
-static void big_response() 
+static void big_response()
 {
     HttpStream    *stream;
     MprBuf      *buf;
@@ -120,7 +120,7 @@ static void big_response()
      */
     buf = mprCreateBuf(51000, 0);
     mprAddRoot(buf);
-    count = 1000;    
+    count = 1000;
     for (i = 0; i < count; i++) {
         mprPutToBuf(buf, "%8d:01234567890123456789012345678901234567890\n", i);
         mprYield(0);
@@ -129,9 +129,9 @@ static void big_response()
     mprAddNullToBuf(buf);
     /* Retain just for GC */
     httpSetWebSocketData(stream, buf);
-    
+
     /*
-        Note: this will block while writing the entire message. It may be quicker to use HTTP_BUFFER but will 
+        Note: this will block while writing the entire message. It may be quicker to use HTTP_BUFFER but will
         use more memory.  Not point using HTTP_NON_BLOCK as we need to close after sending the message.
      */
     if ((wrote = httpSendBlock(stream, WS_MSG_TEXT, mprGetBufStart(buf), mprGetBufLength(buf), HTTP_BLOCK)) < 0) {
@@ -143,10 +143,10 @@ static void big_response()
 
 /*
     Multiple-frame response message with explicit continuations.
-    The WebSockets filter will encode each call to httpSendBlock into a frame. 
+    The WebSockets filter will encode each call to httpSendBlock into a frame.
     Even if large blocks are written, HTTP_MORE assures that the block will be encoded as a single frame.
  */
-static void frames_response() 
+static void frames_response()
 {
     HttpStream    *stream;
     cchar       *str;
@@ -241,16 +241,16 @@ static void chat_action()
 ESP_EXPORT int esp_controller_esptest_websockets(HttpRoute *route) {
     clients = mprCreateList(0, 0);
     mprAddRoot(clients);
-    espDefineAction(route, "basic/construct", dummy_action);
-    espDefineAction(route, "basic/open", dummy_action);
-    espDefineAction(route, "basic/send", dummy_action);
-    espDefineAction(route, "basic/echo", echo_action);
-    espDefineAction(route, "basic/ssl", len_action);
-    espDefineAction(route, "basic/len", len_action);
-    espDefineAction(route, "basic/echo", echo_action);
-    espDefineAction(route, "basic/empty", empty_response);
-    espDefineAction(route, "basic/big", big_response);
-    espDefineAction(route, "basic/frames", frames_response);
-    espDefineAction(route, "basic/chat", chat_action);
+    espAction(route, "basic/construct", NULL, dummy_action);
+    espAction(route, "basic/open", NULL, dummy_action);
+    espAction(route, "basic/send", NULL, dummy_action);
+    espAction(route, "basic/echo", NULL, echo_action);
+    espAction(route, "basic/ssl", NULL, len_action);
+    espAction(route, "basic/len", NULL, len_action);
+    espAction(route, "basic/echo", NULL, echo_action);
+    espAction(route, "basic/empty", NULL, empty_response);
+    espAction(route, "basic/big", NULL, big_response);
+    espAction(route, "basic/frames", NULL, frames_response);
+    espAction(route, "basic/chat", NULL, chat_action);
     return 0;
 }
