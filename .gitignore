@@ -3,3 +3,4 @@ samples/html-mvc/dist
 /test/server/cache
 /test/caching/cache
 /test/cmd/cache
+cache/

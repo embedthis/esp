@@ -37,7 +37,7 @@ else
 endif
 
 BIN 	:= $(OS)-$(ARCH)-$(PROFILE)/bin
-PATH	:= $(BIN):$(PATH)
+PATH    := $(PWD)/build/$(BIN):$(PATH)
 
 .EXPORT_ALL_VARIABLES:
 
