@@ -119,7 +119,7 @@ PUBLIC cchar *espCreateSession(HttpStream *stream)
 }
 
 
-#if DEPRECATED
+#if DEPRECATED || 1
 PUBLIC void espDefineAction(HttpRoute *route, cchar *target, EspProc callback)
 {
     espAction(route, target, NULL, callback);
@@ -181,10 +181,32 @@ static EspAction *createAction(cchar *target, cchar *roles, void *callback)
     return action;
 }
 
+
+#if DEPRECATED || 1
 /*
     The base procedure is invoked prior to calling any and all actions on this route
  */
-PUBLIC void espDefineBase(HttpRoute *route, EspProc baseProc)
+PUBLIC void espDefineBase(HttpRoute *route, EspLegacyProc baseProc)
+{
+    HttpRoute   *rp;
+    EspRoute    *eroute;
+    int         next;
+
+    for (ITERATE_ITEMS(route->host->routes, rp, next)) {
+        if ((eroute = rp->eroute) != 0) {
+            if (smatch(httpGetDir(rp, "CONTROLLERS"), httpGetDir(route, "CONTROLLERS"))) {
+                eroute->commonController = (EspProc) baseProc;
+            }
+        }
+    }
+}
+#endif
+
+
+/*
+    Define a common base controller to invoke prior to calling any and all actions on this route
+ */
+PUBLIC void espController(HttpRoute *route, EspProc baseProc)
 {
     HttpRoute   *rp;
     EspRoute    *eroute;

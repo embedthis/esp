@@ -79,7 +79,7 @@ static void sdbClose(Edi *edi);
 static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName);
 static int sdbDelete(cchar *path);
 static void sdbError(Edi *edi, cchar *fmt, ...);
-static int sdbRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key);
+static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
 static MprList *sdbGetColumns(Edi *edi, cchar *tableName);
 static int sdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *sdbGetTables(Edi *edi);
@@ -105,7 +105,7 @@ static EdiProvider SdbProvider = {
     "sdb",
     sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
     sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
-    sdbReadField, sdbReadGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRecByKey, sdbRemoveTable,
+    sdbReadField, sdbReadGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
@@ -210,6 +210,9 @@ static EdiRec *getSchema(Edi *edi, cchar *tableName)
 }
 
 
+/*
+    Create a record based on the table's schema. Not saved to the database.
+ */
 static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName)
 {
     EdiRec  *rec, *schema;
@@ -603,7 +606,7 @@ static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName)
 }
 
 
-static int sdbRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key)
+static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key)
 {
     assert(edi);
     assert(tableName && *tableName);

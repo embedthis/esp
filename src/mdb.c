@@ -77,7 +77,7 @@ static EdiRec *mdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static EdiGrid *mdbReadGrid(Edi *edi, cchar *tableName, cchar *query);
 static int mdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int mdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
-static int mdbRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key);
+static int mdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
 static int mdbRemoveTable(Edi *edi, cchar *tableName);
 static int mdbRenameTable(Edi *edi, cchar *tableName, cchar *newTableName);
 static int mdbRenameColumn(Edi *edi, cchar *tableName, cchar *columnName, cchar *newColumnName);
@@ -89,7 +89,7 @@ static EdiProvider MdbProvider = {
     "mdb",
     mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete,
     mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery,
-    mdbReadField, mdbReadGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRecByKey, mdbRemoveTable,
+    mdbReadField, mdbReadGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
     mdbRenameTable, mdbRenameColumn, mdbSave, mdbUpdateField, mdbUpdateRec,
 };
 
@@ -144,6 +144,9 @@ static void mdbClose(Edi *edi)
 }
 
 
+/*
+    Create a record based on the table's schema. Not saved to the database.
+ */
 static EdiRec *mdbCreateRec(Edi *edi, cchar *tableName)
 {
     Mdb         *mdb;
@@ -857,7 +860,7 @@ static int mdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName)
 }
 
 
-static int mdbRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key)
+static int mdbRemoveRec(Edi *edi, cchar *tableName, cchar *key)
 {
     Mdb         *mdb;
     MdbTable    *table;

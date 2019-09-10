@@ -1041,7 +1041,7 @@ static void migrate(int argc, char **argv)
     /*
         Each database has a _EspMigrations table which has a record for each migration applied
      */
-    if ((app->migrations = ediReadGrid(edi, ESP_MIGRATIONS, NULL)) == 0) {
+    if ((app->migrations = ediFindGrid(edi, ESP_MIGRATIONS, NULL)) == 0) {
         rc = ediAddTable(edi, ESP_MIGRATIONS);
         rc += ediAddColumn(edi, ESP_MIGRATIONS, "id", EDI_TYPE_INT, EDI_AUTO_INC | EDI_INDEX | EDI_KEY);
         rc += ediAddColumn(edi, ESP_MIGRATIONS, "version", EDI_TYPE_STRING, 0);
@@ -1049,7 +1049,7 @@ static void migrate(int argc, char **argv)
             fail("Cannot add migration");
             return;
         }
-        app->migrations = ediReadGrid(edi, ESP_MIGRATIONS, NULL);
+        app->migrations = ediFindGrid(edi, ESP_MIGRATIONS, NULL);
     }
     if (app->migrations->nrecords > 0) {
         mig = app->migrations->records[app->migrations->nrecords - 1];
@@ -2137,7 +2137,7 @@ static void generateController(int argc, char **argv)
     actions = sclone("");
     for (i = 1; i < argc; i++) {
         action = argv[i];
-        defines = sjoin(defines, sfmt("    espDefineAction(route, \"%s/%s\", %s);\n", app->controller,
+        defines = sjoin(defines, sfmt("    espAction(route, \"%s/%s\", NULL, %s);\n", app->controller,
             action, action), NULL);
         actions = sjoin(actions, sfmt("static void %s() {\n}\n\n", action), NULL);
     }
@@ -2610,7 +2610,7 @@ static void usageError()
     "    esp migrate [forward|backward|NNN]\n"
     "    esp profile [dev|prod|...]\n"
     "    esp role [add|remove] rolename abilities...\n"
-    "    esp [run] [ip]:[port] ...\n"
+    "    esp [serve] [ip]:[port] ...\n"
     "    esp user [add|compute] username password roles...\n"
     "    esp user [remove|show] username\n"
     "\n", name);

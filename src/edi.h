@@ -240,11 +240,11 @@ typedef struct EdiProvider {
     Edi       *(*open)(cchar *path, int flags);
     EdiGrid   *(*query)(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
     EdiField  (*readField)(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-    EdiGrid   *(*readGrid)(Edi *edi, cchar *tableName, cchar *query);
-    EdiRec    *(*readRecByKey)(Edi *edi, cchar *tableName, cchar *key);
+    EdiGrid   *(*findGrid)(Edi *edi, cchar *tableName, cchar *query);
+    EdiRec    *(*readRec)(Edi *edi, cchar *tableName, cchar *key);
     int       (*removeColumn)(Edi *edi, cchar *tableName, cchar *columnName);
     int       (*removeIndex)(Edi *edi, cchar *tableName, cchar *indexName);
-    int       (*removeRecByKey)(Edi *edi, cchar *tableName, cchar *key);
+    int       (*removeRec)(Edi *edi, cchar *tableName, cchar *key);
     int       (*removeTable)(Edi *edi, cchar *tableName);
     int       (*renameTable)(Edi *edi, cchar *tableName, cchar *newTableName);
     int       (*renameColumn)(Edi *edi, cchar *tableName, cchar *columnName, cchar *newColumnName);
@@ -348,9 +348,12 @@ PUBLIC void ediClose(Edi *edi);
 PUBLIC EdiGrid *ediCloneGrid(EdiGrid *grid);
 
 /**
-    Create a record
-    @description This will create an empty record using the given database tableName to supply the record schema. Use
-        #ediCreateBareRec to create a free-standing record without requiring a database.
+    Create a new record based on the table's schema.
+    @description This will create an empty record using the given database tableName to supply the record schema. It will
+        not be saved to the database as the field values have not been assigned. Set field values using #ediSetField and
+        #ediSetFields and then save to the database using #ediUpdateRec.
+        Create a record based on the table's schema. Not saved to the database.
+        Use #ediCreateBareRec to create a free-standing record without requiring a database.
         The record is allocated and room is reserved to store record values. No record field values are stored.
     @param edi Database handle
     @param tableName Database table name
@@ -374,20 +377,22 @@ PUBLIC int ediDelete(Edi *edi, cchar *path);
 /**
     Display the grid to the debug log
     @description Used for debugging only.
+    @param message Prefix message to output
     @param grid EDI grid
     @ingroup Edi
     @stability Prototype
  */
-PUBLIC void ediDumpGrid(EdiGrid *grid);
+PUBLIC void ediDumpGrid(cchar *message, EdiGrid *grid);
 
 /**
     Display a record to the debug log
     @description Used for debugging only.
+    @param message Prefix message to output
     @param rec Record to log
     @ingroup Edi
     @stability Prototype
  */
-PUBLIC void ediDumpRec(EdiRec *rec);
+PUBLIC void ediDumpRec(cchar *message, EdiRec *rec);
 
 /**
     Get a list of database column names.
@@ -562,7 +567,7 @@ PUBLIC Edi *ediClone(Edi *edi);
     Run a database query query.
     @description This runs a provider dependant query. For the SDB SQLite provider, this runs an SQL statement.
         The "mdb" provider does not implement this API. To do queries using the "mdb" provider, use:
-        #ediReadRec, #ediReadGrid and #ediReadField.
+        #ediFindRec, #ediFindGrid and #ediReadField.
         The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate SQL injection risk.
     @param edi Database handle
     @param cmd Query command to execute.
@@ -617,7 +622,7 @@ PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
     @ingroup Edi
     @stability Evolving
  */
-PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *query);
+PUBLIC EdiGrid *ediFindGrid(Edi *edi, cchar *tableName, cchar *query);
 
 /**
     Read one record.
@@ -632,7 +637,7 @@ PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *query);
     @ingroup Edi
     @stability Deprecated
  */
-PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *query);
+PUBLIC EdiRec *ediFindRec(Edi *edi, cchar *tableName, cchar *query);
 
 /**
     Read a record.
@@ -644,9 +649,9 @@ PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *query);
     @ingroup Edi
     @stability Evolving
  */
-PUBLIC EdiRec *ediReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
+PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key);
 
-#if DEPRECATED && KEEP
+#if DEPRECATED || 1
 /**
     Read a table.
     @description This reads all the records in a table and returns a grid containing the results.
@@ -654,15 +659,15 @@ PUBLIC EdiRec *ediReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
     @param tableName Database table name
     @return A grid containing all records in the table. Returns NULL if no matching records.
     @ingroup Edi
-    @stability Evolving
+    @stability Deprecated
  */
-PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName);
+PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName) ME_DEPRECATED("Use ediFindGrid instead");
 
 /**
     Read one record.
     @description This runs a simple query on the database and selects the first matching record. The query selects
         a row that has a "field" that matches the given "value".
-        This API is deprecated, use ediReadGrid instead.
+        This API is deprecated, use ediFindGrid instead.
     @param edi Database handle
     @param tableName Database table name
     @param fieldName Database field name to evaluate
@@ -672,13 +677,13 @@ PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName);
     @ingroup Edi
     @stability Deprecated
  */
-PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiRec *ediFindRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED("Use ediFindGrid instead");
 
 /**
     Read matching records.
     @description This runs a simple query on the database and returns matching records in a grid. The query selects
         all rows that have a "field" that matches the given "value".
-        This API is deprecated, use ediReadGrid instead.
+        This API is deprecated, use ediFindGrid instead.
     @param edi Database handle
     @param tableName Database table name
     @param fieldName Database field name to evaluate
@@ -688,7 +693,7 @@ PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cch
     @ingroup Edi
     @stability Deprecated
  */
-PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value);
+PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED("Use ediFindRec instead");
 #endif
 
 /**
@@ -723,6 +728,7 @@ PUBLIC int edRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
  */
 PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 
+#if KEEP
 /**
     Delete a row in a database table identified by the query expression
     @param edi Database handle
@@ -735,6 +741,7 @@ PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
     @stability Evolving
  */
 PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query);
+#endif
 
 /**
     Delete a row in a database table identified by a key value
@@ -745,7 +752,7 @@ PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query);
     @ingroup Edi
     @stability Evolving
  */
-PUBLIC int ediRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key);
+PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *key);
 
 /**
     Remove a table from the database.
@@ -919,8 +926,10 @@ PUBLIC bool ediValidateRec(EdiRec *rec);
 PUBLIC EdiGrid *ediCreateBareGrid(Edi *edi, cchar *tableName, int nrows);
 
 /**
-    Create a bare record.
-    @description This creates an empty record based on the given table's schema.
+    Create a bare, free-standing record.
+    @description This creates an empty record based. The tableName and number of fields are defined
+        in the record, but otherwise, the record's fields are uninitialized. This API is a low level API
+        used internally by ESP and EDI.
     @param edi Database handle
     @param tableName Database table name
     @param nfields Number of fields to reserve in the record

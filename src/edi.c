@@ -195,6 +195,9 @@ PUBLIC void ediClose(Edi *edi)
 }
 
 
+/*
+    Create a record based on the table's schema. Not saved to the database.
+ */
 PUBLIC EdiRec *ediCreateRec(Edi *edi, cchar *tableName)
 {
     if (!edi || !edi->provider) {
@@ -213,16 +216,16 @@ PUBLIC int ediDelete(Edi *edi, cchar *path)
 }
 
 
-PUBLIC void ediDumpGrid(EdiGrid *grid)
+PUBLIC void ediDumpGrid(cchar *message, EdiGrid *grid)
 {
-    mprLog("info esp edi", 0, "Grid: %s\nschema: %s,\ndata: %s", grid->tableName,
+    mprLog("info esp edi", 0, "%s: Grid: %s\nschema: %s,\ndata: %s", message, grid->tableName,
         ediGetTableSchemaAsJson(grid->edi, grid->tableName), ediGridAsJson(grid, MPR_JSON_PRETTY));
 }
 
 
-PUBLIC void ediDumpRec(EdiRec *rec)
+PUBLIC void ediDumpRec(cchar *message, EdiRec *rec)
 {
-    mprLog("info esp edi", 0, "Rec: %s", ediRecAsJson(rec, MPR_JSON_PRETTY));
+    mprLog("info esp edi", 0, "%s: Rec: %s", message, ediRecAsJson(rec, MPR_JSON_PRETTY));
 }
 
 
@@ -630,23 +633,23 @@ PUBLIC EdiField ediReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
 }
 
 
-PUBLIC EdiGrid *ediReadGrid(Edi *edi, cchar *tableName, cchar *select)
+PUBLIC EdiGrid *ediFindGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readGrid(edi, tableName, select);
+    return edi->provider->findGrid(edi, tableName, select);
 }
 
 
-PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *select)
+PUBLIC EdiRec *ediFindRec(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
 
     if (!edi || !edi->provider) {
         return 0;
     }
-    if ((grid = edi->provider->readGrid(edi, tableName, select)) == 0) {
+    if ((grid = edi->provider->findGrid(edi, tableName, select)) == 0) {
         return 0;
 
     }
@@ -657,17 +660,17 @@ PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *select)
 }
 
 
-PUBLIC EdiRec *ediReadRecByKey(Edi *edi, cchar *tableName, cchar *key)
+PUBLIC EdiRec *ediReadRec(Edi *edi, cchar *tableName, cchar *key)
 {
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readRecByKey(edi, tableName, key);
+    return edi->provider->readRec(edi, tableName, key);
 }
 
 
-#if DEPRECATED
-PUBLIC EdiRec *ediReadRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
+#if DEPRECATED || 1
+PUBLIC EdiRec *ediFindRecWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value)
 {
     EdiGrid *grid;
 
@@ -686,7 +689,7 @@ PUBLIC EdiGrid *ediReadWhere(Edi *edi, cchar *tableName, cchar *fieldName, cchar
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readGrid(edi, tableName, sfmt("%s %s %s", fieldName, operation, value));
+    return edi->provider->findGrid(edi, tableName, sfmt("%s %s %s", fieldName, operation, value));
 }
 
 
@@ -695,7 +698,7 @@ PUBLIC EdiGrid *ediReadTable(Edi *edi, cchar *tableName)
     if (!edi || !edi->provider) {
         return 0;
     }
-    return edi->provider->readGrid(edi, tableName, NULL);
+    return edi->provider->findGrid(edi, tableName, NULL);
 }
 #endif
 
@@ -751,6 +754,7 @@ PUBLIC int ediRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName)
 }
 
 
+#if KEEP
 PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query)
 {
     EdiRec  *rec;
@@ -758,18 +762,20 @@ PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *query)
     if (!edi || !edi->provider) {
         return MPR_ERR_BAD_STATE;
     }
-    if ((rec = ediReadRec(edi, tableName, query)) == 0) {
+    if ((rec = ediFindRec(edi, tableName, query)) == 0) {
         return MPR_ERR_CANT_READ;
     }
     return edi->provider->removeRecByKey(edi, tableName, rec->id);
 }
+#endif
 
-PUBLIC int ediRemoveRecByKey(Edi *edi, cchar *tableName, cchar *key)
+
+PUBLIC int ediRemoveRec(Edi *edi, cchar *tableName, cchar *key)
 {
     if (!edi || !edi->provider) {
         return MPR_ERR_BAD_STATE;
     }
-    return edi->provider->removeRecByKey(edi, tableName, key);
+    return edi->provider->removeRec(edi, tableName, key);
 }
 
 
@@ -1120,7 +1126,7 @@ PUBLIC EdiGrid *ediJoin(Edi *edi, ...)
                 if (col->grid != current) {
                     current = col->grid;
                     keyValue = primary->records[r]->fields[col->joinField].value;
-                    rec = ediReadRecByKey(edi, col->grid->tableName, keyValue);
+                    rec = ediReadRec(edi, col->grid->tableName, keyValue);
                 }
                 if (rec) {
                     fp = &rec->fields[col->field];
@@ -1612,7 +1618,7 @@ static cchar *checkUnique(EdiValidation *vp, EdiRec *rec, cchar *fieldName, ccha
 {
     EdiRec  *other;
 
-    if ((other = ediReadRecByKey(rec->edi, rec->tableName, sfmt("%s == %s", fieldName, value))) == 0) {
+    if ((other = ediReadRec(rec->edi, rec->tableName, sfmt("%s == %s", fieldName, value))) == 0) {
         return 0;
     }
     if (smatch(other->id, rec->id)) {

@@ -389,7 +389,7 @@ static void restfulRouteSet(HttpRoute *route, cchar *set)
 }
 
 
-#if DEPRECATED || 1
+#if DEPRECATED && REMOVE
 static void legacyRouteSet(HttpRoute *route, cchar *set)
 {
     restfulRouteSet(route, "restful");
@@ -401,8 +401,8 @@ PUBLIC int espInitParser()
 {
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
-#if DEPRECATED || 1
-    httpDefineRouteSet("esp-angular-mvc", legacyRouteSet);
+#if DEPRECATE && REMOVE
+    httpDefineRouteSet("esp-vue-mvc", legacyRouteSet);
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
     httpAddConfig("esp", parseEsp);
