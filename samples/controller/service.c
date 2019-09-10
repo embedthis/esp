@@ -15,6 +15,6 @@ static void hello() {
     Controller initialization. Invoked when the controller is loaded.
  */
 ESP_EXPORT int esp_controller_test_service(HttpRoute *route) {
-    espDefineAction(route, "hello", hello);
+    espAction(route, "hello", NULL, hello);
     return 0;
 }

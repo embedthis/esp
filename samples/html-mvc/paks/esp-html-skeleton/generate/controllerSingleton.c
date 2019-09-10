@@ -20,14 +20,14 @@ static void create${UCONTROLLER}() {
     Prepare an edit template with the resource
  */
 static void edit${UCONTROLLER}() {
-    readRec("${CONTROLLER}", param("id"));
+    findRec("${CONTROLLER}", param("id"));
 }
 
 /*
     Get a resource
  */
 static void get${UCONTROLLER}() {
-    readRec("${CONTROLLER}", param("id"));
+    findRec("${CONTROLLER}", param("id"));
     renderView("${CONTROLLER}/edit");
 }
 
@@ -77,12 +77,12 @@ static void common${UCONTROLLER}(HttpStream *stream) {
  */
 ESP_EXPORT int esp_controller_${NAME}_${CONTROLLER}(HttpRoute *route, MprModule *module) {
     espDefineBase(route, common${UCONTROLLER});
-    espDefineAction(route, "${CONTROLLER}/create", create${UCONTROLLER});
-    espDefineAction(route, "${CONTROLLER}/remove", remove${UCONTROLLER});
-    espDefineAction(route, "${CONTROLLER}/edit", edit${UCONTROLLER});
-    espDefineAction(route, "${CONTROLLER}/get", get${UCONTROLLER});
-    espDefineAction(route, "${CONTROLLER}/init", init${UCONTROLLER});
-    espDefineAction(route, "${CONTROLLER}/update", update${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/create", NULL, create${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/remove", NULL, remove${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/edit", NULL, edit${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/get", NULL, get${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/init", NULL, init${UCONTROLLER});
+    espAction(route, "${CONTROLLER}/update", NULL, update${UCONTROLLER});
 ${DEFINE_ACTIONS}
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);

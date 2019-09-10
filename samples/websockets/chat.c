@@ -125,6 +125,6 @@ ESP_EXPORT int esp_controller_websockets_chat(HttpRoute *route)
     /*
         Define the "chat" action that will run when the "test/chat" URI is invoked
      */
-    espDefineAction(route, "test/chat", chat_action);
+    espAction(route, "test/chat", NULL, chat_action);
     return 0;
 }

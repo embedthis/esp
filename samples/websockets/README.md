@@ -55,7 +55,7 @@ Documentation:
 
 See Also:
 ---
-* [esp-angular-mvc - ESP Angular MVC Application](../esp-angular-mvc/README.md)
+* [esp-vue-mvc - ESP VueJS Skeleton](../esp-vue-skeleton/README.md)
 * [esp-controller - Serving ESP controllers](../esp-controller/README.md)
 * [esp-html-mvc - ESP MVC Application](../esp-html-mvc/README.md)
 * [esp-page - Serving ESP pages](../esp-page/README.md)

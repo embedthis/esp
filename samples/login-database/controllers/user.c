@@ -34,7 +34,7 @@ ESP_EXPORT int esp_controller_login_database_user(HttpRoute *route)
     /*
         Define the login / logout actions
      */
-    espDefineAction(route, "user-login", loginUser);
-    espDefineAction(route, "user-logout", logoutUser);
+    espAction(route, "user/login", NULL, loginUser);
+    espAction(route, "user/logout", NULL, logoutUser);
     return 0;
 }

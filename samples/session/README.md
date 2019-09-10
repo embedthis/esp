@@ -13,7 +13,7 @@ To run:
 
 The server listens on port 4000. Browse to: 
  
-     http://localhost:4000/
+     http://localhost:4000/index.esp
 
 Code:
 ---

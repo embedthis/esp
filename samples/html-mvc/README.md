@@ -5,7 +5,7 @@ This sample demonstrates an ESP MVC application using server-side HTML page view
 The app is a trivial blogging application. Posts with a title and body can be created, listed and deleted.
 
 An alternative approach is to use a client-side Javascript framework to generate views on the client.
-The [esp-angular-skeleton](../esp-angular-skeleton/README.md) sample demonstrates such an approach.
+The [esp-vue-skeleton](../esp-vue-skeleton/README.md) sample demonstrates such an approach.
 
 The app contains:
 

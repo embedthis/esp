@@ -7,7 +7,7 @@
     Create a new resource in the database
  */
 static void createPost() {
-    if (saveRec(createRec("post", params()))) {
+    if (updateRec(createRec("post", params(NULL)))) {
         feedback("info", "New post Created");
         renderView("post/list");
     } else {
@@ -65,7 +65,7 @@ static void updatePost() {
     if (smatch(param("submit"), "Delete")) {
         removePost();
     } else {
-        if (updateFields("post", params())) {
+        if (updateFields("post", params(NULL))) {
             feedback("info", "Post Updated Successfully");
             redirect(".");
         } else {
@@ -82,23 +82,23 @@ static void redirectPost() {
     redirect(sjoin(getUri(), "/", NULL));
 }
 
-static void commonPost(HttpStream *stream) {
+static void commonPost(HttpStream *stream, EspAction *action) {
 }
 
 /*
     Dynamic module initialization
  */
 ESP_EXPORT int esp_controller_blog_post(HttpRoute *route) {
-    espDefineBase(route, commonPost);
-    espDefineAction(route, "post/create", createPost);
-    espDefineAction(route, "post/remove", removePost);
-    espDefineAction(route, "post/edit", editPost);
-    espDefineAction(route, "post/get", getPost);
-    espDefineAction(route, "post/init", initPost);
-    espDefineAction(route, "post/list", listPost);
-    espDefineAction(route, "post/update", updatePost);
-    espDefineAction(route, "post/", listPost);
-    espDefineAction(route, "post", redirectPost);
+    espController(route, commonPost);
+    espAction(route, "post/create", NULL, createPost);
+    espAction(route, "post/remove", NULL, removePost);
+    espAction(route, "post/edit", NULL, editPost);
+    espAction(route, "post/get", NULL, getPost);
+    espAction(route, "post/init", NULL, initPost);
+    espAction(route, "post/list", NULL, listPost);
+    espAction(route, "post/update", NULL, updatePost);
+    espAction(route, "post/", NULL, listPost);
+    espAction(route, "post", NULL, redirectPost);
 
 #if SAMPLE_VALIDATIONS
     Edi *edi = espGetRouteDatabase(route);

@@ -8,7 +8,7 @@
 /*
     Common base run for every request.
  */
-static void commonBase(HttpStream *stream)
+static void commonBase(HttpStream *stream, EspAction *action)
 {
     cchar   *uri;
 
@@ -31,6 +31,6 @@ static void commonBase(HttpStream *stream)
  */
 ESP_EXPORT int esp_app_login_auth(HttpRoute *route)
 {
-    espDefineBase(route, commonBase);
+    espController(route, commonBase);
     return 0;
 }

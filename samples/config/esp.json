@@ -7,7 +7,7 @@
 */
 {
     /*
-        See the Http configuration sample for the full list of Http related configuration 
+        See the Http configuration sample for the full list of Http related configuration
         properties at:
 
         https://github.com/embedthis/http/tree/dev/samples/config
@@ -57,12 +57,12 @@
          */
         generate: {
             appweb:             "esp-best/appweb.conf",
-            clientController:   "esp-angular-mvc/controller.js",
-            clientEdit:         "esp-angular-mvc/edit.html",
-            clientList:         "esp-angular-mvc/list.html",
-            clientModel:        "esp-angular-mvc/model.js",
+            clientController:   "esp-vue-mvc/controller.js",
+            clientEdit:         "esp-vue-mvc/edit.html",
+            clientList:         "esp-vue-mvc/list.html",
+            clientModel:        "esp-vue-mvc/model.js",
             controller:         "esp-mvc/controller.c",
-            controllerSingleton: "esp-angular-mvc/generate/controllerSingleton.c",
+            controllerSingleton: "esp-vue-mvc/generate/controllerSingleton.c",
             migration:          "esp-mvc/migration.c",
             module:             "esp-mvc/src/app.c",
         },
@@ -95,11 +95,11 @@
         },
 
         /*
-            How to compile ESP components. Set to true to optimize, set to false for 
+            How to compile ESP components. Set to true to optimize, set to false for
             symbolic debugging support.
          */
         optimize: false,
-        
+
         /*
             Name of the file containing the esp compilation rule templates
          */

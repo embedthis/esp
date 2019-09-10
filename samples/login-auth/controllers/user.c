@@ -32,7 +32,7 @@ static void logoutUser() {
  */
 ESP_EXPORT int esp_controller_login_auth_user(HttpRoute *route)
 {
-    espDefineAction(route, "user-login", loginUser);
-    espDefineAction(route, "user-logout", logoutUser);
+    espAction(route, "user/login", NULL, loginUser);
+    espAction(route, "user/logout", NULL, logoutUser);
     return 0;
 }

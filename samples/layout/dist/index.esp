@@ -14,7 +14,7 @@
 
         </section>
         <div class="feedback">
-            <% renderFlash("all"); %>
+            <% renderFeedback("all"); %>
         </div>
     </main>
 </body>
