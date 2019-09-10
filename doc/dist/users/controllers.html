@@ -41,7 +41,7 @@
                 </a>
                 <div class="menu">
                     <a class="item" href="../start/quick.html">Quick Start</a>
-                    <a class="item" href="../start/index.html">Installing ESP</a>
+                    <a class="item" href="../start/installing.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
                     <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
@@ -179,7 +179,7 @@ static void hello() {
 
 ESP_EXPORT int esp_controller_test_greeting(HttpRoute *route)
 {
-    espDefineAction(route, "greeting-hello", hello);
+    espAction(route, "greeting-hello", "user", hello);
     return 0;
 }
 </pre>
@@ -251,7 +251,7 @@ http://example.com/APP/CONTROLLER/ACTION/ID
             name of the controller. The first time the controller is invoked, the controller
             module will be loaded and the initialization function will be run. Typically, the initialization function
             will then call
-            <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espDefineAction</a>
+            <a href="../ref/api/esp.html#group___esp_route_1ga321abe89cc91246b2a44f40493988670">espAction</a>
             to bind action functions to route actions.</p>
 <pre class="code">
 #include "esp.h"
@@ -264,7 +264,7 @@ static FUNCTION() {
  */
 ESP_EXPORT int esp_controller_APP_NAME(HttpRoute *route)
 {
-    espDefineAction(route, "NAME-ACTION", FUNCTION);
+    espAction(route, "NAME-ACTION", "user", FUNCTION);
     return 0;
 }
 </pre>
@@ -303,6 +303,7 @@ static void second(HttpStream *stream) {
     render("World\n");
     finalize();
 }
+
 static void first() {
     dontAutoFinalize();
     render("Hello ");
@@ -555,7 +556,7 @@ esp generate controller name [actions...]
             <pre class="code">$ <b>esp generate controller admin edit login logout command</b></pre>
 
             <p>The following controller code will be generated. There is one function generated for each action
-            and a call to <em>espDefineAction</em> is added to register the controller. The <em>esp_controller_admin</em>
+            and a call to <em>espAction</em> is added to register the controller. The <em>esp_controller_admin</em>
             initialization function is invoked once when the controller is first loaded.</p>
 
             <pre class="code">#include "esp.h"
@@ -567,10 +568,11 @@ static void command() {}
 
 ESP_EXPORT int esp_controller_demo_admin(HttpRoute *route)
 {
-    espDefineAction(route, "admin/edit", edit);
-    espDefineAction(route, "admin/login", login);
-    espDefineAction(route, "admin/logout", logout);
-    espDefineAction(route, "admin/command", command);
+    cchar   *role = "user";
+    espAction(route, "admin/edit", role, edit);
+    espAction(route, "admin/login", role, login);
+    espAction(route, "admin/logout", role, logout);
+    espAction(route, "admin/command", role, command);
     return 0;
 }
 </pre>

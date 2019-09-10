@@ -43,14 +43,14 @@ esp \- ESP Application Generator for Server-Side Web Applications.
     esp role [add|remove] rolename
     esp serve [ip]:[port]
     esp user [add|compute] username password roles...
-    esp user [remove|show] username 
+    esp user [remove|show] username
 .SH DESCRIPTION
-The \fBesp\fR command generates, manages and runs ESP web applications. It includes a full HTTP/1.1 web server to 
+The \fBesp\fR command generates, manages and runs ESP web applications. It includes a full HTTP/1.1 web server to
 host your application and can generate ESP skeletons, controllers, database tables, and scaffolds.
 .PP
-The esp command will create directories and generate configuration and source code files that can then be manually 
-edited as required.  ESP is intelligent and will not overwrite existing files, so you can safely edit 
-and regenerate without losing your changes. You can overwrite your changes if you wish to by using 
+The esp command will create directories and generate configuration and source code files that can then be manually
+edited as required.  ESP is intelligent and will not overwrite existing files, so you can safely edit
+and regenerate without losing your changes. You can overwrite your changes if you wish to by using
 the \fB--force\fR switch.
 .PP
 .SH RUNNING ESP
@@ -71,7 +71,7 @@ run \fBpak\fR to install the required supporting packs. For example:
  \fBpak install esp-html-skeleton\fR
 .RE
 .PP
-This will will create a set of directories that have the following meaning: 
+This will will create a set of directories that have the following meaning:
 
 .RS 5
  documents           - Public client web content
@@ -100,12 +100,10 @@ Pak utility (see https://embedthis.com/pak).
 Packs may depend on other packs so that installing a top level pack
 may install other required packs. For example: generating the "esp-html-skeleton" pack will
 also install: esp-mvc, exp-less, and other paks.
-.PP
-See https://embedthis.com/catalog/ for a list of packs.
 
 .SH GENERATING MIGRATIONS
-Migrations are generated code modules that manage portions of the database. Migrations are used to create tables, 
-initialize with test data and optionally destroy tables. Migrations are typically generated and then hand-edited to 
+Migrations are generated code modules that manage portions of the database. Migrations are used to create tables,
+initialize with test data and optionally destroy tables. Migrations are typically generated and then hand-edited to
 include relevant initialization or test data. Migrations are useful to quickly recreate the database with the required
 tables and data.
 .RS 5
@@ -113,12 +111,12 @@ tables and data.
  \fBesp generate migration DESCRIPTION TABLE [field:type ...]\fR
 .RE
 
-The DESCRIPTION is used to name the migration which is created in the \fBmigrations\fR directory. A migration 
+The DESCRIPTION is used to name the migration which is created in the \fBmigrations\fR directory. A migration
 is given a unique ordered sequence number and the description is appended to this number. The description is mapped
 where spaces are changed to "_" characters. When migrations are run, they are run in sequence number order.
 .PP
-If field:type values are supplied, the database migration will include code to create a column for each 
-specified field of the requested type. The valid database types are: blob, boolean, date, float, integer, string, 
+If field:type values are supplied, the database migration will include code to create a column for each
+specified field of the requested type. The valid database types are: blob, boolean, date, float, integer, string,
 and text.
 
 .SH GENERATING TABLES
@@ -129,8 +127,8 @@ To generate a database table without creating a migration:
 .RE
 
 .SH GENERATING CONTROLLERS
-Controllers are the primary mechanism for responding to client requests. 
-To generate a controller, 
+Controllers are the primary mechanism for responding to client requests.
+To generate a controller,
 run:
 .RS 5
 
@@ -144,9 +142,9 @@ name. You can edit the controller source to meet your needs. It will not be over
 
 .SH GENERATING SCAFFOLDS
 .PP
-A scaffold is a generated controller, database migration, client-side controller and set of views that provides add, edit 
+A scaffold is a generated controller, database migration, client-side controller and set of views that provides add, edit
 and list functionality for the database table.
-Scaffolds are useful to quickly generate chunks of the application and prototype web pages and actions for 
+Scaffolds are useful to quickly generate chunks of the application and prototype web pages and actions for
 managing a database table.
 To generate a scaffold:
 .RS 5
@@ -156,16 +154,16 @@ To generate a scaffold:
 .PP
 This will create a scaffold for the specified database table and will generate a controller of the same name.
 .PP
-If field:type values are supplied, a database migration will be created with code to create a column for each 
+If field:type values are supplied, a database migration will be created with code to create a column for each
 specified field of the requested type. The valid database types are: blob, boolean, date, float, integer, string,
-and text. The migration will use the name "create_scaffold_MODEL" and will be created under 
+and text. The migration will use the name "create_scaffold_MODEL" and will be created under
 the \fBmigrations\fR direcvtory.
 .PP
-The scaffold will include an edit action and view page that provides add and edit capability. The list action and view, 
+The scaffold will include an edit action and view page that provides add and edit capability. The list action and view,
 provides the ability to list the table rows and select an entry to edit.
 .PP
 If the --singleton switch is ues, the controller will be generated for a singleton resource and will not have a list
-action. 
+action.
 
 .SH COMPILING
 ESP compiles controllers and ESP pages native code shared libraries. These are then loaded and
@@ -173,7 +171,7 @@ run by ESP in response to incoming client requests. Code is compiled only once b
 service incoming requests.
 .PP
 In development mode, ESP will automatically compile the relevant portions of the application if the source code
-is modified. It can intelligently recompile controllers and ESP pages. However, you can also explicilty recompile 
+is modified. It can intelligently recompile controllers and ESP pages. However, you can also explicilty recompile
 portions or the complete appliction via the esp command.
 .PP
 ESP can recompile everything via:
@@ -194,7 +192,7 @@ matching the filter pathnames are compiled.
 
 .RE
 .PP
-To compile the entire application and produce a single combined shared library file, set the "esp.combine" 
+To compile the entire application and produce a single combined shared library file, set the "esp.combine"
 property in the esp.json file, to true. Alternatively, invoke "esp --combine compile".
 .RS 5
 
@@ -209,7 +207,7 @@ To define authentication roles, use:
   \fBesp role add abilities...\fR
 
 .SH CROSS-COMPILING
-To compile for a target system of a different architecture, you must specify the target. 
+To compile for a target system of a different architecture, you must specify the target.
 To do this, use the -platform switch to specify the target architecture. Specify the path to the platform directory
 in the Appweb source code built for that platform.
 
@@ -243,7 +241,7 @@ is the migration sequence number at the start of the migration file name.
 .PP
 
 .SH COMMANDS
-.PP 
+.PP
 esp has the following command usage patterns:
 
 .RS 5
@@ -275,14 +273,14 @@ Combine compiled ESP assets into a single file. Used when building with --static
 Use the specified database provider. Set to "mdb" or "sdb" for SQLite.
 .TP 6
 \fB\--force\fR
-Overwrite existing files. ESP normally will not overwrite existing files. This is to preserve user changes to 
+Overwrite existing files. ESP normally will not overwrite existing files. This is to preserve user changes to
 previously generated files.
 .TP 6
 \fB\--home dir\fR
 Change the current working directory before beginning processing.
 .TP 6
 \fB\--keep\fR
-Keep intermediate source files in the cache directory. This overrides the 
+Keep intermediate source files in the cache directory. This overrides the
 ejs.json "keep" setting.
 .TP 6
 \fB\--listen [ip:]port\fR
@@ -290,8 +288,8 @@ Define the listening endpoint address. This will be used when generating an appl
 will be patched into the generated esp.json configuration file.
 .TP 6
 \fB\--log logFile:level\fR
-Specify a file to log messages.  The syntax is: \fB"--log logName[:logLevel]"\fR.             
-Level 3 will trace the request and response headers. 
+Specify a file to log messages.  The syntax is: \fB"--log logName[:logLevel]"\fR.
+Level 3 will trace the request and response headers.
 .TP 6
 \fB\--name AppName\fR
 Set the ESP application name. Defaults to the name of the directory containing the application.
@@ -300,22 +298,22 @@ Set the ESP application name. Defaults to the name of the directory containing t
 Do not update esp.json.
 .TP 6
 \fB\--optimize\fR
-Compile optimized without debug symbols. 
+Compile optimized without debug symbols.
 .TP 6
 \fB\--quiet\fR
 Suppress diagnostic trace to the console.
 .TP 6
 \fB\--platform [path/]os-arch-profile\fR
-Target platform configuration to build for and directory containing esp objects and libraries for the target platform. 
-If a path is supplied, the specified platform directory is used.  Otherwise, esp searches from the current directory 
+Target platform configuration to build for and directory containing esp objects and libraries for the target platform.
+If a path is supplied, the specified platform directory is used.  Otherwise, esp searches from the current directory
 upwards for a parent platform directory.
 .TP 6
 \fB\--rebuild\fR
-Force a recompile of all items when used with the compile command. 
+Force a recompile of all items when used with the compile command.
 When used with migrate, this will recreate the database and apply all migrations.
 .TP 6
 \fB\--route pattern\fR
-This selects the route by pattern that will be used for the ESP configuration. 
+This selects the route by pattern that will be used for the ESP configuration.
 .TP 6
 \fB\--single\fR
 Generate a controller for a singleton resource instead of a group of resources. A singleton controller omits a list
@@ -328,16 +326,16 @@ Display the route table to the console.
 Use static linking when building ESP applications. This causes esp to create archive libraries instead of shared libraries.
 .TP 6
 \fB\--symbols\fR
-Compile for debug with symbols. 
+Compile for debug with symbols.
 .TP 6
 \fB\--table name\fR
-Override the database table name when generating tables, migrations or scaffolds. This is useful to request a plural 
-version of the model name. Alternatively, specify the model name when generating the scaffold, table or migration 
+Override the database table name when generating tables, migrations or scaffolds. This is useful to request a plural
+version of the model name. Alternatively, specify the model name when generating the scaffold, table or migration
 with the desired plural suffix. For example: "-s" or "-ies".
 .TP 6
 \fB\--trace traceFile:level\fR
-Specify a file for trace messages.  The syntax is: \fB"--trace traceName[:traceLevel]"\fR.             
-Level 3 will trace the request and response headers. 
+Specify a file for trace messages.  The syntax is: \fB"--trace traceName[:traceLevel]"\fR.
+Level 3 will trace the request and response headers.
 .TP 6
 \fB\--verbose\fR or \fB\-v\fR
 Run in verbose mode and trace actions to the console.

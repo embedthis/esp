@@ -41,7 +41,7 @@
                 </a>
                 <div class="menu">
                     <a class="item" href="../start/quick.html">Quick Start</a>
-                    <a class="item" href="../start/index.html">Installing ESP</a>
+                    <a class="item" href="../start/installing.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
                     <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
@@ -202,10 +202,7 @@
             the core structure of your application and include pages, templates, stylesheets and scaffolds
             that are used to generate models, views and controllers as your application grows. </p>
 
-            <p>To create a new ESP application, we will use the <a href="https://embedthis.com/pak/">Pak</a>
-            package manager to install the <em>esp-html-skeleton</em> application skeleton. The <em>esp-html-skeleton</em>
-            is a starter package for ESP HTML MVC applications with server-side views. Other skeletons
-            include the <em>esp-angular-skeleton</em> for ESP Angular applications with client-side views.</p>
+            <p>To create a new ESP application, we will use the <a href="https://embedthis.com/pak/">Pak</a> package manager to install the <em>esp-html-skeleton</em> application skeleton. The <em>esp-html-skeleton</em> is a starter package for ESP HTML MVC applications with server-side views. Other skeletons include the <em>esp-vue-skeleton</em> for ESP VueJS applications with client-side views.</p>
 
             <h3>Install the Skeleton</h3>
             <p>First make a directory named <em>blog</em> and then install the <em>esp-html-skeleton</em> package.</p>
@@ -397,7 +394,7 @@ $ <b>esp generate scaffold post title:string body:text</b>
             then identifies <em>post</em> as the name of the server-side controller invokes the <em>createPost</em>
             action routine to service the request. The controller is automatically compiled and loaded if required.
             <p>A controller file typically defines many such C functions called actions, that are bound to specific URLs
-            via ESP routes. Actions are defined using the <em>espDefineAction</em> API in the initialization
+            via ESP routes. Actions are defined using the <em>espAction</em> API in the initialization
             function of the controller.</p>
             <p>A minimal post controller file looks like this:</p>
             <pre class="code">
@@ -413,7 +410,7 @@ static void createPost() {
 }
 ESP_EXPORT int esp_controller_blog_post(EspRoute *eroute)
 {
-    espDefineAction(route, "post/create", createPost);
+    espAction(route, "post/create", NULL, createPost);
     return 0;
 }
 </pre>

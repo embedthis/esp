@@ -67,10 +67,24 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>espController</name>
+      <anchorfile>group___esp_route.html</anchorfile>
+      <anchor>ga8e9d301b4d8ea03e194be4339ec9d361</anchor>
+      <arglist>(HttpRoute *route, EspProc baseProc)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>espDefineAction</name>
+      <anchorfile>group___esp_route.html</anchorfile>
+      <anchor>ga6ce7e8f816dd7a994f77583c953065a2</anchor>
+      <arglist>(HttpRoute *route, cchar *targetKey, EspProc actionProc) ME_DEPRECATED(&quot;Use espAction instead&quot;)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>espDefineBase</name>
       <anchorfile>group___esp_route.html</anchorfile>
-      <anchor>gae250d071bb458546c8ed5fad3aba5e84</anchor>
-      <arglist>(HttpRoute *route, EspProc baseProc)</arglist>
+      <anchor>ga619e3d85014d882f8330e47ee1f6ac24</anchor>
+      <arglist>(HttpRoute *route, EspLegacyProc baseProc) ME_DEPRECATED(&quot;Use espDefineCommon instead&quot;)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -323,6 +337,13 @@
       <arglist>(HttpStream *stream)</arglist>
     </member>
     <member kind="function">
+      <type>int</type>
+      <name>espGetIntParam</name>
+      <anchorfile>group___esp_req.html</anchorfile>
+      <anchor>ga8c516f5c15f5610e38c7a2c8f37f28cc</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
+    </member>
+    <member kind="function">
       <type>cchar *</type>
       <name>espGetMethod</name>
       <anchorfile>group___esp_req.html</anchorfile>
@@ -335,13 +356,6 @@
       <anchorfile>group___esp_req.html</anchorfile>
       <anchor>ga4cbe8eba43dbb755ee5e383c2834c225</anchor>
       <arglist>(HttpStream *stream, cchar *var, cchar *defaultValue)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>espGetParamInt</name>
-      <anchorfile>group___esp_req.html</anchorfile>
-      <anchor>ga2b0a4a349c06bae1be16bc789779f3db</anchor>
-      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
     </member>
     <member kind="function">
       <type>MprJson *</type>
@@ -874,6 +888,13 @@
       <arglist>(cchar *table)</arglist>
     </member>
     <member kind="function">
+      <type>bool</type>
+      <name>createRecFromParams</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga5be0da11b7438947e9508f2b0e1a9a1f</anchor>
+      <arglist>(cchar *table) ME_DEPRECATED(&quot;Use updateRecFields(table</arglist>
+    </member>
+    <member kind="function">
       <type>cchar *</type>
       <name>createSession</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
@@ -898,22 +919,22 @@
       <type>void</type>
       <name>dumpGrid</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga3e68a43b4ec780b8b02ef2a50c283c97</anchor>
-      <arglist>(EdiGrid *grid)</arglist>
+      <anchor>ga59e03741fc139bbfe159b19c0ec0ab3b</anchor>
+      <arglist>(cchar *message, EdiGrid *grid)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>dumpParams</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga29ff2542d5ab62e0b9b02c0b4a509c8a</anchor>
-      <arglist>()</arglist>
+      <anchor>ga6185ee40ad6b60aab06ffe4b7f633ad9</anchor>
+      <arglist>(cchar *message)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>dumpRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga64319d753c67ea605a794f4fb51d6747</anchor>
-      <arglist>(EdiRec *rec)</arglist>
+      <anchor>ga92161376031e92987063467cb6f1dbd3</anchor>
+      <arglist>(cchar *message, EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
@@ -928,6 +949,27 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga061eb4d725222504949f9eb49c619fd5</anchor>
       <arglist>(void)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>findGrid</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga9b9c955e187a244fc82d652e43f9dba7</anchor>
+      <arglist>(cchar *tableName, cchar *select,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiRec *</type>
+      <name>findRec</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga1da9624881216845cd40703c1af904f8</anchor>
+      <arglist>(cchar *tableName, cchar *query,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiRec *</type>
+      <name>findRecWhere</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>gad2de201bd5c4004d31bae21c1c00668c</anchor>
+      <arglist>(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED(&quot;Use findRec instead&quot;)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1266,25 +1308,25 @@
       <arglist>(cchar *var)</arglist>
     </member>
     <member kind="function">
-      <type>EdiGrid *</type>
-      <name>readGrid</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga54deafc297a9ac46e475580f9da23be8</anchor>
-      <arglist>(cchar *tableName, cchar *select,...)</arglist>
-    </member>
-    <member kind="function">
       <type>EdiRec *</type>
       <name>readRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga8c93ce16dc8e9581d461846e71a9fb64</anchor>
-      <arglist>(cchar *tableName, cchar *query,...)</arglist>
+      <anchor>gaebd6eb20a67d36dca94880e1545dfe1b</anchor>
+      <arglist>(cchar *tableName, cchar *key)</arglist>
     </member>
     <member kind="function">
-      <type>EdiRec *</type>
-      <name>readRecByKey</name>
+      <type>EdiGrid *</type>
+      <name>readTable</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaa26e4e1c0388326035e93a9334f6e0ba</anchor>
-      <arglist>(cchar *tableName, cchar *key)</arglist>
+      <anchor>ga191e1bf0423a9cf77e85b613efc28bee</anchor>
+      <arglist>(cchar *tableName) ME_DEPRECATED(&quot;Use findGrid instead&quot;)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>readWhere</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>gadbe316e24230e57a77270272a74c9f45</anchor>
+      <arglist>(cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED(&quot;Use findGrid instead&quot;)</arglist>
     </member>
     <member kind="function">
       <type>ssize</type>
@@ -1318,14 +1360,7 @@
       <type>bool</type>
       <name>removeRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga05131113923818f2449d988851236437</anchor>
-      <arglist>(cchar *tableName, cchar *query)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>removeRecByKey</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga025fe0d2d544e3f63435eeb2997a5cfe</anchor>
+      <anchor>ga09091b0bc981b74fdf0b197fbee8adab</anchor>
       <arglist>(cchar *tableName, cchar *key)</arglist>
     </member>
     <member kind="function">
@@ -1411,13 +1446,6 @@
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga1d226bb7d309a4586b862d409f53ab9f</anchor>
       <arglist>(cchar *command, char *input, char **output, char **error, MprTicks timeout, int flags)</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>saveRec</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gaf372bf2f67325a3d7eb5c916dd36de72</anchor>
-      <arglist>(EdiRec *rec)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1570,8 +1598,15 @@
       <type>bool</type>
       <name>updateRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga8d75b3623a14d88dfad5992616c9bb0b</anchor>
-      <arglist>(cchar *table, MprJson *data)</arglist>
+      <anchor>gaac69d2eab0ce7dfea56ac4714d0e6e55</anchor>
+      <arglist>(EdiRec *rec)</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
+      <name>updateRecFromParams</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga991073350c22cfb5830a5d18da91ffb5</anchor>
+      <arglist>(cchar *table) ME_DEPRECATED(&quot;Use updateRecFields instead&quot;)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>

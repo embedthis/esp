@@ -31,19 +31,22 @@
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1gaa2607091f3a16d14643c675405556ebd" class="nameRef">ediCloneGrid</a>(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Clone a grid.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga81b2c711a2a3047672b6c259946be394" class="nameRef">ediClose</a>(<a href="#group___edi" class="ref">Edi</a> *edi)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Close a database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga7500efee354868a347e7a9cc763994af" class="nameRef">ediCreateBareGrid</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nrows)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a bare grid.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga15bf63cd0ba27fd41ffcd2556552bc9c" class="nameRef">ediCreateBareRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nfields)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a bare record.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1gad4e706a1a2d9ff527c9d42612ebeeae1" class="nameRef">ediCreateRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga15bf63cd0ba27fd41ffcd2556552bc9c" class="nameRef">ediCreateBareRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nfields)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a bare, free-standing record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1gad4e706a1a2d9ff527c9d42612ebeeae1" class="nameRef">ediCreateRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new record based on the table&apos;s schema.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_service" class="ref">EdiService*</a></td><td><a href="#group___edi_service_1gaf844bec409e3238a6a9de36ddc040899" class="nameRef">ediCreateService</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create the EDI service.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga789f616e9f38aee34d6862bf85ac4742" class="nameRef">ediDefineMigration</a>(struct Edi *edi, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> back)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define migration callbacks.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga789f616e9f38aee34d6862bf85ac4742" class="nameRef">ediDefineMigration</a>(struct Edi *edi, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> back)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define database migration callbacks.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46" class="nameRef">ediDefineValidation</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9" class="ref">EdiValidationProc</a> vfn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a field validation procedure.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gaec3079929130e2f517f56d8c322e2468" class="nameRef">ediDelete</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Delete the database at the given path.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga696eb0deb1daaffbee776d3773acccc0" class="nameRef">ediDumpGrid</a>(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display the grid to the debug log.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga1bd019aa80a2faef3fc558f4b71e6e47" class="nameRef">ediDumpRec</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display a record to the debug log.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga21a7e078206b019276d18123e24af1f7" class="nameRef">ediDumpGrid</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display the grid to the debug log.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga035889ee66fbb74bfdd9fd71ce4017ea" class="nameRef">ediDumpRec</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display a record to the debug log.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_grid_1ga0b5c39ab9aa8d6cba06403659aa9e36b" class="nameRef">ediFilterGridFields</a>(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fields, int include)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Filter the fields of a grid.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_rec_1ga72056f840f501082ef3efac4c4454e24" class="nameRef">ediFilterRecFields</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fields, int include)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Filter the fields of a record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga74f954ed9e126bff9da81ed97867ccb9" class="nameRef">ediFindGrid</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records in a table.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga72ea3b671cdb008bc8d1268257ea58e9" class="nameRef">ediFindRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read one record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1gae9efbdea2dcfe74f20ba6ccc58e55649" class="nameRef">ediFindRecWhere</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value),ME_DEPRECATED(&quot;Use,ediFindGrid,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read one record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___edi_1ga64d2d436610342310b2b4a7dae4ed376" class="nameRef">ediFormatField</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, <a href="#group___edi_field" class="ref">EdiField</a> *fp)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Format a field value.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gac764d3271d738b2e6d284e4d49e8b90e" class="nameRef">ediGetColumnSchema</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *columnName, int *type, int *flags, int *cid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the column schema.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___edi_1gab5db5e05416c9998e8b3f3a2e700c2a2" class="nameRef">ediGetColumns</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a list of column names.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="mpr.html#group___mpr_list" class="ref">MprList*</a></td><td><a href="#group___edi_1gab5db5e05416c9998e8b3f3a2e700c2a2" class="nameRef">ediGetColumns</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a list of database column names.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_field" class="ref">EdiField*</a></td><td><a href="#group___edi_1ga8c63c2630f7052b17422ff1c15cc85d6" class="nameRef">ediGetField</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a record field.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga1f563dfa6f4ad87a227f0470b2a9838e" class="nameRef">ediGetFieldType</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the data type of a record field.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___edi_1gaa232690d3f51e8ee058aed2f294c2f6c" class="nameRef">ediGetFieldValue</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a field value.</td></tr>
@@ -72,13 +75,12 @@
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga26a2a774e3058ebbce96b515d1aaf6b4" class="nameRef">ediQuery</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *cmd, int argc, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> **argv, va_list vargs)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Run a database query query.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_field" class="ref">EdiField</a></td><td><a href="#group___edi_1gafe7cfc471e3df12dcd88b28ff01a958d" class="nameRef">ediReadField</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a field from the database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___edi_1gad06ac586c4ad7316e3d72043b6e52151" class="nameRef">ediReadFieldValue</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *defaultValue)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a formatted field from the database.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga27aaf0a8e082e11d70eab2501f9423ae" class="nameRef">ediReadGrid</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records in a table.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1gae9e11eabf1341f73a956e637fb5ce6b8" class="nameRef">ediReadRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read one record.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga98ede829363d9360e56bb1205a6b5bb6" class="nameRef">ediReadRecByKey</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga9da339eccd0e7dddfea03640bfa30e7f" class="nameRef">ediReadRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga679ca4b93b543b7b430e7cae0321e83b" class="nameRef">ediReadTable</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName),ME_DEPRECATED(&quot;Use,ediFindGrid,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a table.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga30f3458b0d5f3a3ca48c55c0b7f9abee" class="nameRef">ediReadWhere</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value),ME_DEPRECATED(&quot;Use,ediFindRec,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___edi_1gafa8c8e27f4ec96f66948f31d40ad95d6" class="nameRef">ediRecAsJson</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Convert an EDI database record into a JSON string.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga2e0e7c2d3e5c286a51bdc7c1d18cc34b" class="nameRef">ediRemoveIndex</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *indexName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a table index.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gab94147fe4075e23d34d85d9fe4d3284e" class="nameRef">ediRemoveRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Delete a row in a database table identified by the query expression.</td></tr>
-<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga1b25e8832bfc02d5cad5b1c28720b902" class="nameRef">ediRemoveRecByKey</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Delete a row in a database table identified by a key value.</td></tr>
+<tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gaaa5333b9b756b1d362d9803830ec3f50" class="nameRef">ediRemoveRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Delete a row in a database table identified by a key value.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gae965f0739fa618a75fdc0455453dec14" class="nameRef">ediRemoveTable</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Remove a table from the database.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga6725ef26c5e502c45ed03f42c2f75051" class="nameRef">ediRenameColumn</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *columnName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *newColumnName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Rename a column.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga42ebae84b96f934005926c25cb568f24" class="nameRef">ediRenameTable</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *newTableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Rename a table.</td></tr>
@@ -423,8 +425,8 @@ Validations.
 (<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nfields)
   </div>
   <div class="apiDetail">
-<p>Create a bare record.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This creates an empty record based on the given table&apos;s schema.</dd></dl>
+<p>Create a bare, free-standing record.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This creates an empty record based. The tableName and number of fields are defined in the record, but otherwise, the record&apos;s fields are uninitialized. This API is a low level API used internally by ESP and EDI.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">edi</td><td>Database handle.</td>
@@ -445,8 +447,8 @@ Validations.
 (<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)
   </div>
   <div class="apiDetail">
-<p>Create a record.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This will create a record using the given database tableName to supply the record schema. Use <a class="ref" href="#group___edi_1ga15bf63cd0ba27fd41ffcd2556552bc9c">ediCreateBareRec</a> to create a free-standing record without requiring a database. The record is allocated and room is reserved to store record values. No record field values are stored.</dd></dl>
+<p>Create a new record based on the table&apos;s schema.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This will create an empty record using the given database tableName to supply the record schema. It will not be saved to the database as the field values have not been assigned. Set field values using <a class="ref" href="#group___edi_1ga649f5d198bed950955c34c05d8b59777">ediSetField</a> and <a class="ref" href="#group___edi_1ga916af8d529a028643e87b3b8c8973a85">ediSetFields</a> and then save to the database using <a class="ref" href="#group___edi_1ga9b65a775c4ddc081e49b1a55cabc06aa">ediUpdateRec</a>. Create a record based on the table&apos;s schema. Not saved to the database. Use <a class="ref" href="#group___edi_1ga15bf63cd0ba27fd41ffcd2556552bc9c">ediCreateBareRec</a> to create a free-standing record without requiring a database. The record is allocated and room is reserved to store record values. No record field values are stored.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">edi</td><td>Database handle.</td>
@@ -478,17 +480,19 @@ Validations.
     </dd></dl>
   </div>
 </div>
-<a name="group___edi_1ga696eb0deb1daaffbee776d3773acccc0"></a>
+<a name="group___edi_1ga21a7e078206b019276d18123e24af1f7"></a>
 <div class="api">
   <div class="prototype">
     void
     ediDumpGrid
-(<a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)
+(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)
   </div>
   <div class="apiDetail">
 <p>Display the grid to the debug log.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Used for debugging only.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
+    <tr><td class="param">message</td><td>Prefix message to output.</td>
     <tr><td class="param">grid</td><td>EDI grid.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
@@ -496,20 +500,90 @@ Validations.
     </dd></dl>
   </div>
 </div>
-<a name="group___edi_1ga1bd019aa80a2faef3fc558f4b71e6e47"></a>
+<a name="group___edi_1ga035889ee66fbb74bfdd9fd71ce4017ea"></a>
 <div class="api">
   <div class="prototype">
     void
     ediDumpRec
-(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec)
+(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="#group___edi_rec" class="ref">EdiRec</a> *rec)
   </div>
   <div class="apiDetail">
 <p>Display a record to the debug log.</p>
+    <dl><dt><b>Description</b>:</dt><dd>Used for debugging only.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
+    <tr><td class="param">message</td><td>Prefix message to output.</td>
     <tr><td class="param">rec</td><td>Record to log.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga74f954ed9e126bff9da81ed97867ccb9"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_grid" class="ref">EdiGrid</a> *
+    ediFindGrid
+(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)
+  </div>
+  <div class="apiDetail">
+<p>Read matching records in a table.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a SQL like query on the database and returns matching records in a grid. The query selects the rows that have matching fields.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">edi</td><td>Database handle.</td>
+    <tr><td class="param">tableName</td><td>Database table name.</td>
+    <tr><td class="param">query</td><td>SQL like query expression. This arg is a printf style format string. When expanded, this will contain a SQL style query expression of the form: &quot;Field Op Value AND field OP value ... LIMIT offset, limit&quot;. All fields may be matched by using the pseudo column name &quot;*&quot;. Where OP is &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot;, &quot;&gt;=&quot; or &quot;&gt;&lt;&quot;.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>A grid containing all matching records. Returns NULL if no matching records.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga72ea3b671cdb008bc8d1268257ea58e9"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_rec" class="ref">EdiRec</a> *
+    ediFindRec
+(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)
+  </div>
+  <div class="apiDetail">
+<p>Read one record.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and selects the first matching record. The query selects a row that has a &quot;field&quot; that matches the given &quot;value&quot;.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">edi</td><td>Database handle.</td>
+    <tr><td class="param">tableName</td><td>Database table name.</td>
+    <tr><td class="param">query</td><td>SQL like query expression. This arg is a printf style format string. When expanded, this will contain a SQL style query expression of the form: &quot;Field Op Value AND field OP value ... LIMIT offset, limit&quot;. All fields may be matched by using the pseudo column name &quot;*&quot;. Where OP is &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot;, &quot;&gt;=&quot; or &quot;&gt;&lt;&quot;.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>First matching record. Returns NULL if no matching records.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1gae9efbdea2dcfe74f20ba6ccc58e55649"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_rec" class="ref">EdiRec</a> *
+    ediFindRecWhere
+(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)
+  </div>
+  <div class="apiDetail">
+<p>Read one record.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and selects the first matching record. The query selects a row that has a &quot;field&quot; that matches the given &quot;value&quot;. This API is deprecated, use ediFindGrid instead.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">edi</td><td>Database handle.</td>
+    <tr><td class="param">tableName</td><td>Database table name.</td>
+    <tr><td class="param">fieldName</td><td>Database field name to evaluate.</td>
+    <tr><td class="param">operation</td><td>Comparision operation. Set to &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot; or &quot;&gt;=&quot;.</td>
+    <tr><td class="param">value</td><td>Data value to compare with the field values.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>First matching record. Returns NULL if no matching records.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -542,7 +616,7 @@ Validations.
 (<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)
   </div>
   <div class="apiDetail">
-<p>Get a list of column names.</p>
+<p>Get a list of database column names.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">edi</td><td>Database handle.</td>
@@ -767,7 +841,7 @@ Validations.
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">grid</td><td>EDI grid.</td>
-    <tr><td class="param">flags</td><td>Reserved. Set to zero.</td>
+    <tr><td class="param">flags</td><td>Reserved. Set to MPR_JSON_PRETTY for a prettier format.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>JSON string.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
@@ -991,7 +1065,7 @@ This call makes a free-standing data grid based on the JSON format content strin
   </div>
   <div class="apiDetail">
 <p>Run a database query query.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This runs a provider dependant query. For the SDB SQLite provider, this runs an SQL statement. The &quot;mdb&quot; provider does not implement this API. To do queries using the &quot;mdb&quot; provider, use: <a class="ref" href="#group___edi_1gae9e11eabf1341f73a956e637fb5ce6b8">ediReadRec</a>, <a class="ref" href="#group___edi_1ga27aaf0a8e082e11d70eab2501f9423ae">ediReadGrid</a> and <a class="ref" href="#group___edi_1gafe7cfc471e3df12dcd88b28ff01a958d">ediReadField</a>. The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate SQL injection risk.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a provider dependant query. For the SDB SQLite provider, this runs an SQL statement. The &quot;mdb&quot; provider does not implement this API. To do queries using the &quot;mdb&quot; provider, use: <a class="ref" href="#group___edi_1ga72ea3b671cdb008bc8d1268257ea58e9">ediFindRec</a>, <a class="ref" href="#group___edi_1ga74f954ed9e126bff9da81ed97867ccb9">ediFindGrid</a> and <a class="ref" href="#group___edi_1gafe7cfc471e3df12dcd88b28ff01a958d">ediReadField</a>. The query may contain positional parameters via argc/argv or via a va_list. These are recommended to mitigate SQL injection risk.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">edi</td><td>Database handle.</td>
@@ -1054,55 +1128,11 @@ This call makes a free-standing data grid based on the JSON format content strin
     </dd></dl>
   </div>
 </div>
-<a name="group___edi_1ga27aaf0a8e082e11d70eab2501f9423ae"></a>
-<div class="api">
-  <div class="prototype">
-    <a href="#group___edi_grid" class="ref">EdiGrid</a> *
-    ediReadGrid
-(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)
-  </div>
-  <div class="apiDetail">
-<p>Read matching records in a table.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and returns matching records in a grid. The query selects all rows that have matching fields.</dd></dl>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">edi</td><td>Database handle.</td>
-    <tr><td class="param">tableName</td><td>Database table name.</td>
-    <tr><td class="param">query</td><td>Selection criteria. Set to Field OP value, where OP is &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot;, &quot;&gt;=&quot; or &quot;&gt;&lt;&quot;. The &quot;&gt;&lt;&quot; means contains the value. Multiple expressions can be combined using &quot;AND&quot;.</td>
-    </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>A grid containing all matching records. Returns NULL if no matching records.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___edi_1gae9e11eabf1341f73a956e637fb5ce6b8"></a>
+<a name="group___edi_1ga9da339eccd0e7dddfea03640bfa30e7f"></a>
 <div class="api">
   <div class="prototype">
     <a href="#group___edi_rec" class="ref">EdiRec</a> *
     ediReadRec
-(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)
-  </div>
-  <div class="apiDetail">
-<p>Read one record.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and selects the first matching record. The query selects a row that has a &quot;field&quot; that matches the given &quot;value&quot;.</dd></dl>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">edi</td><td>Database handle.</td>
-    <tr><td class="param">tableName</td><td>Database table name.</td>
-    <tr><td class="param">query</td><td>Selection criteria. Set to Field OP value, where OP is &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot;, &quot;&gt;=&quot; or &quot;&gt;&lt;&quot;. The &quot;&gt;&lt;&quot; means contains the value. Multiple expressions can be combined using &quot;AND&quot;.</td>
-    </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>First matching record. Returns NULL if no matching records.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___edi_1ga98ede829363d9360e56bb1205a6b5bb6"></a>
-<div class="api">
-  <div class="prototype">
-    <a href="#group___edi_rec" class="ref">EdiRec</a> *
-    ediReadRecByKey
 (<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)
   </div>
   <div class="apiDetail">
@@ -1116,6 +1146,51 @@ This call makes a free-standing data grid based on the JSON format content strin
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Record instance of EdiRec.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga679ca4b93b543b7b430e7cae0321e83b"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_grid" class="ref">EdiGrid</a> *
+    ediReadTable
+(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)
+  </div>
+  <div class="apiDetail">
+<p>Read a table.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This reads all the records in a table and returns a grid containing the results.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">edi</td><td>Database handle.</td>
+    <tr><td class="param">tableName</td><td>Database table name.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>A grid containing all records in the table. Returns NULL if no matching records.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga30f3458b0d5f3a3ca48c55c0b7f9abee"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_grid" class="ref">EdiGrid</a> *
+    ediReadWhere
+(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)
+  </div>
+  <div class="apiDetail">
+<p>Read matching records.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This runs a simple query on the database and returns matching records in a grid. The query selects all rows that have a &quot;field&quot; that matches the given &quot;value&quot;. This API is deprecated, use ediFindGrid instead.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">edi</td><td>Database handle.</td>
+    <tr><td class="param">tableName</td><td>Database table name.</td>
+    <tr><td class="param">fieldName</td><td>Database field name to evaluate.</td>
+    <tr><td class="param">operation</td><td>Comparision operation. Set to &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot; or &quot;&gt;=&quot;.</td>
+    <tr><td class="param">value</td><td>Data value to compare with the field values.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>A grid containing all matching records. Returns NULL if no matching records.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Deprecated.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
   </div>
@@ -1161,32 +1236,11 @@ This call makes a free-standing data grid based on the JSON format content strin
     </dd></dl>
   </div>
 </div>
-<a name="group___edi_1gab94147fe4075e23d34d85d9fe4d3284e"></a>
+<a name="group___edi_1gaaa5333b9b756b1d362d9803830ec3f50"></a>
 <div class="api">
   <div class="prototype">
     int
     ediRemoveRec
-(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)
-  </div>
-  <div class="apiDetail">
-<p>Delete a row in a database table identified by the query expression.</p>
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">edi</td><td>Database handle.</td>
-    <tr><td class="param">tableName</td><td>Database table name.</td>
-    <tr><td class="param">query</td><td>Selection criteria. Set to Field OP value, where OP is &quot;==&quot;, &quot;!=&quot;, &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot;, &quot;&gt;=&quot; or &quot;&gt;&lt;&quot;. The &quot;&gt;&lt;&quot; means contains the value. Multiple expressions can be combined using &quot;AND&quot;.</td>
-    </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>Zero if successful. Otherwise a negative MPR error code.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___edi_1ga1b25e8832bfc02d5cad5b1c28720b902"></a>
-<div class="api">
-  <div class="prototype">
-    int
-    ediRemoveRecByKey
 (<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)
   </div>
   <div class="apiDetail">
@@ -1805,7 +1859,7 @@ For the first call, set fp to NULL
 (struct Edi *edi, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> back)
   </div>
   <div class="apiDetail">
-<p>Define migration callbacks.</p>
+<p>Define database migration callbacks.</p>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">edi</td><td>Database handle.</td>

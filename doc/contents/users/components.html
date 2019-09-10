@@ -6,32 +6,31 @@
 }
             <h2>Generating Controllers</h2>
             <a id="controllers"></a>
-            <p>Controllers are the primary mechanism for responding to client requests. 
-            Controllers may be generated directly or as part of a scaffold that includes database 
+            <p>Controllers are the primary mechanism for responding to client requests.
+            Controllers may be generated directly or as part of a scaffold that includes database
             schema and web pages. Before generating a controller, you must have installed an ESP skeleton
-            that includes support for generating controllers such as: 
-                <em>esp-skeleton</em>, 
+            that includes support for generating controllers such as:
+                <em>esp-skeleton</em>,
                 <em>esp-html-skeleton</em> or
-                <em>esp-angular-skeleton</em>.</p>
+                <em>esp-vue-skeleton</em>.</p>
 
             <p>To generate a controller, use <em>esp generate controller</em>.</p>
 
             <code class="inverted">$ <b>esp generate controller NAME [actions...]</b></code>
 
-            <p>This will create the named controller in the <em>controllers</em> directory. A controller manages 
-            requests to the web application. The controller action methods are invoked by ESP to respond to 
+            <p>This will create the named controller in the <em>controllers</em> directory. A controller manages
+            requests to the web application. The controller action methods are invoked by ESP to respond to
             client requests and generate responses.</p>
 
-            <p>If no actions are requested when generating, <em>esp</em> will create a controller with 
-            an initialization function but without any actions. If actions are specified, <em>esp</em> 
+            <p>If no actions are requested when generating, <em>esp</em> will create a controller with
+            an initialization function but without any actions. If actions are specified, <em>esp</em>
             will create an empty action method for each requested action. You can edit the
             controller source to meet your needs.</p>
             <p>If you use the command:</p>
 
             <code class="inverted">$ <b>esp generate controller admin edit login logout command</b></code>
-            <p>The following controller code will be generated. There is one function generated for each action 
-            and a call to <em>espDefineAction</em> is added to register the controller. The <em>esp_controller_admin</em>
-            initialization function is invoked once when the controller is first loaded.</p>
+            <p>The following controller code will be generated. There is one function generated for each action
+            and a call to <em>espAction</em> is added to register the controller. The <em>esp_controller_admin</em> initialization function is invoked once when the controller is first loaded.</p>
 
             <code class="inverted">#include "esp.h"
 
@@ -40,23 +39,24 @@ static void login() {}
 static void logout() {}
 static void command() {}
 
-ESP_EXPORT int esp_module_admin(HttpRoute *route) 
+ESP_EXPORT int esp_module_admin(HttpRoute *route)
 {
-    espDefineAction(route, "admin-cmd-edit", edit);
-    espDefineAction(route, "admin-cmd-login", login);
-    espDefineAction(route, "admin-cmd-logout", logout);
-    espDefineAction(route, "admin-cmd-command", command);
+    cchar   *role = "user";
+    espAction(route, "admin-cmd-edit", role, edit);
+    espAction(route, "admin-cmd-login", role, login);
+    espAction(route, "admin-cmd-logout", role, logout);
+    espAction(route, "admin-cmd-command", role, command);
     return 0;
 }
 </code>
             <a id="database"></a>
             <h2>Generating Database Tables</h2>
-            <p>Database schema can be created and modified via the <em>esp</em> command. 
+            <p>Database schema can be created and modified via the <em>esp</em> command.
             This will create a database table with fields of the required types.</p>
 
             <code class="inverted">$ <b>esp generate table NAME [field:type ...]</b></code>
 
-            <p>If <em>field:type</em> values are supplied, the database will be updated for each specified field of 
+            <p>If <em>field:type</em> values are supplied, the database will be updated for each specified field of
             the requested type. The valid database types are: binary, boolean, date,
             datetime, decimal, float, integer, number, string, text, time, timestamp. </p>
 
@@ -74,7 +74,7 @@ ESP_EXPORT int esp_module_admin(HttpRoute *route)
             <p>For each specified <em>field:type</em> pair, esp will generate add column code in the migration
             script. If the --reverse switch is specified, then remove column code will be generated. To change the type
             or name of a column, remove then re-add the column. </p>
-            
+
             <a id="runMigrations"></a>
             <h2>Running Migrations</h2>
             <p>Migration scripts can be run via the "<em>esp migrate</em>" command. Without other parameters, the
@@ -85,25 +85,23 @@ ESP_EXPORT int esp_module_admin(HttpRoute *route)
             number at the start of the migration script file name.</p>
             <p>Migrations are often under used. They are much more important than most people realize. Being able
             to effectively create and manage database test data greatly simplifies this aspect of development and testing.</p>
-            
+
             <a id="scaffolds"></a>
             <h2>Generating Scaffolds</h2>
-            <p>Scaffolds enable you to quickly create sections of your application. A scaffold provides CRUD 
-            functionality (create, read, update and delete) for a database table. Generating a scaffold 
-            will create a database table, controller and actions to add-edit-delete. Depending on the 
-            skeleton, a set of views may also be generated that provide add, edit and list functionality 
+            <p>Scaffolds enable you to quickly create sections of your application. A scaffold provides CRUD
+            functionality (create, read, update and delete) for a database table. Generating a scaffold
+            will create a database table, controller and actions to add-edit-delete. Depending on the
+            skeleton, a set of views may also be generated that provide add, edit and list functionality
             for a database table. The <em>esp-skeleton</em> does not provide scaffold view. The
-            <em>esp-html-skeleton</em> provides basic HTML view pages, and the <em>esp-angular-skeleton</em>
-            provide client-side Angular views.</p>
+            <em>esp-html-skeleton</em> provides basic HTML view pages, and the <em>esp-vue-skeleton</em>
+            provide client-side VueJS views.</p>
 
             <p>To generate a scaffold:</p>
 
             <code class="inverted">$ <b>esp generate scaffold NAME [field:type ...]</b></code>
 
-            <p>This will create a scaffold for the named database table and will generate a controller of the same name. 
+            <p>This will create a scaffold for the named database table and will generate a controller of the same name.
             If field:type values are supplied, the database will be updated with columns for
-            each specified field of the requested type. The valid database types are: <em>binary, bool, date, 
-            float, int, string, text</em>. The scaffold controller will include a create, get, index, remove 
+            each specified field of the requested type. The valid database types are: <em>binary, bool, date,
+            float, int, string, text</em>. The scaffold controller will include a create, get, index, remove
             and update actions. </p>
-
-            

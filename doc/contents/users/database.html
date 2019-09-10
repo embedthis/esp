@@ -179,18 +179,18 @@ ediUpdateRec(db, product);
             <a id="read"></a>
             <h3>Reading a Record</h3>
             <p>Reading a record from the database is done with the <em>ediRead</em> family of record static methods. The
-            basic <em>ediReadRec</em> method will return a record with a given <em>id</em> field. Other read methods include:
-            ediReadRecWhere, ediReadTable and ediReadField.</p>
+            basic <em>ediFindRec</em> method will return a record with a given <em>id</em> field. Other read methods include:
+            ediFindRecWhere, ediReadTable and ediReadField.</p>
             <pre class="code">
-product = ediReadRec(db, "product", "2");
-product = ediReadRecWhere(db, "product", "price", "&lt;", "5.0");
+product = ediFindRec(db, "product", "2");
+product = ediFindRecWhere(db, "product", "price", "&lt;", "5.0");
 </pre>
             <a id="update"></a>
             <h3>Updating a Record</h3>
-            <p>To update a record, first read it using one of the <em>ediReadRec</em> methods. Then update any of the object
+            <p>To update a record, first read it using one of the <em>ediFindRec</em> methods. Then update any of the object
             properties. Finally, call the <em>ediUpdateRec</em> method to save the changes to the database.</p>
             <pre class="code">
-product = ediReadRecWhere(db, "product", "name", "==", "Ferarri");
+product = ediFindRecWhere(db, "product", "name", "==", "Ferarri");
 ediSetField(product, "description", "458 Spider");
 <b>ediUpdateRec(db, product);</b>
 </pre>

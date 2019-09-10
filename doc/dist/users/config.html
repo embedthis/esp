@@ -41,7 +41,7 @@
                 </a>
                 <div class="menu">
                     <a class="item" href="../start/quick.html">Quick Start</a>
-                    <a class="item" href="../start/index.html">Installing ESP</a>
+                    <a class="item" href="../start/installing.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
                     <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
@@ -219,16 +219,14 @@
             <p>All ESP applications have name, title, description and version properties that uniquely identify
             the application. The application name is used in C function entry points, so it is important that
             it only contain valid C identifer characters. The title provides a multi-word title suitable
-            for display to the user. The description is used should you publish your application in a package
-            catalog.</p>
+            for display to the user.</p>
 
             <h3>Dependencies</h3>
             <p>The <em>dependencies</em> hash lists all the installed packages and the required versions.
             Entries will be added as packages are installed via <em>pak install</em>. For example:</p>
             <code class="inverted">$ pak install jquery</code>
             <p>ESP relies heavily on the <a href="https://embedthis.com/pak/">Pak</a> package manager to install
-            and manage extension packages. There are many thousands to choose from the
-            <a href="https://embedthis.com/pak/">Pak</a> and NPM package catalogs.</p>
+            and manage extension packages.</p>
 
             <h2>esp.json</h2>
             <p>The <em>esp.json</em> file provides configuration for ESP and how HTTP requests will be served.
@@ -656,7 +654,6 @@ compress: [ 'html', 'js', 'css' ]
     '404': '/notFound.html,
 },</code></td>
                     </tr>
-
                     <tr>
                         <td>headers</td>
                         <td>Collection response header directives. This includes sub-collections for headers to

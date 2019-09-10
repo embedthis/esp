@@ -13,7 +13,7 @@
 
             <a id="app"></a>
             <h2>ESP Applications</h2>
-            <p>ESP applications hosted in Appweb are still are configured via their <em>esp.json</em> file. 
+            <p>ESP applications hosted in Appweb are still are configured via their <em>esp.json</em> file.
             However, Appweb manages the listening endpoints, user accounts, logging and properties defined in
             the <a href="config.html#server"><em>http.server</em></a> collection of the <em>esp.json</em> file.</p>
 
@@ -22,7 +22,7 @@
             before reading this document.</p>
 
             <h3>Defining ESP Applications</h3>
-            <p>To define an ESP application in Appweb, use the <em>EspApp</em> directive in your <em>appweb.conf</em> file. 
+            <p>To define an ESP application in Appweb, use the <em>EspApp</em> directive in your <em>appweb.conf</em> file.
             This directive takes the following arguments:</p>
 
             <code class="inverted">EspApp prefix="URI" config="path/to/esp.json"</code>
@@ -32,7 +32,7 @@
             of <em>esp</em>. This is because you must link with the Appweb libraries when compiling ESP applications.</p>
 
 <!--
-            <p>This defines an ESP application at the given directory that will receive 
+            <p>This defines an ESP application at the given directory that will receive
             requests that begin with specified URI prefix. </p>
 
             <a id="controllers"></a>
@@ -56,13 +56,13 @@ static void hello() {
     render("Hello World\n");
 }
 ESP_EXPORT int esp_controller_app_greetings(HttpRoute *route) {
-    espDefineAction(route, "greetings-hello", hello);
+    espAction(route, "greetings-hello", NULL, hello);
     return 0;
 }
 </code>
-            <p>This defines a single action which renders the string "Hello World\n" in response to the client request 
+            <p>This defines a single action which renders the string "Hello World\n" in response to the client request
             for the URI <em>/greeting/hello</em>. When the URI is requested, the controller is compiled, linked into
-            a dynamic library, saved in the cache directory and loaded into Appweb. If the source is modified, the 
+            a dynamic library, saved in the cache directory and loaded into Appweb. If the source is modified, the
             old controller is unloaded (after ensuring there are no active requests) and the new source is compiled and
             loaded.</p>
 

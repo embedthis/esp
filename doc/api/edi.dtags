@@ -204,15 +204,36 @@
       <type>void</type>
       <name>ediDumpGrid</name>
       <anchorfile>group___edi.html</anchorfile>
-      <anchor>ga696eb0deb1daaffbee776d3773acccc0</anchor>
-      <arglist>(EdiGrid *grid)</arglist>
+      <anchor>ga21a7e078206b019276d18123e24af1f7</anchor>
+      <arglist>(cchar *message, EdiGrid *grid)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>ediDumpRec</name>
       <anchorfile>group___edi.html</anchorfile>
-      <anchor>ga1bd019aa80a2faef3fc558f4b71e6e47</anchor>
-      <arglist>(EdiRec *rec)</arglist>
+      <anchor>ga035889ee66fbb74bfdd9fd71ce4017ea</anchor>
+      <arglist>(cchar *message, EdiRec *rec)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>ediFindGrid</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga74f954ed9e126bff9da81ed97867ccb9</anchor>
+      <arglist>(Edi *edi, cchar *tableName, cchar *query)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiRec *</type>
+      <name>ediFindRec</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga72ea3b671cdb008bc8d1268257ea58e9</anchor>
+      <arglist>(Edi *edi, cchar *tableName, cchar *query)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiRec *</type>
+      <name>ediFindRecWhere</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>gae9efbdea2dcfe74f20ba6ccc58e55649</anchor>
+      <arglist>(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED(&quot;Use ediFindGrid instead&quot;)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -397,25 +418,25 @@
       <arglist>(Edi *edi, cchar *fmt, cchar *tableName, cchar *key, cchar *fieldName, cchar *defaultValue)</arglist>
     </member>
     <member kind="function">
-      <type>EdiGrid *</type>
-      <name>ediReadGrid</name>
-      <anchorfile>group___edi.html</anchorfile>
-      <anchor>ga27aaf0a8e082e11d70eab2501f9423ae</anchor>
-      <arglist>(Edi *edi, cchar *tableName, cchar *query)</arglist>
-    </member>
-    <member kind="function">
       <type>EdiRec *</type>
       <name>ediReadRec</name>
       <anchorfile>group___edi.html</anchorfile>
-      <anchor>gae9e11eabf1341f73a956e637fb5ce6b8</anchor>
-      <arglist>(Edi *edi, cchar *tableName, cchar *query)</arglist>
+      <anchor>ga9da339eccd0e7dddfea03640bfa30e7f</anchor>
+      <arglist>(Edi *edi, cchar *tableName, cchar *key)</arglist>
     </member>
     <member kind="function">
-      <type>EdiRec *</type>
-      <name>ediReadRecByKey</name>
+      <type>EdiGrid *</type>
+      <name>ediReadTable</name>
       <anchorfile>group___edi.html</anchorfile>
-      <anchor>ga98ede829363d9360e56bb1205a6b5bb6</anchor>
-      <arglist>(Edi *edi, cchar *tableName, cchar *key)</arglist>
+      <anchor>ga679ca4b93b543b7b430e7cae0321e83b</anchor>
+      <arglist>(Edi *edi, cchar *tableName) ME_DEPRECATED(&quot;Use ediFindGrid instead&quot;)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>ediReadWhere</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga30f3458b0d5f3a3ca48c55c0b7f9abee</anchor>
+      <arglist>(Edi *edi, cchar *tableName, cchar *fieldName, cchar *operation, cchar *value) ME_DEPRECATED(&quot;Use ediFindRec instead&quot;)</arglist>
     </member>
     <member kind="function">
       <type>cchar *</type>
@@ -435,14 +456,7 @@
       <type>int</type>
       <name>ediRemoveRec</name>
       <anchorfile>group___edi.html</anchorfile>
-      <anchor>gab94147fe4075e23d34d85d9fe4d3284e</anchor>
-      <arglist>(Edi *edi, cchar *tableName, cchar *query)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>ediRemoveRecByKey</name>
-      <anchorfile>group___edi.html</anchorfile>
-      <anchor>ga1b25e8832bfc02d5cad5b1c28720b902</anchor>
+      <anchor>gaaa5333b9b756b1d362d9803830ec3f50</anchor>
       <arglist>(Edi *edi, cchar *tableName, cchar *key)</arglist>
     </member>
     <member kind="function">

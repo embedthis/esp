@@ -106,8 +106,6 @@ GENERATING APPLICATIONS
        other  required  packs. For example: generating the "esp-html-skeleton"
        pack will also install: esp-mvc, exp-less, and other paks.
 
-       See https://embedthis.com/catalog/ for a list of packs.
-
 
 GENERATING MIGRATIONS
        Migrations are generated code modules that manage portions of the data-

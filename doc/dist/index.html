@@ -41,7 +41,7 @@
                 </a>
                 <div class="menu">
                     <a class="item" href="./start/quick.html">Quick Start</a>
-                    <a class="item" href="./start/index.html">Installing ESP</a>
+                    <a class="item" href="./start/installing.html">Installing ESP</a>
                     <a class="item" href="./start/tour.html">ESP Tour</a>
                     <a class="item" href="./start/app-tour.html">ESP Applications Tour</a>
                     <a class="item" href="./start/releaseNotes.html">Release Notes</a>
@@ -154,25 +154,25 @@
             <h1>Embedthis ESP&trade;</h1>
             <div class="floated">
                 <img src="images/esp-icon-128.png" class="ui left floated image" alt="esp">
-                <p>ESP is a web framework that makes it dramatically easier to create blazing fast, dynamic web applications and web sites. ESP applications uses the <em>C</em> language for server-side programming, which allows easy access to system or hardware data. The result is fast and responsive web applications.</p>
+                <p>ESP is a web framework that makes it dramatically easier to create blazing fast, dynamic embedded web applications and web sites. ESP applications use the <em>C</em> language for server-side programming, which allows easy access to system or hardware data. The result is fast and responsive web applications.</p>
 
-                <p>ESP is not a traditional low-level environment. It is a powerhouse MVC framework in a tiny footprint. ESP has all the features you would normally expect from an enterprise web framework. ESP is also great for development. If web pages or controllers are modified, the code is transparently recompiled and reloaded. This enables unparalleled performance with "script-like" flexibility for web applications. </p>
+                <p>ESP is not a traditional low-level environment. It is a powerhouse MVC framework in a tiny footprint. ESP has all the features you would normally expect from an enterprise web framework. ESP is also great for development and for creating single page applications (SPAs). If web pages or controllers are modified, the code is transparently recompiled and reloaded. This enables unparalleled performance with "script-like" flexibility for web applications. </p>
             </div>
 
             <h2>ESP Components</h2>
             <p>The ESP web framework provides a complete set of components including</p>
             <ul>
-                <li>HTTP web server</li>
+                <li>HTTP web server with HTTP/2 support</li>
                 <li>Model-View-Controller framework</li>
                 <li>Dynamic loader for <em>C</em> controllers</li>
                 <li>Templating with embedded <em>C</em> code in web pages</li>
                 <li>Application and scaffold generator</li>
                 <li>Web Sockets</li>
-                <li>HTTP/2 support</li>
-                <li>Embedded databases</li>
+                <li>Embedded databases: SQLite and In-memory DB</li>
                 <li>Database migrations</li>
                 <li>Extensive programmer API</li>
                 <li>Library of extension packages</li>
+                <li>Skeletons and generators to get going quickly</li>
                 <li>Complete tooling for deploying web applications</li>
             </ul>
             <p>This document describes the ESP web framework and how to use ESP.</p>
@@ -182,11 +182,12 @@
             <p>ESP supports several design patterns:</p>
             <ul>
                 <li>Stand-alone ESP web pages</li>
-                <li>Web Services via ESP Controllers</li>
+                <li>Single Page Applications
+                    (<a href="http://en.wikipedia.org/wiki/Single-page_application">SPA</a>) using <a href="https://vuejs.org">VueJS</a> or other Javascript client frameworks.</li>
                 <li>ESP Model-View-Controller applications
                     (<a href="http://en.wikipedia.org/wiki/Model-view-controller">MVC</a>)</li>
-                <li>Single Page Applications
-                    (<a href="http://en.wikipedia.org/wiki/Single-page_application">SPA</a>)</li>
+                <li>Web Services via ESP Controllers</li>
+                <li>Web Sockets live management applications</li>
             </ul>
 
             <p>Your applications can choose a predominating pattern or you can mix patterns in a
@@ -212,46 +213,28 @@ static void <b>hello()</b> {
 
 /* Initialization of Actions */
 ESP_EXPORT int esp_module_greeting(HttpRoute *route) {
-    espDefineAction(route, "greeting-hello", <b>hello</b>);
+    espAction(route, "greeting-hello", "user", <b>hello</b>);
     return 0;
 }
 </pre>
-            <p>This example is a loadable ESP controller with one action function. The actions are published by
-            binding functions to route names. When the appropriate URL is requested, the <em>hello</em> function
-            is run to generate the response. During development, if the file containing this code is modified,
-            the page will be transparently recompiled and reloaded before running the new code.</p>
+            <p>This example is a loadable ESP controller with one action function. The actions are published by binding functions to route names. When the appropriate URL is requested, the <em>hello</em> function is run to generate the response. During development, if the file containing this code is modified, the page will be transparently recompiled and reloaded before running the new code.</p>
 
             <a name="mvc"></a>
             <h2>Model-View-Controller</h2>
-            <p>A Model-View Controller application, also known as an MVC app, is a proven paradigm for organizing larger web
-            applications. In this pattern, it is the "model" that manages the state of the application including the
-            database. The "controller" responds to inputs and invokes then the relevant "views" to generate the
-            user interface. Originally developed in the '70s, it has been more recently adapted for web applications and been
-            popularized by frameworks such as <a href="http://www.rubyonrails.org">Ruby on Rails</a>. ESP uses the
-            same paradigm with an embedded spin.</p>
-            <p>ESP supports MVC applications and provides an <em>esp</em> application generator to create MVC
-            applications and scaffolds. ESP support two styles of MVC applications:</p>
+            <p>A Model-View Controller application, also known as an MVC app, is a proven paradigm for organizing larger web applications. In this pattern, it is the "model" that manages the state of the application including the database. The "controller" responds to inputs and invokes then the relevant "views" to generate the user interface. Originally developed in the '70s, it has been more recently adapted for web applications and been popularized by frameworks such as <a href="http://www.rubyonrails.org">Ruby on Rails</a>. ESP uses the same paradigm with an embedded spin.</p>
+
+            <p>ESP supports MVC applications and provides an <em>esp</em> application generator to create MVC applications and scaffolds. ESP support two styles of MVC applications:</p>
             <ul>
-                <li>Server-side MVC Applications</li>
                 <li>Single Page Applications</li>
+                <li>Server-side MVC Applications</li>
             </ul>
 
             <h3>Server-side MVC Applications</h3>
-            <p>ESP implements server-side MVC applications by providing using the
-            <a href="https://embedthis.com/expansive/">Expansive</a> web site generator. Expansive provides
-            development time scripting, layout pages, partial pages to support the easy insertion of dynamic
-            data into web pages before they are delivered to the client. A common look-and-feel is achieved
-            by using master layout pages.</p>
+            <p>ESP implements server-side MVC applications by providing using the <a href="https://embedthis.com/expansive/">Expansive</a> web site generator. Expansive provides development time scripting, layout pages, partial pages to support the easy insertion of dynamic data into web pages before they are delivered to the client. A common look-and-feel is achieved by using master layout pages.</p>
 
             <a name="spa"></a>
             <h3>Single Page Applications</h3>
-            <p>Single page applications deliver the entire web application as a single page and then incrementally
-            download resources and data in the background as required. With this paradigm, it is the client that
-            defines the entire user interface via a client-side Javascript framework such as
-            <a href="http://aurelia.io">Aurelia</a>. The server provides the initial page load and ongoing data.
-            This approach can provide a more responsive and fluid user experience without the delays caused by
-            page reloads. ESP is well suited to SPA applications and can deliver all the required resources and
-            data for such apps.</p>
+            <p>Single page applications deliver the entire web application as a single page and then incrementally download resources and data in the background as required. With this paradigm, it is the client that defines the entire user interface via a client-side Javascript framework such as <a href="http://vuejs.org">VueJS</a>. The server provides the initial page load and ongoing data. This approach can provide a more responsive and fluid user experience without the delays caused by page reloads. ESP is well suited to SPA applications and can deliver all the required resources and live data for such apps.</p>
 
             <h2>ESP Web Framework</h2>
             <img src="images/espArchitecture.jpg" alt="ESP Web Framework Architecture" class="centered">

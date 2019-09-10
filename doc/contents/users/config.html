@@ -65,16 +65,14 @@
             <p>All ESP applications have name, title, description and version properties that uniquely identify
             the application. The application name is used in C function entry points, so it is important that
             it only contain valid C identifer characters. The title provides a multi-word title suitable
-            for display to the user. The description is used should you publish your application in a package
-            catalog.</p>
+            for display to the user.</p>
 
             <h3>Dependencies</h3>
             <p>The <em>dependencies</em> hash lists all the installed packages and the required versions.
             Entries will be added as packages are installed via <em>pak install</em>. For example:</p>
             <code class="inverted">$ pak install jquery</code>
             <p>ESP relies heavily on the <a href="https://embedthis.com/pak/">Pak</a> package manager to install
-            and manage extension packages. There are many thousands to choose from the
-            <a href="https://embedthis.com/pak/">Pak</a> and NPM package catalogs.</p>
+            and manage extension packages.</p>
 
             <h2>esp.json</h2>
             <p>The <em>esp.json</em> file provides configuration for ESP and how HTTP requests will be served.
@@ -533,22 +531,6 @@ compress: [ 'html', 'js', 'css' ]
     '404': '/notFound.html,
 },</code></td>
                     </tr>
-<!--
-                    <tr>
-                        <td>formats</td>
-                        <td>Collection default data formats for various data types. The <em>response</em> property specifies
-                        the default client-server interchange format. It can be set to "html" or "json".
-                        For dates, the property specifies an
-                        <a href="https://docs.angularjs.org/api/ng/filter/date">Angular</a> style date format. For
-                        floats, it specifies the default number of decimal places.
-                        For example:
-                        <code class="inverted">formats': {
-    response: 'json',
-    date: 'yyyy-MM-dd',
-    float: 2,
-},</code></td>
-                    </tr>
--->
                     <tr>
                         <td>headers</td>
                         <td>Collection response header directives. This includes sub-collections for headers to
