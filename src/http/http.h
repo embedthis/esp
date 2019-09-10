@@ -6617,8 +6617,8 @@ typedef struct HttpUploadFile {
     @defgroup HttpRx HttpRx
     @see HttpStream HttpRx HttpTx httpAddBodyVars httpAddParamsFromBuf httpContentNotModified
         httpCreateCGIParams httpGetContentLength httpGetCookies httpGetParam httpGetParams httpGetHeader
-        httpGetHeaderHash httpGetHeaders httpGetParamInt httpGetLanguage httpGetQueryString httpGetReadCount httpGetStatus
-        httpGetStatusMessage httpMatchParam httpRead httpReadString httpSetParam httpSetParamInt httpSetUri
+        httpGetHeaderHash httpGetHeaders httpGetIntParam httpGetLanguage httpGetQueryString httpGetReadCount httpGetStatus
+        httpGetStatusMessage httpMatchParam httpRead httpReadString httpSetParam httpSetIntParam httpSetUri
         httpTestParam httpTrimExtraPath
     @stability Internal
  */
@@ -6827,8 +6827,7 @@ PUBLIC cchar *httpGetParam(HttpStream *stream, cchar *var, cchar *defaultValue);
     @ingroup HttpRx
     @stability Stable
  */
-PUBLIC int httpGetParamInt(HttpStream *stream, cchar *var, int defaultValue);
-#define httpGetIntParam httpGetParamInt
+PUBLIC int httpGetIntParam(HttpStream *stream, cchar *var, int defaultValue);
 
 /**
     Get a parameter as a JSON object
@@ -7102,8 +7101,7 @@ PUBLIC void httpSetParam(HttpStream *stream, cchar *var, cchar *value);
     @ingroup HttpRx
     @stability Stable
  */
-PUBLIC void httpSetParamInt(HttpStream *stream, cchar *var, int value);
-#define httpSetIntParam httpSetParamInt
+PUBLIC void httpSetIntParam(HttpStream *stream, cchar *var, int value);
 
 /**
     Set a new HTTP method for processing

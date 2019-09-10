@@ -6216,7 +6216,7 @@ static int  matchDirPattern(cchar *pattern, cchar *file);
 static void outputFooter(HttpQueue *q);
 static void outputHeader(HttpQueue *q, cchar *dir, int nameSize);
 static void outputLine(HttpQueue *q, MprDirEntry *ep, cchar *dir, int nameSize);
-static void parseQuery(HttpStream *stream);
+static void parseDirQuery(HttpStream *stream);
 static void sortList(HttpStream *stream, MprList *list);
 static void startDir(HttpQueue *q);
 
@@ -6299,7 +6299,7 @@ static void startDir(HttpQueue *q)
     httpSetContentType(stream, "text/html");
     httpSetHeaderString(stream, "Cache-Control", "no-cache");
     httpSetHeaderString(stream, "Last-Modified", stream->http->currentDate);
-    parseQuery(stream);
+    parseDirQuery(stream);
 
     if ((list = mprGetPathFiles(tx->filename, MPR_PATH_RELATIVE)) == 0) {
         httpWrite(q, "<h2>Cannot get file list</h2>\r\n");
@@ -6329,7 +6329,7 @@ static void startDir(HttpQueue *q)
 }
 
 
-static void parseQuery(HttpStream *stream)
+static void parseDirQuery(HttpStream *stream)
 {
     HttpRx      *rx;
     HttpDir     *dir;
@@ -25143,7 +25143,8 @@ static int  processUploadBoundary(HttpQueue *q, char *line);
 static int  processUploadHeader(HttpQueue *q, char *line);
 static int  processUploadData(HttpQueue *q);
 static void renameUploadedFiles(HttpStream *stream);
-static void  startUpload(HttpQueue *q);
+static void startUpload(HttpQueue *q);
+static bool validUploadChars(cchar *uri);
 
 /************************************* Code ***********************************/
 
@@ -25459,12 +25460,12 @@ static int processUploadHeader(HttpQueue *q, char *line)
                     We are deliberately restrictive here to assist users that may use the clientFilename in shell scripts.
                     They MUST still sanitize for their environment, but some extra caution is worthwhile.
                  */
-                value = mprNormalizePath(value);
-                if (*value == '.' || !httpValidUriChars(value) || strpbrk(value, "\\/:*?<>|~\"'%`^\n\r\t\f")) {
+                if (*value == '.' || !validUploadChars(value)) {
                     httpError(stream, HTTP_CODE_BAD_REQUEST, "Bad upload client filename.");
                     return MPR_ERR_BAD_STATE;
                 }
-                up->clientFilename = sclone(value);
+                up->clientFilename = mprNormalizePath(value);
+
                 /*
                     Create the file to hold the uploaded data
                  */
@@ -25788,6 +25789,21 @@ static cchar *getUploadDir(HttpStream *stream)
 #endif
     }
     return uploadDir;
+}
+
+
+static bool validUploadChars(cchar *uri)
+{
+    ssize   pos;
+
+    if (uri == 0) {
+        return 1;
+    }
+    pos = strspn(uri, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=% ");
+    if (pos < slen(uri)) {
+        return 0;
+    }
+    return 1;
 }
 
 /*
@@ -27275,7 +27291,7 @@ PUBLIC MprJson *httpGetParamObj(HttpStream *stream, cchar *var)
 }
 
 
-PUBLIC int httpGetParamInt(HttpStream *stream, cchar *var, int defaultValue)
+PUBLIC int httpGetIntParam(HttpStream *stream, cchar *var, int defaultValue)
 {
     cchar       *value;
 
