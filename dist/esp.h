@@ -3214,6 +3214,18 @@ PUBLIC void finalize(void);
 PUBLIC bool feedback(cchar *type, cchar *fmt, ...);
 
 /**
+    Build an EDI selection query from the request parameters for use by SPA applications.
+    @description This call creates an EDI "SQL style" query from the request parameters.
+        This call expects optional "fields" and "options" parameters with options.offset, options.limit and options.filter parameters. It examines each of the "fields" parameters to build an SQL "WHERE" expression testing the value of each field. The resulting expression looks like:
+    \n\n
+        field OP value AND field OP value .... LIMIT offset, limit
+    @return An EDI sql style selection query string suitable for use with #findRec and #findGrid
+    @ingroup EspAbbrev
+    @stability Prototype
+ */
+PUBLIC cchar *findParams();
+
+/**
     Flush transmit data.
     @description This writes any buffered data.
     @ingroup EspAbbrev
@@ -3604,19 +3616,6 @@ PUBLIC MprHash *makeHash(cchar *fmt, ...);
     @stability Evolving
  */
 PUBLIC MprJson *makeJson(cchar *fmt, ...);
-
-//  MOB - move
-/**
-    Build an EDI selection query from the request parameters for use by SPA applications.
-    @description This call creates an EDI "SQL style" query from the request parameters.
-        This call expects optional "fields" and "options" parameters with options.offset, options.limit and options.filter parameters. It examines each of the "fields" parameters to build an SQL "WHERE" expression testing the value of each field. The resulting expression looks like:
-    \n\n
-        field OP value AND field OP value .... LIMIT offset, limit
-    @return An EDI sql style selection query string suitable for use with #findRec and #findGrid
-    @ingroup EspAbbrev
-    @stability Prototype
- */
-PUBLIC cchar *findParams();
 
 /**
     Make a free-standing record

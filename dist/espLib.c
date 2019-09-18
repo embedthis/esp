@@ -1845,6 +1845,39 @@ PUBLIC void finalize()
 }
 
 
+PUBLIC cchar *findParams()
+{
+    MprJson     *fields, *key;
+    MprBuf      *buf;
+    cchar       *filter, *limit, *offset;
+    int         index;
+
+    buf = mprCreateBuf(0, 0);
+
+    if ((fields = params("fields")) != 0) {
+        for (ITERATE_JSON(fields, key, index)) {
+            mprPutToBuf(buf, "%s == %s", key->name, key->value);
+            if ((index + 1) < fields->length) {
+                mprPutStringToBuf(buf, " AND ");
+            }
+            break;
+        }
+    }
+    if ((filter = param("options.filter")) != 0) {
+        if (mprGetBufLength(buf) > 0) {
+            mprPutStringToBuf(buf, " AND ");
+        }
+        mprPutToBuf(buf, "* >< %s", filter);
+    }
+    offset = param("options.offset");
+    limit = param("options.limit");
+    if (offset && limit) {
+        mprPutToBuf(buf, " LIMIT %d, %d", (int) stoi(offset), (int) stoi(limit));
+    }
+    return mprBufToString(buf);
+}
+
+
 #if DEPRECATED
 PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 {
@@ -2180,40 +2213,6 @@ PUBLIC MprJson *params(cchar *var)
     } else {
         return espGetParams(getStream());
     }
-}
-
-
-//  MOB - move
-PUBLIC cchar *findParams()
-{
-    MprJson     *fields, *key;
-    MprBuf      *buf;
-    cchar       *filter, *limit, *offset;
-    int         index;
-
-    buf = mprCreateBuf(0, 0);
-
-    if ((fields = params("fields")) != 0) {
-        for (ITERATE_JSON(fields, key, index)) {
-            mprPutToBuf(buf, "%s == %s", key->name, key->value);
-            if ((index + 1) < fields->length) {
-                mprPutStringToBuf(buf, " AND ");
-            }
-            break;
-        }
-    }
-    if ((filter = param("options.filter")) != 0) {
-        if (mprGetBufLength(buf) > 0) {
-            mprPutStringToBuf(buf, " AND ");
-        }
-        mprPutToBuf(buf, "* >< %s", filter);
-    }
-    offset = param("options.offset");
-    limit = param("options.limit");
-    if (offset && limit) {
-        mprPutToBuf(buf, " LIMIT %d, %d", (int) stoi(offset), (int) stoi(limit));
-    }
-    return mprBufToString(buf);
 }
 
 
