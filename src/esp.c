@@ -2242,6 +2242,28 @@ static void generateClientModel(int argc, char **argv)
 }
 
 
+static void generateClientRoutes(int argc, char **argv)
+{
+    cchar   *data, *routes, *ucontroller;
+
+    genKey("clientRoutes", sfmt("%s/%s/routes.js", httpGetDir(app->route, "CONTENTS"), app->controller), 0);
+
+    routes = sfmt("%s/routes.js", httpGetDir(app->route, "CONTENTS"));
+    if (mprPathExists(routes, R_OK)) {
+        data = mprReadPathContents(routes, NULL);
+        ucontroller = stitle(app->controller);
+        data = sreplace(data,
+            "export default routes",
+            sfmt("import %sRoutes from './%s/routes.js'\n"
+                 "routes = routes.concat(%sRoutes)\n\n"
+                 "export default routes", ucontroller, app->controller, ucontroller));
+        if (mprWritePathContents(routes, data, -1, 0) < 0) {
+            fail("Cannot update %s", routes);
+        }
+    }
+}
+
+
 /*
     Called with args: model [field:type [, field:type] ...]
  */
@@ -2348,6 +2370,7 @@ static void generateScaffold(int argc, char **argv)
     generateClientController(argc, argv);
     generateScaffoldViews(argc, argv);
     generateClientModel(argc, argv);
+    generateClientRoutes(argc, argv);
     generateScaffoldMigration(argc, argv);
     migrate(0, 0);
 }
