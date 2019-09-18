@@ -5258,6 +5258,29 @@ PUBLIC void httpAddPermResource(HttpRoute *parent, cchar *resource);
 PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource);
 
 /**
+    Add routes for a group of resources for use by a single page application
+    @description This routing adds a set of RESTful routes for a resource group. It will add the following routes:
+    <table>
+        <tr><td>Name</td><td>Method</td><td>Pattern</td><td>Action</td></tr>
+        <tr><td>create</td><td>POST</td><td>/NAME(/)*$</td><td>create</td></tr>
+        <tr><td>edit</td><td>GET</td><td>/NAME/{id=[0-9]+}/edit$</td><td>edit</td></tr>
+        <tr><td>get</td><td>GET</td><td>/NAME/{id=[0-9]+}$</td><td>get</td></tr>
+        <tr><td>init</td><td>GET</td><td>/NAME/init$</td><td>init</td></tr>
+        <tr><td>list</td><td>POST</td><td>/NAME/list$</td><td>list</td></tr>
+        <tr><td>remove</td><td>DELETE</td><td>/NAME/{id=[0-9]+}$</td><td>remove</td></tr>
+        <tr><td>update</td><td>PUT</td><td>/NAME/{id=[0-9]+}$</td><td>update</td></tr>
+        <tr><td>action</td><td>POST</td><td>/NAME/{action}/{id=[0-9]+}$</td><td>${action}</td></tr>
+        <tr><td>default</td><td>*</td><td>/NAME/{action}$</td><td>cmd-${action}</td></tr>
+    </tr>
+    </table>
+    @param parent Parent route from which to inherit configuration.
+    @param resource Resource name. This should be a lower case, single word, alphabetic resource name.
+    @ingroup HttpRoute
+    @stability Evolving
+ */
+PUBLIC void httpAddSpaGroup(HttpRoute *parent, cchar *resource);
+
+/**
     Add a route condition
     @description A route condition is run after matching the route pattern. For a route to be accepted, all conditions
         must match. Route conditions are built-in rules that can be applied to routes.
