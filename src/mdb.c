@@ -25,7 +25,7 @@
 #define MDB_LOAD_FIELD   7      /* Parsing fields */
 
 /*
-    Operations for mdbReadGrid
+    Operations for mdbFindGrid
  */
 #define OP_ERR      -1          /* Illegal operation */
 #define OP_EQ       0           /* "==" Equal operation */
@@ -63,6 +63,7 @@ static int mdbChangeColumn(Edi *edi, cchar *tableName, cchar *columnName, int ty
 static void mdbClose(Edi *edi);
 static EdiRec *mdbCreateRec(Edi *edi, cchar *tableName);
 static int mdbDelete(cchar *path);
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query);
 static MprList *mdbGetColumns(Edi *edi, cchar *tableName);
 static int mdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *mdbGetTables(Edi *edi);
@@ -74,7 +75,6 @@ static Edi *mdbOpen(cchar *path, int flags);
 static EdiGrid *mdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField mdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 static EdiRec *mdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *mdbReadGrid(Edi *edi, cchar *tableName, cchar *query);
 static int mdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int mdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int mdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
@@ -89,7 +89,7 @@ static EdiProvider MdbProvider = {
     "mdb",
     mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete,
     mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery,
-    mdbReadField, mdbReadGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
+    mdbReadField, mdbFindGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
     mdbRenameTable, mdbRenameColumn, mdbSave, mdbUpdateField, mdbUpdateRec,
 };
 
@@ -668,9 +668,9 @@ static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
     *offsetp = *limitp = 0;
     expressions = mprCreateList(0, 0);
     query = sclone(query);
-    if ((cp = scontains(query, " LIMIT ")) != 0) {
+    if ((cp = scaselesscontains(query, "LIMIT ")) != 0) {
         *cp = '\0';
-        cp += 7;
+        cp += 6;
         offset = stok(cp, ", ", &limit);
         if (!offset || !limit) {
             return 0;
@@ -678,6 +678,7 @@ static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
         *offsetp = (int) stoi(offset);
         *limitp = (int) stoi(limit);
     }
+    query = strim(query, " ", 0);
     for (tok = sclone(query); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
         *cp = '\0';
         cp += 5;
@@ -691,7 +692,7 @@ static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
 }
 
 
-static EdiGrid *mdbReadGrid(Edi *edi, cchar *tableName, cchar *query)
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
 {
     Mdb         *mdb;
     EdiGrid     *grid;

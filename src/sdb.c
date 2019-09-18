@@ -80,6 +80,7 @@ static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName);
 static int sdbDelete(cchar *path);
 static void sdbError(Edi *edi, cchar *fmt, ...);
 static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select);
 static MprList *sdbGetColumns(Edi *edi, cchar *tableName);
 static int sdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *sdbGetTables(Edi *edi);
@@ -88,7 +89,6 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName);
 static Edi *sdbOpen(cchar *path, int flags);
 PUBLIC EdiGrid *sdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select);
 static EdiRec *sdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static int sdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
@@ -105,7 +105,7 @@ static EdiProvider SdbProvider = {
     "sdb",
     sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
     sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
-    sdbReadField, sdbReadGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
+    sdbReadField, sdbFindGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
@@ -513,8 +513,7 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
-//  MOB - rename select -> query
-static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select)
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
     EdiRec      *schema;
@@ -526,7 +525,6 @@ static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select)
     assert(tableName && *tableName);
     columnName = operation = value = 0;
 
-    //  MOB
     limit = offset = 0;
     if (limit <= 0) {
         limit = MAXINT;
