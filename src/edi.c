@@ -261,21 +261,22 @@ PUBLIC EdiGrid *ediFilterGridFields(EdiGrid *grid, cchar *fields, int include)
 
 PUBLIC EdiRec *ediFilterRecFields(EdiRec *rec, cchar *fields, int include)
 {
-    EdiField    *fp;
     MprList     *fieldList;
-    int         inlist;
+    int         f, inlist;
 
     if (rec == 0 || rec->nfields == 0) {
         return rec;
     }
     fieldList = mprCreateListFromWords(fields);
 
-    for (fp = rec->fields; fp < &rec->fields[rec->nfields]; fp++) {
-        inlist = mprLookupStringItem(fieldList, fp->name) >= 0;
+    for (f = 0; f < rec->nfields; f++) {
+        inlist = mprLookupStringItem(fieldList, rec->fields[f].name) >= 0;
         if ((inlist && !include) || (!inlist && include)) {
-            fp[0] = fp[1];
+            memmove(&rec->fields[f], &rec->fields[f+1], (rec->nfields - f - 1) * sizeof(EdiField));
             rec->nfields--;
-            fp--;
+            /* Ensure never saved to database */
+            rec->id = 0;
+            f--;
         }
     }
     /*
