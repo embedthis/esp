@@ -133,6 +133,39 @@ PUBLIC void finalize()
 }
 
 
+PUBLIC cchar *findParams()
+{
+    MprJson     *fields, *key;
+    MprBuf      *buf;
+    cchar       *filter, *limit, *offset;
+    int         index;
+
+    buf = mprCreateBuf(0, 0);
+
+    if ((fields = params("fields")) != 0) {
+        for (ITERATE_JSON(fields, key, index)) {
+            mprPutToBuf(buf, "%s == %s", key->name, key->value);
+            if ((index + 1) < fields->length) {
+                mprPutStringToBuf(buf, " AND ");
+            }
+            break;
+        }
+    }
+    if ((filter = param("options.filter")) != 0) {
+        if (mprGetBufLength(buf) > 0) {
+            mprPutStringToBuf(buf, " AND ");
+        }
+        mprPutToBuf(buf, "* >< %s", filter);
+    }
+    offset = param("options.offset");
+    limit = param("options.limit");
+    if (offset && limit) {
+        mprPutToBuf(buf, " LIMIT %d, %d", (int) stoi(offset), (int) stoi(limit));
+    }
+    return mprBufToString(buf);
+}
+
+
 #if DEPRECATED
 PUBLIC void flash(cchar *kind, cchar *fmt, ...)
 {
@@ -471,66 +504,34 @@ PUBLIC MprJson *params(cchar *var)
 }
 
 
-PUBLIC cchar *makeQuery()
-{
-    MprJson     *fields, *key;
-    MprBuf      *buf;
-    cchar       *filter, *limit, *offset;
-    int         index;
-
-    buf = mprCreateBuf(0, 0);
-
-    if ((fields = params("fields")) != 0) {
-        for (ITERATE_JSON(fields, key, index)) {
-            //  MOB - quote value
-            mprPutToBuf(buf, "%s == %s", key->name, key->value);
-            if ((index + 1) < fields->length) {
-                mprPutStringToBuf(buf, " AND ");
-            }
-            break;
-        }
-    }
-    if ((filter = param("options.filter")) != 0) {
-        if (mprGetBufLength(buf) > 0) {
-            mprPutStringToBuf(buf, " AND ");
-        }
-        //  MOB - quote value
-        //  MOB - Should we use "LIKE" instead of ><
-        mprPutToBuf(buf, "* >< %s", filter);
-    }
-    offset = param("options.offset");
-    limit = param("options.limit");
-    if (offset && limit) {
-        mprPutToBuf(buf, " LIMIT %d, %d", (int) stoi(offset), (int) stoi(limit));
-    }
-    return mprBufToString(buf);
-}
-
-
 PUBLIC ssize receive(char *buf, ssize len)
 {
     return httpRead(getStream(), buf, len);
 }
 
 
-PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...)
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select)
 {
+#if UNUSED
     va_list     ap;
 
     va_start(ap, select);
     select = sfmtv(select, ap);
     va_end(ap);
+#endif
     return setGrid(ediFindGrid(getDatabase(), tableName, select));
 }
 
 
-PUBLIC EdiRec *findRec(cchar *tableName, cchar *select, ...)
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *select)
 {
+#if UNUSED
     va_list     ap;
 
     va_start(ap, select);
     select = sfmtv(select, ap);
     va_end(ap);
+#endif
     return setRec(ediFindRec(getDatabase(), tableName, select));
 }
 
@@ -857,7 +858,7 @@ PUBLIC bool updateFields(cchar *tableName, MprJson *params)
     cchar   *key;
 
     key = mprReadJson(params, "id");
-    if ((rec = ediSetFields(ediFindRec(getDatabase(), tableName, key), params)) == 0) {
+    if ((rec = ediSetFields(ediReadRec(getDatabase(), tableName, key), params)) == 0) {
         return 0;
     }
     return updateRec(rec);
