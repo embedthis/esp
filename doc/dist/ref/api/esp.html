@@ -44,6 +44,7 @@
                     <a class="item" href="../../start/installing.html">Installing ESP</a>
                     <a class="item" href="../../start/tour.html">ESP Tour</a>
                     <a class="item" href="../../start/app-tour.html">ESP Applications Tour</a>
+                    <a class="item" href="../../start/spa-tour.html">ESP SPA Tour</a>
                     <a class="item" href="../../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../../start/source.html">Building from Source</a>
                 </div>
@@ -315,8 +316,9 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1ga47472c968efbe0ba27b1b158887da6c1" class="nameRef">espUri</a>(<a href="edi.html#http.html#group___http_stream" class="ref">HttpStream</a> *stream, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gac782d72d3f7c11dce5c48befaff8ac0a" class="nameRef">feedback</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a feedback message.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga061eb4d725222504949f9eb49c619fd5" class="nameRef">finalize</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Finalize the response.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1ga9b9c955e187a244fc82d652e43f9dba7" class="nameRef">findGrid</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *select, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records in table from the database.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1ga1da9624881216845cd40703c1af904f8" class="nameRef">findRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record identified by SQL style query expression.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1gaead8228bdcabe7573b938276b9227c2d" class="nameRef">findGrid</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *select)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records in table from the database.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga2a4ab58921120e43a5946fcf761cd1c5" class="nameRef">findParams</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Build an EDI selection query from the request parameters for use by SPA applications.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gadc1fccd34c38647418e4724279651250" class="nameRef">findRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record identified by SQL style query expression.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gad2de201bd5c4004d31bae21c1c00668c" class="nameRef">findRecWhere</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value),ME_DEPRECATED(&quot;Use,findRec,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read one record.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga0a9e9396972b76c5947592479860020d" class="nameRef">flush</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#http.html#group___http_auth" class="ref">HttpAuth*</a></td><td><a href="#group___esp_abbrev_1ga651bbfd7b411eaf2da2fa9e47bdd1584" class="nameRef">getAuth</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get the auth object for the current route.</td></tr>
@@ -358,7 +360,6 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gae69c795a239fe68b0f60b36c8cc546ea" class="nameRef">isSecure</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Test if the stream is using SSL and is secure.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#struct_mpr_hash" class="ref">MprHash*</a></td><td><a href="#group___esp_abbrev_1gae478be50b70b65cbc43e79a2f7e87ad3" class="nameRef">makeHash</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a hash table container of property values.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___esp_abbrev_1ga3e4e27c82fe15a0e658412b26747e0d4" class="nameRef">makeJson</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a JSON object container of property values.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga6b2214cb485032e7324b69b5c4aceb6f" class="nameRef">makeQuery</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Build an EDI selection query from the request parameters for use by SPA applications.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1ga0292bb1e6965cb8befad09d4ce7a2839" class="nameRef">makeRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *content)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a free-standing record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_req_1gad221f00eaacb1253a8e9d0f29e11c55e" class="nameRef">makeUri</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *target)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a URI.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga1d0fda1c77c88bd3b74df6572365b1f3" class="nameRef">md5</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *str)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get an MD5 checksum.</td></tr>
@@ -367,7 +368,6 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gad638c34898123293ebc120c1f9396a9c" class="nameRef">param</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a request parameter.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___esp_abbrev_1ga55013b75f2ed92726f73e4c4137cbf9f" class="nameRef">paramInt</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get an integer request parameter.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___esp_abbrev_1ga13931995115dd8d7c7725afe54c6a1ba" class="nameRef">params</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a collection of request parameters.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___esp_abbrev_1gae203dbb75f0a6610f0d904d1812e89cc" class="nameRef">paramsObj</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Get a property from the request parameters.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gaebd6eb20a67d36dca94880e1545dfe1b" class="nameRef">readRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record identified by key value.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1ga191e1bf0423a9cf77e85b613efc28bee" class="nameRef">readTable</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName),ME_DEPRECATED(&quot;Use,findGrid,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read all the records in table from the database.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1gadbe316e24230e57a77270272a74c9f45" class="nameRef">readWhere</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value),ME_DEPRECATED(&quot;Use,findGrid,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records.</td></tr>
@@ -761,12 +761,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga9b9c955e187a244fc82d652e43f9dba7"></a>
+<a name="group___esp_abbrev_1gaead8228bdcabe7573b938276b9227c2d"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#group___edi_grid" class="ref">EdiGrid</a> *
     findGrid
-(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *select, ...)
+(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *select)
   </div>
   <div class="apiDetail">
 <p>Read matching records in table from the database.</p>
@@ -782,12 +782,29 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga1da9624881216845cd40703c1af904f8"></a>
+<a name="group___esp_abbrev_1ga2a4ab58921120e43a5946fcf761cd1c5"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
+    findParams
+()
+  </div>
+  <div class="apiDetail">
+<p>Build an EDI selection query from the request parameters for use by SPA applications.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This call creates an EDI &quot;SQL style&quot; query from the request parameters. This call expects optional &quot;fields&quot; and &quot;options&quot; parameters with options.offset, options.limit and options.filter parameters. It examines each of the &quot;fields&quot; parameters to build an SQL &quot;WHERE&quot; expression testing the value of each field. The resulting expression looks like: <br/><br/>
+ field OP value AND field OP value .... LIMIT offset, limit.</dd></dl>
+    <dl><dt>Returns:</dt><dd>An EDI sql style selection query string suitable for use with <a class="ref" href="#group___esp_abbrev_1gadc1fccd34c38647418e4724279651250">findRec</a> and <a class="ref" href="#group___esp_abbrev_1gaead8228bdcabe7573b938276b9227c2d">findGrid</a></dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    </dd></dl>
+  </div>
+</div>
+<a name="group___esp_abbrev_1gadc1fccd34c38647418e4724279651250"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#group___edi_rec" class="ref">EdiRec</a> *
     findRec
-(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query, ...)
+(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)
   </div>
   <div class="apiDetail">
 <p>Read a record identified by SQL style query expression.</p>
@@ -1467,23 +1484,6 @@ This is a smart input control that will call the appropriate input control based
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga6b2214cb485032e7324b69b5c4aceb6f"></a>
-<div class="api">
-  <div class="prototype">
-    <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
-    makeQuery
-()
-  </div>
-  <div class="apiDetail">
-<p>Build an EDI selection query from the request parameters for use by SPA applications.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call creates an EDI &quot;SQL style&quot; query from the request parameters. This call expects optional &quot;fields&quot; and &quot;options&quot; parameters with options.offset, options.limit and options.filter parameters. It examines each of the &quot;fields&quot; parameters to build an SQL &quot;WHERE&quot; expression testing the value of each field. The resulting expression looks like: <br/><br/>
- field OP value AND field OP value .... LIMIT offset, limit.</dd></dl>
-    <dl><dt>Returns:</dt><dd>An EDI sql style selection query string suitable for use with <a class="ref" href="#group___esp_abbrev_1ga1da9624881216845cd40703c1af904f8">findRec</a> and <a class="ref" href="#group___esp_abbrev_1ga9b9c955e187a244fc82d652e43f9dba7">findGrid</a></dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
 <a name="group___esp_abbrev_1ga0292bb1e6965cb8befad09d4ce7a2839"></a>
 <div class="api">
   <div class="prototype">
@@ -1613,22 +1613,6 @@ This is a smart input control that will call the appropriate input control based
     <table class="parameters" title="Parameters">
     <tr><td class="param">var</td><td>Root property of the params collection. Set to NULL for the root collection.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>MprJson instance containing the request parameters.</dd></dl>
-    <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
-    <dl><dt>See Also:</dt><dd>
-    </dd></dl>
-  </div>
-</div>
-<a name="group___esp_abbrev_1gae203dbb75f0a6610f0d904d1812e89cc"></a>
-<div class="api">
-  <div class="prototype">
-    <a href="edi.html#mpr.html#group___mpr_json" class="ref">MprJson</a> *
-    paramsObj
-(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *var)
-  </div>
-  <div class="apiDetail">
-<p>Get a property from the request parameters.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call gets a request parameter from the request parameters for the current request. Route tokens, request query data, and www-url encoded form data are all entered into the params table after decoding. This routine calls <a class="ref" href="#group___esp_req_1gaa4ae5df79b9c4d8321ecb2cd15d44d88">espGetParams</a></dd></dl>
     <dl><dt>Returns:</dt><dd>MprJson instance containing the request parameters.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>

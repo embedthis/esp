@@ -954,15 +954,22 @@
       <type>EdiGrid *</type>
       <name>findGrid</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga9b9c955e187a244fc82d652e43f9dba7</anchor>
-      <arglist>(cchar *tableName, cchar *select,...)</arglist>
+      <anchor>gaead8228bdcabe7573b938276b9227c2d</anchor>
+      <arglist>(cchar *tableName, cchar *select)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
+      <name>findParams</name>
+      <anchorfile>group___esp_abbrev.html</anchorfile>
+      <anchor>ga2a4ab58921120e43a5946fcf761cd1c5</anchor>
+      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
       <name>findRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga1da9624881216845cd40703c1af904f8</anchor>
-      <arglist>(cchar *tableName, cchar *query,...)</arglist>
+      <anchor>gadc1fccd34c38647418e4724279651250</anchor>
+      <arglist>(cchar *tableName, cchar *query)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
@@ -1245,13 +1252,6 @@
       <arglist>(cchar *fmt,...)</arglist>
     </member>
     <member kind="function">
-      <type>cchar *</type>
-      <name>makeQuery</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga6b2214cb485032e7324b69b5c4aceb6f</anchor>
-      <arglist>()</arglist>
-    </member>
-    <member kind="function">
       <type>EdiRec *</type>
       <name>makeRec</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
@@ -1298,13 +1298,6 @@
       <name>params</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
       <anchor>ga13931995115dd8d7c7725afe54c6a1ba</anchor>
-      <arglist>(cchar *var)</arglist>
-    </member>
-    <member kind="function">
-      <type>MprJson *</type>
-      <name>paramsObj</name>
-      <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>gae203dbb75f0a6610f0d904d1812e89cc</anchor>
       <arglist>(cchar *var)</arglist>
     </member>
     <member kind="function">

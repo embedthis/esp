@@ -44,6 +44,7 @@
                     <a class="item" href="../start/installing.html">Installing ESP</a>
                     <a class="item" href="../start/tour.html">ESP Tour</a>
                     <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
+                    <a class="item" href="../start/spa-tour.html">ESP SPA Tour</a>
                     <a class="item" href="../start/releaseNotes.html">Release Notes</a>
                     <a class="item" href="../start/source.html">Building from Source</a>
                 </div>
@@ -159,8 +160,14 @@
     <div class="content">
 
             <h1>ESP Tour</h1>
-            <p>This quick tour of the ESP Web Framework provides an overview of ESP and how to use it 
+            <p>This quick tour of the ESP Web Framework provides an overview of ESP and how to use it
             to create ESP pages and ESP applications.</p>
+
+            <p>There are two other tours:</p>
+            <ul>
+                <li>The <a href="app-tour.html">ESP MVC Application Tour</a> &mdash; for server-side MVC applications</li>
+                <li>The <a href="spa-tour.html">ESP SPA Application Tour</a> &mdash; for client-side Single Page Applications (SPA)</li>
+            </ul>
 
             <p>Before you start, make sure you have read the <a href="quick.html">Quick Start</a> and
             that you have ESP installed on your system so you can try the commands as you go.</p>
@@ -176,7 +183,7 @@
                 then run your application.</p>
             <p>To start the tour, create a directory to contain your ESP application and then from that directory,
                 run <em>esp</em>. In this example, we create a directory called "<em>test</em>". The directory
-                name is used as the default name for your application, so choose a name that can be a valid 
+                name is used as the default name for your application, so choose a name that can be a valid
                 <em>C</em> identifier.</p>
 
             <pre class="code">
@@ -190,7 +197,7 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
 
             <a id="hello"></a>
             <h2>Hello World</h2>
-            <p>The first step in any tour is to create a simple "Hello World" web page. ESP web pages have 
+            <p>The first step in any tour is to create a simple "Hello World" web page. ESP web pages have
             an <em>.esp</em> extension.
             Create a file called <em>hello.esp</em> using your favorite text editor in the <em>test</em> directory
             with the following content:</p>
@@ -200,15 +207,15 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
 &lt;h1&gt;Hello World&lt;/h1&gt;
 &lt;/body&gt;
 </pre>
-            <p>To view the "Hello" web page, type the following URL: 
+            <p>To view the "Hello" web page, type the following URL:
             <em>http://localhost:4000/hello.esp</em> into your browser.</p>
-            <img src="../images/esp/tour/hello.png" alt="hello" class="bare-screen"> 
+            <img src="../images/esp/tour/hello.png" alt="hello" class="bare-screen">
 
             <a id="dynamic"></a>
             <h2>Dynamic Content</h2>
             <p>While that was fun, the output is static and boring, so let's add some dynamic content. You can embed
-            <em>C</em> language code and ESP function calls  by including them inside a special ESP web page directive that 
-            will be executed and converted to HTML before being sent to the client. There are a variety of server-side 
+            <em>C</em> language code and ESP function calls  by including them inside a special ESP web page directive that
+            will be executed and converted to HTML before being sent to the client. There are a variety of server-side
             ESP web page directives, the one you'll use first, is: </p>
 
             <pre class="code">&lt;%= expression %&gt;</pre>
@@ -220,14 +227,14 @@ esp: 1: Started at Mon Apr 14 15:00:42 2014 PDT</pre>
 </pre>
             <p>Now when you re-run the page, it will display the current date and time. If you refresh the page by
             pressing reload, the new date and time will be displayed.</p>
-            
+
             <img src="../images/esp/tour/hello-dynamic.png" alt="hello" class="bare-screen">
 
             <h3>No Restart Required</h3>
             <p>Notice that you did not have to restart the web server, nor did you have to manually recompile the
-            ESP code. Rather, ESP transparently recompiled the web page in the background. ESP noticed that the 
-            hello.esp web page had been modified and it re-parsed and compiled it into a loadable module 
-            ready for execution. The loaded module is cached in-memory and on-disk for fast execution by 
+            ESP code. Rather, ESP transparently recompiled the web page in the background. ESP noticed that the
+            hello.esp web page had been modified and it re-parsed and compiled it into a loadable module
+            ready for execution. The loaded module is cached in-memory and on-disk for fast execution by
             subsequent requests.</p>
 
             <p>In the output from the <em>esp</em> command, you may have noticed:</p>
@@ -243,28 +250,29 @@ esp: 2:   HTTP/1.1 200 OK</pre>
 
             <pre class="code">
 <b>&lt;h3&gt;&lt;% render("Request method is %s", getMethod()); %&gt;&lt;/h3&gt;</b>
-<b>&lt;% 
+<b>&lt;%
     int i;
     for (int i = 0; i &lt; 10; i++) {
         render(" Line: %d&lt;/br&gt;\r\n", i);
-    } 
+    }
 %&gt;</b>
 </pre>
             <p>By using the ESP statement directive <em>&lt;% code %&gt;</em>, you can embed arbitrary <em>C</em> language
             statements in your web page. The <em>render</em> function allows you to write arbitrary data which is patched
             back where the directive was defined in the page. See the <a href="../users/pages.html">ESP Pages</a>
             document for full details about all the ESP web page directives.</p>
-            <p>For help on the <em>esp</em> utility, use <em>man esp</em> or invoke esp with the 
+            <p>For help on the <em>esp</em> utility, use <em>man esp</em> or invoke esp with the
                 <em>esp -help</em> switch.</p>
             <pre class="code">$ <b>man esp</b>
-$ <b>esp -help</b></pre> 
+$ <b>esp -help</b></pre>
 
             <a id="learn"></a>
             <h2>Learn More ...</h2>
-            <p>That concludes a quick tour through some of the capabilities of the ESP web framework. 
+            <p>That concludes a quick tour through some of the capabilities of the ESP web framework.
             To learn more, please read:</p>
             <ul>
-                <li><a href="app-tour.html">ESP Applications Tour</a>
+                <li><a href="app-tour.html">ESP MVC Applications Tour</a>
+                <li><a href="spa-tour.html">ESP SPA Tour</a>
                 <li><a href="index.html">User's Guide</a></li>
                 <li><a href="../users/pages.html">ESP Pages</a></li>
                 <li><a href="../ref/mvc.html">ESP MVC Framework</a></li>

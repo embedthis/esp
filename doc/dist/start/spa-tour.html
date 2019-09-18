@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ESP SPA Tour</title>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <meta name="description" content="ESP web framework">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Julius+Sans+One' rel='stylesheet' type='text/css'>
+    
+    <link href="../images/favicon.ico" rel="shortcut icon">
+    <link href="../lib/semantic-ui/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/api.min.css" rel="stylesheet" type="text/css">
+    
+
+</head>
+<body class="show-sidebar">
+    <div class="sidebar">
+        <div class="ui large left vertical inverted labeled menu">
+            <div class="item">
+                <a href="../index.html" class="logo">ESP Docs</a>
+            </div>
+            <div class="item">
+                <a href="../index.html">
+                    <b>General</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../index.html">ESP Overview</a>
+                    <a class="item" href="../users/features.html">ESP Features</a>
+                    <a class="item" href="https://embedthis.com/esp/download.html">Download</a>
+                    <a class="item" href="../licensing/index.html">Licensing</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../start/index.html">
+                    <b>Getting Started</b>
+                </a>
+                <div class="menu">
+                    <a class="item" href="../start/quick.html">Quick Start</a>
+                    <a class="item" href="../start/installing.html">Installing ESP</a>
+                    <a class="item" href="../start/tour.html">ESP Tour</a>
+                    <a class="item" href="../start/app-tour.html">ESP Applications Tour</a>
+                    <a class="item" href="../start/spa-tour.html">ESP SPA Tour</a>
+                    <a class="item" href="../start/releaseNotes.html">Release Notes</a>
+                    <a class="item" href="../start/source.html">Building from Source</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/index.html"><b>User's Guide</b></a>
+                <div class="menu">
+                    <a class="item" href="../users/create.html">Creating ESP Applications</a>
+                    <a class="item" href="../users/packages.html">Extension Packages</a>
+                    <a class="item" href="../users/skeletons.html">Application Skeletons</a>
+                    <a class="item" href="../users/config.html">Configuring ESP</a>
+                    <a class="item" href="../users/components.html">Generating Components</a>
+                    <a class="item" href="../users/building.html">Building Applications</a>
+                    <a class="item" href="../users/deploying.html">Deploying Applications</a>
+                    <a class="item" href="../users/pages.html">ESP Pages</a>
+                    <a class="item" href="../users/layouts.html">Expansive Layouts</a>
+                    <a class="item" href="../users/controllers.html">ESP Controllers</a>
+                    <a class="item" href="../users/database.html">Databases</a>
+                    <a class="item" href="../users/migrations.html">Database Migrations</a>
+                    <a class="item" href="../users/sessions.html">Session Storage</a>
+                    <a class="item" href="../users/security.html">Security Considerations</a>
+                    <a class="item" href="../users/monitor.html">Monitoring and Defending</a>
+                    <a class="item" href="../users/hosting.html">Hosting in Appweb</a>
+                    <a class="item" href="../users/command.html">ESP Command</a>
+                    <a class="item" href="../users/man.html">Manual Pages</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../ref/index.html">Reference Guide</a>
+                <div class="menu">
+                    <a class="item" href="../ref/mvc.html">ESP MVC Framework</a>
+                    <a class="item" href="../ref/compatibility.html">Compatibility</a>
+                    <a class="item" href="../ref/native.html">API Library</a>
+                    <a class="item" href="../ref/memory.html">ESP Memory Allocation</a>
+                    <a class="item" href="../ref/multithread.html">Multithreaded Programming</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/samples.html">Samples</a>
+                <div class="menu">
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/config">config</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/controller">controller</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/html-mvc">html-mvc</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/layout">layout</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-database">login-database</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-form">login-form</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/login-roles">login-roles</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/page">page</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/session">session</a>
+                  <a class="item" href="https://github.com/embedthis/esp/tree/dev/samples/upload">upload</a>
+                </div>
+            </div>
+            <div class="item">
+                <a href="../users/project.html">Project Resources</a>
+                <div class="menu">
+                    <a class="item" href="https://embedthis.com/blog/categories/ESP/">Official ESP News</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Web Site</a>
+                    <a class="item" href="https://github.com/embedthis/esp">Source Code Repository</a>
+                    <a class="item" href="https://github.com/embedthis/esp/issues">Project Issue Database</a>
+                    <a class="item" href="https://github.com/embedthis/esp/releases">Change Log</a>
+                    <a class="item" href="https://github.com/embedthis/esp/milestones">Roadmap</a>
+                    <a class="item" href="https://embedthis.com/developers/contributors.html">Contributors Agreement</a>
+                </div>
+            </div>
+            <div class="item">
+                <b>Links</b>
+                <div class="menu">
+                    <a class="item" href="https://embedthis.com/">Embedthis Web Site</a>
+                    <a class="item" href="https://embedthis.com/blog/">Embedthis Blog</a>
+                    <a class="item" href="http://twitter.com/embedthat">Twitter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="ui inverted masthead">
+        <div class="ui fixed inverted menu">
+            <div class="ui sidebar-launch button">
+                <i class="icon list layout"></i>
+            </div>
+            <div class="right menu">
+                <a class="item" href="https://embedthis.com/">Embedthis</a>
+                    <a class="item" href="https://embedthis.com/esp/">ESP Site</a>
+                    <span class="desktop-only">
+                        <a class="item" href="https://embedthis.com/blog/categories/ESP/">ESP News</a>
+                        <a class="item" href="https://github.com/embedthis/esp">Repository</a>
+                        <a class="item" href="https://embedthis.com/blog/">Blog</a>
+                        <a class="item" href="https://twitter.com/embedthat">Twitter</a>
+                    </span>
+
+            </div>
+        </div>
+        
+        <div class="ui breadcrumb">
+            <a class="section" href="../">Home</a>
+            
+            <div class="divider">/</div>
+            <a class="section" href="index.html">
+                Getting Started
+            </a>
+            
+            
+            <div class="divider">/</div>
+            <a class="active section" href="spa-tour.html">ESP SPA Tour</a>
+            
+        </div>
+        
+        <iframe class="version desktop-only" src="../version.html"></iframe>
+
+    </div>
+    <div class="content">
+
+            <h1>ESP SPA Tour</h1>
+            <p>This tour provides an overview of creating ESP applications for Single Page Applications using the <a href="https://vuejs.org">VueJS</a> and ESP frameworks.</p>
+
+            <p>A <a href="https://en.wikipedia.org/wiki/Single-page_application">Single Page Application (SPA)</a> when implemented with <a href="https://vuejs.org">VueJS</a> and ESP offers compelling advantages. These include:</p>
+
+            <ul>
+                <li>Near instantaneous page to page transitions</li>
+                <li>Little load on the embedded server allowing highly efficient implementations</li>
+                <li>Greatly enhanced usability via modern client-side web frameworks like VueJS</li>
+            </ul>
+
+            <h2>Essential Tools</h2>
+            <p>So you can work along as the tour progresses, install the following products and tools.
+                ESP applications and this tour make good use of the
+                <a href="https://www.npmjs.com/get-npm">NPM</a> tool and
+                <a href="https://embedthis.com/pak/">Pak</a> from Embedthis.
+            </p>
+
+            <ul>
+                <li><a href="https://embedthis.com/pak/">Pak</a> manager to install and manage extension packages.</li>
+                <li><a href="https://npmjs.com/get-npm/">NPM</a> to install VueJS and other required tools.</li>
+            </ul>
+
+            <p>Before starting, first make sure you have read the <a href="quick.html">Quick Start</a>,
+            and the <a href="tour.html">ESP Tour</a> and that you have ESP, Pak and NPM installed on your
+            system so you can type along as you go.</p>
+
+            <p>
+                <a class="ui labeled small icon blue button" href="https://embedthis.com/esp/download.html">
+                    <i class="download cloud icon"></i>
+                    Download ESP</a>
+                <a class="ui labeled small icon purple button" href="https://embedthis.com/pak/download.html">
+                    <i class="download cloud icon"></i>
+                    Download Pak
+                </a>
+                <a class="ui labeled small icon red button" href="https://npmjs.com/get-npm">
+                    <i class="download cloud icon"></i>
+                    Download NPM
+                </a>
+            </p>
+
+            <a id="blog"></a>
+            <h2>Creating a New Application</h2>
+            <p>ESP provides skeletons to get you started quickly. These skeletons packages provide
+            the core structure of your application and include pages, templates, stylesheets and scaffolds
+            that are used to generate models, views and controllers as your application grows. </p>
+
+            <p>To create a new ESP application, we will use the <a href="https://embedthis.com/pak/">Pak</a> package manager to install the <em>esp-vue-skeleton</em> application skeleton. The <em>esp-vue-skeleton</em> is a starter package for ESP SPA applications with client-side views using the VueJS framework. Other skeletons include the <em>esp-html-skeleton</em> for ESP HTML applications with server-side views.</p>
+
+            <h3>Install the Skeleton</h3>
+            <p>First make a directory named <em>blog</em> and then install the <em>esp-vue-skeleton</em> package.</p>
+            <pre class="code"><b>$ mkdir blog
+$ cd blog
+$ pak init
+$ pak install esp-vue-skeleton</b>
+   [Install] js-error 1.0.0
+   [Install] js-json 1.0.0
+   [Install] js-net 1.0.0
+   [Install] js-polyfill 1.0.0
+   [Install] js-rest 1.0.0
+   [Install] vu-feedback 1.0.0
+   [Install] vu-input 1.0.0
+   [Install] vu-input-group 1.0.0
+   [Install] vu-validate 1.0.0
+   [Install] esp-vue-skeleton 1.0.0
+   [Install] vue
+   [Install] vue/cli</pre>
+
+            <p>This simple command sequence accomplished quite a bit, including:</p>
+            <ul>
+                <li>Installing the ESP Vue Skeleton</li>
+                <li>Create a core structure with directories for various parts of the application. Initially, some of
+                    these directories are empty, but they will be used as your application grows.</li>
+                <li><p>Installed the <em>esp-vue-skeleton</em> and other dependant packages.
+                    You can see these via the <em>pak list</em> command.</p>
+                <li>Created <em>esp.json</em> and <em>pak.json</em> files that configures and control
+                    how your application will run.</li>
+                <li>Installed VueJS and Vuetify</li>
+                <li>Compiled the ESP server side app.c code and generated the client-side application via VueJS CLI</li>
+            </ul>
+
+            <h3>Building</h3>
+            <p>The skeleton includes a Makefile with familiar "build", "run", "clean" targets.
+            <pre class="code"><b>$ make build
+   [Compile] esp compile
+     [Build] vue-cli-service --mode development build</b></pre>
+
+            <a id="run"></a>
+            <h2>Running</h2>
+            <p>
+                To run the application, type:
+                <pre class="code"><b>$ make run</b>
+       [Run] esp &
+       [Run] vue-cli-service serve
+Started HTTP service on 127.0.0.1:8000
+ INFO  Starting development server...</pre>
+            </p>
+
+            <p>The ESP server listens for API requests on port 8000. The VueJS server listens on port 8080 for
+                browser requests. To access your application enter <em>http://localhost:8080</em> in your browser.
+            You should see your first application home page.</p>
+            <img src="../images/esp/spa-tour/home.png" alt="home" class="scale screen">
+
+            <h2>Conventions</h2>
+            <p>The ESP web framework follows the <em>convention over configuration</em> philosophy popularized by <a href="http://www.rubyonrails.org">Ruby on Rails</a>. This means that ESP adopts certain conventions about where files and directories should be placed and about how names are used. If you work with these conventions, then you need to do little or no configuration. Things will just work.</p>
+
+            <p>Here are the most important files and directories:</p>
+            <table title="directories" class="ui table segment">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>esp.json</td>
+                        <td>Primary ESP configuration file</td>
+                    </tr>
+                    <tr>
+                        <td>pak.json</td>
+                        <td>This file specifies the application name, version and dependent packages.</td>
+                    </tr>
+                    <tr>
+                        <td>cache</td>
+                        <td>Cached compiled ESP application (app.c) and ESP controllers.</td>
+                    </tr>
+                    <tr>
+                        <td>ui</td>
+                        <td>Client VueJS application</td>
+                    </tr>
+                    <tr>
+                        <td>ui/public</td>
+                        <td>Public static HTML pages</td>
+                    </tr>
+                    <tr>
+                        <td>ui/dist</td>
+                        <td>Distribution directory when building for the "prod" profile for the generated VueJS
+                            application including: web pages, assets, scripts, and style-sheets.</td>
+                    </tr>
+                    <tr>
+                        <td>controllers</td>
+                        <td>ESP Application controller code</td>
+                    </tr>
+                    <tr>
+                        <td>db</td>
+                        <td>Database file and database initialization scripts</td>
+                    </tr>
+                    <tr>
+                        <td>paks</td>
+                        <td>Locally installed packages</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a id="scaffolds"></a>
+            <h2>Scaffolds</h2>
+            <p>Scaffolding is a quick way to generate pieces of your application. Scaffolds are stub MVC resource managers that provide basic Create-Read-Update-Delete (CRUD) for a resource or group of resources. ESP scaffolds include:</p>
+
+            <ul>
+                <li>Database table schema</li>
+                <li>Database migration to create the table</li>
+                <li>Controller logic to create and mange table records</li>
+                <li>Client-side views to display table and record data</li>
+            </ul>
+
+            <p>Don't confuse ESP <em>scaffolds</em> with ESP <em>skeletons</em>. Skeletons are installable packages that are ready-made application starters. Scaffolds are generated CRUD resource managers.</p>
+
+            <p>Once the <em>esp-vue-skeleton</em> is installed, the <em>esp</em> command can generate scaffolds. The command below will create a <em>post</em> scaffold that includes a database <em>post</em> table with a blog post title and post comment body. The <em>title</em> is a string data type and the <em>body</em> is a multi-line text field.</p>
+            <pre class="code">
+$ <b>esp generate scaffold post title:string body:text</b>
+    [Create] controllers/post.c
+    [Create] Directory: ui/src/post
+    [Create] ui/src/post/list.vue
+    [Create] ui/src/post/edit.vue
+    [Create] ui/src/post/Post.js
+    [Create] ui/src/post/routes.js
+    [Create] Directory: migrations
+    [Create] migrations/201909181352170_create_scaffold_post.c
+   [Compile] migrations/201909181352170_create_scaffold_post.c
+   [Migrate] Apply 201909181352170_create_scaffold_post.c
+   [Migrate] All migrations applied
+  [Generate] Complete</pre>
+            <p>This command created:</p>
+            <ul>
+                <li>A server-side post Controller <em>controllers/post.c</em></li>
+                <li>Client-side VueJS views for listing posts <em>ui/post/list.vue</em> and editing posts
+                    <em>ui/post/edit.vue</em>.</li>
+                <li>A database migration to create the post database table.</li>
+            </ul>
+
+            <p>The command also ran the migration to create the database and table.</p>
+            <p>Now if you set your browser to the home page, you will now see an empty listing of blog posts.</p>
+            <p>
+                <img src="../images/esp/spa-tour/post-list.png" alt="postList" class="scale bare-screen">
+                <a id="newPosts"></a>
+            </p>
+
+            <h2>Create New Posts</h2>
+            <p>The New Post button directs your browser to the <em>/post/</em> URL. This form is being rendered on the client from the <em>ui/post/edit.vue</em> page. Behind the scenes, the browser asks for the <em>/post/init</em> URL to determine what are the required input fields for a post.</p>
+
+            <img src="../images/esp/spa-tour/create.png" alt="createPost" class="scale bare-screen">
+            <p>Fill in the input fields and click OK to add the new blog post.</p>
+
+            <img src="../images/esp/spa-tour/post-list-2.png" alt="postList" class="scale bare-screen">
+            <p>The home page is now updated with the first post.  You can click on the post title or body to edit its contents. This will run the same post/edit.vue template that was used to create the post.</p>
+
+            <h2 class=section>On the Server</h2>
+            <p>When <em>OK</em> button is clicked to create a post, the browser invokes the local post/edit.vue page to accept user input. That is then sent to the server <em>/post/</em> URL with the HTTP <em>POST</em> method to create the blog post. ESP parses this URL and and selects the appropriate request route and handler for the request. It then identifies <em>post</em> as the name of the server-side controller invokes the <em>createPost</em> action routine to service the request. The controller is automatically compiled and loaded if required. <p>A controller file typically defines many such C functions called actions, that are bound to specific URLs via ESP routes. Actions are defined using the <em>espAction</em> API in the initialization function of the controller.</p>
+
+            <p>A minimal post controller file looks like this:</p>
+            <pre class="code">
+#include "esp.h"
+static void createPost() {
+    sendResult(updateRec(createRec("post", params("fields"))));
+}
+
+static void updatePost() {
+    sendResult(updateFields("post", params("fields")));
+}
+
+ESP_EXPORT int esp_controller_blog_post(HttpRoute *route) {
+    espAction(route, "post/create", NULL, createPost);
+    return 0;
+}
+</pre>
+            <h3>Actions</h3>
+            <p>The job of the action is to respond to the request and generate the response via views for the
+            client. Here is the <em>listPost</em> action in the generated <em>post</em> controller.</p>
+            <pre class="code">
+static void listPost() {
+    sendGrid(findGrid("post", NULL));
+}
+</pre>
+            <p>The <em>listPost</em> action queries the database and sends the list table (grid) to the client for rendering in the browser by the post/list.vue page.</p>
+
+            <a id="validations"></a>
+            <h2>Validations</h2>
+            <p>Complete validation of all user entered data is essential for a robust and secure application. Some validation may be performed at the client, but full validation must always be fully implemented on the server incase the client or network connection is compromised. ESP provides flexible validation methods to help ensure the data you save at the server is correct.</p>
+
+            <p>You can add calls to validate record data before it is saved to the database. To do this, edit the <em>controllers/post.c</em> file and add calls to <a href="../ref/api/edi.html#group___edi_1ga64cb0410a70843250c9826e8d12e3944">ediAddValidation</a>.</p>
+            <pre class="code">
+ESP_EXPORT int esp_controller_blog_post(HttpRoute *route)
+{
+    <b>Edi *edi;</b>
+    /* Existing code */
+    <b>edi = getDatabase();
+    ediAddValidation(edi, "present", "post", "title", 0);
+    ediAddValidation(edi, "present", "post", "body", 0);
+    ediAddValidation(edi, "unique", "post", "title", 0);</b>
+    return 0;
+}
+</pre>
+            <p>This will cause the database to automatically ensure that the <em>title</em> and <em>body</em> fields are not blank and that the <em>title</em> is unique in the post database table.</p>
+
+            <p>If you click OK in the Post <em>edit</em> web page without entering any data you will see the following:</p>
+
+            <img src="../images/esp/spa-tour/validate.png" alt="validate" class="scale bare-screen">
+            <p>This automatically identified the input fields in error and generated a summary of the errors above the
+            form. Of course, this default error highlighting behavior can be overridden if desired by modifying the
+            application style sheets.<p>
+
+            <p>Other validation types include: <em>checkNumber</em>, <em>checkBoolean</em>, <em>checkDate</em>
+            and <em>checkFormat</em>. You can also define new validation types by calling
+            <a href="../ref/api/edi.html#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46">ediDefineValidation</a>.
+
+            <a id="hosting"></a>
+            <h2>Hosting in Appweb</h2>
+            <p>If you want to host your application in <a href="https://embedthis.com/appweb/">Appweb</a>,
+            generate the required appweb.conf via:</p>
+
+            <pre class="code">esp generate appweb</pre>
+
+            <p>This will generate a stand-alone appweb.conf that includes the required
+                EspApp directive to define your application. </p>
+            <pre class="code">EspApp prefix="/demo" config="/path/to/esp.json</pre>
+
+            <a id="learn"></a>
+            <h2>Learn More ...</h2>
+            <p>That concludes the a quick tour through some of the capabilities of the ESP web framework.
+            To learn more, please read:
+            <ul>
+                <li><a href="index.html">ESP Documentation</a></li>
+                <li><a href="../users/pages.html">ESP Pages</a></li>
+            </ul>
+
+    </div>
+    <div class="terms ui basic center aligned segment">
+        <p>&copy; Embedthis Software. All rights reserved.</p>
+    </div>
+
+    <script src="../lib/jquery/jquery.min.js"></script>
+    <script src="../lib/semantic-ui/semantic.min.js"></script>
+    <script src="../scripts/sidebar.min.js"></script>
+     
+
+    
+
+
+
+
