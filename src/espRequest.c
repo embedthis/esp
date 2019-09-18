@@ -1374,7 +1374,7 @@ static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
 }
 
 
-PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
+PUBLIC void espSetDefaultDirs(HttpRoute *route, bool force)
 {
     cchar   *controllers, *documents, *path, *migrations;
 
@@ -1430,19 +1430,21 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     if (!mprPathExists(path, X_OK)) {
         migrations = "migrations";
     }
-    setDir(route, "CACHE", 0, app);
-    setDir(route, "CONTROLLERS", controllers, app);
-    setDir(route, "CONTENTS", 0, app);
-    setDir(route, "DB", 0, app);
-    setDir(route, "DOCUMENTS", documents, app);
-    setDir(route, "HOME", route->home, app);
-    setDir(route, "LAYOUTS", 0, app);
-    setDir(route, "LIB", 0, app);
-    setDir(route, "MIGRATIONS", migrations, app);
-    setDir(route, "PAKS", 0, app);
-    setDir(route, "PARTIALS", 0, app);
-    setDir(route, "SRC", 0, app);
+    setDir(route, "DOCUMENTS", documents, force);
+    setDir(route, "HOME", route->home, force);
+    setDir(route, "MIGRATIONS", migrations, force);
     setDir(route, "UPLOAD", "/tmp", 0);
+
+    force = 0;
+    setDir(route, "CACHE", 0, force);
+    setDir(route, "CONTROLLERS", controllers, force);
+    setDir(route, "CONTENTS", 0, force);
+    setDir(route, "DB", 0, force);
+    setDir(route, "LAYOUTS", 0, force);
+    setDir(route, "LIB", 0, force);
+    setDir(route, "PAKS", 0, force);
+    setDir(route, "PARTIALS", 0, force);
+    setDir(route, "SRC", 0, force);
 }
 
 
