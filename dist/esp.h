@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "8.0.3"
+    #define ESP_VERSION "8.1.0"
 #endif
 
 /*
@@ -3605,6 +3605,7 @@ PUBLIC MprHash *makeHash(cchar *fmt, ...);
  */
 PUBLIC MprJson *makeJson(cchar *fmt, ...);
 
+//  MOB - move
 /**
     Build an EDI selection query from the request parameters for use by SPA applications.
     @description This call creates an EDI "SQL style" query from the request parameters.
@@ -3615,7 +3616,7 @@ PUBLIC MprJson *makeJson(cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC cchar *makeQuery();
+PUBLIC cchar *findParams();
 
 /**
     Make a free-standing record
@@ -3744,19 +3745,6 @@ PUBLIC cchar *param(cchar *name);
  */
 PUBLIC MprJson *params(cchar *var);
 
-//  MOB - DOC
-//  MOB - who uses?
-/**
-    Get a property from the request parameters.
-    @description This call gets a request parameter from the request parameters for the current request.
-        Route tokens, request query data, and www-url encoded form data are all entered into the params table
-        after decoding. This routine calls #espGetParams.
-    @return MprJson instance containing the request parameters
-    @ingroup EspAbbrev
-    @stability Evolving
- */
-PUBLIC MprJson *paramsObj(cchar *var);
-
 /**
     Read matching records in table from the database
     @description This reads a table and returns a grid containing the table data.
@@ -3769,7 +3757,7 @@ PUBLIC MprJson *paramsObj(cchar *var);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...);
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select);
 
 /**
     Read a record identified by SQL style query expression
@@ -3783,7 +3771,7 @@ PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...);
     @ingroup EspAbbrev
     @stability Evolving
  */
-PUBLIC EdiRec *findRec(cchar *tableName, cchar *query, ...);
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *query);
 
 /**
     Read a record identified by key value

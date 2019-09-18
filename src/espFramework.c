@@ -865,6 +865,9 @@ PUBLIC int espSaveConfig(HttpRoute *route)
 #endif
 
 
+/*
+    Send a grid with schema
+ */
 PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
 {
     HttpRoute   *route;
@@ -880,7 +883,7 @@ PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
             return espRender(stream, "{\n  \"data\": %s, \"count\": %d, \"schema\": %s}\n",
                 ediGridAsJson(grid, flags), grid->count, ediGetGridSchemaAsJson(grid));
         }
-        return espRender(stream, "{}");
+        return espRender(stream, "{data:[]}");
     }
     return 0;
 }

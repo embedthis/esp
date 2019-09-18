@@ -5974,6 +5974,13 @@
       <arglist>(cchar *s1, cchar *s2)</arglist>
     </member>
     <member kind="function">
+      <type>char *</type>
+      <name>scaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>gafe482207f5185e19ee5a155dbfa7991d</anchor>
+      <arglist>(cchar *str, cchar *pattern)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>scaselessmatch</name>
       <anchorfile>group___mpr_string.html</anchorfile>
@@ -6105,6 +6112,13 @@
       <anchorfile>group___mpr_string.html</anchorfile>
       <anchor>ga30d6259caa94ed51abd25be83c0c4972</anchor>
       <arglist>(cchar *s1, cchar *s2, ssize len)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
+      <name>sncaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>ga96f89ab40c17b973f6dbd4b72d7edb98</anchor>
+      <arglist>(cchar *str, cchar *pattern, ssize limit)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>
@@ -6815,6 +6829,13 @@
       <arglist>(cchar *s1, cchar *s2)</arglist>
     </member>
     <member kind="function">
+      <type>char *</type>
+      <name>scaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>gafe482207f5185e19ee5a155dbfa7991d</anchor>
+      <arglist>(cchar *str, cchar *pattern)</arglist>
+    </member>
+    <member kind="function">
       <type>bool</type>
       <name>scaselessmatch</name>
       <anchorfile>group___mpr_string.html</anchorfile>
@@ -6946,6 +6967,13 @@
       <anchorfile>group___mpr_string.html</anchorfile>
       <anchor>ga30d6259caa94ed51abd25be83c0c4972</anchor>
       <arglist>(cchar *s1, cchar *s2, ssize len)</arglist>
+    </member>
+    <member kind="function">
+      <type>char *</type>
+      <name>sncaselesscontains</name>
+      <anchorfile>group___mpr_string.html</anchorfile>
+      <anchor>ga96f89ab40c17b973f6dbd4b72d7edb98</anchor>
+      <arglist>(cchar *str, cchar *pattern, ssize limit)</arglist>
     </member>
     <member kind="function">
       <type>char *</type>

@@ -20395,16 +20395,41 @@ PUBLIC HttpRoute *httpAddRestfulRoute(HttpRoute *parent, cchar *methods, cchar *
 }
 
 
-PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
+/*
+    The different with ResourceGroup is that "list" is a POST and listg is a GET.
+    Also provides a POST getp.
+ */
+PUBLIC void httpAddSpaGroup(HttpRoute *parent, cchar *resource)
 {
-    /* Delete is a POST method alternative to remove */
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",                           "",          resource);
-    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
-    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",                       "create",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/list$",                      "listg",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",                      "init",      resource);
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}/edit$",          "edit",      resource);
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}$",               "get",       resource);
-    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",                      "init",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}/get$",           "getp",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/list$",                      "list",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",                       "create",    resource);
+
+    httpAddWebSocketsRoute(parent, "stream");
+    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "/{id=[0-9]+}$",               "remove",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}$",               "update",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{id=[0-9]+}/{action}(/)*$",  "${action}", resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$",              "${action}", resource);
+}
+
+
+PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
+{
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",                           "",          resource);
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "/list$",                      "list",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",                      "init",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}/edit$",          "edit",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/{id=[0-9]+}$",               "get",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/list$",                      "listp",     resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}/delete$",        "delete",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",                       "create",    resource);
+
     httpAddWebSocketsRoute(parent, "stream");
     httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "/{id=[0-9]+}$",               "remove",    resource);
     httpAddRestfulRoute(parent, "OPTIONS,POST",    "/{id=[0-9]+}$",               "update",    resource);
@@ -20418,16 +20443,16 @@ PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource)
  */
 PUBLIC void httpAddResource(HttpRoute *parent, cchar *resource)
 {
-    /* Delete is a POST method alternative to remove */
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",              "",           resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/edit$",         "edit",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",         "init",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
     httpAddRestfulRoute(parent, "OPTIONS,POST",    "/delete$",       "delete",     resource);
     httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "create",     resource);
-    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/edit$",         "edit",       resource);
-    httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
-    httpAddRestfulRoute(parent, "OPTIONS,GET",     "/init$",         "init",       resource);
     httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "update",     resource);
-    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "(/)*$",          "remove",     resource);
+
     httpAddWebSocketsRoute(parent, "stream");
+    httpAddRestfulRoute(parent, "OPTIONS,DELETE",  "(/)*$",          "remove",     resource);
     httpAddRestfulRoute(parent, "OPTIONS,GET,POST","/{action}(/)*$", "${action}",  resource);
 }
 
@@ -20438,6 +20463,7 @@ PUBLIC void httpAddResource(HttpRoute *parent, cchar *resource)
 PUBLIC void httpAddPermResource(HttpRoute *parent, cchar *resource)
 {
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",              "",           resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/get$",          "getp",        resource);
     httpAddRestfulRoute(parent, "OPTIONS,GET",     "(/)*$",          "get",        resource);
     httpAddRestfulRoute(parent, "OPTIONS,POST",    "(/)*$",          "update",     resource);
     httpAddWebSocketsRoute(parent, "stream");
@@ -27164,6 +27190,10 @@ static void addParamsFromBuf(HttpStream *stream, cchar *buf, ssize len)
     assert(stream);
     params = httpGetParams(stream);
 
+    /*
+        Json encoded parameters tunneled via the query string. This is used to
+        provide additional parameters on GET requests.
+     */
     json = scontains(buf, "_encoded_json_") ? 1 : 0;
     if (json) {
         value = mprUriDecode(buf);

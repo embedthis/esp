@@ -5,7 +5,12 @@
 #   usage: docker-publish [--primary] [--aws-profile profile] [--region region] image
 #
 
-VERSION=$(pak --dir .. edit version)
+if [ -f pak.json ] ; then
+    VERSION=$(pak --dir . edit version)
+else
+    VERSION=$(pak --dir .. edit version)
+fi
+
 
 while [[ $# -gt 0 ]] ; do
     arg="$1"

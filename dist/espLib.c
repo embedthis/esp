@@ -268,21 +268,22 @@ PUBLIC EdiGrid *ediFilterGridFields(EdiGrid *grid, cchar *fields, int include)
 
 PUBLIC EdiRec *ediFilterRecFields(EdiRec *rec, cchar *fields, int include)
 {
-    EdiField    *fp;
     MprList     *fieldList;
-    int         inlist;
+    int         f, inlist;
 
     if (rec == 0 || rec->nfields == 0) {
         return rec;
     }
     fieldList = mprCreateListFromWords(fields);
 
-    for (fp = rec->fields; fp < &rec->fields[rec->nfields]; fp++) {
-        inlist = mprLookupStringItem(fieldList, fp->name) >= 0;
+    for (f = 0; f < rec->nfields; f++) {
+        inlist = mprLookupStringItem(fieldList, rec->fields[f].name) >= 0;
         if ((inlist && !include) || (!inlist && include)) {
-            fp[0] = fp[1];
+            memmove(&rec->fields[f], &rec->fields[f+1], (rec->nfields - f - 1) * sizeof(EdiField));
             rec->nfields--;
-            fp--;
+            /* Ensure never saved to database */
+            rec->id = 0;
+            f--;
         }
     }
     /*
@@ -2182,7 +2183,8 @@ PUBLIC MprJson *params(cchar *var)
 }
 
 
-PUBLIC cchar *makeQuery()
+//  MOB - move
+PUBLIC cchar *findParams()
 {
     MprJson     *fields, *key;
     MprBuf      *buf;
@@ -2193,7 +2195,6 @@ PUBLIC cchar *makeQuery()
 
     if ((fields = params("fields")) != 0) {
         for (ITERATE_JSON(fields, key, index)) {
-            //  MOB - quote value
             mprPutToBuf(buf, "%s == %s", key->name, key->value);
             if ((index + 1) < fields->length) {
                 mprPutStringToBuf(buf, " AND ");
@@ -2205,8 +2206,6 @@ PUBLIC cchar *makeQuery()
         if (mprGetBufLength(buf) > 0) {
             mprPutStringToBuf(buf, " AND ");
         }
-        //  MOB - quote value
-        //  MOB - Should we use "LIKE" instead of ><
         mprPutToBuf(buf, "* >< %s", filter);
     }
     offset = param("options.offset");
@@ -2224,24 +2223,28 @@ PUBLIC ssize receive(char *buf, ssize len)
 }
 
 
-PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select, ...)
+PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select)
 {
+#if UNUSED
     va_list     ap;
 
     va_start(ap, select);
     select = sfmtv(select, ap);
     va_end(ap);
+#endif
     return setGrid(ediFindGrid(getDatabase(), tableName, select));
 }
 
 
-PUBLIC EdiRec *findRec(cchar *tableName, cchar *select, ...)
+PUBLIC EdiRec *findRec(cchar *tableName, cchar *select)
 {
+#if UNUSED
     va_list     ap;
 
     va_start(ap, select);
     select = sfmtv(select, ap);
     va_end(ap);
+#endif
     return setRec(ediFindRec(getDatabase(), tableName, select));
 }
 
@@ -2568,7 +2571,7 @@ PUBLIC bool updateFields(cchar *tableName, MprJson *params)
     cchar   *key;
 
     key = mprReadJson(params, "id");
-    if ((rec = ediSetFields(ediFindRec(getDatabase(), tableName, key), params)) == 0) {
+    if ((rec = ediSetFields(ediReadRec(getDatabase(), tableName, key), params)) == 0) {
         return 0;
     }
     return updateRec(rec);
@@ -3174,6 +3177,11 @@ static void restfulRouteSet(HttpRoute *route, cchar *set)
 }
 
 
+static void spaRouteSet(HttpRoute *route, cchar *set)
+{
+    httpAddSpaGroup(route, "{controller}");
+}
+
 #if DEPRECATED && REMOVE
 static void legacyRouteSet(HttpRoute *route, cchar *set)
 {
@@ -3186,8 +3194,8 @@ PUBLIC int espInitParser()
 {
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
+    httpDefineRouteSet("esp-spa", spaRouteSet);
 #if DEPRECATE && REMOVE
-    httpDefineRouteSet("esp-vue-mvc", legacyRouteSet);
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif
     httpAddConfig("esp", parseEsp);
@@ -4078,6 +4086,9 @@ PUBLIC int espSaveConfig(HttpRoute *route)
 #endif
 
 
+/*
+    Send a grid with schema
+ */
 PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
 {
     HttpRoute   *route;
@@ -4093,7 +4104,7 @@ PUBLIC ssize espSendGrid(HttpStream *stream, EdiGrid *grid, int flags)
             return espRender(stream, "{\n  \"data\": %s, \"count\": %d, \"schema\": %s}\n",
                 ediGridAsJson(grid, flags), grid->count, ediGetGridSchemaAsJson(grid));
         }
-        return espRender(stream, "{}");
+        return espRender(stream, "{data:[]}");
     }
     return 0;
 }
@@ -6069,7 +6080,7 @@ static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
 }
 
 
-PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
+PUBLIC void espSetDefaultDirs(HttpRoute *route, bool force)
 {
     cchar   *controllers, *documents, *path, *migrations;
 
@@ -6125,19 +6136,21 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app)
     if (!mprPathExists(path, X_OK)) {
         migrations = "migrations";
     }
-    setDir(route, "CACHE", 0, app);
-    setDir(route, "CONTROLLERS", controllers, app);
-    setDir(route, "CONTENTS", 0, app);
-    setDir(route, "DB", 0, app);
-    setDir(route, "DOCUMENTS", documents, app);
-    setDir(route, "HOME", route->home, app);
-    setDir(route, "LAYOUTS", 0, app);
-    setDir(route, "LIB", 0, app);
-    setDir(route, "MIGRATIONS", migrations, app);
-    setDir(route, "PAKS", 0, app);
-    setDir(route, "PARTIALS", 0, app);
-    setDir(route, "SRC", 0, app);
+    setDir(route, "DOCUMENTS", documents, force);
+    setDir(route, "HOME", route->home, force);
+    setDir(route, "MIGRATIONS", migrations, force);
     setDir(route, "UPLOAD", "/tmp", 0);
+
+    force = 0;
+    setDir(route, "CACHE", 0, force);
+    setDir(route, "CONTROLLERS", controllers, force);
+    setDir(route, "CONTENTS", 0, force);
+    setDir(route, "DB", 0, force);
+    setDir(route, "LAYOUTS", 0, force);
+    setDir(route, "LIB", 0, force);
+    setDir(route, "PAKS", 0, force);
+    setDir(route, "PARTIALS", 0, force);
+    setDir(route, "SRC", 0, force);
 }
 
 
@@ -7606,7 +7619,7 @@ static void manageContext(CompileContext *context, int flags)
 #define MDB_LOAD_FIELD   7      /* Parsing fields */
 
 /*
-    Operations for mdbReadGrid
+    Operations for mdbFindGrid
  */
 #define OP_ERR      -1          /* Illegal operation */
 #define OP_EQ       0           /* "==" Equal operation */
@@ -7644,6 +7657,7 @@ static int mdbChangeColumn(Edi *edi, cchar *tableName, cchar *columnName, int ty
 static void mdbClose(Edi *edi);
 static EdiRec *mdbCreateRec(Edi *edi, cchar *tableName);
 static int mdbDelete(cchar *path);
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query);
 static MprList *mdbGetColumns(Edi *edi, cchar *tableName);
 static int mdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *mdbGetTables(Edi *edi);
@@ -7655,7 +7669,6 @@ static Edi *mdbOpen(cchar *path, int flags);
 static EdiGrid *mdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField mdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
 static EdiRec *mdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
-static EdiGrid *mdbReadGrid(Edi *edi, cchar *tableName, cchar *query);
 static int mdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int mdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
 static int mdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
@@ -7670,7 +7683,7 @@ static EdiProvider MdbProvider = {
     "mdb",
     mdbAddColumn, mdbAddIndex, mdbAddTable, mdbChangeColumn, mdbClose, mdbCreateRec, mdbDelete,
     mdbGetColumns, mdbGetColumnSchema, mdbGetTables, mdbGetTableDimensions, mdbLoad, mdbLookupField, mdbOpen, mdbQuery,
-    mdbReadField, mdbReadGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
+    mdbReadField, mdbFindGrid, mdbReadRecByKey, mdbRemoveColumn, mdbRemoveIndex, mdbRemoveRec, mdbRemoveTable,
     mdbRenameTable, mdbRenameColumn, mdbSave, mdbUpdateField, mdbUpdateRec,
 };
 
@@ -8249,9 +8262,9 @@ static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
     *offsetp = *limitp = 0;
     expressions = mprCreateList(0, 0);
     query = sclone(query);
-    if ((cp = scontains(query, " LIMIT ")) != 0) {
+    if ((cp = scaselesscontains(query, "LIMIT ")) != 0) {
         *cp = '\0';
-        cp += 7;
+        cp += 6;
         offset = stok(cp, ", ", &limit);
         if (!offset || !limit) {
             return 0;
@@ -8259,6 +8272,7 @@ static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
         *offsetp = (int) stoi(offset);
         *limitp = (int) stoi(limit);
     }
+    query = strim(query, " ", 0);
     for (tok = sclone(query); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
         *cp = '\0';
         cp += 5;
@@ -8272,7 +8286,7 @@ static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
 }
 
 
-static EdiGrid *mdbReadGrid(Edi *edi, cchar *tableName, cchar *query)
+static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
 {
     Mdb         *mdb;
     EdiGrid     *grid;
@@ -9348,6 +9362,7 @@ static EdiRec *sdbCreateRec(Edi *edi, cchar *tableName);
 static int sdbDelete(cchar *path);
 static void sdbError(Edi *edi, cchar *fmt, ...);
 static int sdbRemoveRec(Edi *edi, cchar *tableName, cchar *key);
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select);
 static MprList *sdbGetColumns(Edi *edi, cchar *tableName);
 static int sdbGetColumnSchema(Edi *edi, cchar *tableName, cchar *columnName, int *type, int *flags, int *cid);
 static MprList *sdbGetTables(Edi *edi);
@@ -9356,7 +9371,6 @@ static int sdbLookupField(Edi *edi, cchar *tableName, cchar *fieldName);
 static Edi *sdbOpen(cchar *path, int flags);
 PUBLIC EdiGrid *sdbQuery(Edi *edi, cchar *cmd, int argc, cchar **argv, va_list vargs);
 static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fieldName);
-static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select);
 static EdiRec *sdbReadRecByKey(Edi *edi, cchar *tableName, cchar *key);
 static int sdbRemoveColumn(Edi *edi, cchar *tableName, cchar *columnName);
 static int sdbRemoveIndex(Edi *edi, cchar *tableName, cchar *indexName);
@@ -9373,7 +9387,7 @@ static EdiProvider SdbProvider = {
     "sdb",
     sdbAddColumn, sdbAddIndex, sdbAddTable, sdbChangeColumn, sdbClose, sdbCreateRec, sdbDelete,
     sdbGetColumns, sdbGetColumnSchema, sdbGetTables, sdbGetTableDimensions, NULL, sdbLookupField, sdbOpen, sdbQuery,
-    sdbReadField, sdbReadGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
+    sdbReadField, sdbFindGrid, sdbReadRecByKey, sdbRemoveColumn, sdbRemoveIndex, sdbRemoveRec, sdbRemoveTable,
     sdbRenameTable, sdbRenameColumn, sdbSave, sdbUpdateField, sdbUpdateRec,
 };
 
@@ -9781,8 +9795,7 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
-//  MOB - rename select -> query
-static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select)
+static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
     EdiRec      *schema;
@@ -9794,7 +9807,6 @@ static EdiGrid *sdbReadGrid(Edi *edi, cchar *tableName, cchar *select)
     assert(tableName && *tableName);
     columnName = operation = value = 0;
 
-    //  MOB
     limit = offset = 0;
     if (limit <= 0) {
         limit = MAXINT;

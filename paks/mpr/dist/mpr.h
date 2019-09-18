@@ -1819,6 +1819,17 @@ PUBLIC char *itosbuf(char *buf, ssize size, int64 value, int radix);
 PUBLIC int scaselesscmp(cchar *s1, cchar *s2);
 
 /**
+    Find a pattern in a string with a caseless comparision
+    @description Locate the first occurrence of pattern in a string.
+    @param str Pointer to the string to search.
+    @param pattern String pattern to search for.
+    @return Returns a reference to the start of the pattern in the string. If not found, returns NULL.
+    @ingroup MprString
+    @stability Prototype
+ */
+PUBLIC char *scaselesscontains(cchar *str, cchar *pattern);
+
+/**
     Compare strings ignoring case. This is similar to scaselesscmp but it returns a boolean.
     @description Compare two strings ignoring case differences.
     @param s1 First string to compare.
@@ -2044,6 +2055,18 @@ PUBLIC bool smatch(cchar *s1, cchar *s2);
     @stability Stable
  */
 PUBLIC int sncaselesscmp(cchar *s1, cchar *s2, ssize len);
+
+/**
+    Find a pattern in a string with a limit and a caseless comparision
+    @description Locate the first occurrence of pattern in a string, but do not search more than the given character limit.
+    @param str Pointer to the string to search.
+    @param pattern String pattern to search for.
+    @param limit Count of characters in the string to search.
+    @return Returns a reference to the start of the pattern in the string. If not found, returns NULL.
+    @ingroup MprString
+    @stability Stable
+ */
+PUBLIC char *sncaselesscontains(cchar *str, cchar *pattern, ssize limit);
 
 /**
     Clone a substring.

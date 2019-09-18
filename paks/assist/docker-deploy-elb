@@ -17,7 +17,11 @@ DPORT=2375
 #done
 #eval $(../paks/assist/json2env ${files})
 
-VERSION=$(pak --dir .. edit version)
+if [ -f pak.json ] ; then
+    VERSION=$(pak --dir . edit version)
+else
+    VERSION=$(pak --dir .. edit version)
+fi
 
 while [[ $# -gt 0 ]] ; do
     arg="$1"
