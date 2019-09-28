@@ -989,7 +989,7 @@ static bool process(cchar *operation)
     rc = 1;
 
     if (smatch(operation, "install")) {
-        rc = installService(app->serviceArgs);
+        rc = installService();
 
     } else if (smatch(operation, "uninstall")) {
         rc = removeService(1);

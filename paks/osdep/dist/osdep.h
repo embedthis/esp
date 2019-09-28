@@ -119,8 +119,8 @@
 #endif
 
 /*
-    Operating system defines. Use compiler standard defintions to sleuth.  Works for all except VxWorks which does not
-    define any special symbol.  NOTE: Support for SCOV Unix, LynxOS and UnixWare is deprecated.
+    Operating system defines. Use compiler standard defintions to sleuth. Works for all except VxWorks which does not
+    define any special symbol. NOTE: Support for SCOV Unix, LynxOS and UnixWare is deprecated.
  */
 #if defined(__APPLE__)
     #define ME_OS "macosx"
@@ -143,6 +143,8 @@
     #define ME_UNIX_LIKE 1
     #define ME_WIN_LIKE 0
     #define ME_BSD_LIKE 1
+    #define HAS_USHORT 1
+    #define HAS_UINT 1
 
 #elif defined(__OpenBSD__)
     #define ME_OS "freebsd"
@@ -383,6 +385,7 @@
 #endif
 #if ME_BSD_LIKE
     #include    <readpassphrase.h>
+    #include    <sys/sysctl.h>
 #endif
     #include    <setjmp.h>
     #include    <signal.h>
@@ -451,7 +454,6 @@
     #include    <mach/mach_init.h>
     #include    <mach/mach_time.h>
     #include    <mach/task.h>
-    #include    <sys/sysctl.h>
     #include    <libkern/OSAtomic.h>
 #endif
 #if VXWORKS
@@ -1017,11 +1019,12 @@ typedef int64 Ticks;
 
 #if ME_UNIX_LIKE
     #define closesocket(x)  close(x)
-    #ifndef PTHREAD_MUTEX_RECURSIVE_NP
+    #if !defined(PTHREAD_MUTEX_RECURSIVE_NP) || FREEBSD
         #define PTHREAD_MUTEX_RECURSIVE_NP PTHREAD_MUTEX_RECURSIVE
-    #endif
-    #ifndef PTHREAD_MUTEX_RECURSIVE
-        #define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+    #else
+        #ifndef PTHREAD_MUTEX_RECURSIVE
+            #define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+        #endif
     #endif
 #endif
 
@@ -1041,7 +1044,7 @@ typedef int64 Ticks;
     #endif
 #endif
 
-#if MACOSX
+#if ME_BSD_LIKE
     /*
         Fix for MAC OS X - getenv
      */
