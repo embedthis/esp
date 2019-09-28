@@ -2109,7 +2109,7 @@ static void generateItem(cchar *item)
         fail("No suitable package installed to generate %s", item);
         return;
     }
-    genKey(item, 0, 0);
+    genKey(item, sfmt("%s/app.c", httpGetDir(app->route, "SRC")), 0);
 }
 
 

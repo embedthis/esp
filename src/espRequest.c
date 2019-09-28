@@ -1430,12 +1430,12 @@ PUBLIC void espSetDefaultDirs(HttpRoute *route, bool force)
     if (!mprPathExists(path, X_OK)) {
         migrations = "migrations";
     }
+    force = 0;
     setDir(route, "DOCUMENTS", documents, force);
     setDir(route, "HOME", route->home, force);
     setDir(route, "MIGRATIONS", migrations, force);
     setDir(route, "UPLOAD", "/tmp", 0);
 
-    force = 0;
     setDir(route, "CACHE", 0, force);
     setDir(route, "CONTROLLERS", controllers, force);
     setDir(route, "CONTENTS", 0, force);
