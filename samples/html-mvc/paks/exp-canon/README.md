@@ -9,7 +9,7 @@ Provides the 'canon' service which creates canonical links for index pages to as
 
 ### To install:
 
-    pak install exp-canon
+    pak install embedthis/exp-canon
 
 ### To configure in expansive.json:
 

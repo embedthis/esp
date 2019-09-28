@@ -32,7 +32,7 @@ The esp-mvc package depends upon:
 
 ### Installation
 
-    pak install esp-mvc
+    pak install embedthis/esp-mvc
 
 ### Building
 

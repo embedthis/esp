@@ -76,7 +76,7 @@ GENERATING APPLICATIONS
 
              mkdir blog
              cd blog
-             pak install esp-html-skeleton
+             pak install embedthis/esp-html-skeleton
 
        This  will  will  create  a  set of directories that have the following
        meaning:

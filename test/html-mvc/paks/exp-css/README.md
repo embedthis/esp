@@ -9,7 +9,7 @@ The exp-css plugin provides build tooling for stylesheets. It provides the **css
 
 ## Installation
 
-    pak install exp-css
+    pak install embedthis/exp-css
 
 ## Services
 

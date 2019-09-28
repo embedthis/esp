@@ -9,7 +9,7 @@ The exp-js plugin provides build tooling for script files. It provides the **js-
 
 ## Installation
 
-    pak install exp-js
+    pak install embedthis/exp-js
 
 ### Services
 

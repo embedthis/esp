@@ -5,7 +5,7 @@ Pak for me-docstyle
 
 ### To install:
 
-pak install me-docstyle
+pak install embedthis/me-docstyle
 
 ### Get Pak from
 
