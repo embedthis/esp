@@ -3,7 +3,7 @@
 #
 
 NAME                  := esp
-VERSION               := 8.1.0
+VERSION               := 8.1.1
 PROFILE               ?= default
 ARCH                  ?= $(shell echo $(WIND_HOST_TYPE) | sed 's/-.*$(ME_ROOT_PREFIX)/')
 CPU                   ?= $(subst X86,PENTIUM,$(shell echo $(ARCH) | tr a-z A-Z))
