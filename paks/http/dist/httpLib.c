@@ -27398,13 +27398,13 @@ PUBLIC void httpRemoveParam(HttpStream *stream, cchar *var)
 
 PUBLIC void httpSetParam(HttpStream *stream, cchar *var, cchar *value)
 {
-    mprWriteJson(httpGetParams(stream), var, value, 0);
+    mprSetJson(httpGetParams(stream), var, value, 0);
 }
 
 
 PUBLIC void httpSetIntParam(HttpStream *stream, cchar *var, int value)
 {
-    mprWriteJson(httpGetParams(stream), var, sfmt("%d", value), MPR_JSON_NUMBER);
+    mprSetJson(httpGetParams(stream), var, sfmt("%d", value), MPR_JSON_NUMBER);
 }
 
 

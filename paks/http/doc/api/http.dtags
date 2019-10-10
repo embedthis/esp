@@ -2190,6 +2190,13 @@
       <arglist>(HttpRoute *route, cchar *name, cchar *details, int flags)</arglist>
     </member>
     <member kind="function">
+      <type>void</type>
+      <name>httpAddSpaGroup</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga610545383668b49f0cc8033be89292ea</anchor>
+      <arglist>(HttpRoute *parent, cchar *resource)</arglist>
+    </member>
+    <member kind="function">
       <type>HttpRoute *</type>
       <name>httpAddWebSocketsRoute</name>
       <anchorfile>group___http_route.html</anchorfile>
@@ -2947,6 +2954,13 @@
       <arglist>(MprHash *hash)</arglist>
     </member>
     <member kind="function">
+      <type>int</type>
+      <name>httpGetIntParam</name>
+      <anchorfile>group___http_rx.html</anchorfile>
+      <anchor>ga02f52be6b6fc3cf8494f6e985e03b823</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
+    </member>
+    <member kind="function">
       <type>HttpLang *</type>
       <name>httpGetLanguage</name>
       <anchorfile>group___http_rx.html</anchorfile>
@@ -2959,13 +2973,6 @@
       <anchorfile>group___http_rx.html</anchorfile>
       <anchor>gaa0de01c353e82888a11afc1614df23c7</anchor>
       <arglist>(HttpStream *stream, cchar *var, cchar *defaultValue)</arglist>
-    </member>
-    <member kind="function">
-      <type>int</type>
-      <name>httpGetParamInt</name>
-      <anchorfile>group___http_rx.html</anchorfile>
-      <anchor>ga8b4c41c8b866cc2454f25d38029bae72</anchor>
-      <arglist>(HttpStream *stream, cchar *var, int defaultValue)</arglist>
     </member>
     <member kind="function">
       <type>MprJson *</type>
@@ -3088,6 +3095,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpSetIntParam</name>
+      <anchorfile>group___http_rx.html</anchorfile>
+      <anchor>ga9bdbbe3920eb0580cf20d44658eb0b13</anchor>
+      <arglist>(HttpStream *stream, cchar *var, int value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpSetMethod</name>
       <anchorfile>group___http_rx.html</anchorfile>
       <anchor>gae6efb6104132dc81947b3ac0c2ffe899</anchor>
@@ -3099,13 +3113,6 @@
       <anchorfile>group___http_rx.html</anchorfile>
       <anchor>gad7f38b60b089c24434d760d37643ed98</anchor>
       <arglist>(HttpStream *stream, cchar *var, cchar *value)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>httpSetParamInt</name>
-      <anchorfile>group___http_rx.html</anchorfile>
-      <anchor>gae21683906ec9c94b952a1a1a538586bd</anchor>
-      <arglist>(HttpStream *stream, cchar *var, int value)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
