@@ -3176,6 +3176,11 @@ static void restfulRouteSet(HttpRoute *route, cchar *set)
 }
 
 
+static void postRouteSet(HttpRoute *route, cchar *set)
+{
+    httpAddPostGroup(route, "{controller}");
+}
+
 static void spaRouteSet(HttpRoute *route, cchar *set)
 {
     httpAddSpaGroup(route, "{controller}");
@@ -3194,6 +3199,7 @@ PUBLIC int espInitParser()
     httpDefineRouteSet("esp-server", serverRouteSet);
     httpDefineRouteSet("esp-restful", restfulRouteSet);
     httpDefineRouteSet("esp-spa", spaRouteSet);
+    httpDefineRouteSet("esp-post", postRouteSet);
 #if DEPRECATE && REMOVE
     httpDefineRouteSet("esp-html-mvc", legacyRouteSet);
 #endif

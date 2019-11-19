@@ -2958,6 +2958,8 @@ PUBLIC bool mprDestroy()
 
 static void setArgs(Mpr *mpr, int argc, char **argv)
 {
+    cchar   *appPath;
+
     if (argv) {
 #if ME_WIN_LIKE
         if (argc >= 2 && strstr(argv[1], "--cygroot") != 0) {
@@ -2984,10 +2986,14 @@ static void setArgs(Mpr *mpr, int argc, char **argv)
         memcpy((char*) mpr->argv, argv, sizeof(void*) * argc);
 #endif
         mpr->argc = argc;
-        if (!mprIsPathAbs(mpr->argv[0])) {
-            mpr->argv[0] = mprGetAppPath();
-        } else {
+
+        appPath = mprGetAppPath();
+        if (smatch(appPath, ".")) {
+            mpr->argv[0] = sclone(ME_NAME);
+        } else if (mprIsPathAbs(mpr->argv[0])) {
             mpr->argv[0] = sclone(mprGetAppPath());
+        } else {
+            mpr->argv[0] = mprGetAppPath();
         }
     } else {
         mpr->name = sclone(ME_NAME);
@@ -14344,7 +14350,6 @@ PUBLIC cchar *mprGetJson(MprJson *obj, cchar *key)
 }
 
 
-
 PUBLIC int mprSetJsonObj(MprJson *obj, cchar *key, MprJson *value)
 {
     if (key && !strpbrk(key, ".[]*")) {
@@ -18017,7 +18022,7 @@ PUBLIC cchar *mprGetAppPath()
     int     len;
 
     len = readlink("/proc/curproc/file", pbuf, sizeof(pbuf) - 1);
-    if (len < 0) {
+    if (len < 0 || smatch(pbuf, "unknown")) {
         return mprGetAbsPath(".");
      }
      pbuf[len] = '\0';

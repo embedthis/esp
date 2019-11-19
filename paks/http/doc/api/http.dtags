@@ -2072,6 +2072,13 @@
     </member>
     <member kind="function">
       <type>void</type>
+      <name>httpAddPostGroup</name>
+      <anchorfile>group___http_route.html</anchorfile>
+      <anchor>ga052cc4858d87fe0f38cad18a2574de23</anchor>
+      <arglist>(HttpRoute *parent, cchar *resource)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
       <name>httpAddResource</name>
       <anchorfile>group___http_route.html</anchorfile>
       <anchor>ga07a96592710d8f7edc06546ab105856f</anchor>

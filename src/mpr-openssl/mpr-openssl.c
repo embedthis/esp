@@ -583,9 +583,14 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
     cfg->setFlags = SSL_OP_ALL | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 #ifdef SSL_OP_NO_TLSv1
     if (!(ssl->protocols & MPR_PROTO_TLSV1)) {
-        cfg->setFlags |= SSL_OP_NO_TLSv1;
+        /* Disable all TLS V1 */
+        cfg->setFlags |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_2 | SSL_OP_NO_TLSv1_3;
     }
 #endif
+#ifdef SSL_OP_NO_TLSv1_0
+    if (!(ssl->protocols & MPR_PROTO_TLSV1_0)) {
+        cfg->setFlags |= SSL_OP_NO_TLSv1;
+    }
 #ifdef SSL_OP_NO_TLSv1_1
     if (!(ssl->protocols & MPR_PROTO_TLSV1_1)) {
         cfg->setFlags |= SSL_OP_NO_TLSv1_1;

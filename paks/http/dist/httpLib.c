@@ -14638,8 +14638,8 @@ static void freeNetPackets(HttpQueue *q, ssize bytes)
                 assert(q->count >= 0);
             }
         }
-        if (httpGetPacketLength(packet) == 0 && !packet->prefix) {
-            /* Done with this packet - consume it. Important for flow control. */
+        if ((packet->flags & HTTP_PACKET_END) || (httpGetPacketLength(packet) == 0 && !packet->prefix)) {
+            /* Done with this packet - consume it */
             httpGetPacket(q);
         } else {
             /* Packet still has data to be written */
@@ -20392,6 +20392,25 @@ PUBLIC HttpRoute *httpAddRestfulRoute(HttpRoute *parent, cchar *methods, cchar *
         source = sfmt("%s.c", resource);
     }
     return httpDefineRoute(parent, methods, pattern, target, source);
+}
+
+
+/*
+    Most routes are POST and params are in body.
+ */
+PUBLIC void httpAddPostGroup(HttpRoute *parent, cchar *resource)
+{
+    httpAddRestfulRoute(parent, "OPTIONS,GET",     "$",                 "",          resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/create*$",         "create",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/edit$",            "edit",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/get$",             "get",       resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/find$",            "find",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/init$",            "init",      resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/remove$",          "remove",    resource);
+    httpAddRestfulRoute(parent, "OPTIONS,POST",    "/update$",          "update",    resource);
+
+    httpAddWebSocketsRoute(parent, "stream");
+    httpAddRestfulRoute(parent, "OPTIONS,POST",     "/{action}(/)*$",   "${action}", resource);
 }
 
 

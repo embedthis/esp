@@ -132,7 +132,7 @@ struct HttpWebSocket;
     #define ME_MAX_STREAMS          20                    /**< Default maximum concurrent streams per network */
 #endif
 #ifndef ME_MAX_HEADERS
-    #define ME_MAX_HEADERS          8192                 /**< Maximum size of the headers (8K) */
+    #define ME_MAX_HEADERS          (512 * 1024)         /**< Maximum size of the headers (Chrome HTTP/2 needs this) */
 #endif
 #ifndef ME_MAX_KEEP_ALIVE
     #define ME_MAX_KEEP_ALIVE       400                  /**< Maximum requests per network */
@@ -5256,6 +5256,29 @@ PUBLIC void httpAddPermResource(HttpRoute *parent, cchar *resource);
     @stability Evolving
  */
 PUBLIC void httpAddResourceGroup(HttpRoute *parent, cchar *resource);
+
+/**
+    Add routes that use POST methods to enable extra parameters to be included in the body.
+    Useful for a group of resources in a single page application. The resource ID is provided in the request POST body.
+    @description This routing adds a set of RESTful routes for a resource group. It will add the following routes:
+    <table>
+        <tr><td>Name</td><td>Method</td><td>Pattern</td><td>Action</td></tr>
+        <tr><td>create</td><td>POST</td><td>/NAME/create$</td><td>create</td></tr>
+        <tr><td>edit</td><td>GET</td><td>/NAME/edit$</td><td>edit</td></tr>
+        <tr><td>get</td><td>GET</td><td>/NAME/get$</td><td>get</td></tr>
+        <tr><td>init</td><td>GET</td><td>/NAME/init$</td><td>init</td></tr>
+        <tr><td>list</td><td>POST</td><td>/NAME/find$</td><td>find</td></tr>
+        <tr><td>remove</td><td>DELETE</td><td>/NAME/remove$</td><td>remove</td></tr>
+        <tr><td>update</td><td>PUT</td><td>/NAME/update$</td><td>update</td></tr>
+        <tr><td>action</td><td>POST</td><td>/NAME/{action}$</td><td>${action}</td></tr>
+    </tr>
+    </table>
+    @param parent Parent route from which to inherit configuration.
+    @param resource Resource name. This should be a lower case, single word, alphabetic resource name.
+    @ingroup HttpRoute
+    @stability Evolving
+ */
+PUBLIC void httpAddPostGroup(HttpRoute *parent, cchar *resource);
 
 /**
     Add routes for a group of resources for use by a single page application
