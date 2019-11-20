@@ -18022,7 +18022,7 @@ PUBLIC cchar *mprGetAppPath()
     int     len;
 
     len = readlink("/proc/curproc/file", pbuf, sizeof(pbuf) - 1);
-    if (len < 0 || smatch(pbuf, "unknown")) {
+    if (len <= 0 || smatch(pbuf, "unknown")) {
         return mprGetAbsPath(".");
      }
      pbuf[len] = '\0';
