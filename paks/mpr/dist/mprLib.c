@@ -16347,11 +16347,10 @@ static void backupLog()
  */
 PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
 {
-    MprFile         *file;
     char            tbuf[128];
     static ssize    length = 0;
 
-    if ((file = MPR->logFile) == 0 || msg == 0 || *msg == '\0') {
+    if (MPR->logFile == 0 || msg == 0 || *msg == '\0') {
         return;
     }
     if (MPR->logBackup && MPR->logSize && length >= MPR->logSize) {
@@ -16360,7 +16359,7 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
     if (tags && *tags) {
         if (MPR->flags & MPR_LOG_DETAILED) {
             fmt(tbuf, sizeof(tbuf), "%s %d %s, ", mprGetDate(MPR_LOG_DATE), level, tags);
-            length += mprWriteFileString(file, tbuf);
+            length += mprWriteFileString(MPR->logFile, tbuf);
         } else if (MPR->flags & MPR_LOG_TAGGED) {
             if (schr(tags, ' ')) {
                 tags = ssplit(sclone(tags), " ", NULL);
@@ -16368,12 +16367,12 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
             if (!isupper((uchar) *tags)) {
                 tags = stitle(tags);
             }
-            length += mprWriteFileFmt(file, "%12s ", sfmt("[%s]", tags));
+            length += mprWriteFileFmt(MPR->logFile, "%12s ", sfmt("[%s]", tags));
         }
     }
-    length += mprWriteFileString(file, msg);
+    length += mprWriteFileString(MPR->logFile, msg);
     if (*msg && msg[slen(msg) - 1] != '\n') {
-        length += mprWriteFileString(file, "\n");
+        length += mprWriteFileString(MPR->logFile, "\n");
     }
 #if ME_MPR_OSLOG
     if (level == 0) {

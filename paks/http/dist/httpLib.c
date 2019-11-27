@@ -7160,7 +7160,9 @@ PUBLIC int httpSecureEndpoint(HttpEndpoint *endpoint, struct MprSsl *ssl)
     endpoint->ssl = ssl;
     mprSetSslMatch(ssl, httpMatchSsl);
 #if ME_HTTP_HTTP2
-    mprSetSslAlpn(ssl, "h2 http/1.1");
+    if (HTTP->http2) {
+        mprSetSslAlpn(ssl, "h2 http/1.1");
+    }
 #endif
     return 0;
 #else

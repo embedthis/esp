@@ -1860,7 +1860,6 @@ PUBLIC cchar *findParams()
             if ((index + 1) < fields->length) {
                 mprPutStringToBuf(buf, " AND ");
             }
-            break;
         }
     }
     if ((filter = param("options.filter")) != 0) {
@@ -6001,9 +6000,14 @@ PUBLIC int espInit(HttpRoute *route, cchar *prefix, cchar *path)
         mprLog("info esp", 3, "Load ESP app: %s%s from %s", hostname, prefix, path);
     }
     eroute->top = eroute;
-    if (path && mprPathExists(path, R_OK)) {
-        httpSetRouteHome(route, mprGetPathDir(path));
-        eroute->configFile = sclone(path);
+    if (path) {
+        if (mprPathExists(path, R_OK)) {
+            httpSetRouteHome(route, mprGetPathDir(path));
+            eroute->configFile = sclone(path);
+        } else {
+            mprLog("error esp", 0, "Cannot locate ESP config file: %s", path);
+            return MPR_ERR_CANT_LOAD;
+        }
     }
     if (!route->handler) {
         httpAddRouteHandler(route, "espHandler", "esp");
