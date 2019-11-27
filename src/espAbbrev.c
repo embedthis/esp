@@ -148,7 +148,6 @@ PUBLIC cchar *findParams()
             if ((index + 1) < fields->length) {
                 mprPutStringToBuf(buf, " AND ");
             }
-            break;
         }
     }
     if ((filter = param("options.filter")) != 0) {
