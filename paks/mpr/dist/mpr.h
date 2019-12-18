@@ -6662,6 +6662,17 @@ PUBLIC ssize mprGetJsonLength(MprJson *obj);
 PUBLIC MprJson *mprHashToJson(MprHash *hash);
 
 /**
+    Convert a JSON object to a string of environment variables
+    @param json JSON object tree
+    @prefix prefix String prefix for environment substrings
+    @prefix list MprList to hold environment strings. Set to NULL and this routine will create a list.
+    @return A list of environment strings
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC MprList *mprJsonToEnv(MprJson *json, cchar *prefix, MprList *list);
+
+/**
     Convert a JSON object into a Hash object
     @param json JSON object tree
     @return An MprHash instance

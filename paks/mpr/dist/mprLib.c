@@ -5815,6 +5815,9 @@ PUBLIC int mprRunCmdV(MprCmd *cmd, int argc, cchar **argv, cchar **envp, cchar *
     }
     if (rc < 0) {
         if (err) {
+            if (!cmd->program && argv && argc) {
+                cmd->program = argv[0];
+            }
             if (rc == MPR_ERR_CANT_ACCESS) {
                 *err = sfmt("Cannot access command %s", cmd->program);
             } else if (rc == MPR_ERR_CANT_OPEN) {
@@ -13487,6 +13490,26 @@ static void setValue(MprJson *obj, cchar *value, int type)
     }
     obj->value = sclone(value);
     obj->type = MPR_JSON_VALUE | type;
+}
+
+
+PUBLIC MprList *mprJsonToEnv(MprJson *json, cchar *prefix, MprList *list)
+{
+    MprJson     *jp;
+    int         ji;
+
+    if (!list) {
+        list = mprCreateList(0, 0);
+    }
+    for (ITERATE_JSON(json, jp, ji)) {
+        if (jp->type & MPR_JSON_VALUE) {
+            mprAddItem(list, sfmt("%s_%s=%s", prefix, jp->name, jp->value));
+        } else if (jp->type & (MPR_JSON_OBJ | MPR_JSON_ARRAY)) {
+            list = mprJsonToEnv(jp, sfmt("%s_%s", prefix, jp->name), list);
+        }
+    }
+    mprAddNullItem(list);
+    return list;
 }
 
 

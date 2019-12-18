@@ -7729,18 +7729,6 @@ PUBLIC void httpSetCookie(HttpStream *stream, cchar *name, cchar *value, cchar *
  */
 PUBLIC void httpRemoveCookie(HttpStream *stream, cchar *name);
 
-#if UNUSED
-/**
-    Define the length of the transmission content. When static content is used for the transmission body, defining
-    the entity length permits the request pipeline to know when all the data has been sent.
-    @param stream HttpStream stream object created via #httpCreateStream
-    @param len Transmission body length in bytes
-    @ingroup HttpTx
-    @stability Prototype
- */
-PUBLIC void httpSetEntityLength(HttpStream *stream, MprOff len);
-#endif
-
 /**
     Set the filename to serve for a request
     @description This routine defines a non-default response document filename.
@@ -8776,10 +8764,6 @@ PUBLIC bool httpPumpOutput(HttpQueue *q);
 #define httpClientConn(stream) httpClientStream(stream)
 #define httpServerConn(stream) httpServerStream(stream)
 #define httpDisconnect(stream) httpDisconnectStream(stream)
-
-#if UNUSED
-PUBLIC void httpProtocol(HttpStream *stream);
-#endif
 
 #endif
 

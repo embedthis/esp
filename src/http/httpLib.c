@@ -7761,7 +7761,9 @@ static void startFileHandler(HttpQueue *q)
  */
 static void readyFileHandler(HttpQueue *q)
 {
-    httpScheduleQueue(q);
+    if (!q->stream->tx->finalized) {
+        httpScheduleQueue(q);
+    }
 }
 
 
@@ -7808,53 +7810,15 @@ static ssize readFileData(HttpQueue *q, HttpPacket *packet, MprOff pos, ssize si
 static void outgoingFileService(HttpQueue *q)
 {
     HttpStream  *stream;
+    HttpRx      *rx;
+    HttpTx      *tx;
     HttpPacket  *data, *packet;
     ssize       size, nbytes;
 
     stream = q->stream;
+    rx = stream->rx;
+    tx = stream->tx;
 
-#if UNUSED
-    /*
-        There will be only one entity data packet. PrepPacket will read data into the packet and then
-        put the remaining entity packet on the queue where it will be examined again until the down stream queue is full.
-     */
-    for (packet = httpGetPacket(q); packet; packet = httpGetPacket(q)) {
-        if (packet->fill) {
-            size = min(packet->esize, q->packetSize);
-            size = min(size, q->nextQ->packetSize);
-            if (size > 0) {
-                data = httpCreateDataPacket(size);
-                if ((nbytes = readFileData(q, data, q->ioPos, size)) < 0) {
-                    httpError(stream, HTTP_CODE_NOT_FOUND, "Cannot read document");
-                    return;
-                }
-                q->ioPos += nbytes;
-                packet->epos += nbytes;
-                packet->esize -= nbytes;
-                if (packet->esize > 0) {
-                    httpPutBackPacket(q, packet);
-                }
-                /*
-                    This may split the packet and put back the tail portion ahead of the just putback entity packet.
-                 */
-                if (!httpWillNextQueueAcceptPacket(q, data)) {
-                    httpPutBackPacket(q, data);
-                    if (packet->esize == 0) {
-                        httpFinalizeOutput(stream);
-                    }
-                    break;
-                }
-                httpPutPacketToNext(q, data);
-            }
-            if (packet->esize == 0) {
-                httpFinalizeOutput(stream);
-            }
-        } else {
-            /* Don't flow control as the packet is already consuming memory */
-            httpPutPacketToNext(q, packet);
-        }
-    }
-#else
     /*
         The queue will contain an entity packet which holds the position from which to read in the file.
         If the downstream queue is full, the data packet will be put onto the queue ahead of the entity packet.
@@ -7892,11 +7856,13 @@ static void outgoingFileService(HttpQueue *q)
             packet = httpGetPacket(q);
             httpPutPacketToNext(q, packet);
         }
-        if (!stream->tx->finalizedOutput && !q->first) {
+        if (!tx->finalizedOutput && !q->first) {
             httpFinalizeOutput(stream);
         }
     }
-#endif
+    if (!tx->finalized && tx->finalizedOutput && (tx->finalizedInput || !(rx->flags & HTTP_PUT))) {
+        tx->finalized = 1;
+    }
 }
 
 
@@ -9328,83 +9294,6 @@ static char *validateToken(char *token, char *endToken, int validation)
     }
     return token;
 }
-
-#if UNUSED
-/*
-    Get the next input token. The content buffer is advanced to the next token.
-    The delimiter is a string to match and not a set of characters.
-    If the delimeter null, it means use white space (space or tab) as a delimiter.
- */
-static char *getToken(HttpPacket *packet, cchar *delim, int validation)
-{
-    MprBuf  *buf;
-    char    *t, *token, *endToken, *nextToken;
-
-    buf = packet->content;
-    nextToken = mprGetBufEnd(buf);
-
-    /*
-        Eat white space
-     */
-    for (token = mprGetBufStart(buf); (*token == ' ' || *token == '\t') && token < nextToken; token++) {}
-    if (token >= nextToken) {
-        if (validation == HEADER_KEY) {
-            return NULL;
-        }
-        return "";
-    }
-    if (delim == 0) {
-        delim = " \t";
-        if ((endToken = strpbrk(token, delim)) != 0) {
-            nextToken = endToken + strspn(endToken, delim);
-            *endToken = '\0';
-        } else {
-            return NULL;
-        }
-
-    } else {
-        if ((endToken = sncontains(token, delim, nextToken - token)) != 0) {
-            *endToken = '\0';
-            /* Only eat one occurence of the delimiter */
-            nextToken = endToken + strlen(delim);
-        } else {
-            return NULL;
-        }
-    }
-
-    if (validation == HEADER_KEY) {
-        if (strpbrk(token, "\"\\/ \t\r\n(),:;<=>?@[]{}")) {
-            return NULL;
-        }
-        for (t = token; *t; t++) {
-            if (!isprint(*t)) {
-                return NULL;
-            }
-        }
-    } else if (validation == HEADER_VALUE) {
-        /* Trim white space */
-        if (slen(token) > 0) {
-            for (t = &token[slen(token) - 1]; t >= token; t--) {
-                if (isspace((uchar) *t)) {
-                    *t = '\0';
-                } else {
-                    break;
-                }
-            }
-        }
-        while (isspace((uchar) *token)) {
-            token++;
-        }
-        for (t = token; *t; t++) {
-            if (!isprint(*t)) {
-                return NULL;
-            }
-        }
-    }
-    buf->start = nextToken;
-    return token;
-}
-#endif
 
 
 PUBLIC void httpCreateHeaders1(HttpQueue *q, HttpPacket *packet)
@@ -15984,13 +15873,6 @@ PUBLIC void httpProcess(HttpQueue *q)
 }
 
 
-#if UNUSED
-PUBLIC void httpProtocol(HttpStream *stream)
-{
-    processHttp(stream->inputq);
-}
-#endif
-
 /*
     HTTP Protocol state machine for HTTP/1 server requests and client responses.
     Process an incoming request/response and drive the state machine.
@@ -16007,7 +15889,9 @@ static void processHttp(HttpQueue *q)
         return;
     }
     stream = q->stream;
-
+    if (stream->destroyed) {
+        return;
+    }
     for (count = 0, more = 1; more && count < 10; count++) {
         switch (stream->state) {
         case HTTP_STATE_PARSED:
@@ -24940,20 +24824,6 @@ PUBLIC void httpPrepareHeaders(HttpStream *stream)
 }
 
 
-#if UNUSED
-PUBLIC void httpSetEntityLength(HttpStream *stream, int64 len)
-{
-    HttpTx      *tx;
-
-    tx = stream->tx;
-    tx->entityLength = len;
-    if (tx->outputRanges == 0) {
-        tx->length = len;
-    }
-}
-#endif
-
-
 /*
     Low level routine to set the filename to serve. The filename may be outside the route documents, so caller
     must take care if the HTTP_TX_NO_CHECK flag is used.  This will update HttpTx.ext and HttpTx.fileInfo.
@@ -25581,7 +25451,7 @@ static void defineFileFields(HttpQueue *q, Upload *up)
 
     stream = q->stream;
 #if DEPRECATED || 1
-    if (stream->tx->handler == stream->http->ejsHandler) {
+    if (stream->tx->handler && stream->tx->handler == stream->http->ejsHandler) {
         return;
     }
 #endif
