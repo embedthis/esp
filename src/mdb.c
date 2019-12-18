@@ -660,7 +660,7 @@ static bool matchRow(MdbTable *table, MdbRow *row, int op, cchar *value)
 /*
     parse a SQL like query expression.
  */
-static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
+static MprList *parseMdbQuery(cchar *query, int *offsetp, int *limitp)
 {
     MprList     *expressions;
     char        *cp, *limit, *offset, *tok;
@@ -722,7 +722,7 @@ static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
     grid->nrecords = 0;
     grid->count = table->rows->length;
 
-    if ((expressions = parseQuery(query, &offset, &limit)) == 0) {
+    if ((expressions = parseMdbQuery(query, &offset, &limit)) == 0) {
         unlock(edi);
         return 0;
     }

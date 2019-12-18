@@ -513,27 +513,61 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
+/*
+    parse a SQL like query expression.
+ */
+static cchar *parseSdbQuery(cchar *query, int *offsetp, int *limitp)
+{
+    MprList     *expressions;
+    char        *cp, *limit, *offset, *tok;
+
+    *offsetp = *limitp = 0;
+    expressions = mprCreateList(0, 0);
+    query = sclone(query);
+    if ((cp = scaselesscontains(query, "LIMIT ")) != 0) {
+        *cp = '\0';
+        cp += 6;
+        offset = stok(cp, ", ", &limit);
+        if (!offset || !limit) {
+            return 0;
+        }
+        *offsetp = (int) stoi(offset);
+        *limitp = (int) stoi(limit);
+    }
+    query = strim(query, " ", 0);
+    for (tok = sclone(query); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
+        *cp = '\0';
+        cp += 5;
+        mprAddItem(expressions, tok);
+        tok = cp;
+    }
+    if (tok && *tok) {
+        mprAddItem(expressions, tok);
+    }
+    return mprListToString(expressions, " ");
+}
+
+
 static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
     EdiRec      *schema;
     MprBuf      *buf;
-    cchar       *columnName, *operation, *sql, **values;
+    cchar       *columnName, *expressions, *operation, *sql, **values;
     char        *tok, *value;
     int         i, limit, offset;
 
     assert(tableName && *tableName);
     columnName = operation = value = 0;
 
-    limit = offset = 0;
-    if (limit <= 0) {
-        limit = MAXINT;
-    }
-    if (offset < 0) {
-        offset = 0;
-    }
     if (select) {
-        columnName = stok(sclone(select), " ", &tok);
+        if ((expressions = parseSdbQuery(select, &offset, &limit)) == 0) {
+            return 0;
+        }
+        /*
+            Only works for a single query term
+         */
+        columnName = stok(sclone(expressions), " ", &tok);
         operation = stok(tok, " ", &value);
         if (smatch(operation, "><")) {
             operation = "LIKE";
@@ -542,6 +576,12 @@ static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
     }
     if (!validName(tableName)) {
         return 0;
+    }
+    if (limit <= 0) {
+        limit = MAXINT;
+    }
+    if (offset < 0) {
+        offset = 0;
     }
     if (columnName) {
         if (smatch(columnName, "*")) {
