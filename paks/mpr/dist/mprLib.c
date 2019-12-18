@@ -2459,6 +2459,9 @@ PUBLIC int mprIsValid(cvoid *ptr)
 {
     MprMem      *mp;
 
+    if (ptr == NULL) {
+        return 0;
+    }
     mp = GET_MEM(ptr);
     if (mp->free) {
         return 0;

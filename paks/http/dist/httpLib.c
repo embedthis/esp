@@ -18543,7 +18543,7 @@ PUBLIC cchar *httpMapContent(HttpStream *stream, cchar *filename)
     route = rx->route;
 
     if (route->map && !(tx->flags & HTTP_TX_NO_MAP)) {
-        if ((kp = mprLookupKeyEntry(route->map, tx->ext)) == 0) {
+        if ((kp = mprLookupKeyEntry(route->map, httpGetPathExt(filename))) == 0) {
             kp = mprLookupKeyEntry(route->map, "");
         }
         if (kp) {
@@ -18591,7 +18591,14 @@ PUBLIC void httpMapFile(HttpStream *stream)
         filename = mprJoinPath(lang->path, filename);
     }
     filename = mprJoinPath(stream->rx->route->documents, filename);
+    /*
+        Sets tx->fileInfo
+        Set header for zipped
+     */
     filename = httpMapContent(stream, filename);
+    /*
+        Sets tx->filename, tx->ext, tx->info, tx->tag
+     */
     httpSetFilename(stream, filename, 0);
 }
 
@@ -20104,20 +20111,19 @@ static int directoryCondition(HttpStream *stream, HttpRoute *route, HttpRouteOp 
 {
     HttpTx      *tx;
     MprPath     info;
-    char        *path;
+    cchar       *path, *saveExt, *saveFilename;
 
     assert(stream);
     assert(route);
     assert(op);
     tx = stream->tx;
+    saveExt = tx->ext;
+    saveFilename = tx->filename;
 
-    /*
-        Must have tx->filename set when expanding op->details, so map target now.
-        Then reset the filename and extension.
-     */
     httpMapFile(stream);
     path = mprJoinPath(route->documents, expandTokens(stream, op->details));
-    tx->ext = tx->filename = 0;
+    tx->ext = saveExt;
+    tx->filename = saveFilename;
 
     mprGetPathInfo(path, &info);
     if (info.isDir) {
@@ -20133,19 +20139,20 @@ static int directoryCondition(HttpStream *stream, HttpRoute *route, HttpRouteOp 
 static int existsCondition(HttpStream *stream, HttpRoute *route, HttpRouteOp *op)
 {
     HttpTx  *tx;
-    char    *path;
+    cchar   *path, *saveExt, *saveFilename;
 
     assert(stream);
     assert(route);
     assert(op);
 
-    /*
-        Must have tx->filename set when expanding op->details, so map target now
-     */
     tx = stream->tx;
+    saveExt = tx->ext;
+    saveFilename = tx->filename;
+
     httpMapFile(stream);
     path = mprJoinPath(route->documents, expandTokens(stream, op->details));
-    tx->ext = tx->filename = 0;
+    tx->ext = saveExt;
+    tx->filename = saveFilename;
 
     if (mprPathExists(path, R_OK)) {
         return HTTP_ROUTE_OK;

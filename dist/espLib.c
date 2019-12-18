@@ -5910,9 +5910,8 @@ static bool preload(HttpRoute *route)
     eroute = route->eroute;
     if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
-            /* Must be a cache/appname.c */
+            /* Note: source file does not have to be present - the name is used to calculate the module name */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
-            route->source = source;
             if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
                 mprLog("error esp", 0, "%s", errMsg);
                 return 0;
@@ -5965,6 +5964,8 @@ static bool preload(HttpRoute *route)
                 }
             }
         }
+        mprLog("esp info", 2, "Loaded ESP application %s, profile %s, combine %d, compile %d, compileMode %d, update %d",
+            eroute->appName, route->mode, eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
     return 1;
@@ -6075,6 +6076,28 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
         return MPR_ERR_CANT_OPEN;
     }
     route->database = sclone(spec);
+    return 0;
+}
+
+
+PUBLIC void espCloseDatabase(HttpRoute *route)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+    if (eroute->edi) {
+        ediClose(eroute->edi);
+        eroute->edi = 0;
+    }
+}
+
+
+PUBLIC int espReloadDatabase(HttpRoute *route)
+{
+    if (route->database) {
+        espCloseDatabase(route);
+        return espOpenDatabase(route, route->database);
+    }
     return 0;
 }
 
@@ -8263,7 +8286,7 @@ static bool matchRow(MdbTable *table, MdbRow *row, int op, cchar *value)
 /*
     parse a SQL like query expression.
  */
-static MprList *parseQuery(cchar *query, int *offsetp, int *limitp)
+static MprList *parseMdbQuery(cchar *query, int *offsetp, int *limitp)
 {
     MprList     *expressions;
     char        *cp, *limit, *offset, *tok;
@@ -8325,7 +8348,7 @@ static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
     grid->nrecords = 0;
     grid->count = table->rows->length;
 
-    if ((expressions = parseQuery(query, &offset, &limit)) == 0) {
+    if ((expressions = parseMdbQuery(query, &offset, &limit)) == 0) {
         unlock(edi);
         return 0;
     }
@@ -9804,27 +9827,61 @@ static EdiGrid *setTableName(EdiGrid *grid, cchar *tableName)
 }
 
 
+/*
+    parse a SQL like query expression.
+ */
+static cchar *parseSdbQuery(cchar *query, int *offsetp, int *limitp)
+{
+    MprList     *expressions;
+    char        *cp, *limit, *offset, *tok;
+
+    *offsetp = *limitp = 0;
+    expressions = mprCreateList(0, 0);
+    query = sclone(query);
+    if ((cp = scaselesscontains(query, "LIMIT ")) != 0) {
+        *cp = '\0';
+        cp += 6;
+        offset = stok(cp, ", ", &limit);
+        if (!offset || !limit) {
+            return 0;
+        }
+        *offsetp = (int) stoi(offset);
+        *limitp = (int) stoi(limit);
+    }
+    query = strim(query, " ", 0);
+    for (tok = sclone(query); *tok && (cp = scontains(tok, " AND ")) != 0; ) {
+        *cp = '\0';
+        cp += 5;
+        mprAddItem(expressions, tok);
+        tok = cp;
+    }
+    if (tok && *tok) {
+        mprAddItem(expressions, tok);
+    }
+    return mprListToString(expressions, " ");
+}
+
+
 static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
 {
     EdiGrid     *grid;
     EdiRec      *schema;
     MprBuf      *buf;
-    cchar       *columnName, *operation, *sql, **values;
+    cchar       *columnName, *expressions, *operation, *sql, **values;
     char        *tok, *value;
     int         i, limit, offset;
 
     assert(tableName && *tableName);
     columnName = operation = value = 0;
 
-    limit = offset = 0;
-    if (limit <= 0) {
-        limit = MAXINT;
-    }
-    if (offset < 0) {
-        offset = 0;
-    }
     if (select) {
-        columnName = stok(sclone(select), " ", &tok);
+        if ((expressions = parseSdbQuery(select, &offset, &limit)) == 0) {
+            return 0;
+        }
+        /*
+            Only works for a single query term
+         */
+        columnName = stok(sclone(expressions), " ", &tok);
         operation = stok(tok, " ", &value);
         if (smatch(operation, "><")) {
             operation = "LIKE";
@@ -9833,6 +9890,12 @@ static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
     }
     if (!validName(tableName)) {
         return 0;
+    }
+    if (limit <= 0) {
+        limit = MAXINT;
+    }
+    if (offset < 0) {
+        offset = 0;
     }
     if (columnName) {
         if (smatch(columnName, "*")) {
