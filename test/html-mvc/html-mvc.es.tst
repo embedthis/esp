@@ -12,6 +12,8 @@ if (false && Config.OS == 'macosx') {
     //  /html
     http.followRedirects = true
     http.get(prefix)
+// print("STATUS", http.status)
+// print("RESPONSE", http.response)
     ttrue(http.status == 200)
     ttrue(http.response.contains("<h1>Welcome to Embedded Server Pages</h1>"))
     http.close()

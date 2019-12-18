@@ -1200,9 +1200,8 @@ static bool preload(HttpRoute *route)
     eroute = route->eroute;
     if (eroute->app && !(route->flags & HTTP_ROUTE_NO_LISTEN)) {
         if (eroute->combine) {
-            /* Must be a cache/appname.c */
+            /* Note: source file does not have to be present - the name is used to calculate the module name */
             source = mprJoinPaths(route->home, httpGetDir(route, "CACHE"), sfmt("%s.c", eroute->appName), NULL);
-            route->source = source;
             if (espLoadModule(route, NULL, "app", source, &errMsg, NULL) < 0) {
                 mprLog("error esp", 0, "%s", errMsg);
                 return 0;
@@ -1255,6 +1254,8 @@ static bool preload(HttpRoute *route)
                 }
             }
         }
+        mprLog("esp info", 2, "Loaded ESP application %s, profile %s, combine %d, compile %d, compileMode %d, update %d",
+            eroute->appName, route->mode, eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
     return 1;
