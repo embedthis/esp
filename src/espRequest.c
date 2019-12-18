@@ -1369,6 +1369,28 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
 }
 
 
+PUBLIC void espCloseDatabase(HttpRoute *route)
+{
+    EspRoute    *eroute;
+
+    eroute = route->eroute;
+    if (eroute->edi) {
+        ediClose(eroute->edi);
+        eroute->edi = 0;
+    }
+}
+
+
+PUBLIC int espReloadDatabase(HttpRoute *route)
+{
+    if (route->database) {
+        espCloseDatabase(route);
+        return espOpenDatabase(route, route->database);
+    }
+    return 0;
+}
+
+
 static void setDir(HttpRoute *route, cchar *key, cchar *value, bool force)
 {
     if (force) {

@@ -563,6 +563,8 @@ PUBLIC cchar *espGetVisualStudio(void);
 PUBLIC void espManageEspRoute(EspRoute *eroute, int flags);
 PUBLIC bool espModuleIsStale(HttpRoute *route, cchar *source, cchar *module, int *recompile);
 PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec);
+PUBLIC void espCloseDatabase(HttpRoute *route);
+PUBLIC int espReloadDatabase(HttpRoute *route);
 PUBLIC void espSetDefaultDirs(HttpRoute *route, bool app);
 
 /********************************** Requests **********************************/
