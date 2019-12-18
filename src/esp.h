@@ -3056,20 +3056,6 @@ PUBLIC bool updateFields(cchar *tableName, MprJson *data);
  */
 PUBLIC bool updateRec(EdiRec *rec);
 
-#if UNUSED
-/**
-    Update a record from the request parameters
-    @description The record identified by the params(id) is read and updated with the request parameters. The record is then
-        saved to the database via #updateRec.
-    @param table Database table to update
-    @param data Data as a JSON object to apply to the record. This may come from the #params() API or from #makeJson.
-    @return True if the update is successful.
-    @ingroup EspAbbrev
-    @stability Prototype
-*/
-PUBLIC bool updateRecFields(cchar *table, MprJson *data);
-#endif
-
 #if DEPRECATED || 1
 /**
     Update a record from the request parameters

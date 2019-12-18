@@ -559,28 +559,6 @@ static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, ccha
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }
-
-#if UNUSED
-    /*
-        If target exists as a mapped / compressed view
-     */
-    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(stream, path);
-        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-            return target;
-        }
-    }
-#endif
-
-#if DEPRECATED
-    /*
-        See if views are under client/app. Remove in version 6.
-     */
-    path = mprJoinPaths(route->documents, "app", target, NULL);
-    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-        return mprJoinPath("app", target);
-    }
-#endif
 }
 #endif
     return 0;
@@ -635,25 +613,6 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
         espRenderView(stream, dest, 0);
         return;
     }
-
-#if UNUSED
-    /*
-        Last chance, forward to the file handler ... not an ESP request. This enables file requests within ESP routes.
-     */
-    path = mprJoinPath(route->documents, target);
-    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-        target = path;
-    }
-    /*
-        If target exists as a mapped / compressed document
-     */
-    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(stream, path);
-        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-            target = path;
-        }
-    }
-#endif
 
     httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     stream->rx->target = sclone(&stream->rx->pathInfo[1]);

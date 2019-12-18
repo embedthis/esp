@@ -1040,20 +1040,6 @@ PUBLIC MprHash *ediGetRecErrors(EdiRec *rec);
  */
 PUBLIC char *ediGetTypeString(int type);
 
-#if UNUSED
-/**
-    Make a hash container of property values.
-    @description This routine formats the given arguments, parses the result as a JSON string and returns an
-        equivalent hash of property values.
-    @param fmt Printf style format string
-    @param ... arguments
-    @return MprHash instance
-    @ingroup Edi
-    @stability Evolving
- */
-PUBLIC MprHash *ediMakeHash(cchar *fmt, ...);
-#endif
-
 /**
     Make a JSON container of property values.
     @description This routine formats the given arguments, parses the result into a JSON object.

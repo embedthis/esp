@@ -1251,20 +1251,6 @@ PUBLIC EdiGrid *ediMakeGrid(cchar *json)
 }
 
 
-#if UNUSED
-PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
-{
-    MprHash     *obj;
-    va_list     args;
-
-    va_start(args, fmt);
-    obj = mprDeserialize(sfmtv(fmt, args));
-    va_end(args);
-    return obj;
-}
-#endif
-
-
 PUBLIC MprJson *ediMakeJson(cchar *fmt, ...)
 {
     MprJson     *obj;

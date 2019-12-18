@@ -511,26 +511,12 @@ PUBLIC ssize receive(char *buf, ssize len)
 
 PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select)
 {
-#if UNUSED
-    va_list     ap;
-
-    va_start(ap, select);
-    select = sfmtv(select, ap);
-    va_end(ap);
-#endif
     return setGrid(ediFindGrid(getDatabase(), tableName, select));
 }
 
 
 PUBLIC EdiRec *findRec(cchar *tableName, cchar *select)
 {
-#if UNUSED
-    va_list     ap;
-
-    va_start(ap, select);
-    select = sfmtv(select, ap);
-    va_end(ap);
-#endif
     return setRec(ediFindRec(getDatabase(), tableName, select));
 }
 
@@ -878,19 +864,6 @@ PUBLIC bool updateRec(EdiRec *rec)
     feedback("info", "Saved %s", stitle(rec->tableName));
     return 1;
 }
-
-
-#if UNUSED
-PUBLIC bool updateRecFields(cchar *table, MprJson *params)
-{
-    MprJson     *fields;
-    cchar       *id;
-
-    id = mprGetJson(params, "fields.id");
-    fields = mprGetJsonObj(params, "fields");
-    return updateRec(setFields(readRec(table, id), fields));
-}
-#endif
 
 
 #if DEPRECATED || 1

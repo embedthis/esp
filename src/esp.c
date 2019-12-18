@@ -1981,11 +1981,6 @@ static void compileItems(HttpRoute *route)
             found++;
         }
     }
-#if UNUSED
-    if (!found) {
-        trace("Info", "No files to compile for route \"%s\"", route->pattern);
-    }
-#endif
 }
 
 
