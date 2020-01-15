@@ -2176,13 +2176,8 @@ PUBLIC MprMemStats *mprGetMemStats()
 #if ME_BSD_LIKE
     size_t      len;
     int         mib[2];
-#if FREEBSD
-    size_t      ram, usermem;
-    mib[1] = HW_MEMSIZE;
-#else
-    int64 ram, usermem;
+    int64       ram, usermem;
     mib[1] = HW_PHYSMEM;
-#endif
 #if MACOSX
     sysctlbyname("hw.memsize", &ram, &len, NULL, 0);
 #else
@@ -2464,6 +2459,9 @@ PUBLIC int mprIsValid(cvoid *ptr)
 {
     MprMem      *mp;
 
+    if (ptr == NULL) {
+        return 0;
+    }
     mp = GET_MEM(ptr);
     if (mp->free) {
         return 0;
@@ -2963,6 +2961,8 @@ PUBLIC bool mprDestroy()
 
 static void setArgs(Mpr *mpr, int argc, char **argv)
 {
+    cchar   *appPath;
+
     if (argv) {
 #if ME_WIN_LIKE
         if (argc >= 2 && strstr(argv[1], "--cygroot") != 0) {
@@ -2989,10 +2989,14 @@ static void setArgs(Mpr *mpr, int argc, char **argv)
         memcpy((char*) mpr->argv, argv, sizeof(void*) * argc);
 #endif
         mpr->argc = argc;
-        if (!mprIsPathAbs(mpr->argv[0])) {
-            mpr->argv[0] = mprGetAppPath();
-        } else {
+
+        appPath = mprGetAppPath();
+        if (smatch(appPath, ".")) {
+            mpr->argv[0] = sclone(ME_NAME);
+        } else if (mprIsPathAbs(mpr->argv[0])) {
             mpr->argv[0] = sclone(mprGetAppPath());
+        } else {
+            mpr->argv[0] = mprGetAppPath();
         }
     } else {
         mpr->name = sclone(ME_NAME);
@@ -5811,6 +5815,9 @@ PUBLIC int mprRunCmdV(MprCmd *cmd, int argc, cchar **argv, cchar **envp, cchar *
     }
     if (rc < 0) {
         if (err) {
+            if (!cmd->program && argv && argc) {
+                cmd->program = argv[0];
+            }
             if (rc == MPR_ERR_CANT_ACCESS) {
                 *err = sfmt("Cannot access command %s", cmd->program);
             } else if (rc == MPR_ERR_CANT_OPEN) {
@@ -9884,7 +9891,7 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     if (changed) {
         return 0;
     }
-    if (!ownedDispatcher(dispatcher)) {
+    if (!ownedDispatcher(dispatcher) || dispatchEvents(dispatcher) == 0) {
         mprYield(MPR_YIELD_STICKY);
         mprWaitForCond(dispatcher->cond, delay);
         mprResetYield();
@@ -9893,10 +9900,6 @@ PUBLIC int mprWaitForEvent(MprDispatcher *dispatcher, MprTicks timeout, int64 ma
     lock(es);
     dispatcher->flags &= ~MPR_DISPATCHER_WAITING;
     unlock(es);
-
-    if (ownedDispatcher(dispatcher)) {
-        dispatchEvents(dispatcher);
-    }
     return 0;
 }
 
@@ -11224,10 +11227,12 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
         return 0;
     }
     if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
-        // DEPRECATE - only for ejscript
+#if DEPRECATE || 1
+        // only for ejscript
         if (!(flags & MPR_EVENT_DONT_QUEUE)) {
             mprQueueEvent(dispatcher, event);
         }
+#endif
     }
     return event;
 }
@@ -13485,6 +13490,26 @@ static void setValue(MprJson *obj, cchar *value, int type)
     }
     obj->value = sclone(value);
     obj->type = MPR_JSON_VALUE | type;
+}
+
+
+PUBLIC MprList *mprJsonToEnv(MprJson *json, cchar *prefix, MprList *list)
+{
+    MprJson     *jp;
+    int         ji;
+
+    if (!list) {
+        list = mprCreateList(0, 0);
+    }
+    for (ITERATE_JSON(json, jp, ji)) {
+        if (jp->type & MPR_JSON_VALUE) {
+            mprAddItem(list, sfmt("%s_%s=%s", prefix, jp->name, jp->value));
+        } else if (jp->type & (MPR_JSON_OBJ | MPR_JSON_ARRAY)) {
+            list = mprJsonToEnv(jp, sfmt("%s_%s", prefix, jp->name), list);
+        }
+    }
+    mprAddNullItem(list);
+    return list;
 }
 
 
@@ -16348,11 +16373,10 @@ static void backupLog()
  */
 PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
 {
-    MprFile         *file;
     char            tbuf[128];
     static ssize    length = 0;
 
-    if ((file = MPR->logFile) == 0 || msg == 0 || *msg == '\0') {
+    if (MPR->logFile == 0 || msg == 0 || *msg == '\0') {
         return;
     }
     if (MPR->logBackup && MPR->logSize && length >= MPR->logSize) {
@@ -16361,7 +16385,7 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
     if (tags && *tags) {
         if (MPR->flags & MPR_LOG_DETAILED) {
             fmt(tbuf, sizeof(tbuf), "%s %d %s, ", mprGetDate(MPR_LOG_DATE), level, tags);
-            length += mprWriteFileString(file, tbuf);
+            length += mprWriteFileString(MPR->logFile, tbuf);
         } else if (MPR->flags & MPR_LOG_TAGGED) {
             if (schr(tags, ' ')) {
                 tags = ssplit(sclone(tags), " ", NULL);
@@ -16369,12 +16393,12 @@ PUBLIC void mprDefaultLogHandler(cchar *tags, int level, cchar *msg)
             if (!isupper((uchar) *tags)) {
                 tags = stitle(tags);
             }
-            length += mprWriteFileFmt(file, "%12s ", sfmt("[%s]", tags));
+            length += mprWriteFileFmt(MPR->logFile, "%12s ", sfmt("[%s]", tags));
         }
     }
-    length += mprWriteFileString(file, msg);
+    length += mprWriteFileString(MPR->logFile, msg);
     if (*msg && msg[slen(msg) - 1] != '\n') {
-        length += mprWriteFileString(file, "\n");
+        length += mprWriteFileString(MPR->logFile, "\n");
     }
 #if ME_MPR_OSLOG
     if (level == 0) {
@@ -17440,6 +17464,9 @@ PUBLIC MprModule *mprCreateModule(cchar *name, cchar *path, cchar *entry, void *
     if (entry && *entry) {
         mp->entry = sclone(entry);
     }
+    /*
+        Not managed by default unless MPR_MODULE_DATA_MANAGED is set
+     */
     mp->moduleData = data;
     mp->lastActivity = mprGetTicks();
     index = mprAddItem(ms->modules, mp);
@@ -17456,6 +17483,9 @@ static void manageModule(MprModule *mp, int flags)
         mprMark(mp->name);
         mprMark(mp->path);
         mprMark(mp->entry);
+        if (mp->flags & MPR_MODULE_DATA_MANAGED) {
+            mprMark(mp->moduleData);
+        }
     }
 }
 
@@ -17936,8 +17966,8 @@ PUBLIC char *mprGetAbsPath(cchar *path)
             Get the full path with a drive spec
          */
         wchar buf[ME_MAX_PATH];
-        GetFullPathName(wide(path), sizeof(buf) - 1, buf, NULL);
-        buf[sizeof(buf) - 1] = '\0';
+        GetFullPathName(wide(path), (sizeof(buf) / sizeof(wchar)) - 1, buf, NULL);
+        buf[((sizeof(buf) / sizeof(wchar)) - 1] = '\0';
         result = mprNormalizePath(multi(buf));
 #elif VXWORKS
         if (hasDrive(fs, path)) {
@@ -18017,7 +18047,7 @@ PUBLIC cchar *mprGetAppPath()
     int     len;
 
     len = readlink("/proc/curproc/file", pbuf, sizeof(pbuf) - 1);
-    if (len < 0) {
+    if (len <= 0 || smatch(pbuf, "unknown")) {
         return mprGetAbsPath(".");
      }
      pbuf[len] = '\0';
@@ -23222,7 +23252,7 @@ PUBLIC int mprSetSocketBlockingMode(MprSocket *sp, bool on)
 #elif VXWORKS
 {
     int flag = (sp->flags & MPR_SOCKET_BLOCK) ? 0 : 1;
-    ioctl(sp->fd, FIONBIO, (int) &flag);
+    ioctl(sp->fd, FIONBIO, &flag);
 }
 #else
     if (on) {
@@ -24147,6 +24177,40 @@ PUBLIC char *scontains(cchar *str, cchar *pattern)
     return sncontains(str, pattern, -1);
 }
 
+
+PUBLIC char *sncaselesscontains(cchar *str, cchar *pattern, ssize limit)
+{
+    cchar   *cp, *s1, *s2;
+    ssize   lim;
+
+    if (limit < 0) {
+        limit = MAXINT;
+    }
+    if (str == 0) {
+        return 0;
+    }
+    if (pattern == 0 || *pattern == '\0') {
+        return 0;
+    }
+    for (cp = str; limit > 0 && *cp; cp++, limit--) {
+        s1 = cp;
+        s2 = pattern;
+        for (lim = limit; lim > 0 && *s1 && *s2 && (tolower((uchar) *s1) == tolower((uchar) *s2)); lim--) {
+            s1++;
+            s2++;
+        }
+        if (*s2 == '\0') {
+            return (char*) cp;
+        }
+    }
+    return 0;
+}
+
+
+PUBLIC char *scaselesscontains(cchar *str, cchar *pattern)
+{
+    return sncaselesscontains(str, pattern, -1);
+}
 
 /*
     Copy a string into a buffer. Always ensure it is null terminated
@@ -27054,6 +27118,12 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
                 cp++;
                 goto again;
 
+            case 'f':
+                strcpy(--dp, "000");
+                dp += slen(dp);
+                cp++;
+                break;
+
             case 'F':
                 strcpy(dp, "Y-%m-%d");
                 dp += 7;
@@ -27346,6 +27416,10 @@ PUBLIC char *mprFormatTm(cchar *format, struct tm *tp)
 
         case 'e':                                       /* day of month (1-31). Single digits preceeded by a blank */
             digits(buf, 2, ' ', tp->tm_mday);
+            break;
+
+        case 'f':                                       /* milliseconds */
+            mprPutStringToBuf(buf, "000");
             break;
 
         case 'F':                                       /* %m/%d/%y */

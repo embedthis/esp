@@ -5887,7 +5887,7 @@ static void connTimeout(HttpConn *conn, MprEvent *mprEvent)
                 httpTrace(conn, event, "error", "msg:'%s'", msg);
             }
         } else {
-            httpError(conn, HTTP_CODE_REQUEST_TIMEOUT, "%s", msg);
+            httpError(conn, HTTP_CODE_REQUEST_TIMEOUT | HTTP_CLOSE, "%s", msg);
         }
     }
     if (httpClientConn(conn)) {
@@ -6145,15 +6145,6 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
     assert(conn->tx);
     assert(conn->rx);
 
-#if DEPRECATE
-    /* Just IO state asserting */
-    if (conn->io) {
-        assert(!conn->io);
-        return;
-    }
-    conn->io = 1;
-#endif
-
     if ((eventMask & MPR_WRITABLE) && conn->connectorq) {
         httpResumeQueue(conn->connectorq);
     }
@@ -6197,6 +6188,7 @@ PUBLIC void httpIO(HttpConn *conn, int eventMask)
         }
         httpTrace(conn, "connection.close", "context", "msg:'%s'", conn->errorMsg);
         httpDestroyConn(conn);
+
     } else if (!mprIsSocketEof(conn->sock) && conn->async && !conn->delay) {
         httpEnableConnEvents(conn);
     }

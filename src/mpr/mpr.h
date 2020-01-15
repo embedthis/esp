@@ -194,7 +194,7 @@ struct  MprXml;
         #define ME_EVENT_NOTIFIER MPR_EVENT_ASYNC
     #elif VXWORKS
         #define ME_EVENT_NOTIFIER MPR_EVENT_SELECT
-    #elif (LINUX || ME_BSD_LIKE)
+    #elif LINUX
         #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
             #define ME_EVENT_NOTIFIER MPR_EVENT_EPOLL
         #else
@@ -1819,6 +1819,17 @@ PUBLIC char *itosbuf(char *buf, ssize size, int64 value, int radix);
 PUBLIC int scaselesscmp(cchar *s1, cchar *s2);
 
 /**
+    Find a pattern in a string with a caseless comparision
+    @description Locate the first occurrence of pattern in a string.
+    @param str Pointer to the string to search.
+    @param pattern String pattern to search for.
+    @return Returns a reference to the start of the pattern in the string. If not found, returns NULL.
+    @ingroup MprString
+    @stability Prototype
+ */
+PUBLIC char *scaselesscontains(cchar *str, cchar *pattern);
+
+/**
     Compare strings ignoring case. This is similar to scaselesscmp but it returns a boolean.
     @description Compare two strings ignoring case differences.
     @param s1 First string to compare.
@@ -2044,6 +2055,18 @@ PUBLIC bool smatch(cchar *s1, cchar *s2);
     @stability Stable
  */
 PUBLIC int sncaselesscmp(cchar *s1, cchar *s2, ssize len);
+
+/**
+    Find a pattern in a string with a limit and a caseless comparision
+    @description Locate the first occurrence of pattern in a string, but do not search more than the given character limit.
+    @param str Pointer to the string to search.
+    @param pattern String pattern to search for.
+    @param limit Count of characters in the string to search.
+    @return Returns a reference to the start of the pattern in the string. If not found, returns NULL.
+    @ingroup MprString
+    @stability Stable
+ */
+PUBLIC char *sncaselesscontains(cchar *str, cchar *pattern, ssize limit);
 
 /**
     Clone a substring.
@@ -2297,8 +2320,8 @@ PUBLIC int64 stoiradix(cchar *str, int radix, int *err);
     @description Split a string into tokens using a character set as delimiters.
     @param str String to tokenize.
     @param delim Set of characters that are used as token separators.
-    @param last Last token pointer.
-    @return Returns a pointer to the next token.
+    @param last Last token pointer. This is a pointer inside the original string.
+    @return Returns a pointer to the next token. The pointer is inside the original string and is not allocated.
     @ingroup MprString
     @stability Stable
  */
@@ -3120,6 +3143,11 @@ PUBLIC void mprPutUint32ToBuf(MprBuf *buf, uint32 num);
 #define MPR_RFC_DATE        "%a, %d %b %Y %T %Z"
 #define MPR_RFC822_DATE     "%a, %d %b %Y %T %Z"
 
+/*
+    ISO dates. 2009-05-21T16:06:05.000Z
+ */
+#define MPR_ISO_DATE        "%Y-%m-%dT%H:%M:%S.%fZ"
+
 /**
     Default date format used in mprFormatLocalTime/mprFormatUniversalTime when no format supplied
  */
@@ -3227,6 +3255,8 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
          %d ... day-of-month (01-31)
             \n
          %e ... day-of-month with a leading space if only one digit ( 1-31)
+            \n
+         %f ... milliseconds
             \n
          %F ... same as %Y-%m-%d
             \n
@@ -4532,7 +4562,7 @@ PUBLIC MprRomFileSystem *mprCreateRomFileSystem(cchar *path, MprRomInode *inodes
     Get the ROM file system data
     @return Returns a pointer to the list of ROM inodes.
     @ingroup MprFileSystem
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC MprRomInode *mprGetRomFiles(void);
 #endif /* ME_ROM */
@@ -5600,9 +5630,10 @@ typedef int (*MprModuleProc)(struct MprModule *mp);
 /*
     Module flags
  */
-#define MPR_MODULE_STARTED     0x1     /**< Module stared **/
-#define MPR_MODULE_STOPPED     0x2     /**< Module stopped */
-#define MPR_MODULE_LOADED      0x4     /**< Dynamic module loaded */
+#define MPR_MODULE_STARTED          0x1     /**< Module stared **/
+#define MPR_MODULE_STOPPED          0x2     /**< Module stopped */
+#define MPR_MODULE_LOADED           0x4     /**< Dynamic module loaded */
+#define MPR_MODULE_DATA_MANAGED     0x8     /**< Module.moduleData is managed */
 
 /**
     Loadable Module Service
@@ -5618,7 +5649,7 @@ typedef struct MprModule {
     char            *name;              /**< Unique module name */
     char            *path;              /**< Module library filename */
     char            *entry;             /**< Module library init entry point */
-    void            *moduleData;        /**< Module specific data - not managed */
+    void            *moduleData;        /**< Module specific data - not managed unless MPR_MODULE_DATA_MANAGED */
     void            *handle;            /**< O/S shared library load handle */
     MprTime         modified;           /**< When the module file was last modified */
     MprTicks        lastActivity;       /**< When the module was last used */
@@ -6103,7 +6134,7 @@ PUBLIC MprEvent *mprCreateTimerEvent(MprDispatcher *dispatcher, cchar *name, Mpr
     @param dispatcher Dispatcher object created via mprCreateDispatcher
     @param event Event object to queue
     @ingroup MprEvent
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event);
 
@@ -6365,6 +6396,7 @@ PUBLIC void mprXmlSetParserHandler(MprXml *xp, MprXmlHandler h);
 #define MPR_JSON_PRETTY         0x1         /**< Serialize output in a more human readable, multiline "pretty" format */
 #define MPR_JSON_QUOTES         0x2         /**< Serialize output quoting keys */
 #define MPR_JSON_STRINGS        0x4         /**< Emit all values as quoted strings */
+#define MPR_JSON_ENCODE_TYPES   0x8         /**< Encode dates and regexp with {type:date} or {type:regexp} */
 
 /*
     Data types for obj property values
@@ -6628,6 +6660,17 @@ PUBLIC ssize mprGetJsonLength(MprJson *obj);
     @stability Stable
  */
 PUBLIC MprJson *mprHashToJson(MprHash *hash);
+
+/**
+    Convert a JSON object to a string of environment variables
+    @param json JSON object tree
+    @prefix prefix String prefix for environment substrings
+    @prefix list MprList to hold environment strings. Set to NULL and this routine will create a list.
+    @return A list of environment strings
+    @ingroup MprJson
+    @stability Prototype
+ */
+PUBLIC MprList *mprJsonToEnv(MprJson *json, cchar *prefix, MprList *list);
 
 /**
     Convert a JSON object into a Hash object
@@ -7060,7 +7103,7 @@ PUBLIC cchar *mprGetThreadName(MprThread *thread);
     @param tp Thread object returned by #mprCreateThread. Set to NULL for the current thread.
     @param on Set to true to enable yielding
     @ingroup MprThread
-    @stability Prototype
+    @stability Evolving
 */
 PUBLIC bool mprSetThreadYield(MprThread *tp, bool on);
 
@@ -7582,7 +7625,7 @@ PUBLIC void mprSetSocketPrebindCallback(MprSocketPrebind callback);
 typedef struct MprSocket {
     MprSocketService *service;          /**< Socket service */
     MprWaitHandler  *handler;           /**< Wait handler */
-    char            *acceptIp;          /**< Server addresss that accepted a new connection (actual interface) */
+    char            *acceptIp;          /**< Server address that accepted a new connection (actual interface) */
     char            *ip;                /**< Server listen address or remote client address */
     char            *errorMsg;          /**< Connection related error messages */
     int             acceptPort;         /**< Server port doing the listening */
@@ -7753,7 +7796,7 @@ PUBLIC Socket mprGetSocketHandle(MprSocket *sp);
     @param port Port number
     @param family Output parameter to contain the Internet protocol family
     @param protocol Output parameter to contain the Internet TCP/IP protocol
-    @param addr Output parameter to contain the sockaddr description of the socket address
+    @param addr Allocated block to contain the sockaddr description of the socket address
     @param addrlen Output parameter to hold the length of the sockaddr object
     @return Zero if the call is successful. Otherwise return a negative MPR error code.
     @ingroup MprSocket
@@ -8247,7 +8290,7 @@ PUBLIC void mprSetSslKeyFile(struct MprSsl *ssl, cchar *keyFile);
     @param ssl SSL instance returned from #mprCreateSsl
     @param hostname Name of the host when using SNI
     @ingroup MprSsl
-    @stability Evolving
+    @stability Stable
  */
 PUBLIC void mprSetSslHostname(MprSsl *ssl, cchar *hostname);
 

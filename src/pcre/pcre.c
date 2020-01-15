@@ -18392,3 +18392,9 @@ return negated;   /* char did not match */
 /* End of pcre_xclass.c */
 #endif /* ME_COM_PCRE */
 
+
+#undef max
+#undef min
+#define max(a,b)  (((a) > (b)) ? (a) : (b))
+#define min(a,b)  (((a) < (b)) ? (a) : (b))
+
