@@ -343,9 +343,11 @@ static bool loadController(HttpStream *stream)
         route->source = controller;
         if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
+                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "%s", errMsg);
+            } else {
                 httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-                return 0;
             }
+            return 0;
         } else if (loaded) {
             httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
@@ -1213,8 +1215,8 @@ static bool preload(HttpRoute *route)
                 }
             }
         }
-        mprLog("esp info", 2, "Loaded ESP application %s, profile %s, combine %d, compile %d, compileMode %d, update %d",
-            eroute->appName, route->mode, eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
+        mprLog("esp info", 2, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
+            eroute->appName, route->mode ? route->mode : "unset", eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
     return 1;
