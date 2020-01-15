@@ -17966,8 +17966,8 @@ PUBLIC char *mprGetAbsPath(cchar *path)
             Get the full path with a drive spec
          */
         wchar buf[ME_MAX_PATH];
-        GetFullPathName(wide(path), sizeof(buf) - 1, buf, NULL);
-        buf[sizeof(buf) - 1] = '\0';
+        GetFullPathName(wide(path), (sizeof(buf) / sizeof(wchar)) - 1, buf, NULL);
+        buf[((sizeof(buf) / sizeof(wchar)) - 1] = '\0';
         result = mprNormalizePath(multi(buf));
 #elif VXWORKS
         if (hasDrive(fs, path)) {
