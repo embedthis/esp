@@ -15,7 +15,7 @@
 
 /*********************************** Fowards **********************************/
 
-static EspAction *createAction(cchar *target, cchar *roles, void *callback);
+static EspAction *createAction(cchar *target, cchar *abilities, void *callback);
 
 /************************************* Code ***********************************/
 
@@ -127,7 +127,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, EspProc callback)
 #endif
 
 
-PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *roles, EspProc callback)
+PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *abilities, EspProc callback)
 {
     EspRoute    *eroute;
     EspAction   *action;
@@ -150,7 +150,7 @@ PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *roles, EspProc cal
         if (!eroute->actions) {
             eroute->actions = mprCreateHash(-1, 0);
         }
-        if ((action = createAction(target, roles, callback)) == 0) {
+        if ((action = createAction(target, abilities, callback)) == 0) {
             /* Memory errors centrally reported */
             return;
         }
@@ -163,12 +163,12 @@ static void manageAction(EspAction *action, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(action->target);
-        mprMark(action->roles);
+        mprMark(action->abilities);
     }
 }
 
 
-static EspAction *createAction(cchar *target, cchar *roles, void *callback)
+static EspAction *createAction(cchar *target, cchar *abilities, void *callback)
 {
     EspAction   *action;
 
@@ -176,7 +176,7 @@ static EspAction *createAction(cchar *target, cchar *roles, void *callback)
         return NULL;
     }
     action->target = sclone(target);
-    action->roles = roles ? sclone(roles) : NULL;
+    action->abilities = abilities ? sclone(abilities) : NULL;
     action->callback = callback;
     return action;
 }

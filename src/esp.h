@@ -1731,7 +1731,7 @@ PUBLIC cchar *espUri(HttpStream *stream, cchar *target);
  */
 typedef struct EspAction {
     cchar       *target;            /**< Route target string */
-    cchar       *roles;             /**< Roles or abilities string for action */
+    cchar       *abilities;         /**< Abilities or roles for action. Comma separated. */
     EspProc     callback;           /**< Callback action */
 } EspAction;
 
@@ -1752,16 +1752,16 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, EspProc actionPr
 /**
     Define an action
     @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
-    The action will require the specified roles or abilities.
+    The action will require the specified abilities or roles.
     @param route HttpRoute object
     @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
-    @param roles String Comma separated list of roles or abilities. If set to the empty string, no specific roles are required
+    @param abilities String Comma separated list of abilities or roles. If set to the empty string, no specific abilities are required
         but an authenticated user is required. Set to NULL if an authenticated user is not required.
     @param actionProc EspProc callback procedure to invoke when the action is requested.
     @ingroup EspRoute
     @stability Prototype
  */
-PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *roles, EspProc actionProc);
+PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *abilities, EspProc actionProc);
 
 /***************************** Abbreviated Controls ***************************/
 #if ME_ESP_ABBREV

@@ -8,7 +8,7 @@
 #include "osdep.h"
 
 #ifndef ESP_VERSION
-    #define ESP_VERSION "8.1.1"
+    #define ESP_VERSION "8.1.2"
 #endif
 
 /*
@@ -1052,20 +1052,6 @@ PUBLIC MprHash *ediGetRecErrors(EdiRec *rec);
     @stability Evolving
  */
 PUBLIC char *ediGetTypeString(int type);
-
-#if UNUSED
-/**
-    Make a hash container of property values.
-    @description This routine formats the given arguments, parses the result as a JSON string and returns an
-        equivalent hash of property values.
-    @param fmt Printf style format string
-    @param ... arguments
-    @return MprHash instance
-    @ingroup Edi
-    @stability Evolving
- */
-PUBLIC MprHash *ediMakeHash(cchar *fmt, ...);
-#endif
 
 /**
     Make a JSON container of property values.
@@ -3010,7 +2996,7 @@ PUBLIC cchar *espUri(HttpStream *stream, cchar *target);
  */
 typedef struct EspAction {
     cchar       *target;            /**< Route target string */
-    cchar       *roles;             /**< Roles or abilities string for action */
+    cchar       *abilities;         /**< Abilities or roles for action. Comma separated. */
     EspProc     callback;           /**< Callback action */
 } EspAction;
 
@@ -3031,16 +3017,16 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *targetKey, EspProc actionPr
 /**
     Define an action
     @description Actions are C procedures that are invoked when specific URIs are routed to the controller/action pair.
-    The action will require the specified roles or abilities.
+    The action will require the specified abilities or roles.
     @param route HttpRoute object
     @param targetKey Target key used to select the action in a HttpRoute target. This is typically a URI prefix.
-    @param roles String Comma separated list of roles or abilities. If set to the empty string, no specific roles are required
+    @param abilities String Comma separated list of abilities or roles. If set to the empty string, no specific abilities are required
         but an authenticated user is required. Set to NULL if an authenticated user is not required.
     @param actionProc EspProc callback procedure to invoke when the action is requested.
     @ingroup EspRoute
     @stability Prototype
  */
-PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *roles, EspProc actionProc);
+PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *abilities, EspProc actionProc);
 
 /***************************** Abbreviated Controls ***************************/
 #if ME_ESP_ABBREV
@@ -4334,20 +4320,6 @@ PUBLIC bool updateFields(cchar *tableName, MprJson *data);
     @stability Evolving
  */
 PUBLIC bool updateRec(EdiRec *rec);
-
-#if UNUSED
-/**
-    Update a record from the request parameters
-    @description The record identified by the params(id) is read and updated with the request parameters. The record is then
-        saved to the database via #updateRec.
-    @param table Database table to update
-    @param data Data as a JSON object to apply to the record. This may come from the #params() API or from #makeJson.
-    @return True if the update is successful.
-    @ingroup EspAbbrev
-    @stability Prototype
-*/
-PUBLIC bool updateRecFields(cchar *table, MprJson *data);
-#endif
 
 #if DEPRECATED || 1
 /**

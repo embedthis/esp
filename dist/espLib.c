@@ -195,10 +195,11 @@ PUBLIC int ediChangeColumn(Edi *edi, cchar *tableName, cchar *columnName, int ty
 
 PUBLIC void ediClose(Edi *edi)
 {
-    if (!edi || !edi->provider) {
+    if (!edi || !edi->provider || !edi->path) {
         return;
     }
     edi->provider->close(edi);
+    edi->path = NULL;
 }
 
 
@@ -585,12 +586,16 @@ PUBLIC EdiProvider *ediLookupProvider(cchar *providerName)
 PUBLIC Edi *ediOpen(cchar *path, cchar *providerName, int flags)
 {
     EdiProvider     *provider;
+    Edi             *edi;
 
     if ((provider = lookupProvider(providerName)) == 0) {
         mprLog("error esp edi", 0, "Cannot find EDI provider '%s'", providerName);
         return 0;
     }
-    return provider->open(path, flags);
+    if ((edi = provider->open(path, flags)) != 0) {
+        edi->path = sclone(path);
+    }
+    return edi;
 }
 
 
@@ -1256,20 +1261,6 @@ PUBLIC EdiGrid *ediMakeGrid(cchar *json)
     }
     return grid;
 }
-
-
-#if UNUSED
-PUBLIC MprHash *ediMakeHash(cchar *fmt, ...)
-{
-    MprHash     *obj;
-    va_list     args;
-
-    va_start(args, fmt);
-    obj = mprDeserialize(sfmtv(fmt, args));
-    va_end(args);
-    return obj;
-}
-#endif
 
 
 PUBLIC MprJson *ediMakeJson(cchar *fmt, ...)
@@ -2223,26 +2214,12 @@ PUBLIC ssize receive(char *buf, ssize len)
 
 PUBLIC EdiGrid *findGrid(cchar *tableName, cchar *select)
 {
-#if UNUSED
-    va_list     ap;
-
-    va_start(ap, select);
-    select = sfmtv(select, ap);
-    va_end(ap);
-#endif
     return setGrid(ediFindGrid(getDatabase(), tableName, select));
 }
 
 
 PUBLIC EdiRec *findRec(cchar *tableName, cchar *select)
 {
-#if UNUSED
-    va_list     ap;
-
-    va_start(ap, select);
-    select = sfmtv(select, ap);
-    va_end(ap);
-#endif
     return setRec(ediFindRec(getDatabase(), tableName, select));
 }
 
@@ -2590,19 +2567,6 @@ PUBLIC bool updateRec(EdiRec *rec)
     feedback("info", "Saved %s", stitle(rec->tableName));
     return 1;
 }
-
-
-#if UNUSED
-PUBLIC bool updateRecFields(cchar *table, MprJson *params)
-{
-    MprJson     *fields;
-    cchar       *id;
-
-    id = mprGetJson(params, "fields.id");
-    fields = mprGetJsonObj(params, "fields");
-    return updateRec(setFields(readRec(table, id), fields));
-}
-#endif
 
 
 #if DEPRECATED || 1
@@ -3240,7 +3204,7 @@ PUBLIC int espInitParser()
 
 /*********************************** Fowards **********************************/
 
-static EspAction *createAction(cchar *target, cchar *roles, void *callback);
+static EspAction *createAction(cchar *target, cchar *abilities, void *callback);
 
 /************************************* Code ***********************************/
 
@@ -3352,7 +3316,7 @@ PUBLIC void espDefineAction(HttpRoute *route, cchar *target, EspProc callback)
 #endif
 
 
-PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *roles, EspProc callback)
+PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *abilities, EspProc callback)
 {
     EspRoute    *eroute;
     EspAction   *action;
@@ -3375,7 +3339,7 @@ PUBLIC void espAction(HttpRoute *route, cchar *target, cchar *roles, EspProc cal
         if (!eroute->actions) {
             eroute->actions = mprCreateHash(-1, 0);
         }
-        if ((action = createAction(target, roles, callback)) == 0) {
+        if ((action = createAction(target, abilities, callback)) == 0) {
             /* Memory errors centrally reported */
             return;
         }
@@ -3388,12 +3352,12 @@ static void manageAction(EspAction *action, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(action->target);
-        mprMark(action->roles);
+        mprMark(action->abilities);
     }
 }
 
 
-static EspAction *createAction(cchar *target, cchar *roles, void *callback)
+static EspAction *createAction(cchar *target, cchar *abilities, void *callback)
 {
     EspAction   *action;
 
@@ -3401,7 +3365,7 @@ static EspAction *createAction(cchar *target, cchar *roles, void *callback)
         return NULL;
     }
     action->target = sclone(target);
-    action->roles = roles ? sclone(roles) : NULL;
+    action->abilities = abilities ? sclone(abilities) : NULL;
     action->callback = callback;
     return action;
 }
@@ -5053,9 +5017,11 @@ static bool loadController(HttpStream *stream)
         route->source = controller;
         if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
+                httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "%s", errMsg);
+            } else {
                 httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
-                return 0;
             }
+            return 0;
         } else if (loaded) {
             httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
         }
@@ -5269,28 +5235,6 @@ static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, ccha
     if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
         return target;
     }
-
-#if UNUSED
-    /*
-        If target exists as a mapped / compressed view
-     */
-    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(stream, path);
-        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-            return target;
-        }
-    }
-#endif
-
-#if DEPRECATED
-    /*
-        See if views are under client/app. Remove in version 6.
-     */
-    path = mprJoinPaths(route->documents, "app", target, NULL);
-    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-        return mprJoinPath("app", target);
-    }
-#endif
 }
 #endif
     return 0;
@@ -5345,25 +5289,6 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
         espRenderView(stream, dest, 0);
         return;
     }
-
-#if UNUSED
-    /*
-        Last chance, forward to the file handler ... not an ESP request. This enables file requests within ESP routes.
-     */
-    path = mprJoinPath(route->documents, target);
-    if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-        target = path;
-    }
-    /*
-        If target exists as a mapped / compressed document
-     */
-    if (route->map && !(stream->tx->flags & HTTP_TX_NO_MAP)) {
-        path = httpMapContent(stream, path);
-        if (mprGetPathInfo(path, &info) == 0 && !info.isDir) {
-            target = path;
-        }
-    }
-#endif
 
     httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
     stream->rx->target = sclone(&stream->rx->pathInfo[1]);
@@ -5964,8 +5889,8 @@ static bool preload(HttpRoute *route)
                 }
             }
         }
-        mprLog("esp info", 2, "Loaded ESP application %s, profile %s, combine %d, compile %d, compileMode %d, update %d",
-            eroute->appName, route->mode, eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
+        mprLog("esp info", 2, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
+            eroute->appName, route->mode ? route->mode : "unset", eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
     return 1;
@@ -8851,9 +8776,6 @@ static void autoSave(Mdb *mdb, MdbTable *table)
 }
 
 
-/*
-    Must be called locked
- */
 static int mdbSave(Edi *edi)
 {
     Mdb         *mdb;

@@ -21,6 +21,8 @@ typedef struct App {
     cchar       *name;                  /* Application name */
     cchar       *cipher;                /* Cipher for passwords: "md5" or "blowfish" */
     cchar       *currentDir;            /* Initial starting current directory */
+
+    //  MOB - this becomes the actual database file
     cchar       *database;              /* Database provider "mdb" | "sdb" */
     cchar       *version;               /* Application version */
 
@@ -215,6 +217,7 @@ static App *createApp(Mpr *mpr)
     app->mpr = mpr;
     app->listen = sclone(ESP_LISTEN);
     app->paksDir = sclone(ESP_PAKS_DIR);
+#if UNUSED
     app->migDir = sclone(ESP_MIG_DIR);
 #if ME_COM_SQLITE
     app->database = sclone("sdb");
@@ -222,6 +225,7 @@ static App *createApp(Mpr *mpr)
     app->database = sclone("mdb");
 #else
     mprLog("", 0, "No database provider defined");
+#endif
 #endif
     app->cipher = sclone("blowfish");
     return app;
@@ -281,6 +285,7 @@ static void manageApp(App *app, int flags)
 static int parseArgs(int argc, char **argv)
 {
     cchar   *argp;
+    char    *dir, *key, *value;
     int     argind;
 
    for (argind = 1; argind < argc && !app->error; argind++) {
@@ -317,14 +322,45 @@ static int parseArgs(int argc, char **argv)
                 usageError();
             } else {
                 app->database = sclone(argv[++argind]);
-                if (!smatch(app->database, "mdb") && !smatch(app->database, "sdb")) {
+#if UNUSED
+                if (!mprPathExists(app->database, O_RDONLY)) {
                     fail("Unknown database \"%s\"", app->database);
                     usageError();
                 }
+#endif
             }
 
         } else if (smatch(argp, "debugger") || smatch(argp, "D")) {
             mprSetDebugMode(1);
+
+        } else if (smatch(argp, "dir")) {
+            if (argind >= argc) {
+                usageError();
+            } else {
+                dir = sclone(argv[++argind]);
+                key = stok(dir, "=", &value);
+                if (!key || !value) {
+                    fail("Bad directory usage");
+                    usageError();
+                } else {
+                    if (smatch(key, "bin")) {
+                        app->binDir = sclone(value);
+                    } else if (smatch(key, "cache")) {
+                        app->paksCacheDir = sclone(value);
+                    } else if (smatch(key, "migrations")) {
+                        app->migDir = sclone(value);
+                    } else if (smatch(key, "paks")) {
+                        app->paksDir = sclone(value);
+                    } else {
+                        fail("Unknown directory");
+                        usageError();
+                    }
+                    if (!mprPathExists(value, X_OK)) {
+                        fail("Cant find directory \"%s\" at \"%s\"", key, value);
+                        usageError();
+                    }
+                }
+            }
 
         } else if (smatch(argp, "force") || smatch(argp, "f")) {
             app->force = 1;
@@ -688,6 +724,17 @@ static void initialize(int argc, char **argv)
     if (app->require & REQ_TARGETS) {
         app->targets = getTargets(argc - 1, &argv[1]);
     }
+
+    if (!app->migDir) {
+        path = mprJoinPath(route->home, "db/migrations");
+        if (mprPathExists(path, X_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
+            app->migDir = path;
+            httpSetDir(route, "MIGRATIONS", path);
+        } else {
+            app->migDir = getJson(app->package, "directories.migrations", httpGetDir(route, "MIGRATIONS"));
+        }
+    }
+
     if (espInit(route, 0, "esp.json")) {
         fail("Cannot initialize for ESP");
         return;
@@ -701,15 +748,6 @@ static void initialize(int argc, char **argv)
     }
     esp = stage->stageData;
     esp->compileMode = app->compileMode;
-
-    path = mprJoinPath(route->home, "db/migrations");
-    if (mprPathExists(path, R_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
-        app->migDir = path;
-        httpSetDir(route, "MIGRATIONS", path);
-    } else {
-        app->migDir = httpGetDir(route, "MIGRATIONS");
-        app->migDir = getJson(app->package, "directories.migrations", app->migDir);
-    }
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
 }
 
@@ -1012,7 +1050,7 @@ static void migrate(int argc, char **argv)
     Edi         *edi;
     EdiRec      *mig;
     HttpRoute   *route;
-    cchar       *command, *file;
+    cchar       *command, *file, *path, *provider;
     uint64      seq, targetSeq, lastMigration, v;
     int         next, onlyOne, backward, found, i, rc;
 
@@ -1029,11 +1067,19 @@ static void migrate(int argc, char **argv)
         fail("Database not defined");
         return;
     }
+    path = app->database ? app->database : edi->path;
     if (app->rebuild) {
-        ediClose(edi);
-        mprDeletePath(edi->path);
-        if ((edi = ediOpen(edi->path, edi->provider->name, edi->flags | EDI_CREATE)) == 0) {
-            fail("Cannot open database %s", edi->path);
+        if (edi->path) {
+            ediClose(edi);
+        }
+        if (path) {
+            mprDeletePath(path);
+        }
+    }
+    if (app->database || app->rebuild) {
+        provider = sends(path, "sdb") ? "sdb" : "mdb";
+        if ((edi = ediOpen(path, provider, edi->flags | EDI_CREATE)) == 0) {
+            fail("Cannot open database %s", path);
             return;
         }
         app->eroute->edi = edi;
@@ -1981,11 +2027,6 @@ static void compileItems(HttpRoute *route)
             found++;
         }
     }
-#if UNUSED
-    if (!found) {
-        trace("Info", "No files to compile for route \"%s\"", route->pattern);
-    }
-#endif
 }
 
 
