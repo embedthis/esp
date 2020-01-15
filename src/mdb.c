@@ -1225,9 +1225,6 @@ static void autoSave(Mdb *mdb, MdbTable *table)
 }
 
 
-/*
-    Must be called locked
- */
 static int mdbSave(Edi *edi)
 {
     Mdb         *mdb;

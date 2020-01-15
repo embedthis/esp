@@ -188,10 +188,11 @@ PUBLIC int ediChangeColumn(Edi *edi, cchar *tableName, cchar *columnName, int ty
 
 PUBLIC void ediClose(Edi *edi)
 {
-    if (!edi || !edi->provider) {
+    if (!edi || !edi->provider || !edi->path) {
         return;
     }
     edi->provider->close(edi);
+    edi->path = NULL;
 }
 
 
@@ -578,12 +579,16 @@ PUBLIC EdiProvider *ediLookupProvider(cchar *providerName)
 PUBLIC Edi *ediOpen(cchar *path, cchar *providerName, int flags)
 {
     EdiProvider     *provider;
+    Edi             *edi;
 
     if ((provider = lookupProvider(providerName)) == 0) {
         mprLog("error esp edi", 0, "Cannot find EDI provider '%s'", providerName);
         return 0;
     }
-    return provider->open(path, flags);
+    if ((edi = provider->open(path, flags)) != 0) {
+        edi->path = sclone(path);
+    }
+    return edi;
 }
 
 
