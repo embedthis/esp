@@ -2,3 +2,4 @@ samples/html-mvc/dist
 /samples/*/cache
 /start.me
 cache/
+*.sdb
