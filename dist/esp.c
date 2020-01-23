@@ -22,8 +22,7 @@ typedef struct App {
     cchar       *cipher;                /* Cipher for passwords: "md5" or "blowfish" */
     cchar       *currentDir;            /* Initial starting current directory */
 
-    //  MOB - this becomes the actual database file
-    cchar       *database;              /* Database provider "mdb" | "sdb" */
+    cchar       *database;              /* Database */
     cchar       *version;               /* Application version */
 
     cchar       *binDir;                /* Bin directory */

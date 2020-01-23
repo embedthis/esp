@@ -1308,6 +1308,35 @@ PUBLIC EdiRec *ediMakeRec(cchar *json)
 }
 
 
+PUBLIC EdiRec *ediMakeRecFromJson(cchar *tableName, MprJson *fields)
+{
+    MprJson     *field;
+    EdiRec      *rec;
+    EdiField    *fp;
+    int         f, fid;
+
+    if ((rec = ediCreateBareRec(NULL, tableName, (int) mprGetJsonLength(fields))) == 0) {
+        return 0;
+    }
+    for (f = 0, ITERATE_JSON(fields, field, fid)) {
+        print("Table %s column %s value %s", tableName, field->name, field->value);
+        if ((field->type & MPR_JSON_VALUE) == 0) {
+            mprLog("error dlc", 0, "Bad field type %x", field->type);
+        }
+        fp = &rec->fields[f++];
+        fp->valid = 1;
+        fp->name = field->name;
+        fp->value = field->value;
+        fp->type = field->type & MPR_JSON_DATA_TYPE;
+        fp->flags = 0;
+        if (smatch(field->name, "id")) {
+            rec->id = field->value;
+        }
+    }
+    return rec;
+}
+
+
 PUBLIC int ediParseTypeString(cchar *type)
 {
     if (smatch(type, "binary")) {
