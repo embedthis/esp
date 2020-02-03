@@ -665,7 +665,6 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
     @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
     @param buf Data buffer to trace.
     @param len Length of the data buf.
-    @param buf Trace data buffer to write
     @param fmt Printf style formatted string
     @param args Varargs arguments for fmt
     @ingroup HttpTrace
@@ -681,7 +680,6 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
     @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
     @param buf Data buffer to trace.
     @param len Length of the data buf.
-    @param buf Trace data buffer to write
     @param fmt Printf style formatted string
     @param args Varargs arguments for fmt
     @ingroup HttpTrace
@@ -1728,7 +1726,8 @@ PUBLIC HttpUri *httpResolveUri(struct HttpStream *stream, HttpUri *base, HttpUri
     @return A normalized Uri string.
     @ingroup HttpUri
     @stability Evolving
-    @remarks Examples:<pre>
+    @remarks Examples:
+    <pre>
     httpLink(stream, "http://example.com/index.html");
     httpLink(stream, "/path/to/index.html");
     httpLink(stream, "../images/splash.png");
@@ -1745,14 +1744,13 @@ PUBLIC HttpUri *httpResolveUri(struct HttpStream *stream, HttpUri *base, HttpUri
     httpLink(stream, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }");
     httpLink(stream, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }");
     httpLink(stream, "{ template: '~/static/images/${theme}/background.jpg', theme: 'blue' }");
-</pre>
+    </pre>
  */
 PUBLIC char *httpLink(struct HttpStream *stream, cchar *target);
 
 /**
     Create an absolute link that includes scheme and host
     @param stream HttpStream stream object
-    @param target
     @param target The URI target. See #httpLink for details of the target parameter.
     @return A normalized Uri string.
     @ingroup HttpUri
@@ -2336,17 +2334,16 @@ PUBLIC void httpPutPacket(struct HttpQueue *q, HttpPacket *packet);
     Put a packet to the next queue downstream.
     @description Put a packet onto the next downstream queue by calling the downstream queue's put() method.
         Note the receiving queue may immediately process the packet or it may choose to defer processing by putting to
-        its service queue.  @param q Queue reference
+        its service queue.
     \n\n
     Note: the garbage collector may run while calling httpSendBlock to reclaim unused packets. It is essential that all
         required memory be retained by a relevant manager calling mprMark as required.
-
-    @param q Queue reference. The packet will not be queued on this queue, but rather on the queue downstream.
+    @param qp Queue reference. The packet will not be queued on this queue, but rather on the queue downstream.
     @param packet Packet to put
     @ingroup HttpQueue
     @stability Stable
  */
-PUBLIC void httpPutPacketToNext(struct HttpQueue *q, HttpPacket *packet);
+PUBLIC void httpPutPacketToNext(struct HttpQueue *qp, HttpPacket *packet);
 
 /**
     Remove a queue
@@ -2551,22 +2548,7 @@ PUBLIC ssize httpWriteBlock(HttpQueue *q, cchar *buf, ssize size, int flags);
     Write a string of data to the queue
     @description Write a string of data into packets onto the end of the queue. Data packets will be created
         as required to store the write data. This call may block waiting for the downstream queue to drain if it is
-        or becomes full.
-        Data written after #httpFinalizeOutput or #httpError is called will be ignored.
-    @param q Queue reference
-    @param s String containing the data to write
-    @return A count of the bytes actually written
-    @ingroup HttpQueue
-    @stability Stable
- */
-PUBLIC ssize httpWriteString(HttpQueue *q, cchar *s);
-
-/**
-    Write a safe string of data to the queue
-    @description This will escape any HTML sequences before writing the string into packets onto the end of the queue.
-        Data packets will be created as required to store the write data. This call may block waiting for the
-        downstream queue to drain if it is or becomes full.
-        Data written after #httpFinalizeOutput or #httpError is called will be ignored.
+        or becomes full. Data written after #httpFinalizeOutput or #httpError is called will be ignored.
     @param q Queue reference
     @param s String containing the data to write
     @return A count of the bytes actually written
@@ -4546,7 +4528,7 @@ PUBLIC bool httpAuthenticate(HttpStream *stream);
 /**
     Test if a user has the required abilities
     @param stream HttpStream stream object created via #httpCreateStream object.
-    @param abilities Comma separated list of abilities to test for. If null, then use the required abilities defined
+    @param abilities Comma separated list of abilities or roles to test for. If null, then use the required abilities defined
         for the current request route.
     @return True if the user has all the required abilities
     @ingroup HttpAuth

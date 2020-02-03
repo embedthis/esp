@@ -200,8 +200,8 @@
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga15bf63cd0ba27fd41ffcd2556552bc9c" class="nameRef">ediCreateBareRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, int nfields)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a bare, free-standing record.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1gad4e706a1a2d9ff527c9d42612ebeeae1" class="nameRef">ediCreateRec</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create a new record based on the table&apos;s schema.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_service" class="ref">EdiService*</a></td><td><a href="#group___edi_service_1gaf844bec409e3238a6a9de36ddc040899" class="nameRef">ediCreateService</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Create the EDI service.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga789f616e9f38aee34d6862bf85ac4742" class="nameRef">ediDefineMigration</a>(struct Edi *edi, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> back)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define database migration callbacks.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46" class="nameRef">ediDefineValidation</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9" class="ref">EdiValidationProc</a> vfn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a field validation procedure.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga789f616e9f38aee34d6862bf85ac4742" class="nameRef">ediDefineMigration</a>(struct Edi *edi, <a href="#edi_8h_1afef50d4216e0abc4595d23366fc7f328" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1afef50d4216e0abc4595d23366fc7f328" class="ref">EdiMigration</a> back)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define database migration callbacks.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_service_1ga889df64bdd239f71c66b4fa920be8f46" class="nameRef">ediDefineValidation</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#group___edi_service_1gabd91c5b2e51a33e99e142554ef7de574" class="ref">EdiValidationProc</a> vfn)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Define a field validation procedure.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gaec3079929130e2f517f56d8c322e2468" class="nameRef">ediDelete</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Delete the database at the given path.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga21a7e078206b019276d18123e24af1f7" class="nameRef">ediDumpGrid</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="#group___edi_grid" class="ref">EdiGrid</a> *grid)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display the grid to the debug log.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga035889ee66fbb74bfdd9fd71ce4017ea" class="nameRef">ediDumpRec</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *message, <a href="#group___edi_rec" class="ref">EdiRec</a> *rec)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Display a record to the debug log.</td></tr>
@@ -231,9 +231,10 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga7dec1de01e90319b1ff0fe351f83f49e" class="nameRef">ediLoad</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *path)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Load the database file.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1gaa88adbb2470a05da45d468fd9d578672" class="nameRef">ediLookupField</a>(<a href="#group___edi" class="ref">Edi</a> *edi, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Lookup a column field by name.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#struct_edi_provider" class="ref">EdiProvider*</a></td><td><a href="#group___edi_1ga042cf084b2e3c1487644cdf7f9a0257d" class="nameRef">ediLookupProvider</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *providerName)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Lookup an EDI provider name.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga92df88662a9be066b5e3eff35b8954b1" class="nameRef">ediMakeGrid</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *content)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a grid.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___edi_1ga92df88662a9be066b5e3eff35b8954b1" class="nameRef">ediMakeGrid</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *content)</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="mpr.html#group___mpr_json" class="ref">MprJson*</a></td><td><a href="#group___edi_1ga5ed0a53407a3c91bc90c7d05d8ed7144" class="nameRef">ediMakeJson</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a JSON container of property values.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga5bf685fd34ebd962218f900361ada49b" class="nameRef">ediMakeRec</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *content)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a record.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___edi_1ga2f4ed6ff961ec45838f0555a48e6298e" class="nameRef">ediMakeRecFromJson</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="mpr.html#group___mpr_json" class="ref">MprJson</a> *fields)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Make a record from a JSON fields object.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___edi_1ga6913a7aa47c80857de9057e5442b5834" class="nameRef">ediManageEdiRec</a>(<a href="#group___edi_rec" class="ref">EdiRec</a> *rec, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Manage an EdiRec instance for garbage collection.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="#group___edi" class="ref">Edi*</a></td><td><a href="#group___edi_1ga7c923cfc31d2c7d94c9338c7849b8da6" class="nameRef">ediOpen</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *source, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *provider, int flags)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Open a database.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___edi_1ga9e890e5216c6c01220e6ba150197a0e1" class="nameRef">ediParseTypeString</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Parse an EDI type string.</td></tr>
@@ -265,7 +266,7 @@
 <table class="apiIndex" title="typedefs">
 <tr class="apiDef"><td class="apiName"><a href="#struct_edi_provider" class="nameRef">EdiProvider</a></td><td class="apiBrief">Database provider interface.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_edi_validation" class="nameRef">EdiValidation</a></td><td class="apiBrief">Validation structure.</td></tr>
-<tr class="apiDef"><td class="apiName"><a href="#group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9" class="nameRef">EdiValidationProc</a></td><td class="apiBrief">Field validation callback procedure.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#group___edi_service_1gabd91c5b2e51a33e99e142554ef7de574" class="nameRef">EdiValidationProc</a></td><td class="apiBrief">Field validation callback procedure.</td></tr>
 </table>
 <a name="Defines"></a><h1>Defines</h1>
 <table class="apiIndex" title="Defines">
@@ -375,7 +376,7 @@ Database flags.
     <tr><td class="param">EdiMigration</td><td><td>forw</td><td>
 Forward migration callback.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/esp/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
 Multithread lock.
 </td>
     <tr><td class="param">cchar *</td><td><td>path</td><td>
@@ -384,10 +385,10 @@ Database path.
     <tr><td class="param">struct <a class="ref" href="#struct_edi_provider">EdiProvider</a> *</td><td><td>provider</td><td>
 Database provider.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>schemaCache</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/esp/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>schemaCache</td><td>
 Cache of table schema in JSON.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>validations</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/esp/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>validations</td><td>
 Validations.
 </td>
     </table></dd></dl>
@@ -1103,18 +1104,21 @@ Validations.
 (<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *content)
   </div>
   <div class="apiDetail">
-<p>Make a grid.</p>
-\par \b Description:
-This call makes a free-standing data grid based on the JSON format content string
-    <dl><dt>Parameters:</dt><dd>
-    <table class="parameters" title="Parameters">
-    <tr><td class="param">content</td><td>JSON format content string. The content should be an array of objects where each object is a set of property names and values.</td>
-    </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>An EdiGrid instance.</dd></dl>
-    <dl><dt><b>Example</b>:</dt><dd>: grid = ediMakeGrid("[ \ <br/>
- { id: &apos;1&apos;, country: &apos;Australia&apos; }, \ <br/>
- { id: &apos;2&apos;, country: &apos;China&apos; }, \ <br/>
- ]");.</dd></dl>
+Make a grid.
+\par \b Description:\
+  This call makes a free-standing data grid based on the JSON format content string.
+@param content JSON format content string. The content should be an array of objects where each object is a
+    set of property names and values.
+@return An EdiGrid instance
+\par \b Example:\
+ :
+grid = ediMakeGrid("[ \
+
+{ id: &apos;1&apos;, country: &apos;Australia&apos; }, \
+
+{ id: &apos;2&apos;, country: &apos;China&apos; }, \
+
+]");
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
@@ -1160,6 +1164,27 @@ This call makes a free-standing data grid based on the JSON format content strin
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     </dd></dl>
+  </div>
+</div>
+<a name="group___edi_1ga2f4ed6ff961ec45838f0555a48e6298e"></a>
+<div class="api">
+  <div class="prototype">
+    <a href="#group___edi_rec" class="ref">EdiRec</a> *
+    ediMakeRecFromJson
+(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="mpr.html#group___mpr_json" class="ref">MprJson</a> *fields)
+  </div>
+  <div class="apiDetail">
+<p>Make a record from a JSON fields object.</p>
+    <dl><dt><b>Description</b>:</dt><dd>This call makes a free-standing data record based on the JSON fields.</dd></dl>
+    <dl><dt>Parameters:</dt><dd>
+    <table class="parameters" title="Parameters">
+    <tr><td class="param">tableName</td><td>Name of the database table to initialize in the record.</td>
+    <tr><td class="param">fields</td><td>JSON object.</td>
+    </table></dd></dl>
+    <dl><dt>Returns:</dt><dd>An EdiRec instance.</dd></dl>
+    <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
+    <dl><dt>See Also:</dt><dd>
+    <a href="#group___edi_1ga92df88662a9be066b5e3eff35b8954b1" class="ref">ediMakeGrid</a>, <a href="#group___edi_1ga5bf685fd34ebd962218f900361ada49b" class="ref">ediMakeRec</a></dd></dl>
   </div>
 </div>
 <a name="group___edi_1ga6913a7aa47c80857de9057e5442b5834"></a>
@@ -1619,7 +1644,7 @@ This call makes a free-standing data grid based on the JSON format content strin
   </div>
   <div class="apiDetail">
 <p>Write a value to a database table field.</p>
-    <dl><dt><b>Description</b>:</dt><dd>Update the value of a table field in the selected table row. Note: field validations are not run.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>Update the value of a table field in the selected table row. Note: field validations are not run MOB.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">edi</td><td>Database handle.</td>
@@ -1740,7 +1765,7 @@ Sourced from the database column name.
 </td>
     <tr><td class="param">int</td><td><td>type</td><td>
 Field data type. 
-Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT.
+Set to one of EDI_TYPE_BINARY, EDI_TYPE_BOOL, EDI_TYPE_DATE EDI_TYPE_FLOAT, EDI_TYPE_INT, EDI_TYPE_STRING, EDI_TYPE_TEXT <br/>
 </td>
     <tr><td class="param">int</td><td><td>valid</td><td>
 Field validity. 
@@ -1874,7 +1899,7 @@ For the first call, set rec to NULL
     <tr><td class="param">struct Edi *</td><td><td>edi</td><td>
 Database handle.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="mpr.dtags">MprHash</a> *</td><td><td>errors</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/esp/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>errors</td><td>
 Hash of record errors.
 </td>
     <tr><td class="param">EdiField</td><td><td>fields[ARRAY_FLEX]</td><td>
@@ -2022,7 +2047,7 @@ For the first call, set fp to NULL
   <div class="prototype">
     void
     ediDefineMigration
-(struct Edi *edi, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1af52ffce789628c7454d22c76cf56d380" class="ref">EdiMigration</a> back)
+(struct Edi *edi, <a href="#edi_8h_1afef50d4216e0abc4595d23366fc7f328" class="ref">EdiMigration</a> forw, <a href="#edi_8h_1afef50d4216e0abc4595d23366fc7f328" class="ref">EdiMigration</a> back)
   </div>
   <div class="apiDetail">
 <p>Define database migration callbacks.</p>
@@ -2042,7 +2067,7 @@ For the first call, set fp to NULL
   <div class="prototype">
     void
     ediDefineValidation
-(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9" class="ref">EdiValidationProc</a> vfn)
+(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="#group___edi_service_1gabd91c5b2e51a33e99e142554ef7de574" class="ref">EdiValidationProc</a> vfn)
   </div>
   <div class="apiDetail">
 <p>Define a field validation procedure.</p>
@@ -2058,10 +2083,10 @@ For the first call, set fp to NULL
 </div>
 <h2>Functions</h2>
 <h2>Typedefs</h2>
-<a name="group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9"></a>
+<a name="group___edi_service_1gabd91c5b2e51a33e99e142554ef7de574"></a>
 <div class="api">
   <div class="prototype">
-    typedef cchar*(* EdiValidationProc)(struct EdiValidation *vp, struct EdiRec *rec, cchar *fieldName, cchar *value).
+    typedef cchar*(* EdiValidationProc) (struct EdiValidation *vp, struct EdiRec *rec, cchar *fieldName, cchar *value).
   </div>
   <div class="apiDetail">
 <p>Field validation callback procedure.</p>
@@ -2070,7 +2095,7 @@ For the first call, set fp to NULL
     <tr><td class="param">vp</td><td>Validation structure reference.</td>
     <tr><td class="param">rec</td><td>Record to validate.</td>
     <tr><td class="param">fieldName</td><td>Field name to validate.</td>
-    <tr><td class="param">value</td><td>Field value to validate.</td>
+    <tr><td class="param">value</td><td>Field value to.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -2104,7 +2129,7 @@ Custom data (unmanaged).
     <tr><td class="param">cchar *</td><td><td>name</td><td>
 Validation name.
 </td>
-    <tr><td class="param"><a class="ref" href="#group___edi_service_1ga3cf21d57a02f250570e2beafc05befd9">EdiValidationProc</a></td><td><td>vfn</td><td>
+    <tr><td class="param"><a class="ref" href="#group___edi_service_1gabd91c5b2e51a33e99e142554ef7de574">EdiValidationProc</a></td><td><td>vfn</td><td>
 Validation callback procedure.
 </td>
     </table></dd></dl>

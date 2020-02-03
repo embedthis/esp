@@ -23252,7 +23252,7 @@ PUBLIC int mprSetSocketBlockingMode(MprSocket *sp, bool on)
 #elif VXWORKS
 {
     int flag = (sp->flags & MPR_SOCKET_BLOCK) ? 0 : 1;
-    ioctl(sp->fd, FIONBIO, (int) &flag);
+    ioctl(sp->fd, FIONBIO, &flag);
 }
 #else
     if (on) {

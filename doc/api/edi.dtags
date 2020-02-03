@@ -1,115 +1,39 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <tagfile>
-  <compound kind="group">
-    <name>EdiService</name>
-    <title>EdiService</title>
-    <filename>group___edi_service.html</filename>
-    <class kind="struct">EdiValidation</class>
-    <member kind="typedef">
-      <type>cchar *(*</type>
-      <name>EdiValidationProc</name>
-      <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>ga3cf21d57a02f250570e2beafc05befd9</anchor>
-      <arglist>)(struct EdiValidation *vp, struct EdiRec *rec, cchar *fieldName, cchar *value)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>ediAddFieldError</name>
-      <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>ga81c6f760f0e529fb91868fc2caddcec8</anchor>
-      <arglist>(struct EdiRec *rec, cchar *field, cchar *fmt,...)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>ediAddProvider</name>
-      <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>ga7c605c7761d7a46a207cb6dd0f71b372</anchor>
-      <arglist>(struct EdiProvider *provider)</arglist>
-    </member>
-    <member kind="function">
-      <type>EdiService *</type>
-      <name>ediCreateService</name>
-      <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>gaf844bec409e3238a6a9de36ddc040899</anchor>
-      <arglist>(void)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>ediDefineMigration</name>
-      <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>ga789f616e9f38aee34d6862bf85ac4742</anchor>
-      <arglist>(struct Edi *edi, EdiMigration forw, EdiMigration back)</arglist>
-    </member>
-    <member kind="function">
-      <type>void</type>
-      <name>ediDefineValidation</name>
-      <anchorfile>group___edi_service.html</anchorfile>
-      <anchor>ga889df64bdd239f71c66b4fa920be8f46</anchor>
-      <arglist>(cchar *name, EdiValidationProc vfn)</arglist>
-    </member>
+  <compound kind="struct">
+    <name>EdiProvider</name>
+    <filename>struct_edi_provider.html</filename>
   </compound>
-  <compound kind="group">
-    <name>EdiField</name>
-    <title>EdiField</title>
-    <filename>group___edi_field.html</filename>
-  </compound>
-  <compound kind="group">
-    <name>EdiRec</name>
-    <title>EdiRec</title>
-    <filename>group___edi_rec.html</filename>
-    <member kind="function">
-      <type>EdiRec *</type>
-      <name>ediFilterRecFields</name>
-      <anchorfile>group___edi_rec.html</anchorfile>
-      <anchor>ga72056f840f501082ef3efac4c4454e24</anchor>
-      <arglist>(EdiRec *rec, cchar *fields, int include)</arglist>
+  <compound kind="struct">
+    <name>EdiValidation</name>
+    <filename>struct_edi_validation.html</filename>
+    <member kind="variable">
+      <type>cvoid *</type>
+      <name>data</name>
+      <anchorfile>struct_edi_validation.html</anchorfile>
+      <anchor>a83259246d60bff5ce645d884b3389948</anchor>
+      <arglist></arglist>
     </member>
-    <member kind="function">
-      <type>EdiField *</type>
-      <name>ediGetNextField</name>
-      <anchorfile>group___edi_rec.html</anchorfile>
-      <anchor>gad8a96a0785fa3cfd81f99eb75c02bbee</anchor>
-      <arglist>(EdiRec *rec, EdiField *fp, int offset)</arglist>
+    <member kind="variable">
+      <type>cvoid *</type>
+      <name>mdata</name>
+      <anchorfile>struct_edi_validation.html</anchorfile>
+      <anchor>af746f4762e58538aed9c2607af28e189</anchor>
+      <arglist></arglist>
     </member>
-    <member kind="function">
+    <member kind="variable">
       <type>cchar *</type>
-      <name>ediGetRecSchemaAsJson</name>
-      <anchorfile>group___edi_rec.html</anchorfile>
-      <anchor>ga1320e35f4abcbfd440c8122a0e1d9e10</anchor>
-      <arglist>(EdiRec *rec)</arglist>
+      <name>name</name>
+      <anchorfile>struct_edi_validation.html</anchorfile>
+      <anchor>a7d1e61bbf1b3b2107f220cbcc30a5062</anchor>
+      <arglist></arglist>
     </member>
-  </compound>
-  <compound kind="group">
-    <name>EdiGrid</name>
-    <title>EdiGrid</title>
-    <filename>group___edi_grid.html</filename>
-    <member kind="function">
-      <type>EdiGrid *</type>
-      <name>ediFilterGridFields</name>
-      <anchorfile>group___edi_grid.html</anchorfile>
-      <anchor>ga0b5c39ab9aa8d6cba06403659aa9e36b</anchor>
-      <arglist>(EdiGrid *grid, cchar *fields, int include)</arglist>
-    </member>
-    <member kind="function">
-      <type>cchar *</type>
-      <name>ediGetGridSchemaAsJson</name>
-      <anchorfile>group___edi_grid.html</anchorfile>
-      <anchor>gaec44a7575ea84f98f8a6a89d88d67df0</anchor>
-      <arglist>(EdiGrid *grid)</arglist>
-    </member>
-    <member kind="function">
-      <type>EdiRec *</type>
-      <name>ediGetNextRec</name>
-      <anchorfile>group___edi_grid.html</anchorfile>
-      <anchor>ga4ea5088bc3e4cc1206310bc46236bb03</anchor>
-      <arglist>(EdiGrid *grid, EdiRec *rec)</arglist>
-    </member>
-    <member kind="function">
-      <type>EdiGrid *</type>
-      <name>ediPivotGrid</name>
-      <anchorfile>group___edi_grid.html</anchorfile>
-      <anchor>gab083046f341a40f3880e0dc41a6f2845</anchor>
-      <arglist>(EdiGrid *grid, int flags)</arglist>
+    <member kind="variable">
+      <type>EdiValidationProc</type>
+      <name>vfn</name>
+      <anchorfile>struct_edi_validation.html</anchorfile>
+      <anchor>a4ded82ab07d0602d9adc5cd9ac31aaee</anchor>
+      <arglist></arglist>
     </member>
   </compound>
   <compound kind="group">
@@ -376,6 +300,13 @@
       <arglist>(cchar *content)</arglist>
     </member>
     <member kind="function">
+      <type>EdiRec *</type>
+      <name>ediMakeRecFromJson</name>
+      <anchorfile>group___edi.html</anchorfile>
+      <anchor>ga2f4ed6ff961ec45838f0555a48e6298e</anchor>
+      <arglist>(cchar *tableName, MprJson *fields)</arglist>
+    </member>
+    <member kind="function">
       <type>void</type>
       <name>ediManageEdiRec</name>
       <anchorfile>group___edi.html</anchorfile>
@@ -558,40 +489,116 @@
       <arglist>(Edi *edi, cchar *tableName, cchar *columnName)</arglist>
     </member>
   </compound>
-  <compound kind="struct">
-    <name>EdiProvider</name>
-    <filename>struct_edi_provider.html</filename>
+  <compound kind="group">
+    <name>EdiField</name>
+    <title>EdiField</title>
+    <filename>group___edi_field.html</filename>
   </compound>
-  <compound kind="struct">
-    <name>EdiValidation</name>
-    <filename>struct_edi_validation.html</filename>
-    <member kind="variable">
-      <type>cvoid *</type>
-      <name>data</name>
-      <anchorfile>struct_edi_validation.html</anchorfile>
-      <anchor>a83259246d60bff5ce645d884b3389948</anchor>
-      <arglist></arglist>
+  <compound kind="group">
+    <name>EdiGrid</name>
+    <title>EdiGrid</title>
+    <filename>group___edi_grid.html</filename>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>ediFilterGridFields</name>
+      <anchorfile>group___edi_grid.html</anchorfile>
+      <anchor>ga0b5c39ab9aa8d6cba06403659aa9e36b</anchor>
+      <arglist>(EdiGrid *grid, cchar *fields, int include)</arglist>
     </member>
-    <member kind="variable">
-      <type>cvoid *</type>
-      <name>mdata</name>
-      <anchorfile>struct_edi_validation.html</anchorfile>
-      <anchor>af746f4762e58538aed9c2607af28e189</anchor>
-      <arglist></arglist>
-    </member>
-    <member kind="variable">
+    <member kind="function">
       <type>cchar *</type>
-      <name>name</name>
-      <anchorfile>struct_edi_validation.html</anchorfile>
-      <anchor>a7d1e61bbf1b3b2107f220cbcc30a5062</anchor>
-      <arglist></arglist>
+      <name>ediGetGridSchemaAsJson</name>
+      <anchorfile>group___edi_grid.html</anchorfile>
+      <anchor>gaec44a7575ea84f98f8a6a89d88d67df0</anchor>
+      <arglist>(EdiGrid *grid)</arglist>
     </member>
-    <member kind="variable">
-      <type>EdiValidationProc</type>
-      <name>vfn</name>
-      <anchorfile>struct_edi_validation.html</anchorfile>
-      <anchor>a4ded82ab07d0602d9adc5cd9ac31aaee</anchor>
-      <arglist></arglist>
+    <member kind="function">
+      <type>EdiRec *</type>
+      <name>ediGetNextRec</name>
+      <anchorfile>group___edi_grid.html</anchorfile>
+      <anchor>ga4ea5088bc3e4cc1206310bc46236bb03</anchor>
+      <arglist>(EdiGrid *grid, EdiRec *rec)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiGrid *</type>
+      <name>ediPivotGrid</name>
+      <anchorfile>group___edi_grid.html</anchorfile>
+      <anchor>gab083046f341a40f3880e0dc41a6f2845</anchor>
+      <arglist>(EdiGrid *grid, int flags)</arglist>
+    </member>
+  </compound>
+  <compound kind="group">
+    <name>EdiRec</name>
+    <title>EdiRec</title>
+    <filename>group___edi_rec.html</filename>
+    <member kind="function">
+      <type>EdiRec *</type>
+      <name>ediFilterRecFields</name>
+      <anchorfile>group___edi_rec.html</anchorfile>
+      <anchor>ga72056f840f501082ef3efac4c4454e24</anchor>
+      <arglist>(EdiRec *rec, cchar *fields, int include)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiField *</type>
+      <name>ediGetNextField</name>
+      <anchorfile>group___edi_rec.html</anchorfile>
+      <anchor>gad8a96a0785fa3cfd81f99eb75c02bbee</anchor>
+      <arglist>(EdiRec *rec, EdiField *fp, int offset)</arglist>
+    </member>
+    <member kind="function">
+      <type>cchar *</type>
+      <name>ediGetRecSchemaAsJson</name>
+      <anchorfile>group___edi_rec.html</anchorfile>
+      <anchor>ga1320e35f4abcbfd440c8122a0e1d9e10</anchor>
+      <arglist>(EdiRec *rec)</arglist>
+    </member>
+  </compound>
+  <compound kind="group">
+    <name>EdiService</name>
+    <title>EdiService</title>
+    <filename>group___edi_service.html</filename>
+    <class kind="struct">EdiValidation</class>
+    <member kind="typedef">
+      <type>cchar *(*</type>
+      <name>EdiValidationProc</name>
+      <anchorfile>group___edi_service.html</anchorfile>
+      <anchor>gabd91c5b2e51a33e99e142554ef7de574</anchor>
+      <arglist>)(struct EdiValidation *vp, struct EdiRec *rec, cchar *fieldName, cchar *value)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>ediAddFieldError</name>
+      <anchorfile>group___edi_service.html</anchorfile>
+      <anchor>ga81c6f760f0e529fb91868fc2caddcec8</anchor>
+      <arglist>(struct EdiRec *rec, cchar *field, cchar *fmt,...)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>ediAddProvider</name>
+      <anchorfile>group___edi_service.html</anchorfile>
+      <anchor>ga7c605c7761d7a46a207cb6dd0f71b372</anchor>
+      <arglist>(struct EdiProvider *provider)</arglist>
+    </member>
+    <member kind="function">
+      <type>EdiService *</type>
+      <name>ediCreateService</name>
+      <anchorfile>group___edi_service.html</anchorfile>
+      <anchor>gaf844bec409e3238a6a9de36ddc040899</anchor>
+      <arglist>(void)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>ediDefineMigration</name>
+      <anchorfile>group___edi_service.html</anchorfile>
+      <anchor>ga789f616e9f38aee34d6862bf85ac4742</anchor>
+      <arglist>(struct Edi *edi, EdiMigration forw, EdiMigration back)</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>ediDefineValidation</name>
+      <anchorfile>group___edi_service.html</anchorfile>
+      <anchor>ga889df64bdd239f71c66b4fa920be8f46</anchor>
+      <arglist>(cchar *name, EdiValidationProc vfn)</arglist>
     </member>
   </compound>
 </tagfile>
