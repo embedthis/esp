@@ -283,7 +283,6 @@ PUBLIC int espLoadConfig(HttpRoute *route);
     @returns The EspRoute object.
     @ingroup EspRoute
     @stability Prototype
-    @param route
  */
 PUBLIC EspRoute *espRoute(HttpRoute *route, bool create);
 
@@ -1702,21 +1701,21 @@ PUBLIC bool espUpdateRec(HttpStream *stream, EdiRec *rec);
             <li>route String Route name to use for the URI template</li>
         </ul>
     @return A normalized, server-local Uri string.
-    @example espUri(stream, "http://example.com/index.html", 0); \n
-    espUri(stream, "/path/to/index.html", 0); \n
-    espUri(stream, "../images/splash.png", 0); \n
-    espUri(stream, "~/client/images/splash.png", 0); \n
-    espUri(stream, "${app}/client/images/splash.png", 0); \n
-    espUri(stream, "@controller/checkout", 0); \n
-    espUri(stream, "@controller/") \n
-    espUri(stream, "@init") \n
-    espUri(stream, "@") \n
-    espUri(stream, "{ action: '@post/create' }", 0); \n
-    espUri(stream, "{ action: 'checkout' }", 0); \n
-    espUri(stream, "{ action: 'logout', controller: 'admin' }", 0); \n
-    espUri(stream, "{ action: 'admin/logout'", 0); \n
-    espUri(stream, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); \n
-    espUri(stream, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); \n
+    @example espUri(stream, "http://example.com/index.html", 0); <br/>
+    espUri(stream, "/path/to/index.html", 0); <br/>
+    espUri(stream, "../images/splash.png", 0); <br/>
+    espUri(stream, "~/client/images/splash.png", 0); <br/>
+    espUri(stream, "${app}/client/images/splash.png", 0); <br/>
+    espUri(stream, "@controller/checkout", 0); <br/>
+    espUri(stream, "@controller/") <br/>
+    espUri(stream, "@init") <br/>
+    espUri(stream, "@") <br/>
+    espUri(stream, "{ action: '@post/create' }", 0); <br/>
+    espUri(stream, "{ action: 'checkout' }", 0); <br/>
+    espUri(stream, "{ action: 'logout', controller: 'admin' }", 0); <br/>
+    espUri(stream, "{ action: 'admin/logout'", 0); <br/>
+    espUri(stream, "{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); <br/>
+    espUri(stream, "{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); <br/>
     espUri(stream, "{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
     @ingroup EspReq
     @stability Evolving
@@ -1769,7 +1768,6 @@ PUBLIC void espAction(HttpRoute *route, cchar *targetKey, cchar *abilities, EspP
     Abbreviated ESP API.
     @description This is a short-form API that uses the current HttpStream stream object.
         These APIs are designed to be terse and highly readable. Consequently, they are not prefixed with "esp".
-    @see espAlert
     @defgroup EspAbbrev EspAbbrev
     @stability Stable
   */
@@ -1946,7 +1944,7 @@ PUBLIC bool feedback(cchar *type, cchar *fmt, ...);
     @ingroup EspAbbrev
     @stability Prototype
  */
-PUBLIC cchar *findParams();
+PUBLIC cchar *findParams(void);
 
 /**
     Flush transmit data.
@@ -2396,21 +2394,21 @@ PUBLIC EdiRec *makeRec(cchar *content);
             <li>route String Route name to use for the URI template</li>
         </ul>
     @return A normalized, server-local Uri string.
-    @example makeUri("http://example.com/index.html", 0); \n
-    makeUri("/path/to/index.html", 0); \n
-    makeUri("../images/splash.png", 0); \n
-    makeUri("~/client/images/splash.png", 0); \n
-    makeUri("${app}/client/images/splash.png", 0); \n
-    makeUri("@controller/checkout", 0); \n
-    makeUri("@controller/") \n
-    makeUri("@init") \n
-    makeUri("@") \n
-    makeUri("{ action: '@post/create' }", 0); \n
-    makeUri("{ action: 'checkout' }", 0); \n
-    makeUri("{ action: 'logout', controller: 'admin' }", 0); \n
-    makeUri("{ action: 'admin/logout'", 0); \n
-    makeUri("{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); \n
-    makeUri("{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); \n
+    @example makeUri("http://example.com/index.html", 0); <br/>
+    makeUri("/path/to/index.html", 0); <br/>
+    makeUri("../images/splash.png", 0); <br/>
+    makeUri("~/client/images/splash.png", 0); <br/>
+    makeUri("${app}/client/images/splash.png", 0); <br/>
+    makeUri("@controller/checkout", 0); <br/>
+    makeUri("@controller/") <br/>
+    makeUri("@init") <br/>
+    makeUri("@") <br/>
+    makeUri("{ action: '@post/create' }", 0); <br/>
+    makeUri("{ action: 'checkout' }", 0); <br/>
+    makeUri("{ action: 'logout', controller: 'admin' }", 0); <br/>
+    makeUri("{ action: 'admin/logout'", 0); <br/>
+    makeUri("{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }", 0); <br/>
+    makeUri("{ route: '~/STAR/edit', action: 'checkout', id: '99' }", 0); <br/>
     makeUri("{ template: '~/client/images/${theme}/background.jpg', theme: 'blue' }", 0);
     @ingroup EspReq
     @stability Evolving
@@ -3072,29 +3070,29 @@ PUBLIC bool updateRecFromParams(cchar *table) ME_DEPRECATED("Use updateRecFields
     Create a URI link.
     @description Create a URI link based on a given target an expanding embedded tokens based on the current request and
         route state. The target URI parameter may contain partial or complete URI information. The missing parts
-    are supplied using the current request and route tables.
+        are supplied using the current request and route tables.
     @param target The URI target. The target parameter can be a URI string or JSON style set of options.
         The target will have any embedded "{tokens}" expanded by using token values from the request parameters.
         If the target has an absolute URI path, that path is used directly after tokenization. If the target begins with
         "~", that character will be replaced with the route prefix. This is a very convenient way to create application
         top-level relative links.
-        \n\n
+        <br/>
         If the target is a string that begins with "{AT}" it will be interpreted as a service/action pair of the
         form "{AT}Service/action". If the "service/" portion is absent, the current service is used. If
         the action component is missing, the "list" action is used. A bare "{AT}" refers to the "list" action
         of the current service.
-        \n\n
+        <br/>
         If the target starts with "{" it is interpreted as being a JSON style set of options that describe the link.
         If the target is a relative URI path, it is appended to the current request URI path.
-        \n\n
+        <br/><br/>
         If the is a JSON style of options, it can specify the URI components: scheme, host, port, path, reference and
         query. If these component properties are supplied, these will be combined to create a URI.
-        \n\n
+        <br/><br/>
         If the target specifies either a service/action or a JSON set of options, The URI will be created according
         to the route URI template. The template may be explicitly specified
         via a "route" target property. Otherwise, if an "action" property is specified, the route of the same
         name will be used. If these don't result in a usable route, the "default" route will be used.
-        \n\n
+        <br/><br/>
         These are the properties supported in a JSON style "{ ... }" target:
         <ul>
             <li>scheme String URI scheme portion</li>
@@ -3113,7 +3111,8 @@ PUBLIC bool updateRecFromParams(cchar *table) ME_DEPRECATED("Use updateRecFields
     @return A normalized Uri string.
     @ingroup EspAbbrev
     @stability Evolving
-    @remarks Examples:<pre>
+    @examples:
+    <pre>
     uri("http://example.com/index.html");
     uri("/path/to/index.html");
     uri("../images/splash.png");
@@ -3130,7 +3129,7 @@ PUBLIC bool updateRecFromParams(cchar *table) ME_DEPRECATED("Use updateRecFields
     uri("{ product: 'candy', quantity: '10', template: '/cart/${product}/${quantity}' }");
     uri("{ route: '~/STAR/edit', action: 'checkout', id: '99' }");
     uri("{ template: '~/static/images/${theme}/background.jpg', theme: 'blue' }");
-</pre>
+    </pre>
  */
 PUBLIC cchar *uri(cchar *target, ...);
 
