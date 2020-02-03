@@ -63,7 +63,7 @@ PUBLIC void ediAddProvider(struct EdiProvider *provider);
     @param vp Validation structure reference
     @param rec Record to validate
     @param fieldName Field name to validate
-    @param value Field value to validate
+    @param value Field value to
     @ingroup EdiService
     @stability Evolving
  */
@@ -861,7 +861,7 @@ PUBLIC void ediSetPrivate(Edi *edi, bool on);
 
 /**
     Write a value to a database table field
-    @description Update the value of a table field in the selected table row. Note: field validations are not run.
+    @description Update the value of a table field in the selected table row. Note: field validations are not run MOB.
     @param edi Database handle
     @param tableName Database table name
     @param key Key value for the table row to update.
@@ -1066,6 +1066,18 @@ grid = ediMakeGrid("[ \\ \n
     @stability Evolving
  */
 PUBLIC EdiGrid *ediMakeGrid(cchar *content);
+
+/**
+    Make a record from a JSON fields object.
+    @description This call makes a free-standing data record based on the JSON fields.
+    @param tableName Name of the database table to initialize in the record.
+    @param fields JSON object.
+    @return An EdiRec instance
+    @ingroup Edi
+    @stability Prototype
+    @see ediMakeRec ediMakeGrid
+ */
+PUBLIC EdiRec *ediMakeRecFromJson(cchar *tableName, MprJson *fields);
 
 /**
     Make a record.
