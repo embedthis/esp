@@ -1126,6 +1126,7 @@ static cchar *getDebug(EspRoute *eroute)
 {
     Http        *http;
     Esp         *esp;
+    cchar       *switches;
     int         symbols;
 
     http = MPR->httpService;
@@ -1144,9 +1145,11 @@ static cchar *getDebug(EspRoute *eroute)
             sends(http->platform, "-mine") || sends(http->platform, "-vsdebug");
     }
     if (scontains(http->platform, "windows-")) {
-        return (symbols) ? "-Zi -Od" : "-Os";
+        switches = (symbols) ? "-Zi -Od" : "-Os";
+    } else {
+        switches = (symbols) ? "-g" : "-O2";
     }
-    return (symbols) ? "-g" : "-O2";
+    return sfmt("%s%s", switches, eroute->combine ? " -DESP_COMBINE=1" : "");
 }
 
 
