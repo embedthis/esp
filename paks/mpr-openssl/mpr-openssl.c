@@ -38,6 +38,8 @@
  #include    <openssl/rand.h>
  #include    <openssl/err.h>
  #include    <openssl/dh.h>
+ #include    <openssl/rsa.h>
+ #include    <openssl/bio.h>
 
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
     #include    <openssl/x509v3.h>
@@ -235,6 +237,12 @@ typedef struct CRYPTO_dynlock_value DynLock;
 #ifndef ME_MPR_SSL_CURVE
     #define ME_MPR_SSL_CURVE "prime256v1"
 #endif
+
+/*
+    Certificate and key formats
+ */
+#define FORMAT_PEM 1
+#define FORMAT_DER 2
 
 /***************************** Forward Declarations ***************************/
 
@@ -1276,38 +1284,42 @@ static int checkPeerCertName(MprSocket *sp)
 }
 
 
-static int setCertFile(SSL_CTX *ctx, cchar *certFile)
+/*
+    Load a certificate into the context from the supplied buffer. Type indicates the desired format. The path is only used for errors.
+ */
+static int loadCert(SSL_CTX *ctx, cchar *buf, ssize len, int type, cchar *path)
 {
     X509    *cert;
     BIO     *bio;
-    char    *buf;
-    int     rc;
+    bool    loaded;
 
     assert(ctx);
-    assert(certFile);
+    assert(buf);
+    assert(type);
+    assert(path && *path);
 
-    rc = -1;
-    bio = 0;
-    buf = 0;
     cert = 0;
+    loaded = 0;
 
-    if (ctx == NULL) {
-        return rc;
-    }
-    if ((buf = mprReadPathContents(certFile, NULL)) == 0) {
-        mprLog("error openssl", 0, "Unable to read certificate %s", certFile);
-
-    } else if ((bio = BIO_new_mem_buf(buf, -1)) == 0) {
-        mprLog("error openssl", 0, "Unable to allocate memory for certificate %s", certFile);
-
-    } else if ((cert = PEM_read_bio_X509(bio, NULL, 0, NULL)) == 0) {
-        mprLog("error openssl", 0, "Unable to parse certificate %s", certFile);
-
-    } else if (SSL_CTX_use_certificate(ctx, cert) != 1) {
-        mprLog("error openssl", 0, "Unable to use certificate %s", certFile);
-
+    if ((bio = BIO_new_mem_buf(buf, (int) len)) == 0) {
+        mprLog("error openssl", 0, "Unable to allocate memory for certificate %s", path);
     } else {
-        rc = 0;
+        if (type == FORMAT_PEM) {
+            if ((cert = PEM_read_bio_X509(bio, NULL, 0, NULL)) == 0) {
+                /* Error reported by caller if loading all formats fail */
+            }
+        } else if (type == FORMAT_DER) {
+            if ((cert = d2i_X509_bio(bio, NULL)) == 0) {
+                /* Error reported by caller */
+            }
+        }
+        if (cert) {
+            if (SSL_CTX_use_certificate(ctx, cert) != 1) {
+                mprLog("error openssl", 0, "Unable to use certificate %s", path);
+            } else {
+                loaded = 1;
+            }
+        }
     }
     if (bio) {
         BIO_free(bio);
@@ -1315,45 +1327,114 @@ static int setCertFile(SSL_CTX *ctx, cchar *certFile)
     if (cert) {
         X509_free(cert);
     }
+    return loaded ? 0 : MPR_ERR_CANT_LOAD;
+}
+
+
+/*
+    Load a certificate file in either PEM or DER format
+ */
+static int setCertFile(SSL_CTX *ctx, cchar *certFile)
+{
+    cchar   *buf;
+    ssize   len;
+    int     rc;
+
+    assert(ctx);
+    assert(certFile);
+
+    rc = 0;
+
+    if (ctx == NULL || certFile == NULL) {
+        return rc;
+    }
+    if ((buf = mprReadPathContents(certFile, &len)) == 0) {
+        mprLog("error openssl", 0, "Unable to read certificate %s", certFile);
+        rc = MPR_ERR_CANT_READ;
+    } else {
+        if (loadCert(ctx, buf, len, FORMAT_PEM, certFile) < 0 && loadCert(ctx, buf, len, FORMAT_DER, certFile) < 0) {
+            mprLog("error openssl", 0, "Unable to load certificate %s", certFile);
+            rc = MPR_ERR_CANT_LOAD;
+        }
+    }
     return rc;
 }
 
 
-static int setKeyFile(SSL_CTX *ctx, cchar *keyFile)
+/*
+    Load a key into the context from the supplied buffer. Type indicates the key format.  Path only used for diagnostics.
+ */
+static int loadKey(SSL_CTX *ctx, cchar *buf, ssize len, int type, cchar *path)
 {
     RSA     *key;
     BIO     *bio;
+    bool    loaded;
+
+    assert(ctx);
+    assert(buf);
+    assert(type);
+    assert(path && *path);
+
+    key = 0;
+    loaded = 0;
+
+    if ((bio = BIO_new_mem_buf(buf, (int) len)) == 0) {
+        mprLog("error openssl", 0, "Unable to allocate memory for key %s", path);
+    } else {
+        if (type == FORMAT_PEM) {
+            if ((key = PEM_read_bio_RSAPrivateKey(bio, NULL, 0, NULL)) == 0) {
+                /* Error reported by caller if loading all formats fail */
+            }
+        } else if (type == FORMAT_DER) {
+            if ((key = d2i_RSAPrivateKey_bio(bio, NULL)) == 0) {
+                /* Error reported by caller if loading all formats fail */
+            }
+        }
+    }
+    if (key) {
+        if (SSL_CTX_use_RSAPrivateKey(ctx, key) != 1) {
+            mprLog("error openssl", 0, "Unable to use key %s", path);
+        } else {
+            loaded = 1;
+        }
+    }
+    if (bio) {
+        BIO_free(bio);
+    }
+    if (key) {
+        RSA_free(key);
+    }
+    return loaded ? 0 : MPR_ERR_CANT_LOAD;
+}
+
+
+/*
+    Load a key file in either PEM or DER format
+ */
+static int setKeyFile(SSL_CTX *ctx, cchar *keyFile)
+{
+    RSA     *key;
     char    *buf;
+    ssize   len;
     int     rc;
 
     assert(ctx);
     assert(keyFile);
 
     key = 0;
-    bio = 0;
     buf = 0;
-    rc = -1;
+    rc = 0;
 
     if (ctx == NULL || keyFile == NULL) {
         ;
-
-    } else if ((buf = mprReadPathContents(keyFile, NULL)) == 0) {
-        mprLog("error openssl", 0, "Unable to read certificate %s", keyFile);
-
-    } else if ((bio = BIO_new_mem_buf(buf, -1)) == 0) {
-        mprLog("error openssl", 0, "Unable to allocate memory for key %s", keyFile);
-
-    } else if ((key = PEM_read_bio_RSAPrivateKey(bio, NULL, 0, NULL)) == 0) {
-        mprLog("error openssl", 0, "Unable to parse key %s", keyFile);
-
-    } else if (SSL_CTX_use_RSAPrivateKey(ctx, key) != 1) {
-        mprLog("error openssl", 0, "Unable to use key %s", keyFile);
-
+    } else if ((buf = mprReadPathContents(keyFile, &len)) == 0) {
+        mprLog("error openssl", 0, "Unable to read key %s", keyFile);
+        rc = MPR_ERR_CANT_READ;
     } else {
-        rc = 0;
-    }
-    if (bio) {
-        BIO_free(bio);
+        if (loadKey(ctx, buf, len, FORMAT_PEM, keyFile) < 0 && loadKey(ctx, buf, len, FORMAT_DER, keyFile) < 0) {
+            mprLog("error openssl", 0, "Unable to load key %s", keyFile);
+            rc = MPR_ERR_CANT_LOAD;
+        }
     }
     if (key) {
         RSA_free(key);
