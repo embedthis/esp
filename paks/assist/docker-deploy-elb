@@ -109,7 +109,7 @@ getHost() {
 checkTargets() {
     local arn targets tcount
     allTargets=$(aws ec2 describe-instances \
-        --filter "Name=tag:aws:autoscaling:groupName,Values=${AWS_PROXY}" --output text \
+        --filter "Name=tag:aws:autoscaling:groupName,Values=[${AWS_PROXY}]" --output text \
         --query 'Reservations[].Instances[].InstanceId')
     if [ $? != 0 ] ; then
         echo "Cannot describe instances"

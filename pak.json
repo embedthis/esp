@@ -33,18 +33,17 @@
     "dependencies": {
         "http": "~7",
         "mpr": "~8",
-        "mpr-version": "~0.1",
+        "mpr-version": "~1",
         "osdep": "~1.0",
         "pcre": "~1.0"
     },
     "optionalDependencies": {
-        "certs": "~0.1",
-        "mpr-matrixssl": "~0.3",
+        "certs": "~1",
         "mpr-mbedtls": "~2",
-        "mpr-openssl": "~1.0",
+        "mpr-openssl": "~1",
         "sqlite": "~3",
-        "ssl": "~0.9",
-        "watchdog": "~0.3"
+        "ssl": "~1",
+        "watchdog": "~1"
     },
     "devDependencies": {
         "makeme": ">=1.0",

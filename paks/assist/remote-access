@@ -10,9 +10,9 @@ grantAccess() {
     local data ip prior sgroup
     local GROUP_NAME="$1"
     local PORT="$2"
-    
+
     ip=$(curl -s ipecho.net/plain)
-    data=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=${GROUP_NAME}")
+    data=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=[${GROUP_NAME}]")
     [ $? != 0 ] && exit 1
 
     sgroup=$(echo $data | jq -r ".SecurityGroups[].GroupId")
@@ -30,7 +30,7 @@ revokeAccess() {
     local GROUP_NAME="$1"
     local PORT="$2"
     ip=$(curl -s ipecho.net/plain)
-    data=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=${GROUP_NAME}")
+    data=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=[${GROUP_NAME}]")
     [ $? != 0 ] && exit 1
 
     sgroup=$(echo $data | jq -r ".SecurityGroups[].GroupId")

@@ -519,7 +519,7 @@ typedef struct MprSpin {
 
 /**
     Create a Mutex lock object.
-    @description This call creates a Mutex lock object that can be used in #mprLock, #mprTryLock and #mprUnlock calls.
+    @description This call creates a Mutex lock object that can be used in mprLock #mprTryLock and mprUnlock calls.
     @ingroup MprSync
     @stability Stable.
  */
@@ -528,7 +528,7 @@ PUBLIC MprMutex *mprCreateLock(void);
 /**
     Initialize a statically allocated Mutex lock object.
     @description This call initialized a Mutex lock object without allocation. The object can then be used used
-        in #mprLock, #mprTryLock and #mprUnlock calls.
+        in mprLock mprTryLock and mprUnlock calls.
     @param mutex Reference to an MprMutex structure to initialize
     @returns A reference to the supplied mutex. Returns null on errors.
     @ingroup MprSync
@@ -548,7 +548,7 @@ PUBLIC bool mprTryLock(MprMutex *lock);
 
 /**
     Create a spin lock lock object.
-    @description This call creates a spinlock object that can be used in #mprSpinLock, and #mprSpinUnlock calls. Spin locks
+    @description This call creates a spinlock object that can be used in mprSpinLock, and mprSpinUnlock calls. Spin locks
         using MprSpin are much faster than MprMutex based locks on some systems.
     @ingroup MprSync
     @stability Stable.
@@ -558,7 +558,7 @@ PUBLIC MprSpin *mprCreateSpinLock(void);
 /**
     Initialize a statically allocated spinlock object.
     @description This call initialized a spinlock lock object without allocation. The object can then be used used
-        in #mprSpinLock and #mprSpinUnlock calls.
+        in mprSpinLock and mprSpinUnlock calls.
     @param lock Reference to a static #MprSpin  object.
     @returns A reference to the MprSpin object. Returns null on errors.
     @ingroup MprSync
@@ -579,8 +579,9 @@ PUBLIC bool mprTrySpinLock(MprSpin *lock);
     For maximum performance, use the spin lock/unlock routines macros
  */
 #if !ME_DEBUG
-#define ME_USE_LOCK_MACROS 1
+    #define ME_USE_LOCK_MACROS 1
 #endif
+
 #if ME_USE_LOCK_MACROS && !DOXYGEN
     /*
         Spin lock macros
@@ -3236,8 +3237,9 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
     Convert a time value to universal time and format as a string.
     @description Format a time string. This uses strftime if available and so the supported formats vary from
         platform to platform. Strftime should supports some of these these formats described below.
+    @param time Time to format. Use mprGetTime to retrieve the current time.
     @param fmt Time format string
-            \n
+            \n 
          %A ... full weekday name (Monday)
             \n
          %a ... abbreviated weekday name (Mon)
@@ -3345,8 +3347,6 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
         "%v "07-Jul-2003"
             \n
         RFC3399: "%FT%TZ" "1985-04-12T23:20:50.52Z" which is April 12 1985, 23:20.50 and 52 msec
-\n\n
-    @param time Time to format. Use mprGetTime to retrieve the current time.
     @return The formatting time string
     @ingroup MprTime
     @stability Stable
@@ -6664,8 +6664,8 @@ PUBLIC MprJson *mprHashToJson(MprHash *hash);
 /**
     Convert a JSON object to a string of environment variables
     @param json JSON object tree
-    @prefix prefix String prefix for environment substrings
-    @prefix list MprList to hold environment strings. Set to NULL and this routine will create a list.
+    @param prefix String prefix for environment substrings
+    @param list MprList to hold environment strings. Set to NULL and this routine will create a list.
     @return A list of environment strings
     @ingroup MprJson
     @stability Prototype
@@ -8539,7 +8539,6 @@ PUBLIC void mprActivateWorker(MprWorker *worker, MprWorkerProc proc, void *data)
 /**
     Dedicate a worker thread to a current real thread. This implements thread affinity and is required on some platforms
         where some APIs (waitpid on uClibc) cannot be called on a different thread.
-    @param worker Worker object
     @param worker Worker thread reference
     @ingroup MprWorker
     @stability Internal
@@ -8565,7 +8564,6 @@ PUBLIC ssize mprGetBusyWorkerCount(void);
 
 /**
     Release a worker thread. This releases a worker thread to be assignable to any real thread.
-    @param worker Worker object
     @param worker Worker thread reference
     @stability Internal
  */

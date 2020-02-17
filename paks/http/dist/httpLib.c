@@ -16159,6 +16159,7 @@ static bool parseIncoming(HttpConn *conn)
     /*
         Don't start processing until all the headers have been received (delimited by two blank lines)
      */
+    start = mprGetBufStart(packet->content);
     if ((end = sncontains(start, "\r\n\r\n", len)) == 0 && (end = sncontains(start, "\n\n", len)) == 0) {
         if (len >= limits->headerSize) {
             httpLimitError(conn, HTTP_ABORT | HTTP_CODE_REQUEST_TOO_LARGE,

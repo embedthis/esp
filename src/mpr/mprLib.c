@@ -27915,14 +27915,15 @@ static void validateTime(struct tm *tp, struct tm *defaults)
 
     /*
         Check for overflow. Underflow validated below.
+        tm_sec can be 61 for leap seconds.
      */
-    if (tp->tm_sec > 60) {
+    if (tp->tm_sec > 61) {
         tp->tm_sec = -1;
     }
-    if (tp->tm_min > 60) {
+    if (tp->tm_min > 59) {
         tp->tm_sec = -1;
     }
-    if (tp->tm_hour > 24) {
+    if (tp->tm_hour > 23) {
         tp->tm_sec = -1;
     }
     if (tp->tm_mday > 31) {

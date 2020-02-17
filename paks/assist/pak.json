@@ -2,7 +2,7 @@
     "name": "assist",
     "owner": "embedthis",
     "description": "Build Assist",
-    "version": "0.1.4",
+    "version": "1.0.0",
     "license": "UNLICENSED",
     "main": "index.js",
     "export": false,

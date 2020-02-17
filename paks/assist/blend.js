@@ -23,7 +23,7 @@ function clone(src) {
     return result
 }
 
-export function blend(dest, src, combine = '') {
+export default function blend(dest, src, combine = '') {
     if (!src) {
         return dest
     }

@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import * as json5 from 'json5'
 import * as gulp from 'gulp'
 import * as log from 'fancy-log'
-import {blend} from './blend'
+import blend from './blend'
 
 /*
     Polyfills

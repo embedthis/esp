@@ -27,13 +27,14 @@
         }
     ],
     "dependencies": {
-        "assist": "~0.1",
-        "me-win": "~0.1",
+        "assist": "~1",
+        "mbedtls": "~2.8",
+        "me-win": "~1",
         "osdep": "~1"
     },
     "optionalDependencies": {
-        "certs": "~0.1",
-        "ssl": "~0.9",
+        "certs": "~1",
+        "ssl": "~1",
         "mpr-openssl": "~1",
         "mpr-mbedtls": "~2"
     },
