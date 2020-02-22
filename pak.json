@@ -42,8 +42,7 @@
         "mpr-mbedtls": "~2",
         "mpr-openssl": "~1",
         "sqlite": "~3",
-        "ssl": "~1",
-        "watchdog": "~1"
+        "ssl": "~1"
     },
     "devDependencies": {
         "makeme": ">=1.0",

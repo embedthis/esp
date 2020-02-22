@@ -88,7 +88,6 @@ ME_SRC_PREFIX         ?= $(ME_ROOT_PREFIX)/usr/src/$(NAME)-$(VERSION)
 TARGETS               += $(BUILD)/bin/esp.out
 TARGETS               += $(BUILD)/.extras-modified
 TARGETS               += $(BUILD)/.install-certs-modified
-TARGETS               += $(BUILD)/bin/espman.out
 
 unexport CDPATH
 
@@ -143,7 +142,6 @@ clean:
 	rm -f "$(BUILD)/obj/sdb.o"
 	rm -f "$(BUILD)/obj/sqlite.o"
 	rm -f "$(BUILD)/obj/sqlite3.o"
-	rm -f "$(BUILD)/obj/watchdog.o"
 	rm -f "$(BUILD)/bin/esp.out"
 	rm -f "$(BUILD)/.extras-modified"
 	rm -f "$(BUILD)/.install-certs-modified"
@@ -155,7 +153,6 @@ clean:
 	rm -f "$(BUILD)/bin/libmpr-version.a"
 	rm -f "$(BUILD)/bin/libpcre.out"
 	rm -f "$(BUILD)/bin/libsql.out"
-	rm -f "$(BUILD)/bin/espman.out"
 
 clobber: clean
 	rm -fr ./$(BUILD)
@@ -579,24 +576,14 @@ $(BUILD)/obj/sqlite3.o: \
 	@echo '   [Compile] $(BUILD)/obj/sqlite3.o'
 	$(CC) -c -o $(BUILD)/obj/sqlite3.o $(CFLAGS) -DME_DEBUG=1 -DVXWORKS -DRW_MULTI_THREAD -DCPU=PENTIUM -DTOOL_FAMILY=gnu -DTOOL=gnu -D_GNU_TOOL -D_WRS_KERNEL_ -D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\" $(IFLAGS) src/sqlite/sqlite3.c
 
-#
-#   watchdog.o
-#
-DEPS_46 += $(BUILD)/inc/mpr.h
-
-$(BUILD)/obj/watchdog.o: \
-    src/watchdog/watchdog.c $(DEPS_46)
-	@echo '   [Compile] $(BUILD)/obj/watchdog.o'
-	$(CC) -c -o $(BUILD)/obj/watchdog.o $(CFLAGS) -DME_DEBUG=1 -DVXWORKS -DRW_MULTI_THREAD -DCPU=PENTIUM -DTOOL_FAMILY=gnu -DTOOL=gnu -D_GNU_TOOL -D_WRS_KERNEL_ -D_VSB_CONFIG_FILE=\"/WindRiver/vxworks-7/samples/prebuilt_projects/vsb_vxsim_linux/h/config/vsbConfig.h\" -D_FILE_OFFSET_BITS=64 -DMBEDTLS_USER_CONFIG_FILE=\"embedtls.h\" -DME_COM_OPENSSL_PATH=$(ME_COM_OPENSSL_PATH) $(IFLAGS) "-I$(ME_COM_OPENSSL_PATH)/include" src/watchdog/watchdog.c
-
 ifeq ($(ME_COM_SQLITE),1)
 #
 #   libsql
 #
-DEPS_47 += $(BUILD)/inc/sqlite3.h
-DEPS_47 += $(BUILD)/obj/sqlite3.o
+DEPS_46 += $(BUILD)/inc/sqlite3.h
+DEPS_46 += $(BUILD)/obj/sqlite3.o
 
-$(BUILD)/bin/libsql.out: $(DEPS_47)
+$(BUILD)/bin/libsql.out: $(DEPS_46)
 	@echo '      [Link] $(BUILD)/bin/libsql.out'
 	$(CC) -r -o $(BUILD)/bin/libsql.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/sqlite3.o" $(LIBS) 
 endif
@@ -605,13 +592,13 @@ ifeq ($(ME_COM_MBEDTLS),1)
 #
 #   libmbedtls
 #
-DEPS_48 += $(BUILD)/inc/osdep.h
-DEPS_48 += $(BUILD)/inc/embedtls.h
-DEPS_48 += $(BUILD)/inc/mbedtls-config.h
-DEPS_48 += $(BUILD)/inc/mbedtls.h
-DEPS_48 += $(BUILD)/obj/mbedtls.o
+DEPS_47 += $(BUILD)/inc/osdep.h
+DEPS_47 += $(BUILD)/inc/embedtls.h
+DEPS_47 += $(BUILD)/inc/mbedtls-config.h
+DEPS_47 += $(BUILD)/inc/mbedtls.h
+DEPS_47 += $(BUILD)/obj/mbedtls.o
 
-$(BUILD)/bin/libmbedtls.a: $(DEPS_48)
+$(BUILD)/bin/libmbedtls.a: $(DEPS_47)
 	@echo '      [Link] $(BUILD)/bin/libmbedtls.a'
 	$(AR) -cr $(BUILD)/bin/libmbedtls.a "$(BUILD)/obj/mbedtls.o"
 endif
@@ -620,10 +607,10 @@ ifeq ($(ME_COM_MBEDTLS),1)
 #
 #   libmpr-mbedtls
 #
-DEPS_49 += $(BUILD)/bin/libmbedtls.a
-DEPS_49 += $(BUILD)/obj/mpr-mbedtls.o
+DEPS_48 += $(BUILD)/bin/libmbedtls.a
+DEPS_48 += $(BUILD)/obj/mpr-mbedtls.o
 
-$(BUILD)/bin/libmpr-mbedtls.a: $(DEPS_49)
+$(BUILD)/bin/libmpr-mbedtls.a: $(DEPS_48)
 	@echo '      [Link] $(BUILD)/bin/libmpr-mbedtls.a'
 	$(AR) -cr $(BUILD)/bin/libmpr-mbedtls.a "$(BUILD)/obj/mpr-mbedtls.o"
 endif
@@ -632,9 +619,9 @@ ifeq ($(ME_COM_OPENSSL),1)
 #
 #   libmpr-openssl
 #
-DEPS_50 += $(BUILD)/obj/mpr-openssl.o
+DEPS_49 += $(BUILD)/obj/mpr-openssl.o
 
-$(BUILD)/bin/libmpr-openssl.a: $(DEPS_50)
+$(BUILD)/bin/libmpr-openssl.a: $(DEPS_49)
 	@echo '      [Link] $(BUILD)/bin/libmpr-openssl.a'
 	$(AR) -cr $(BUILD)/bin/libmpr-openssl.a "$(BUILD)/obj/mpr-openssl.o"
 endif
@@ -642,42 +629,42 @@ endif
 #
 #   libmpr
 #
-DEPS_51 += $(BUILD)/inc/osdep.h
+DEPS_50 += $(BUILD)/inc/osdep.h
 ifeq ($(ME_COM_MBEDTLS),1)
-    DEPS_51 += $(BUILD)/bin/libmpr-mbedtls.a
+    DEPS_50 += $(BUILD)/bin/libmpr-mbedtls.a
 endif
 ifeq ($(ME_COM_MBEDTLS),1)
-    DEPS_51 += $(BUILD)/bin/libmbedtls.a
+    DEPS_50 += $(BUILD)/bin/libmbedtls.a
 endif
 ifeq ($(ME_COM_OPENSSL),1)
-    DEPS_51 += $(BUILD)/bin/libmpr-openssl.a
+    DEPS_50 += $(BUILD)/bin/libmpr-openssl.a
 endif
-DEPS_51 += $(BUILD)/inc/mpr.h
-DEPS_51 += $(BUILD)/obj/mprLib.o
+DEPS_50 += $(BUILD)/inc/mpr.h
+DEPS_50 += $(BUILD)/obj/mprLib.o
 
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
-    LIBS_51 += -lssl
-    LIBPATHS_51 += -L"$(ME_COM_OPENSSL_PATH)"
+    LIBS_50 += -lssl
+    LIBPATHS_50 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 endif
 ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_51 += -lcrypto
-    LIBPATHS_51 += -L"$(ME_COM_OPENSSL_PATH)"
+    LIBS_50 += -lcrypto
+    LIBPATHS_50 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
-$(BUILD)/bin/libmpr.out: $(DEPS_51)
+$(BUILD)/bin/libmpr.out: $(DEPS_50)
 	@echo '      [Link] $(BUILD)/bin/libmpr.out'
-	$(CC) -r -o $(BUILD)/bin/libmpr.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/mprLib.o" -lmpr-openssl $(LIBPATHS_51) $(LIBS_51) $(LIBS_51) $(LIBS) -lmpr-mbedtls -lmbedtls 
+	$(CC) -r -o $(BUILD)/bin/libmpr.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/mprLib.o" -lmpr-openssl $(LIBPATHS_50) $(LIBS_50) $(LIBS_50) $(LIBS) -lmpr-mbedtls -lmbedtls 
 
 ifeq ($(ME_COM_PCRE),1)
 #
 #   libpcre
 #
-DEPS_52 += $(BUILD)/inc/pcre.h
-DEPS_52 += $(BUILD)/obj/pcre.o
+DEPS_51 += $(BUILD)/inc/pcre.h
+DEPS_51 += $(BUILD)/obj/pcre.o
 
-$(BUILD)/bin/libpcre.out: $(DEPS_52)
+$(BUILD)/bin/libpcre.out: $(DEPS_51)
 	@echo '      [Link] $(BUILD)/bin/libpcre.out'
 	$(CC) -r -o $(BUILD)/bin/libpcre.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/pcre.o" $(LIBS) 
 endif
@@ -686,36 +673,36 @@ ifeq ($(ME_COM_HTTP),1)
 #
 #   libhttp
 #
-DEPS_53 += $(BUILD)/bin/libmpr.out
+DEPS_52 += $(BUILD)/bin/libmpr.out
 ifeq ($(ME_COM_PCRE),1)
-    DEPS_53 += $(BUILD)/bin/libpcre.out
+    DEPS_52 += $(BUILD)/bin/libpcre.out
 endif
-DEPS_53 += $(BUILD)/inc/http.h
-DEPS_53 += $(BUILD)/obj/httpLib.o
+DEPS_52 += $(BUILD)/inc/http.h
+DEPS_52 += $(BUILD)/obj/httpLib.o
 
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
-    LIBS_53 += -lssl
-    LIBPATHS_53 += -L"$(ME_COM_OPENSSL_PATH)"
+    LIBS_52 += -lssl
+    LIBPATHS_52 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 endif
 ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_53 += -lcrypto
-    LIBPATHS_53 += -L"$(ME_COM_OPENSSL_PATH)"
+    LIBS_52 += -lcrypto
+    LIBPATHS_52 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
-$(BUILD)/bin/libhttp.out: $(DEPS_53)
+$(BUILD)/bin/libhttp.out: $(DEPS_52)
 	@echo '      [Link] $(BUILD)/bin/libhttp.out'
-	$(CC) -r -o $(BUILD)/bin/libhttp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/httpLib.o" $(LIBPATHS_53) $(LIBS_53) $(LIBS_53) $(LIBS) -lmpr-openssl -lmpr-mbedtls -lmbedtls 
+	$(CC) -r -o $(BUILD)/bin/libhttp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/httpLib.o" $(LIBPATHS_52) $(LIBS_52) $(LIBS_52) $(LIBS) -lmpr-openssl -lmpr-mbedtls -lmbedtls 
 endif
 
 #
 #   libmpr-version
 #
-DEPS_54 += $(BUILD)/inc/mpr-version.h
-DEPS_54 += $(BUILD)/obj/mpr-version.o
+DEPS_53 += $(BUILD)/inc/mpr-version.h
+DEPS_53 += $(BUILD)/obj/mpr-version.o
 
-$(BUILD)/bin/libmpr-version.a: $(DEPS_54)
+$(BUILD)/bin/libmpr-version.a: $(DEPS_53)
 	@echo '      [Link] $(BUILD)/bin/libmpr-version.a'
 	$(AR) -cr $(BUILD)/bin/libmpr-version.a "$(BUILD)/obj/mpr-version.o"
 
@@ -723,24 +710,48 @@ $(BUILD)/bin/libmpr-version.a: $(DEPS_54)
 #   libesp
 #
 ifeq ($(ME_COM_SQLITE),1)
-    DEPS_55 += $(BUILD)/bin/libsql.out
+    DEPS_54 += $(BUILD)/bin/libsql.out
 endif
 ifeq ($(ME_COM_HTTP),1)
-    DEPS_55 += $(BUILD)/bin/libhttp.out
+    DEPS_54 += $(BUILD)/bin/libhttp.out
 endif
-DEPS_55 += $(BUILD)/bin/libmpr-version.a
-DEPS_55 += $(BUILD)/inc/edi.h
-DEPS_55 += $(BUILD)/inc/esp.h
-DEPS_55 += $(BUILD)/inc/mdb.h
-DEPS_55 += $(BUILD)/obj/edi.o
-DEPS_55 += $(BUILD)/obj/espAbbrev.o
-DEPS_55 += $(BUILD)/obj/espConfig.o
-DEPS_55 += $(BUILD)/obj/espFramework.o
-DEPS_55 += $(BUILD)/obj/espHtml.o
-DEPS_55 += $(BUILD)/obj/espRequest.o
-DEPS_55 += $(BUILD)/obj/espTemplate.o
-DEPS_55 += $(BUILD)/obj/mdb.o
-DEPS_55 += $(BUILD)/obj/sdb.o
+DEPS_54 += $(BUILD)/bin/libmpr-version.a
+DEPS_54 += $(BUILD)/inc/edi.h
+DEPS_54 += $(BUILD)/inc/esp.h
+DEPS_54 += $(BUILD)/inc/mdb.h
+DEPS_54 += $(BUILD)/obj/edi.o
+DEPS_54 += $(BUILD)/obj/espAbbrev.o
+DEPS_54 += $(BUILD)/obj/espConfig.o
+DEPS_54 += $(BUILD)/obj/espFramework.o
+DEPS_54 += $(BUILD)/obj/espHtml.o
+DEPS_54 += $(BUILD)/obj/espRequest.o
+DEPS_54 += $(BUILD)/obj/espTemplate.o
+DEPS_54 += $(BUILD)/obj/mdb.o
+DEPS_54 += $(BUILD)/obj/sdb.o
+
+ifeq ($(ME_COM_OPENSSL),1)
+ifeq ($(ME_COM_SSL),1)
+    LIBS_54 += -lssl
+    LIBPATHS_54 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
+endif
+ifeq ($(ME_COM_OPENSSL),1)
+    LIBS_54 += -lcrypto
+    LIBPATHS_54 += -L"$(ME_COM_OPENSSL_PATH)"
+endif
+
+$(BUILD)/bin/libesp.out: $(DEPS_54)
+	@echo '      [Link] $(BUILD)/bin/libesp.out'
+	$(CC) -r -o $(BUILD)/bin/libesp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/edi.o" "$(BUILD)/obj/espAbbrev.o" "$(BUILD)/obj/espConfig.o" "$(BUILD)/obj/espFramework.o" "$(BUILD)/obj/espHtml.o" "$(BUILD)/obj/espRequest.o" "$(BUILD)/obj/espTemplate.o" "$(BUILD)/obj/mdb.o" "$(BUILD)/obj/sdb.o" -lmpr-version $(LIBPATHS_54) $(LIBS_54) $(LIBS_54) $(LIBS) -lmpr-openssl -lmpr-mbedtls -lmbedtls 
+
+#
+#   espcmd
+#
+ifeq ($(ME_COM_SQLITE),1)
+    DEPS_55 += $(BUILD)/bin/libsql.out
+endif
+DEPS_55 += $(BUILD)/bin/libesp.out
+DEPS_55 += $(BUILD)/obj/esp.o
 
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
@@ -753,41 +764,17 @@ ifeq ($(ME_COM_OPENSSL),1)
     LIBPATHS_55 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
-$(BUILD)/bin/libesp.out: $(DEPS_55)
-	@echo '      [Link] $(BUILD)/bin/libesp.out'
-	$(CC) -r -o $(BUILD)/bin/libesp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/edi.o" "$(BUILD)/obj/espAbbrev.o" "$(BUILD)/obj/espConfig.o" "$(BUILD)/obj/espFramework.o" "$(BUILD)/obj/espHtml.o" "$(BUILD)/obj/espRequest.o" "$(BUILD)/obj/espTemplate.o" "$(BUILD)/obj/mdb.o" "$(BUILD)/obj/sdb.o" -lmpr-version $(LIBPATHS_55) $(LIBS_55) $(LIBS_55) $(LIBS) -lmpr-openssl -lmpr-mbedtls -lmbedtls 
-
-#
-#   espcmd
-#
-ifeq ($(ME_COM_SQLITE),1)
-    DEPS_56 += $(BUILD)/bin/libsql.out
-endif
-DEPS_56 += $(BUILD)/bin/libesp.out
-DEPS_56 += $(BUILD)/obj/esp.o
-
-ifeq ($(ME_COM_OPENSSL),1)
-ifeq ($(ME_COM_SSL),1)
-    LIBS_56 += -lssl
-    LIBPATHS_56 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_56 += -lcrypto
-    LIBPATHS_56 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-
-$(BUILD)/bin/esp.out: $(DEPS_56)
+$(BUILD)/bin/esp.out: $(DEPS_55)
 	@echo '      [Link] $(BUILD)/bin/esp.out'
-	$(CC) -o $(BUILD)/bin/esp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_56) $(LIBS_56) $(LIBS_56) $(LIBS) -lmpr-version -lmpr-openssl -lmpr-mbedtls -lmbedtls -Wl,-r 
+	$(CC) -o $(BUILD)/bin/esp.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/esp.o" $(LIBPATHS_55) $(LIBS_55) $(LIBS_55) $(LIBS) -lmpr-version -lmpr-openssl -lmpr-mbedtls -lmbedtls -Wl,-r 
 
 #
 #   extras
 #
-DEPS_57 += src/esp-compile.json
-DEPS_57 += src/vcvars.bat
+DEPS_56 += src/esp-compile.json
+DEPS_56 += src/vcvars.bat
 
-$(BUILD)/.extras-modified: $(DEPS_57)
+$(BUILD)/.extras-modified: $(DEPS_56)
 	@echo '      [Copy] $(BUILD)/bin'
 	mkdir -p "$(BUILD)/bin"
 	cp src/esp-compile.json $(BUILD)/bin/esp-compile.json
@@ -798,39 +785,39 @@ ifeq ($(ME_COM_HTTP),1)
 #
 #   httpcmd
 #
-DEPS_58 += $(BUILD)/bin/libhttp.out
-DEPS_58 += $(BUILD)/obj/http.o
+DEPS_57 += $(BUILD)/bin/libhttp.out
+DEPS_57 += $(BUILD)/obj/http.o
 
 ifeq ($(ME_COM_OPENSSL),1)
 ifeq ($(ME_COM_SSL),1)
-    LIBS_58 += -lssl
-    LIBPATHS_58 += -L"$(ME_COM_OPENSSL_PATH)"
+    LIBS_57 += -lssl
+    LIBPATHS_57 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 endif
 ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_58 += -lcrypto
-    LIBPATHS_58 += -L"$(ME_COM_OPENSSL_PATH)"
+    LIBS_57 += -lcrypto
+    LIBPATHS_57 += -L"$(ME_COM_OPENSSL_PATH)"
 endif
 
-$(BUILD)/bin/http.out: $(DEPS_58)
+$(BUILD)/bin/http.out: $(DEPS_57)
 	@echo '      [Link] $(BUILD)/bin/http.out'
-	$(CC) -o $(BUILD)/bin/http.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/http.o" $(LIBPATHS_58) $(LIBS_58) $(LIBS_58) $(LIBS) -Wl,-r 
+	$(CC) -o $(BUILD)/bin/http.out $(LDFLAGS) $(LIBPATHS) "$(BUILD)/obj/http.o" $(LIBPATHS_57) $(LIBS_57) $(LIBS_57) $(LIBS) -Wl,-r 
 endif
 
 #
 #   install-certs
 #
-DEPS_59 += src/certs/samples/ca.crt
-DEPS_59 += src/certs/samples/ca.key
-DEPS_59 += src/certs/samples/ec.crt
-DEPS_59 += src/certs/samples/ec.key
-DEPS_59 += src/certs/samples/roots.crt
-DEPS_59 += src/certs/samples/self.crt
-DEPS_59 += src/certs/samples/self.key
-DEPS_59 += src/certs/samples/test.crt
-DEPS_59 += src/certs/samples/test.key
+DEPS_58 += src/certs/samples/ca.crt
+DEPS_58 += src/certs/samples/ca.key
+DEPS_58 += src/certs/samples/ec.crt
+DEPS_58 += src/certs/samples/ec.key
+DEPS_58 += src/certs/samples/roots.crt
+DEPS_58 += src/certs/samples/self.crt
+DEPS_58 += src/certs/samples/self.key
+DEPS_58 += src/certs/samples/test.crt
+DEPS_58 += src/certs/samples/test.key
 
-$(BUILD)/.install-certs-modified: $(DEPS_59)
+$(BUILD)/.install-certs-modified: $(DEPS_58)
 	@echo '      [Copy] $(BUILD)/bin'
 	mkdir -p "$(BUILD)/bin"
 	cp src/certs/samples/ca.crt $(BUILD)/bin/ca.crt
@@ -845,31 +832,10 @@ $(BUILD)/.install-certs-modified: $(DEPS_59)
 	touch "$(BUILD)/.install-certs-modified"
 
 #
-#   watchdog
-#
-DEPS_60 += $(BUILD)/bin/libmpr.out
-DEPS_60 += $(BUILD)/obj/watchdog.o
-
-ifeq ($(ME_COM_OPENSSL),1)
-ifeq ($(ME_COM_SSL),1)
-    LIBS_60 += -lssl
-    LIBPATHS_60 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-endif
-ifeq ($(ME_COM_OPENSSL),1)
-    LIBS_60 += -lcrypto
-    LIBPATHS_60 += -L"$(ME_COM_OPENSSL_PATH)"
-endif
-
-$(BUILD)/bin/espman.out: $(DEPS_60)
-	@echo '      [Link] $(BUILD)/bin/espman.out'
-	$(CC) -o $(BUILD)/bin/espman.out $(LDFLAGS) $(LIBPATHS)  "$(BUILD)/obj/watchdog.o" $(LIBPATHS_60) $(LIBS_60) $(LIBS_60) $(LIBS) -lmpr-openssl -lmpr-mbedtls -lmbedtls -Wl,-r 
-
-#
 #   installPrep
 #
 
-installPrep: $(DEPS_61)
+installPrep: $(DEPS_59)
 	if [ "`id -u`" != 0 ] ; \
 	then echo "Must run as root. Rerun with sudo." ; \
 	exit 255 ; \
@@ -879,47 +845,47 @@ installPrep: $(DEPS_61)
 #   stop
 #
 
-stop: $(DEPS_62)
+stop: $(DEPS_60)
 
 #
 #   installBinary
 #
 
-installBinary: $(DEPS_63)
+installBinary: $(DEPS_61)
 
 #
 #   start
 #
 
-start: $(DEPS_64)
+start: $(DEPS_62)
 
 #
 #   install
 #
-DEPS_65 += installPrep
-DEPS_65 += stop
-DEPS_65 += installBinary
-DEPS_65 += start
+DEPS_63 += installPrep
+DEPS_63 += stop
+DEPS_63 += installBinary
+DEPS_63 += start
 
-install: $(DEPS_65)
+install: $(DEPS_63)
 
 #
 #   uninstall
 #
-DEPS_66 += stop
+DEPS_64 += stop
 
-uninstall: $(DEPS_66)
+uninstall: $(DEPS_64)
 
 #
 #   uninstallBinary
 #
 
-uninstallBinary: $(DEPS_67)
+uninstallBinary: $(DEPS_65)
 
 #
 #   version
 #
 
-version: $(DEPS_68)
+version: $(DEPS_66)
 	echo $(VERSION)
 
