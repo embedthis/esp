@@ -30,11 +30,11 @@
         }
     ],
     "dependencies": {
-        "certs": "~0.1",
+        "certs": "~1",
         "mpr": "~8",
         "mpr-mbedtls": "~2",
-        "osdep": "~1.0",
-        "pcre": "~1.0",
+        "osdep": "~1",
+        "pcre": "~1",
         "ssl": "~1"
     },
     "optionalDependencies": {

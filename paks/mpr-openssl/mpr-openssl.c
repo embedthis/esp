@@ -586,12 +586,14 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
     /*
         Define default OpenSSL options
         Ensure we generate a new private key for each connection
-        Disable SSLv2 and SSLv3 by default -- they are insecure.
+        Disable SSLv2, SSLv3 and TLSv1 by default -- they are insecure.
      */
-    cfg->setFlags = SSL_OP_ALL | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+    cfg->setFlags = SSL_OP_ALL | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
+
     /*
         Configuration time controls
      */
+#if UNUSED
     if (!(ssl->protocols & MPR_PROTO_TLSV1)) {
         /* Disable all TLS V1.* */
 #ifdef SSL_OP_NO_TLSv1
@@ -607,6 +609,18 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         cfg->setFlags |= SSL_OP_NO_TLSv1_3;
 #endif
     }
+#endif /* UNUSED */
+
+#ifdef SSL_OP_NO_SSLv2
+    if (!(ssl->protocols & MPR_PROTO_SSLV2)) {
+        cfg->setFlags |= SSL_OP_NO_SSLv2;
+    }
+#endif
+#ifdef SSL_OP_NO_SSLv3
+    if (!(ssl->protocols & MPR_PROTO_SSLV3)) {
+        cfg->setFlags |= SSL_OP_NO_SSLv3;
+    }
+#endif
 #ifdef SSL_OP_NO_TLSv1
     if (!(ssl->protocols & MPR_PROTO_TLSV1_0)) {
         cfg->setFlags |= SSL_OP_NO_TLSv1;

@@ -1742,7 +1742,9 @@ typedef void (*EspViewProc)(HttpConn *conn);
  */
 typedef EspProc EspAction;
 
+#if UNUSED
 PUBLIC void espManageAction(EspAction *ap, int flags);
+#endif
 
 /**
     ESP request structure
