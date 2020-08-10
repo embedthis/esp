@@ -8,7 +8,7 @@
             rules: {
                 dynamic: {
                     macosx: {
-                        compile: '${CC} -c ${DEBUG} -Wall -DPIC -fPIC -arch ${GCC_ARCH} -I. -I${APPINC} -I${INC} ${SRC} -o ${OBJ}',
+                        compile: '${CC} -c ${DEBUG} ${CFLAGS} -Wall -DPIC -fPIC -arch ${GCC_ARCH} -I. -I${APPINC} -I${INC} ${SRC} -o ${OBJ}',
                         link: '${CC} -dynamiclib ${DEBUG} -arch ${GCC_ARCH} -L${LIBPATH} -Wl,-rpath,@executable_path/ -Wl,-rpath,@loader_path/ ${CFLAGS} ${LIBS} ${LDFLAGS} -o ${MOD}${SHOBJ} ${OBJ}',
                     },
                     windows: {
