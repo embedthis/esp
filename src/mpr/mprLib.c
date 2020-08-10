@@ -2034,8 +2034,12 @@ static void allocException(int cause, size_t size)
         /*
             Allocation failed
          */
-        mprLog("critical mpr memory", 0, "Application exiting immediately due to memory depletion.");
-        mprShutdown(MPR_EXIT_ABORT, -1, 0);
+        if (heap->allocPolicy == MPR_ALLOC_POLICY_ABORT) {
+            abort();
+        } else {
+            mprLog("critical mpr memory", 0, "Application exiting immediately due to memory depletion.");
+            mprShutdown(MPR_EXIT_ABORT, -1, 0);
+        }
 
     } else if (cause & MPR_MEM_LIMIT) {
         /*
@@ -2048,6 +2052,10 @@ static void allocException(int cause, size_t size)
         } else if (heap->allocPolicy == MPR_ALLOC_POLICY_EXIT) {
             mprLog("critical mpr memory", 0, "Application exiting due to memory depletion.");
             mprShutdown(MPR_EXIT_NORMAL, -1, MPR_EXIT_TIMEOUT);
+
+        } else if (heap->allocPolicy == MPR_ALLOC_POLICY_ABORT) {
+            //  kill(getpid(), SIGSEGV);
+            abort();
         }
     }
     heap->stats.inMemException = 0;
@@ -3725,27 +3733,27 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
         timeout = 30000;
     }
 #endif
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-
-    } else if ((hwnd = mprGetWindow(0)) == 0) {
+    if ((hwnd = mprGetWindow(0)) == 0) {
         mprLog("critical mpr event", 0, "mprWaitForIO: Cannot get window");
+        return;
+    }
 
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
+    }
+    /*
+        Timer must be after yield
+     */
+    mprYield(MPR_YIELD_STICKY);
+    SetTimer(hwnd, 0, (UINT) timeout, NULL);
+    if (GetMessage(&msg, NULL, 0, 0) == 0) {
+        mprResetYield();
+        mprShutdown(MPR_EXIT_NORMAL, 0, MPR_EXIT_TIMEOUT);
     } else {
-        /*
-            Timer must be after yield
-         */
-        mprYield(MPR_YIELD_STICKY);
-        SetTimer(hwnd, 0, (UINT) timeout, NULL);
-        if (GetMessage(&msg, NULL, 0, 0) == 0) {
-            mprResetYield();
-            mprShutdown(MPR_EXIT_NORMAL, 0, MPR_EXIT_TIMEOUT);
-        } else {
-            mprClearWaiting();
-            mprResetYield();
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        mprClearWaiting();
+        mprResetYield();
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
     ws->wakeRequested = 0;
 }
@@ -5468,7 +5476,7 @@ static void manageCmdService(MprCmdService *cmd, int flags);
 static void manageCmd(MprCmd *cmd, int flags);
 static void prepWinCommand(MprCmd *cmd);
 static void prepWinProgram(MprCmd *cmd);
-static void reapCmd(MprCmd *cmd, bool finalizing);
+static bool reapCmd(MprCmd *cmd);
 static void resetCmd(MprCmd *cmd, bool finalizing);
 static int startProcess(MprCmd *cmd);
 static void stdinCallback(MprCmd *cmd, MprEvent *event);
@@ -5610,8 +5618,9 @@ static void manageCmd(MprCmd *cmd, int flags)
 
 static void resetCmd(MprCmd *cmd, bool finalizing)
 {
-    MprCmdFile      *files;
-    int             i;
+    MprCmdFile  *files;
+    MprTicks    mark, timeout;
+    int         i;
 
     assert(cmd);
     files = cmd->files;
@@ -5644,8 +5653,18 @@ static void resetCmd(MprCmd *cmd, bool finalizing)
 
     if (cmd->pid && (!(cmd->flags & MPR_CMD_DETACH) || finalizing)) {
         mprStopCmd(cmd, -1);
-        reapCmd(cmd, finalizing);
-        cmd->pid = 0;
+        mark = mprGetTicks();
+        timeout = 20 * TPS;
+        do {
+            if (reapCmd(cmd)) {
+                break;
+            }
+            mprYield(0);
+            mprNap(1);
+        } while (mprGetRemainingTicks(mark, timeout) > 0);
+    }
+    if (cmd->pid) {
+        mprLog("error cmd", 0, "Could not reap command pid %d", cmd->pid);
     }
     if (cmd->signal) {
         mprRemoveSignalHandler(cmd->signal);
@@ -5711,7 +5730,7 @@ PUBLIC void mprCloseCmdFd(MprCmd *cmd, int channel)
             cmd->eofCount++;
             if (cmd->eofCount >= cmd->requiredEof) {
 #if VXWORKS || XCODE_DEBUG
-                reapCmd(cmd, 0);
+                reapCmd(cmd);
 #endif
                 if (cmd->pid == 0) {
                     completeCommand(cmd);
@@ -6132,6 +6151,9 @@ PUBLIC bool mprAreCmdEventsEnabled(MprCmd *cmd, int channel)
     MprWaitHandler  *wp;
 
     int mask = (channel == MPR_CMD_STDIN) ? MPR_WRITABLE : MPR_READABLE;
+    if (cmd == 0) {
+        return 0;
+    }
     return ((wp = cmd->handlers[channel]) != 0) && (wp->desiredMask & mask);
 }
 
@@ -6140,6 +6162,9 @@ PUBLIC void mprEnableCmdOutputEvents(MprCmd *cmd, bool on)
 {
     int     mask;
 
+    if (cmd == 0) {
+        return;
+    }
     mask = on ? MPR_READABLE : 0;
     if (cmd->handlers[MPR_CMD_STDOUT]) {
         mprWaitOn(cmd->handlers[MPR_CMD_STDOUT], mask);
@@ -6152,6 +6177,9 @@ PUBLIC void mprEnableCmdOutputEvents(MprCmd *cmd, bool on)
 
 PUBLIC void mprEnableCmdEvents(MprCmd *cmd, int channel)
 {
+    if (cmd == 0) {
+        return;
+    }
     int mask = (channel == MPR_CMD_STDIN) ? MPR_WRITABLE : MPR_READABLE;
     if (cmd->handlers[channel]) {
         mprWaitOn(cmd->handlers[channel], mask);
@@ -6161,6 +6189,9 @@ PUBLIC void mprEnableCmdEvents(MprCmd *cmd, int channel)
 
 PUBLIC void mprDisableCmdEvents(MprCmd *cmd, int channel)
 {
+    if (cmd == 0) {
+        return;
+    }
     if (cmd->handlers[channel]) {
         mprWaitOn(cmd->handlers[channel], 0);
     }
@@ -6210,7 +6241,7 @@ static void pollWinCmd(MprCmd *cmd, MprTicks timeout)
             mprYield(MPR_YIELD_STICKY);
             if (WaitForSingleObject(cmd->process, (DWORD) delay) == WAIT_OBJECT_0) {
                 mprResetYield();
-                reapCmd(cmd, 0);
+                reapCmd(cmd);
                 break;
             } else {
                 mprResetYield();
@@ -6285,10 +6316,10 @@ PUBLIC int mprWaitForCmd(MprCmd *cmd, MprTicks timeout)
     WARNING: this may be called with a false-positive, ie. SIGCHLD will get invoked for all process deaths and not just
     when this cmd has completed.
  */
-static void reapCmd(MprCmd *cmd, bool finalizing)
+static bool reapCmd(MprCmd *cmd)
 {
     if (cmd->pid == 0) {
-        return;
+        return 0;
     }
 #if ME_UNIX_LIKE
 {
@@ -6324,7 +6355,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
     if (!cmd->stopped) {
         if (semTake(cmd->exitCond, MPR_TIMEOUT_STOP_TASK) != OK) {
             mprLog("error mpr cmd", 0, "Child %s did not exit, errno %d", cmd->program, errno);
-            return;
+            return 0;
         }
     }
     semDelete(cmd->exitCond);
@@ -6339,7 +6370,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
 
     if (GetExitCodeProcess(cmd->process, (ulong*) &status) == 0) {
         mprLog("error mpr cmd", 0, "GetExitProcess error");
-        return;
+        return 0;
     }
     if (status != STILL_ACTIVE) {
         cmd->status = status;
@@ -6363,6 +6394,7 @@ static void reapCmd(MprCmd *cmd, bool finalizing)
             (cmd->callback)(cmd, -1, cmd->callbackData);
         }
     }
+    return cmd->pid == 0 ? 1 : 0;
 }
 
 
@@ -6953,7 +6985,7 @@ static int makeChannel(MprCmd *cmd, int index)
  */
 static void cmdChildDeath(MprCmd *cmd, MprSignal *sp)
 {
-    reapCmd(cmd, 0);
+    reapCmd(cmd);
 }
 
 
@@ -7050,7 +7082,7 @@ PUBLIC int startProcess(MprCmd *cmd)
     char            *entryPoint, *program, *pair;
     int             pri, next;
 
-    mprLog("info mpr cmd", 4, "Program %s", cmd->program);
+    mprLog("info mpr cmd", 6, "Program %s", cmd->program);
     entryPoint = 0;
     if (cmd->env) {
         for (ITERATE_ITEMS(cmd->env, pair, next)) {
@@ -7110,7 +7142,6 @@ static void cmdTaskEntry(char *program, MprCmdTaskFn entry, int cmdArg)
 {
     MprCmd          *cmd;
     MprCmdFile      *files;
-    WIND_TCB        *tcb;
     char            *item;
     int             inFd, outFd, errFd, id, next;
 
@@ -7146,36 +7177,22 @@ static void cmdTaskEntry(char *program, MprCmdTaskFn entry, int cmdArg)
     for (ITERATE_ITEMS(cmd->env, item, next)) {
         putenv(item);
     }
-
-#if !VXWORKS
-{
-    char    *dir;
-    int     rc;
-
-    /*
-        Set current directory if required
-        WARNING: Setting working directory on VxWorks is global
-     */
-    if (cmd->dir) {
-        rc = chdir(cmd->dir);
-    } else {
-        dir = mprGetPathDir(cmd->program);
-        rc = chdir(dir);
-    }
-    if (rc < 0) {
-        mprLog("error mpr cmd", 0, "Cannot change directory to %s", cmd->dir);
-        exit(255);
-    }
-}
-#endif
-
     /*
         Call the user's entry point
      */
     (entry)(cmd->argc, (char**) cmd->argv, (char**) cmd->env);
 
-    tcb = taskTcb(id);
-    cmd->status = tcb->exitCode;
+    {
+#if _WRS_VXWORKS_MAJOR >= 6
+        TASK_DESC td;
+        taskInfoGet(id, &td);
+        cmd->status = td.td_status;
+#else
+        WIND_TCB *tcb;
+        tcb = taskTcb(id);
+        cmd->status = tcb->exitCode;
+#endif
+    }
 
     /*
         Cleanup
@@ -7186,8 +7203,6 @@ static void cmdTaskEntry(char *program, MprCmdTaskFn entry, int cmdArg)
     close(errFd);
     semGive(cmd->exitCond);
 }
-
-
 #endif /* VXWORKS */
 
 
@@ -11029,9 +11044,8 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
         timeout = 30000;
     }
 #endif
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-        return;
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
     }
     mprYield(MPR_YIELD_STICKY);
 
@@ -14836,10 +14850,6 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
     struct kevent   events[ME_MAX_EVENTS];
     int             nevents;
 
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-        return;
-    }
     if (timeout < 0 || timeout > MAXINT) {
         timeout = MAXINT;
     }
@@ -14848,6 +14858,9 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
         timeout = 30000;
     }
 #endif
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
+    }
     ts.tv_sec = ((int) (timeout / 1000));
     ts.tv_nsec = ((int) ((timeout % 1000) * 1000 * 1000));
 
@@ -16204,11 +16217,13 @@ PUBLIC int mprStartLogging(cchar *logSpec, int flags)
         if (MPR->logBackup > 0) {
             mprGetPathInfo(path, &info);
             if (MPR->logSize <= 0 || (info.valid && info.size > MPR->logSize) || (flags & MPR_LOG_ANEW)) {
-                mprBackupLog(path, MPR->logBackup);
+                if (mprBackupLog(path, MPR->logBackup) < 0) {
+                    mprPrintf("Cannot backup log %s, errno=%d\n", path, errno);
+                }
             }
         }
         if ((file = mprOpenFile(path, mode, 0664)) == 0) {
-            mprLog("error mpr log", 0, "Cannot open log file %s, errno=%d", path, errno);
+            mprPrintf("Cannot open log file %s, errno=%d", path, errno);
             return MPR_ERR_CANT_OPEN;
         }
 #endif
@@ -16351,7 +16366,9 @@ static void backupLog()
     if (info.valid && info.size > MPR->logSize) {
         lock(MPR);
         mprSetLogFile(0);
-        mprBackupLog(MPR->logPath, MPR->logBackup);
+        if (mprBackupLog(MPR->logPath, MPR->logBackup) < 0) {
+            mprPrintf("Cannot backup log %s, errno=%d\n", MPR->logPath, errno);
+        }
         mode = O_CREAT | O_WRONLY | O_TEXT;
         if ((file = mprOpenFile(MPR->logPath, mode, 0664)) == 0) {
             mprLog("error mpr log", 0, "Cannot open log file %s, errno=%d", MPR->logPath, errno);
@@ -21274,29 +21291,40 @@ void romDummy() {}
 
 
 
-#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT || ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
 
 /********************************** Forwards **********************************/
 
+static int createWakeup(MprWaitService *ws);
 static void serviceIO(MprWaitService *ws, fd_set *readMask, fd_set *writeMask, int maxfd);
-static void readPipe(MprWaitService *ws);
+static void readWakeup(MprWaitService *ws);
+static int sendWakeup(MprWaitService *ws);
 
 /************************************ Code ************************************/
 
 PUBLIC int mprCreateNotifierService(MprWaitService *ws)
 {
-    int     rc, retries, breakPort, breakSock, maxTries;
-
     ws->highestFd = 0;
     if ((ws->handlerMap = mprCreateList(MPR_FD_MIN, 0)) == 0) {
         return MPR_ERR_CANT_INITIALIZE;
     }
     FD_ZERO(&ws->readMask);
     FD_ZERO(&ws->writeMask);
+    ws->breakFd[0] = -1;
+    ws->breakFd[1] = -1;
 
-    /*
-        Try to find a good port to use to break out of the select wait
-     */
+    return createWakeup(ws);
+}
+
+
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+/*
+    Try to find a good port to use to break out of the select wait
+ */
+static int createWakeup(MprWaitService *ws)
+{
+    int     rc, retries, breakPort, breakSock, maxTries;
+
     maxTries = 100;
     breakPort = ME_WAKEUP_PORT;
     for (rc = retries = 0; retries < maxTries; retries++) {
@@ -21309,11 +21337,11 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
         fcntl(breakSock, F_SETFD, FD_CLOEXEC);
 #endif
         ws->breakAddress.sin_family = AF_INET;
-#if CYGWIN || VXWORKS
+#if CYGWIN || VXWORKS || FREEBSD
         /*
             Cygwin & VxWorks don't work with INADDR_ANY
          */
-        ws->breakAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+        ws->breakAddress.sin_addr.s_addr = inet_addr(ME_WAKEUP_ADDR);
 #else
         ws->breakAddress.sin_addr.s_addr = INADDR_ANY;
 #endif
@@ -21335,11 +21363,34 @@ PUBLIC int mprCreateNotifierService(MprWaitService *ws)
         mprLog("critical mpr select", 0, "Cannot bind any port to use for select. Tried %d-%d", breakPort, breakPort - maxTries);
         return MPR_ERR_CANT_OPEN;
     }
-    ws->breakSock = breakSock;
     FD_SET(breakSock, &ws->readMask);
     ws->highestFd = breakSock;
+    ws->breakFd[0] = breakSock;
     return 0;
 }
+
+
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
+/*
+    Create a wakeup pipe
+ */
+static int createWakeup(MprWaitService *ws)
+{
+    /*
+        The pipe() returns two file descriptors. fds[0] is the read side fds[1] is the write side
+     */
+    if (pipe(ws->breakFd)) {
+        mprLog("critical mpr select", 0, "Cannot create pipe to use for select");
+        return MPR_ERR_CANT_OPEN;
+    }
+    /*
+        Add the read side to the select mask
+     */
+    FD_SET(ws->breakFd[0], &ws->readMask);
+    ws->highestFd = ws->breakFd[0];
+    return 0;
+}
+#endif
 
 
 PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
@@ -21348,9 +21399,13 @@ PUBLIC void mprManageSelect(MprWaitService *ws, int flags)
         mprMark(ws->handlerMap);
 
     } else if (flags & MPR_MANAGE_FREE) {
-        if (ws->breakSock >= 0) {
-            close(ws->breakSock);
-            ws->breakSock = -1;
+        if (ws->breakFd[0] >= 0) {
+            close(ws->breakFd[0]);
+            ws->breakFd[0] = -1;
+        }
+        if (ws->breakFd[1] >= 0) {
+            close(ws->breakFd[1]);
+            ws->breakFd[1] = -1;
         }
     }
 }
@@ -21467,13 +21522,12 @@ PUBLIC void mprWaitForIO(MprWaitService *ws, MprTicks timeout)
     /* Minimize worst-case VxWorks task starvation */
     timeout = max(timeout, 50);
 #endif
+    if (ws->needRecall && mprDoWaitRecall(ws)) {
+        timeout = 0;
+    }
     tval.tv_sec = (int) (timeout / 1000);
     tval.tv_usec = (int) ((timeout % 1000) * 1000);
 
-    if (ws->needRecall) {
-        mprDoWaitRecall(ws);
-        return;
-    }
     lock(ws);
     readMask = ws->readMask;
     writeMask = ws->writeMask;
@@ -21507,14 +21561,14 @@ static void serviceIO(MprWaitService *ws, fd_set *readMask, fd_set *writeMask, i
             mask |= MPR_WRITABLE;
         }
         if (mask) {
-            if (fd == ws->breakSock) {
-                readPipe(ws);
+            if (fd == ws->breakFd[0]) {
+                readWakeup(ws);
                 continue;
             }
             if (fd < 0 || (wp = mprGetItem(ws->handlerMap, fd)) == 0) {
                 /*
                     This can happen if a writable event has been triggered (e.g. MprCmd command stdin pipe) and the pipe is closed.
-                    Also may happen if fd == ws->breakSock and breakSock is the highest fd.
+                    Also may happen if fd == ws->breakFd[0] and breakFd[0] is the highest fd.
                     This thread may have waked before the pipe is closed and the wait handler removed from the map.
                  */
                 continue;
@@ -21535,47 +21589,71 @@ static void serviceIO(MprWaitService *ws, fd_set *readMask, fd_set *writeMask, i
 
 
 /*
-    Wake the wait service. WARNING: This routine must not require locking. MprEvents in scheduleDispatcher depends on this.
+    Wake the wait service.
+    WARNING: This routine must not require locking. MprEvents in scheduleDispatcher depends on this.
     Must be async-safe.
  */
 PUBLIC void mprWakeNotifier()
 {
     MprWaitService  *ws;
-    ssize           rc;
-    int             c;
 
     ws = MPR->waitService;
     if (!ws->wakeRequested) {
         ws->wakeRequested = 1;
-        c = 0;
-        rc = sendto(ws->breakSock, (char*) &c, 1, 0, (struct sockaddr*) &ws->breakAddress, (int) sizeof(ws->breakAddress));
-        if (rc < 0) {
+        if (sendWakeup(ws) < 0) {
             static int warnOnce = 0;
             if (warnOnce++ == 0) {
-                mprLog("error mpr event", 0, "Cannot send wakeup to breakout socket: errno %d", errno);
+                mprLog("error mpr event", 0, "FATAL: Cannot send wakeup to breakout socket: errno %d", errno);
             }
         }
     }
 }
 
 
-static void readPipe(MprWaitService *ws)
+/*
+    Read any wakeup bytes from the socket / pipe
+ */
+static void readWakeup(MprWaitService *ws)
 {
     char        buf[128];
 
-#if VXWORKS
-    int len = sizeof(ws->breakAddress);
-    (void) recvfrom(ws->breakSock, buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (int*) &len);
-#else
-    socklen_t   len = sizeof(ws->breakAddress);
-    (void) recvfrom(ws->breakSock, buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (socklen_t*) &len);
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+    #if VXWORKS
+        int len = sizeof(ws->breakAddress);
+        (void) recvfrom(ws->breakFd[0], buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (int*) &len);
+    #else
+        socklen_t len = sizeof(ws->breakAddress);
+        (void) recvfrom(ws->breakFd[0], buf, (int) sizeof(buf), 0, (struct sockaddr*) &ws->breakAddress, (socklen_t*) &len);
+    #endif
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
+    (void) read(ws->breakFd[0], (char*) buf, sizeof(buf));
 #endif
+}
+
+
+/*
+    Send a byte to the wakeup socket / pipe
+ */
+static int sendWakeup(MprWaitService *ws)
+{
+    int     c, rc;
+
+    c = 0;
+#if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+    rc = (int) sendto(ws->breakFd[0], (char*) &c, 1, 0, (struct sockaddr*) &ws->breakAddress, (int) sizeof(ws->breakAddress));
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
+    /*
+        The write side of the pipe is [1]
+     */
+    rc = (int) write(ws->breakFd[1], (char*) &c, 1);
+#endif
+    return rc;
 }
 
 #else
 void selectDummy() {}
 
-#endif /* MPR_EVENT_SELECT */
+#endif /* MPR_EVENT_SELECT || MPR_EVENT_SELECT_PIPE */
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
@@ -23846,6 +23924,25 @@ PUBLIC void mprAddSslCiphers(MprSsl *ssl, cchar *ciphers)
 }
 
 
+PUBLIC int mprPreloadSsl(MprSsl *ssl, int flags)
+{
+    MprSocketService    *ss;
+
+    assert(ssl);
+
+    if (!ssl) {
+        mprLog("error mpr", 0, "Missing SSL context configuration");
+        return MPR_ERR_BAD_ARGS;
+    }
+    ss = MPR->socketService;
+    if (!ss->loaded && mprLoadSsl() < 0) {
+        mprLog("error mpr", 0, "Cannot load SSL provider");
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    return ss->sslProvider->preload(ssl, flags);
+}
+
+
 PUBLIC void mprSetSslAlpn(MprSsl *ssl, cchar *protocols)
 {
     char    *next, *protocol;
@@ -25979,6 +26076,7 @@ static void pruneWorkers(MprWorkerService *ws, MprEvent *timer)
     int           index, pruned;
 
     if (mprGetDebugMode()) {
+        mprRescheduleEvent(timer, 15 * 60 * TPS);
         return;
     }
     lock(ws);
@@ -26919,13 +27017,12 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
     offset = dst = 0;
 
     if (local) {
-        //  OPT -- cache the results somehow
         timeForZoneCalc = when;
         secs = when / MS_PER_SEC;
         if (secs < MIN_TIME || secs > MAX_TIME) {
             /*
                 On some systems, localTime won't work for very small (negative) or very large times.
-                Cannot be certain localTime will work for all O/Ss with this year.  Map to an a date with a valid year.
+                Cannot be certain localTime will work for all O/Ss with this year.  Map to a date with a valid year.
              */
             decodeTime(&t, when, 0);
             t.tm_year = 111;
@@ -26935,6 +27032,8 @@ static void decodeTime(struct tm *tp, MprTime when, bool local)
         if (localTime(&t, timeForZoneCalc) == 0) {
             offset = getTimeZoneOffsetFromTm(&t);
             dst = t.tm_isdst;
+        } else {
+            printf("ERROR: Cannot get local time\n");
         }
 #if ME_UNIX_LIKE && !CYGWIN
         zoneName = (char*) t.tm_zone;
@@ -27915,14 +28014,15 @@ static void validateTime(struct tm *tp, struct tm *defaults)
 
     /*
         Check for overflow. Underflow validated below.
+        tm_sec can be 61 for leap seconds.
      */
-    if (tp->tm_sec > 60) {
+    if (tp->tm_sec > 61) {
         tp->tm_sec = -1;
     }
-    if (tp->tm_min > 60) {
+    if (tp->tm_min > 59) {
         tp->tm_sec = -1;
     }
-    if (tp->tm_hour > 24) {
+    if (tp->tm_hour > 23) {
         tp->tm_sec = -1;
     }
     if (tp->tm_mday > 31) {
@@ -28624,25 +28724,28 @@ PUBLIC void mprRecallWaitHandler(MprWaitHandler *wp)
 /*
     Recall a handler which may have buffered data. Only called by notifiers.
  */
-PUBLIC void mprDoWaitRecall(MprWaitService *ws)
+PUBLIC int mprDoWaitRecall(MprWaitService *ws)
 {
     MprWaitHandler      *wp;
-    int                 index;
+    int                 count, index;
 
     if (!ws) {
-        return;
+        return 0;
     }
     lock(ws);
     ws->needRecall = 0;
+    count = 0;
     for (index = 0; (wp = (MprWaitHandler*) mprGetNextItem(ws->handlers, &index)) != 0; ) {
         if ((wp->flags & MPR_WAIT_RECALL_HANDLER) && (wp->desiredMask & MPR_READABLE)) {
             wp->presentMask |= MPR_READABLE;
             wp->flags &= ~MPR_WAIT_RECALL_HANDLER;
             mprNotifyOn(wp, 0);
             mprQueueIOEvent(wp);
+            count++;
         }
     }
     unlock(ws);
+    return count;
 }
 
 

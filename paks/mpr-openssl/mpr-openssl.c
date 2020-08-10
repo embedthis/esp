@@ -261,6 +261,7 @@ static void     manageOpenConfig(OpenConfig *cfg, int flags);
 static void     manageOpenProvider(MprSocketProvider *provider, int flags);
 static void     manageOpenSocket(OpenSocket *ssp, int flags);
 static cchar    *mapCipherNames(cchar *ciphers);
+static int      preloadOss(MprSsl *ssl, int flags);
 static ssize    readOss(MprSocket *sp, void *buf, ssize len);
 static void     setSecured(MprSocket *sp);
 static int      setCertFile(SSL_CTX *ctx, cchar *certFile);
@@ -302,6 +303,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
         return MPR_ERR_MEMORY;
     }
     openProvider->name = sclone("openssl");
+    openProvider->preload = preloadOss;
     openProvider->upgradeSocket = upgradeOss;
     openProvider->closeSocket = closeOss;
     openProvider->disconnectSocket = disconnectOss;
@@ -586,12 +588,14 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
     /*
         Define default OpenSSL options
         Ensure we generate a new private key for each connection
-        Disable SSLv2 and SSLv3 by default -- they are insecure.
+        Disable SSLv2, SSLv3 and TLSv1 by default -- they are insecure.
      */
-    cfg->setFlags = SSL_OP_ALL | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+    cfg->setFlags = SSL_OP_ALL | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
+
     /*
         Configuration time controls
      */
+#if UNUSED
     if (!(ssl->protocols & MPR_PROTO_TLSV1)) {
         /* Disable all TLS V1.* */
 #ifdef SSL_OP_NO_TLSv1
@@ -607,6 +611,18 @@ static int configOss(MprSsl *ssl, int flags, char **errorMsg)
         cfg->setFlags |= SSL_OP_NO_TLSv1_3;
 #endif
     }
+#endif /* UNUSED */
+
+#ifdef SSL_OP_NO_SSLv2
+    if (!(ssl->protocols & MPR_PROTO_SSLV2)) {
+        cfg->setFlags |= SSL_OP_NO_SSLv2;
+    }
+#endif
+#ifdef SSL_OP_NO_SSLv3
+    if (!(ssl->protocols & MPR_PROTO_SSLV3)) {
+        cfg->setFlags |= SSL_OP_NO_SSLv3;
+    }
+#endif
 #ifdef SSL_OP_NO_TLSv1
     if (!(ssl->protocols & MPR_PROTO_TLSV1_0)) {
         cfg->setFlags |= SSL_OP_NO_TLSv1;
@@ -878,6 +894,26 @@ static void closeOss(MprSocket *sp, bool gracefully)
 }
 
 
+static int preloadOss(MprSsl *ssl, int flags)
+{
+    char    *errorMsg;
+
+    assert(ssl);
+
+    if (ssl == 0) {
+        ssl = mprCreateSsl(flags & MPR_SOCKET_SERVER);
+    }
+    lock(ssl);
+    if (configOss(ssl, flags, &errorMsg) < 0) {
+        mprLog("error mpr ssl openssl", 4, "Cannot configure SSL %s", errorMsg);
+        unlock(ssl);
+        return MPR_ERR_CANT_INITIALIZE;
+    }
+    unlock(ssl);
+    return 0;
+}
+
+
 /*
     Upgrade a standard socket to use SSL/TLS. Used by both clients and servers to upgrade a socket for SSL.
     If a client, this may block while connecting.
@@ -1001,7 +1037,7 @@ static ssize readOss(MprSocket *sp, void *buf, ssize len)
     retries = 5;
     for (i = 0; i < retries; i++) {
         rc = SSL_read(osp->handle, buf, (int) len);
-        if (rc < 0) {
+        if (rc <= 0) {
             error = SSL_get_error(osp->handle, rc);
             if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_CONNECT || error == SSL_ERROR_WANT_ACCEPT) {
                 continue;

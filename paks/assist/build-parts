@@ -28,9 +28,9 @@ function buildParts() {
         if [ -f gulpfile.ts ] ; then
             gulp build $*
         elif [ -f main.me ] ; then
-            me
+            me $*
         elif [ -f Makefile ] ; then
-            make
+            make $*
         fi
         [ $? != 0 ] && exit 2
         cd ..

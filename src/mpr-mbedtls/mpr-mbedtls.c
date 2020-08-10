@@ -68,6 +68,7 @@ static void     merror(int rc, cchar *fmt, ...);
 static int      parseCert(mbedtls_x509_crt *cert, cchar *file, char **errorMsg);
 static int      parseCrl(mbedtls_x509_crl *crl, cchar *path, char **errorMsg);
 static int      parseKey(mbedtls_pk_context *key, cchar *path, char **errorMsg);
+static int      preloadMbed(MprSsl *ssl, int flags);
 static ssize    readMbed(MprSocket *sp, void *buf, ssize len);
 static char     *replaceHyphen(char *cipher, char from, char to);
 PUBLIC int      sniCallback(void *unused, mbedtls_ssl_context *ctx, cuchar *hostname, size_t len);
@@ -92,6 +93,7 @@ PUBLIC int mprSslInit(void *unused, MprModule *module)
     mbedProvider->upgradeSocket = upgradeMbed;
     mbedProvider->closeSocket = closeMbed;
     mbedProvider->disconnectSocket = disconnectMbed;
+    mbedProvider->preload = preloadMbed;
     mbedProvider->readSocket = readMbed;
     mbedProvider->writeSocket = writeMbed;
     mbedProvider->socketState = getMbedState;
@@ -529,6 +531,11 @@ static int getPeerCertInfo(MprSocket *sp)
     return 0;
 }
 
+static int preloadMbed(MprSsl *ssl, int flags)
+{
+    mprLog("error mpr ssl openssl", 4, "Preload not yet supported with MbedTLS");
+    return 0;
+}
 
 /*
     Return the number of bytes read. Return -1 on errors and EOF. Distinguish EOF via mprIsSocketEof.

@@ -304,7 +304,8 @@ static int parseArgs(int argc, char **argv)
 
     setWorkers = 0;
     app->needSsl = 0;
-    logSpec = traceSpec = 0;
+    logSpec = "stdout:1";
+    traceSpec = "stdout:1";
 
     for (nextArg = 1; nextArg < argc; nextArg++) {
         argp = argv[nextArg];
@@ -667,23 +668,16 @@ static int parseArgs(int argc, char **argv)
             break;
 
         } else if (isdigit((uchar) argp[1])) {
-            if (!logSpec) {
-                logSpec = sfmt("stdout:%d", (int) stoi(&argp[1]));
-            }
-            if (!traceSpec) {
-                traceSpec = sfmt("stdout:%d", (int) stoi(&argp[1]));
-            }
+            logSpec = sfmt("stdout:%d", (int) stoi(&argp[1]));
+            traceSpec = sfmt("stdout:%d", (int) stoi(&argp[1]));
 
         } else {
             return showUsage();
         }
     }
-    if (logSpec) {
-        mprStartLogging(logSpec, MPR_LOG_CMDLINE);
-    }
-    if (traceSpec) {
-        httpStartTracing(traceSpec);
-    }
+    mprStartLogging(logSpec, MPR_LOG_CMDLINE);
+    httpStartTracing(traceSpec);
+
     if (argc == nextArg) {
         return showUsage();
     }
@@ -952,7 +946,6 @@ static Request *createRequest(ThreadData *td, HttpStream *stream)
 
     /*
         Create file to save output
-        TODO - what if iterations?
      */
     if (app->outFilename) {
         path = app->loadThreads > 1 ? sfmt("%s-%s.tmp", app->outFilename, mprGetCurrentThreadName()): app->outFilename;
@@ -981,11 +974,6 @@ static void startRequest(Request *request)
         return;
     }
     request->written = 0;
-
-#if FUTURE
-    //  TODO - review
-    cchar *authType = stream->authType;
-#endif
 
     app->url = request->redirect ? request->redirect : app->url;
     request->redirect = 0;
@@ -1073,14 +1061,6 @@ static void checkRequestState(HttpStream *stream)
                 }
                 mprDebug("http", 4, "redirect %d of %d for: %s %s", request->follow, app->maxFollow, app->method, app->url);
             } else {
-#if FUTURE
-                //  TODO - check this
-                if (stream->rx && stream->rx->status == HTTP_CODE_UNAUTHORIZED && authType && smatch(authType, stream->authType)) {
-                    httpError(stream, HTTP_CODE_UNAUTHORIZED, "Authentication failed");
-                    //TODO - should this stop all requests?
-                    break;
-                }
-#endif
                 if (++request->retries >= app->maxRetries) {
                     httpError(stream, HTTP_CODE_NO_RESPONSE, "Too many retries");
                     break;
@@ -1115,7 +1095,6 @@ static void parseStatus(HttpStream *stream)
     HttpRx      *rx;
 
     if (stream->net->error) {
-        //  TODO - need to stop all streams on this network
         httpNetError(stream->net, "Connection I/O error");
 
     } else if (stream->error) {
@@ -1139,9 +1118,7 @@ static void prepHeaders(HttpStream *stream)
     char            *seq;
     int             next;
 
-    if (stream->net->protocol == 1) {
-        httpResetClientStream(stream, 0);
-    }
+    httpResetClientStream(stream, 0);
     for (next = 0; (header = mprGetNextItem(app->headers, &next)) != 0; ) {
         if (scaselessmatch(header->key, "User-Agent")) {
             httpSetHeaderString(stream, header->key, header->value);
@@ -1185,20 +1162,19 @@ static int processResponse(HttpStream *stream)
 {
     HttpNet     *net;
     HttpRx      *rx;
-    MprOff      bytesRead;
+    MprOff      bytesRead, contentLength;
     cchar       *msg, *responseHeaders, *sep;
     int         status;
 
     net = stream->net;
+    bytesRead = 0;
 
     if (!stream->rx) {
         return 0;
     }
     app->status = status = httpGetStatus(stream);
-    bytesRead = httpGetContentLength(stream);
-    if (bytesRead < 0 && stream->rx) {
-        bytesRead = stream->rx->bytesRead;
-    }
+    contentLength = httpGetContentLength(stream);
+
     mprDebug("http", 6, "Response status %d, elapsed %lld", status, mprGetTicks() - stream->started);
     if (stream->rx) {
         if (app->showHeaders) {
@@ -1211,6 +1187,7 @@ static int processResponse(HttpStream *stream)
         } else if (app->showStatus) {
             mprPrintf("%d\n", status);
         }
+        bytesRead = stream->rx->bytesRead;
     }
     if (stream->error) {
         app->success = 0;
@@ -1233,7 +1210,11 @@ static int processResponse(HttpStream *stream)
             mprLog("error http", 0, "\nCannot process request for %s \"%s\" (%d) %s", app->method, app->url, status, httpGetError(stream));
             return MPR_ERR_CANT_READ;
         }
+    } else if (contentLength >= 0 && bytesRead != contentLength) {
+        app->success = 0;
+        mprLog("error http", 0, "Failed \"%s\" request for %s, content not fully received", app->method, app->url);
     }
+
     mprLock(app->mutex);
     app->fetchCount++;
     if (app->verbose && app->noout) {
@@ -1244,7 +1225,6 @@ static int processResponse(HttpStream *stream)
 }
 
 
-//  TODO - but this is blocking?
 static void readBody(HttpStream *stream)
 {
     Request     *request;
@@ -1277,7 +1257,6 @@ static int setContentLength(HttpStream *stream)
 
     len = 0;
     if (app->upload) {
-        //  TODO?
         httpEnableUpload(stream);
         return 0;
     }
@@ -1304,7 +1283,6 @@ static int setContentLength(HttpStream *stream)
 }
 
 
-//  TODO - how to make this non-blocking?
 static ssize writeBody(HttpStream *stream)
 {
     MprFile     *file;
@@ -1363,6 +1341,7 @@ static ssize writeBody(HttpStream *stream)
                 }
                 mprCloseFile(file);
                 app->inFile = 0;
+                httpEnableNetEvents(stream->net);
             }
         }
         if (app->bodyData) {

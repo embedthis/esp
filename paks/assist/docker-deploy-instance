@@ -28,7 +28,7 @@ getTargets() {
     local arn targets tcount tag value
     tag="${DEPLOY_TAG/=*}"
     value="${DEPLOY_TAG/*=}"
-    aws ec2 describe-instances --filter "Name=tag:${tag},Values=${value}" \
+    aws ec2 describe-instances --filter "Name=tag:${tag},Values=[${value}]" \
         --output text --query 'Reservations[].Instances[].InstanceId'
     if [ $? != 0 ] ; then
         echo "Cannot describe instances"

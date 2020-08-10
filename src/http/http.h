@@ -43,8 +43,26 @@ struct HttpWebSocket;
 
 /********************************** Tunables **********************************/
 
+#ifndef ME_HTTP_BASIC
+    #define ME_HTTP_BASIC           1
+#endif
+#ifndef ME_HTTP_CACHE
+    #define ME_HTTP_CACHE           1
+#endif
+#ifndef ME_HTTP_DIGEST
+    #define ME_HTTP_DIGEST          1
+#endif
+#ifndef ME_HTTP_DIR
+    #define ME_HTTP_DIR             1
+#endif
+#ifndef ME_HTTP_PAM
+    #define ME_HTTP_PAM             1
+#endif
 #ifndef ME_HTTP_HTTP2
     #define ME_HTTP_HTTP2           1
+#endif
+#ifndef ME_HTTP_UPLOAD
+    #define ME_HTTP_UPLOAD          1
 #endif
 #ifndef ME_HTTP_WEB_SOCKETS
     #define ME_HTTP_WEB_SOCKETS     1
@@ -62,6 +80,9 @@ struct HttpWebSocket;
     #ifndef ME_CHUNK_SIZE
         #define ME_CHUNK_SIZE       (8 * 1024)      /**< Maximum chunk size for transfer chunk encoding */
     #endif
+    #ifndef ME_MAX_PACKET_COUNT
+        #define ME_MAX_PACKET_COUNT 10              /**< Max packets in socketq */
+    #endif
 #elif ME_TUNE_SPEED
     #ifndef ME_PACKET_SIZE
         #define ME_PACKET_SIZE      (32 * 1024)
@@ -69,12 +90,18 @@ struct HttpWebSocket;
     #ifndef ME_CHUNK_SIZE
         #define ME_CHUNK_SIZE       (32 * 1024)
     #endif
+    #ifndef ME_MAX_PACKET_COUNT
+        #define ME_MAX_PACKET_COUNT 20
+    #endif
 #else
     #ifndef ME_PACKET_SIZE
         #define ME_PACKET_SIZE      (16 * 1024)
     #endif
     #ifndef ME_CHUNK_SIZE
         #define ME_CHUNK_SIZE       (16 * 1024)
+    #endif
+    #ifndef ME_MAX_PACKET_COUNT
+        #define ME_MAX_PACKET_COUNT 30
     #endif
 #endif
 #ifndef ME_SANITY_PACKET
@@ -104,6 +131,9 @@ struct HttpWebSocket;
 #ifndef ME_HTTP_DELAY
     #define ME_HTTP_DELAY           (2000)               /**< 2 second delay per request - while delay enforced */
 #endif
+#ifndef ME_DIGEST_NONCE_DURATION
+    #define ME_DIGEST_NONCE_DURATION 60                  /**< Lifespan for Digest auth request nonce */
+#endif
 #ifndef ME_MAX_URI
     #define ME_MAX_URI              512                  /**< Reasonable URI size */
 #endif
@@ -126,10 +156,10 @@ struct HttpWebSocket;
     #define ME_MAX_CONNECTIONS      50                   /**< Maximum concurrent client endpoints */
 #endif
 #ifndef ME_MAX_HPACK_SIZE
-    #define ME_MAX_HPACK_SIZE       4096                 /**< Maximum size of the hpack table */
+    #define ME_MAX_HPACK_SIZE       65536                /**< Maximum size of the hpack table */
 #endif
 #ifndef ME_MAX_STREAMS
-    #define ME_MAX_STREAMS          20                    /**< Default maximum concurrent streams per network */
+    #define ME_MAX_STREAMS          100                  /**< Default maximum concurrent streams per network */
 #endif
 #ifndef ME_MAX_HEADERS
     #define ME_MAX_HEADERS          (512 * 1024)         /**< Maximum size of the headers (Chrome HTTP/2 needs this) */
@@ -266,6 +296,7 @@ struct HttpWebSocket;
 #define HTTP_CODE_EXPECTATION_FAILED        417     /**< The server cannot satisfy the Expect header requirements */
 #define HTTP_CODE_IM_A_TEAPOT               418     /**< Short and stout error code (RFC 2324) */
 #define HTTP_CODE_UNPROCESSABLE             422     /**< The request was well-formed but was unable process */
+#define HTTP_CODE_UPGRADE_REQUIRED          426     /**< The client should upgrade */
 #define HTTP_CODE_NO_RESPONSE               444     /**< The connection was closed with no response to the client */
 #define HTTP_CODE_INTERNAL_SERVER_ERROR     500     /**< Server processing or configuration error. No response generated */
 #define HTTP_CODE_NOT_IMPLEMENTED           501     /**< The server does not recognize the request or method */
@@ -306,6 +337,7 @@ struct HttpWebSocket;
                 Use #httpRead to read the data. For WebSockets, use #httpGetPacket.</li>
             <li>HTTP_EVENT_WRITABLE. The output queue is now writable.</li>
             <li>HTTP_EVENT_ERROR. The stream has an error. </li>
+            <li>HTTP_EVENT_DESTROY. The stream is being destroyed. NOTE: this is not the network / socket.</li>
         </ul>
     @param stream HttpStream stream object created via #httpCreateStream
     @param event Http state
@@ -990,10 +1022,14 @@ typedef struct Http {
     struct HttpStage *ejsHandler;           /**< Ejscript Web Framework handler */
 #endif
     struct HttpStage *espHandler;           /**< ESP Web Framework handler */
+    struct HttpStage *fastHandler;          /**< FastCGI handler */
+    struct HttpStage *fastConnector;        /**< FastCGI connector */
     struct HttpStage *fileHandler;          /**< Static file handler */
     struct HttpStage *netConnector;         /**< Default network connector */
     struct HttpStage *passHandler;          /**< Pass through handler */
     struct HttpStage *phpHandler;           /**< PHP through handler */
+    struct HttpStage *proxyHandler;         /**< Proxy handler */
+    struct HttpStage *proxyConnector;       /**< Proxy connector */
     struct HttpStage *rangeFilter;          /**< Ranged requests filter */
     struct HttpStage *tailFilter;           /**< Tail filter */
     struct HttpStage *uploadFilter;         /**< Upload filter */
@@ -1875,8 +1911,9 @@ typedef ssize (*HttpFillProc)(struct HttpQueue *q, struct HttpPacket *packet, Mp
  */
 typedef struct HttpPacket {
     uint            flags: 7;               /**< Packet flags */
-    uint            last: 1;                /**< Last packet in a message - used by web sockets */
-    uint            type: 24;               /**< Packet type extension */
+    uint            last: 1;                /**< Last packet in a message */
+    uint            type: 8;                /**< Packet type extension */
+    uint            reserved: 16;           /**< Reserved */
     struct HttpPacket *next;                /**< Next packet in chain */
     MprBuf          *content;               /**< Chunk content */
     MprBuf          *prefix;                /**< Prefix message to be emitted before the content */
@@ -2102,6 +2139,12 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *packet, ssize offset);
 #define HTTP_QUEUE_RESERVICE      0x100     /**< Queue requires reservicing */
 #define HTTP_QUEUE_OUTGOING       0x200     /**< Queue is for outgoing traffic */
 #define HTTP_QUEUE_REQUEST        0x400     /**< Queue is specific for this request */
+
+/*
+    Queue optimizations
+ */
+#define HTTP_QUEUE_ALLOW          16        /**< Let packets less than this size flow through */
+#define HTTP_QUEUE_DONT_SPLIT     32        /**< Don't split packets less than 32 bytes */
 
 /*
     Queue callback prototypes
@@ -2375,10 +2418,12 @@ PUBLIC HttpPacket *httpResizePacket(struct HttpQueue *q, HttpPacket *packet, ssi
         to run as soon as possible. This is normally called automatically called by the pipeline when downstream
         congestion has cleared.
     @param q Queue reference
+    @param force Force a queue to be scheduled regardless. Set to true to force.
+    @return True if the queue was resumed.
     @ingroup HttpQueue
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC void httpResumeQueue(HttpQueue *q);
+PUBLIC bool httpResumeQueue(HttpQueue *q, bool force);
 
 /**
     Schedule a queue
@@ -2572,6 +2617,7 @@ PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2);
 PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet);
 PUBLIC cchar *httpTraceHeaders(HttpQueue *q, MprHash *headers);
 PUBLIC void httpTraceQueues(struct HttpStream *stream);
+PUBLIC void httpServiceQueue(HttpQueue *q);
 
 /******************************** Pipeline Stages *****************************/
 /*
@@ -2601,7 +2647,7 @@ typedef int (*HttpParse)(cchar *key, char *value, void *state);
     Configuration is not thread safe and must occur at initialization time when the application is single threaded.
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpStage HttpStage
-    @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateStreamector httpCreateFilter httpCreateHandler
+    @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateConnector httpCreateFilter httpCreateHandler
         httpCreateStage httpDefaultOutgoingServiceStage httpGetStageData httpHandleOptionsTrace httpLookupStage
         httpLookupStageData httpSetStageData
     @stability Internal
@@ -2783,7 +2829,7 @@ PUBLIC HttpStage *httpCloneStage(HttpStage *stage);
     @ingroup HttpStage
     @stability Stable
  */
-PUBLIC HttpStage *httpCreateStreamector(cchar *name, MprModule *module);
+PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module);
 
 /**
     Create a filter stage
@@ -2938,6 +2984,7 @@ PUBLIC int httpOpenTailFilter(void);
 #define HTTP2_WINDOW_SIZE           4                       /**< Size of windows frame data */
 #define HTTP2_RESET_SIZE            4                       /**< Size of rest frame data */
 #define HTTP2_GOAWAY_SIZE           8                       /**< Size of goaway frame data */
+#define HTTP2_PRIORITY_SIZE         5                       /**< Size of priority frame data */
 
 /*
     HTTP/2 parameters
@@ -2960,7 +3007,6 @@ PUBLIC int httpOpenTailFilter(void);
 #define HTTP2_PREFACE_SIZE          24
 #define HTTP2_ENCODE_RAW            0
 #define HTTP2_ENCODE_HUFF           0x80
-#define HTTP2_HEADER_TABLE_SIZE     512
 #define HTTP2_TABLE_SIZE            4096
 #define HTTP2_HEADER_OVERHEAD       32                      /**< HPACK table overhead by spec */
 #define HTTP_STREAM_MASK            0x7fffffff
@@ -3003,8 +3049,8 @@ PUBLIC int httpOpenTailFilter(void);
     HTTP2 error codes
  */
 #define HTTP2_NO_ERROR              0x0
-#define HTTP2_INTERNAL_ERROR        0x2
 #define HTTP2_PROTOCOL_ERROR        0x1
+#define HTTP2_INTERNAL_ERROR        0x2
 #define HTTP2_FLOW_CONTROL_ERROR    0x3
 #define HTTP2_SETTINGS_TIMEOUT      0x4
 #define HTTP2_STREAM_CLOSED         0x5
@@ -3032,10 +3078,18 @@ PUBLIC int httpOpenTailFilter(void);
 #define HTTP2_STATUS_404        13
 #define HTTP2_STATUS_500        14
 
+/*
+    HTTP/2 States
+ */
+#define HTTP2_STATE_IDLE                0
+
 typedef struct HttpFrame {
     struct HttpStream   *stream;
     int                 type;               /**< Frame type */
     int                 flags;              /**< Flags */
+    int                 depend;             /** Stream dependency */
+    int                 exclusive;
+    int                 weight;             /**< Priority weight */
     int                 streamID;           /**< Current stream ID */
 } HttpFrame;
 
@@ -3140,6 +3194,7 @@ typedef struct HttpNet {
     int             session;                /**< Currently parsing frame for this session */
     int             timeout;                /**< Network timeout indication */
     int             totalRequests;          /**< Total number of requests serviced */
+    int             window;                 /**< Default HTTP/2 flow control window size for streams tx */
 
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
 #if DEPRECATED || 1
@@ -3149,14 +3204,15 @@ typedef struct HttpNet {
     bool            eof: 1;                 /**< Socket has been closed */
     bool            error: 1;               /**< Hard network error - cannot continue */
     uint            eventMask: 3;           /**< Last IO event mask */
-    bool            goaway: 1;              /**< Closing network connection (sent or received a goAway frame) */
     bool            http2: 1;               /**< Enable http 2 */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
     uint            protocol: 2;            /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
-    bool            receivedGoaway: 1;      /**< Received goaway frame */
     bool            ownDispatcher: 1;       /**< Using own the dispatcher and should destroy when closing connection */
+    bool            parsingHeaders: 1;      /**< Parsing HTTP/2 headers */
     bool            push: 1;                /**< Receiver will accept push */
+    bool            receivedGoaway: 1;      /**< Received goaway frame */
     bool            secure: 1;              /**< Using https */
+    bool            sentGoaway: 1;          /**< Sent goaway frame */
     bool            skipTrace: 1;           /**< Omit trace from now on */
     bool            worker: 1;              /**< Use worker */
     bool            writeBlocked: 1;        /**< Transmission writing is blocked */
@@ -3435,6 +3491,7 @@ PUBLIC Socket httpStealSocketHandle(HttpNet *net);
 /*
     Internal
  */
+PUBLIC int httpGetNetEventMask(HttpNet *net);
 PUBLIC void httpGetUriAddress(HttpUri *uri, cchar **ip, int *port);
 PUBLIC void httpSetNetTimeout(HttpNet *net, MprTicks inactivityTimeout);
 PUBLIC void httpSendGoAway(struct HttpNet *net, int status, cchar *fmt, ...);
@@ -3462,7 +3519,7 @@ PUBLIC void httpSetupWaitHandler(HttpNet *net, int eventMask);
 /*
     Internal hidden events. Not exposed by the Http notifier.
  */
-#define HTTP_EVENT_APP_OPEN         7       /* The request is now open */
+#define HTTP_EVENT_APP_OPEN         7       /**< The request is now open */
 #define HTTP_EVENT_MAX              8       /**< Maximum event plus one */
 
 /*
@@ -3548,6 +3605,7 @@ PUBLIC void httpSetHeadersCallback(struct HttpStream *stream, HttpHeadersCallbac
 typedef struct HttpStream {
     HttpNet         *net;
     int             state;                  /**< Stream state */
+    int             h2State;                /**< HTTP/2 stream state */
     struct HttpRx   *rx;                    /**< Rx object for HTTP/1 */
     struct HttpTx   *tx;                    /**< Tx object for HTTP/1 */
 
@@ -3555,7 +3613,7 @@ typedef struct HttpStream {
     HttpQueue       *txHead;                /**< Transmit queue head */
     HttpQueue       *inputq;                /**< Start of the read pipeline (tailFilter-rx) */
     HttpQueue       *outputq;               /**< End of the write pipeline (tailFilter-tx) */
-    HttpQueue       *readq;                 /**< Application queue to old incoming data for reading (qhead) */
+    HttpQueue       *readq;                 /**< Application queue reading (qhead) */
     HttpQueue       *writeq;                /**< Application queue to write outgoing data (handler) */
 
     MprSocket       *sock;                  /**< Underlying socket handle */
@@ -3606,8 +3664,6 @@ typedef struct HttpStream {
     bool            peerCreated: 1;         /**< Stream created by peer */
     bool            ownDispatcher: 1;       /**< Own the dispatcher and should destroy when closing connection */
     bool            secure: 1;              /**< Using https */
-    bool            seenHeader:1;           /**< Already seen at least one header packet in the output queue */
-    bool            streamReset: 1;         /**< Stream reset (http2) */
     bool            suppressTrace: 1;       /**< Do not trace this connection */
     bool            upgraded: 1;            /**< Request protocol upgraded */
 
@@ -4410,6 +4466,7 @@ typedef struct HttpUser {
     char            *password;              /**< User password for "internal" auth store - (actually the password hash */
     MprHash         *roles;                 /**< List of roles */
     MprHash         *abilities;             /**< User abilities defined by roles */
+    void            *data;                  /**< Unmanaged custom data */
 } HttpUser;
 
 /**
@@ -4898,16 +4955,15 @@ PUBLIC void httpDefineAction(cchar *uri, HttpAction fun);
 /********************************** Streaming **********************************/
 /**
     Determine if input body content should be streamed or buffered for requests with content of a given mime type
-    @description The mime type and URI are used to match the request.
-    @param host Host to modify
-    @param mime Mime type to configure
-    @param uri URI prefix to match with.
+    @description The mime type and URI are used to match the request. If streaming is not defined true or false for
+    the mime and url, this routine return true if the request is not POST or PUT.
+    @param stream Current request stream
     @return True if input should be streamed. False if it should be buffered.
     @ingroup HttpHost
     @stability Evolving
     @internal
  */
-PUBLIC bool httpGetStreaming(struct HttpHost *host, cchar *mime, cchar *uri);
+PUBLIC bool httpGetStreaming(struct HttpStream *stream);
 
 /**
     Control if input body content should be streamed or buffered for requests with content of a given mime type
@@ -4949,6 +5005,7 @@ PUBLIC void httpSetStreaming(struct HttpHost *host, cchar *mime, cchar *uri, boo
 #define HTTP_ROUTE_UTILITY              0x100000    /**< Route hosted by a utility */
 #define HTTP_ROUTE_LAX_COOKIE           0x200000    /**< Session cookie is SameSite=lax */
 #define HTTP_ROUTE_STRICT_COOKIE        0x400000    /**< Session cookie is SameSite=strict */
+#define HTTP_ROUTE_NONE_COOKIE          0x800000    /**< Session cookie is SameSite=none */
 
 /*
     Route hook types
@@ -6661,6 +6718,8 @@ typedef struct HttpRx {
     MprOff          bytesRead;              /**< Length of content read by user (includes bytesUloaded) */
     MprOff          length;                 /**< Content length header value (ENV: CONTENT_LENGTH) */
     MprOff          remainingContent;       /**< Remaining content data to read (in next chunk if chunked) */
+    MprOff          dataFrameLength;        /**< Size of HTTP/2 data frames read */
+    MprOff          http2ContentLength;     /**< Pre-parsed content-length header for http/2 */
 
     HttpStream      *stream;                /**< HttpStream object */
     HttpRoute       *route;                 /**< Route for request */
@@ -6691,7 +6750,9 @@ typedef struct HttpRx {
     bool            json: 1;                /**< Using a JSON body */
     bool            needInputPipeline: 1;   /**< Input pipeline required to process received data */
     bool            ownParams: 1;           /**< Do own parameter handling */
+    bool            parsedHeaders: 1;       /**< Parsed HTTP/2 headers */
     bool            renameUploads: 1;       /**< Rename uploaded files to the client specified filename */
+    bool            seenRegularHeader: 1;   /**< Seen a regular HTTP/2 header (non pseudo) */
     bool            sessionProbed: 1;       /**< Session has been resolved */
     bool            streaming: 1;           /**< Stream incoming content. Forms typically buffer and dont stream */
     bool            upload: 1;              /**< Request is using file upload */
@@ -6726,6 +6787,7 @@ typedef struct HttpRx {
     cchar           *redirect;              /**< Redirect route header */
     cchar           *referrer;              /**< Refering URL */
     cchar           *securityToken;         /**< Security form token */
+    cchar           *scheme;                /**< HTTP/2 request scheme */
     cchar           *upgrade;               /**< Protocol upgrade header */
     cchar           *userAgent;             /**< User-Agent header */
 
@@ -7263,8 +7325,7 @@ typedef struct HttpTx {
     cchar           *filename;              /**< Name of a real file being served (typically pathInfo mapped) */
     int             status;                 /**< HTTP response status */
 
-    bool            endHeaders:1;           /**< Processed all header packets */
-    bool            endData:1;              /**< Processed the last data packet */
+    bool            allDataSent:1;          /**< Processed the last data packet */
     bool            finalized:1;            /**< Request response generated and handler processing is complete */
     bool            finalizedConnector:1;   /**< Connector has finished sending the response */
     bool            finalizedInput:1;       /**< Handler has finished processing all input */
@@ -7272,6 +7333,7 @@ typedef struct HttpTx {
     bool            needChunking:1;         /**< Use chunk encoding */
     bool            pendingFinalize:1;      /**< Call httpFinalize again once the Tx pipeline is created */
     bool            responded:1;            /**< The handler has started to respond. Some output has been initiated. */
+    bool            startedHeader: 1;       /**< Already started sending at least one header packet in the output queue */
     bool            started:1;              /**< Handler has been started */
     uint            flags:16;               /**< Response flags */
 
@@ -7672,6 +7734,7 @@ PUBLIC void httpSetContentType(HttpStream *stream, cchar *mimeType);
 #define HTTP_COOKIE_HTTP        0x2         /**< Flag for Set-Cookie httponly. Not visible to Javascript */
 #define HTTP_COOKIE_SAME_LAX    0x4         /**< Flag for Set-Cookie SameSite=Lax */
 #define HTTP_COOKIE_SAME_STRICT 0x8         /**< Flag for Set-Cookie SameSite=Strict */
+#define HTTP_COOKIE_SAME_NONE   0x10        /**< Flag for Set-Cookie SameSite=None */
 
 /**
     Set a transmission cookie

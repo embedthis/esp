@@ -25,6 +25,14 @@ Me.load({
             conflicts:    [ 'openssl', 'matrixssl', 'nanossl' ]
             depends:      [ 'libmpr-mbedtls', 'libmbedtls' ],
             location:     '${SRC}/mpr-mbedtls',
+            '-compiler': [
+                '-Wall',
+                '-Wshorten-64-to-32',
+                '-W3',
+            ],
+            '+defines': [
+                '-D_FILE_OFFSET_BITS=64'
+            ]
         },
 
         'libmpr-mbedtls': {

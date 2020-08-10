@@ -109,6 +109,9 @@ struct  MprXml;
 /*
     Select wakeup port. Port can be any free port number. If this is not free, the MPR will use the next free port.
  */
+#ifndef ME_WAKEUP_ADDR
+    #define ME_WAKEUP_ADDR      "127.0.0.1"
+#endif
 #ifndef ME_WAKEUP_PORT
     #define ME_WAKEUP_PORT      9473
 #endif
@@ -186,6 +189,7 @@ struct  MprXml;
 #define MPR_EVENT_EPOLL         2           /**< epoll_wait */
 #define MPR_EVENT_KQUEUE        3           /**< BSD kqueue */
 #define MPR_EVENT_SELECT        4           /**< traditional select() */
+#define MPR_EVENT_SELECT_PIPE   5           /**< Select with pipe for wakeup */
 
 #ifndef ME_EVENT_NOTIFIER
     #if MACOSX || SOLARIS
@@ -1009,8 +1013,9 @@ typedef struct MprFreeQueue {
  */
 #define MPR_ALLOC_POLICY_NOTHING    0       /**< Do nothing */
 #define MPR_ALLOC_POLICY_PRUNE      1       /**< Prune all non-essential memory and continue */
-#define MPR_ALLOC_POLICY_RESTART    2       /**< Gracefully restart the app if memory maxHeap level is exceeded */
-#define MPR_ALLOC_POLICY_EXIT       3       /**< Exit the app if maxHeap exceeded */
+#define MPR_ALLOC_POLICY_RESTART    2       /**< Gracefully restart the app */
+#define MPR_ALLOC_POLICY_EXIT       3       /**< Exit the app cleanly */
+#define MPR_ALLOC_POLICY_ABORT      4       /**< Abort the app and dump core */
 
 /*
     MprMemNotifier cause argument
@@ -1029,7 +1034,7 @@ typedef struct MprFreeQueue {
         Allocations will be rejected for MPR_MEM_FAIL and MPR_MEM_TOO_BIG, otherwise the allocations will proceed and the
         memory notifier will be invoked.
     @param policy Memory depletion policy. Set to one of #MPR_ALLOC_POLICY_NOTHING, #MPR_ALLOC_POLICY_PRUNE,
-        #MPR_ALLOC_POLICY_RESTART or #MPR_ALLOC_POLICY_EXIT.
+        #MPR_ALLOC_POLICY_RESTART, #MPR_ALLOC_POLICY_EXIT or #MPR_ALLOC_POLICY_ABORT.
     @param size Size of the allocation that triggered the low memory condition.
     @param total Total memory currently in use
     @ingroup MprMem
@@ -3239,7 +3244,7 @@ PUBLIC char *mprFormatLocalTime(cchar *fmt, MprTime time);
         platform to platform. Strftime should supports some of these these formats described below.
     @param time Time to format. Use mprGetTime to retrieve the current time.
     @param fmt Time format string
-            \n 
+            \n
          %A ... full weekday name (Monday)
             \n
          %a ... abbreviated weekday name (Mon)
@@ -7225,13 +7230,13 @@ typedef struct MprWaitService {
     int             breakFd[2];             /* Event or pipe to wakeup */
 #elif ME_EVENT_NOTIFIER == MPR_EVENT_KQUEUE
     int             kq;                     /* Kqueue() return descriptor */
-#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
+#elif ME_EVENT_NOTIFIER == MPR_EVENT_SELECT || ME_EVENT_NOTIFIER == MPR_EVENT_SELECT_PIPE
     fd_set          readMask;               /* Current read events mask */
     fd_set          writeMask;              /* Current write events mask */
     int             highestFd;              /* Highest socket in masks + 1 */
-    int             breakSock;              /* Socket to wakeup select */
+    int             breakFd[2];             /* Socket to wakeup select in [0] */
     struct sockaddr_in breakAddress;        /* Address of wakeup socket */
-#endif /* EVENT_SELECT */
+#endif /* EVENT_SELECT || MPR_EVENT_SELECT_PIPE */
     MprMutex        *mutex;                 /* General multi-thread sync */
     MprSpin         *spin;                  /* Fast short locking */
 } MprWaitService;
@@ -7399,7 +7404,7 @@ PUBLIC void mprWaitOn(MprWaitHandler *wp, int desiredMask);
 /*
    Internal
  */
-PUBLIC void mprDoWaitRecall(MprWaitService *ws);
+PUBLIC int mprDoWaitRecall(MprWaitService *ws);
 
 /******************************* Notification *********************************/
 /**
@@ -7464,6 +7469,15 @@ typedef struct MprSocketProvider {
         @stability Stable
      */
     ssize   (*flushSocket)(struct MprSocket *socket);
+
+    /**
+        Preload SSL configuration
+        @param ssl SSL configurations to use.
+        @param flags Set to MPR_SOCKET_SERVER for server side use.
+        @returns Zero if successful, otherwise a negative MPR error code.
+        @stability Prototype
+     */
+    int  (*preload)(struct MprSsl *ssl, int flags);
 
     /**
         Read from a socket
@@ -8185,12 +8199,12 @@ typedef struct MprSsl {
  */
 #define MPR_PROTO_SSLV2    0x1              /**< SSL V2 protocol */
 #define MPR_PROTO_SSLV3    0x2              /**< SSL V3 protocol */
-#define MPR_PROTO_TLSV1_0  0x8              /**< TLS V1.0 protocol */
-#define MPR_PROTO_TLSV1_1  0x10             /**< TLS V1.1 protocol */
-#define MPR_PROTO_TLSV1_2  0x20             /**< TLS V1.2 protocol */
-#define MPR_PROTO_TLSV1_3  0x40             /**< TLS V1.3 protocol */
-#define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2 | MPR_PROTO_TLSV1_3)
-#define MPR_PROTO_ALL      0x6B             /**< All protocols */
+#define MPR_PROTO_TLSV1_0  0x10             /**< TLS V1.0 protocol */
+#define MPR_PROTO_TLSV1_1  0x20             /**< TLS V1.1 protocol */
+#define MPR_PROTO_TLSV1_2  0x40             /**< TLS V1.2 protocol */
+#define MPR_PROTO_TLSV1_3  0x80             /**< TLS V1.3 protocol */
+#define MPR_PROTO_TLSV1    (MPR_PROTO_TLSV1_0 | MPR_PROTO_TLSV1_1 | MPR_PROTO_TLSV1_2 | MPR_PROTO_TLSV1_3)
+#define MPR_PROTO_ALL      0xF3             /**< All protocols */
 
 /**
     Add the ciphers to use for SSL
@@ -8230,6 +8244,13 @@ PUBLIC int mprLoadSsl(void);
     @stability Stable
  */
 PUBLIC int mprSslInit(void *unused, MprModule *module);
+
+/**
+    Preload SSL configuration
+    @ingroup MprSsl
+    @stability Prototype
+ */
+PUBLIC int mprPreloadSsl(struct MprSsl *ssl, int flags);
 
 /**
     Set the ALPN protocols for SSL

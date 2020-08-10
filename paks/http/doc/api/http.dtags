@@ -292,6 +292,13 @@
       <arglist></arglist>
     </member>
     <member kind="variable">
+      <type>void *</type>
+      <name>data</name>
+      <anchorfile>struct_http_user.html</anchorfile>
+      <anchor>a9e75aaefa5a897134f96e6e73ee0fc9b</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="variable">
       <type>char *</type>
       <name>name</name>
       <anchorfile>struct_http_user.html</anchorfile>
@@ -1050,8 +1057,8 @@
       <type>bool</type>
       <name>httpGetStreaming</name>
       <anchorfile>group___http_host.html</anchorfile>
-      <anchor>ga19ac2afb766c2b4d074c1823dc233246</anchor>
-      <arglist>(struct HttpHost *host, cchar *mime, cchar *uri)</arglist>
+      <anchor>ga20f491f05b22bc898061270fcf92ace5</anchor>
+      <arglist>(struct HttpStream *stream)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -1635,11 +1642,11 @@
       <arglist>(struct HttpQueue *q, HttpPacket *packet, ssize size)</arglist>
     </member>
     <member kind="function">
-      <type>void</type>
+      <type>bool</type>
       <name>httpResumeQueue</name>
       <anchorfile>group___http_queue.html</anchorfile>
-      <anchor>gad9b3304f0b755f85d500c072b6812380</anchor>
-      <arglist>(HttpQueue *q)</arglist>
+      <anchor>ga86d03a7f2d1953718eca976f4b716b48</anchor>
+      <arglist>(HttpQueue *q, bool force)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
@@ -2838,6 +2845,13 @@
     </member>
     <member kind="function">
       <type>HttpStage *</type>
+      <name>httpCreateConnector</name>
+      <anchorfile>group___http_stage.html</anchorfile>
+      <anchor>gae849a3661e868643c89f5c18c631a81a</anchor>
+      <arglist>(cchar *name, MprModule *module)</arglist>
+    </member>
+    <member kind="function">
+      <type>HttpStage *</type>
       <name>httpCreateFilter</name>
       <anchorfile>group___http_stage.html</anchorfile>
       <anchor>ga3fe9d639641c7a10b67511374c1ec8f0</anchor>
@@ -2856,13 +2870,6 @@
       <anchorfile>group___http_stage.html</anchorfile>
       <anchor>gabe5f7726337256b6221f6dd05b1a8599</anchor>
       <arglist>(cchar *name, int flags, MprModule *module)</arglist>
-    </member>
-    <member kind="function">
-      <type>HttpStage *</type>
-      <name>httpCreateStreamector</name>
-      <anchorfile>group___http_stage.html</anchorfile>
-      <anchor>ga5759364506e31f3782a7b1abfc21fb69</anchor>
-      <arglist>(cchar *name, MprModule *module)</arglist>
     </member>
     <member kind="function">
       <type>void</type>

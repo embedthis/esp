@@ -242,7 +242,7 @@
 
 #endif
 
-#if __WORDSIZE == 64 || __amd64 || __x86_64 || __x86_64__ || _WIN64 || __mips64 || __arch64__ || __arm64__
+#if __WORDSIZE == 64 || __amd64 || __x86_64 || __x86_64__ || _WIN64 || __mips64 || __arch64__ || __arm64__ || __aarch64__
     #define ME_64 1
     #define ME_WORDSIZE 64
 #else
@@ -473,6 +473,7 @@
     #include    <taskHookLib.h>
     #include    <unldLib.h>
     #if _WRS_VXWORKS_MAJOR >= 6
+        #include    <taskLibCommon.h>
         #include    <wait.h>
     #endif
     #if _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR >= 8)
@@ -927,9 +928,9 @@ typedef int64 Ticks;
 #endif
 
 #if VXWORKS
-/*
-    Old VxWorks can't do array[]
- */
+    /*
+        Old VxWorks cannot do array[]
+     */
     #define ARRAY_FLEX 0
 #else
     #define ARRAY_FLEX
@@ -943,6 +944,8 @@ typedef int64 Ticks;
 #else
     #define ME_DEPRECATED(MSG)
 #endif
+
+#define NOT_USED(x) ((void*) x)
 
 /********************************** Tunables *********************************/
 /*
