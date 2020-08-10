@@ -151,7 +151,7 @@
 <tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1ad5c9d4ba3dc37783a528b0925dc981a0" class="ref">bool</a></td><td><a href="#group___esp_abbrev_1gac782d72d3f7c11dce5c48befaff8ac0a" class="nameRef">feedback</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *type, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Set a feedback message.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga061eb4d725222504949f9eb49c619fd5" class="nameRef">finalize</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Finalize the response.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_grid" class="ref">EdiGrid*</a></td><td><a href="#group___esp_abbrev_1gaead8228bdcabe7573b938276b9227c2d" class="nameRef">findGrid</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *select)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read matching records in table from the database.</td></tr>
-<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1ga2a4ab58921120e43a5946fcf761cd1c5" class="nameRef">findParams</a>()</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Build an EDI selection query from the request parameters for use by SPA applications.</td></tr>
+<tr class="apiDef"><td class="apiType"><a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar*</a></td><td><a href="#group___esp_abbrev_1gadbdff80ba34ed0293ae0e67af143f3f4" class="nameRef">findParams</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Build an EDI selection query from the request parameters for use by SPA applications.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gadc1fccd34c38647418e4724279651250" class="nameRef">findRec</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *query)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read a record identified by SQL style query expression.</td></tr>
 <tr class="apiDef"><td class="apiType"><a href="edi.html#group___edi_rec" class="ref">EdiRec*</a></td><td><a href="#group___esp_abbrev_1gad2de201bd5c4004d31bae21c1c00668c" class="nameRef">findRecWhere</a>(<a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *tableName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fieldName, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *operation, <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value),ME_DEPRECATED(&quot;Use,findRec,instead&quot;)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Read one record.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___esp_abbrev_1ga0a9e9396972b76c5947592479860020d" class="nameRef">flush</a>(void)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Flush transmit data.</td></tr>
@@ -614,12 +614,12 @@
     </dd></dl>
   </div>
 </div>
-<a name="group___esp_abbrev_1ga2a4ab58921120e43a5946fcf761cd1c5"></a>
+<a name="group___esp_abbrev_1gadbdff80ba34ed0293ae0e67af143f3f4"></a>
 <div class="api">
   <div class="prototype">
     <a href="edi.html#osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *
     findParams
-()
+(void )
   </div>
   <div class="apiDetail">
 <p>Build an EDI selection query from the request parameters for use by SPA applications.</p>

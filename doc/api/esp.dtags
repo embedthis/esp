@@ -226,8 +226,8 @@
       <type>cchar *</type>
       <name>findParams</name>
       <anchorfile>group___esp_abbrev.html</anchorfile>
-      <anchor>ga2a4ab58921120e43a5946fcf761cd1c5</anchor>
-      <arglist>()</arglist>
+      <anchor>gadbdff80ba34ed0293ae0e67af143f3f4</anchor>
+      <arglist>(void)</arglist>
     </member>
     <member kind="function">
       <type>EdiRec *</type>
