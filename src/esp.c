@@ -216,16 +216,6 @@ static App *createApp(Mpr *mpr)
     app->mpr = mpr;
     app->listen = sclone(ESP_LISTEN);
     app->paksDir = sclone(ESP_PAKS_DIR);
-#if UNUSED
-    app->migDir = sclone(ESP_MIG_DIR);
-#if ME_COM_SQLITE
-    app->database = sclone("sdb");
-#elif ME_COM_MDB
-    app->database = sclone("mdb");
-#else
-    mprLog("", 0, "No database provider defined");
-#endif
-#endif
     app->cipher = sclone("blowfish");
     return app;
 }
@@ -321,12 +311,6 @@ static int parseArgs(int argc, char **argv)
                 usageError();
             } else {
                 app->database = sclone(argv[++argind]);
-#if UNUSED
-                if (!mprPathExists(app->database, O_RDONLY)) {
-                    fail("Unknown database \"%s\"", app->database);
-                    usageError();
-                }
-#endif
             }
 
         } else if (smatch(argp, "debugger") || smatch(argp, "D")) {
