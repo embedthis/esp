@@ -216,16 +216,6 @@ static App *createApp(Mpr *mpr)
     app->mpr = mpr;
     app->listen = sclone(ESP_LISTEN);
     app->paksDir = sclone(ESP_PAKS_DIR);
-#if UNUSED
-    app->migDir = sclone(ESP_MIG_DIR);
-#if ME_COM_SQLITE
-    app->database = sclone("sdb");
-#elif ME_COM_MDB
-    app->database = sclone("mdb");
-#else
-    mprLog("", 0, "No database provider defined");
-#endif
-#endif
     app->cipher = sclone("blowfish");
     return app;
 }
@@ -321,12 +311,6 @@ static int parseArgs(int argc, char **argv)
                 usageError();
             } else {
                 app->database = sclone(argv[++argind]);
-#if UNUSED
-                if (!mprPathExists(app->database, O_RDONLY)) {
-                    fail("Unknown database \"%s\"", app->database);
-                    usageError();
-                }
-#endif
             }
 
         } else if (smatch(argp, "debugger") || smatch(argp, "D")) {
@@ -725,12 +709,18 @@ static void initialize(int argc, char **argv)
     }
 
     if (!app->migDir) {
-        path = mprJoinPath(route->home, "db/migrations");
-        if (mprPathExists(path, X_OK) && !mprPathExists(mprJoinPath(route->home, "db"), R_OK)) {
+        path = mprJoinPath(route->home, "migrations");
+        if (mprPathExists(path, X_OK)) {
             app->migDir = path;
             httpSetDir(route, "MIGRATIONS", path);
         } else {
-            app->migDir = getJson(app->package, "directories.migrations", httpGetDir(route, "MIGRATIONS"));
+            path = mprJoinPath(route->home, "db/migrations");
+            if (mprPathExists(path, X_OK)) {
+                app->migDir = path;
+                httpSetDir(route, "MIGRATIONS", path);
+            } else {
+                app->migDir = getJson(app->package, "directories.migrations", httpGetDir(route, "MIGRATIONS"));
+            }
         }
     }
 
@@ -1062,13 +1052,18 @@ static void migrate(int argc, char **argv)
     lastMigration = 0;
     command = 0;
 
-    if ((edi = app->eroute->edi) == 0) {
-        fail("Database not defined");
-        return;
+    edi = app->eroute->edi;
+    path = app->database;
+
+    if (!path) {
+        if (!edi) {
+            fail("Cannot migrate, no database specified");
+            return;
+        }
+        path = edi->path;
     }
-    path = app->database ? app->database : edi->path;
     if (app->rebuild) {
-        if (edi->path) {
+        if (edi && edi->path) {
             ediClose(edi);
         }
         if (path) {
@@ -1082,6 +1077,10 @@ static void migrate(int argc, char **argv)
             return;
         }
         app->eroute->edi = edi;
+    }
+    if (!edi) {
+        fail("Cannot migrate, no database specified");
+        return;
     }
     /*
         Each database has a _EspMigrations table which has a record for each migration applied
@@ -2633,6 +2632,7 @@ static void usageError()
     "    --cipher cipher            # Password cipher 'md5' or 'blowfish'\n"
     "    --combine                  # Combine ESP assets into one cache file\n"
     "    --database name            # Database provider 'mdb|sdb'\n"
+    "    --dir DIR=path             # Set directory to path\n"
     "    --force                    # Force requested action\n"
     "    --home directory           # Change to directory first\n"
     "    --keep                     # Keep intermediate source\n"

@@ -15,7 +15,7 @@
 
     <script>
         setTimeout(function() {
-            document.location = "/user/logout";
+            // document.location = "/user/logout";
         }, 60 * 1000);
     </script>
 </body>

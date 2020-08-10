@@ -439,6 +439,9 @@ PUBLIC EdiField *ediGetField(EdiRec *rec, cchar *fieldName)
 {
     EdiField    *fp;
 
+    if (rec == 0) {
+        return 0;
+    }
     for (fp = rec->fields; fp < &rec->fields[rec->nfields]; fp++) {
         if (smatch(fp->name, fieldName)) {
             return fp;
@@ -1439,8 +1442,15 @@ static cchar *mapEdiValue(cchar *value, int type)
         }
         break;
 
-    case EDI_TYPE_BINARY:
     case EDI_TYPE_BOOL:
+        if (smatch(value, "false")) {
+            value = "0";
+        } else if (smatch(value, "true")) {
+            value = "1";
+        }
+        break;
+
+    case EDI_TYPE_BINARY:
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_INT:
     case EDI_TYPE_STRING:
@@ -5213,9 +5223,10 @@ PUBLIC bool espRenderView(HttpStream *stream, cchar *target, int flags)
  */
 static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, cchar *ext)
 {
-    HttpRx      *rx;
-    HttpRoute   *route;
-    EspRoute    *eroute;
+    HttpRx          *rx;
+    HttpRoute       *route;
+    EspRoute        *eroute;
+    MprFileSystem   *fs;
 
     assert(target);
 
@@ -5229,8 +5240,15 @@ static cchar *checkView(HttpStream *stream, cchar *target, cchar *filename, ccha
     assert(target && *target);
 
     if (ext && *ext) {
-        if (!smatch(mprGetPathExt(target), ext)) {
-            target = sjoin(target, ".", ext, NULL);
+        fs = mprLookupFileSystem("/");
+        if (fs->caseSensitive) {
+            if (!smatch(mprGetPathExt(target), ext)) {
+                target = sjoin(target, ".", ext, NULL);
+            }
+        } else {
+            if (!scaselessmatch(mprGetPathExt(target), ext)) {
+                target = sjoin(target, ".", ext, NULL);
+            }
         }
     }
     /*
@@ -5918,7 +5936,7 @@ static bool preload(HttpRoute *route)
                 }
             }
         }
-        mprLog("esp info", 4, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
+        mprLog("esp info", 6, "Loaded ESP application \"%s\", profile \"%s\" with options: combine %d, compile %d, compile mode %d, update %d",
             eroute->appName, route->mode ? route->mode : "unset", eroute->combine, eroute->compile, eroute->compileMode, eroute->update);
     }
 #endif
@@ -7722,8 +7740,10 @@ static void mdbClose(Edi *edi)
     Mdb     *mdb;
 
     mdb = (Mdb*) edi;
-    autoSave(mdb, 0);
-    mdb->tables = 0;
+    if (mdb->tables) {
+        autoSave(mdb, 0);
+        mdb->tables = 0;
+    }
 }
 
 
@@ -8315,7 +8335,6 @@ static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
     if (offset < 0) {
         offset = 0;
     }
-
     count = index = 0;
 
     /*
@@ -8826,7 +8845,7 @@ static int mdbSave(Edi *edi)
     }
     path = mdb->edi.path;
     if (path == 0) {
-        mprLog("error esp mdb", 0, "No database path specified");
+        mprLog("error esp mdb", 0, "Cannot save MDB database in mdbSave, no path specified");
         return MPR_ERR_BAD_ARGS;
     }
     npath = mprReplacePathExt(path, "new");
@@ -9758,6 +9777,14 @@ static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
         err.valid = 0;
         return err;
     }
+    if (grid->nrecords == 0) {
+        err.valid = 0;
+        return err;
+    }
+    if (grid->records[0]->nfields == 0) {
+        err.valid = 0;
+        return err;
+    }
     return grid->records[0]->fields[0];
 }
 
@@ -9893,7 +9920,7 @@ static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
         grid = query(edi, sql, NULL);
     }
     if (grid) {
-        if (grid->nrecords == limit) {
+        if (offset > 0 || grid->nrecords == limit) {
             sdbGetTableDimensions(edi, tableName, &grid->count, NULL);
         } else {
             grid->count = grid->nrecords;
@@ -10384,7 +10411,7 @@ static void initSqlite(void)
     mprGlobalLock();
     if (!sqliteInitialized) {
         sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
-        sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+        sqlite3_config(SQLITE_CONFIG_SERIALIZED);
         if (sqlite3_initialize() != SQLITE_OK) {
             mprLog("error esp sdb", 0, "Cannot initialize SQLite");
             return;

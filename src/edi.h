@@ -987,7 +987,7 @@ PUBLIC EdiField *ediGetField(EdiRec *rec, cchar *fieldName);
     Get a field value
     @param rec Database record
     @param fieldName Field in the record to extract
-    @return A field value as a string. Returns ZZ
+    @return A field value as a string.
     @ingroup Edi
     @stability Evolving
  */
