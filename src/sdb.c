@@ -483,6 +483,14 @@ static EdiField sdbReadField(Edi *edi, cchar *tableName, cchar *key, cchar *fiel
         err.valid = 0;
         return err;
     }
+    if (grid->nrecords == 0) {
+        err.valid = 0;
+        return err;
+    }
+    if (grid->records[0]->nfields == 0) {
+        err.valid = 0;
+        return err;
+    }
     return grid->records[0]->fields[0];
 }
 
