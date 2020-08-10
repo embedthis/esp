@@ -1109,7 +1109,7 @@ static void initSqlite(void)
     mprGlobalLock();
     if (!sqliteInitialized) {
         sqlite3_config(SQLITE_CONFIG_MALLOC, &memMethods);
-        sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+        sqlite3_config(SQLITE_CONFIG_SERIALIZED);
         if (sqlite3_initialize() != SQLITE_OK) {
             mprLog("error esp sdb", 0, "Cannot initialize SQLite");
             return;
