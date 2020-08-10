@@ -618,7 +618,7 @@ static EdiGrid *sdbFindGrid(Edi *edi, cchar *tableName, cchar *select)
         grid = query(edi, sql, NULL);
     }
     if (grid) {
-        if (grid->nrecords == limit) {
+        if (offset > 0 || grid->nrecords == limit) {
             sdbGetTableDimensions(edi, tableName, &grid->count, NULL);
         } else {
             grid->count = grid->nrecords;
