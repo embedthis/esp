@@ -432,6 +432,9 @@ PUBLIC EdiField *ediGetField(EdiRec *rec, cchar *fieldName)
 {
     EdiField    *fp;
 
+    if (rec == 0) {
+        return 0;
+    }
     for (fp = rec->fields; fp < &rec->fields[rec->nfields]; fp++) {
         if (smatch(fp->name, fieldName)) {
             return fp;
@@ -1432,8 +1435,15 @@ static cchar *mapEdiValue(cchar *value, int type)
         }
         break;
 
-    case EDI_TYPE_BINARY:
     case EDI_TYPE_BOOL:
+        if (smatch(value, "false")) {
+            value = "0";
+        } else if (smatch(value, "true")) {
+            value = "1";
+        }
+        break;
+
+    case EDI_TYPE_BINARY:
     case EDI_TYPE_FLOAT:
     case EDI_TYPE_INT:
     case EDI_TYPE_STRING:
