@@ -139,8 +139,10 @@ static void mdbClose(Edi *edi)
     Mdb     *mdb;
 
     mdb = (Mdb*) edi;
-    autoSave(mdb, 0);
-    mdb->tables = 0;
+    if (mdb->tables) {
+        autoSave(mdb, 0);
+        mdb->tables = 0;
+    }
 }
 
 
@@ -732,7 +734,6 @@ static EdiGrid *mdbFindGrid(Edi *edi, cchar *tableName, cchar *query)
     if (offset < 0) {
         offset = 0;
     }
-
     count = index = 0;
 
     /*
@@ -1243,7 +1244,7 @@ static int mdbSave(Edi *edi)
     }
     path = mdb->edi.path;
     if (path == 0) {
-        mprLog("error esp mdb", 0, "No database path specified");
+        mprLog("error esp mdb", 0, "Cannot save MDB database in mdbSave, no path specified");
         return MPR_ERR_BAD_ARGS;
     }
     npath = mprReplacePathExt(path, "new");
