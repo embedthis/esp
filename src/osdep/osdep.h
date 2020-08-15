@@ -386,6 +386,7 @@
 #if ME_BSD_LIKE
     #include    <readpassphrase.h>
     #include    <sys/sysctl.h>
+    #include    <sys/event.h>
 #endif
     #include    <setjmp.h>
     #include    <signal.h>

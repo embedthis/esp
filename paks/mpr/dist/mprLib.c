@@ -28548,13 +28548,15 @@ static MprWaitHandler *initWaitHandler(MprWaitHandler *wp, int fd, int mask, Mpr
     wp->flags           = flags;
 
     if (mprGetListLength(ws->handlers) >= FD_SETSIZE) {
-        mprLog("error mpr event", 0, "Too many io handlers: %d", FD_SETSIZE);
+        mprLog("error mpr event", 1, 
+            "Too many io handlers: FD_SETSIZE %d, increase FD_SETSIZE or reduce limits", FD_SETSIZE);
         return 0;
     }
 #if ME_UNIX_LIKE || VXWORKS
 #if ME_EVENT_NOTIFIER == MPR_EVENT_SELECT
     if (fd >= FD_SETSIZE) {
-        mprLog("error mpr event", 0, "File descriptor %d exceeds max io of %d", fd, FD_SETSIZE);
+        mprLog("error mpr event", 1, "File descriptor %d exceeds max FD_SETSIZE of %d, increase FD_SETSIZE or reduce limits",
+            fd, FD_SETSIZE);
     }
 #endif
 #endif

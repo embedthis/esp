@@ -123,7 +123,7 @@ struct HttpWebSocket;
     #define ME_HTTP_DELAY_PERIOD    (5 * 60 * 1000)      /**< Default delay IP period */
 #endif
 #ifndef ME_HTTP_MONITOR_PERIOD
-    #define ME_HTTP_MONITOR_PERIOD  (15 * 1000)          /**< Monitor prune period */
+    #define ME_HTTP_MONITOR_PERIOD  (60 * 1000)          /**< Monitor prune period */
 #endif
 #ifndef ME_HTTP_REMEDY_TIMEOUT
     #define ME_HTTP_REMEDY_TIMEOUT  (60 * 1000)          /**< Default remedy command timeout */
@@ -153,7 +153,10 @@ struct HttpWebSocket;
     #define ME_MAX_CLIENTS          32                   /**< Maximum unique client IP addresses */
 #endif
 #ifndef ME_MAX_CONNECTIONS
-    #define ME_MAX_CONNECTIONS      50                   /**< Maximum concurrent client endpoints */
+    #define ME_MAX_CONNECTIONS      50                   /**< Maximum concurrent connections (sockets) for whole server */
+#endif
+#ifndef ME_MAX_CONNECTIONS_PER_CLIENT
+    #define ME_MAX_CONNECTIONS_PER_CLIENT 20             /**< Maximum concurrent connections per client (ip address) */
 #endif
 #ifndef ME_MAX_HPACK_SIZE
     #define ME_MAX_HPACK_SIZE       65536                /**< Maximum size of the hpack table */
@@ -183,7 +186,7 @@ struct HttpWebSocket;
     #define ME_MAX_RX_FORM          (512 * 1024)         /**< Maximum incoming form size (512K) */
 #endif
 #ifndef ME_MAX_REQUESTS_PER_CLIENT
-    #define ME_MAX_REQUESTS_PER_CLIENT 20               /**< Maximum concurrent requests per client */
+    #define ME_MAX_REQUESTS_PER_CLIENT 20               /**< Maximum concurrent requests per client (ip address) */
 #endif
 #ifndef ME_MAX_REWRITE
     #define ME_MAX_REWRITE          20                   /**< Maximum URI rewrites */
@@ -400,14 +403,14 @@ PUBLIC void httpSetForkCallback(MprForkCallback proc, void *arg);
 /*
     Monitored counters. These are per-client IP unless specified.
  */
-#define HTTP_COUNTER_ACTIVE_CLIENTS     0       /**< Active unique client IP addresses */
+#define HTTP_COUNTER_ACTIVE_CLIENTS     0       /**< Active unique client IP addresses (global) */
 #define HTTP_COUNTER_ACTIVE_CONNECTIONS 1       /**< Active connections per client */
 #define HTTP_COUNTER_ACTIVE_REQUESTS    2       /**< Active requests per client */
-#define HTTP_COUNTER_ACTIVE_PROCESSES   3       /**< Total processes for server */
+#define HTTP_COUNTER_ACTIVE_PROCESSES   3       /**< Total processes for server (global) */
 #define HTTP_COUNTER_BAD_REQUEST_ERRORS 4       /**< Bad request format errors */
 #define HTTP_COUNTER_ERRORS             5       /**< All errors */
 #define HTTP_COUNTER_LIMIT_ERRORS       6       /**< Limit violation errors */
-#define HTTP_COUNTER_MEMORY             7       /**< Total application memory for server */
+#define HTTP_COUNTER_MEMORY             7       /**< Total application memory for server (global) */
 #define HTTP_COUNTER_NETWORK_IO         8       /**< Network I/O */
 #define HTTP_COUNTER_NOT_FOUND_ERRORS   9       /**< URI not found errors */
 #define HTTP_COUNTER_REQUESTS           10      /**< Request count */
@@ -442,7 +445,7 @@ typedef struct HttpMonitor {
 } HttpMonitor;
 
 /**
-    Per-IP address structure
+    Per-IP address structure that holds the monitor counters
     @ingroup HttpMonitor HttpMonitor
     @stability Internal
  */
@@ -1465,8 +1468,9 @@ PUBLIC void httpGetStats(HttpStats *sp);
 typedef struct HttpLimits {
     int      cacheItemSize;             /**< Maximum size of a cachable item */
     ssize    chunkSize;                 /**< Maximum chunk size for transfer encoding */
-    int      clientMax;                 /**< Maximum number of unique clients IP addresses */
-    int      connectionsMax;            /**< Maximum number of simultaneous client connections */
+    int      clientMax;                 /**< Maximum number of unique clients (ip addresses) */
+    int      connectionsMax;            /**< Maximum number of simultaneous connections (sockets) for whole server */
+    int      connectionsPerClientMax;   /**< Maximum number of simultaneous connections (sockets) per client (ip address) */
     int      headerMax;                 /**< Maximum number of header lines */
     int      headerSize;                /**< Maximum size of the total header */
     MprTicks inactivityTimeout;         /**< Timeout for keep-alive and idle requests (msec) */
@@ -1476,7 +1480,7 @@ typedef struct HttpLimits {
     int      requestMax;                /**< Maximum number of simultaneous concurrent requests */
     MprTicks requestTimeout;            /**< Time a request can take (msec) */
     MprTicks requestParseTimeout;       /**< Time a request can take to parse the request headers (msec) */
-    int      requestsPerClientMax;      /**< Maximum number of requests per client IP */
+    int      requestsPerClientMax;      /**< Maximum number of requests per client (ip address) */
     MprOff   rxBodySize;                /**< Maximum size of receive body data */
     MprOff   rxFormSize;                /**< Maximum size of form data */
     int      sessionMax;                /**< Maximum number of sessions */
@@ -3196,6 +3200,7 @@ typedef struct HttpNet {
     int             totalRequests;          /**< Total number of requests serviced */
     int             window;                 /**< Default HTTP/2 flow control window size for streams tx */
 
+    bool            activeNet;              /**< Active net request (server side) */
     bool            async: 1;               /**< Network is in async mode (non-blocking) */
 #if DEPRECATED || 1
     bool            borrowed: 1;            /**< Socket has been borrowed */
@@ -3647,12 +3652,12 @@ typedef struct HttpStream {
     void            *record;                /**< Current request database record for MVC apps */
     void            *staticData;            /**< Custom data for request - must be an unmanaged reference */
 
-    int             activeRequest;          /**< Actively servicing a request */
     int             keepAliveCount;         /**< Count of remaining Keep-Alive requests for this connection */
     int             port;                   /**< Remote port */
     int             streamID;               /**< Http/2 stream */
     int             timeout;                /**< Timeout indication */
 
+    bool            activeRequest;          /**< Actively servicing a request */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
     bool            complete: 1;            /**< Request is complete */
     bool            destroyed: 1;           /**< Stream has been destroyed */

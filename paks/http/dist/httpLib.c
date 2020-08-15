@@ -473,6 +473,7 @@ PUBLIC void httpInitLimits(HttpLimits *limits, bool serverSide)
     limits->chunkSize = ME_MAX_CHUNK;
     limits->clientMax = ME_MAX_CLIENTS;
     limits->connectionsMax = ME_MAX_CONNECTIONS;
+    limits->connectionsPerClientMax = ME_MAX_CONNECTIONS;
     limits->headerMax = ME_MAX_NUM_HEADERS;
     limits->headerSize = ME_MAX_HEADERS;
     limits->keepAliveMax = ME_MAX_KEEP_ALIVE;
@@ -4538,6 +4539,11 @@ static void parseLimitsConnections(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
+static void parseLimitsConnectionsPerClient(HttpRoute *route, cchar *key, MprJson *prop)
+{
+    route->limits->connectionsPerClientMax = httpGetInt(prop->value);
+}
+
 static void parseLimitsDepletion(HttpRoute *route, cchar *key, MprJson *prop)
 {
     cchar   *policy;
@@ -4606,7 +4612,7 @@ static void parseLimitsProcesses(HttpRoute *route, cchar *key, MprJson *prop)
 }
 
 
-static void parseLimitsRequests(HttpRoute *route, cchar *key, MprJson *prop)
+static void parseLimitsRequestsPerClient(HttpRoute *route, cchar *key, MprJson *prop)
 {
     route->limits->requestsPerClientMax = httpGetInt(prop->value);
 }
@@ -5705,6 +5711,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.chunk", parseLimitsChunk);
     httpAddConfig("http.limits.clients", parseLimitsClients);
     httpAddConfig("http.limits.connections", parseLimitsConnections);
+    httpAddConfig("http.limits.connectionsPerClient", parseLimitsConnectionsPerClient);
     httpAddConfig("http.limits.depletion", parseLimitsDepletion);
     httpAddConfig("http.limits.keepAlive", parseLimitsKeepAlive);
     httpAddConfig("http.limits.files", parseLimitsFiles);
@@ -5714,7 +5721,7 @@ PUBLIC int httpInitParser()
     httpAddConfig("http.limits.rxHeader", parseLimitsRxHeader);
     httpAddConfig("http.limits.packet", parseLimitsPacket);
     httpAddConfig("http.limits.processes", parseLimitsProcesses);
-    httpAddConfig("http.limits.requests", parseLimitsRequests);
+    httpAddConfig("http.limits.requests", parseLimitsRequestsPerClient);
     httpAddConfig("http.limits.sessions", parseLimitsSessions);
     httpAddConfig("http.limits.txBody", parseLimitsTxBody);
     httpAddConfig("http.limits.upload", parseLimitsUpload);
@@ -8859,7 +8866,6 @@ static char *getToken(HttpPacket *packet, cchar *delim, int validation);
 static bool gotHeaders(HttpQueue *q, HttpPacket *packet);
 static void logPacket(HttpQueue *q, HttpPacket *packet);
 static void incomingHttp1(HttpQueue *q, HttpPacket *packet);
-static bool monitorActiveRequests(HttpStream *stream);
 static void outgoingHttp1(HttpQueue *q, HttpPacket *packet);
 static void outgoingHttp1Service(HttpQueue *q);
 static HttpPacket *parseFields(HttpQueue *q, HttpPacket *packet);
@@ -8983,9 +8989,6 @@ static HttpPacket *parseHeaders1(HttpQueue *q, HttpPacket *packet)
     assert(stream->tx);
     rx = stream->rx;
 
-    if (!monitorActiveRequests(stream)) {
-        return 0;
-    }
     if (!gotHeaders(q, packet)) {
         /* Don't yet have a complete header, or error */
         return (q->stream->error) ? NULL : packet;
@@ -8998,29 +9001,6 @@ static HttpPacket *parseHeaders1(HttpQueue *q, HttpPacket *packet)
         parseResponseLine(q, packet);
     }
     return parseFields(q, packet);
-}
-
-
-static bool monitorActiveRequests(HttpStream *stream)
-{
-    HttpLimits  *limits;
-    int64       value;
-
-    limits = stream->limits;
-
-    if (httpServerStream(stream) && !stream->activeRequest) {
-        /*
-            ErrorDocuments may come through here twice so test activeRequest to keep counters valid.
-         */
-        stream->activeRequest = 1;
-        if ((value = httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) >= limits->requestsPerClientMax) {
-            httpError(stream, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
-                "Too many concurrent requests for client: %s %d/%d", stream->ip, (int) value, limits->requestsPerClientMax);
-            return 0;
-        }
-        httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
-    }
-    return 1;
 }
 
 
@@ -11356,14 +11336,8 @@ static HttpStream *createStream(HttpQueue *q, HttpPacket *packet)
         frame->stream = stream;
 
         /*
-            Servers create a new connection stream. Note: HttpStream is used for HTTP/2 streams (legacy).
+            Servers create a new connection stream
          */
-        if (mprGetListLength(net->streams) >= net->limits->requestsPerClientMax) {
-            sendReset(q, stream, HTTP2_REFUSED_STREAM, "Too many streams for IP: %s %d/%d", net->ip,
-                (int) mprGetListLength(net->streams), net->limits->requestsPerClientMax);
-            return 0;
-        }
-        httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
         if (mprGetListLength(net->streams) >= net->limits->streamsMax) {
             sendReset(q, stream, HTTP2_REFUSED_STREAM, "Too many streams for connection: %s %d/%d", net->ip,
                 (int) mprGetListLength(net->streams), net->limits->streamsMax);
@@ -13162,7 +13136,7 @@ PUBLIC ssize httpHuffEncode(cchar *src, ssize size, char *dst, uint lower)
 
 /********************************** Forwards **********************************/
 
-static HttpAddress *growAddresses(HttpNet *net, HttpAddress *address, int counterIndex);
+static HttpAddress *growCounters(HttpNet *net, HttpAddress *address, int counterIndex);
 static MprTicks lookupTicks(MprHash *args, cchar *key, MprTicks defaultValue);
 static void stopMonitors(void);
 
@@ -13264,7 +13238,7 @@ static void checkCounter(HttpMonitor *monitor, HttpCounter *counter, cchar *ip)
             fmt = "Monitor%s for \"%s\". Value %lld per %lld secs exceeds limit of %lld.";
         }
 
-    } else if (monitor->expr == '>') {
+    } else if (monitor->expr == '<') {
         if (counter->value < monitor->limit) {
             fmt = "Monitor%s for \"%s\". Value %lld per %lld secs outside limit of %lld.";
         }
@@ -13305,9 +13279,15 @@ PUBLIC void httpPruneMonitors()
             httpLog(http->trace, "monitor.ban.stop", "context", "client:'%s'", kp->key);
             address->banUntil = 0;
         }
-        if ((address->updated + period) < http->now && address->banUntil == 0) {
-            mprRemoveKey(http->addresses, kp->key);
-            /* Safe to keep iterating after removal of key */
+        /*
+            Remove address if not banned, not active in the last (1 minute) and no active connections.
+         */
+        if ((address->updated + ME_HTTP_MONITOR_PERIOD) < http->now && address->banUntil == 0) {
+            if (address->counters[HTTP_COUNTER_ACTIVE_CONNECTIONS].value == 0) {
+                mprLog("error http monitor", 1, "Restored access for IP %s", kp->key);
+                mprRemoveKey(http->addresses, kp->key);
+                /* Safe to keep iterating after removal of key */
+            }
         }
     }
     unlock(http->addresses);
@@ -13481,6 +13461,10 @@ static void stopMonitors()
 }
 
 
+/*
+    Return the monitor counters for a network address based on the net->ip.
+    Allocate or grow the counters sufficient to store the max counter index.
+ */
 PUBLIC HttpAddress *httpMonitorAddress(HttpNet *net, int counterIndex)
 {
     Http            *http;
@@ -13500,13 +13484,13 @@ PUBLIC HttpAddress *httpMonitorAddress(HttpNet *net, int counterIndex)
     address = mprLookupKey(http->addresses, net->ip);
     if (!address) {
         count = mprGetHashLength(http->addresses);
-        if (count > net->limits->clientMax) {
-            mprLog("net info", 3, "Too many concurrent clients, active: %d, max:%d", count, net->limits->clientMax);
+        if (count >= net->limits->clientMax) {
             unlock(http->addresses);
             return 0;
         }
     }
-    if ((address = growAddresses(net, address, counterIndex)) == 0) {
+    if ((address = growCounters(net, address, counterIndex)) == 0) {
+        /* Cannot happen */
         unlock(http->addresses);
         return 0;
     }
@@ -13522,11 +13506,12 @@ PUBLIC HttpAddress *httpMonitorAddress(HttpNet *net, int counterIndex)
 }
 
 
-static HttpAddress *growAddresses(HttpNet *net, HttpAddress *address, int counterIndex)
+static HttpAddress *growCounters(HttpNet *net, HttpAddress *address, int counterIndex)
 {
     int     ncounters;
 
     if (!address || address->ncounters <= counterIndex) {
+        //  Round to 16
         ncounters = ((counterIndex + 0xF) & ~0xF);
         if (address) {
             address = mprRealloc(address, sizeof(HttpAddress) * ncounters * sizeof(HttpCounter));
@@ -13996,7 +13981,10 @@ PUBLIC void httpDestroyNet(HttpNet *net)
                 httpDestroyStream(stream);
                 next--;
             }
-            httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
+            if (net->activeNet) {
+                httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, -1);
+                net->activeNet = 0;
+            }
         }
         httpRemoveNet(net);
         if (net->sock) {
@@ -14423,6 +14411,7 @@ PUBLIC int httpOpenNetConnector()
  */
 PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
 {
+    Http        *http;
     HttpNet     *net;
     HttpAddress *address;
     HttpLimits  *limits;
@@ -14444,23 +14433,40 @@ PUBLIC HttpNet *httpAccept(HttpEndpoint *endpoint, MprEvent *event)
     }
     httpBindSocket(net, sock);
     limits = net->limits;
+    http = net->http;
 
+#if KEEP
+    //  Useful for debugging and simulating multiple clients
+    net->ip = mprGetRandomString(16);
+#endif
     if ((address = httpMonitorAddress(net, 0)) == 0) {
-        mprCloseSocket(sock, 0);
+        mprLog("net info", 1, "Connection denied for IP %s. Too many concurrent clients, active: %d, max:%d",
+            net->ip, mprGetHashLength(http->addresses), net->limits->clientMax);
+        httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1);
+        httpDestroyNet(net);
         return 0;
     }
-    if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsMax) {
-        mprLog("net info", 3, "Too many concurrent connections, active: %d, max:%d", (int) value - 1, limits->connectionsMax);
+    net->activeNet = 1;
+    if ((value = httpMonitorNetEvent(net, HTTP_COUNTER_ACTIVE_CONNECTIONS, 1)) > limits->connectionsPerClientMax) {
+        mprLog("net info", 1, "Connection denied for IP %s. Too many concurrent connections for client, active: %d, max: %d",
+            net->ip, (int) (value - 1), limits->connectionsPerClientMax);
+        httpDestroyNet(net);
+        return 0;
+    }
+    if (mprGetListLength(http->networks) > limits->connectionsMax) {
+        mprLog("net info", 1, "Connection denied for IP %s. Too many concurrent connections for the server, active: %d, max: %d",
+            net->ip, mprGetListLength(http->networks), limits->connectionsMax);
         httpDestroyNet(net);
         return 0;
     }
     address = net->address;
     if (address && address->banUntil) {
         if (address->banUntil < net->http->now) {
-            mprLog("net info", 3, "Stop ban for client %s", net->ip);
+            mprLog("net info", 1, "Remove ban for client IP %s", net->ip);
             address->banUntil = 0;
         } else {
-            mprLog("net info", 3, "Network connection refused, client banned: %s", address->banMsg ? address->banMsg : "");
+            mprLog("net info", 1, "Network connection refused for client IP %s, client banned: %s", net->ip,
+                address->banMsg ? address->banMsg : "");
             httpDestroyNet(net);
             return 0;
         }
@@ -16256,8 +16262,29 @@ static int sendContinue(HttpQueue *q);
 
 PUBLIC bool httpProcessHeaders(HttpQueue *q)
 {
+    HttpNet     *net;
+    HttpStream  *stream;
+    HttpLimits  *limits;
+    int64       value;
+
     if (q->stream->state != HTTP_STATE_PARSED) {
         return 0;
+    }
+    stream = q->stream;
+    net = stream->net;
+    limits = net->limits;
+
+    if (httpServerStream(stream) && !stream->activeRequest) {
+        /*
+            ErrorDocuments may come through here twice so test activeRequest to keep counters valid.
+         */
+        stream->activeRequest = 1;
+        if ((value = httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, 1)) > limits->requestsPerClientMax) {
+            httpError(stream, HTTP_ABORT | HTTP_CODE_SERVICE_UNAVAILABLE,
+                "Request denied for IP %s. Too many concurrent requests for client, active: %d max: %d", stream->ip, (int) value, limits->requestsPerClientMax);
+            return 1;
+        }
+        httpMonitorEvent(stream, HTTP_COUNTER_REQUESTS, 1);
     }
     processFirst(q);
     processHeaders(q);
@@ -16918,8 +16945,8 @@ static void processFinalized(HttpQueue *q)
         httpMonitorEvent(stream, HTTP_COUNTER_NETWORK_IO, tx->bytesWritten);
     }
     if (httpServerStream(stream) && stream->activeRequest) {
-        httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
         stream->activeRequest = 0;
+        httpMonitorEvent(stream, HTTP_COUNTER_ACTIVE_REQUESTS, -1);
     }
     measureRequest(q);
 
@@ -24159,7 +24186,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
 
     now = mprGetTime();
     if (trace->lastMark < (now + TPS) || trace->lastTime == 0) {
-        trace->lastTime = mprGetDate("%T");
+        trace->lastTime = mprGetDate("%D %T");
         trace->lastMark = now;
     }
 

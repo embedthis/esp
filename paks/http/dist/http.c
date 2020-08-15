@@ -657,6 +657,14 @@ static int parseArgs(int argc, char **argv)
             }
             setWorkers++;
 
+        } else if (smatch(argp, "-x")) {
+            //  Undocumented and unsupported (-D --nofollow -s)
+            mprSetDebugMode(1);
+            app->maxRetries = 0;
+            app->timeout = HTTP_UNLIMITED;
+            app->nofollow++;
+            app->showHeaders++;
+
         } else if (smatch(argp, "--zero")) {
             app->zeroOnErrors++;
 

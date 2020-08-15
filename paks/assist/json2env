@@ -168,7 +168,9 @@ function mapEnv(obj, prefix = '', vars = {}) {
         if (typeof value == 'object') {
             mapEnv(value, prefix + name.toUpperCase() + '_', vars)
         } else {
-            name = (prefix + name).toUpperCase().replace(/\./g, '_').replace(/-/g, '_')
+            name = prefix + name
+            name = name.replace(/[A-Z]/g, '_$&').replace(/^_/, '')
+            name = name.toUpperCase().replace(/\./g, '_').replace(/-/g, '_')
             vars[name] = value
         }
     }
