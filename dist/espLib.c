@@ -3929,7 +3929,7 @@ PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
             httpSetContentType(stream, "text/html");
             written += espRenderString(stream, text);
             espFinalize(stream);
-            httpLog(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpLog(stream->trace, "esp.error", "error", "msg=%s, status=%d, uri=%s", msg, status, rx->pathInfo);
         }
     }
     va_end(args);
@@ -4780,6 +4780,7 @@ PUBLIC int espOpen(MprModule *module)
     handler->stageData = esp;
     esp->mutex = mprCreateLock();
     esp->local = mprCreateThreadLocal();
+    
     if (espInitParser() < 0) {
         return 0;
     }
@@ -5062,7 +5063,7 @@ static bool loadController(HttpStream *stream)
             }
             return 0;
         } else if (loaded) {
-            httpLog(stream->trace, "esp.handler", "context", "msg: 'Load module %s'", controller);
+            httpLog(stream->trace, "esp.handler", "context", "msg:Load module %s", controller);
         }
     }
 #endif /* !ME_STATIC */
@@ -5134,7 +5135,7 @@ static int runAction(HttpStream *stream)
     httpAuthenticate(stream);
 
     action = mprLookupKey(eroute->top->actions, rx->target);
-    httpLog(stream->trace, "esp.handler", "context", "msg: 'Invoke controller action %s'", rx->target);
+    httpLog(stream->trace, "esp.handler", "context", "msg:Invoke controller action %s", rx->target);
 
     if (eroute->commonController) {
         (eroute->commonController)(stream, action);
@@ -5170,7 +5171,7 @@ static bool loadView(HttpStream *stream, cchar *target)
 
     if (!eroute->combine && (eroute->update || !mprLookupKey(eroute->top->views, target))) {
         path = mprJoinPath(route->documents, target);
-        httpLog(stream->trace, "esp.handler", "context", "msg: 'Loading module %s'", path);
+        httpLog(stream->trace, "esp.handler", "context", "msg:Loading module %s", path);
         /* May yield */
         route->source = path;
         if (espLoadModule(route, stream->dispatcher, "view", path, &errMsg, &loaded) < 0) {
@@ -5310,7 +5311,7 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
         for (ITERATE_KEYS(stream->rx->route->extensions, kp)) {
             if (kp->data == HTTP->espHandler && kp->key && kp->key[0]) {
                 if ((dest = checkView(stream, target, 0, kp->key)) != 0) {
-                    httpLog(stream->trace, "esp.handler", "context", "msg: 'Render view %s'", dest);
+                    httpLog(stream->trace, "esp.handler", "context", "msg:Render view %s", dest);
                     /* May yield */
                     espRenderView(stream, dest, 0);
                     return;
@@ -5331,13 +5332,13 @@ PUBLIC void espRenderDocument(HttpStream *stream, cchar *target)
                 up->port, sjoin(up->path, "/", NULL), up->reference, up->query, 0));
             return;
         }
-        httpLog(stream->trace, "esp.handler", "context", "msg: 'Render index %s'", dest);
+        httpLog(stream->trace, "esp.handler", "context", "msg:Render index %s", dest);
         /* May yield */
         espRenderView(stream, dest, 0);
         return;
     }
 
-    httpLog(stream->trace, "esp.handler", "context", "msg: 'Relay to the fileHandler'");
+    httpLog(stream->trace, "esp.handler", "context", "msg:Relay to the fileHandler");
     stream->rx->target = sclone(&stream->rx->pathInfo[1]);
     httpMapFile(stream);
     if (stream->tx->fileInfo.isDir) {

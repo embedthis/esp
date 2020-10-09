@@ -38,11 +38,11 @@ static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
     auth = rx->route->auth;
 
     if ((urec = findRecWhere("user", "username", "==", username)) == 0) {
-        httpLog(stream->trace, "auth.login.error", "error", "msg: 'Cannot verify user', username: '%s'", username);
+        httpLog(stream->trace, "auth.login.error", "error", "msg:Cannot verify user, username:%s", username);
         return 0;
     }
     if (!mprCheckPassword(password, getField(urec, "password"))) {
-        httpLog(stream->trace, "auth.login.error", "error", "msg: 'Password failed to authenticate', username: '%s'", username);
+        httpLog(stream->trace, "auth.login.error", "error", "msg:Password failed to authenticate, username:%s", username);
         mprSleep(500);
         return 0;
     }
@@ -58,7 +58,7 @@ static bool verifyUser(HttpStream *stream, cchar *username, cchar *password)
      */
     httpSetStreamUser(stream, user);
 
-    httpLog(stream->trace, "auth.login.authenticated", "context", "msg: 'User authenticated', username: '%s'", username);
+    httpLog(stream->trace, "auth.login.authenticated", "context", "msg:User authenticated, username:%s", username);
     return 1;
 }
 

@@ -701,7 +701,7 @@ PUBLIC ssize espRenderError(HttpStream *stream, int status, cchar *fmt, ...)
             httpSetContentType(stream, "text/html");
             written += espRenderString(stream, text);
             espFinalize(stream);
-            httpLog(stream->trace, "esp.error", "error", "msg=\"%s\", status=%d, uri=\"%s\"", msg, status, rx->pathInfo);
+            httpLog(stream->trace, "esp.error", "error", "msg=%s, status=%d, uri=%s", msg, status, rx->pathInfo);
         }
     }
     va_end(args);

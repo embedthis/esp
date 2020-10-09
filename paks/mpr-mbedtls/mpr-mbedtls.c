@@ -407,30 +407,37 @@ static int handshakeMbed(MprSocket *sp)
             mbedtls_strerror(-rc, ebuf, sizeof(ebuf));
             sp->errorMsg = sfmt("%s: error -0x%x", ebuf, -rc);
         }
-        sp->flags |= MPR_SOCKET_EOF;
+        sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
         errno = EPROTO;
         return MPR_ERR_CANT_READ;
     }
     if ((vrc = mbedtls_ssl_get_verify_result(&mb->ctx)) != 0) {
         if (vrc & MBEDTLS_X509_BADCERT_MISSING) {
             sp->errorMsg = sclone("Certificate missing");
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
 
         } if (vrc & MBEDTLS_X509_BADCERT_EXPIRED) {
             sp->errorMsg = sclone("Certificate expired");
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
 
         } else if (vrc & MBEDTLS_X509_BADCERT_REVOKED) {
             sp->errorMsg = sclone("Certificate revoked");
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
 
         } else if (vrc & MBEDTLS_X509_BADCERT_CN_MISMATCH) {
             sp->errorMsg = sclone("Certificate common name mismatch");
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
 
         } else if (vrc & MBEDTLS_X509_BADCERT_KEY_USAGE || vrc & MBEDTLS_X509_BADCERT_EXT_KEY_USAGE) {
             sp->errorMsg = sclone("Unauthorized key use in certificate");
+            sp->flags |= MPR_SOCKET_CERT_ERROR;
 
         } else if (vrc & MBEDTLS_X509_BADCERT_NOT_TRUSTED) {
             sp->errorMsg = sclone("Certificate not trusted");
             if (!sp->ssl->verifyIssuer) {
                 vrc = 0;
+            } else {
+                sp->flags |= MPR_SOCKET_CERT_ERROR;
             }
 
         } else if (vrc & MBEDTLS_X509_BADCERT_SKIP_VERIFY) {
@@ -442,15 +449,18 @@ static int handshakeMbed(MprSocket *sp)
         } else {
             if (mb->ctx.client_auth && !sp->ssl->certFile) {
                 sp->errorMsg = sclone("Server requires a client certificate");
+                sp->flags |= MPR_SOCKET_CERT_ERROR;
 
             } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
                 sp->errorMsg = sclone("Peer disconnected");
+                sp->flags |= MPR_SOCKET_ERROR;
 
             } else {
                 char ebuf[256];
                 mbedtls_x509_crt_verify_info(ebuf, sizeof(ebuf), "", vrc);
                 strim(ebuf, "\n", 0);
                 sp->errorMsg = sfmt("Cannot handshake: %s, error -0x%x", ebuf, -rc);
+                sp->flags |= MPR_SOCKET_ERROR;
             }
         }
     }
