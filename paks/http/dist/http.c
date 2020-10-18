@@ -468,6 +468,9 @@ static int parseArgs(int argc, char **argv)
                 return showUsage();
             } else {
                 app->iterations = atoi(argv[++nextArg]);
+                if (app->iterations == 0) {
+                    app->iterations = MAXINT;
+                }
             }
 
         } else if (smatch(argp, "--key")) {
@@ -913,7 +916,7 @@ static void threadMain(void *data, MprThread *thread)
             request = createRequest(td, net);
             mprAddItem(td->requests, request);
             /* Run serialized on the network dispatcher */
-            mprCreateEvent(td->dispatcher, "startRequest", 0, startRequest, request, 0);
+            mprCreateLocalEvent(td->dispatcher, "startRequest", 0, startRequest, request, 0);
             td->activeRequests++;
         }
         if (app->success) {
@@ -1033,7 +1036,7 @@ static void startRequest(Request *request)
         mprLog("error http", 0, "Failed request for \"%s\". %s.", app->url, net->errorMsg);
         app->success = 0;
         if (!app->continueOnErrors) {
-            mprCreateEvent(stream->dispatcher, "done", 0, mprSignalCond, request->threadData->cond, 0);
+            mprCreateLocalEvent(stream->dispatcher, "done", 0, mprSignalCond, request->threadData->cond, 0);
         }
         return;
     }
@@ -1048,7 +1051,6 @@ static void startRequest(Request *request)
 static void notifier(HttpStream *stream, int event, int arg)
 {
     Request *request;
-
     request = stream->data;
 
     switch (event) {
@@ -1064,7 +1066,7 @@ static void notifier(HttpStream *stream, int event, int arg)
         if (++request->count >= app->iterations || (!app->success && !app->continueOnErrors)) {
             finishRequest(request);
         } else {
-            mprCreateEvent(stream->dispatcher, "startRequest", 0, startRequest, request, 0);
+            mprCreateLocalEvent(stream->dispatcher, "startRequest", 0, startRequest, request, 0);
         }
     }
 }
@@ -1423,7 +1425,7 @@ static void finishRequest(Request *request)
             /*
                 Run as an event so the stack httpIO stack unwinds before threadMain destroys the network.
              */
-            mprCreateEvent(request->stream->dispatcher, "done", 0, mprSignalCond, request->threadData->cond, 0);
+            mprCreateLocalEvent(request->stream->dispatcher, "done", 0, mprSignalCond, request->threadData->cond, 0);
         }
         mprUnlock(app->mutex);
     }

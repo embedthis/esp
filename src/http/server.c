@@ -26,7 +26,7 @@
  */
 typedef struct App {
     Mpr         *mpr;
-    MprSignal   *traceToggle;
+    MprSignal   *signal;
     cchar       *documents;
     cchar       *home;
     cchar       *configFile;
@@ -41,6 +41,7 @@ static App *app;
 static int createEndpoints(int argc, char **argv);
 static int findConfig(void);
 static void manageApp(App *app, int flags);
+static void showState(void *ignored, MprSignal *sp);
 static void usageError(void);
 
 /*********************************** Code *************************************/
@@ -174,7 +175,7 @@ MAIN(http, int argc, char **argv, char **envp)
 static void manageApp(App *app, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(app->traceToggle);
+        mprMark(app->signal);
         mprMark(app->configFile);
         mprMark(app->pathVar);
     }
@@ -197,6 +198,7 @@ static int createEndpoints(int argc, char **argv)
         return MPR_ERR_CANT_CREATE;
     }
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
+    app->signal = mprAddSignalHandler(SIGINFO, showState, 0, 0, MPR_SIGNAL_AFTER);
     return 0;
 }
 
@@ -242,6 +244,18 @@ static void usageError()
         mprGetAppTitle(), name);
     exit(7);
 }
+
+
+static void showState(void *ignored, MprSignal *sp)
+{
+    mprLog(0, 0, "%s", httpStatsReport(0));
+    if (MPR->heap->track) {
+        mprPrintMem("MPR Memory Report", MPR_MEM_DETAIL);
+    } else {
+        mprPrintMem("MPR Memory Report", 0);
+    }
+}
+
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.

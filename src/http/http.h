@@ -70,6 +70,9 @@ struct HttpWebSocket;
 #ifndef ME_HTTP_WEB_SOCKETS
     #define ME_HTTP_WEB_SOCKETS     0
 #endif
+#ifndef ME_HTTP_SENDFILE
+    #define ME_HTTP_SENDFILE        1
+#endif
 
 /*
     Unlimited limit value
@@ -631,9 +634,9 @@ PUBLIC HttpAddress *httpMonitorAddress(struct HttpNet *net, int counterIndex);
 /*
     Formatter flags
  */
-#define HTTP_TRACE_PACKET           0x1         /**< Trace a packet */
-#define HTTP_TRACE_HEX              0x2         /**< Format content in hex with side ascii */
-#define HTTP_TRACE_RAW              0x4         /**< Emit raw trace */
+#define HTTP_TRACE_HEX              0x1         /**< Format content in hex with side ascii */
+#define HTTP_TRACE_RAW              0x2         /**< Emit raw trace - don't interpret key/value pairs */
+#define HTTP_TRACE_CONT             0x4         /**< Continuation trace. Don't flush and try to format with subsequent trace */
 
 /**
     Trace formatter callback
@@ -699,7 +702,7 @@ PUBLIC int httpBackupTraceLogFile(HttpTrace *trace);
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param buf Data buffer to trace.
     @param len Length of the data buf.
     @param fmt Printf style formatted string
@@ -724,7 +727,7 @@ PUBLIC HttpTrace *httpCreateTrace(HttpTrace *parent);
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param buf Data buffer to trace.
     @param len Length of the data buf.
     @param fmt Printf style formatted string
@@ -739,7 +742,7 @@ PUBLIC void httpDetailFormatter(HttpTrace *trace, cchar *event, cchar *type, int
     @description The formatter will invoke the trace logger and actually write the trace mesage
     @param trace HttpTrace object
     @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param event Event name to trace
     @param buf Trace data buffer to write
     @param len Length of data buffer
@@ -794,54 +797,44 @@ PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...
         } else
 #endif
 
-PUBLIC bool httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...) PRINTF_ATTRIBUTE(5,6);
+//  Internal
+PUBLIC void httpLogProc(HttpTrace *trace, cchar *event, cchar *type, int flags, cchar *fmt, ...) PRINTF_ATTRIBUTE(5,6);
 
 /**
-    Trace request packet
-    @description This is similar to #httpLogData but accepts a packet as a parameter.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
-    to the maximum size defined via #httpSetTraceLogFile.
-    @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event to log
-    @param type Event type to log
-    @param flags Output formatting flags
-    @param packet Packet to log.
-    @param values Formatted comma separated key=value pairs
-    @param ... Arguments for fmt
-    @return True if the event was logged
-    @ingroup HttpTrace
-    @stability Evolving
- */
-PUBLIC bool httpLogPacket(HttpTrace *trace, cchar *event, cchar *type, int flags, struct HttpPacket *packet, cchar *values, ...) PRINTF_ATTRIBUTE(6,7);
-
-#if DEPRECATED
-/**
-    Log with data buffer
-    @description This is similar to #httpLog but will also log the contents of a data buffer.
-    If the buffer contains binary data, it will be displayed in hex format. The content will be logged up
-    to the maximum size defined via #httpSetTraceLogFile.
-    @param trace HttpTrace object. Typically used via HttpStream.trace or HttpNet.trace.
-    @param event Event to trace
-    @param type Event type to trace
-    @param flags Output formatting flags
+    Trace a packet received from the network
+    @param net HttpNet object
     @param buf Data buffer to trace
-    @param len Size of the data buffer.
-    @param fmt Printf style format string. String should be comma separated key=value pairs
-    @param ... Arguments for fmt
-    @return True if the event was traced
+    @param len Size of buffer
     @ingroup HttpTrace
-    @stability Evolving
+    @stability Prototype
  */
-PUBLIC bool httpLogData(struct HttpNet *net, struct HttpStream *stream, cchar *event, cchar *type, int flags, cchar *buf,
-    ssize len, cchar *fmt, ...) PRINTF_ATTRIBUTE(8,9);
-#endif
+PUBLIC void httpLogRxPacket(struct HttpNet *net, cchar *buf, ssize len);
+
+/**
+    Trace packets sent to the network
+    @description This traces the packets referenced by net->socketq->iovec
+    @param net HttpNet object
+    @param len Length in bytes actually written
+    @ingroup HttpTrace
+    @stability Prototype
+ */
+PUBLIC void httpLogTxPacket(struct HttpNet *net, ssize len);
+
+/**
+    Trace the completion of a request
+    @description This traces the request metrics
+    @param stream HttpStream object
+    @ingroup HttpTrace
+    @stability Prototype
+ */
+PUBLIC void httpLogCompleteRequest(struct HttpStream *stream);
 
 /**
     Pretty log trace formatter for debugging
     @param trace HttpTrace object
     @param event Event to trace
     @param type Event type to trace
-    @param flags Formatting flags (HTTP_TRACE_PACKET and set buf to a HttpPacket)
+    @param flags Formatting flags
     @param buf Data buffer to trace.
     @param len Length of the data buf.
     @param fmt Printf style formatted string
@@ -1958,7 +1951,8 @@ typedef struct HttpPacket {
     uint            flags: 7;               /**< Packet flags */
     uint            last: 1;                /**< Last packet in a message */
     uint            type: 8;                /**< Packet type extension */
-    uint            reserved: 16;           /**< Reserved */
+    uint            fin: 1;                 /**< Web sockets frame fin bit */
+    uint            reserved: 15;           /**< Reserved */
     struct HttpPacket *next;                /**< Next packet in chain */
     MprBuf          *content;               /**< Chunk content */
     MprBuf          *prefix;                /**< Prefix message to be emitted before the content */
@@ -2189,7 +2183,7 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *packet, ssize offset);
 /*
     Queue optimizations
  */
-#define HTTP_QUEUE_ALLOW          16        /**< Let packets less than this size flow through */
+#define HTTP_QUEUE_ALLOW          32        /**< Let packets less than this size flow through */
 #define HTTP_QUEUE_DONT_SPLIT     32        /**< Don't split packets less than 32 bytes */
 
 /*
@@ -2258,15 +2252,6 @@ typedef struct HttpQueue {
 #if ME_HTTP_HTTP2 || DOXYGEN
     ssize               window;                 /**< HTTP/2 flow control window size */
 #endif
-
-    /*
-        Connector instance data
-     */
-    MprIOVec            iovec[ME_MAX_IOVEC];
-    int                 ioIndex;                /**< Next index into iovec */
-    int                 ioFile;                 /**< Sending a file */
-    MprOff              ioCount;                /**< Count of bytes in iovec including file I/O */
-    MprOff              ioPos;                  /**< Position in file */
 } HttpQueue;
 
 /**
@@ -2424,9 +2409,6 @@ PUBLIC void httpPutPacket(struct HttpQueue *q, HttpPacket *packet);
     @description Put a packet onto the next downstream queue by calling the downstream queue's put() method.
         Note the receiving queue may immediately process the packet or it may choose to defer processing by putting to
         its service queue.
-    \n\n
-    Note: the garbage collector may run while calling httpSendBlock to reclaim unused packets. It is essential that all
-        required memory be retained by a relevant manager calling mprMark as required.
     @param qp Queue reference. The packet will not be queued on this queue, but rather on the queue downstream.
     @param packet Packet to put
     @ingroup HttpQueue
@@ -2667,12 +2649,14 @@ PUBLIC HttpQueue *httpAppendQueue(HttpQueue *q, HttpQueue *prev);
 PUBLIC void httpAssignQueueCallbacks(HttpQueue *q, struct HttpStage *stage, int dir);
 PUBLIC HttpQueue *httpCreateQueue(struct HttpNet *net, struct HttpStream *stream, struct HttpStage *stage, int dir, HttpQueue *prev);
 PUBLIC HttpQueue *httpCreateQueueHead(struct HttpNet *net, struct HttpStream *stream, cchar *name, int dir);
+PUBLIC HttpQueue *httpFindNextQueue(HttpQueue *q);
 PUBLIC HttpQueue *httpFindPreviousQueue(HttpQueue *q);
 PUBLIC HttpQueue *httpGetNextQueueForService(HttpQueue *q);
 PUBLIC void httpInitSchedulerQueue(HttpQueue *q);
 PUBLIC void httpMarkQueueHead(HttpQueue *q);
 PUBLIC void httpOpenQueues(struct HttpStream *stream);
 PUBLIC void httpPairQueues(HttpQueue *q1, HttpQueue *q2);
+PUBLIC void httpRemoveChunkFilter(HttpQueue *head);
 PUBLIC void httpRemovePacket(HttpQueue *q, HttpPacket *prev, HttpPacket *packet);
 PUBLIC cchar *httpTraceHeaders(MprHash *headers);
 PUBLIC void httpTraceQueues(struct HttpStream *stream);
@@ -2708,7 +2692,7 @@ typedef int (*HttpParse)(cchar *key, char *value, void *state);
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
     @defgroup HttpStage HttpStage
     @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateConnector httpCreateFilter httpCreateHandler
-        httpCreateStage httpDefaultOutgoingServiceStage httpGetStageData httpHandleOptionsTrace httpLookupStage
+        httpCreateStage httpDefaultService httpGetStageData httpHandleOptionsTrace httpLookupStage
         httpLookupStageData httpSetStageData
     @stability Internal
  */
@@ -2948,14 +2932,44 @@ PUBLIC struct HttpStage *httpLookupStage(cchar *name);
 PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet);
 
 /**
-    Default outgoing data handling
-    @description This routine provides default handling of outgoing data for stages. It simply sends all packets
-        downstream.
+    Default stage service routine handling
+    @description This routine provides default service handling of data for stages. It simply sends all packets
+        downstream. It handles flow control automatically.
     @param q Queue object
     @ingroup HttpStage
-    @stability Stable
+    @stability Evolving
  */
-PUBLIC void httpDefaultOutgoingServiceStage(HttpQueue *q);
+PUBLIC void httpDefaultService(HttpQueue *q);
+
+/**
+    Stage service routine that discards packets
+    @param q Queue object
+    @ingroup HttpStage
+    @stability Evolving
+ */
+PUBLIC void httpDiscardService(HttpQueue *q);
+
+
+/**
+    Default stage incoming handling
+    @description This routine provides default incoming handling of data for stages.
+        It puts the packet to the next Stage's incoming service queue or incoming routine if there
+        is no service routine defined.
+    @param q Queue object
+    @ingroup HttpStage
+    @stability Prototype
+ */
+PUBLIC void httpDefaultIncoming(HttpQueue *q, HttpPacket *packet);
+
+/**
+    Default stage outgoing handling
+    @description This routine provides default outgoing handling of data for stages. It puts the packet
+        to the next Stage's outgoing service queue or outgoing routine if there is no service routine defined.
+    @param q Queue object
+    @ingroup HttpStage
+    @stability Prototype
+ */
+PUBLIC void httpDefaultOutgoing(HttpQueue *q, HttpPacket *packet);
 
 /**
     Get stage data
@@ -3283,7 +3297,7 @@ typedef struct HttpNet {
     uint            eventMask: 3;           /**< Last IO event mask */
     bool            http2: 1;               /**< Enable http 2 */
     bool            init: 1;                /**< Settings frame has been sent and network is ready to use */
-    bool            ownDispatcher: 1;       /**< Using own the dispatcher and should destroy when closing connection */
+    bool            ownDispatcher: 1;       /**< Using own dispatcher and should destroy when closing */
     bool            parsingHeaders: 1;      /**< Parsing HTTP/2 headers */
     bool            push: 1;                /**< Receiver will accept push */
     bool            receivedGoaway: 1;      /**< Received goaway frame */
@@ -3291,8 +3305,20 @@ typedef struct HttpNet {
     bool            sentGoaway: 1;          /**< Sent goaway frame */
     bool            sharedDispatcher: 1;    /**< Dispatcher is shared and should not be destroyed */
     bool            skipTrace: 1;           /**< Omit trace from now on */
+    bool            tracing: 1;             /**< Network is tracing packets */
     bool            worker: 1;              /**< Use worker */
     bool            writeBlocked: 1;        /**< Transmission writing is blocked */
+
+    /*
+        Network connector instance data
+     */
+    MprIOVec            iovec[ME_MAX_IOVEC];
+    int                 ioIndex;                /**< Next index into iovec */
+    MprOff              ioCount;                /**< Count of bytes in iovec including file I/O */
+    MprOff              ioPos;                  /**< Position in file */
+    //MprOff              ioFileSize;             /**< Size of file */
+    MprFile             *ioFile;                /**< File to send */
+
 } HttpNet;
 
 #if DEPRECATED || 1
@@ -3481,11 +3507,10 @@ PUBLIC void httpReturnNet(HttpNet *net);
         by the http pipeline and support routines.
     @param net HttpNet object created via #httpCreateNet
     @param flags Set to HTTP_BLOCK to yield for GC if due
-    @return True if work was done servicing queues.
     @ingroup HttpNet
     @stability Evolving
  */
-PUBLIC bool httpServiceNetQueues(HttpNet *net, int flags);
+PUBLIC void httpServiceNetQueues(HttpNet *net, int flags);
 
 /**
     Define an I/O callback for network connections
@@ -3746,7 +3771,9 @@ typedef struct HttpStream {
     char            *boundary;              /**< File upload boundary */
     void            *context;               /**< Embedding context (EjsRequest) */
     void            *data;                  /**< Custom data for request - must be a managed reference */
+#if DEPRECATED
     void            *ejs;                   /**< Embedding VM */
+#endif
     cchar           *errorMsg;              /**< Error message for the last request (if any) */
     void            *grid;                  /**< Current request database grid for MVC apps */
     char            *ip;                    /**< Remote client IP address */
@@ -3766,6 +3793,7 @@ typedef struct HttpStream {
     bool            active;                 /**< httpProcess active on this stack */
     bool            authRequested: 1;       /**< Authorization requested based on user credentials */
     bool            completed: 1;           /**< Request complete and completeRequest schedule */
+    bool            counted: 1;             /**< Request counted by/ monitor event */
     bool            destroyed: 1;           /**< Stream has been destroyed */
     bool            disconnect;             /**< Must disconnect/reset the connection - can not continue */
     bool            encoded: 1;             /**< True if the password is MD5(username:realm:password) */
@@ -4354,7 +4382,7 @@ PUBLIC void httpParseMethod(HttpStream *stream);
 PUBLIC void httpResetServerStream(HttpStream *stream);
 PUBLIC HttpLimits *httpSetUniqueStreamLimits(HttpStream *stream);
 PUBLIC void httpInitChunking(HttpStream *stream);
-PUBLIC bool httpServiceQueues(HttpStream *stream, int flags);
+PUBLIC void httpServiceQueues(HttpStream *stream, int flags);
 
 /********************************** HttpAuthStore *********************************/
 /**
@@ -7496,6 +7524,7 @@ typedef struct HttpTx {
     cchar           *method;                /**< Client request method GET, HEAD, POST, DELETE, OPTIONS, PUT, TRACE */
     cchar           *mimeType;              /**< Mime type of the request payload */
     cchar           *charSet;               /**< Character set to use with the Content-Type */
+    uint            simplePipeline;         /**< Output pipeline doesn't use custom filters or HTTP/2, SSL or ranges */
 
     /*
         Range fields
@@ -7504,6 +7533,7 @@ typedef struct HttpTx {
     HttpRange       *currentRange;          /**< Current range being fullfilled */
     char            *rangeBoundary;         /**< Inter-range boundary */
     MprOff          rangePos;               /**< Current range I/O position in response data */
+    MprOff          filePos;                /**< Position in file */
 
     cchar           *altBody;               /**< Alternate transmission for errors */
     int             traceMethods;           /**< Handler methods supported */
@@ -8813,7 +8843,7 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route);
         If is important to check the HttpStream.error and HttpStream.state in the callback to ensure the Stream is in
         an acceptable state for your logic. Typically you want HttpStream.state to be greater than HTTP_STATE_BEGIN and
         less than HTTP_STATE_COMPLETE. You may also wish to check HttpStream.error incase the stream request has errored.
-    @param data Data to pass to the callback.
+    @param data Data to pass to the callback. This is unmanaged data. The caller is responsible for retaining and freeing.
     @return "Zero" if the stream can be found and the event is scheduled, Otherwise returns MPR_ERR_CANT_FIND.
     @ingroup HttpStream
     @stability Prototype
@@ -8963,3 +8993,5 @@ PUBLIC bool httpPumpOutput(HttpQueue *q);
     by the terms of either license. Consult the LICENSE.md distributed with
     this software for full details and other copyrights.
  */
+
+PUBLIC void httpCheckQueues(HttpQueue *q);

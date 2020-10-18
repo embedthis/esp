@@ -128,6 +128,13 @@ struct  MprXml;
 #define MPR_SOCKET_MESSAGE      (WM_USER + 32)
 
 /*
+    Coalesce vectored write packets when using SSL
+ */
+#ifndef ME_MPR_SOCKET_VECTOR_JOIN
+    #define ME_MPR_SOCKET_VECTOR_JOIN 1
+#endif
+
+/*
     Priorities
  */
 #define MPR_BACKGROUND_PRIORITY 15          /**< May only get CPU if idle */
@@ -675,6 +682,17 @@ PUBLIC void mprGlobalUnlock(void);
     Lock free primitives
  */
 
+ /*
+     AtomicBarrier memory models
+  */
+ #define MPR_ATOMIC_RELAXED      __ATOMIC_RELAXED
+ #define MPR_ATOMIC_CONSUME      __ATOMIC_CONSUME
+ #define MPR_ATOMIC_ACQUIRE      __ATOMIC_ACQUIRE
+ #define MPR_ATOMIC_RELEASE      __ATOMIC_RELEASE
+ #define MPR_ATOMIC_ACQ_REL      __ATOMIC_ACQ_REL
+ #define MPR_ATOMIC_SEQUENTIAL   __ATOMIC_SEQ_CST
+
+
 /**
     Open and initialize the atomic subystem
     @ingroup MprSync
@@ -684,10 +702,12 @@ PUBLIC void mprAtomicOpen(void);
 
 /**
     Apply a full (read+write) memory barrier
+    @param model Memory model. Set to MPR_ATOMIC_RELAXED, MPR_ATOMIC_CONSUME, MPR_ATOMIC_ACQUIRE,
+        MPR_ATOMIC_RELEASE, MPR_ATOMIC_ACQREL, MPR_ATOMIC_SEQUENTIAL
     @ingroup MprSync
-    @stability Stable.
+    @stability Evolving.
  */
-PUBLIC void mprAtomicBarrier(void);
+PUBLIC void mprAtomicBarrier(int model);
 
 /**
     Atomic list insertion. Inserts "item" at the "head" of the list. The "link" field is the next field in item.
@@ -728,6 +748,23 @@ PUBLIC void mprAtomicAdd(volatile int *target, int value);
     @stability Stable.
  */
 PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
+
+#if ME_COMPILER_HAS_ATOMIC
+    #define mprAtomicLoad(ptr, ret, model) __atomic_load(ptr, ret, model)
+    #define mprAtomicStore(ptr, val, model) __atomic_store(ptr, val, model)
+#else
+    #define mprAtomicLoad(ptr, ret, model) \
+        if (1) { \
+            mprAtomicBarrier(model); \
+            *ret = *ptr; \
+        } else
+    #define mprAtomicStore(ptr, val, model) \
+        if (1) { \
+            mprAtomicBarrier(model); \
+            *ptr = val; \
+        } else
+
+#endif
 
 /********************************* Memory Allocator ***************************/
 /*
@@ -1158,7 +1195,6 @@ typedef struct MprHeap {
     int              gcEnabled;             /**< GC is enabled */
     int              gcRequested;           /**< GC has been requested */
     int              hasError;              /**< Memory allocation error */
-    int              mark;                  /**< Mark version */
     int              marking;               /**< Actually marking objects now */
     int              mustYield;             /**< Threads must yield for GC which is due */
     int              nextSeqno;             /**< Next sequence number */
@@ -1172,6 +1208,7 @@ typedef struct MprHeap {
     int              verify;                /**< Verify memory contents (very slow) */
     uint64           workDone;              /**< Count of allocations weighted by block size */
     uint64           workQuota;             /**< Quota of work done before idle GC worthwhile */
+    uchar            mark;                  /**< Mark version */
 } MprHeap;
 
 /**
@@ -4178,6 +4215,7 @@ PUBLIC int mprStartLogging(cchar *logSpec, int flags);
  */
 PUBLIC void mprDebug(cchar *tags, int level, cchar *fmt, ...);
 #endif
+
 PUBLIC void mprLogProc(cchar *tags, int level, cchar *fmt, ...) PRINTF_ATTRIBUTE(3,4);
 
 /**
@@ -5833,6 +5871,7 @@ PUBLIC int mprUnloadModule(MprModule *mp);
 #define MPR_EVENT_DONT_QUEUE        0x4     /**< Don't queue the event. User must call mprQueueEvent */
 #define MPR_EVENT_STATIC_DATA       0x8     /**< Event data is permanent and should not be marked by GC */
 #define MPR_EVENT_ALWAYS            0x10    /**< Always invoke the callback even if the event not run  */
+#define MPR_EVENT_LOCAL             0x20    /**< Invoked from an MPR local thread */
 
 #define MPR_EVENT_MAX_PERIOD (MAXINT64 / 2)
 
@@ -5891,7 +5930,7 @@ typedef struct MprEvent {
 typedef struct MprDispatcher {
     cchar           *name;              /**< Static debug dispatcher name / purpose */
     MprEvent        *eventQ;            /**< Event queue */
-    MprEvent        *currentQ;          /**< Currently executing events */
+    MprEvent        *currentQ;          /**< Currently executing event */
     MprCond         *cond;              /**< Multi-thread sync */
     int             flags;              /**< Dispatcher control flags */
     int64           mark;               /**< Last event sequence mark (may reuse over time) */
@@ -6104,12 +6143,27 @@ PUBLIC void mprSignalDispatcher(MprDispatcher *dispatcher);
  */
 PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
 
-/*
+/**
+    Optimized variety of mprCreateEvent for use by local MPR threads only
+    @param dispatcher Event dispatcher created via mprCreateDispatcher
+    @param name Static string name of the event used for debugging.
+    @param period Time in milliseconds used by continuous events between firing of the event.
+    @param proc Function to invoke when the event is run.
+    @param data Data to associate with the event. See #mprCreateEvent for details.
+    @param flags Flags. See #mprCreateEvent for details.
+    @see MprEvent MprWaitHandler mprCreateEvent mprCreateWaitHandler mprQueueIOEvent
+    @ingroup MprEvent
+    @stability Prototype
+ */
+PUBLIC MprEvent *mprCreateLocalEvent(MprDispatcher *dispatcher, cchar *name, MprTicks period, void *proc, void *data, int flags);
+
+/**
     Create and queue an IO event for a wait handler
     @param dispatcher Event dispatcher created via mprCreateDispatcher
     @param proc Function to invoke when the event is run.
     @param data Data to associate with the event. See #mprCreateEvent for details.
-    @param wp WaitHandler reference created via #mprWaitHandler
+    @param wp WaitHandler reference created via mprWaitHandler
+    @param sock Socket for the I/O event.
     @see MprEvent MprWaitHandler mprCreateEvent mprCreateWaitHandler mprQueueIOEvent
     @ingroup MprEvent
     @stability Internal
@@ -6214,7 +6268,8 @@ PUBLIC int mprStopDispatcher(MprDispatcher *dispatcher);
 PUBLIC MprEvent *mprCreateEventQueue(void);
 PUBLIC MprEventService *mprCreateEventService(void);
 PUBLIC void mprDedicateWorkerToDispatcher(MprDispatcher *dispatcher, struct MprWorker *worker);
-PUBLIC void mprDequeueEvent(MprEvent *event);
+PUBLIC void mprLinkEvent(MprEvent *prior, MprEvent *event);
+PUBLIC void mprUnlinkEvent(MprEvent *event);
 PUBLIC bool mprDispatcherHasEvents(MprDispatcher *dispatcher);
 PUBLIC int mprDispatchersAreIdle(void);
 PUBLIC int mprGetEventCount(MprDispatcher *dispatcher);
@@ -7364,7 +7419,7 @@ PUBLIC void mprRemoveWaitHandler(MprWaitHandler *wp);
 
 /**
     Queue an IO event for dispatch on the wait handler dispatcher
-    @param wp Wait handler created via #mprCreateWaitHandler
+    @param wp Wait handler created via mprCreateWaitHandler
     @stability Stable
  */
 PUBLIC void mprQueueIOEvent(MprWaitHandler *wp);
@@ -7392,7 +7447,7 @@ PUBLIC void mprRecallWaitHandlerByFd(Socket fd);
 /**
     Subscribe for desired wait events
     @description Subscribe to the desired wait events for a given wait handler.
-    @param wp Wait handler created via #mprCreateWaitHandler
+    @param wp Wait handler created via mprCreateWaitHandler
     @param desiredMask Mask of desired events (MPR_READABLE | MPR_WRITABLE)
     @ingroup MprWaitHandler
     @stability Stable
@@ -8120,11 +8175,12 @@ PUBLIC ssize mprWriteSocket(MprSocket *sp, cvoid *buf, ssize len);
 PUBLIC ssize mprWriteSocketString(MprSocket *sp, cchar *str);
 
 /**
-    Write a vector to a socket
-    @description Do scatter/gather I/O by writing a vector of buffers to a socket.
+    Write a vector of buffers to a socket
+    @description Do scatter/gather I/O by writing a vector of buffers to a socket. May return with a short write having written
+        less than the total.
     @param sp Socket object returned from #mprCreateSocket
     @param iovec Vector of data to write before the file contents
-    @param count Count of entries in beforeVect
+    @param count Count of entries in iovec
     @return A count of bytes actually written. Return a negative MPR error code on errors and if the socket cannot absorb any
         more data. If the transport is saturated, will return a negative error and mprGetError() returns EAGAIN or EWOULDBLOCK
     @ingroup MprSocket
@@ -8143,7 +8199,7 @@ PUBLIC ssize mprWriteSocketVector(MprSocket *sp, MprIOVec *iovec, int count);
     #define ME_MPR_SSL_CACHE 512
 #endif
 #ifndef ME_MPR_SSL_LOG_LEVEL
-    #define ME_MPR_SSL_LOG_LEVEL 6
+    #define ME_MPR_SSL_LOG_LEVEL 7
 #endif
 #ifndef ME_MPR_SSL_RENEGOTIATE
     #define ME_MPR_SSL_RENEGOTIATE 1
