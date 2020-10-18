@@ -2551,7 +2551,7 @@ PUBLIC cchar *session(cchar *key)
 
 PUBLIC void setTimeout(void *proc, MprTicks timeout, void *data)
 {
-    mprCreateEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
+    mprCreateLocalEvent(getStream()->dispatcher, "setTimeout", (int) timeout, proc, data, 0);
 }
 
 
@@ -3825,7 +3825,12 @@ PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 
 PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
-    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
+    /*
+        Need to block because ESP views may call espRenderBlock a lot. To prevent memory growth, must block.
+        Callers can call httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER); for faster writing if they
+        are confident they will not exceed memory limits.
+     */
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BLOCK);
 }
 
 
@@ -4780,7 +4785,7 @@ PUBLIC int espOpen(MprModule *module)
     handler->stageData = esp;
     esp->mutex = mprCreateLock();
     esp->local = mprCreateThreadLocal();
-    
+
     if (espInitParser() < 0) {
         return 0;
     }
@@ -5058,10 +5063,13 @@ static bool loadController(HttpStream *stream)
         if (espLoadModule(route, stream->dispatcher, "controller", controller, &errMsg, &loaded) < 0) {
             if (mprPathExists(controller, R_OK)) {
                 httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "%s", errMsg);
+                return 0;
+#if UNUSED
             } else {
+                //  Cant do this because esp pages try to load a controller first and then fall back to RenderDocument
                 httpError(stream, HTTP_CODE_NOT_FOUND, "%s", errMsg);
+#endif
             }
-            return 0;
         } else if (loaded) {
             httpLog(stream->trace, "esp.handler", "context", "msg:Load module %s", controller);
         }
@@ -6034,6 +6042,9 @@ PUBLIC int espOpenDatabase(HttpRoute *route, cchar *spec)
         spec = sfmt("sdb://%s.sdb", eroute->appName);
 #elif ME_COM_MDB
         spec = sfmt("mdb://%s.mdb", eroute->appName);
+#else
+        mprLog("error esp", 0, "No database handler configured (MDB or SQLITE). Reconfigure.");
+        return MPR_ERR_BAD_ARGS;
 #endif
     }
     provider = ssplit(sclone(spec), "://", &path);

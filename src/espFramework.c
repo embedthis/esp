@@ -597,7 +597,12 @@ PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 
 PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
-    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
+    /*
+        Need to block because ESP views may call espRenderBlock a lot. To prevent memory growth, must block.
+        Callers can call httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER); for faster writing if they
+        are confident they will not exceed memory limits.
+     */
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BLOCK);
 }
 
 

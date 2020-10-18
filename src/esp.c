@@ -606,7 +606,7 @@ static void initialize(int argc, char **argv)
 {
     HttpStage   *stage;
     HttpRoute   *route;
-    cchar       *criteria, *path;
+    cchar       *criteria, *espJson, *path;
 
     if (app->error) {
         return;
@@ -663,14 +663,16 @@ static void initialize(int argc, char **argv)
     app->version = getJson(app->package, "version", app->version);
     app->paksDir = getJson(app->package, "directories.paks", app->paksDir);
 
-    path = mprJoinPath(route->home, "esp.json");
-    if (mprPathExists(path, R_OK)) {
-        if ((app->config = readConfig(path)) == 0) {
+    espJson = mprJoinPath(route->home, "esp.json");
+    if (mprPathExists(espJson, R_OK)) {
+        if ((app->config = readConfig(espJson)) == 0) {
             return;
         }
         app->name = getJson(app->config, "name", app->name);
         app->version = getJson(app->config, "version", app->version);
         app->paksDir = getJson(app->config, "directories.paks", app->paksDir);
+    } else {
+        espJson = 0;
     }
     if (!verifyConfig()) {
         return;
@@ -723,8 +725,7 @@ static void initialize(int argc, char **argv)
             }
         }
     }
-
-    if (espInit(route, 0, "esp.json")) {
+    if (espInit(route, 0, espJson)) {
         fail("Cannot initialize for ESP");
         return;
     }
