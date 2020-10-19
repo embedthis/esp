@@ -2,6 +2,17 @@
     http.c -- Http client program
 
     The http program is a client to issue HTTP requests. It is also a test platform for loading and testing web servers.
+    Usages:
+
+    http /
+    http 80/
+    http 127.0.0.1:80/index.html
+    http --iterations 10000 -b /
+    http fromFile.txt /toFile.txt
+    http --upload fromFile.txt /toFile.txt
+    http --method DELETE /toFile.txt
+    http --threads 10 --iterations 1000 --http2 /
+    http --trace stdout:4 /
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
  */
@@ -12,7 +23,7 @@
 
 /*********************************** Locals ***********************************/
 
-#define MAX_REDIRECTS   10
+#define MAX_REDIRECTS   5           /* Maximum number of redirects to follow */
 
 typedef struct ThreadData {
     int             activeRequests;
@@ -28,52 +39,57 @@ typedef struct ThreadData {
 typedef struct Request {
     HttpNet     *net;
     HttpStream  *stream;
-    int         count;
+    int         count;              /* Count of request iterations issued so far */
     int         follow;             /* Current follow redirect count */
+    MprFile     *file;              /* Put/Upload file */
+    cchar       *ip;                /* First hop IP for the request URL */
     MprFile     *outFile;
+    cchar       *path;              /* Put/Upload file path */
+    int         port;               /* TCP/IP port for request */
     cchar       *redirect;          /* Redirect URL */
     int         retries;            /* Current retry count */
     MprEvent    *timeout;           /* Timeout event */
     ThreadData  *threadData;
     bool        written;
+    int         upload;             /* Upload using multipart mime */
+    HttpUri     *uri;               /* Parsed target URL */
+    char        *url;               /* Request target URL */
 } Request;
 
 typedef struct App {
     int         activeLoadThreads;  /* Active threads */
     char        *authType;          /* Authentication: basic|digest */
     int         benchmark;          /* Output benchmarks */
+    MprBuf      *bodyData;          /* Block body data */
     cchar       *ca;                /* Certificate bundle to use when validating the server certificate */
     cchar       *cert;              /* Certificate to identify the client */
     int         chunkSize;          /* Ask for response data to be chunked in this quanta */
     char        *ciphers;           /* Set of acceptable ciphers to use for SSL */
     int         continueOnErrors;   /* Continue testing even if an error occurs. Default is to stop */
     int         fetchCount;         /* Total count of fetches */
-    cchar       *file;              /* File to put / upload */
     MprList     *files;             /* List of files to put / upload (only ever 1 entry) */
-    int         packetSize;         /* HTTP/2 input frame size (min 16K) */
-    int         hasData;            /* Request has body data */
     MprList     *formData;          /* Form body data */
-    MprBuf      *bodyData;          /* Block body data */
-    Mpr         *mpr;               /* Portable runtime */
+    int         hasData;            /* Request has body data */
     MprList     *headers;           /* Request headers */
     Http        *http;              /* Http service object */
     char        *host;              /* Host to connect to */
-    MprFile     *inFile;            /* Input file for post/put data */
-    cchar       *ip;                /* First hop IP for the request URL */
+    cchar       *ip;                /* Target IP for the request URL */
     int         iterations;         /* URLs to fetch (per thread) */
     cchar       *key;               /* Private key file */
     int         loadThreads;        /* Number of threads to use for URL requests */
     int         maxRetries;         /* Times to retry a failed request */
     int         maxFollow;          /* Times to follow a redirect */
     char        *method;            /* HTTP method when URL on cmd line */
+    Mpr         *mpr;               /* Portable runtime */
     MprMutex    *mutex;             /* Multithread sync */
     bool        needSsl;            /* Need SSL for request */
     int         nextArg;            /* Next arg to parse */
     int         noout;              /* Don't output files */
     int         nofollow;           /* Don't automatically follow redirects */
     char        *outFilename;       /* Output filename */
+    int         packetSize;         /* HTTP/2 input frame size (min 16K) */
     char        *password;          /* Password for authentication */
-    int         port;               /* TCP/IP port for request */
+    int         port;               /* Target port */
     int         printable;          /* Make binary output printable */
     int         protocol;           /**< HTTP protocol: 0 for HTTP/1.0, 1 for HTTP/1.1 or 2+ */
     char        *ranges;            /* Request ranges */
@@ -91,8 +107,6 @@ typedef struct App {
     MprTicks    timeout;            /* Timeout in msecs for a non-responsive server */
     MprList     *threadData;        /* Per thread data */
     int         upload;             /* Upload using multipart mime */
-    HttpUri     *uri;               /* Parsed URL */
-    char        *url;               /* Request URL */
     char        *username;          /* User name for authentication of requests */
     int         verifyPeer;         /* Validate server certs */
     int         verifyIssuer;       /* Validate the issuer. Permits self-signed certs if false. */
@@ -111,27 +125,29 @@ static Request  *allocRequest(void);
 static void     checkRequestState(HttpStream *stream);
 static Request  *createRequest(ThreadData *td, HttpNet *net);
 static char     *extendUrl(cchar *url);
-static void     finishRequest(Request *request);
+static void     finishRequest(Request *req);
 static void     finishThread(MprThread *thread);
 static cchar    *formatOutput(HttpStream *stream, cchar *buf, ssize *count);
 static char     *getPassword(void);
 static cchar    *getRedirectUrl(HttpStream *stream, cchar *url);
-static HttpStream *getStream(Request *request);
+static HttpStream *getStream(Request *req);
 static int      initSettings(void);
+static int      initSsl();
 static bool     isPort(cchar *name);
 static void     manageApp(App *app, int flags);
-static void     manageRequest(Request *request, int flags);
+static void     manageRequest(Request *req, int flags);
 static void     manageThreadData(ThreadData *data, int flags);
 static void     notifier(HttpStream *stream, int event, int arg);
 static int      parseArgs(int argc, char **argv);
 static void     parseStatus(HttpStream *stream);
-static void     prepHeaders(HttpStream *stream);
+static void     prepHeaders(Request *req);
 static void     readBody(HttpStream *stream);
+static int      prepUri(Request *req);
 static int      processResponse(HttpStream *stream);
 static int      setContentLength(HttpStream *stream);
 static void     setDefaults(void);
 static int      showUsage(void);
-static void     startRequest(Request *request);
+static void     startRequest(Request *req);
 static void     startThreads(void);
 static void     threadMain(void *data, MprThread *tp);
 static void     trace(HttpStream *stream, cchar *url, int fetchCount, cchar *method, int status, MprOff contentLen);
@@ -203,9 +219,6 @@ static void manageApp(App *app, int flags)
         mprMark(app->ca);
         mprMark(app->cert);
         mprMark(app->ciphers);
-        mprMark(app->inFile);
-        mprMark(app->ip);
-        mprMark(app->file);
         mprMark(app->files);
         mprMark(app->formData);
         mprMark(app->bodyData);
@@ -220,8 +233,6 @@ static void manageApp(App *app, int flags)
         mprMark(app->ssl);
         mprMark(app->username);
         mprMark(app->threadData);
-        mprMark(app->uri);
-        mprMark(app->url);
     }
 }
 
@@ -246,7 +257,7 @@ static void setDefaults()
     app->success = 1;
     app->streams = 1;
 
-    /* zero means no timeout */
+    // zero means no timeout
     app->timeout = 0;
     app->workers = 1;
     app->headers = mprCreateList(0, MPR_LIST_STABLE);
@@ -261,48 +272,10 @@ static void setDefaults()
 }
 
 
-static int initSsl()
-{
-#if ME_COM_SSL
-    if (app->uri->secure || app->needSsl) {
-        app->ssl = mprCreateSsl(0);
-        if (app->cert) {
-            if (!app->key) {
-                mprLog("error http", 0, "Must specify key file");
-                return MPR_ERR_BAD_ARGS;
-            }
-            mprSetSslCertFile(app->ssl, app->cert);
-            mprSetSslKeyFile(app->ssl, app->key);
-        }
-        if (app->ca) {
-            mprSetSslCaFile(app->ssl, app->ca);
-        }
-        if (app->verifyIssuer == -1) {
-            app->verifyIssuer = app->verifyPeer ? 1 : 0;
-        }
-        mprVerifySslPeer(app->ssl, app->verifyPeer);
-        mprVerifySslIssuer(app->ssl, app->verifyIssuer);
-        if (app->ciphers) {
-            mprSetSslCiphers(app->ssl, app->ciphers);
-        }
-        if (app->protocol >= 2) {
-            mprSetSslAlpn(app->ssl, "h2");
-        }
-    } else {
-        mprVerifySslPeer(NULL, 0);
-    }
-#else
-    /* Suppress comp warning */
-    mprNop(&app->ssl);
-#endif
-    return 0;
-}
-
-
 static int parseArgs(int argc, char **argv)
 {
     char    *argp, *key, *logSpec, *value, *traceSpec;
-    int     setWorkers, nextArg;
+    int     i, setWorkers, nextArg;
 
     setWorkers = 0;
     app->needSsl = 0;
@@ -357,6 +330,9 @@ static int parseArgs(int argc, char **argv)
                 if (app->chunkSize < 0) {
                     mprLog("error http", 0, "Bad chunksize %d", app->chunkSize);
                     return MPR_ERR_BAD_ARGS;
+                }
+                if (app->chunkSize > 0) {
+                    mprAddItem(app->headers, mprCreateKeyPair("X-Chunk-Size", sfmt("%d", app->chunkSize), 0));
                 }
             }
 
@@ -710,9 +686,11 @@ static int parseArgs(int argc, char **argv)
     argv = &argv[nextArg];
     app->target = argv[argc - 1];
     if (--argc > 0) {
-        app->file = sclone(argv[0]);
+        app->files = mprCreateList(0, -1);
+        for (i = 0; i < argc; i++) {
+            mprAddItem(app->files, argv[i]);
+        }
     }
-
     /*
         Process arg settings
      */
@@ -725,38 +703,12 @@ static int parseArgs(int argc, char **argv)
     if (app->method == 0) {
         if (app->bodyData || app->formData || app->upload) {
             app->method = "POST";
-        } else if (app->file) {
+        } else if (app->files) {
             app->method = "PUT";
         } else {
             app->method = "GET";
         }
     }
-    if (app->file) {
-        if (app->upload) {
-            app->url = extendUrl(app->target);
-        } else {
-            /*
-                If URL ends with "/", assume it is a directory on the target and append each file name
-             */
-            if (app->target[strlen(app->target) - 1] == '/') {
-                app->url = mprJoinPath(app->target, mprGetPathBase(app->file));
-            } else {
-                app->url = sclone(app->target);
-            }
-            app->url = extendUrl(app->url);
-            if (app->verbose) {
-                mprPrintf("putting: %s to %s\n", app->file, app->url);
-            }
-        }
-        app->files = mprCreateList(1, 0);
-        mprAddItem(app->files, app->file);
-    } else {
-        app->url = extendUrl(app->target);
-    }
-    if ((app->uri = httpCreateUri(app->url, HTTP_COMPLETE_URI_PATH)) == 0) {
-        return MPR_ERR_BAD_ARGS;
-    }
-    httpGetUriAddress(app->uri, &app->ip, &app->port);
     return 0;
 }
 
@@ -769,6 +721,8 @@ static int initSettings()
         mprLog("error http", 0, "Cannot use multiple streams except with HTTP/2 protocol");
         return MPR_ERR_BAD_ARGS;
     }
+    app->hasData = app->bodyData || app->formData || app->files;
+
     limits = HTTP->clientLimits;
     if (app->timeout) {
         limits->inactivityTimeout = app->timeout;
@@ -780,6 +734,14 @@ static int initSettings()
 #endif
     mprSetMaxWorkers(app->workers);
 
+    /*
+        Setup authentication
+     */
+    if (app->username) {
+        if (app->password == 0 && !strchr(app->username, ':')) {
+            app->password = getPassword();
+        }
+    }
     if (initSsl() < 0) {
         return showUsage();
     }
@@ -851,9 +813,6 @@ static void startThreads()
     ThreadData  *data;
     int         j;
 
-    if (app->chunkSize > 0) {
-        mprAddItem(app->headers, mprCreateKeyPair("X-Chunk-Size", sfmt("%d", app->chunkSize), 0));
-    }
     app->activeLoadThreads = app->loadThreads;
     app->threadData = mprCreateList(app->loadThreads, 0);
 
@@ -888,8 +847,10 @@ static void manageThreadData(ThreadData *data, int flags)
 static void threadMain(void *data, MprThread *thread)
 {
     HttpNet     *net;
-    Request     *request;
+    HttpUri     *uri;
+    Request     *req;
     ThreadData  *td;
+    cchar       *target;
     int         i;
 
     /*
@@ -907,26 +868,32 @@ static void threadMain(void *data, MprThread *thread)
     mprStartDispatcher(td->dispatcher);
     net = td->net = httpCreateNet(td->dispatcher, NULL, app->protocol, HTTP_NET_ASYNC);
 
+    target = extendUrl(app->target);
+    uri = httpCreateUri(target, HTTP_COMPLETE_URI_PATH);
+    httpGetUriAddress(uri, &app->ip, &app->port);
+
+    /*
+        Pre-connect to the network. Required when creating multiple streams.
+     */
     if (httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
         httpNetError(net, "Cannot connect to %s:%d", app->ip, app->port);
         mprLog("error http", 0, "%s", net->errorMsg);
-
-    } else {
-        for (i = 0; i < app->streams && app->success; i++) {
-            request = createRequest(td, net);
-            mprAddItem(td->requests, request);
-            /* Run serialized on the network dispatcher */
-            mprCreateLocalEvent(td->dispatcher, "startRequest", 0, startRequest, request, 0);
-            td->activeRequests++;
-        }
-        if (app->success) {
-            mprYield(MPR_YIELD_STICKY);
-            mprStopDispatcher(td->dispatcher);
-            mprWaitForCond(td->cond, -1);
-            mprResetYield();
-        }
+        return;
     }
-    httpDestroyNet(td->net);
+    for (i = 0; i < app->streams && app->success; i++) {
+        req = createRequest(td, net);
+        mprAddItem(td->requests, req);
+        mprCreateLocalEvent(td->dispatcher, "startRequest", 0, startRequest, req, 0);
+        td->activeRequests++;
+    }
+    if (app->success) {
+        mprYield(MPR_YIELD_STICKY);
+        mprStopDispatcher(td->dispatcher);
+        mprWaitForCond(td->cond, -1);
+        mprResetYield();
+    }
+    httpDestroyNet(net);
+
     td->requests = 0;
     td->net = 0;
     td->dispatcher = 0;
@@ -936,50 +903,41 @@ static void threadMain(void *data, MprThread *thread)
 
 static Request *createRequest(ThreadData *td, HttpNet *net)
 {
-    Request     *request;
+    Request     *req;
     cchar       *path;
 
-    request = allocRequest();
-    request->threadData = td;
-    request->net = net;
-
-    /*
-        Setup authentication
-     */
-    if (app->username) {
-        if (app->password == 0 && !strchr(app->username, ':')) {
-            app->password = getPassword();
-        }
-    }
+    req = allocRequest();
+    req->threadData = td;
+    req->net = net;
+    req->upload = app->upload;
 
     /*
         Create file to save output
      */
     if (app->outFilename) {
         path = app->loadThreads > 1 ? sfmt("%s-%s.tmp", app->outFilename, mprGetCurrentThreadName()): app->outFilename;
-        if ((request->outFile = mprOpenFile(path, O_CREAT | O_WRONLY | O_TRUNC | O_TEXT, 0664)) == 0) {
+        if ((req->outFile = mprOpenFile(path, O_CREAT | O_WRONLY | O_TRUNC | O_TEXT, 0664)) == 0) {
             mprLog("error http", 0, "Cannot open %s", path);
             app->success = 0;
             return 0;
         }
     } else {
-        request->outFile = mprGetStdout();
+        req->outFile = mprGetStdout();
     }
-    app->hasData = app->bodyData || app->formData || app->file;
-    return request;
+    return req;
 }
 
 
 /*
     Get the stream to use for the request. HTTP/1 reuses streams, HTTP/2 creates anew.
  */
-static HttpStream *getStream(Request *request)
+static HttpStream *getStream(Request *req)
 {
     HttpNet     *net;
     HttpStream  *stream;
 
-    net = request->net;
-    stream = request->stream;
+    net = req->net;
+    stream = req->stream;
 
     if (!stream || app->protocol >= 2) {
         if ((stream = httpCreateStream(net, 0)) == 0) {
@@ -987,8 +945,8 @@ static HttpStream *getStream(Request *request)
             app->success = 0;
             return NULL;
         }
-        request->stream = stream;
-        stream->data = request;
+        req->stream = stream;
+        stream->data = req;
 
     } else {
         httpResetClientStream(stream, 0);
@@ -1006,37 +964,40 @@ static HttpStream *getStream(Request *request)
     /*
         Apply chunk size override if specified on command line
      */
-    if (app->chunkSize > 0 && (app->bodyData || app->formData || app->file)) {
+    if (app->chunkSize > 0 && (app->bodyData || app->formData || app->files)) {
         httpSetChunkSize(stream, app->chunkSize);
     }
     return stream;
 }
 
 
-static void startRequest(Request *request)
+static void startRequest(Request *req)
 {
     HttpNet     *net;
     HttpStream  *stream;
 
-    stream = getStream(request);
+    stream = getStream(req);
 
     net = stream->net;
-    app->url = request->redirect ? sclone(request->redirect) : app->url;
-    request->redirect = 0;
-    request->written = 0;
+
+    req->redirect = 0;
+    req->written = 0;
 
     if (app->singleStep) {
         waitForUser();
     }
-    prepHeaders(stream);
+    if (prepUri(req) < 0) {
+        return;
+    }
+    prepHeaders(req);
     if (setContentLength(stream) < 0) {
         return;
     }
-    if (httpConnect(stream, app->method, app->url, app->ssl) < 0) {
-        mprLog("error http", 0, "Failed request for \"%s\". %s.", app->url, net->errorMsg);
+    if (httpConnect(stream, app->method, req->url, app->ssl) < 0) {
+        mprLog("error http", 0, "Failed request for \"%s\". %s.", req->url, net->errorMsg);
         app->success = 0;
         if (!app->continueOnErrors) {
-            mprCreateLocalEvent(stream->dispatcher, "done", 0, mprSignalCond, request->threadData->cond, 0);
+            mprCreateLocalEvent(stream->dispatcher, "done", 0, mprSignalCond, req->threadData->cond, 0);
         }
         return;
     }
@@ -1050,8 +1011,10 @@ static void startRequest(Request *request)
  */
 static void notifier(HttpStream *stream, int event, int arg)
 {
-    Request *request;
-    request = stream->data;
+    Request     *req;
+    int         limit;
+
+    req = stream->data;
 
     switch (event) {
     case HTTP_EVENT_STATE:
@@ -1063,10 +1026,11 @@ static void notifier(HttpStream *stream, int event, int arg)
     case HTTP_EVENT_ERROR:
         break;
     case HTTP_EVENT_DONE:
-        if (++request->count >= app->iterations || (!app->success && !app->continueOnErrors)) {
-            finishRequest(request);
+        limit = app->files ? mprGetListLength(app->files) : app->iterations;
+        if (++req->count >= limit || (!app->success && !app->continueOnErrors)) {
+            finishRequest(req);
         } else {
-            mprCreateLocalEvent(stream->dispatcher, "startRequest", 0, startRequest, request, 0);
+            mprCreateLocalEvent(stream->dispatcher, "startRequest", 0, startRequest, req, 0);
         }
     }
 }
@@ -1074,10 +1038,10 @@ static void notifier(HttpStream *stream, int event, int arg)
 
 static void checkRequestState(HttpStream *stream)
 {
-    Request *request;
+    Request *req;
     cchar   *url;
 
-    request = stream->data;
+    req = stream->data;
     switch (stream->state) {
     case HTTP_STATE_BEGIN:
         break;
@@ -1086,11 +1050,11 @@ static void checkRequestState(HttpStream *stream)
         if (!app->hasData) {
             httpFinalizeOutput(stream);
         } else {
-            if (!request->written) {
+            if (!req->written) {
                 if (writeBody(stream) < 0) {
                     httpError(stream, HTTP_CODE_INTERNAL_SERVER_ERROR, "Cannot write body data. %s", httpGetError(stream));
                 }
-                request->written = 1;
+                req->written = 1;
             }
         }
         break;
@@ -1108,28 +1072,28 @@ static void checkRequestState(HttpStream *stream)
                     httpError(stream, HTTP_CODE_BAD_REQUEST, "Cannot redirect when using multiple threads or ");
                     break;
                 }
-                if ((request->redirect = getRedirectUrl(stream, url)) == 0) {
+                if ((req->redirect = getRedirectUrl(stream, url)) == 0) {
                     httpError(stream, HTTP_CODE_BAD_REQUEST, "Invalid redirect");
                     break;
                 }
-                if (++request->follow >= app->maxFollow) {
+                if (++req->follow >= app->maxFollow) {
                     httpError(stream, HTTP_CODE_NO_RESPONSE, "Too many redirects");
                     break;
                 }
-                mprDebug("http", 4, "redirect %d of %d for: %s %s", request->follow, app->maxFollow, app->method, app->url);
+                mprDebug("http", 4, "redirect %d of %d for: %s %s", req->follow, app->maxFollow, app->method, req->url);
             } else {
-                if (++request->retries >= app->maxRetries) {
+                if (++req->retries >= app->maxRetries) {
                     httpError(stream, HTTP_CODE_NO_RESPONSE, "Too many retries");
                     break;
                 }
-                request->follow = 0;
-                mprDebug("http", 4, "retry %d of %d for: %s %s", request->retries, app->maxRetries, app->method, app->url);
+                req->follow = 0;
+                mprDebug("http", 4, "retry %d of %d for: %s %s", req->retries, app->maxRetries, app->method, req->url);
             }
-            request->count--;
+            req->count--;
 
         } else {
-            request->retries = 0;
-            request->follow = 0;
+            req->retries = 0;
+            req->follow = 0;
             parseStatus(stream);
         }
         break;
@@ -1167,13 +1131,15 @@ static void parseStatus(HttpStream *stream)
 }
 
 
-static void prepHeaders(HttpStream *stream)
+static void prepHeaders(Request *req)
 {
+    HttpStream      *stream;
     MprKeyValue     *header;
     char            *seq, *url;
     int             next;
     static int      sequence = 0;
 
+    stream = req->stream;
     for (next = 0; (header = mprGetNextItem(app->headers, &next)) != 0; ) {
         if (scaselessmatch(header->key, "User-Agent")) {
             httpSetHeaderString(stream, header->key, header->value);
@@ -1186,8 +1152,8 @@ static void prepHeaders(HttpStream *stream)
     }
     if (app->sequence) {
         mprLock(app->mutex);
-        url = stok(app->url, "?", NULL);
-        app->url = sfmt("%s?seq=%d", url, sequence);
+        url = stok(req->url, "?", NULL);
+        req->url = sfmt("%s?seq=%d", url, sequence);
         seq = itos(sequence++);
         httpSetHeaderString(stream, "X-Http-Seq", seq);
         mprUnlock(app->mutex);
@@ -1198,6 +1164,56 @@ static void prepHeaders(HttpStream *stream)
     if (app->formData) {
         httpSetContentType(stream, "application/x-www-form-urlencoded");
     }
+}
+
+
+static int prepUri(Request *req)
+{
+    MprFile     *file;
+    cchar       *base, *path;
+
+    if (req->redirect) {
+        req->url = sclone(req->redirect);
+
+    } else if (req->upload) {
+        req->url = extendUrl(app->target);
+        if (app->verbose) {
+            mprPrintf("Uploading: %s\n", req->url);
+        }
+
+    } else if (app->files && mprGetListLength(app->files) > req->count) {
+        path = mprGetItem(app->files, req->count);
+        if (strcmp(path, "-") == 0) {
+            file = mprAttachFileFd(0, "stdin", O_RDONLY | O_BINARY);
+        } else {
+            file = mprOpenFile(path, O_RDONLY | O_BINARY, 0);
+        }
+        if (file == 0) {
+            mprLog("error http", 0, "Cannot open \"%s\"", path);
+            return MPR_ERR_CANT_OPEN;
+        }
+        req->path = path;
+        req->file = file;
+
+        /*
+            If URL ends with "/", assume it is a directory on the target and append each file name
+         */
+        base = mprGetPathBase(path);
+        if (app->target[strlen(app->target) - 1] == '/') {
+            req->url = mprJoinPath(app->target, base);
+        } else {
+            req->url = sclone(app->target);
+        }
+        req->url = extendUrl(req->url);
+        if (app->verbose) {
+            mprPrintf("Putting: %s to %s\n", path, req->url);
+        }
+    } else {
+        req->url = extendUrl(app->target);
+    }
+    req->uri = httpCreateUri(req->url, HTTP_COMPLETE_URI_PATH);
+    httpGetUriAddress(req->uri, &req->ip, &req->port);
+    return 0;
 }
 
 
@@ -1218,12 +1234,14 @@ static cchar *getRedirectUrl(HttpStream *stream, cchar *url)
 
 static int processResponse(HttpStream *stream)
 {
+    Request     *req;
     HttpNet     *net;
     HttpRx      *rx;
     MprOff      bytesRead, contentLength;
     cchar       *msg, *responseHeaders, *sep;
     int         status;
 
+    req = stream->data;
     net = stream->net;
     bytesRead = 0;
 
@@ -1251,10 +1269,10 @@ static int processResponse(HttpStream *stream)
         app->success = 0;
         msg = (stream->errorMsg) ? stream->errorMsg : "";
         sep = (msg && *msg) ? "\n" : "";
-        mprLog("error http", 0, "Failed \"%s\" request for %s%s%s", app->method, app->url, sep, msg);
+        mprLog("error http", 0, "Failed \"%s\" request for %s%s%s", app->method, req->url, sep, msg);
 
     } else if (status < 0) {
-        mprLog("error http", 0, "\nCannot process request for \"%s\" %s", app->url, httpGetError(stream));
+        mprLog("error http", 0, "\nCannot process request for \"%s\" %s", req->url, httpGetError(stream));
         return MPR_ERR_CANT_READ;
 
     } else if (status == 0 && net->protocol == 0) {
@@ -1265,18 +1283,18 @@ static int processResponse(HttpStream *stream)
             app->success = 0;
         }
         if (!app->showStatus) {
-            mprLog("error http", 0, "\nCannot process request for %s \"%s\" (%d) %s", app->method, app->url, status, httpGetError(stream));
+            mprLog("error http", 0, "\nCannot process request for %s \"%s\" (%d) %s", app->method, req->url, status, httpGetError(stream));
             return MPR_ERR_CANT_READ;
         }
     } else if (contentLength >= 0 && bytesRead != contentLength) {
         app->success = 0;
-        mprLog("error http", 0, "Failed \"%s\" request for %s, content not fully received", app->method, app->url);
+        mprLog("error http", 0, "Failed \"%s\" request for %s, content not fully received", app->method, req->url);
     }
 
     mprLock(app->mutex);
     app->fetchCount++;
     if (app->verbose && app->noout) {
-        trace(stream, app->url, app->fetchCount, app->method, status, bytesRead);
+        trace(stream, req->url, app->fetchCount, app->method, status, bytesRead);
     }
     mprUnlock(app->mutex);
     return 0;
@@ -1285,42 +1303,44 @@ static int processResponse(HttpStream *stream)
 
 static void readBody(HttpStream *stream)
 {
-    Request     *request;
+    Request     *req;
     char        buf[ME_BUFSIZE];
     cchar       *result;
     ssize       bytes;
 
-    request = stream->data;
+    req = stream->data;
     while (!stream->error && (bytes = httpRead(stream, buf, sizeof(buf))) > 0) {
         if (!app->noout) {
             result = formatOutput(stream, buf, &bytes);
             if (result) {
-                mprWriteFile(request->outFile, result, bytes);
+                mprWriteFile(req->outFile, result, bytes);
             }
         }
     }
-    if (bytes <= 0 && request->outFile != mprGetStdout()) {
-        mprCloseFile(request->outFile);
-        request->outFile = 0;
+    if (bytes <= 0 && req->outFile != mprGetStdout()) {
+        mprCloseFile(req->outFile);
+        req->outFile = 0;
     }
 }
 
 
 static int setContentLength(HttpStream *stream)
 {
+    Request     *req;
     MprPath     info;
     MprOff      len;
     char        *pair;
     int         next;
 
+    req = stream->data;
     len = 0;
-    if (app->upload) {
+    if (req->upload) {
         httpEnableUpload(stream);
         return 0;
     }
-    if (smatch(app->file, "-")) {
-        if (mprGetPathInfo(app->file, &info) < 0) {
-            httpError(stream, HTTP_CODE_GONE, "Cannot access file %s", app->file);
+    if (smatch(req->path, "-")) {
+        if (mprGetPathInfo(req->path, &info) < 0) {
+            httpError(stream, HTTP_CODE_GONE, "Cannot access file %s", req->path);
             return MPR_ERR_CANT_ACCESS;
         }
         len += info.size;
@@ -1343,12 +1363,13 @@ static int setContentLength(HttpStream *stream)
 
 static ssize writeBody(HttpStream *stream)
 {
-    MprFile     *file;
-    char        buf[ME_BUFSIZE], *path, *pair;
+    Request     *req;
+    char        buf[ME_BUFSIZE], *pair;
     ssize       bytes, len, count, nbytes, sofar;
     int         next;
 
-    if (app->upload) {
+    req = stream->data;
+    if (req->upload) {
         if (httpWriteUploadData(stream, app->files, app->formData) < 0) {
             return MPR_ERR_CANT_WRITE;
         }
@@ -1369,38 +1390,26 @@ static ssize writeBody(HttpStream *stream)
                 }
             }
         }
-        if (app->files) {
-            assert(mprGetListLength(app->files) == 1);
-            for (next = 0; (path = mprGetNextItem(app->files, &next)) != 0; ) {
-                if (strcmp(path, "-") == 0) {
-                    file = mprAttachFileFd(0, "stdin", O_RDONLY | O_BINARY);
-                } else {
-                    file = mprOpenFile(path, O_RDONLY | O_BINARY, 0);
-                }
-                if (file == 0) {
-                    mprLog("error http", 0, "Cannot open \"%s\"", path);
-                    return MPR_ERR_CANT_OPEN;
-                }
-                app->inFile = file;
-                if (app->verbose) {
-                    mprPrintf("uploading: %s\n", path);
-                }
-                while ((bytes = mprReadFile(file, buf, sizeof(buf))) > 0) {
-                    sofar = 0;
-                    while (bytes > 0) {
-                        if ((nbytes = httpWriteBlock(stream->writeq, &buf[sofar], bytes, 0)) < 0) {
-                            mprCloseFile(file);
-                            return MPR_ERR_CANT_WRITE;
-                        }
-                        bytes -= nbytes;
-                        sofar += nbytes;
-                        assert(bytes >= 0);
-                    }
-                }
-                mprCloseFile(file);
-                app->inFile = 0;
-                httpEnableNetEvents(stream->net);
+        if (req->file) {
+            if (app->verbose) {
+                mprPrintf("Uploading: %s\n", req->path);
             }
+            while ((bytes = mprReadFile(req->file, buf, sizeof(buf))) > 0) {
+                sofar = 0;
+                while (bytes > 0) {
+                    if ((nbytes = httpWriteBlock(stream->writeq, &buf[sofar], bytes, 0)) < 0) {
+                        mprCloseFile(req->file);
+                        req->file = 0;
+                        return MPR_ERR_CANT_WRITE;
+                    }
+                    bytes -= nbytes;
+                    sofar += nbytes;
+                    assert(bytes >= 0);
+                }
+            }
+            mprCloseFile(req->file);
+            req->file = 0;
+            httpEnableNetEvents(stream->net);
         }
         if (app->bodyData) {
             len = mprGetBufLength(app->bodyData);
@@ -1414,18 +1423,18 @@ static ssize writeBody(HttpStream *stream)
 }
 
 
-static void finishRequest(Request *request)
+static void finishRequest(Request *req)
 {
     ThreadData  *td;
 
-    if (request) {
-        td = request->threadData;
+    if (req) {
+        td = req->threadData;
         mprLock(app->mutex);
         if (--td->activeRequests <= 0) {
             /*
                 Run as an event so the stack httpIO stack unwinds before threadMain destroys the network.
              */
-            mprCreateLocalEvent(request->stream->dispatcher, "done", 0, mprSignalCond, request->threadData->cond, 0);
+            mprCreateLocalEvent(req->stream->dispatcher, "done", 0, mprSignalCond, req->threadData->cond, 0);
         }
         mprUnlock(app->mutex);
     }
@@ -1450,13 +1459,18 @@ static Request *allocRequest()
 }
 
 
-static void manageRequest(Request *request, int flags)
+static void manageRequest(Request *req, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(request->net);
-        mprMark(request->stream);
-        mprMark(request->outFile);
-        mprMark(request->threadData);
+        mprMark(req->file);
+        mprMark(req->ip);
+        mprMark(req->net);
+        mprMark(req->outFile);
+        mprMark(req->path);
+        mprMark(req->stream);
+        mprMark(req->threadData);
+        mprMark(req->uri);
+        mprMark(req->url);
     }
 }
 
@@ -1524,6 +1538,49 @@ static char *extendUrl(cchar *url)
         }
     }
     return sclone(url);
+}
+
+
+static int initSsl()
+{
+#if ME_COM_SSL
+    HttpUri     *uri;
+    cchar       *target;
+
+    target = extendUrl(app->target);
+    uri = httpCreateUri(target, HTTP_COMPLETE_URI_PATH);
+    if (uri->secure || app->needSsl) {
+        app->ssl = mprCreateSsl(0);
+        if (app->cert) {
+            if (!app->key) {
+                mprLog("error http", 0, "Must specify key file");
+                return MPR_ERR_BAD_ARGS;
+            }
+            mprSetSslCertFile(app->ssl, app->cert);
+            mprSetSslKeyFile(app->ssl, app->key);
+        }
+        if (app->ca) {
+            mprSetSslCaFile(app->ssl, app->ca);
+        }
+        if (app->verifyIssuer == -1) {
+            app->verifyIssuer = app->verifyPeer ? 1 : 0;
+        }
+        mprVerifySslPeer(app->ssl, app->verifyPeer);
+        mprVerifySslIssuer(app->ssl, app->verifyIssuer);
+        if (app->ciphers) {
+            mprSetSslCiphers(app->ssl, app->ciphers);
+        }
+        if (app->protocol >= 2) {
+            mprSetSslAlpn(app->ssl, "h2");
+        }
+    } else {
+        mprVerifySslPeer(NULL, 0);
+    }
+#else
+    /* Suppress comp warning */
+    mprNop(&app->ssl);
+#endif
+    return 0;
 }
 
 

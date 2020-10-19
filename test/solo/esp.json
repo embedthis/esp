@@ -21,15 +21,17 @@
             "location": "trace.log",
             "level": 4
         },
+        limits: {
+            rxBody: 'unlimited',
+        },
         routes: [
             {
                 pattern: '^/solo/{action}$',
                 methods: [ 'GET', 'POST' ],
                 source: 'solo.c',
                 target: 'solo/$1',
-                limits: {
-                    rxBody: 'unlimited',
-                }
+                stream: true,
+
             }
         ]
     }

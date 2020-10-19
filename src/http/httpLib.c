@@ -3154,6 +3154,10 @@ static bool canUse(HttpNet *net, HttpStream *stream, HttpUri *uri, MprSsl *ssl, 
 }
 
 
+/*
+    Connect to a new URL using the given method.
+    If the stream is already connected to a suitable network, it is reused.
+ */
 PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ssl)
 {
     HttpNet     *net;
@@ -3168,7 +3172,7 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
 
     net = stream->net;
     if (httpServerStream(stream)) {
-        mprLog("client error", 0, "Cannot call httpConnect() in a server");
+        mprLog("client error", 0, "Cannot call httpConnect() on a server stream");
         return MPR_ERR_BAD_STATE;
     }
     if (net->protocol < 0) {
@@ -3195,18 +3199,16 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
             net->sock = 0;
 
         } else if (canUse(net, stream, uri, ssl, ip, port)) {
-            httpLog(stream->trace, "client.connection.reuse", "context", "reuse:%d", stream->keepAliveCount);
+            httpLog(stream->trace, "client.connection.reuse", "context", "msg:Reuse connection, IP:%s, PORT:%d, KeepAlive:%d", ip, port, stream->keepAliveCount);
 
-        } else {
-            if (net->protocol >= 2) {
-                if (mprGetListLength(net->streams) > 1) {
-                    httpError(stream, HTTP_CODE_COMMS_ERROR, "Cannot use network for %s due to other existing requests", ip);
-                    return MPR_ERR_CANT_FIND;
-                }
-            } else {
-                mprCloseSocket(net->sock, 0);
-                net->sock = 0;
+        } else if (net->protocol >= 2) {
+            if (mprGetListLength(net->streams) > 1) {
+                httpError(stream, HTTP_CODE_COMMS_ERROR, "Cannot use network for %s due to other existing requests", ip);
+                return MPR_ERR_CANT_FIND;
             }
+        } else {
+            mprCloseSocket(net->sock, 0);
+            net->sock = 0;
         }
     }
     if (!net->sock) {
@@ -3228,9 +3230,9 @@ PUBLIC int httpConnect(HttpStream *stream, cchar *method, cchar *url, MprSsl *ss
 #endif
     }
     httpCreatePipeline(stream);
-    setDefaultHeaders(stream);
     tx->started = 1;
 
+    setDefaultHeaders(stream);
     httpSetState(stream, HTTP_STATE_CONNECTED);
     httpPumpOutput(stream->writeq);
 
@@ -5402,10 +5404,16 @@ static void parseStream(HttpRoute *route, cchar *key, MprJson *prop)
     int         ji;
 
     for (ITERATE_CONFIG(route, prop, child, ji)) {
-        mime = mprGetJson(child, "mime");
-        stream = mprGetJson(child, "stream");
-        uri = mprGetJson(child, "uri");
-        httpSetStreaming(route->host, mime, uri, smatch(stream, "false") || smatch(stream, ""));
+        if ((mime = mprGetJson(child, "mime")) == 0) {
+            mime = "*";
+        }
+        if ((stream = mprGetJson(child, "stream")) == 0) {
+            stream = "true";
+        }
+        if ((uri = mprGetJson(child, "uri")) == 0) {
+            uri = "/";
+        }
+        httpSetStreaming(route->host, mime, uri, smatch(stream, "true"));
     }
 }
 
@@ -8514,7 +8522,7 @@ PUBLIC HttpRoute *httpGetDefaultRoute(HttpHost *host)
              return kp->type;
          }
      }
-     if (rx->flags & HTTP_POST) {
+     if ((rx->flags & HTTP_POST) && (rx->form || rx->json)) {
          return 0;
      }
      return 1;
@@ -14104,7 +14112,7 @@ PUBLIC void httpBindSocket(HttpNet *net, MprSocket *sock)
 
 /*
     Client connect the network to a new peer.
-    Existing streams are closed
+    Existing streams are closed when the socket is closed.
  */
 PUBLIC int httpConnectNet(HttpNet *net, cchar *ip, int port, MprSsl *ssl)
 {
@@ -14211,7 +14219,9 @@ static void manageHeaderTable(HttpHeaderTable *table, int flags)
 
 PUBLIC void httpAddStream(HttpNet *net, HttpStream *stream)
 {
-    mprAddItem(net->streams, stream);
+    if (mprLookupItem(net->streams, stream) < 0) {
+        mprAddItem(net->streams, stream);
+    }
     stream->net = net;
     if (net->protocol < 2) {
         net->stream = stream;
@@ -16402,7 +16412,13 @@ static int matchFilter(HttpStream *stream, HttpStage *filter, HttpRoute *route, 
         return filter->match(stream, route, dir);
     }
     if (filter->extensions && tx->ext) {
-        return mprLookupKey(filter->extensions, tx->ext) != 0 ? HTTP_ROUTE_OK : HTTP_ROUTE_OMIT_FILTER;
+        if (mprLookupKey(filter->extensions, tx->ext)) {
+            return HTTP_ROUTE_OK;
+        }
+        if (mprLookupKey(filter->extensions, "")) {
+            return HTTP_ROUTE_OK;
+        }
+        return HTTP_ROUTE_OMIT_FILTER;
     }
     return HTTP_ROUTE_OK;
 }
@@ -16990,7 +17006,7 @@ static int processParsed(HttpStream *stream)
             Don't do this for HTTP/2 which must have remainingContent == HTTP_UNLIMITED
          */
         if (stream->keepAliveCount <= 0 && rx->length < 0 && rx->chunkState == HTTP_CHUNK_UNCHUNKED &&
-                stream->net->protocol < 2) {
+                stream->net->protocol < 2 && rx->status != HTTP_CODE_NO_CONTENT) {
             rx->remainingContent = rx->redirect ? 0 : HTTP_UNLIMITED;
         }
     }
@@ -24341,11 +24357,11 @@ PUBLIC void httpLogCompleteRequest(HttpStream *stream)
     if (httpTracing(stream->net)) {
         received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
 #if MPR_HIGH_RES_TIMER
-        formatTrace(stream->trace, "rx.complete", "context", 0, (void*) stream, 0,
+        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
             "elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
             elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
 #else
-        formatTrace(stream->trace, "rx.complete", "context", 0, (void*) stream, 0,
+        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
             "elapsed:%llu, received:%lld, sent:%lld", elapsed, received, tx->bytesWritten);
 #endif
     }
