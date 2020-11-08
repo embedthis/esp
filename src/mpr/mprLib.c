@@ -160,6 +160,7 @@ static int initQueues(void);
 static void invokeDestructors(void);
 static void markAndSweep(void);
 static void markRoots(void);
+static ME_INLINE bool needGC(MprHeap *heap);
 static int pauseThreads(void);
 static void printMemReport(void);
 static ME_INLINE void release(MprFreeQueue *freeq);
@@ -556,7 +557,7 @@ static MprMem *allocMem(size_t required)
                             mp->size = (MprMemSize) required;
                             ATOMIC_INC(splits);
                         }
-                        if (!heap->gcRequested && heap->workDone > heap->workQuota) {
+                        if (needGC(heap)) {
                             triggerGC(0);
                         }
                         ATOMIC_INC(reuse);
@@ -621,7 +622,7 @@ static MprMem *growHeap(size_t required)
     MprMem      *mp;
     size_t      size, rsize, spareLen;
 
-    if (required < MPR_ALLOC_MAX_BLOCK && (heap->workDone > heap->workQuota)) {
+    if (required < MPR_ALLOC_MAX_BLOCK && needGC(heap)) {
         triggerGC(1);
     }
     if (required >= MPR_ALLOC_MAX) {
@@ -920,9 +921,7 @@ static void vmfree(void *ptr, size_t size)
 {
 #if ME_MPR_ALLOC_VIRTUAL
     #if ME_UNIX_LIKE
-        if (munmap(ptr, size) != 0) {
-            assert(0);
-        }
+        munmap(ptr, size);
     #elif ME_WIN_LIKE
         VirtualFree(ptr, 0, MEM_RELEASE);
     #else
@@ -997,7 +996,7 @@ PUBLIC int mprGC(int flags)
          */
         mprYield(MPR_YIELD_STICKY);
     }
-    if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || (heap->workDone > heap->workQuota)) {
+    if ((flags & (MPR_GC_FORCE | MPR_GC_COMPLETE)) || needGC(heap)) {
         triggerGC(flags & (MPR_GC_FORCE | MPR_GC_COMPLETE));
     }
     if (!(flags & MPR_GC_NO_BLOCK)) {
@@ -1237,6 +1236,12 @@ static void sweeperThread(void *unused, MprThread *tp)
  */
 static void markAndSweep()
 {
+    MprThreadService    *ts;
+    int                 threadCount;
+
+    ts = MPR->threadService;
+    threadCount = ts->threads->length;
+
     if (!pauseThreads()) {
 #if ME_MPR_ALLOC_STATS && ME_MPR_ALLOC_DEBUG && MPR_ALLOC_TRACE
         static int warnOnce = 0;
@@ -1264,18 +1269,23 @@ static void markAndSweep()
     mprGlobalUnlock();
 
     /*
-        Sweep unused memory. Sweeping goes on in parallel with running threads.
+        Sweep unused memory. If less than 4 threds, sweeping goes on in parallel with running threads.
+        Otherwise, with high thread loads, the sweeper can be starved which leads to memory growth.
      */
     heap->sweeping = 1;
 
-    resumeThreads(YIELDED_THREADS);
-
+    if (threadCount < 4) {
+        resumeThreads(YIELDED_THREADS);
+    }
     sweep();
     heap->sweeping = 0;
 
     /*
         Resume threads waiting for the sweeper to complete
      */
+    if (threadCount >= 4) {
+        resumeThreads(YIELDED_THREADS);
+    }
     resumeThreads(WAITING_THREADS);
 }
 
@@ -2579,6 +2589,16 @@ static void monitorStack()
     }
 }
 #endif
+
+
+static ME_INLINE bool needGC(MprHeap *heap)
+{
+    if (!heap->gcRequested && heap->workDone > (heap->workQuota * (mprGetBusyWorkerCount() / 2 + 1))) {
+        return 1;
+    }
+    return 0;
+}
+
 
 #if !ME_MPR_ALLOC_DEBUG
 #undef mprSetName
@@ -9583,6 +9603,7 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher);
 static MprTicks getDispatcherIdleTicks(MprDispatcher *dispatcher, MprTicks timeout);
 static MprTicks getIdleTicks(MprEventService *es, MprTicks timeout);
 static MprDispatcher *getNextReadyDispatcher(MprEventService *es);
+static bool hasPendingDispatchers();
 static void initDispatcher(MprDispatcher *q);
 static void manageDispatcher(MprDispatcher *dispatcher, int flags);
 static void manageEventService(MprEventService *es, int flags);
@@ -9757,9 +9778,12 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
-        freeEvents(dispatcher->currentQ);
+        //  Must not free events in currentQ incase running in dispatchEvents -- current event must not be freed
         freeEvents(dispatcher->eventQ);
-        dequeueDispatcher(dispatcher);
+        if (!isRunning(dispatcher)) {
+            //  Must not dequeue otherwise GC may claim dispatcher while running dispatchEvents
+            dequeueDispatcher(dispatcher);
+        }
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
     }
@@ -9847,12 +9871,11 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
              */
             if (dp->flags & MPR_DISPATCHER_IMMEDIATE) {
                 dispatchEventsHelper(dp);
-            } else {
-                if (mprStartWorker((MprWorkerProc) dispatchEventsHelper, dp) < 0) {
-                    releaseDispatcher(dp);
-                    queueDispatcher(es->pendingQ, dp);
-                    break;
-                }
+
+            } else if (mprStartWorker((MprWorkerProc) dispatchEventsHelper, dp) < 0) {
+                releaseDispatcher(dp);
+                queueDispatcher(es->pendingQ, dp);
+                break;
             }
         }
         if (flags & MPR_SERVICE_NO_BLOCK) {
@@ -9864,9 +9887,12 @@ PUBLIC int mprServiceEvents(MprTicks timeout, int flags)
             delay = getIdleTicks(es, expires - es->now);
             es->willAwake = es->now + delay;
             es->waiting = 1;
+            if (hasPendingDispatchers() && mprAvailableWorkers()) {
+                delay = 0;
+            }
             unlock(es);
             /*
-                Service IO events
+                Service IO events. Will Yield.
              */
             mprWaitForIO(MPR->waitService, delay);
         }
@@ -10132,6 +10158,7 @@ PUBLIC void mprRescheduleDispatcher(MprDispatcher *dispatcher)
 
 /*
     Run events for a dispatcher
+    WARNING: may yield
  */
 static int dispatchEvents(MprDispatcher *dispatcher)
 {
@@ -10155,6 +10182,8 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         mprAtomicAdd64(&dispatcher->mark, 1);
         mprLinkEvent(dispatcher->currentQ, event);
 
+        //  WARNING: may yield
+        //  WARNING: may destroy dispatcher (memory still present)
         (event->proc)(event->data, event);
 
         mprUnlinkEvent(event);
@@ -10193,27 +10222,33 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
     }
     dispatchEvents(dispatcher);
 
+    releaseDispatcher(dispatcher);
+    dequeueDispatcher(dispatcher);
+
     if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
-        releaseDispatcher(dispatcher);
-        dequeueDispatcher(dispatcher);
         mprScheduleDispatcher(dispatcher);
     }
 }
 
 
-PUBLIC void mprWakePendingDispatchers()
+static bool hasPendingDispatchers()
 {
     MprEventService *es;
-    int             mustWake;
+    bool            hasPending;
 
     if ((es = MPR->eventService) == 0) {
-        return;
+        return 0;
     }
     lock(es);
-    mustWake = es->pendingQ->next != es->pendingQ;
+    hasPending = es->pendingQ->next != es->pendingQ;
     unlock(es);
+    return hasPending;
+}
 
-    if (mustWake) {
+
+PUBLIC void mprWakePendingDispatchers()
+{
+    if (hasPendingDispatchers()) {
         mprWakeEventService();
     }
 }
@@ -10387,7 +10422,6 @@ static bool claimDispatcher(MprDispatcher *dispatcher, MprOsThread thread)
     es = MPR->eventService;
     lock(es);
     if (dispatcher->owner && dispatcher->owner != mprGetCurrentOsThread()) {
-        assert(0);
         unlock(es);
         return 0;
     }
@@ -10417,18 +10451,12 @@ static bool reclaimDispatcher(MprDispatcher *dispatcher)
     dispatcher->owner = mprGetCurrentOsThread();
     unlock(es);
     return 1;
-
 }
 
 
 static void releaseDispatcher(MprDispatcher *dispatcher)
 {
-    lock(MPR->eventService);
-    if (dispatcher->owner && dispatcher->owner != RESERVED_DISPATCHER && dispatcher->owner != mprGetCurrentOsThread()) {
-        assert(0);
-    }
     dispatcher->owner = 0;
-    unlock(MPR->eventService);
 }
 
 
@@ -10747,8 +10775,6 @@ PUBLIC char *mprEscapeHtml(cchar *html)
             } else if (*html == '\'') {
                 strcpy(op, "&#39;");
                 op += 5;
-            } else {
-                assert(0);
             }
             html++;
         } else {
@@ -14136,7 +14162,6 @@ static MprJson *queryContents(MprJson *obj, char *property, cchar *rest, MprJson
     result = mprCreateJson(MPR_JSON_ARRAY);
     if (!(obj->type & MPR_JSON_ARRAY)) {
         /* Cannot get here */
-        assert(0);
         return result;
     }
     if (splitExpression(property, &operator, &v) == 0) {
@@ -14151,7 +14176,6 @@ static MprJson *queryContents(MprJson *obj, char *property, cchar *rest, MprJson
                     appendItem(result, queryLeaf(obj, itosbuf(ibuf, sizeof(ibuf), index, 10), value, flags));
                 }
             } else {
-                assert(0);
                 /*  Should never get here as this means the array has objects instead of simple values */
                 appendItems(result, queryCore(child, rest, value, flags));
             }
@@ -14252,9 +14276,6 @@ static MprJson *queryCompound(MprJson *obj, char *property, cchar *rest, MprJson
 
     } else if (termType & JSON_PROP_EXPR) {
         return queryExpr(obj, property, rest, value, flags);
-
-    } else {
-        assert(0);
     }
     return 0;
 }
@@ -19853,7 +19874,6 @@ PUBLIC int mprGetRandomBytes(char *buf, ssize length, bool block)
     do {
         rc = read(fd, &buf[sofar], length);
         if (rc < 0) {
-            assert(0);
             close(fd);
             return MPR_ERR_CANT_READ;
         }
@@ -22835,7 +22855,6 @@ PUBLIC MprSocket *mprAcceptSocket(MprSocket *listen)
         Get the remote client address
      */
     if (getSocketIpAddr(addr, addrlen, ip, sizeof(ip), &port) != 0) {
-        assert(0);
         mprCloseSocket(nsp, 0);
         return 0;
     }
@@ -23120,7 +23139,6 @@ static ssize localSendfile(MprSocket *sp, MprFile *file, MprOff offset, ssize le
     mprSeekFile(file, SEEK_SET, (int) offset);
     len = min(len, sizeof(buf));
     if ((len = mprReadFile(file, buf, len)) < 0) {
-        assert(0);
         return MPR_ERR_CANT_READ;
     }
     return mprWriteSocket(sp, buf, len);
@@ -23246,7 +23264,7 @@ static ssize flushSocket(MprSocket *sp)
 
 PUBLIC ssize mprFlushSocket(MprSocket *sp)
 {
-    if (sp->provider == 0) {
+    if (sp->provider == 0 || sp->provider->flushSocket == NULL) {
         return MPR_ERR_NOT_INITIALIZED;
     }
     return sp->provider->flushSocket(sp);
@@ -23581,7 +23599,6 @@ PUBLIC int mprGetSocketInfo(cchar *ip, int port, int *family, int *protocol, str
         sa->sin_addr.s_addr = (ulong) hostGetByName((char*) ip);
         if (sa->sin_addr.s_addr < 0) {
             unlock(ss);
-            assert(0);
             return 0;
         }
 #else
@@ -25810,7 +25827,6 @@ PUBLIC int mprMapMprPriorityToOs(int mprPriority)
     } else {
         return -19;
     }
-    assert(0);
     return 0;
 }
 
@@ -26334,15 +26350,11 @@ static void changeState(MprWorker *worker, int state)
 PUBLIC ssize mprGetBusyWorkerCount()
 {
     MprWorkerService    *ws;
-    ssize               count;
 
     if ((ws = MPR->workerService) == 0) {
         return 0;
     }
-    lock(ws);
-    count = mprGetListLength(MPR->workerService->busyThreads);
-    unlock(ws);
-    return count;
+    return mprGetListLength(MPR->workerService->busyThreads);
 }
 
 
@@ -30660,7 +30672,6 @@ static int parseNext(MprXml *xp, int state)
             return MPR_ERR;
         }
     }
-    assert(0);
 }
 
 
@@ -30849,7 +30860,6 @@ static MprXmlToken getXmlToken(MprXml *xp, int state)
     }
 
     /* Should never get here */
-    assert(0);
     return MPR_XMLTOK_ERR;
 }
 
@@ -30936,7 +30946,6 @@ static int getNextChar(MprXml *xp)
 static int putLastChar(MprXml *xp, int c)
 {
     if (mprInsertCharToBuf(xp->inBuf, (char) c) < 0) {
-        assert(0);
         return MPR_ERR_BAD_STATE;
     }
     if (c == '\n') {

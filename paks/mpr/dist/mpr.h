@@ -751,17 +751,17 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
 
 #if ME_COMPILER_HAS_ATOMIC
     #define mprAtomicLoad(ptr, ret, model) __atomic_load(ptr, ret, model)
-    #define mprAtomicStore(ptr, val, model) __atomic_store(ptr, val, model)
+    #define mprAtomicStore(ptr, valptr, model) __atomic_store(ptr, valptr, model)
 #else
     #define mprAtomicLoad(ptr, ret, model) \
         if (1) { \
             mprAtomicBarrier(model); \
-            *ret = *ptr; \
+            *ret = *(ptr); \
         } else
-    #define mprAtomicStore(ptr, val, model) \
+    #define mprAtomicStore(ptr, valptr, model) \
         if (1) { \
             mprAtomicBarrier(model); \
-            *ptr = val; \
+            *ptr = *(valptr); \
         } else
 
 #endif
@@ -827,9 +827,9 @@ PUBLIC void mprAtomicAdd64(volatile int64 *target, int64 value);
 #endif
 #ifndef ME_MPR_ALLOC_QUOTA
     #if ME_TUNE_SIZE
-        #define ME_MPR_ALLOC_QUOTA  (200 * 1024)        /* Total allocations before a GC is worthwhile */
+        #define ME_MPR_ALLOC_QUOTA  (100 * 1024)        /* Allocations before a GC. Scaled by workers/2 */
     #else
-        #define ME_MPR_ALLOC_QUOTA  (512 * 1024)
+        #define ME_MPR_ALLOC_QUOTA  (200 * 1024)
     #endif
 #endif
 #ifndef ME_MPR_ALLOC_REGION_SIZE

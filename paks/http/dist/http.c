@@ -132,7 +132,7 @@ static char     *getPassword(void);
 static cchar    *getRedirectUrl(HttpStream *stream, cchar *url);
 static HttpStream *getStream(Request *req);
 static int      initSettings(void);
-static int      initSsl();
+static int      initSsl(void);
 static bool     isPort(cchar *name);
 static void     manageApp(App *app, int flags);
 static void     manageRequest(Request *req, int flags);
@@ -460,6 +460,15 @@ static int parseArgs(int argc, char **argv)
                 }
             }
             app->needSsl = 1;
+
+        } else if (smatch(argp, "--load") || smatch(argp, "-L")) {
+            //  Undocumented and unsupported.  -i 0 -q -v -D
+            app->iterations = MAXINT;
+            mprSetDebugMode(1);
+            app->timeout = HTTP_UNLIMITED;
+            app->maxRetries = 0;
+            app->noout++;
+            app->verbose++;
 
         } else if (smatch(argp, "--log") || smatch(argp, "-l")) {
             if (nextArg >= argc) {
@@ -875,7 +884,7 @@ static void threadMain(void *data, MprThread *thread)
     /*
         Pre-connect to the network. Required when creating multiple streams.
      */
-    if (httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
+    if (net->protocol >= 2 && httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
         httpNetError(net, "Cannot connect to %s:%d", app->ip, app->port);
         mprLog("error http", 0, "%s", net->errorMsg);
         return;
@@ -1012,7 +1021,7 @@ static void startRequest(Request *req)
 static void notifier(HttpStream *stream, int event, int arg)
 {
     Request     *req;
-    int         limit;
+    int         delay, limit;
 
     req = stream->data;
 
@@ -1026,11 +1035,15 @@ static void notifier(HttpStream *stream, int event, int arg)
     case HTTP_EVENT_ERROR:
         break;
     case HTTP_EVENT_DONE:
-        limit = app->files ? mprGetListLength(app->files) : app->iterations;
+        limit = (app->files && mprGetListLength(app->files) > 1) ? mprGetListLength(app->files) : app->iterations;
         if (++req->count >= limit || (!app->success && !app->continueOnErrors)) {
             finishRequest(req);
         } else {
-            mprCreateLocalEvent(stream->dispatcher, "startRequest", 0, startRequest, req, 0);
+            /*
+                Slight delay to better load balance threads
+             */
+            delay = app->loadThreads > 2 ? 2: 0;
+            mprCreateLocalEvent(stream->dispatcher, "startRequest", delay, startRequest, req, 0);
         }
     }
 }
@@ -1177,12 +1190,17 @@ static int prepUri(Request *req)
 
     } else if (req->upload) {
         req->url = extendUrl(app->target);
+        /*
         if (app->verbose) {
             mprPrintf("Uploading: %s\n", req->url);
-        }
+        } */
 
-    } else if (app->files && mprGetListLength(app->files) > req->count) {
-        path = mprGetItem(app->files, req->count);
+    } else if (app->files) {
+        if (mprGetListLength(app->files) == 1) {
+            path = mprGetItem(app->files, 0);
+        } else {
+            path = mprGetItem(app->files, req->count);
+        }
         if (strcmp(path, "-") == 0) {
             file = mprAttachFileFd(0, "stdin", O_RDONLY | O_BINARY);
         } else {
@@ -1205,9 +1223,10 @@ static int prepUri(Request *req)
             req->url = sclone(app->target);
         }
         req->url = extendUrl(req->url);
+        /*
         if (app->verbose) {
             mprPrintf("Putting: %s to %s\n", path, req->url);
-        }
+        } */
     } else {
         req->url = extendUrl(app->target);
     }
@@ -1391,9 +1410,10 @@ static ssize writeBody(HttpStream *stream)
             }
         }
         if (req->file) {
+            /*
             if (app->verbose) {
                 mprPrintf("Uploading: %s\n", req->path);
-            }
+            } */
             while ((bytes = mprReadFile(req->file, buf, sizeof(buf))) > 0) {
                 sofar = 0;
                 while (bytes > 0) {
@@ -1541,7 +1561,7 @@ static char *extendUrl(cchar *url)
 }
 
 
-static int initSsl()
+static int initSsl(void)
 {
 #if ME_COM_SSL
     HttpUri     *uri;
