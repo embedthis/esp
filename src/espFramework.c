@@ -598,11 +598,10 @@ PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
     /*
-        Need to block because ESP views may call espRenderBlock a lot. To prevent memory growth, must block.
-        Callers can call httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER); for faster writing if they
-        are confident they will not exceed memory limits.
+        Must not yield as render() has dynamic allocations.
+        If callers is generating a lot of data, they must call mprYield themselves or monitor the stream->writeq->count.
      */
-    return httpWriteBlock(stream->writeq, buf, size, HTTP_BLOCK);
+    return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
 }
 
 
