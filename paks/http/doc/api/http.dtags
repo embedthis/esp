@@ -3058,7 +3058,7 @@
     </member>
     <member kind="function">
       <type>void</type>
-      <name>httpAddInputEndPacket</name>
+      <name>httpAddEndInputPacket</name>
       <anchorfile>group___http_stream.html</anchorfile>
       <anchor>ga11ff9e4e0927400b45332cf34fd923fd</anchor>
       <arglist>(HttpStream *stream, HttpQueue *q)</arglist>

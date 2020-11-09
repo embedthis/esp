@@ -2,7 +2,7 @@
 <tagfile>
   <compound kind="file">
     <name>mpr.h</name>
-    <path>/Users/mob/dev/mpr/src/</path>
+    <path>/Users/mob/dev/mpr-8/src/</path>
     <filename>mpr_8h.html</filename>
     <class kind="struct">MprCmdService</class>
     <class kind="struct">MprCond</class>
@@ -77,6 +77,13 @@
       <name>MPR_ALLOC_PAD_MASK</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>a065c472c2b2b6788e97aa947c2875d14</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_ALLOC_POLICY_ABORT</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>ab0142929f5c96aeb7f5a67a137204059</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -700,6 +707,13 @@
       <name>MPR_EVENT_SELECT</name>
       <anchorfile>mpr_8h.html</anchorfile>
       <anchor>af178ffbd32723f67ab58ca731a4c3db7</anchor>
+      <arglist></arglist>
+    </member>
+    <member kind="define">
+      <type>#define</type>
+      <name>MPR_EVENT_SELECT_PIPE</name>
+      <anchorfile>mpr_8h.html</anchorfile>
+      <anchor>adc36e5173a2a5c9baee5070f9aa051f7</anchor>
       <arglist></arglist>
     </member>
     <member kind="define">
@@ -4371,6 +4385,13 @@
       <arglist>(MprList *list)</arglist>
     </member>
     <member kind="function">
+      <type>PUBLIC int</type>
+      <name>mprPreloadSsl</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga44bb56339399cae7f845e9b09814ef2a</anchor>
+      <arglist>(struct MprSsl *ssl, int flags)</arglist>
+    </member>
+    <member kind="function">
       <type>PUBLIC ssize</type>
       <name>mprPrintf</name>
       <anchorfile>group___mpr_string.html</anchorfile>
@@ -7217,6 +7238,13 @@
       <anchorfile>struct_mpr_socket_provider.html</anchorfile>
       <anchor>affd40a8cb2f2f1203666f61622d24d4f</anchor>
       <arglist></arglist>
+    </member>
+    <member kind="variable">
+      <type>int(*</type>
+      <name>preload</name>
+      <anchorfile>struct_mpr_socket_provider.html</anchorfile>
+      <anchor>aa4103d9ac47ff0c9c56aa52ecc779509</anchor>
+      <arglist>)(struct MprSsl *ssl, int flags)</arglist>
     </member>
     <member kind="variable">
       <type>ssize(*</type>
@@ -10932,6 +10960,13 @@
       <anchorfile>group___mpr_ssl.html</anchorfile>
       <anchor>gab25a535dfd66d4fe55208d3a0472a011</anchor>
       <arglist>(void)</arglist>
+    </member>
+    <member kind="function">
+      <type>PUBLIC int</type>
+      <name>mprPreloadSsl</name>
+      <anchorfile>group___mpr_ssl.html</anchorfile>
+      <anchor>ga44bb56339399cae7f845e9b09814ef2a</anchor>
+      <arglist>(struct MprSsl *ssl, int flags)</arglist>
     </member>
     <member kind="function">
       <type>PUBLIC void</type>

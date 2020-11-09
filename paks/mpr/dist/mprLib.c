@@ -1303,16 +1303,19 @@ static void invokeDestructors()
                 Order matters: racing with allocator. The allocator sets free last.
                 Free first, then mark, then eternal
              */
-            if (!mp->free && !mp->eternal && mp->mark != heap->mark && mp->hasManager) {
-                mgr = GET_MANAGER(mp);
-                if (mgr) {
-                    assert(!mp->eternal);
-                    assert(!mp->free);
-                    assert(mp->mark != heap->mark);
-                    (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
-                    /* Retest incase the manager routine revied the object */
-                    if (mp->mark != heap->mark) {
-                        mp->hasManager = 0;
+            if (mp->hasManager && !mp->free && !mp->eternal) {
+                mprAtomicBarrier();
+                if (mp->mark != heap->mark) {
+                    mgr = GET_MANAGER(mp);
+                    if (mgr) {
+                        assert(!mp->eternal);
+                        assert(!mp->free);
+                        assert(mp->mark != heap->mark);
+                        (mgr)(GET_PTR(mp), MPR_MANAGE_FREE);
+                        /* Retest incase the manager routine revied the object */
+                        if (mp->mark != heap->mark) {
+                            mp->hasManager = 0;
+                        }
                     }
                 }
             }
@@ -1426,8 +1429,8 @@ static void sweep()
             INC(sweepVisited);
 
             /*
-                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is set.
-                The allocator is the only place that clears mp->free. If mp->free is zero, we can be sure the block is
+                Racing with the allocator. Be conservative. The sweeper is the only place that mp->free is cleared.
+                The allocator is the only place that sets mp->free. If mp->free is zero, we can be sure the block is
                 not free and not on a freeq. If mp->free is set, we could be racing with the allocator for the block.
              */
             if (mp->eternal) {
@@ -1444,9 +1447,6 @@ static void sweep()
                     INC(compacted);
                 }
             }
-            /*
-                Test that the block was not marked on the current mark phase
-             */
             if (!mp->free && mp->mark != heap->mark) {
                 freeLocation(mp);
                 if (joinBlocks) {
@@ -1815,13 +1815,9 @@ static void printMemReport()
 {
     MprMemStats     *ap;
     double          mb;
-    int             fd;
 
     ap = mprGetMemStats();
     mb = 1024.0 * 1024;
-
-    fd = open("/dev/null", O_RDONLY);
-    close(fd);
 
     printf("Memory Stats:\n");
     printf("  Memory          %12.1f MB\n", mprGetMem() / mb);
@@ -1840,7 +1836,6 @@ static void printMemReport()
     }
     printf("  Errors          %12d\n", (int) ap->errors);
     printf("  CPU cores       %12d\n", (int) ap->cpuCores);
-    printf("  Next free fd    %12d\n", (int) fd);
     printf("\n");
 
 #if ME_MPR_ALLOC_STATS
@@ -2854,9 +2849,9 @@ PUBLIC void mprShutdown(int how, int exitStatus, MprTicks timeout)
         }
         /* No continue */
     }
+    mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
 
     if (!mprIsIdle(0)) {
-        mprLog("info mpr", 6, "Application exit, waiting for existing requests to complete.");
         mprCreateTimerEvent(NULL, "shutdownMonitor", 0, shutdownMonitor, 0, MPR_EVENT_QUICK);
     }
     mprWakeDispatchers();
@@ -9701,6 +9696,7 @@ PUBLIC MprDispatcher *mprCreateDispatcher(cchar *name, int flags)
     dispatcher->name = name;
     dispatcher->cond = mprCreateCond();
     dispatcher->eventQ = mprCreateEventQueue();
+    dispatcher->currentQ = mprCreateEventQueue();
     queueDispatcher(es->idleQ, dispatcher);
     return dispatcher;
 }
@@ -9719,6 +9715,7 @@ static void freeEvents(MprEvent *q)
             if (event->dispatcher) {
                 mprRemoveEvent(event);
             }
+            mprRelease(event);
         }
     }
 }
@@ -9728,11 +9725,12 @@ PUBLIC void mprDestroyDispatcher(MprDispatcher *dispatcher)
 {
     MprEventService     *es;
 
-    if (dispatcher && !(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
+    if (dispatcher) {
         es = dispatcher->service;
         assert(es == MPR->eventService);
         lock(es);
         freeEvents(dispatcher->eventQ);
+        freeEvents(dispatcher->currentQ);
         dequeueDispatcher(dispatcher);
         dispatcher->flags |= MPR_DISPATCHER_DESTROYED;
         unlock(es);
@@ -9746,6 +9744,7 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
 
     if (flags & MPR_MANAGE_MARK) {
         mprMark(dispatcher->eventQ);
+        mprMark(dispatcher->currentQ);
         mprMark(dispatcher->cond);
         mprMark(dispatcher->parent);
         mprMark(dispatcher->service);
@@ -9756,9 +9755,17 @@ static void manageDispatcher(MprDispatcher *dispatcher, int flags)
                 mprMark(event);
             }
         }
+        if ((q = dispatcher->currentQ) != 0) {
+            for (event = q->next; event != q; event = next) {
+                next = event->next;
+                mprMark(event);
+            }
+        }
+
     } else if (flags & MPR_MANAGE_FREE) {
         if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
             freeEvents(dispatcher->eventQ);
+            freeEvents(dispatcher->currentQ);
         }
     }
 }
@@ -10110,39 +10117,57 @@ static int dispatchEvents(MprDispatcher *dispatcher)
         return 0;
     }
     assert(isRunning(dispatcher));
-    assert(ownedDispatcher(dispatcher));
     es = dispatcher->service;
 
+    assert(ownedDispatcher(dispatcher));
+
     /*
-        Events are serviced from the dispatcher queue. When serviced, they are removed.
-        If the callback calls mprRemoveEvent, it will not remove it from the queue, but will clear the continuous flag.
+        Events are removed from the dispatcher queue and put onto the currentQ. This is so they will be marked for GC.
+        If the callback calls mprRemoveEvent, it will not remove from the currentQ. If it was a continuous event,
+        mprRemoveEvent will clear the continuous flag.
+        OPT - this could all be simpler if dispatchEvents was never called recursively. Then a currentQ would not be needed,
+        and neither would a running flag. See mprRemoveEvent().
      */
     for (count = 0; (event = mprGetNextEvent(dispatcher)) != 0; count++) {
-        mprAtomicAdd64(&dispatcher->mark, 1);
+        assert(!(event->flags & MPR_EVENT_RUNNING));
+        event->flags |= MPR_EVENT_RUNNING;
 
         assert(event->proc);
-        mprHold(event);
+        mprAtomicAdd64(&dispatcher->mark, 1);
 
         (event->proc)(event->data, event);
-
         event->hasRun = 1;
 
         if (event->cond) {
             mprSignalCond(event->cond);
         }
+
         if (dispatcher->flags & MPR_DISPATCHER_DESTROYED) {
             mprRelease(event);
             break;
         }
-        if (event->flags & MPR_EVENT_CONTINUOUS && event->next == NULL) {
+        event->flags &= ~MPR_EVENT_RUNNING;
+
+        lock(es);
+        if (event->flags & MPR_EVENT_CONTINUOUS) {
+            /*
+                Reschedule if continuous
+             */
+            if (event->next) {
+                mprDequeueEvent(event);
+            }
             event->timestamp = dispatcher->service->now;
             event->due = event->timestamp + (event->period ? event->period : 1);
             mprQueueEvent(dispatcher, event);
+        } else {
+            mprDequeueEvent(event);
         }
+        /*
+            Can release here even if continuous. Hold not needed once securely referenced by the dispatcher
+         */
         mprRelease(event);
-
-        lock(es);
         es->eventCount++;
+        assert(ownedDispatcher(dispatcher));
         unlock(es);
     }
     return count;
@@ -10161,6 +10186,8 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
     if (!reclaimDispatcher(dispatcher)) {
         return;
     }
+    assert(ownedDispatcher(dispatcher));
+
     dispatchEvents(dispatcher);
 
     if (!(dispatcher->flags & MPR_DISPATCHER_DESTROYED)) {
@@ -10168,6 +10195,7 @@ static void dispatchEventsHelper(MprDispatcher *dispatcher)
         dequeueDispatcher(dispatcher);
         mprScheduleDispatcher(dispatcher);
     }
+    assert(!ownedDispatcher(dispatcher));
 }
 
 
@@ -11186,8 +11214,8 @@ PUBLIC void mprCreateIOEvent(MprDispatcher *dispatcher, void *proc, void *data, 
     event->mask = wp->presentMask;
     event->handler = wp;
     event->sock = sock;
+    wp->event = event;
     mprQueueEvent(dispatcher, event);
-    mprRelease(event);
 }
 
 
@@ -11217,10 +11245,12 @@ PUBLIC MprEvent *mprCreateEvent(MprDispatcher *dispatcher, cchar *name, MprTicks
         return 0;
     }
     if ((event = createEvent(dispatcher, name, period, proc, data, flags)) != NULL) {
+#if DEPRECATE || 1
+        // only for ejscript
         if (!(flags & MPR_EVENT_DONT_QUEUE)) {
             mprQueueEvent(dispatcher, event);
-            mprRelease(event);
         }
+#endif
     }
     return event;
 }
@@ -11291,7 +11321,6 @@ PUBLIC void mprQueueEvent(MprDispatcher *dispatcher, MprEvent *event)
     assert(dispatcher);
     assert(event);
     assert(event->timestamp);
-    assert(event->next == NULL);
 
     es = dispatcher->service;
     lock(es);
@@ -11328,7 +11357,7 @@ PUBLIC void mprRemoveEvent(MprEvent *event)
     if (dispatcher) {
         es = dispatcher->service;
         lock(es);
-        if (event->next) {
+        if (event->next && !(event->flags & MPR_EVENT_RUNNING)) {
             mprDequeueEvent(event);
         }
         event->dispatcher = 0;
@@ -11398,8 +11427,7 @@ PUBLIC void mprEnableContinuousEvent(MprEvent *event, int enable)
 
 
 /*
-    Get the next due event from the front of the event queue and dequeue it.
-    Internal: only called by the dispatcher
+    Get the next due event from the front of the event queue.
  */
 PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
 {
@@ -11414,8 +11442,11 @@ PUBLIC MprEvent *mprGetNextEvent(MprDispatcher *dispatcher)
     next = dispatcher->eventQ->next;
     if (next != dispatcher->eventQ) {
         if (next->due <= es->now) {
+            /*
+                Hold event while executing in the current queue
+             */
             event = next;
-            mprDequeueEvent(event);
+            queueEvent(dispatcher->currentQ, event);
         }
     }
     unlock(es);
@@ -11457,10 +11488,7 @@ static void initEventQ(MprEvent *q, cchar *name)
 static void queueEvent(MprEvent *prior, MprEvent *event)
 {
     assert(prior);
-    if (!event) {
-        return;
-    }
-    if (!prior) {
+    if (!prior || !event) {
         return;
     }
     assert(event);
@@ -15550,10 +15578,8 @@ PUBLIC void *mprPopItem(MprList *lp)
     if (lp->length > 0) {
         lock(lp);
         index = lp->length - 1;
-        if (index >= 0) {
-            item = mprGetItem(lp, index);
-            mprRemoveItemAtPos(lp, index);
-        }
+        item = mprGetItem(lp, index);
+        mprRemoveItemAtPos(lp, index);
         unlock(lp);
     }
     return item;
@@ -16234,7 +16260,6 @@ PUBLIC void mprLogConfig()
     mprLog(name, 2, "OS:                 %s", ME_OS);
     mprLog(name, 2, "Host:               %s", mprGetHostName());
     mprLog(name, 2, "Configure:          %s", ME_CONFIG_CMD);
-    mprLog(name, 2, "PID:                %d", getpid());
     mprLog(name, 2, "----------------------------------");
 }
 
@@ -16690,7 +16715,7 @@ PUBLIC int _cmp(char *s1, char *s2)
 
 /********* Start of file src/mime.c ************/
 
-/* 
+/*
     mime.c - Mime type handling
 
     Copyright (c) All Rights Reserved. See copyright notice at the bottom of the file.
@@ -21991,7 +22016,6 @@ static void standardSignalHandler(void *ignored, MprSignal *sp)
         mprShutdown(MPR_EXIT_ABORT, -1, 0);
 
     } else if (sp->signo == SIGUSR1) {
-        /* Graceful shutdown */
         mprShutdown(MPR_EXIT_RESTART, 0, -1);
 
     } else if (sp->signo == SIGPIPE || sp->signo == SIGXFSZ) {
@@ -22317,7 +22341,7 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
     sp->fd = INVALID_SOCKET;
     sp->port = port;
     sp->flags = (flags & (MPR_SOCKET_BROADCAST | MPR_SOCKET_DATAGRAM | MPR_SOCKET_BLOCK |
-         MPR_SOCKET_NOREUSE | MPR_SOCKET_REUSE_PORT | MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD));
+         MPR_SOCKET_NOREUSE | MPR_SOCKET_NODELAY | MPR_SOCKET_THREAD));
     datagram = sp->flags & MPR_SOCKET_DATAGRAM;
 
     /*
@@ -22344,35 +22368,20 @@ PUBLIC Socket mprListenOnSocket(MprSocket *sp, cchar *ip, int port, int flags)
 #endif
 
     if (!(sp->flags & MPR_SOCKET_NOREUSE)) {
-#if ME_UNIX_LIKE || VXWORKS
         enable = 1;
+#if ME_UNIX_LIKE || VXWORKS
         if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEADDR, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set reuseaddr, errno %d", errno);
         }
-#if defined(SO_REUSEPORT_LB)
-    /*
-        This permits multiple servers listening on the same endpoint with loadbalancing for BSD
-     */
-    if (sp->flags & MPR_SOCKET_REUSE_PORT) {
-        enable = 1;
-        if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT_LB, (char*) &enable, sizeof(enable)) != 0) {
-            mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
-        }
-    }
-#elif defined(SO_REUSEPORT)
+#if defined(SO_REUSEPORT) && MULTIPLE_SERVERS
         /*
-            This permits multiple servers listening on the same endpoint. Linux will load balance.
-            On Mac (without REUSEPORT_LB), only the last bound port gets the traffic.
+            This permits multiple servers listening on the same endpoint
          */
-        if (sp->flags & MPR_SOCKET_REUSE_PORT) {
-            enable = 1;
-            if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT, (char*) &enable, sizeof(enable)) != 0) {
-                mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
-            }
+        if (setsockopt(sp->fd, SOL_SOCKET, SO_REUSEPORT, (char*) &enable, sizeof(enable)) != 0) {
+            mprLog("error mpr socket", 3, "Cannot set reuseport, errno %d", errno);
         }
 #endif
 #elif ME_WIN_LIKE && defined(SO_EXCLUSIVEADDRUSE)
-        enable = 1;
         if (setsockopt(sp->fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*) &enable, sizeof(enable)) != 0) {
             mprLog("error mpr socket", 3, "Cannot set exclusiveaddr, errno %d", errno);
         }
@@ -22565,6 +22574,8 @@ static int connectSocket(MprSocket *sp, cchar *ip, int port, int initialFlags)
     datagram = sp->flags & MPR_SOCKET_DATAGRAM;
 
     if (mprGetSocketInfo(ip, port, &family, &protocol, &addr, &addrlen) < 0) {
+        closesocket(sp->fd);
+        sp->fd = INVALID_SOCKET;
         unlock(sp);
         return MPR_ERR_CANT_ACCESS;
     }
@@ -22642,8 +22653,8 @@ PUBLIC void mprDisconnectSocket(MprSocket *sp)
 
 static void disconnectSocket(MprSocket *sp)
 {
-    char            buf[ME_BUFSIZE];
-    int             i;
+    char    buf[ME_BUFSIZE];
+    int     i;
 
     /*
         Defensive lock buster. Use try lock incase an operation is blocked somewhere with a lock asserted.
@@ -22663,13 +22674,6 @@ static void disconnectSocket(MprSocket *sp)
                 break;
             }
         }
-#if ME_UNIX_LIKE || ME_BSD_LIKE
-        struct linger   sl;
-        sl.l_onoff = 1;
-        sl.l_linger = 0;
-        setsockopt(sp->fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
-#endif
-
         shutdown(sp->fd, SHUT_RDWR);
         for (i = 0; i < 16; i++) {
             if (recv(sp->fd, buf, sizeof(buf), 0) <= 0) {
@@ -22897,7 +22901,7 @@ again:
             bytes = -1;
 
         } else {
-            sp->flags |= MPR_SOCKET_EOF | MPR_SOCKET_ERROR;
+            sp->flags |= MPR_SOCKET_EOF;        /* Some other error */
             bytes = -errCode;
         }
 
@@ -26204,9 +26208,7 @@ static void workerMain(MprWorker *worker, MprThread *tp)
     worker->thread = 0;
     ws->numThreads--;
     unlock(ws);
-    if (ws->numThreads) {
-        mprLog("info mpr thread", 6, "Worker exiting with %d workers in the pool.", ws->numThreads);
-    }
+    mprLog("info mpr thread", 6, "Worker exiting. There are %d workers remaining in the pool.", ws->numThreads);
 }
 
 
@@ -28589,6 +28591,7 @@ static void manageWaitHandler(MprWaitHandler *wp, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
         mprMark(wp->handlerData);
+        mprMark(wp->event);
         mprMark(wp->dispatcher);
         mprMark(wp->requiredWorker);
         mprMark(wp->thread);
@@ -28616,7 +28619,8 @@ PUBLIC void mprRemoveWaitHandler(MprWaitHandler *wp)
 
 PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
 {
-    MprWaitService      *ws;
+    MprWaitService  *ws;
+    MprEvent        *event;
 
     if (wp == 0) {
         return;
@@ -28626,6 +28630,12 @@ PUBLIC void mprDestroyWaitHandler(MprWaitHandler *wp)
     if (wp->fd >= 0) {
         mprRemoveWaitHandler(wp);
         wp->fd = INVALID_SOCKET;
+        event = wp->event;
+        if (event) {
+            wp->event = 0;
+            mprRemoveEvent(event);
+            mprRelease(event);
+        }
     }
     wp->dispatcher = 0;
     unlock(ws);
@@ -28655,6 +28665,7 @@ static void ioEvent(void *data, MprEvent *event)
     }
     assert(event->handler);
 
+    event->handler->event = 0;
     event->handler->proc(data, event);
 }
 

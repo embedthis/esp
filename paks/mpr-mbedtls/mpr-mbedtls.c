@@ -517,7 +517,7 @@ static int getPeerCertInfo(MprSocket *sp)
         if (mprGetLogLevel() >= 6) {
             char buf[4096];
             mbedtls_x509_crt_info(buf, sizeof(buf) - 1, "", peer);
-            mprLog("info mbedtls", 6, "Peer certificate\n%s", buf);
+            mprLog("info mbedtls", mbedLogLevel, "Peer certificate\n%s", buf);
         }
     }
     sp->cipher = replaceHyphen(sclone(mbedtls_ssl_get_ciphersuite(ctx)), '-', '_');
@@ -621,7 +621,7 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
     rc = 0;
     do {
         rc = mbedtls_ssl_write(&mb->ctx, (uchar*) buf, (int) len);
-        mprDebug("debug mpr ssl mbedtls", 6, "mbedtls write: write returned %d (0x%04x), len %zd", rc, rc, len);
+        mprDebug("debug mpr ssl mbedtls", mbedLogLevel, "mbedtls write: write returned %d (0x%04x), len %zd", rc, rc, len);
         if (rc <= 0) {
             if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) {
                 break;
@@ -843,11 +843,11 @@ static int *getCipherSuite(MprSsl *ssl)
         static int once = 0;
         if (!once++) {
             cp = (ciphers && *ciphers) ? result : mbedtls_ssl_list_ciphersuites();
-            mprLog("info mbedtls", 6, "\nCiphers:");
+            mprLog("info mbedtls", mbedLogLevel, "\nCiphers:");
             for (; *cp; cp++) {
                 scopy(buf, sizeof(buf), mbedtls_ssl_get_ciphersuite_name(*cp));
                 replaceHyphen(buf, '-', '_');
-                mprLog("info mbedtls", 6, "0x%04X %s", *cp, buf);
+                mprLog("info mbedtls", mbedLogLevel, "0x%04X %s", *cp, buf);
             }
         }
     }

@@ -491,6 +491,10 @@
     #include    <file.h>
 #endif
 
+#if ME_COMPILER_HAS_ATOMIC
+    #include   <stdatomic.h>
+#endif
+
 /************************************** Types *********************************/
 /*
     Standard types

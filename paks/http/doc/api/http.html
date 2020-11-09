@@ -80,7 +80,7 @@
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___http_monitor_1ga7a392f9544359c5dfaf69fd07f2737bd" class="nameRef">httpAddCounter</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a counter to be monitored.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___http_monitor_1gab63bf01d19bbbeda83109cbb8a240b8d" class="nameRef">httpAddDefense</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *remedy, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *args)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a defense.</td></tr>
 <tr class="apiDef"><td class="apiType">int</td><td><a href="#group___http_monitor_1gaadde2922692a98bb23ee3a77d8a0f625" class="nameRef">httpAddDefenseFromJson</a>(<a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *name, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *remedy, <a href="mpr.html#group___mpr_json" class="ref">MprJson</a> *jargs)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a defense using JSON arguments.</td></tr>
-<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_stream_1ga11ff9e4e0927400b45332cf34fd923fd" class="nameRef">httpAddInputEndPacket</a>(<a href="#group___http_stream" class="ref">HttpStream</a> *stream, <a href="#group___http_queue" class="ref">HttpQueue</a> *q)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add an END packet to the input queue.</td></tr>
+<tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_stream_1ga11ff9e4e0927400b45332cf34fd923fd" class="nameRef">httpAddEndInputPacket</a>(<a href="#group___http_stream" class="ref">HttpStream</a> *stream, <a href="#group___http_queue" class="ref">HttpQueue</a> *q)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add an END packet to the input queue.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_tx_1ga331edf5a90481e9ac4cdc7145c678891" class="nameRef">httpAddHeader</a>(<a href="#group___http_stream" class="ref">HttpStream</a> *stream, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *fmt, ...) PRINTF_ATTRIBUTE(3</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a header to the transmission using a format string.</td></tr>
 <tr class="apiDef"><td class="apiType">void void</td><td><a href="#group___http_tx_1gad4fe6e7ba2f7acebd19a41ea0434452e" class="nameRef">httpAddHeaderString</a>(<a href="#group___http_stream" class="ref">HttpStream</a> *stream, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *key, <a href="osdep.html#osdep_8h_1a0f128c3e0c83721af0220c00554e9c4e" class="ref">cchar</a> *value)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a header to the transmission.</td></tr>
 <tr class="apiDef"><td class="apiType">void</td><td><a href="#group___http_endpoint_1ga4ef2065c27222065ba19f343cb9358d6" class="nameRef">httpAddHostToEndpoint</a>(<a href="#group___http_endpoint" class="ref">HttpEndpoint</a> *endpoint, struct HttpHost *host)</td></tr><tr class="apiBrief"><td>&nbsp;</td><td>Add a host to an endpoint.</td></tr>
@@ -573,7 +573,7 @@
 </table>
 <a name="Typedefs"></a><h1>Typedefs</h1>
 <table class="apiIndex" title="typedefs">
-<tr class="apiDef"><td class="apiName"><a href="#struct_http_address" class="nameRef">HttpAddress</a></td><td class="apiBrief">Per-IP address structure.</td></tr>
+<tr class="apiDef"><td class="apiName"><a href="#struct_http_address" class="nameRef">HttpAddress</a></td><td class="apiBrief">Per-IP address structure that holds the monitor counters.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#group___http_auth_1gae4e3c04d307ca58b0c202c227d2fc503" class="nameRef">HttpAskLogin</a></td><td class="apiBrief">AuthType callback to generate a response requesting the user login This should call httpError if such a response cannot be generated.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_http_auth_store" class="nameRef">HttpAuthStore</a></td><td class="apiBrief">Password backend store.</td></tr>
 <tr class="apiDef"><td class="apiName"><a href="#struct_http_auth_type" class="nameRef">HttpAuthType</a></td><td class="apiBrief">Authentication Protocol.</td></tr>
@@ -958,7 +958,7 @@
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a270817daf78763c6fb6dec946a9e77cd" class="nameRef">HTTP_COUNTER_ACTIVE_CLIENTS</a>&nbsp;&nbsp;&nbsp;0</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Active unique client IP addresses.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Active unique client IP addresses (global).</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a0bc3705044b387003637af0245d371d4" class="nameRef">HTTP_COUNTER_ACTIVE_CONNECTIONS</a>&nbsp;&nbsp;&nbsp;1</td>
 </tr>
@@ -966,7 +966,7 @@
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a6373403a3f29c25fdef60b64714b79fc" class="nameRef">HTTP_COUNTER_ACTIVE_PROCESSES</a>&nbsp;&nbsp;&nbsp;3</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Total processes for server.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Total processes for server (global).</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1af92a5002b12e5c3d6ba6de95a515c657" class="nameRef">HTTP_COUNTER_ACTIVE_REQUESTS</a>&nbsp;&nbsp;&nbsp;2</td>
 </tr>
@@ -990,7 +990,7 @@
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1acf53f054cfc596fc65cae0f76448bae7" class="nameRef">HTTP_COUNTER_MEMORY</a>&nbsp;&nbsp;&nbsp;7</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Total application memory for server.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Total application memory for server (global).</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a2f1b4916e3205ffbc683dbc0b5d83ab1" class="nameRef">HTTP_COUNTER_NETWORK_IO</a>&nbsp;&nbsp;&nbsp;8</td>
 </tr>
@@ -1027,6 +1027,10 @@
 <td>#define</td><td><a href="#http_8h_1a62ebab73ebbfd4aca3756e4902021d51" class="nameRef">HTTP_EVENT_APP_CLOSE</a>&nbsp;&nbsp;&nbsp;6</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>The request is now closed.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#http_8h_1a3e6f19bf167049b8bc020628ddb2f601" class="nameRef">HTTP_EVENT_APP_OPEN</a>&nbsp;&nbsp;&nbsp;7</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>The request is now open.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1ad1769775106df4605233ba9b01721c02" class="nameRef">HTTP_EVENT_DESTROY</a>&nbsp;&nbsp;&nbsp;5</td>
 </tr>
@@ -1480,7 +1484,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Test if the network is a server-side network.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#http_8h_1a5bb3553eed7c99e1c9a7c1ca13f0b12b" class="nameRef">ME_DIGEST_NONCE_DURATION</a>&nbsp;&nbsp;&nbsp;5</td>
+<td>#define</td><td><a href="#http_8h_1a5bb3553eed7c99e1c9a7c1ca13f0b12b" class="nameRef">ME_DIGEST_NONCE_DURATION</a>&nbsp;&nbsp;&nbsp;60</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Lifespan for Digest auth request nonce.</td></tr>
 <tr class="apiDef">
@@ -1500,7 +1504,7 @@
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Default delay IP period.</td></tr>
 <tr class="apiDef">
-<td>#define</td><td><a href="#http_8h_1a288dc2d3432018e743617a5fa0489185" class="nameRef">ME_HTTP_MONITOR_PERIOD</a>&nbsp;&nbsp;&nbsp;(15 * 1000)</td>
+<td>#define</td><td><a href="#http_8h_1a288dc2d3432018e743617a5fa0489185" class="nameRef">ME_HTTP_MONITOR_PERIOD</a>&nbsp;&nbsp;&nbsp;(60 * 1000)</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Monitor prune period.</td></tr>
 <tr class="apiDef">
@@ -1534,7 +1538,11 @@
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1afca01fc11abef8d7977a31e8b26d0616" class="nameRef">ME_MAX_CONNECTIONS</a>&nbsp;&nbsp;&nbsp;50</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Maximum concurrent client endpoints.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Maximum concurrent connections (sockets) for whole server.</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#http_8h_1afde246754aa94d8d8e412aa5de922975" class="nameRef">ME_MAX_CONNECTIONS_PER_CLIENT</a>&nbsp;&nbsp;&nbsp;20</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Maximum concurrent connections per client (ip address).</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1a7ba5a9815b6005f9672fc06475bf06a4" class="nameRef">ME_MAX_HEADERS</a>&nbsp;&nbsp;&nbsp;(512 * 1024)</td>
 </tr>
@@ -1578,7 +1586,7 @@
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1aec3f4b8fac4da2c8978ce0853f687dce" class="nameRef">ME_MAX_REQUESTS_PER_CLIENT</a>&nbsp;&nbsp;&nbsp;20</td>
 </tr>
-<tr class="apiBrief"><td>&nbsp;</td><td>Maximum concurrent requests per client.</td></tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Maximum concurrent requests per client (ip address).</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1aeb149cf1a962f0853be6c3660606c204" class="nameRef">ME_MAX_REWRITE</a>&nbsp;&nbsp;&nbsp;20</td>
 </tr>
@@ -1599,6 +1607,10 @@
 <td>#define</td><td><a href="#http_8h_1ac078af47c1789ef70ea80777e4357e2a" class="nameRef">ME_MAX_RX_FORM</a>&nbsp;&nbsp;&nbsp;(512 * 1024)</td>
 </tr>
 <tr class="apiBrief"><td>&nbsp;</td><td>Maximum incoming form size (512K).</td></tr>
+<tr class="apiDef">
+<td>#define</td><td><a href="#http_8h_1a4e6efa5256a6ba15bbadab2c0fb7ba82" class="nameRef">ME_MAX_RX_FORM_FIELD</a>&nbsp;&nbsp;&nbsp;HTTP_UNLIMITED</td>
+</tr>
+<tr class="apiBrief"><td>&nbsp;</td><td>Maximum upload form field size.</td></tr>
 <tr class="apiDef">
 <td>#define</td><td><a href="#http_8h_1aa08d831e603e06f1b97646432c5e880b" class="nameRef">ME_MAX_SESSION_DURATION</a>&nbsp;&nbsp;&nbsp;(5 * 60 * 1000)</td>
 </tr>
@@ -1798,13 +1810,13 @@ Action handler.
     <tr><td class="param">int</td><td><td>activeProcesses</td><td>
 Count of active external processes.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>addresses</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>addresses</td><td>
 Monitored per-IP-address counters.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>authStores</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>authStores</td><td>
 Available password stores.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>authTypes</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>authTypes</td><td>
 Available authentication protocol types.
 </td>
     <tr><td class="param">MprTime</td><td><td>booted</td><td>
@@ -1843,10 +1855,10 @@ List of counters.
     <tr><td class="param">char *</td><td><td>currentDate</td><td>
 Date string for HTTP response headers.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>currentTime</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>currentTime</td><td>
 When currentDate was last calculated (ticks).
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>dateCache</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>dateCache</td><td>
 Cache of date modified times.
 </td>
     <tr><td class="param">char *</td><td><td>defaultClientHost</td><td>
@@ -1855,7 +1867,7 @@ Default ip address.
     <tr><td class="param">int</td><td><td>defaultClientPort</td><td>
 Default port.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>defenses</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>defenses</td><td>
 List of Defenses.
 </td>
     <tr><td class="param">struct HttpStage *</td><td><td>dirHandler</td><td>
@@ -1888,7 +1900,7 @@ Static file handler.
     <tr><td class="param">int</td><td><td>flags</td><td>
 Open flags.
 </td>
-    <tr><td class="param"><a class="ref" href="#group___mpr_cmd_1ga1f81231ad26bae17a8bf2b2fa36ed37e" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprForkCallback</a></td><td><td>forkCallback</td><td>
+    <tr><td class="param"><a class="ref" href="#group___mpr_cmd_1ga1f81231ad26bae17a8bf2b2fa36ed37e" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprForkCallback</a></td><td><td>forkCallback</td><td>
 Callback in child after fork().
 </td>
     <tr><td class="param">int</td><td><td>gid</td><td>
@@ -1909,6 +1921,9 @@ Http/1 filter.
     <tr><td class="param">int</td><td><td>http2</td><td>
 Enable http 2.
 </td>
+    <tr><td class="param">struct HttpStage *</td><td><td>http2Filter</td><td>
+Http/2 filter.
+</td>
     <tr><td class="param">struct HttpStage *</td><td><td>httpFilter</td><td>
 Http filter.
 </td>
@@ -1921,7 +1936,7 @@ Invoked when creating listeners.
     <tr><td class="param">cchar *</td><td><td>localPlatform</td><td>
 Local (dev) platform os-arch-profile (lower case).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>monitorPeriod</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>monitorPeriod</td><td>
 Minimum monitor period.
 </td>
     <tr><td class="param">MprList *</td><td><td>monitors</td><td>
@@ -1930,7 +1945,7 @@ List of monitors.
     <tr><td class="param">int</td><td><td>monitorsStarted</td><td>
 Monitors are running.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
 Multithread sync.
 </td>
     <tr><td class="param">struct HttpStage *</td><td><td>netConnector</td><td>
@@ -1942,10 +1957,10 @@ Currently open network connections.
     <tr><td class="param">int</td><td><td>nextAuth</td><td>
 Auth object version vector.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>now</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>now</td><td>
 Current time in ticks.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>parsers</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>parsers</td><td>
 Table config parser callbacks.
 </td>
     <tr><td class="param">struct HttpStage *</td><td><td>passHandler</td><td>
@@ -1960,6 +1975,12 @@ Target platform os-arch-profile (lower case).
     <tr><td class="param">cchar *</td><td><td>platformDir</td><td>
 Path to platform directory containing binaries.
 </td>
+    <tr><td class="param">struct HttpStage *</td><td><td>proxyConnector</td><td>
+Proxy connector.
+</td>
+    <tr><td class="param">struct HttpStage *</td><td><td>proxyHandler</td><td>
+Proxy handler.
+</td>
     <tr><td class="param">char *</td><td><td>proxyHost</td><td>
 Proxy ip address.
 </td>
@@ -1972,22 +1993,22 @@ Ranged requests filter.
     <tr><td class="param"><a class="ref" href="#group___http_stream_1ga1dc74c285a8d89529394104d9d38be09">HttpRedirectCallback</a></td><td><td>redirectCallback</td><td>
 Redirect callback.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>remedies</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>remedies</td><td>
 List of Defense Remedies.
 </td>
     <tr><td class="param"><a class="ref" href="#group___http_rx_1ga6305723e581ebbc9da38f70254541dfc">HttpRequestCallback</a></td><td><td>requestCallback</td><td>
 Request completion callback.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeConditions</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeConditions</td><td>
 Http route condition functions.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeSets</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeSets</td><td>
 Http route sets functions.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeTargets</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeTargets</td><td>
 Http route target functions.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeUpdates</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>routeUpdates</td><td>
 Http route update functions.
 </td>
     <tr><td class="param">char *</td><td><td>secret</td><td>
@@ -2002,7 +2023,7 @@ Session state cache.
     <tr><td class="param">char *</td><td><td>software</td><td>
 Software name and version.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>stages</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>stages</td><td>
 Possible stages in connection pipelines.
 </td>
     <tr><td class="param">int</td><td><td>startLevel</td><td>
@@ -2014,7 +2035,7 @@ HTTP/2 static headers.
     <tr><td class="param">int</td><td><td>staticLink</td><td>
 Target platform is using a static linking.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>statusCodes</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>statusCodes</td><td>
 Http status codes.
 </td>
     <tr><td class="param">struct HttpStage *</td><td><td>tailFilter</td><td>
@@ -2055,6 +2076,9 @@ O/S application user name.
 </td>
     <tr><td class="param">int</td><td><td>userChanged</td><td>
 User name changed.
+</td>
+    <tr><td class="param">struct HttpStage *</td><td><td>webSocketFilter</td><td>
+WebSocket filter.
 </td>
     </table></dd></dl>
   </div>
@@ -2246,13 +2270,13 @@ This waits until there are no open connections and then invokes the configuratio
   </div>
   <div class="apiDetail">
 <p>Get an option value that is itself an object (hash).</p>
-    <dl><dt><b>Description</b>:</dt><dd>This returns an option value that is an instance of <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a>. When deserializing a JSON option string which contains multiple levels, this routine can be used to extract lower option container values.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This returns an option value that is an instance of <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a>. When deserializing a JSON option string which contains multiple levels, this routine can be used to extract lower option container values.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">options</td><td>Options object to examine.</td>
     <tr><td class="param">field</td><td>Property to return.</td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>An <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> instance for the given field. This will contain option sub-properties.</dd></dl>
+    <dl><dt>Returns:</dt><dd>An <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> instance for the given field. This will contain option sub-properties.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___http" class="ref">Http</a>, <a href="#group___http_endpoint" class="ref">HttpEndpoint</a>, <a href="#group___http_stream" class="ref">HttpStream</a>, <a href="#group___http_1gad2de58bfa89501db8cc1d6b850ff7729" class="ref">httpConfigure</a>, <a href="#group___http_1ga26dea264af06335774c8abc9fbe7c44f" class="ref">httpCreate</a>, <a href="#group___http_1ga932c2946e5f3f05ca033af2f3af05896" class="ref">httpGetContext</a>, <a href="#group___http_1ga27b90151605da08a154b87961e2a9e60" class="ref">httpGetDateString</a>, <a href="#group___http_1ga168813fff5e0f2b5d67fd54a3577d177" class="ref">httpLookupEndpoint</a>, <a href="#group___http_1gac59dbc1125116fc484e2b66d1f4bbcea" class="ref">httpLookupStatus</a>, <a href="#group___http_1ga295e4431c5e0cdf8bdc072f916083742" class="ref">httpSetContext</a>, <a href="#group___http_1ga8167df1b974212d4f6cd72574639e020" class="ref">httpSetDefaultClientHost</a>, <a href="#group___http_1ga669bfbc2dd7db037e4ccb5928261eea4" class="ref">httpSetDefaultClientPort</a>, <a href="#group___http_stream_1gabd351f0b1e511d12218ad20e38ea77c4" class="ref">httpSetForkCallback</a>, <a href="#group___http_1gab4c777b9a266d023f0b27fb57e1b4d90" class="ref">httpSetProxy</a>, <a href="#group___http_1gaa5a635bd813b7f179e44736be7d5b826" class="ref">httpSetSoftware</a></dd></dl>
@@ -2713,16 +2737,16 @@ This waits until there are no open connections and then invokes the configuratio
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>abilities</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>abilities</td><td>
 Set of required abilities (all are required).
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>allow</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>allow</td><td>
 Clients to allow.
 </td>
     <tr><td class="param">char *</td><td><td>cipher</td><td>
 Encryption cipher.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>deny</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>deny</td><td>
 Clients to deny.
 </td>
     <tr><td class="param">int</td><td><td>flags</td><td>
@@ -2740,7 +2764,7 @@ Web page for user login for &apos;form&apos; type.
     <tr><td class="param">struct HttpAuth *</td><td><td>parent</td><td>
 Parent auth.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>permittedUsers</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>permittedUsers</td><td>
 Set of valid users.
 </td>
     <tr><td class="param">char *</td><td><td>qop</td><td>
@@ -2749,7 +2773,7 @@ Quality of service.
     <tr><td class="param">char *</td><td><td>realm</td><td>
 Realm of access.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>roles</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>roles</td><td>
 Hash of roles.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_http_auth_store">HttpAuthStore</a> *</td><td><td>store</td><td>
@@ -2758,7 +2782,7 @@ Authorization password backend (system|file|custom).
     <tr><td class="param"><a class="ref" href="#struct_http_auth_type">HttpAuthType</a> *</td><td><td>type</td><td>
 Authorization protocol type (basic|digest|form|custom).
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>userCache</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>userCache</td><td>
 Cache of authenticated users.
 </td>
     <tr><td class="param">char *</td><td><td>username</td><td>
@@ -3463,25 +3487,25 @@ The pre-supplied types are &apos;basic&apos;, &apos;digest&apos; and &apos;form&
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>clientLifespan</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>clientLifespan</td><td>
 Lifespan for client cached content.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>extensions</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>extensions</td><td>
 Extensions to cache.
 </td>
     <tr><td class="param">int</td><td><td>flags</td><td>
 Cache control flags.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>methods</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>methods</td><td>
 Methods to cache.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>serverLifespan</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>serverLifespan</td><td>
 Lifespan for server cached content.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>types</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>types</td><td>
 MimeTypes to cache.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>uris</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>uris</td><td>
 URIs to cache.
 </td>
     </table></dd></dl>
@@ -3625,7 +3649,7 @@ May be null if listening on all interfaces.
     <tr><td class="param">HttpLimits *</td><td><td>limits</td><td>
 Alias for first host, default route resource limits.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
 Multithread sync.
 </td>
     <tr><td class="param"><a class="ref" href="#group___http_stream_1gad583143fc934fa15f237b74102c31c4a">HttpNotifier</a></td><td><td>notifier</td><td>
@@ -3637,7 +3661,7 @@ Listen port.
     <tr><td class="param">MprSocket *</td><td><td>sock</td><td>
 Listening socket.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprSsl</a> *</td><td><td>ssl</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprSsl</a> *</td><td><td>ssl</td><td>
 SSL configurations to use.
 </td>
     </table></dd></dl>
@@ -3821,7 +3845,7 @@ Accept a new client connection on a new socket. If multithreaded, this will come
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">endpoint</td><td>HttpEndpoint object created via <a class="ref" href="#group___http_endpoint_1gad5bb2a3a29df9b1191c484a56fcf642c">httpCreateEndpoint</a></td>
-    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprSsl</a> object.</td>
+    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprSsl</a> object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>&quot;Zero&quot; if successful, otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
@@ -3842,7 +3866,7 @@ Accept a new client connection on a new socket. If multithreaded, this will come
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">name</td><td>Endpoint name. The endpoint name is comprised of the IP and port. For example: &quot;127.0.0.1:7777&quot;.</td>
-    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprSsl</a> object.</td>
+    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprSsl</a> object.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
@@ -4045,7 +4069,7 @@ List of Route defintions.
     <tr><td class="param">HttpEndpoint *</td><td><td>secureEndpoint</td><td>
 Secure endpoint for host.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>streaming</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>streaming</td><td>
 Hash of mime-types use streaming instead of buffering.
 </td>
     </table></dd></dl>
@@ -4376,10 +4400,13 @@ Maximum size of a cachable item.
 Maximum chunk size for transfer encoding.
 </td>
     <tr><td class="param">int</td><td><td>clientMax</td><td>
-Maximum number of unique clients IP addresses.
+Maximum number of unique clients (ip addresses).
 </td>
     <tr><td class="param">int</td><td><td>connectionsMax</td><td>
-Maximum number of simultaneous client connections.
+Maximum number of simultaneous connections (sockets) for whole server.
+</td>
+    <tr><td class="param">int</td><td><td>connectionsPerClientMax</td><td>
+Maximum number of simultaneous connections (sockets) per client (ip address).
 </td>
     <tr><td class="param">int</td><td><td>frameSize</td><td>
 HTTP/2 maximum frame size.
@@ -4393,7 +4420,7 @@ Maximum size of the total header.
     <tr><td class="param">int</td><td><td>hpackMax</td><td>
 HTTP/2 maximum size of the hpack header table.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>inactivityTimeout</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>inactivityTimeout</td><td>
 Timeout for keep-alive and idle requests (msec).
 </td>
     <tr><td class="param">int</td><td><td>keepAliveMax</td><td>
@@ -4408,37 +4435,37 @@ Maximum number of processes (CGI).
     <tr><td class="param">int</td><td><td>requestMax</td><td>
 Maximum number of simultaneous concurrent requests.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>requestParseTimeout</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>requestParseTimeout</td><td>
 Time a request can take to parse the request headers (msec).
 </td>
     <tr><td class="param">int</td><td><td>requestsPerClientMax</td><td>
-Maximum number of requests per client IP.
+Maximum number of requests per client (ip address).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>requestTimeout</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>requestTimeout</td><td>
 Time a request can take (msec).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>rxBodySize</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>rxBodySize</td><td>
 Maximum size of receive body data.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>rxFormSize</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>rxFormSize</td><td>
 Maximum size of form data.
 </td>
     <tr><td class="param">int</td><td><td>sessionMax</td><td>
 Maximum number of sessions.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>sessionTimeout</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>sessionTimeout</td><td>
 Time a session can persist (msec).
 </td>
     <tr><td class="param">int</td><td><td>streamsMax</td><td>
 HTTP/2 maximum number of streams per connection (both peer and self initiated).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>txBodySize</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>txBodySize</td><td>
 Maximum size of transmission body content.
 </td>
     <tr><td class="param">int</td><td><td>txStreamsMax</td><td>
 HTTP/2 maximum number of streams the peer will permit per connection.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>uploadSize</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>uploadSize</td><td>
 Maximum size of an uploaded file.
 </td>
     <tr><td class="param">int</td><td><td>uriSize</td><td>
@@ -4457,7 +4484,7 @@ Maximum total size of a WebSocket message including all frames.
     <tr><td class="param">int</td><td><td>webSocketsPacketSize</td><td>
 Maximum size of a WebSocket packet exchanged with the user callback.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>webSocketsPing</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>webSocketsPing</td><td>
 Time between pings.
 </td>
     <tr><td class="param">int</td><td><td>window</td><td>
@@ -4549,7 +4576,7 @@ Set to &apos;&lt;&apos; or &apos;&gt;&apos;.
     <tr><td class="param">uint64</td><td><td>limit</td><td>
 Comparison limit value.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>period</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>period</td><td>
 Frequence of comparison.
 </td>
     <tr><td class="param">MprEvent *</td><td><td>timer</td><td>
@@ -4752,6 +4779,9 @@ Monitor timer.
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
+    <tr><td class="param">bool</td><td><td>activeNet</td><td>
+Active net request (server side).
+</td>
     <tr><td class="param"><a class="ref" href="#struct_http_address">HttpAddress</a> *</td><td><td>address</td><td>
 Per-client IP address reference.
 </td>
@@ -4761,7 +4791,7 @@ Network is in async mode (non-blocking).
     <tr><td class="param">bool</td><td><td>borrowed</td><td>
 Socket has been borrowed.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesWritten</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesWritten</td><td>
 Total bytes written.
 </td>
     <tr><td class="param">void *</td><td><td>context</td><td>
@@ -4821,7 +4851,7 @@ I/O event callback.
     <tr><td class="param">char *</td><td><td>ip</td><td>
 Remote client IP address.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lastActivity</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lastActivity</td><td>
 Last activity on the connection.
 </td>
     <tr><td class="param">int</td><td><td>lastStreamID</td><td>
@@ -4940,7 +4970,7 @@ Transmission writing is blocked.
 <p>Borrow a network connection.</p>
     <dl><dt><b>Description</b>:</dt><dd>Borrow the network from Http. This effectively gains an exclusive loan of the network so that it cannot be destroyed while the loan is active. After the loan is complete, you must call return the network by calling <a class="ref" href="#group___http_net_1gae1272376040bde707ad46e859764f3ed">httpReturnNet</a>. Otherwise the network will not be freed and memory will leak. <br/><br/>
 The httpBorrowNet routine is used to stabilize a network while interacting with some outside service. Without this routine, the network could be destroyed while waiting. Many things can happen while waiting. For example: the client could disconnect or the network connection could timeout. These events will still be serviced while the network is borrowed, but the network object will not be destroyed. <br/><br/>
-While borrowed, you must not access the network object using foreign / non-MPR threads. If you need to do this, use <a class="ref" href="#group___mpr_event_1ga32abaec43ed0d55477dc65f8eba0246b" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">mprCreateEvent</a> to schedule an event to run on the networks&apos;s event dispatcher. This is essential to serialize access to the network object. <br/><br/>
+While borrowed, you must not access the network object using foreign / non-MPR threads. If you need to do this, use <a class="ref" href="#group___mpr_event_1ga32abaec43ed0d55477dc65f8eba0246b" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">mprCreateEvent</a> to schedule an event to run on the networks&apos;s event dispatcher. This is essential to serialize access to the network object. <br/><br/>
 Before returning from the event callback, you must call <a class="ref" href="#group___http_net_1gae1272376040bde707ad46e859764f3ed">httpReturnNet</a> to end the exclusive loan. This restores normal processing of the connection and enables any required I/O events. <br/><br/></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
@@ -4965,7 +4995,7 @@ Before returning from the event callback, you must call <a class="ref" href="#gr
     <tr><td class="param">net</td><td>HttpNet Network object created via <a class="ref" href="#group___http_net_1ga0d3ddf2e5ae45da02660b15f4a7a864f">httpCreateNet</a></td>
     <tr><td class="param">ip</td><td>Remote IP address to connect to.</td>
     <tr><td class="param">port</td><td>TCP/IP port to connect to.</td>
-    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprSsl</a> object that defines the SSL context.</td>
+    <tr><td class="param">ssl</td><td><a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprSsl</a> object that defines the SSL context.</td>
     </table></dd></dl>
     <dl><dt>Returns:</dt><dd>Zero if successful, otherwise a negative MPR error code.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Prototype.</dd></dl>
@@ -5180,7 +5210,7 @@ Before returning from the event callback, you must call <a class="ref" href="#gr
   <div class="apiDetail">
 <p>Return a borrowed a network connection.</p>
     <dl><dt><b>Description</b>:</dt><dd>Returns a borrowed network object back to the Http engine. This ends the exclusive loan of the network so that the current request can be completed. It also enables I/O events based on the current state of the network. <br/><br/>
-While the network is borrowed, you must not access the network using foreign / non-MPR threads. Use <a class="ref" href="#group___mpr_event_1ga32abaec43ed0d55477dc65f8eba0246b" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">mprCreateEvent</a> to schedule an event to run on the network&apos;s event dispatcher. This is essential to serialize access to the network object. <br/><br/>
+While the network is borrowed, you must not access the network using foreign / non-MPR threads. Use <a class="ref" href="#group___mpr_event_1ga32abaec43ed0d55477dc65f8eba0246b" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">mprCreateEvent</a> to schedule an event to run on the network&apos;s event dispatcher. This is essential to serialize access to the network object. <br/><br/>
 You should only call this routine (once) after calling <a class="ref" href="#group___http_net_1ga4034c029cbd70e893cb70a462a73481b">httpBorrowNet</a>. <br/><br/></dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
@@ -5351,10 +5381,10 @@ Chunk content.
     <tr><td class="param">void *</td><td><td>data</td><td>
 Managed data reference.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>epos</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>epos</td><td>
 Data position in entity (file).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>esize</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>esize</td><td>
 Data size in entity (file).
 </td>
     <tr><td class="param"><a class="ref" href="#group___http_packet_1ga958771bc3763c4d4089d246f29cf30a9">HttpFillProc</a></td><td><td>fill</td><td>
@@ -5708,7 +5738,7 @@ First packet in queue (singly linked).
     <tr><td class="param">int</td><td><td>flags</td><td>
 Queue flags.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>ioCount</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>ioCount</td><td>
 Count of bytes in iovec including file I/O.
 </td>
     <tr><td class="param">int</td><td><td>ioFile</td><td>
@@ -5717,7 +5747,7 @@ Sending a file.
     <tr><td class="param">int</td><td><td>ioIndex</td><td>
 Next index into iovec.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>ioPos</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>ioPos</td><td>
 Position in file.
 </td>
     <tr><td class="param">HttpPacket *</td><td><td>last</td><td>
@@ -6385,16 +6415,16 @@ Note: the garbage collector may run while calling httpSendBlock to reclaim unuse
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>end</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>end</td><td>
 End byte of range + 1.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>len</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>len</td><td>
 Redundant range length.
 </td>
     <tr><td class="param">struct HttpRange *</td><td><td>next</td><td>
 Next range.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>start</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>start</td><td>
 Start of range.
 </td>
     </table></dd></dl>
@@ -6460,7 +6490,7 @@ Methods to add for Access-Control-Allow-Methods.
     <tr><td class="param">cchar *</td><td><td>corsOrigin</td><td>
 CORS permissible client origins.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>data</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>data</td><td>
 Hash of extra data configuration.
 </td>
     <tr><td class="param">cchar *</td><td><td>database</td><td>
@@ -6484,10 +6514,10 @@ Extended route information for handler (only).
     <tr><td class="param">bool</td><td><td>error</td><td>
 Parse or runtime error.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>errorDocuments</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>errorDocuments</td><td>
 Set of error documents to use on errors.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>extensions</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>extensions</td><td>
 Hash of handlers by extensions.
 </td>
     <tr><td class="param">int</td><td><td>flags</td><td>
@@ -6523,22 +6553,22 @@ Input stages.
     <tr><td class="param">bool</td><td><td>json</td><td>
 Response format is json.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>languages</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>languages</td><td>
 Languages supported.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lifespan</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lifespan</td><td>
 Default lifespan for all cache items in route.
 </td>
     <tr><td class="param">HttpLimits *</td><td><td>limits</td><td>
 Host resource limits.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>map</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>map</td><td>
 Map of alternate extensions (gzip|minified).
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>methods</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>methods</td><td>
 Matching HTTP methods.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>mimeTypes</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>mimeTypes</td><td>
 Hash table of mime types (key is extension).
 </td>
     <tr><td class="param">cchar *</td><td><td>mode</td><td>
@@ -6596,7 +6626,7 @@ Final source for route target.
     <tr><td class="param">cchar *</td><td><td>sourceName</td><td>
 Source name for route target.
 </td>
-    <tr><td class="param">struct <a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprSsl</a> *</td><td><td>ssl</td><td>
+    <tr><td class="param">struct <a class="ref" href="#struct_mpr_ssl" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprSsl</a> *</td><td><td>ssl</td><td>
 SSL configuration.
 </td>
     <tr><td class="param">char *</td><td><td>startSegment</td><td>
@@ -6629,11 +6659,11 @@ Per-route tracing configuration.
     <tr><td class="param">MprList *</td><td><td>updates</td><td>
 Route and request updates.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>vars</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>vars</td><td>
 Route variables. 
 Used to expand Path ${token} refrerences.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>webSocketsPingPeriod</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>webSocketsPingPeriod</td><td>
 Time between pings (msec).
 </td>
     <tr><td class="param">char *</td><td><td>webSocketsProtocol</td><td>
@@ -8693,10 +8723,10 @@ Type of authentication: set to basic, digest, post or a custom name.
     <tr><td class="param">bool</td><td><td>autoDelete</td><td>
 Automatically delete uploaded files.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesRead</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesRead</td><td>
 Length of content read by user (includes bytesUloaded).
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesUploaded</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesUploaded</td><td>
 Length of uploaded content by user.
 </td>
     <tr><td class="param">int</td><td><td>chunkState</td><td>
@@ -8711,7 +8741,7 @@ Content length string value.
     <tr><td class="param">cchar *</td><td><td>cookie</td><td>
 Cookie header - may contain many cookies.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>dataFrameLength</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>dataFrameLength</td><td>
 Size of HTTP/2 data frames read.
 </td>
     <tr><td class="param">bool</td><td><td>eof</td><td>
@@ -8735,13 +8765,13 @@ Using mime-type application/x-www-form-urlencoded.
     <tr><td class="param">HttpPacket *</td><td><td>headerPacket</td><td>
 HTTP headers.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>headers</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>headers</td><td>
 Header variables.
 </td>
     <tr><td class="param">cchar *</td><td><td>hostHeader</td><td>
 Client supplied host name header.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>http2ContentLength</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>http2ContentLength</td><td>
 Pre-parsed content-length header for http/2.
 </td>
     <tr><td class="param">bool</td><td><td>ifMatch</td><td>
@@ -8765,7 +8795,7 @@ Using a JSON body.
     <tr><td class="param"><a class="ref" href="#struct_http_lang">HttpLang</a> *</td><td><td>lang</td><td>
 Selected language.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>length</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>length</td><td>
 Content length header value (ENV: CONTENT_LENGTH).
 </td>
     <tr><td class="param">cchar *</td><td><td>method</td><td>
@@ -8819,13 +8849,13 @@ Redirect route header.
     <tr><td class="param">cchar *</td><td><td>referrer</td><td>
 Refering URL.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>remainingContent</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>remainingContent</td><td>
 Remaining content data to read (in next chunk if chunked).
 </td>
     <tr><td class="param">bool</td><td><td>renameUploads</td><td>
 Rename uploaded files to the client specified filename.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>requestData</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>requestData</td><td>
 General request data storage. 
 Set via <a class="ref" href="#group___http_route_1ga66808161b07233145990ddfd4f78c49a">httpSetStageData</a>
 </td>
@@ -8870,7 +8900,7 @@ HttpStream object.
 Stream incoming content. 
 Forms typically buffer and dont stream.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>svars</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>svars</td><td>
 Server variables.
 </td>
     <tr><td class="param">char *</td><td><td>target</td><td>
@@ -9090,7 +9120,7 @@ WebSocket state.
     <table class="parameters" title="Parameters">
     <tr><td class="param">stream</td><td>HttpStream stream object created via <a class="ref" href="#group___http_stream_1ga2203fa59ea98e0a35417dde387123d29">httpCreateStream</a></td>
     </table></dd></dl>
-    <dl><dt>Returns:</dt><dd>Hash table. See <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> for how to access the hash table.</dd></dl>
+    <dl><dt>Returns:</dt><dd>Hash table. See <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> for how to access the hash table.</dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
     <a href="#group___http_rx" class="ref">HttpRx</a>, <a href="#group___http_stream" class="ref">HttpStream</a>, <a href="#group___http_tx" class="ref">HttpTx</a>, <a href="#group___http_rx_1gaad9b01463695e806de2fe692d1d98dea" class="ref">httpContentNotModified</a>, <a href="#group___http_rx_1ga5ce723349a6db2b43ed6a4b320e56614" class="ref">httpCreateCGIParams</a>, <a href="#group___http_rx_1gaf637c1cff0cd19f1a23cc29584675c80" class="ref">httpGetContentLength</a>, <a href="#group___http_rx_1ga460a9f642f922340953fe7f5ae83e846" class="ref">httpGetCookies</a>, <a href="#group___http_rx_1ga2b5ae924713e43daaaecc4798b72bd0c" class="ref">httpGetHeader</a>, <a href="#group___http_rx_1ga88cc7a6d5a2ce6759cd543a74ce7bdc4" class="ref">httpGetHeaders</a>, <a href="#group___http_rx_1ga02f52be6b6fc3cf8494f6e985e03b823" class="ref">httpGetIntParam</a>, <a href="#group___http_rx_1ga8cef3d4bae3a3048ed0ecd58ca9558cf" class="ref">httpGetLanguage</a>, <a href="#group___http_rx_1gaa0de01c353e82888a11afc1614df23c7" class="ref">httpGetParam</a>, <a href="#group___http_rx_1ga629350f754fa11496b9297c3315a3dd2" class="ref">httpGetParams</a>, <a href="#group___http_rx_1ga969603bf2600280aa128306ae0b48d05" class="ref">httpGetQueryString</a>, <a href="#group___http_rx_1gae9b945cfee3c9a10c04851ac93962549" class="ref">httpGetReadCount</a>, <a href="#group___http_rx_1ga91aab95eee6eda7c8548f5d34145b144" class="ref">httpGetStatus</a>, <a href="#group___http_rx_1ga1f2f6b4a4cb51fcafbe4de7a8c0a8f97" class="ref">httpGetStatusMessage</a>, <a href="#group___http_rx_1ga492d19fd40ad607f3905c31b87fe7f4e" class="ref">httpMatchParam</a>, <a href="#group___http_rx_1ga116cca0c6b4bca9634788ad7a2cda16e" class="ref">httpRead</a>, <a href="#group___http_rx_1ga4a143512159f61e0b7791ad31bef34e8" class="ref">httpReadString</a>, <a href="#group___http_rx_1ga9bdbbe3920eb0580cf20d44658eb0b13" class="ref">httpSetIntParam</a>, <a href="#group___http_rx_1gad7f38b60b089c24434d760d37643ed98" class="ref">httpSetParam</a>, <a href="#group___http_rx_1ga239445df8318f4592a969cc3d0249d6c" class="ref">httpSetUri</a>, <a href="#group___http_rx_1ga7213bdb43f79813e40fd21c727a71aa0" class="ref">httpTestParam</a>, <a href="#group___http_rx_1gaf130dc0c4d703dad38522c153b833acb" class="ref">httpTrimExtraPath</a></dd></dl>
@@ -9231,7 +9261,7 @@ WebSocket state.
   </div>
   <div class="apiDetail">
 <p>Get the request params table.</p>
-    <dl><dt><b>Description</b>:</dt><dd>This call gets the form var table for the current request. Query data and www-url encoded form data is entered into the table after decoding. Use <a class="ref" href="#group___mpr_hash_1gabd670eabe1949a8f1b105ad5d58bd9e0" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">mprLookupKey</a> to retrieve data from the table.</dd></dl>
+    <dl><dt><b>Description</b>:</dt><dd>This call gets the form var table for the current request. Query data and www-url encoded form data is entered into the table after decoding. Use <a class="ref" href="#group___mpr_hash_1gabd670eabe1949a8f1b105ad5d58bd9e0" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">mprLookupKey</a> to retrieve data from the table.</dd></dl>
     <dl><dt>Parameters:</dt><dd>
     <table class="parameters" title="Parameters">
     <tr><td class="param">stream</td><td>HttpStream stream object.</td>
@@ -9713,7 +9743,7 @@ This will read all rx body and return a string that the caller should free. This
     <tr><td class="param">MprCache *</td><td><td>cache</td><td>
 Cache store reference.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>data</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>data</td><td>
 Intermediate session data before writing to cache.
 </td>
     <tr><td class="param">int</td><td><td>dirty</td><td>
@@ -9722,7 +9752,7 @@ Session updated and needs saving.
     <tr><td class="param">char *</td><td><td>id</td><td>
 Session ID key.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lifespan</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lifespan</td><td>
 Session inactivity timeout (msecs).
 </td>
     <tr><td class="param">int</td><td><td>seqno</td><td>
@@ -10009,7 +10039,7 @@ WARNING: the callback may happen on any thread. Use careful locking to synchroni
     <table class="parameters" title="Parameters">
     <tr><td class="param">stream</td><td>Http stream object.</td>
     <tr><td class="param">key</td><td>Session state key.</td>
-    <tr><td class="param">value</td><td>Object to serialize. This must be an <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> object.</td>
+    <tr><td class="param">value</td><td>Object to serialize. This must be an <a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> object.</td>
     </table></dd></dl>
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>See Also:</dt><dd>
@@ -10074,7 +10104,7 @@ WARNING: the callback may happen on any thread. Use careful locking to synchroni
 Close the stage. 
 <simplesect kind="par"><b>Description</b>:Close the stage and cleanup any request resources. Handlers may block or yield in this callback. </simplesect><parameterlist kind="param"><parameteritem><parameternamelist><parametername>q</parametername></parameternamelist><parameterdescription>Queue instance object</parameterdescription></parameteritem></parameterlist><simplesect kind="par"><b>API</b> Stability:Evolving </simplesect>
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>extensions</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>extensions</td><td>
 Matching extensions for this filter.
 </td>
     <tr><td class="param">int</td><td><td>flags</td><td>
@@ -10473,7 +10503,7 @@ When these APIs block and yield, the garbage collector may reclaim allocated mem
     <dl><dt><b>API</b> Stability:</dt><dd>Stable.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param">int</td><td><td>activeRequest</td><td>
+    <tr><td class="param">bool</td><td><td>activeRequest</td><td>
 Actively servicing a request.
 </td>
     <tr><td class="param">void *</td><td><td>authData</td><td>
@@ -10557,7 +10587,7 @@ Remote client IP address.
     <tr><td class="param">int</td><td><td>keepAliveCount</td><td>
 Count of remaining Keep-Alive requests for this connection.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lastActivity</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>lastActivity</td><td>
 Last activity on the connection.
 </td>
     <tr><td class="param">HttpLimits *</td><td><td>limits</td><td>
@@ -10618,7 +10648,7 @@ Unique monotonically increasing sequence number.
     <tr><td class="param">MprSocket *</td><td><td>sock</td><td>
 Underlying socket handle.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>started</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>started</td><td>
 When the request started (ticks).
 </td>
     <tr><td class="param">uint64</td><td><td>startMark</td><td>
@@ -10673,7 +10703,7 @@ Application queue to write outgoing data (handler).
 <div class="api">
   <div class="prototype">
     void
-    httpAddInputEndPacket
+    httpAddEndInputPacket
 (<a href="#group___http_stream" class="ref">HttpStream</a> *stream, <a href="#group___http_queue" class="ref">HttpQueue</a> *q)
   </div>
   <div class="apiDetail">
@@ -11710,7 +11740,7 @@ Trace logger backup count.
     <tr><td class="param">MprBuf *</td><td><td>buf</td><td>
 Output buffer.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>events</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>events</td><td>
 Configuration of events.
 </td>
     <tr><td class="param">MprFile *</td><td><td>file</td><td>
@@ -11737,7 +11767,7 @@ Trace logger.
     <tr><td class="param">ssize</td><td><td>maxContent</td><td>
 Maximum content size to trace.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_mutex" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprMutex</a> *</td><td><td>mutex</td><td>
 Multithread sync.
 </td>
     <tr><td class="param">struct HttpTrace *</td><td><td>parent</td><td>
@@ -11746,7 +11776,7 @@ Parent trace.
     <tr><td class="param">cchar *</td><td><td>path</td><td>
 Trace logger filename.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>size</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>size</td><td>
 Max log size.
 </td>
     </table></dd></dl>
@@ -12228,7 +12258,7 @@ Processed the last data packet.
     <tr><td class="param">cchar *</td><td><td>altBody</td><td>
 Alternate transmission for errors.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesWritten</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>bytesWritten</td><td>
 Bytes written including headers.
 </td>
     <tr><td class="param">HttpCache *</td><td><td>cache</td><td>
@@ -12250,13 +12280,13 @@ Zero for unchunked.
     <tr><td class="param">HttpStage *</td><td><td>connector</td><td>
 Network connector to send / receive socket data.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>cookies</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>cookies</td><td>
 Browser cookies.
 </td>
     <tr><td class="param">HttpRange *</td><td><td>currentRange</td><td>
 Current range being fullfilled.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>entityLength</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>entityLength</td><td>
 Original content length before range subsetting.
 </td>
     <tr><td class="param">cchar *</td><td><td>errorDocument</td><td>
@@ -12295,13 +12325,13 @@ Response flags.
     <tr><td class="param">HttpStage *</td><td><td>handler</td><td>
 Final handler serving the request.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>headers</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>headers</td><td>
 Transmission headers.
 </td>
     <tr><td class="param">ssize</td><td><td>headerSize</td><td>
 Size of the header written.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>length</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>length</td><td>
 Transmission content length.
 </td>
     <tr><td class="param">char *</td><td><td>method</td><td>
@@ -12328,7 +12358,7 @@ Call httpFinalize again once the Tx pipeline is created.
     <tr><td class="param">char *</td><td><td>rangeBoundary</td><td>
 Inter-range boundary.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>rangePos</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1a87e9f435008723c7b1489af1944c6e20" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprOff</a></td><td><td>rangePos</td><td>
 Current range I/O position in response data.
 </td>
     <tr><td class="param">bool</td><td><td>responded</td><td>
@@ -14489,7 +14519,7 @@ Invoked before processing redirects
 <div class="api">
   <div class="prototype">HttpAddress</div>
   <div class="apiDetail">
-<p>Per-IP address structure.</p>
+<p>Per-IP address structure that holds the monitor counters.</p>
     <dl><dt><b>API</b> Stability:</dt><dd>Internal.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
@@ -14499,7 +14529,7 @@ Ban response message.
     <tr><td class="param">int</td><td><td>banStatus</td><td>
 Ban response status.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>banUntil</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>banUntil</td><td>
 Ban IP address until this time.
 </td>
     <tr><td class="param"><a class="ref" href="#struct_http_counter">HttpCounter</a></td><td><td>counters[1]</td><td>
@@ -14508,7 +14538,7 @@ Counters allocated here.
     <tr><td class="param">int</td><td><td>delay</td><td>
 Delay per request.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>delayUntil</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>delayUntil</td><td>
 Delay (go-slow) servicing requests until this time <br/>
 </td>
     <tr><td class="param">int</td><td><td>ncounters</td><td>
@@ -14517,7 +14547,7 @@ Number of counters in ncounters.
     <tr><td class="param">int</td><td><td>seqno</td><td>
 Unique client sequence number.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>updated</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>updated</td><td>
 When the address counters were last updated.
 </td>
     </table></dd></dl>
@@ -14590,7 +14620,7 @@ Current counter value.
     <dl><dt><b>API</b> Stability:</dt><dd>Evolving.</dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>args</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>args</td><td>
 Remedy arguments.
 </td>
     <tr><td class="param">cchar *</td><td><td>name</td><td>
@@ -14599,13 +14629,13 @@ Defense name.
     <tr><td class="param">cchar *</td><td><td>remedy</td><td>
 Remedy name to invoke.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>suppress</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>suppress</td><td>
 Active defenses to suppress.
 </td>
     <tr><td class="param">int</td><td><td>suppressed</td><td>
 Number of remedies suppressed.
 </td>
-    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>suppressPeriod</td><td>
+    <tr><td class="param"><a class="ref" href="#mpr_8h_1adbceeccda24c35e7b4c6090db7065319" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprTicks</a></td><td><td>suppressPeriod</td><td>
 Period to suppress defense.
 </td>
     </table></dd></dl>
@@ -14653,7 +14683,7 @@ Suffix to add to filenames.
     <a href="#group___http_auth" class="ref">HttpAuth</a></dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>abilities</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>abilities</td><td>
 Role&apos;s abilities.
 </td>
     <tr><td class="param">char *</td><td><td>name</td><td>
@@ -14701,7 +14731,7 @@ Var to set.
     <a href="#group___http_auth" class="ref">HttpAuth</a></dd></dl>
     <dl><dt>Fields:</dt><dd>
     <table class="parameters" title="Parameters">
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>abilities</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>abilities</td><td>
 User abilities defined by roles.
 </td>
     <tr><td class="param">void *</td><td><td>data</td><td>
@@ -14713,7 +14743,7 @@ User name.
     <tr><td class="param">char *</td><td><td>password</td><td>
 User password for &quot;internal&quot; auth store - (actually the password hash.
 </td>
-    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>roles</td><td>
+    <tr><td class="param"><a class="ref" href="#struct_mpr_hash" external="/Users/mob/dev/http-8/paks/mpr/doc/api/mpr.dtags">MprHash</a> *</td><td><td>roles</td><td>
 List of roles.
 </td>
     </table></dd></dl>

@@ -23,10 +23,9 @@ typedef struct ThreadData {
 } ThreadData;
 
 /*
-    State for each stream
+    State for each stream/conn.
  */
 typedef struct Request {
-    HttpNet     *net;
     HttpStream  *stream;
     int         count;
     int         follow;             /* Current follow redirect count */
@@ -92,7 +91,7 @@ typedef struct App {
     MprList     *threadData;        /* Per thread data */
     int         upload;             /* Upload using multipart mime */
     HttpUri     *uri;               /* Parsed URL */
-    char        *url;               /* Request URL */
+    cchar       *url;               /* Request URL */
     char        *username;          /* User name for authentication of requests */
     int         verifyPeer;         /* Validate server certs */
     int         verifyIssuer;       /* Validate the issuer. Permits self-signed certs if false. */
@@ -107,16 +106,15 @@ static App *app;
 /***************************** Forward Declarations ***************************/
 
 static void     addFormVars(cchar *buf);
-static Request  *allocRequest(void);
+static Request  *allocRequest(HttpStream *stream);
 static void     checkRequestState(HttpStream *stream);
-static Request  *createRequest(ThreadData *td, HttpNet *net);
+static Request  *createRequest(ThreadData *td, HttpStream *stream);
 static char     *extendUrl(cchar *url);
 static void     finishRequest(Request *request);
 static void     finishThread(MprThread *thread);
 static cchar    *formatOutput(HttpStream *stream, cchar *buf, ssize *count);
 static char     *getPassword(void);
 static cchar    *getRedirectUrl(HttpStream *stream, cchar *url);
-static HttpStream *getStream(Request *request);
 static int      initSettings(void);
 static bool     isPort(cchar *name);
 static void     manageApp(App *app, int flags);
@@ -667,17 +665,6 @@ static int parseArgs(int argc, char **argv)
             app->nofollow++;
             app->showHeaders++;
 
-        } else if (smatch(argp, "--pj")) {
-            /* Post JSON */
-            if (nextArg >= argc) {
-                return showUsage();
-            } else {
-                mprAddItem(app->headers, mprCreateKeyPair("Content-Type", "application/json", 0));
-                app->method = "POST";
-                app->bodyData = mprCreateBuf(-1, -1);
-                mprPutStringToBuf(app->bodyData, argv[++nextArg]);
-            }
-
         } else if (smatch(argp, "--zero")) {
             app->zeroOnErrors++;
 
@@ -738,7 +725,7 @@ static int parseArgs(int argc, char **argv)
             if (app->target[strlen(app->target) - 1] == '/') {
                 app->url = mprJoinPath(app->target, mprGetPathBase(app->file));
             } else {
-                app->url = sclone(app->target);
+                app->url = app->target;
             }
             app->url = extendUrl(app->url);
             if (app->verbose) {
@@ -803,8 +790,7 @@ static int showUsage()
         "  --frame size          # Set maximum HTTP/2 input frame size (min 16K).\n"
         "  --header 'key: value' # Add a custom request header.\n"
         "  --host hostName       # Host name or IP address for unqualified URLs.\n"
-        "  --http0               # Alias for --protocol HTTP/1.0 (default HTTP/1.1).\n"
-        "  --http1               # Alias for --protocol HTTP/1.1 (default HTTP/1.1).\n"
+        "  --http1               # Alias for --protocol HTTP/1 (default HTTP/1.1).\n"
 #if ME_HTTP_HTTP2
         "  --http2               # Alias for --protocol HTTP/2 (default HTTP/1.1).\n"
 #endif
@@ -886,6 +872,7 @@ static void threadMain(void *data, MprThread *thread)
 {
     HttpNet     *net;
     Request     *request;
+    HttpStream  *stream;
     ThreadData  *td;
     int         i;
 
@@ -905,12 +892,16 @@ static void threadMain(void *data, MprThread *thread)
     net = td->net = httpCreateNet(td->dispatcher, NULL, app->protocol, HTTP_NET_ASYNC);
 
     if (httpConnectNet(net, app->ip, app->port, app->ssl) < 0) {
-        httpNetError(net, "Cannot connect to %s:%d", app->ip, app->port);
         mprLog("error http", 0, "%s", net->errorMsg);
 
     } else {
         for (i = 0; i < app->streams && app->success; i++) {
-            request = createRequest(td, net);
+            if ((stream = httpCreateStream(net, 0)) == 0) {
+                mprLog("error http", 0, "Cannot create connection: %s", net->errorMsg);
+                app->success = 0;
+                break;
+            }
+            request = createRequest(td, stream);
             mprAddItem(td->requests, request);
             /* Run serialized on the network dispatcher */
             mprCreateEvent(td->dispatcher, "startRequest", 0, startRequest, request, 0);
@@ -931,15 +922,20 @@ static void threadMain(void *data, MprThread *thread)
 }
 
 
-static Request *createRequest(ThreadData *td, HttpNet *net)
+static Request *createRequest(ThreadData *td, HttpStream *stream)
 {
     Request     *request;
     cchar       *path;
 
-    request = allocRequest();
+    request = stream->data = allocRequest(stream);
     request->threadData = td;
-    request->net = net;
 
+    httpFollowRedirects(stream, !app->nofollow);
+    httpSetStreamNotifier(stream, notifier);
+
+    if (app->iterations == 1) {
+        stream->limits->keepAliveMax = 0;
+    }
     /*
         Setup authentication
      */
@@ -947,6 +943,13 @@ static Request *createRequest(ThreadData *td, HttpNet *net)
         if (app->password == 0 && !strchr(app->username, ':')) {
             app->password = getPassword();
         }
+        httpSetCredentials(stream, app->username, app->password, app->authType);
+    }
+    /*
+        Apply chunk size override if specified on command line
+     */
+    if (app->chunkSize > 0 && (app->bodyData || app->formData || app->file)) {
+        httpSetChunkSize(stream, app->chunkSize);
     }
 
     /*
@@ -967,60 +970,21 @@ static Request *createRequest(ThreadData *td, HttpNet *net)
 }
 
 
-/*
-    Get the stream to use for the request. HTTP/1 reuses streams, HTTP/2 creates anew.
- */
-static HttpStream *getStream(Request *request)
-{
-    HttpNet     *net;
-    HttpStream  *stream;
-
-    net = request->net;
-    stream = request->stream;
-
-    if (!stream || app->protocol >= 2) {
-        if ((stream = httpCreateStream(net, 0)) == 0) {
-            mprLog("error http", 0, "Cannot create stream: %s", net->errorMsg);
-            app->success = 0;
-            return NULL;
-        }
-        request->stream = stream;
-        stream->data = request;
-
-    } else {
-        httpResetClientStream(stream, 0);
-    }
-
-    httpFollowRedirects(stream, !app->nofollow);
-    httpSetStreamNotifier(stream, notifier);
-
-    if (app->iterations == 1) {
-        stream->limits->keepAliveMax = 0;
-    }
-    if (app->username) {
-        httpSetCredentials(stream, app->username, app->password, app->authType);
-    }
-    /*
-        Apply chunk size override if specified on command line
-     */
-    if (app->chunkSize > 0 && (app->bodyData || app->formData || app->file)) {
-        httpSetChunkSize(stream, app->chunkSize);
-    }
-    return stream;
-}
-
-
 static void startRequest(Request *request)
 {
     HttpNet     *net;
     HttpStream  *stream;
 
-    stream = getStream(request);
-
+    stream = request->stream;
     net = stream->net;
-    app->url = request->redirect ? sclone(request->redirect) : app->url;
-    request->redirect = 0;
+    if (request->count++ >= app->iterations || (!app->success && !app->continueOnErrors)) {
+        finishRequest(request);
+        return;
+    }
     request->written = 0;
+
+    app->url = request->redirect ? request->redirect : app->url;
+    request->redirect = 0;
 
     if (app->singleStep) {
         waitForUser();
@@ -1047,10 +1011,6 @@ static void startRequest(Request *request)
  */
 static void notifier(HttpStream *stream, int event, int arg)
 {
-    Request *request;
-
-    request = stream->data;
-
     switch (event) {
     case HTTP_EVENT_STATE:
         checkRequestState(stream);
@@ -1060,15 +1020,8 @@ static void notifier(HttpStream *stream, int event, int arg)
         break;
     case HTTP_EVENT_ERROR:
         break;
-    case HTTP_EVENT_DONE:
-        if (++request->count >= app->iterations || (!app->success && !app->continueOnErrors)) {
-            finishRequest(request);
-        } else {
-            mprCreateEvent(stream->dispatcher, "startRequest", 0, startRequest, request, 0);
-        }
     }
 }
-
 
 static void checkRequestState(HttpStream *stream)
 {
@@ -1124,6 +1077,7 @@ static void checkRequestState(HttpStream *stream)
                 mprDebug("http", 4, "retry %d of %d for: %s %s", request->retries, app->maxRetries, app->method, app->url);
             }
             request->count--;
+            httpSetState(stream, HTTP_STATE_COMPLETE);
 
         } else {
             request->retries = 0;
@@ -1139,6 +1093,7 @@ static void checkRequestState(HttpStream *stream)
 
     case HTTP_STATE_COMPLETE:
         processResponse(stream);
+        mprCreateEvent(stream->dispatcher, "startRequest", 0, startRequest, request, 0);
     }
 }
 
@@ -1168,10 +1123,10 @@ static void parseStatus(HttpStream *stream)
 static void prepHeaders(HttpStream *stream)
 {
     MprKeyValue     *header;
-    char            *seq, *url;
+    char            *seq;
     int             next;
-    static int      sequence = 0;
 
+    httpResetClientStream(stream, 0);
     for (next = 0; (header = mprGetNextItem(app->headers, &next)) != 0; ) {
         if (scaselessmatch(header->key, "User-Agent")) {
             httpSetHeaderString(stream, header->key, header->value);
@@ -1183,12 +1138,9 @@ static void prepHeaders(HttpStream *stream)
         httpSetHeader(stream, "Accept", "text/plain");
     }
     if (app->sequence) {
-        mprLock(app->mutex);
-        url = stok(app->url, "?", NULL);
-        app->url = sfmt("%s?seq=%d", url, sequence);
-        seq = itos(sequence++);
+        static int next = 0;
+        seq = itos(next++);
         httpSetHeaderString(stream, "X-Http-Seq", seq);
-        mprUnlock(app->mutex);
     }
     if (app->ranges) {
         httpSetHeaderString(stream, "Range", app->ranges);
@@ -1442,16 +1394,19 @@ static void finishThread(MprThread *tp)
 }
 
 
-static Request *allocRequest()
+static Request *allocRequest(HttpStream *stream)
 {
-    return mprAllocObj(Request, manageRequest);
+    Request  *request;
+
+    request = mprAllocObj(Request, manageRequest);
+    request->stream = stream;
+    return request;
 }
 
 
 static void manageRequest(Request *request, int flags)
 {
     if (flags & MPR_MANAGE_MARK) {
-        mprMark(request->net);
         mprMark(request->stream);
         mprMark(request->outFile);
         mprMark(request->threadData);
@@ -1497,14 +1452,10 @@ static bool isPort(cchar *name)
 
 static char *extendUrl(cchar *url)
 {
-    cchar   *proto;
-
-    proto = app->protocol >= 2 ? "https" : "http";
-
     if (*url == '/') {
         if (app->host) {
             if (sncaselesscmp(app->host, "http://", 7) != 0 && sncaselesscmp(app->host, "https://", 8) != 0) {
-                return sfmt("%s://%s%s", proto, app->host, url);
+                return sfmt("http://%s%s", app->host, url);
             } else {
                 return sfmt("%s%s", app->host, url);
             }
@@ -1514,11 +1465,11 @@ static char *extendUrl(cchar *url)
     }
     if (sncaselesscmp(url, "http://", 7) != 0 && sncaselesscmp(url, "https://", 8) != 0) {
         if (*url == ':' && isPort(&url[1])) {
-            return sfmt("%s://127.0.0.1%s", proto, url);
+            return sfmt("http://127.0.0.1%s", url);
         } else if (isPort(url)) {
-            return sfmt("%s://127.0.0.1:%s", proto, url);
+            return sfmt("http://127.0.0.1:%s", url);
         } else {
-            return sfmt("%s://%s", proto, url);
+            return sfmt("http://%s", url);
         }
     }
     return sclone(url);
@@ -1564,17 +1515,15 @@ static cchar *formatOutput(HttpStream *stream, cchar *buf, ssize *count)
 
 static void trace(HttpStream *stream, cchar *url, int fetchCount, cchar *method, int status, MprOff contentLen)
 {
-    if (sncaselesscmp(url, "http://", 7) == 0) {
+    if (sncaselesscmp(url, "http://", 7) != 0) {
         url += 7;
-    } else if (sncaselesscmp(url, "https://", 8) == 0) {
-        url += 8;
     }
     if ((fetchCount % 200) == 1) {
         if (fetchCount == 1 || (fetchCount % 5000) == 1) {
             if (fetchCount > 1) {
                 mprPrintf("\n");
             }
-            mprPrintf("  Count   Thread   Op  Code   Bytes  Url\n");
+            mprPrintf("  Count  Thread   Op  Code   Bytes  Url\n");
         }
         mprPrintf("%7d %7s %4s %5d %7d  %s\n", fetchCount - 1,
             mprGetCurrentThreadName(), method, status, (uchar) contentLen, url);
