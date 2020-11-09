@@ -25,7 +25,7 @@
     #define ME_COMPAT 1
 #endif
 #ifndef ME_COMPATIBLE
-    #define ME_COMPATIBLE "8.2"
+    #define ME_COMPATIBLE "9.0"
 #endif
 #ifndef ME_COMPILER_HAS_ATOMIC
     #define ME_COMPILER_HAS_ATOMIC 0
@@ -72,11 +72,32 @@
 #ifndef ME_DESCRIPTION
     #define ME_DESCRIPTION "Embedthis ESP, the amazingly fast C-Language web framework"
 #endif
+#ifndef ME_HTTP_BASIC
+    #define ME_HTTP_BASIC 1
+#endif
+#ifndef ME_HTTP_CACHE
+    #define ME_HTTP_CACHE 1
+#endif
+#ifndef ME_HTTP_CMD
+    #define ME_HTTP_CMD 1
+#endif
+#ifndef ME_HTTP_DEFENSE
+    #define ME_HTTP_DEFENSE 1
+#endif
+#ifndef ME_HTTP_DIGEST
+    #define ME_HTTP_DIGEST 1
+#endif
+#ifndef ME_HTTP_DIR
+    #define ME_HTTP_DIR 1
+#endif
 #ifndef ME_HTTP_HTTP2
     #define ME_HTTP_HTTP2 1
 #endif
 #ifndef ME_HTTP_PAM
     #define ME_HTTP_PAM 1
+#endif
+#ifndef ME_HTTP_UPLOAD
+    #define ME_HTTP_UPLOAD 1
 #endif
 #ifndef ME_HTTP_WEB_SOCKETS
     #define ME_HTTP_WEB_SOCKETS 1
@@ -115,7 +136,7 @@
     #define ME_TUNE "size"
 #endif
 #ifndef ME_VERSION
-    #define ME_VERSION "8.2.0"
+    #define ME_VERSION "9.0.0"
 #endif
 #ifndef ME_WATCHDOG_NAME
     #define ME_WATCHDOG_NAME "espman"
@@ -210,16 +231,16 @@
 
 /* Miscellaneous */
 #ifndef ME_MAJOR_VERSION
-    #define ME_MAJOR_VERSION 8
+    #define ME_MAJOR_VERSION 9
 #endif
 #ifndef ME_MINOR_VERSION
-    #define ME_MINOR_VERSION 2
+    #define ME_MINOR_VERSION 0
 #endif
 #ifndef ME_PATCH_VERSION
     #define ME_PATCH_VERSION 0
 #endif
 #ifndef ME_VNUM
-    #define ME_VNUM 800020000
+    #define ME_VNUM 900000000
 #endif
 
 /* Components */

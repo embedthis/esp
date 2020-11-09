@@ -58,7 +58,7 @@
             "location": "trace.log",
             "level": 4
         },
-        routes: [ 
+        routes: [
             {
                 pattern: '^/auth/basic',
                 auth: {

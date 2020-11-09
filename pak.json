@@ -32,9 +32,9 @@
     ],
     "dependencies": {
         "assist": "~1",
-        "http": "~8.1",
+        "http": "~9",
         "me-win": "~1",
-        "mpr": "~8.1",
+        "mpr": "~9",
         "mpr-version": "~1",
         "osdep": "~1",
         "pcre": "~1"

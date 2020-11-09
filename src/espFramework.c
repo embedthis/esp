@@ -597,6 +597,10 @@ PUBLIC ssize espRender(HttpStream *stream, cchar *fmt, ...)
 
 PUBLIC ssize espRenderBlock(HttpStream *stream, cchar *buf, ssize size)
 {
+    /*
+        Must not yield as render() has dynamic allocations.
+        If callers is generating a lot of data, they must call mprYield themselves or monitor the stream->writeq->count.
+     */
     return httpWriteBlock(stream->writeq, buf, size, HTTP_BUFFER);
 }
 

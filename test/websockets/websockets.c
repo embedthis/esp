@@ -13,11 +13,10 @@ static void traceEvent(HttpStream *stream, int event, int arg)
     if (event == HTTP_EVENT_READABLE) {
         /*
             Peek at the readq rather than doing httpGetPacket()
-            The last frame in a message has packet->last == true
+            The fin frame in a message has packet->fin == true
          */
         packet = stream->readq->first;
-        mprDebug("webock test", 5, "read %s event, last %d", packet->type == WS_MSG_TEXT ? "text" : "binary",
-            packet->last);
+        mprDebug("webock test", 5, "read %s event, fin %d", packet->type == WS_MSG_TEXT ? "text" : "binary", packet->fin);
         mprDebug("webock test", 5, "read: (start of data only) \"%s\"",
             snclone(mprGetBufStart(packet->content), 40));
 
@@ -54,9 +53,9 @@ static void len_callback(HttpStream *stream, int event, int arg)
         /*
             Ignore precedding packets and just respond and echo the last
          */
-        if (packet->last) {
+        if (packet->fin) {
             ws = stream->rx->webSocket;
-            httpSend(stream, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->last,
+            httpSend(stream, "{type: %d, last: %d, length: %d, data: \"%s\"}\n", packet->type, packet->fin,
                 ws->messageLength, snclone(mprGetBufStart(packet->content), 10));
         }
     }
