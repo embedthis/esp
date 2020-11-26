@@ -1070,6 +1070,14 @@ typedef int64 Ticks;
     #define INADDR_NONE     ((in_addr_t) 0xffffffff)
 #endif
 
+#ifdef SIGINFO
+    #define ME_SIGINFO SIGINFO
+#elif (defined(SIGIPRW)
+    #define ME_SIGINFO SIGIPRW
+#else
+    #define ME_SIGINFO NULL
+#endif
+
 #if VXWORKS
     #ifndef SHUT_RDWR
         #define SHUT_RDWR 2

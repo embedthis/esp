@@ -3,7 +3,7 @@
 #
 
 NAME                  = esp
-VERSION               = 9.0.0
+VERSION               = 9.0.1
 
 OS                    = windows
 PA                    = $(PROCESSOR_ARCHITECTURE)

@@ -198,7 +198,7 @@ static int createEndpoints(int argc, char **argv)
         return MPR_ERR_CANT_CREATE;
     }
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
-    app->signal = mprAddSignalHandler(SIGINFO, showState, 0, 0, MPR_SIGNAL_AFTER);
+    app->signal = mprAddSignalHandler(ME_SIGINFO, showState, 0, 0, MPR_SIGNAL_AFTER);
     return 0;
 }
 

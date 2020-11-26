@@ -96,3 +96,8 @@ help:
 	@echo 'Use "SHOW=1 make" to show executed commands.' >&2
 	@echo '' >&2
 
+LOCAL_MAKEFILE := $(strip $(wildcard ./.local.mk))
+
+ifneq ($(LOCAL_MAKEFILE),)
+include $(LOCAL_MAKEFILE)
+endif
