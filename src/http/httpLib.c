@@ -1688,7 +1688,6 @@ PUBLIC bool httpLogin(HttpStream *stream, cchar *username, cchar *password)
 {
     HttpRx          *rx;
     HttpAuth        *auth;
-    HttpSession     *session;
     HttpVerifyUser  verifyUser;
 
     rx = stream->rx;
@@ -1722,7 +1721,7 @@ PUBLIC bool httpLogin(HttpStream *stream, cchar *username, cchar *password)
         return 0;
     }
     if (!(auth->flags & HTTP_AUTH_NO_SESSION) && !auth->store->noSession) {
-        if ((session = httpCreateSession(stream)) == 0) {
+        if (httpCreateSession(stream) == 0) {
             /* Too many sessions */
             return 0;
         }
@@ -7309,6 +7308,7 @@ PUBLIC void httpNetError(HttpNet *net, cchar *fmt, ...)
 #endif
         if (httpIsServer(net)) {
             for (ITERATE_ITEMS(net->streams, stream, next)) {
+                httpFinalizeConnector(stream);
                 httpError(stream, HTTP_ABORT | HTTP_CODE_COMMS_ERROR, "%s", msg);
             }
             httpMonitorNetEvent(net, HTTP_COUNTER_BAD_REQUEST_ERRORS, 1);
@@ -17121,7 +17121,6 @@ static int processFinalized(HttpStream *stream)
     if (rx->session) {
         httpWriteSession(stream);
     }
-
     if (stream->net->eof && stream->net->protocol > 0) {
         if (!stream->errorMsg) {
             stream->errorMsg = stream->sock->errorMsg ? stream->sock->errorMsg : sclone("Server close");
@@ -25374,7 +25373,6 @@ static void checkFinalized(HttpStream *stream)
     if (tx->finalizedInput && tx->finalizedOutput && tx->finalizedConnector) {
         if (stream->rx->session) {
             httpWriteSession(stream);
-            stream->rx->session = 0;
         }
         httpSetState(stream, HTTP_STATE_FINALIZED);
         tx->finalized = 1;

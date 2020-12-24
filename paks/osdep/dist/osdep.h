@@ -1072,7 +1072,7 @@ typedef int64 Ticks;
 
 #ifdef SIGINFO
     #define ME_SIGINFO SIGINFO
-#elif (defined(SIGIPRW)
+#elif defined(SIGIPRW)
     #define ME_SIGINFO SIGIPRW
 #else
     #define ME_SIGINFO NULL
