@@ -1072,10 +1072,10 @@ typedef int64 Ticks;
 
 #ifdef SIGINFO
     #define ME_SIGINFO SIGINFO
-#elif defined(SIGIPRW)
-    #define ME_SIGINFO SIGIPRW
+#elif defined(SIGPWR)
+    #define ME_SIGINFO SIGPWR
 #else
-    #define ME_SIGINFO NULL
+    #define ME_SIGINFO (0)
 #endif
 
 #if VXWORKS

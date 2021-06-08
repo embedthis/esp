@@ -989,15 +989,15 @@ static void startRequest(Request *req)
 
     net = stream->net;
 
-    req->redirect = 0;
-    req->written = 0;
-
     if (app->singleStep) {
         waitForUser();
     }
     if (prepUri(req) < 0) {
         return;
     }
+    req->redirect = 0;
+    req->written = 0;
+
     prepHeaders(req);
     if (setContentLength(stream) < 0) {
         return;
@@ -1734,9 +1734,6 @@ PUBLIC int _exit() {
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */

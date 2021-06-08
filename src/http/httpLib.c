@@ -1,5 +1,5 @@
 /*
- * Embedthis Http Library Source 9.0.0
+ * Embedthis Http Library Source 9.0.1
  */
 
 #include "http.h"
@@ -1288,11 +1288,8 @@ PUBLIC void httpSetRedirectCallback(HttpRedirectCallback redirectCallback)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -1361,11 +1358,8 @@ PUBLIC int httpOpenActionHandler()
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -2109,11 +2103,8 @@ PUBLIC int formParse(HttpStream *stream, cchar **username, cchar **password)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -2205,11 +2196,8 @@ PUBLIC bool httpBasicSetHeaders(HttpStream *stream, cchar *username, cchar *pass
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -2758,11 +2746,8 @@ static cchar *setHeadersFromCache(HttpStream *stream, cchar *content)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -3083,11 +3068,8 @@ static void setChunkPrefix(HttpQueue *q, HttpPacket *packet)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -3670,11 +3652,8 @@ PUBLIC int httpWait(HttpStream *stream, int state, MprTicks timeout)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -5776,11 +5755,8 @@ PUBLIC int httpInitParser()
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -6184,11 +6160,8 @@ static char *calcDigest(HttpStream *stream, HttpDigest *dp, cchar *username)
 #endif /* ME_HTTP_DIGEST */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -6826,11 +6799,8 @@ PUBLIC HttpDir *httpGetDirObj(HttpRoute *route)
 #endif /* ME_HTTP_DIR */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -7261,11 +7231,8 @@ PUBLIC void httpSetInfoLevel(int level)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -7410,12 +7377,12 @@ static void errorv(HttpStream *stream, int flags, cchar *fmt, va_list args)
     cchar       *uri;
     int         redirected, status;
 
-    rx = stream->rx;
-    tx = stream->tx;
-
     if (stream == 0 || fmt == 0) {
         return;
     }
+    rx = stream->rx;
+    tx = stream->tx;
+
     status = flags & HTTP_CODE_MASK;
     if (status == 0) {
         status = HTTP_CODE_INTERNAL_SERVER_ERROR;
@@ -7525,11 +7492,8 @@ PUBLIC void httpMemoryError(HttpStream *stream)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -7906,15 +7870,13 @@ static void outgoingFileService(HttpQueue *q)
         }
         if (!tx->finalizedOutput && !q->first) {
             /*
-                Do manually to optimize rather than call httpFinalizeOutput because we want to ensure the HTTP/2 protocol
-                can see the END_DATA packet and set an END_DATA flag on the last data frame. httpFinalize puts the
-                END_DATA packet on this service queue.
+                Optimize FinalizeOutput by putting the end packet manually. The helps the HTTP/2 protocol
+                can see the END_DATA packet now and set an END_DATA flag on the last data frame rather than
+                waiting for this outgoing to be rescheduled later.
              */
+            tx->putEndPacket = 1;
             httpPutPacketToNext(q, httpCreateEndPacket());
-            tx->finalizedOutput = 1;
-            if (tx->finalizedInput) {
-                httpFinalize(stream);
-            }
+            httpFinalizeOutput(stream);
         }
     }
     if (!tx->finalized && tx->finalizedOutput && tx->finalizedInput) {
@@ -8101,11 +8063,8 @@ PUBLIC int httpHandleDirectory(HttpStream *stream)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -8556,11 +8515,8 @@ PUBLIC void httpSetStreaming(HttpHost *host, cchar *mime, cchar *uri, bool enabl
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -8812,11 +8768,8 @@ PUBLIC MprKeyValue *httpGetPackedHeader(HttpHeaderTable *headers, int index)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -9403,11 +9356,8 @@ static cchar *eatBlankLines(HttpPacket *packet)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -9715,6 +9665,10 @@ static void outgoingHttp2Service(HttpQueue *q)
     net = q->net;
     assert(!(q->flags & HTTP_QUEUE_SUSPENDED));
 
+    /*
+        Note: httpGetPacket will not automatically resume the previous queue (which logically is each streams' tailFilter).
+        Note: q->nextQ == q->prevQ == socketq, so we must explicitly re-enable the stream's tail filter below.
+     */
     for (packet = httpGetPacket(q); packet && !net->error; packet = httpGetPacket(q)) {
         net->lastActivity = net->http->now;
 
@@ -11536,11 +11490,8 @@ static int setState(HttpStream *stream, int event)
 #endif /* ME_HTTP_HTTP2 */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -13151,11 +13102,8 @@ PUBLIC ssize httpHuffEncode(cchar *src, ssize size, char *dst, uint lower)
     Nginx -- Portions. See License.md.
 
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -13919,11 +13867,8 @@ PUBLIC int64 httpMonitorEvent(HttpStream *stream, int counterIndex, int64 adj)
 #endif /* ME_HTTP_DEFENSE */
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -14461,11 +14406,8 @@ PUBLIC void httpSetNetError(HttpNet *net)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -14677,7 +14619,7 @@ PUBLIC void httpIOEvent(HttpNet *net, MprEvent *event)
     /*
         Process packet read above. This will propagate the packet through configured queues for the net.
      */
-    httpServiceNetQueues(net, 0);
+    httpServiceNetQueues(net, HTTP_BLOCK);
 
     if (net->error || net->eof || (net->sentGoaway && !net->socketq->first)) {
         closeStreams(net);
@@ -15202,11 +15144,8 @@ static void closeStreams(HttpNet *net)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -15744,11 +15683,8 @@ PUBLIC HttpPacket *httpSplitPacket(HttpPacket *orig, ssize offset)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -15892,11 +15828,8 @@ static int pamChat(int msgCount, const struct pam_message **msg, struct pam_resp
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -16006,11 +15939,8 @@ static void handleTraceMethod(HttpStream *stream)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -16478,11 +16408,8 @@ PUBLIC void httpRemoveChunkFilter(HttpQueue *head)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -17191,7 +17118,7 @@ PUBLIC bool httpPumpOutput(HttpQueue *q)
     stream = q->stream;
     tx = stream->tx;
 
-    httpServiceNetQueues(q->net, 0);
+    httpServiceNetQueues(q->net, HTTP_BLOCK);
 
     if (tx->started && !stream->net->writeBlocked) {
         wq = stream->writeq;
@@ -17443,11 +17370,8 @@ PUBLIC cchar *httpTraceHeaders(MprHash *headers)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -18106,11 +18030,8 @@ PUBLIC bool httpVerifyQueue(HttpQueue *q)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -18457,11 +18378,8 @@ static int fixRangeLength(HttpStream *stream, HttpQueue *q)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -21937,11 +21855,8 @@ PUBLIC void httpSetRouteCharSet(HttpRoute *route, cchar *charSet)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -22541,11 +22456,8 @@ PUBLIC void httpParseMethod(HttpStream *stream)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -22979,11 +22891,8 @@ PUBLIC bool httpCheckSecurityToken(HttpStream *stream)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -23172,11 +23081,8 @@ PUBLIC HttpStage *httpCreateConnector(cchar *name, MprModule *module)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -23924,11 +23830,8 @@ PUBLIC void httpAddInputEndPacket(HttpStream *stream, HttpQueue *q)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -24088,14 +23991,13 @@ static bool willQueueAcceptPacket(HttpQueue *q, HttpPacket *packet)
         (packet->flags & HTTP_PACKET_END));
 
     /*
-        Get the maximum the output stream can absorb that is less than the downstream queue packet size and
-        the per-stream window size if HTTP/2.
+        Get the maximum the output stream can absorb that is less than the downstream
+        queue packet size and the per-stream window size if HTTP/2.
      */
     nextQ = stream->net->outputq;
-    if (packet->flags & HTTP_PACKET_DATA) {
-        room = net->protocol >= 2 ? stream->outputq->window : nextQ->max - nextQ->count;
-    } else {
-        room = nextQ->max - nextQ->count;
+    room = nextQ->max - nextQ->count;
+    if (packet->flags & HTTP_PACKET_DATA && net->protocol >= 2) {
+        room = min(stream->outputq->window, room);
     }
     size = httpGetPacketLength(packet);
     if (size <= room) {
@@ -24149,11 +24051,8 @@ static HttpPacket *createAltBodyPacket(HttpQueue *q)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -25015,11 +24914,8 @@ PUBLIC char *httpStatsReport(int flags)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -25325,6 +25221,7 @@ PUBLIC void httpFinalizeInput(HttpStream *stream)
     }
 }
 
+
 /*
     The handler has generated the entire transmit body. Note: the data may not yet have drained from
     the pipeline or socket and the caller may not have read all the input body content.
@@ -25344,8 +25241,10 @@ PUBLIC void httpFinalizeOutput(HttpStream *stream)
         tx->pendingFinalize = 1;
         return;
     }
-    httpPutPacket(stream->writeq, httpCreateEndPacket());
-    httpScheduleQueue(stream->writeq);
+    if (!tx->putEndPacket) {
+        httpPutPacket(stream->writeq, httpCreateEndPacket());
+        httpScheduleQueue(stream->writeq);
+    }
     checkFinalized(stream);
 }
 
@@ -26046,11 +25945,8 @@ PUBLIC ssize httpWrite(HttpQueue *q, cchar *fmt, ...)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -26300,8 +26196,11 @@ static void incomingUploadService(HttpQueue *q)
                 break;
 
             case HTTP_UPLOAD_CONTENT_END:
+                //  May have already consumed the trailing CRLF
+                if (mprGetBufLength(content) >= 2) {
+                    mprAdjustBufStart(content, 2);
+                }
                 done++;
-                mprAdjustBufStart(content, 2);
                 break;
             }
         }
@@ -26804,11 +26703,8 @@ static bool validUploadChars(cchar *uri)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -27799,11 +27695,8 @@ static char *actionRoute(HttpRoute *route, cchar *controller, cchar *action)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -28035,11 +27928,8 @@ PUBLIC void httpSetConnUser(HttpStream *stream, HttpUser *user)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -28393,11 +28283,8 @@ PUBLIC bool httpMatchParam(HttpStream *stream, cchar *var, cchar *value)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 
 
@@ -29654,10 +29541,7 @@ bool httpIsLastPacket(HttpPacket *packet)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
 

@@ -609,7 +609,6 @@ static ssize writeMbed(MprSocket *sp, cvoid *buf, ssize len)
 
     mb = (MbedSocket*) sp->sslSocket;
     if (len <= 0) {
-        assert(0);
         return MPR_ERR_BAD_ARGS;
     }
     if (mb->ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
@@ -1004,9 +1003,6 @@ static char *replaceHyphen(char *cipher, char from, char to)
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */

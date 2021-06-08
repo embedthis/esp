@@ -20,16 +20,7 @@
     "bugs": {
         "url": "http://github.com/embedthis/esp/issues"
     },
-    "licenses": [
-        {
-            "type": "GPL",
-            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
-        },
-        {
-            "type": "Commercial",
-            "url": "https://www.embedthis.com/licensing/"
-        }
-    ],
+    "licenses": "Commercial",
     "dependencies": {
         "assist": "~1",
         "http": "~9",
@@ -41,7 +32,7 @@
     },
     "optionalDependencies": {
         "certs": "~1",
-        "mpr-mbedtls": "~2",
+        "mpr-mbedtls": "~3",
         "mpr-openssl": "~1",
         "sqlite": "~3",
         "ssl": "~1",

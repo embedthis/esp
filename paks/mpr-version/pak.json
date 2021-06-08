@@ -20,16 +20,7 @@
     "bugs": {
         "url": "http://github.com/embedthis/mpr-version/issues"
     },
-    "licenses": [
-        {
-            "type": "GPL",
-            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
-        },
-        {
-            "type": "Commercial",
-            "url": "https://embedthis.com/licensing/"
-        }
-    ],
+    "licenses": "Commercial",
     "dependencies": {
         "pcre": "~1.x"
     },

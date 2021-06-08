@@ -771,7 +771,7 @@ PUBLIC int httpGetTraceLevel(HttpTrace *trace);
     @param event Event name to trace. Typically dot separated module names.
     @param type Event type to trace. Events are grouped into types that are traced at the same level.
     The standard set of types and their default trace levels are:
-    debug: 0, request:1, error: 2, result:2, context:3, packet:4, detail:5. Users can create custom types.
+    debug: 1, error: 1, request:2, result:2, headers: 3, context:4, packet:5, detail:6. Users can create custom types.
     The request type is used for the initial http request line. The result type is used for the request status.
     The context type is used for general information including http headers. The form type is used for POST form data.
     The body type is used for request body data.
@@ -791,7 +791,7 @@ PUBLIC bool httpLog(HttpTrace *trace, cchar *event, cchar *type, cchar *fmt, ...
     #define httpLog(trace, event, type, ...) \
         if (trace && trace->level > 0) { \
             int __tlevel = PTOI(mprLookupKey(trace->events, type)); \
-            if (__tlevel >= 0 && __tlevel <= trace->level) { \
+            if (__tlevel > 0 && __tlevel <= trace->level) { \
                 httpLogProc(trace, event, type, 0, __VA_ARGS__); \
             } \
         } else
@@ -7504,6 +7504,7 @@ typedef struct HttpTx {
     bool            finalizedOutput:1;      /**< Handler or surrogate has finished writing output */
     bool            needChunking:1;         /**< Use chunk encoding */
     bool            pendingFinalize:1;      /**< Call httpFinalize again once the Tx pipeline is created */
+    bool            putEndPacket:1;         /**< Handler has manually put the END package (httpFinalizeOutput to skip) */
     bool            responded:1;            /**< The handler has started to respond. Some output has been initiated. */
     bool            startedHeader: 1;       /**< Already started sending at least one header packet in the output queue */
     bool            started:1;              /**< Handler has been started */
@@ -9002,11 +9003,6 @@ PUBLIC bool httpPumpOutput(HttpQueue *q);
 
 /*
     Copyright (c) Embedthis Software. All Rights Reserved.
-    This software is distributed under commercial and open source licenses.
-    You may use the Embedthis Open Source license or you may acquire a
-    commercial license from Embedthis Software. You agree to be fully bound
-    by the terms of either license. Consult the LICENSE.md distributed with
-    this software for full details and other copyrights.
+    This software is distributed under a commercial license. Consult the LICENSE.md
+    distributed with this software for full details and copyrights.
  */
-
-PUBLIC void httpCheckQueues(HttpQueue *q);

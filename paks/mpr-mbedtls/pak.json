@@ -2,7 +2,7 @@
     "name": "mpr-mbedtls",
     "title": "MbedTLS support",
     "description": "MbedTLS Support for the MPR",
-    "version": "2.8.1",
+    "version": "3.0.0",
     "keywords": [
         "me",
         "ssl",
@@ -20,16 +20,7 @@
     "bugs": {
         "url": "http://github.com/embedthis/mpr-mbedtls/issues"
     },
-    "licenses": [
-        {
-            "type": "GPL",
-            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
-        },
-        {
-            "type": "Commercial",
-            "url": "https://embedthis.com/licensing/"
-        }
-    ],
+    "licenses": "Commercial",
     "dependencies": {
         "mbedtls": "~2"
     },

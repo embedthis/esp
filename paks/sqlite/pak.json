@@ -19,12 +19,7 @@
     "bugs": {
         "url": "http://github.com/embedthis/sqlite/issues"
     },
-    "licenses": [
-        {
-            "type": "PUBLIC",
-            "url": "https://github.com/embedthis/sqlite/blob/master/LICENSE.md"
-        }
-    ],
+    "licenses": "PUBLIC",
     "files": [
         "dist/**"
     ],
