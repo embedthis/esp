@@ -8,7 +8,9 @@
             var r = new XMLHttpRequest();
             r.onreadystatechange = function() {
                 if (r.readyState >= 3 && r.status == 200) {
-                    window.location.reload();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 250);
                 }
             }
             r.open("GET", "/reload-service", true);

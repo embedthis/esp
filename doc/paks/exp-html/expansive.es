@@ -2,7 +2,8 @@ Expansive.load({
 
     services: {
         name:       'html',
-        options:    '--remove-comments --collapse-whitespace --prevent-attributes-escaping --remove-empty-attributes --remove-optional-tags'
+        _options:   '--remove-comments',
+        options:    '--collapse-whitespace --prevent-attributes-escaping --remove-empty-attributes --remove-optional-tags'
 
         transforms: {
             mappings:   ['html'],
@@ -10,7 +11,7 @@ Expansive.load({
             init: function(transform) {
                 transform.htmlmin = Cmd.locate('html-minifier')
                 if (!transform.htmlmin) {
-                    trace('Warn', 'Cannot find html-minifier')
+                    throw new Error('Cannot find html-minifier')
                 }
             },
 

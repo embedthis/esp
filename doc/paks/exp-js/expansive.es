@@ -88,8 +88,12 @@ Expansive.load({
                 let service = transform.service
                 let cmd = Cmd.locate('uglifyjs')
                 if (!cmd) {
-                    trace('Warn', 'Cannot find uglifyjs')
-                    transform.enable = false
+                    trace('Install', 'Uglify')
+                    Cmd.run('npm install -g uglify-js')
+                    cmd = Cmd.locate('uglifyjs')
+                    if (!cmd) {
+                        throw new Error('Cannot find uglifyjs')
+                    }
                 } else if (!service.minify) {
                     transform.enable = false
                 } else {
@@ -103,16 +107,20 @@ Expansive.load({
             render: function (contents, meta, transform) {
                 trace('Minify', meta.source)
                 let cmd = transform.cmd
-                if (transform.service.usemap) {
-                    let mapFile = meta.dest.replaceExt('map')
-                    mapFile.dirname.makeDir()
-                    cmd += ' --source-map ' + mapFile
-                    contents = runFile(cmd, contents, meta)
-                    let map = mapFile.readJSON()
-                    map.sources = [ meta.dest ]
-                    mapFile.write(serialize(map))
-                } else {
-                    contents = run(cmd, contents)
+                try {
+                    if (transform.service.usemap) {
+                        let mapFile = meta.dest.replaceExt('map')
+                        mapFile.dirname.makeDir()
+                        cmd += ' --source-map ' + mapFile
+                        contents = runFile(cmd, contents, meta)
+                        let map = mapFile.readJSON()
+                        map.sources = [ meta.dest ]
+                        mapFile.write(serialize(map))
+                    } else {
+                        contents = run(cmd, contents)
+                    }
+                } catch (err) {
+                    //  Continue
                 }
                 return contents
             },
@@ -156,7 +164,7 @@ Expansive.load({
                             let map = base.joinExt('min.map', true).exists || base.joinExt('js.map', true).exists ||
                                 base.joinExt('.min.js.map', true).exists
                             if (vfile.endsWith('min.js')) {
-                                if ((service.minify || service.usemin) && (!service.usemap || map)) {
+                                if ((service.minify || service.usemin) /* && (!service.usemap || map) */) {
                                     scripts.push(script)
                                 }
                             } else {

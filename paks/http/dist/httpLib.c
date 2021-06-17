@@ -250,7 +250,7 @@ static void manageHttp(Http *http, int flags)
 }
 
 
-PUBLIC Http *httpGetHttp()
+PUBLIC Http *httpGetHttp(void)
 {
     return HTTP;
 }
@@ -783,7 +783,7 @@ PUBLIC char *httpGetDateString(MprPath *sbuf)
 }
 
 
-PUBLIC void *httpGetContext()
+PUBLIC void *httpGetContext(void)
 {
     return HTTP->context;
 }
@@ -795,13 +795,13 @@ PUBLIC void httpSetContext(void *context)
 }
 
 
-PUBLIC int httpGetDefaultClientPort()
+PUBLIC int httpGetDefaultClientPort(void)
 {
     return HTTP->defaultClientPort;
 }
 
 
-PUBLIC cchar *httpGetDefaultClientHost()
+PUBLIC cchar *httpGetDefaultClientHost(void)
 {
     return HTTP->defaultClientHost;
 }
@@ -24085,6 +24085,7 @@ static void formatTrace(HttpTrace *trace, cchar *event, cchar *type, int flags, 
 static cchar *getTraceTag(cchar *event, cchar *type);
 
 static void traceData(HttpTrace *trace, cchar *data, ssize len, int flags);
+static void traceQueues(HttpStream *stream, MprBuf *buf);
 
 /*********************************** Code *************************************/
 
@@ -24283,15 +24284,17 @@ PUBLIC void httpLogCompleteRequest(HttpStream *stream)
 
     elapsed = mprGetTicks() - stream->started;
     if (httpTracing(stream->net)) {
-        received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
+        if (httpShouldTrace(stream->trace, "context")) {
+            received = httpGetPacketLength(rx->headerPacket) + rx->bytesRead;
 #if MPR_HIGH_RES_TIMER
-        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
-            "elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
-            elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
+            formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
+                "elapsed:%llu, ticks:%llu, received:%lld, sent:%lld",
+                elapsed, mprGetHiResTicks() - stream->startMark, received, tx->bytesWritten);
 #else
-        formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
-            "elapsed:%llu, received:%lld, sent:%lld", elapsed, received, tx->bytesWritten);
+            formatTrace(stream->trace, "tx.complete", "context", 0, (void*) stream, 0,
+                "elapsed:%llu, received:%lld, sent:%lld", elapsed, received, tx->bytesWritten);
 #endif
+        }
     }
 }
 
@@ -24891,9 +24894,9 @@ PUBLIC char *httpStatsReport(int flags)
     mprPutCharToBuf(buf, '\n');
     last = s;
 
-
     http = HTTP;
     mprPutToBuf(buf, "\nActive Streams:\n");
+    lock(http);
     for (ITERATE_ITEMS(http->networks, net, nextNet)) {
         for (ITERATE_ITEMS(net->streams, stream, nextStream)) {
             rx = stream->rx;
@@ -24902,13 +24905,48 @@ PUBLIC char *httpStatsReport(int flags)
                 "State %d (%d), error %d, eof %d, finalized input %d, output %d, connector %d, seqno %lld, mask %x, uri %s\n",
                 stream->state, stream->h2State, stream->error, rx->eof, tx->finalizedInput, tx->finalizedOutput,
                 tx->finalizedConnector, stream->seqno, net->eventMask, rx->uri);
+            traceQueues(stream, buf);
         }
     }
+    unlock(http);
     mprPutCharToBuf(buf, '\n');
 
     lastTime = now;
     mprAddNullToBuf(buf);
     return sclone(mprGetBufStart(buf));
+}
+
+
+static void traceQueues(HttpStream *stream, MprBuf *buf)
+{
+    HttpNet     *net;
+    HttpQueue   *q;
+    HttpTrace   *trace;
+
+    net = stream->net;
+    trace = stream->trace;
+
+    mprPutToBuf(buf, "  Rx: ");
+    mprPutToBuf(buf, "%s[%d, %d, 0x%x] < ",
+        stream->rxHead->name, (int) stream->rxHead->count, (int) stream->rxHead->window, stream->rxHead->flags);
+    for (q = stream->rxHead->prevQ; q != stream->rxHead; q = q->prevQ) {
+        mprPutToBuf(buf, "%s[%d, %d, 0x%x] < ", q->name, (int) q->count, (int) q->window, q->flags);
+    }
+    mprPutToBuf(buf, "%s[%d, %d, 0x%x] < ",
+        net->inputq->name, (int) net->inputq->count, (int) net->inputq->window, net->inputq->flags);
+    mprPutToBuf(buf, "%s[%d, 0x%x]\n", net->socketq->name, (int) net->socketq->count, net->socketq->flags);
+
+    mprPutToBuf(buf, "  Tx: ");
+    mprPutToBuf(buf, "%s[%d, %d, 0x%x] > ",
+        stream->txHead->name, (int) stream->txHead->count, (int) stream->txHead->window, stream->txHead->flags);
+    for (q = stream->txHead->nextQ; q != stream->txHead; q = q->nextQ) {
+        mprPutToBuf(buf, "%s[%d, %d, 0x%x] > ", q->name, (int) q->count, (int) q->window, q->flags);
+    }
+    mprPutToBuf(buf, "%s[%d, %d, 0x%x] > ",
+        net->outputq->name, (int) net->outputq->count, (int) net->outputq->window, net->outputq->flags);
+    for (q = net->outputq->nextQ; q != net->outputq; q = q->prevQ) {
+        mprPutToBuf(buf, "%s[%d, %d, 0x%x]\n\n", q->name, (int) q->count, (int) q->window, q->flags);
+    }
 }
 
 

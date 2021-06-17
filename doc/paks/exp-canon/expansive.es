@@ -4,14 +4,24 @@ Expansive.load({
         name: 'canon',
         init: function() {
             global.renderCanonical = function() {
-                if (meta.dest.basename.trimExt() == 'index') {
-                    let ref: String = meta.absurl.dirname
+                let ref: string
+                if (meta.canon) {
+                    ref = meta.canon
+                } else if (meta.dest.basename.trimExt() == 'index') {
+                    ref = meta.absurl.dirname
                     if (!ref.endsWith('/')) {
                         ref += '/'
                     }
-                    write('<link href="' + ref + '" rel="canonical" />')
+                } else {
+                    ref = meta.absurl
                 }
+                let site = meta.site.toString()
+                if (!site.contains('127.0.0.1') && !site.contains('localhost')) {
+                    ref = meta.site.join(ref)
+                }
+                write('<link href="' + ref + '" rel="canonical" />')
             }
         }
     }
 })
+

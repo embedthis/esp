@@ -1,7 +1,7 @@
 {
     "name": "me-docstyle",
     "description": "Documentation Style",
-    "version": "0.9.3",
+    "version": "1.0.0",
     "keywords": [
         "me"
     ],
@@ -17,24 +17,15 @@
     "bugs": {
         "url": "http://github.com/embedthis/me-docstyle/issues"
     },
-    "licenses": [
-        {
-            "type": "GPL",
-            "url": "http://www.gnu.org/licenses/gpl-2.0.html"
-        },
-        {
-            "type": "Commercial",
-            "url": "https://embedthis.com/licensing/"
-        }
-    ],
+    "licenses": "MIT",
     "dependencies": {
-        "exp-css": "~0.3",
-        "exp-js": "~0.3",
-        "exp-less": "~0.3",
-        "exp-reload": "~0.3",
-        "exp-html": "~0.2",
-        "exp-canon": "~0.1",
-        "jquery": "~2",
+        "exp-css": "~1",
+        "exp-js": "~1",
+        "exp-less": "~1",
+        "exp-reload": "~1",
+        "exp-html": "~1",
+        "exp-canon": "~1",
+        "jquery": "~3",
         "semantic-ui": "~2"
     },
     "export": [

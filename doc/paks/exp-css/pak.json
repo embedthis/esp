@@ -1,19 +1,19 @@
 {
     "name": "exp-css",
     "description": "CSS Plugin for Expansive",
-    "version": "0.3.1",
+    "version": "1.0.0",
     "keywords": [
         "expansive-plugin",
         "css"
     ],
-    "licenses": "GPL",
+    "licenses": "MIT",
     "repository": {
         "type": "git",
         "url": "git://github.com/embedthis/exp-css.git"
     },
     "devDependencies": {
-        "expansive": ">=0.7.0",
-        "pak": ">=0.11.3"
+        "expansive": ">=1.0.0",
+        "pak": ">=1.0.0"
     },
     "scripts": {
         "postcache": [

@@ -2,7 +2,7 @@
     control: {
         "?listen": '127.0.0.1:4000'
     },
-    debug: {
+    dev: {
         services: {
             "?gzip": false,
             "?html": false,
@@ -13,7 +13,7 @@
             }
         }
     },
-    release: {
+    prod: {
         services: {
             "css": {
                 "?minify": true,

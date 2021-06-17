@@ -7,7 +7,7 @@ Provides the 'html' service to minify HTML files.
 
 ### To install:
 
-    pak install embedthis/exp-html
+    pak install exp-html
 
 ### To configure in expansive.json:
 
@@ -33,4 +33,4 @@ Provides the 'html' service to minify HTML files.
 
 ### Get Pak from
 
-[https://embedthis.com/pak/](https://embedthis.com/pak/)
+[https://www.embedthis.com/pak/](https://www.embedthis.com/pak/)

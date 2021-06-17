@@ -949,7 +949,7 @@ PUBLIC void httpSetTraceFormatterName(HttpTrace *trace, cchar *name);
     @stability Prototype.
     @returns True if trace should be emitted
  */
-PUBLIC bool httpShouldTrace(HttpTrace *trace, cchar *name);
+PUBLIC bool httpShouldTrace(HttpTrace *trace, cchar *type);
 
 #define httpTracing(net) (net->trace->level > 0)
 
@@ -2688,9 +2688,13 @@ typedef int (*HttpParse)(cchar *key, char *value, void *state);
         Each stage has two queues, one for outgoing data and one for incoming data.
         \n\n
         Stages provide callback methods for parsing configuration, matching requests, open/close, run and the
-        acceptance and service of incoming and outgoing data.
+        acceptance and service of incoming and outgoing data. The order of these callbacks will vary depending if
+        HttpRx.streaming is set. FileUpload requires streaming and the input callback for some stages in the
+        standard pipeline may be invoked before the request is routed.
+
     Configuration is not thread safe and must occur at initialization time when the application is single threaded.
     If the configuration is modified when the application is multithreaded, all requests must be first be quiesced.
+
     @defgroup HttpStage HttpStage
     @see HttpStream HttpQueue HttpStage httpCloneStage httpCreateConnector httpCreateFilter httpCreateHandler
         httpCreateStage httpDefaultService httpGetStageData httpHandleOptionsTrace httpLookupStage

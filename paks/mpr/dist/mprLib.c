@@ -2448,7 +2448,7 @@ PUBLIC size_t mprGetBlockSize(cvoid *ptr)
 }
 
 
-PUBLIC int mprGetHeapFlags()
+PUBLIC int mprGetHeapFlags(void)
 {
     return heap->flags;
 }
@@ -3473,7 +3473,7 @@ PUBLIC MprDispatcher *mprGetNonBlockDispatcher()
 }
 
 
-PUBLIC cchar *mprCopyright()
+PUBLIC cchar *mprCopyright(void)
 {
     return  "Copyright (c) Embedthis Software. All Rights Reserved.\n"
             "Copyright (c) Michael O'Brien. All Rights Reserved.";
@@ -3962,7 +3962,7 @@ PUBLIC HWND mprGetWindow(bool *created)
 
 
 #else
-void asyncDummy() {}
+void asyncDummy(void) {}
 #endif /* MPR_EVENT_ASYNC */
 
 /*
@@ -11132,7 +11132,7 @@ PUBLIC void mprWakeNotifier()
 }
 
 #else
-void epollDummy() {}
+void epollDummy(void) {}
 #endif /* MPR_EVENT_EPOLL */
 
 /*
@@ -17316,7 +17316,7 @@ PUBLIC wchar *mtrim(wchar *str, cchar *set, int where)
 }
 
 #else
-PUBLIC void dummyWide() {}
+PUBLIC void dummyWide(void) {}
 #endif /* ME_CHAR_LEN > 1 */
 
 /*
@@ -21200,7 +21200,7 @@ PUBLIC MprRomFileSystem *mprCreateRomFileSystem(cchar *path, MprRomInode *inodes
 }
 
 #else
-void romDummy() {}
+void romDummy(void) {}
 
 #endif /* ME_ROM */
 
@@ -21585,7 +21585,7 @@ static int sendWakeup(MprWaitService *ws)
 }
 
 #else
-void selectDummy() {}
+void selectDummy(void) {}
 
 #endif /* MPR_EVENT_SELECT || MPR_EVENT_SELECT_PIPE */
 
@@ -28375,7 +28375,7 @@ double  __mpr_floating_point_resolution(double a, double b, int64 c, int64 d, ui
 }
 
 #else
-void vxworksDummy() {}
+void vxworksDummy(void) {}
 #endif /* VXWORKS */
 
 /*
@@ -30211,7 +30211,7 @@ PUBLIC int mprWriteRegistry(cchar *key, cchar *name, cchar *value)
 
 
 #else
-void winDummy() {}
+void winDummy(void) {}
 #endif /* ME_WIN_LIKE || CYGWIN */
 
 /*

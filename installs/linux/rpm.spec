@@ -1,10 +1,10 @@
 #
 #	RPM spec file for ${settings.title}
 #
-Summary: ${settings.title} -- The "C" language web framework 
+Summary: ${settings.title} -- The "C" language web framework
 Name: ${settings.name}
 Version: ${settings.version}
-License: Dual GPL/commercial
+License: commercial
 Group: Development/Other
 URL: https://www.embedthis.com/esp
 Distribution: Embedthis
@@ -28,7 +28,7 @@ Bit is a replacement for the autoconf/make build tools. Bit is a single tool tha
 %files -f binFiles.txt
 
 %post
-if [ -x /usr/bin/chcon ] ; then 
+if [ -x /usr/bin/chcon ] ; then
 	sestatus | grep enabled >/dev/null 2>&1
 	if [ $? = 0 ] ; then
 		for f in ${prefixes.vapp}/bin/*.so ; do
@@ -42,4 +42,3 @@ ldconfig -n ${prefixes.vapp}/bin
 rm -f ${prefixes.app}/latest
 
 %postun
-

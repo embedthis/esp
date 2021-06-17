@@ -198,7 +198,9 @@ static int createEndpoints(int argc, char **argv)
         return MPR_ERR_CANT_CREATE;
     }
     mprGC(MPR_GC_FORCE | MPR_GC_COMPLETE);
+#if ME_UNIX_LIKE
     app->signal = mprAddSignalHandler(ME_SIGINFO, showState, 0, 0, MPR_SIGNAL_AFTER);
+#endif
     return 0;
 }
 
